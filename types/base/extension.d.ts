@@ -39,6 +39,8 @@ interface CssGridCellData {
 interface FlexboxData<T> extends Required<FlexData> {
     rowCount: number;
     columnCount: number;
+    rowGap: number;
+    columnGap: number;
     children: T[];
     singleRow?: boolean;
 }

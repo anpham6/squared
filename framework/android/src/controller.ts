@@ -3530,10 +3530,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     };
-                    const renderChildren = parent.renderChildren;
-                    const length = renderChildren.length;
+                    const children = parent.renderChildren;
+                    const length = children.length;
                     for (let i = 0; i < length; ++i) {
-                        const child = renderChildren[i] as T;
+                        const child = children[i] as T;
                         if (child === node) {
                             continue;
                         }
@@ -3601,7 +3601,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     let nearest: Undef<T>,
                         adjacent: Undef<T>;
                     for (let i = 0; i < length; ++i) {
-                        const item = renderChildren[i] as T;
+                        const item = children[i] as T;
                         if (item === node || !item.constraint[axis]) {
                             continue;
                         }

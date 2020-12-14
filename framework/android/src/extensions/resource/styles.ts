@@ -14,13 +14,13 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
             next: {
-                const renderChildren = rendered[i].renderChildren;
-                const q = renderChildren.length;
+                const children = rendered[i].renderChildren;
+                const q = children.length;
                 if (q > 1) {
                     const attrMap: ObjectMap<number> = {};
                     let style = '';
                     for (let j = 0; j < q; ++j) {
-                        const item = renderChildren[j] as T;
+                        const item = children[j] as T;
                         const combined = item.combine('_', 'android');
                         let found: Undef<boolean>;
                         for (let k = 0, r = combined.length; k < r; ++k) {
@@ -67,7 +67,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         items.sort((a, b) => a.key < b.key ? -1 : 1);
                         styles.set(name, { name, parent: '', items } as StyleAttribute);
                         for (let j = 0; j < q; ++j) {
-                            const item = renderChildren[j];
+                            const item = children[j];
                             item.attr('_', 'style', `@style/${name}`);
                             item.delete('android', ...attrs);
                         }

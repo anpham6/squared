@@ -807,6 +807,74 @@ export function getRootOffset(element: SVGGraphicsElement, rootElement: Element)
     return { x, y };
 }
 
+export function sanitizePath(value: string) {
+    let d = value,
+        pattern = /(\d*)\.(\d+)\.(\d+)/g,
+        match: Null<RegExpExecArray>;
+    while (match = pattern.exec(d)) {
+        let seg: string;
+        if (!match[1]) {
+            seg = '.' + match[2] + ' .' + match[3];
+        }
+        else if (match[3].length >= 2) {
+            seg = match[1] + '.' + match[2] + ' .' + match[3];
+        }
+        else {
+            const length = match[2].length;
+            seg = match[1] + '.';
+            switch (length) {
+                case 1:
+                    seg += match[2] + ' .' + match[3];
+                    break;
+                default:
+                    seg += match[2].substring(0, length - 1) + ' ' + match[2][length - 1] + '.' + match[3];
+                    break;
+            }
+        }
+        value = value.replace(match[0], seg + ' ');
+    }
+    d = value;
+    pattern = /(\d)([A-Za-z])/g;
+    while (match = pattern.exec(d)) {
+        value = value.replace(match[0], match[1] + ' ' + match[2]);
+    }
+    d = value;
+    pattern = /([A-Za-z])\s+(\d)/g;
+    while (match = pattern.exec(d)) {
+        value = value.replace(match[0], match[1] + match[2]);
+    }
+    d = value;
+    pattern = /([Aa](?:-?[\d.]+[\s,]+){3}\s*)(0|1)(0|1)(-?[\d.]+)/g;
+    while (match = pattern.exec(d)) {
+        value = value.replace(match[0], match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4]);
+    }
+    d = value;
+    pattern = /((?:-?[\d.]+[\s,]+){3}\s*)0(0|1)(-?[\d.]+)/g;
+    while (match = pattern.exec(d)) {
+        found: {
+            for (let i = pattern.lastIndex - 1; i >= 0; --i) {
+                switch (d[i]) {
+                    case 'A':
+                    case 'a':
+                        value = value.replace(match[0], d[i] + match[1] + ' 0 ' + match[2] + ' ' + match[3]);
+                        break found;
+                }
+            }
+        }
+    }
+    d = value;
+    pattern = /([A-Za-z\s,])(?:(0+)(\d)|(0{2,}))/g;
+    while (match = pattern.exec(d)) {
+        value = value.replace(match[0], match[1] + ' ' + (match[4] ? '0 '.repeat(match[4].length) : '0 '.repeat(match[2].length) + ' ' + match[3]));
+    }
+    d = value;
+    pattern = /(\d+)-/g;
+    while (match = pattern.exec(d)) {
+        value = value.replace(match[0], match[1] + ' -');
+    }
+    return value.replace(/\s{2,}/g, ' ');
+}
+
 export function createPath(value: string) {
     const element = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     element.setAttribute('d', value);

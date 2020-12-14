@@ -145,7 +145,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
 
     public removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerRemoveIfOptions<T>): T[] {
         let count: Undef<number>,
-            cascade: Undef<boolean>,
+            cascade: Undef<boolean | IteratorPredicate<T, boolean>>,
             also: Undef<BindGeneric<T, void>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
@@ -174,7 +174,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                         break;
                     }
                 }
-                if (cascade && item instanceof Container && !item.isEmpty()) {
+                if (cascade && (cascade === true || cascade(item, i, children)) && item instanceof Container && !item.isEmpty()) {
                     recurse(item, result);
                     if (complete) {
                         break;
@@ -207,13 +207,13 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                         length = end;
                     }
                 }
-                while (i < length) {
+                for ( ; i < length; ++i) {
                     const item = children[i];
                     if (error && error(item, i, children)) {
                         complete = true;
                         break;
                     }
-                    if (predicate(item, i++, children)) {
+                    if (predicate(item, i, children)) {
                         if (count-- === 0) {
                             if (also) {
                                 also.call(container, item);
@@ -221,7 +221,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
                             return item;
                         }
                     }
-                    if (cascade && item instanceof Container && !item.isEmpty()) {
+                    if (cascade && (cascade === true || cascade(item, i, children)) && item instanceof Container && !item.isEmpty()) {
                         const result = recurse(item, level + 1);
                         if (result) {
                             return result;

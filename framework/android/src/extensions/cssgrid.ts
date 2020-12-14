@@ -1108,7 +1108,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 return valid;
             }
         }
-        return node.hasFlex('row') && node.flexbox.grow > 0;
+        return node.hasFlex('row') ? node.flexbox.grow > 0 : false;
     }
 
     private checkRowSpan(mainData: CssGridData<T>, node: T, rowSpan: number, rowStart: number) {

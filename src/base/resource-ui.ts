@@ -13,7 +13,7 @@ const { STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, getStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -272,6 +272,73 @@ function newBoxRectPosition(orientation = ['left', 'top']): BoxRectPosition {
         vertical: 'top',
         orientation
     };
+}
+
+function replaceSvgAttribute(src: string, tagName: string, attr: string, value: NumString, timestamp: string, start?: boolean) {
+    tagName = (start ? '' : '@@' + timestamp) + `(${tagName})`;
+    const style = ' ' + attr + `="${value}"`;
+    const match = new RegExp(`<${tagName}(.+?)\\s+${attr}\\s*=\\s*["']?[^"']+["']?([^>]*>)`, 'i').exec(src);
+    if (match) {
+        return src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[3]);
+    }
+    return src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+}
+
+function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], dimension?: Dimension) {
+    for (let i = 0, length = children.length; i < length; ++i) {
+        const item = children[i];
+        const timestamp = performance.now().toString().replace('.', '');
+        const tagName = item.tagName;
+        let start = true;
+        switch (tagName) {
+            case 'svg':
+            case 'use':
+            case 'rect':
+            case 'pattern':
+                try {
+                    src = replaceSvgAttribute(src, tagName, 'height', dimension && dimension.height || (item as SVGSVGElement).height.baseVal.value, timestamp, true);
+                    src = replaceSvgAttribute(src, tagName, 'width', dimension && dimension.width || (item as SVGSVGElement).width.baseVal.value, timestamp);
+                    start = false;
+                }
+                catch {
+                }
+            case 'symbol':
+            case 'g':
+            case 'path':
+            case 'line':
+            case 'ellipse':
+            case 'circle':
+            case 'polyline':
+            case 'polygon': {
+                const { stroke, strokeWidth, strokeDasharray, strokeDashoffset, strokeLinecap, strokeLinejoin, strokeMiterlimit, strokeOpacity, fill, fillRule, fillOpacity, clipPath, clipRule } = getStyle(item);
+                const strokeColor = parseColor(stroke);
+                const fillColor = parseColor(fill);
+                src = replaceSvgAttribute(src, tagName, 'stroke', strokeColor && !strokeColor.transparent ? strokeColor.valueAsRGBA : 'none', timestamp, start);
+                src = replaceSvgAttribute(src, tagName, 'stroke-width', strokeWidth, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'stroke-dasharray', strokeDasharray, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'stroke-dashoffset', strokeDashoffset, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'stroke-linecap', strokeLinecap, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'stroke-linejoin', strokeLinejoin, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'stroke-miterlimit', strokeMiterlimit, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'stroke-opacity', strokeOpacity, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'fill', fillColor && !fillColor.transparent ? fillColor.valueAsRGBA : 'none', timestamp);
+                src = replaceSvgAttribute(src, tagName, 'fill-rule', fillRule, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'fill-opacity', fillOpacity, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'clip-path', clipPath, timestamp);
+                src = replaceSvgAttribute(src, tagName, 'clip-rule', clipRule, timestamp);
+                src = replaceSvgValues(src, item.children);
+                break;
+            }
+            case 'stop': {
+                const { stopColor, stopOpacity } = getStyle(item);
+                const color = parseColor(stopColor);
+                src = replaceSvgAttribute(src, tagName, 'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none', timestamp, true);
+                src = replaceSvgAttribute(src, tagName, 'stop-opacity', stopOpacity, timestamp);
+                break;
+            }
+        }
+    }
+    return src;
 }
 
 const parseLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round(convertPercent(value) * dimension) : parseUnit(value, options);
@@ -982,6 +1049,14 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             return result;
         }
         return null;
+    }
+
+    public writeRawSvg(element: SVGSVGElement, dimension?: Dimension) {
+        let src = element.outerHTML.trim().replace(/\s+/g, ' ');
+        src = replaceSvgValues(src, [element], dimension).replace(/"/g, '\\"').replace(/<@@\d+/g, '<');
+        const uri = 'data:image/svg+xml,' + src;
+        this.addRawData(uri, 'image/svg+xml', src);
+        return uri;
     }
 
     public setBoxStyle(node: T) {

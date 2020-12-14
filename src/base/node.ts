@@ -2269,13 +2269,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.flexdata;
         if (result === undefined) {
             if (this.flexElement) {
-                const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                const row = flexDirection!.startsWith('row');
+                const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
+                const row = flexDirection.startsWith('row');
                 result = {
                     row,
                     column: !row,
-                    reverse: flexDirection!.endsWith('reverse'),
-                    wrap: flexWrap!.startsWith('wrap'),
+                    reverse: flexDirection.endsWith('reverse'),
+                    wrap: flexWrap.startsWith('wrap'),
                     wrapReverse: flexWrap === 'wrap-reverse',
                     alignContent,
                     justifyContent

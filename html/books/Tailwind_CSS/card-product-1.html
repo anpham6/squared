@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/tailwind.min.css" rel="stylesheet">
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+</head>
+<body class="h-screen overflow-hidden flex items-center justify-center" style="background: #edf2f7;">
+  <div class="flex flex-col gap-6 items-center h-screen w-full bg-gray-50 flex items-center justify-center">
+    <div class="flex">
+      <div class="flex-none w-48 relative">
+        <img src="images/classic-utility-jacket.jpg" alt="" class="absolute inset-0 w-full h-full object-cover" />
+      </div>
+      <form class="flex-auto p-6">
+        <div class="flex flex-wrap">
+          <h1 class="text-blue font-bold flex-auto text-xl font-semibold">
+            Classic Utility Jacket
+          </h1>
+          
+          <div class="text-xl font-semibold text-gray-500">
+            $326.00
+          </div>
+          <div class="w-full flex-none text-sm font-medium text-gray-500 mt-2">
+            In stock
+          </div>
+        </div>
+        <p class="mt-4 text-sm text-gray-500">
+          Free shipping on all continental US orders.
+        </p>
+        <div class="flex items-baseline mt-4 mb-6">
+          <div class="space-x-2 flex">
+            <label class="w-8 h-8 rounded shadow-sm text-center flex items-center justify-center bg-white">
+              <input class="hidden focus-within:w-6 h-6 flex items-center justify-center bg-gray-100 rounded-lg" name="size" type="radio" value="xs" checked>
+              XS
+            </label>
+            <label class="w-8 h-8 rounded shadow-sm text-center flex items-center justify-center bg-white">
+              <input class="hidden focus-within:w-6 h-6 flex items-center justify-center bg-gray-100 rounded-lg" name="size" type="radio" value="xs" checked>
+              S
+            </label>
+            <label class="w-8 h-8 rounded shadow-sm text-center flex items-center justify-center bg-white">
+              <input class="hidden focus-within:w-6 h-6 flex items-center justify-center bg-gray-100 rounded-lg" name="size" type="radio" value="xs" checked>
+              M
+            </label>
+            <label class="w-8 h-8 rounded shadow-sm text-center flex items-center justify-center bg-white">
+              <input class="hidden focus-within:w-6 h-6 flex items-center justify-center bg-gray-100 rounded-lg" name="size" type="radio" value="xs" checked>
+              L
+            </label>
+            <label class="w-8 h-8 rounded shadow-sm text-center flex items-center justify-center bg-white">
+              <input class="hidden focus-within:w-6 h-6 flex items-center justify-center bg-gray-100 rounded-lg" name="size" type="radio" value="xs" checked>
+              XL
+            </label>
+          </div>
+          <div class="ml-auto text-xs text-gray-500 underline">Voir plus</div>
+        </div>
+        <div class="flex space-x-3 mb-4 text-sm font-medium">
+          <div class="flex-auto flex space-x-3">
+            <button class="uppercase text-xs font-bold w-1/2 flex items-center justify-center rounded-full bg-blue-400 text-white" type="submit">
+            Acheter</button>
+            <button class="uppercase text-xs font-bold w-1/2 flex items-center justify-center rounded-full border border-gray-300" type="button">Ajouter</button>
+          </div>
+          <button class="flex-none flex items-center justify-center w-9 h-9 rounded-md text-gray-400 border border-red-300 hover:animate-ping" type="button" aria-label="like">
+            <svg width="20" height="20" fill="currentColor" class="fill-current text-red-300">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+            </svg>
+          </button>
+        </div>
+        
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

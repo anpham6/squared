@@ -6,8 +6,6 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
-type NodeIntersectXY = "intersectY" | "intersectX";
-
 const { partitionArray, withinRange } = squared.lib.util;
 
 const OPTIONS_BOUNDSDATA: StringMap = {
@@ -20,6 +18,8 @@ function createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<Node
         ...(node.flexdata as Required<FlexData>),
         rowCount: 0,
         columnCount: 0,
+        rowGap: node.parseHeight(node.valueOf('rowGap')),
+        columnGap: node.parseWidth(node.valueOf('columnGap')),
         children
     };
 }
@@ -47,12 +47,11 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
         });
         if (mainData.wrap) {
-            const controller = this.controller;
             const options: CoordsXYOptions = { dimension: 'bounds' };
-            let align: string,
-                sort: string,
-                size: string,
-                method: string;
+            let align: "left" | "top",
+                sort: "top" | "left",
+                size: "right" | "bottom",
+                method: "intersectX" | "intersectY";
             if (mainData.row) {
                 align = 'top';
                 sort = 'left';
@@ -68,7 +67,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             children.sort((a, b) => {
                 const linearA = a.linear;
                 const linearB = b.linear;
-                if (!a[method as NodeIntersectXY](b.bounds, options)) {
+                if (!a[method](b.bounds, options)) {
                     return linearA[align] - linearB[align];
                 }
                 const posA = linearA[sort];
@@ -85,7 +84,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             const rows: T[][] = [row];
             for (let i = 1; i < length; ++i) {
                 const item = children[i];
-                if (rowStart[method as NodeIntersectXY](item.bounds, options)) {
+                if (rowStart[method](item.bounds, options)) {
                     row.push(item);
                 }
                 else {
@@ -97,18 +96,17 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             node.clear();
             length = rows.length;
             if (length > 1) {
-                const boxSize: number = node.box[size];
+                const boxSize = node.box[size];
                 for (let i = 0; i < length; ++i) {
                     const seg = rows[i];
                     maxCount = Math.max(seg.length, maxCount);
-                    const group = controller.createNodeGroup(seg[0], seg, node, { alignmentType: NODE_ALIGNMENT.SEGMENTED, flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE });
+                    const group = this.controller.createNodeGroup(seg[0], seg, node, { alignmentType: NODE_ALIGNMENT.SEGMENTED, flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE });
                     group.box[size] = boxSize;
                 }
             }
             else {
-                const items = rows[0];
-                node.retainAs(items);
-                maxCount = items.length;
+                node.retainAs(rows[0]);
+                maxCount = rows[0].length;
             }
             node.addAll(absolute);
             if (mainData.row) {

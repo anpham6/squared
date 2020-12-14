@@ -65,7 +65,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 minWidth += parent.paddingLeft ? parent.paddingLeft : parent.marginLeft;
             }
             let ordinal = !value && node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T>,
-                containerType = CONTAINER_NODE.CONSTRAINT;
+                containerType = 0;
             if (ordinal) {
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
@@ -151,9 +151,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 if (node.isEmpty() && !node.outerWrapper) {
                     container = controller.createNodeWrapper(node, parent, { alignmentType: parent.layoutGrid ? NODE_ALIGNMENT.VERTICAL : 0 });
-                    if (node.baselineElement && node.percentWidth === 0 && !node.cssInitial('maxWidth').endsWith('%')) {
-                        containerType = CONTAINER_NODE.LINEAR;
-                    }
+                    containerType = node.baselineElement && node.percentWidth === 0 && !node.cssInitial('maxWidth').endsWith('%') ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT;
                 }
                 else {
                     container = node.outerMostWrapper as T;

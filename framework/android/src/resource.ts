@@ -10,8 +10,6 @@ const { FILE } = squared.lib.regex;
 const { extractURL, getSrcSet } = squared.lib.css;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPairStart, trimString } = squared.lib.util;
 
-const STORED = squared.base.ResourceUI.STORED;
-
 const REGEXP_STRINGNAME = /(?:\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
 
@@ -84,7 +82,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 file = trimString(output.file.trim().replace(/\\/g, '/'), '/');
             }
         }
-        const themes = STORED.themes;
+        const themes = Resource.STORED.themes;
         const filename = `${path}/${file}`;
         const storedFile = themes.get(filename) || new Map<string, ThemeAttribute>();
         if (!name || name[0] === '.') {
@@ -126,7 +124,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         if (value) {
             const numeric = isNumber(value);
             if (!numeric || numberAlias) {
-                const strings = STORED.strings;
+                const strings = Resource.STORED.strings;
                 for (const data of strings) {
                     if (data[1] === value) {
                         return `@string/${data[0]}`;
@@ -193,16 +191,16 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         if (!color.transparent || transparency) {
             const keyName = color.opacity < 1 ? color.valueAsARGB : color.value;
-            let colorName = STORED.colors.get(keyName);
+            let colorName = Resource.STORED.colors.get(keyName);
             if (colorName) {
                 return colorName;
             }
             if (color.key) {
-                STORED.colors.set(keyName, color.key);
+                Resource.STORED.colors.set(keyName, color.key);
                 return color.key;
             }
             colorName = Resource.generateId('color', color.nearest.key);
-            STORED.colors.set(keyName, colorName);
+            Resource.STORED.colors.set(keyName, colorName);
             return colorName;
         }
         return '';
@@ -215,6 +213,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         public cache: squared.base.NodeList<T>)
     {
         super();
+        const STORED = Resource.STORED;
         STORED.styles = new Map();
         STORED.themes = new Map();
         STORED.dimens = new Map();

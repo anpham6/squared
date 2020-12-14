@@ -273,10 +273,17 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         }
     }
 
+    public postConstraints(node: T) {
+        if (!node.hasPX('width')) {
+            node.setLayoutWidth(node.getMatchConstraint(), false);
+        }
+    }
+
     public postOptimize(node: T) {
         const container = (this.data.get(node) as Undef<PositiveXData>)?.container;
         if (container) {
-            if (!container.constraint.horizontal) {
+            const { horizontal, vertical } = container.constraint;
+            if (!horizontal) {
                 if (container.blockWidth || container.flexibleWidth) {
                     container.anchorParent('horizontal', 0);
                 }
@@ -284,7 +291,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     container.anchor('left', 'parent');
                 }
             }
-            if (!container.constraint.vertical) {
+            if (!vertical) {
                 if (container.blockHeight || container.flexibleHeight) {
                     container.anchorParent('vertical', 0);
                 }

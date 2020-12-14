@@ -63,7 +63,7 @@ interface LayerData {
 
 const { NODE_RESOURCE } = squared.base.lib.constant;
 
-const { extractURL, formatPercent, formatPX } = squared.lib.css;
+const { extractURL, formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
@@ -429,7 +429,7 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
 }
 
 const roundFloat = (value: string) => Math.round(parseFloat(value));
-const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
+const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     return plainMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
@@ -471,9 +471,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '':
                     case 'auto':
                     case '100%': {
-                        const renderChildren = wrapper.renderChildren;
-                        if (renderChildren.length === 1) {
-                            wrapper.removeTry({ replaceWith: renderChildren[0] });
+                        const children = wrapper.renderChildren;
+                        if (children.length === 1) {
+                            wrapper.removeTry({ replaceWith: children[0] });
                         }
                         break;
                     }
@@ -756,7 +756,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (parentElement && element) {
                                     const drawable = svgInstance.createSvgDrawable(node, element);
                                     if (drawable) {
-                                        const dimension = node.data<squared.svg.Svg>(Resource.KEY_NAME, 'svg')?.viewBox || { width: element.width.baseVal.value, height: element.height.baseVal.value };
+                                        let dimension = node.data<squared.svg.Svg>(Resource.KEY_NAME, 'svg')?.viewBox;
+                                        if (!dimension || !dimension.width || !dimension.height) {
+                                            dimension = { width: element.width.baseVal.value, height: element.height.baseVal.value } as DOMRect;
+                                        }
                                         if (!node.svgElement) {
                                             let { width, height } = dimension;
                                             if (width > boundsWidth || height > boundsHeight) {
@@ -778,9 +781,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 else {
                                                     width = boundsWidth * (ratioWidth / ratioHeight);
                                                 }
+                                                dimension.width = width;
+                                                dimension.height = height;
                                             }
-                                            dimension.width = width;
-                                            dimension.height = height;
                                         }
                                         images[length] = drawable;
                                         imageDimensions[length] = dimension;
@@ -908,7 +911,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     continue;
                 }
                 const position = backgroundPosition[i];
-                const padded = position.orientation.length === 4;
+                const orientation = position.orientation;
+                const k = orientation.length;
+                const positionX = k >= 3 && isLength(orientation[1], true);
+                const positionY = k >= 3 && isLength(orientation[k - 1], true);
                 const size = backgroundSize[i];
                 let repeat = backgroundRepeat[i],
                     dimension = imageDimensions[i] || null,
@@ -982,7 +988,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '0%':
                     case '0px':
                         gravityX = node.localizeString('left');
-                        if (padded) {
+                        if (positionX) {
                             posLeft = 0;
                             offsetX = true;
                         }
@@ -995,7 +1001,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '100%':
                         gravityX = node.localizeString('right');
                         posRight = 0;
-                        if (padded) {
+                        if (positionX) {
                             offsetX = true;
                         }
                         break;
@@ -1019,7 +1025,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '0%':
                     case '0px':
                         gravityY = 'top';
-                        if (padded) {
+                        if (positionY) {
                             posTop = 0;
                             offsetY = true;
                         }
@@ -1032,7 +1038,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '100%':
                         gravityY = 'bottom';
                         posBottom = 0;
-                        if (padded) {
+                        if (positionY) {
                             offsetY = true;
                         }
                         break;
@@ -1111,24 +1117,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (dimension) {
                     let fittedWidth = boundsWidth,
                         fittedHeight = boundsHeight;
-                    if (size !== 'contain') {
-                        if (!node.hasWidth) {
-                            const innerWidth = window.innerWidth;
-                            const screenWidth = screenDimension.width;
-                            const getFittedWidth = () => boundsHeight * (fittedWidth / boundsWidth);
-                            if (boundsWidth === innerWidth) {
-                                if (innerWidth >= screenWidth) {
-                                    fittedWidth = screenWidth;
-                                    fittedHeight = getFittedWidth();
-                                }
-                                else {
-                                    ({ width: fittedWidth, height: fittedHeight } = node.fitToScreen(bounds));
-                                }
-                            }
-                            else if (innerWidth >= screenWidth) {
-                                fittedWidth = node.actualBoxWidth(boundsWidth);
+                    if (size !== 'contain' && !node.hasWidth) {
+                        const innerWidth = window.innerWidth;
+                        const screenWidth = screenDimension.width;
+                        const getFittedWidth = () => boundsHeight * (fittedWidth / boundsWidth);
+                        if (boundsWidth === innerWidth) {
+                            if (innerWidth >= screenWidth) {
+                                fittedWidth = screenWidth;
                                 fittedHeight = getFittedWidth();
                             }
+                            else {
+                                ({ width: fittedWidth, height: fittedHeight } = node.fitToScreen(bounds));
+                            }
+                        }
+                        else if (innerWidth >= screenWidth) {
+                            fittedWidth = node.actualBoxWidth(boundsWidth);
+                            fittedHeight = getFittedWidth();
                         }
                     }
                     const ratioWidth = dimenWidth / fittedWidth;
@@ -1574,7 +1578,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                 }
-                const gravity = gravityX === 'center_horizontal' && gravityY === 'center_vertical' ? 'center' : delimitString({ value: gravityX, delimiter: '|' }, gravityY);
+                let gravity = '';
+                if (gravityX === 'center_horizontal' && gravityY === 'center_vertical') {
+                    gravity = 'center';
+                }
+                else if (gravityAlign === 'center_horizontal|center_vertical') {
+                    gravityAlign = 'center';
+                }
+                else {
+                    gravity = delimitString({ value: gravityX, delimiter: '|' }, gravityY);
+                }
                 if (src) {
                     if (bitmap && (!autoFit && (gravityAlign && gravity || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || unsizedWidth || unsizedHeight)) {
                         let tileMode = '';

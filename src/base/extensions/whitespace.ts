@@ -836,17 +836,17 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {
-                            const renderChildren = renderParent.renderChildren;
-                            for (let i = 0, length = renderChildren.length; i < length; ++i) {
-                                if (renderChildren[i] === outerWrapper) {
+                            const children = renderParent.renderChildren;
+                            for (let i = 0, length = children.length; i < length; ++i) {
+                                if (children[i] === outerWrapper) {
                                     if (i > 0 && !node.lineBreakLeading && !node.baselineAltered) {
-                                        const previous = renderChildren[i - 1];
+                                        const previous = children[i - 1];
                                         if (previous.pageFlow && (!previous.blockStatic || node.inlineStatic && node.blockDimension)) {
                                             setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
                                         }
                                     }
                                     if (i < length - 1 && !node.lineBreakTrailing) {
-                                        const next = renderChildren[i + 1];
+                                        const next = children[i + 1];
                                         if (next.pageFlow && next.styleElement && !next.inlineVertical) {
                                             setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'), next.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
                                         }

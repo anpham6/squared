@@ -1899,7 +1899,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (marginLeft !== -Infinity) {
                     const offset = floatPosition + marginOffset - (parent.box.left + marginLeft + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0)));
                     if (offset > 0 && offset < parent.actualBoxWidth()) {
-                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(leftAbove, offset);
                     }
                 }
@@ -1938,7 +1938,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (marginRight !== -Infinity) {
                     const offset = parent.box.right - (floatPosition - marginOffset + marginRight + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0)));
                     if (offset > 0 && offset < parent.actualBoxWidth()) {
-                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(rightAbove, offset);
                     }
                 }

@@ -769,13 +769,14 @@ declare module "svg" {
             };
             function calculateStyle(element: SVGElement, attr: string, value: string): string;
             function truncateString(value: string, precision?: number): string;
-            function createPath(value: string): SVGPathElement;
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: Null<SVGSVGElement>, contentMap?: Null<StringMap>): Null<SVGElement>;
             function getNearestViewBox(element: SVGElement): Null<DOMRect>;
             function getRootOffset(element: SVGGraphicsElement, rootElement: Element): Point;
+            function sanitizePath(value: string): string;
+            function createPath(value: string): SVGPathElement;
             function getPathLength(value: string): string;
         }
     }

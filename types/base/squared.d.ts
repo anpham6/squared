@@ -219,7 +219,7 @@ declare module "base" {
         getVideo(uri: string): Undef<Asset>;
         addAudio(uri: string, mimeType?: string, options?: ElementScope): void;
         getAudio(uri: string): Undef<Asset>;
-        addRawData(uri: string, mimeType: string, content?: string, options?: RawDataOptions): string;
+        addRawData(uri: string, mimeType: string, content?: string, options?: RawDataOptions): Null<RawAsset>;
         getRawData(uri: string): Undef<RawAsset>;
         addImageData(uri: string, width?: number, height?: number): void;
         set fileHandler(value);
@@ -247,6 +247,7 @@ declare module "base" {
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
         writeRawImage(options: RawDataOptions): Null<RawAsset>;
+        writeRawSvg(element: SVGSVGElement, dimension?: Dimension): string;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;

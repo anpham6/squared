@@ -11,7 +11,7 @@ import SvgAnimationIntervalMap from './svganimationintervalmap';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { SVG, TRANSFORM, getPathLength } from './lib/util';
+import { SVG, TRANSFORM, getPathLength, sanitizePath } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
 
@@ -246,7 +246,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         this.transformed = null;
         let d: string;
         if (SVG.path(element)) {
-            d = this.getBaseValue<string>('d')!;
+            d = sanitizePath(this.getBaseValue<string>('d')!);
             if (transforms && transforms.length || requireRefit || patternRefit) {
                 const commands = SvgBuild.toPathCommands(d);
                 if (commands.length) {

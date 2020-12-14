@@ -565,7 +565,7 @@ class Sample extends squared.base.Extension {
 
 // Install an extension
 
-const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
+const sample = new Sample('your.namespace.sample', 0, {/* same as configure */});
 squared.add(sample);
 // OR
 squared.add([sample, {/* config */}]);

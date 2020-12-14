@@ -129,13 +129,13 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             content &&= content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
         }
         if (!content && !base64 && !buffer) {
-            return '';
+            return null;
         }
         if (!filename) {
             const ext = '.' + (fromMimeType(mimeType) || 'unknown');
             filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
         }
-        Resource.ASSETS.rawData.set(uri, {
+        const result = {
             pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
             filename,
             content,
@@ -144,8 +144,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             buffer,
             width,
             height
-        });
-        return filename;
+        } as RawAsset;
+        Resource.ASSETS.rawData.set(uri, result);
+        return result;
     }
 
     public getImage(uri: string) {
@@ -170,11 +171,10 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     public getRawData(uri: string) {
         if (uri.startsWith('url(')) {
-            const url = extractURL(uri);
-            if (!url) {
+            uri = extractURL(uri)!;
+            if (!uri) {
                 return;
             }
-            uri = url;
         }
         return Resource.ASSETS.rawData.get(uri);
     }

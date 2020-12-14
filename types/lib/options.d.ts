@@ -10,11 +10,11 @@ interface ContainerCascadeOptions<T> {
 }
 
 interface ContainerFindOptions<T> extends ContainerCascadeOptions<T>, ContainerRangeOptions {
-    cascade?: boolean;
+    cascade?: boolean | IteratorPredicate<T, boolean>;
 }
 
 interface ContainerRemoveIfOptions<T> extends ContainerCascadeOptions<T> {
-    cascade?: boolean;
+    cascade?: boolean | IteratorPredicate<T, boolean>;
 }
 
 interface BackgroundPositionOptions {
