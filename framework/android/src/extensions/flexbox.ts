@@ -63,8 +63,14 @@ function setLayoutWeight(node: View, horizontal: boolean, dimension: string, att
     }
 }
 
-const setBoxPercentage = (parent: View, node: View, attr: DimensionAttr) => node.flexbox.basis = (node.bounds[attr] / parent.box[attr] * 100) + '%';
-const hasMultiline = (parent: View, node: View) => node.find(child => child.multiline && child.ascend({ condition: above => above.hasWidth, including: parent }).length === 0, { cascade: item => !item.hasPX('width', { percent: false }) });
+function setBoxPercentage(node: View, parent: View, attr: DimensionAttr) {
+    const flexbox = node.flexbox;
+    flexbox.grow = 0;
+    flexbox.shrink = 1;
+    flexbox.basis = (node.bounds[attr] / parent.box[attr] * 100) + '%';
+}
+
+const hasMultiline = (node: View, parent: View) => node.find(child => child.multiline && child.ascend({ condition: above => above.hasWidth, including: parent }).length === 0, { cascade: item => !item.hasPX('width', { percent: false }) });
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
@@ -147,7 +153,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public postBaseLayout(node: T) {
         const mainData = this.data.get(node) as Undef<FlexboxData<T>>;
         if (mainData) {
-            const controller = this.controller as android.base.Controller<T>;
             const { row, column, rowGap, columnGap, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
             const parentBottom = node.hasPX('height', { percent: false }) || node.percentHeight ? node.linear.bottom : 0;
             const chainHorizontal: T[][] = [];
@@ -170,18 +175,15 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             if (!mainData.singleRow) {
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
-                        const segment = item.renderChildren.filter(child => child.pageFlow) as T[];
-                        if (children.length) {
-                            if (row) {
-                                item.setLayoutWidth('match_parent');
-                                chainHorizontal.push(segment);
-                            }
-                            else {
-                                item.setLayoutHeight('match_parent');
-                                chainVertical.push(segment);
-                            }
-                            segmented.push(item);
+                        if (row) {
+                            item.setLayoutWidth('match_parent');
+                            chainHorizontal.push(item.renderChildren as T[]);
                         }
+                        else {
+                            item.setLayoutHeight('match_parent');
+                            chainVertical.push(item.renderChildren as T[]);
+                        }
+                        segmented.push(item);
                     }
                 });
                 if (row) {
@@ -286,7 +288,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         percentGap = 0,
                         parentEnd = true,
                         baseline: Null<T> = null,
-                        spreadInside: Undef<boolean>,
+                        spreadInside = justifyContent === 'space-between',
                         boundsWeight: Undef<number>;
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
@@ -313,49 +315,49 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         segStart.anchorStyle(orientation, bias, chainStyle);
                     }
-                    else {
+                    else if (q > 1) {
                         grow = seg.reduce((a, b) => a + b.flexbox.grow, 0);
-                        spreadInside = grow >= 1 && q > 1 && !wrap || (justifyContent === 'space-between' || justifyContent === 'space-around' && q > 1) || seg.length === 2 && (grow >= 1 || (reverse ? seg[0].autoMargin[RB] && !seg[1].autoMargin[RB] : !seg[0].autoMargin[LT] && seg[1].autoMargin[LT]));
-                        if (grow > 0 || seg.some(item => parseFloat(item.flexbox.basis) > 0 || item.flexbox.shrink < 1)) {
+                        if (!spreadInside) {
+                            spreadInside = justifyContent === 'space-around' || grow >= 1 && !wrap;
+                        }
+                        if (grow > 0 || seg.some(item => item.flexbox.shrink < 1)) {
                             boundsWeight = this.adjustGrowRatio(node, seg, WHL);
                         }
-                        if (q > 1) {
-                            let sizeCount = 1,
-                                maxDimension = 0;
-                            for (let k = 0; k < q; ++k) {
-                                const chain = seg[k];
-                                const value = (chain.data<BoxRectDimension>(this.name, 'boundsData') || chain.bounds)[HWL];
-                                if (k === 0) {
-                                    maxSize = value;
-                                }
-                                else if (value === maxSize) {
-                                    ++sizeCount;
-                                }
-                                else if (value > maxSize) {
-                                    maxSize = value;
-                                    sizeCount = 1;
-                                }
-                                if (chain[HWL]) {
-                                    maxDimension = Math.max(maxDimension, value);
-                                }
+                        let sizeCount = 1,
+                            maxDimension = 0;
+                        for (let k = 0; k < q; ++k) {
+                            const item = seg[k];
+                            const value = (item.data<BoxRectDimension>(this.name, 'boundsData') || item.bounds)[HWL];
+                            if (k === 0) {
+                                maxSize = value;
                             }
-                            if (maxDimension === maxSize) {
-                                maxSize = Infinity;
+                            else if (value === maxSize) {
+                                ++sizeCount;
                             }
-                            else if (sizeCount === q) {
-                                maxSize = NaN;
+                            else if (value > maxSize) {
+                                maxSize = value;
+                                sizeCount = 1;
                             }
-                            if (horizontal) {
-                                percentWidth = View.availablePercent(seg, 'width', node.box.width);
-                                if (columnGap > 0) {
-                                    gap = columnGap;
-                                    percentGap = (columnGap / 2) / node.bounds.width;
-                                }
+                            if (value > maxDimension && item[HWL]) {
+                                maxDimension = value;
                             }
-                            else if (rowGap > 0) {
-                                gap = rowGap;
-                                percentGap = (rowGap / 2) / node.bounds.height;
+                        }
+                        if (maxDimension === maxSize) {
+                            maxSize = Infinity;
+                        }
+                        else if (sizeCount === q) {
+                            maxSize = NaN;
+                        }
+                        if (horizontal) {
+                            percentWidth = View.availablePercent(seg, 'width', node.box.width);
+                            if (columnGap > 0) {
+                                gap = columnGap;
+                                percentGap = (columnGap / 2) / node.bounds.width;
                             }
+                        }
+                        else if (rowGap > 0) {
+                            gap = rowGap;
+                            percentGap = (rowGap / 2) / node.bounds.height;
                         }
                     }
                     for (let k = 0; k < q; ++k) {
@@ -587,9 +589,17 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            percentWidth = chain.setFlexDimension(WHL, percentWidth);
-                            if (horizontal && !chain.layoutWidth && (wrap && !chain[WHL] && !chain.autoMargin.horizontal || spreadInside && chain.autoMargin[reverse ? BR : LT])) {
-                                chain.setLayoutWidth('wrap_content');
+                            if (horizontal) {
+                                if (!chain.flexbox.weight && hasMultiline(chain, node)) {
+                                    setBoxPercentage(chain, node, WHL);
+                                }
+                                percentWidth = chain.setFlexDimension(WHL, percentWidth);
+                                if (!chain.layoutWidth && (wrap && !chain[WHL] && !chain.autoMargin.horizontal || spreadInside && chain.autoMargin[reverse ? BR : LT])) {
+                                    chain.setLayoutWidth('wrap_content');
+                                }
+                            }
+                            else {
+                                percentWidth = chain.setFlexDimension(WHL, percentWidth);
                             }
                             if (parentBottom > 0 && j === length - 1) {
                                 marginBottom = Math.max(chain.linear.bottom - parentBottom, marginBottom);
@@ -642,9 +652,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         const r = layoutWeight.length;
                         if (r) {
-                            const available = 1 - grow;
                             for (const [item, value] of layoutWeight) {
-                                setLayoutWeight(item, horizontal, WHL, orientationWeight, boundsWeight ? item.bounds[WHL] / boundsWeight : (available * value) / r, true);
+                                setLayoutWeight(item, horizontal, WHL, orientationWeight, boundsWeight ? item.bounds[WHL] / boundsWeight : ((1 - grow) * value) / r, true);
                             }
                         }
                         if (marginBottom > 0) {
@@ -694,6 +703,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         break;
                                     case 'space-around':
                                         if (q > 1) {
+                                            const controller = this.controller as android.base.Controller<T>;
                                             segStart.constraint[orientation] = false;
                                             segEnd.constraint[orientation] = false;
                                             const options: GuidelineOptions<T> = {
@@ -731,27 +741,45 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
 
     private adjustGrowRatio(node: T, items: T[], dimension: DimensionAttr) {
         const horizontal = dimension === 'width';
-        const percent = (horizontal ? node.hasWidth || ascendFlexibleWidth(node) : node.hasHeight || ascendFlexibleHeight(node)) && !items.some(item => item.innerMostWrapped.autoMargin[horizontal ? 'horizontal' : 'vertical']);
-        const length = items.length;
-        let growShrinkType = 0;
+        const percent = (horizontal ? node.hasWidth || ascendFlexibleWidth(node, true) : node.hasHeight || ascendFlexibleHeight(node, true)) && !items.some(item => item.innerMostWrapped.autoMargin[horizontal ? 'horizontal' : 'vertical']);
+        let result = 0;
         if (horizontal || percent) {
+            const groupGrow: FlexBasis<T>[] = [];
             const groupBasis: FlexBasis<T>[] = [];
             const percentage: T[] = [];
             const options: NodeParseUnitOptions = { dimension };
-            let maxBasisUnit = 0,
+            let growShrinkType = 0,
+                maxBasisUnit = 0,
                 maxDimension = 0,
                 maxRatio = NaN,
                 maxBasis: Undef<T>;
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, length = items.length; i < length; ++i) {
                 const item = items[i].innerMostWrapped as T;
                 const { alignSelf, basis, shrink, grow } = item.flexbox;
                 if (basis === 'auto' && item.hasPX(dimension, { percent: false })) {
                     continue;
                 }
                 const size = item.bounds[dimension];
-                let growPercent: Undef<boolean>;
                 if (grow > 0 || shrink !== 1) {
-                    const value = basis === 'auto' ? !item.hasPX(dimension, { percent: false }) && item.data<BoxRectDimension>(this.name, 'boundsData')?.[dimension] || item.parseUnit(item.css(dimension)) : item.parseUnit(basis, options);
+                    let value: number;
+                    if (basis === 'auto') {
+                        if (item.hasPX(dimension)) {
+                            value = item.parseUnit(item.css(dimension));
+                        }
+                        else {
+                            const boundsData = item.data<BoxRectDimension>(this.name, 'boundsData');
+                            value = boundsData ? boundsData[dimension] : size;
+                            if (value === size) {
+                                if (grow > 0 && item.blockStatic) {
+                                    percentage.push(item);
+                                }
+                                continue;
+                            }
+                        }
+                    }
+                    else {
+                        value = item.parseUnit(basis, options);
+                    }
                     if (value > 0) {
                         let largest: Undef<boolean>;
                         if (size < value) {
@@ -771,17 +799,16 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             maxBasisUnit = value;
                             maxDimension = size;
                         }
-                        groupBasis.push({
+                        groupGrow.push({
                             item,
                             size,
                             basis: value,
                             shrink,
                             grow
                         });
-                        continue;
                     }
-                    else if (grow > 0) {
-                        growPercent = true;
+                    else if (grow > 0 && alignSelf === 'auto') {
+                        percentage.push(item);
                     }
                 }
                 else if (isLength(basis)) {
@@ -792,17 +819,18 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         shrink,
                         grow
                     });
-                    item.flexbox.basis = 'auto';
-                    continue;
                 }
-                if (alignSelf === 'auto' && (growPercent || percent && !item[horizontal ? 'hasWidth' : 'hasHeight'])) {
+                else if (percent && alignSelf === 'auto' && !item[horizontal ? 'hasWidth' : 'hasHeight']) {
                     percentage.push(item);
                 }
             }
-            if (growShrinkType) {
-                let result = 0;
-                for (let i = 0, q = groupBasis.length; i < q; ++i) {
-                    const data = groupBasis[i];
+            for (let i = 0, q = percentage.length; i < q; ++i) {
+                setBoxPercentage(percentage[i], node, dimension);
+            }
+            if (groupGrow.length) {
+                groupGrow.push(...groupBasis);
+                for (let i = 0, q = groupGrow.length; i < q; ++i) {
+                    const data = groupGrow[i];
                     const { basis, item } = data;
                     if (item === maxBasis || basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
                         item.flexbox.weight = 1;
@@ -811,22 +839,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     else if (basis) {
                         item.flexbox.weight = ((data.size / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
                     }
-                }
-                for (let i = 0, q = percentage.length; i < q; ++i) {
-                    setBoxPercentage(node, percentage[i], dimension);
-                }
-                return result;
-            }
-        }
-        if (horizontal) {
-            for (let i = 0; i < length; ++i) {
-                if (hasMultiline(node, items[i])) {
-                    for (let j = 0; j < length; ++j) {
-                        setBoxPercentage(node, items[j], dimension);
-                    }
-                    break;
+                    item.flexbox.basis = 'auto';
                 }
             }
         }
+        return result;
     }
 }

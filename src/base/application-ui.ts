@@ -1781,9 +1781,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         if (!counterType && subcounter.length > 1) {
                                             subcounter.reverse().splice(1, 1);
                                             const textValue = match[7];
-                                            for (const item of subcounter) {
-                                                content += convertListStyle(styleName, item, true) + textValue;
-                                            }
+                                            content += subcounter.reduce((a, b) => a + convertListStyle(styleName, b, true) + textValue, '');
                                         }
                                     }
                                     else {

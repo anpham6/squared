@@ -42,15 +42,10 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                                 let output = indentA + '<layout {#0}>\n' +
                                              indentB + '<data>\n';
                                 if (importing) {
-                                    for (let j = 0, q = importing.length; j < q; ++j) {
-                                        output += indentC + `<import type="${importing[j]}" />\n`;
-                                    }
+                                    output += importing.reduce((a, b) => a + indentC + `<import type="${b}" />\n`, '');
                                 }
                                 if (variable) {
-                                    for (let j = 0, q = variable.length; j < q; ++j) {
-                                        const { name, type } = variable[j];
-                                        output += indentC + `<variable name="${name}" type="${type}" />\n`;
-                                    }
+                                    output += variable.reduce((a, b) => a + indentC + `<variable name="${b.name}" type="${b.type}" />\n`, '');
                                 }
                                 output += indentB + '</data>\n';
                                 controller.addBeforeOutsideTemplate(node, output);

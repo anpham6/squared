@@ -257,16 +257,15 @@ export function appendSeparator(preceding = '', value = '', separator = '/') {
 }
 
 export function randomUUID(separator = '-') {
-    let result = '';
-    for (const length of [8, 4, 4, 4, 12]) {
-        if (result) {
-            result += separator;
+    return [8, 4, 4, 4, 12].reduce((a, b, index) => {
+        if (index > 0) {
+            a += separator;
         }
-        for (let i = 0; i < length; ++i) {
-            result += HEX[Math.floor(Math.random() * 16)];
+        for (let i = 0; i < b; ++i) {
+            a += HEX[Math.floor(Math.random() * 16)];
         }
-    }
-    return result;
+        return a;
+    }, '');
 }
 
 export function upperCaseString(value: string) {
@@ -286,15 +285,7 @@ export function lowerCaseString(value: string) {
     while (match = pattern.exec(value)) {
         entities.push(match[0]);
     }
-    if (entities.length) {
-        let result = '';
-        const segments = value.split(pattern);
-        for (let i = 0, length = segments.length; i < length; ++i) {
-            result += segments[i].toLowerCase() + (entities[i] || '');
-        }
-        return result;
-    }
-    return value.toLowerCase();
+    return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
 }
 
 export function formatXml(value: string, options: FormatXmlOptions = {}) {

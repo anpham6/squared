@@ -76,13 +76,13 @@ function checkMergableGravity(value: string, direction: string[]) {
     return false;
 }
 
-function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
-    const lineHeightAdjust = node.dataset.androidLineHeightAdjust;
-    if (lineHeightAdjust !== 'false') {
-        let offset = getLineSpacingExtra(node, lineHeight);
-        lineHeight *= lineHeightAdjust && +lineHeightAdjust || node.localSettings.lineHeightAdjust;
+function setMultiline(node: T, value: number, overwrite: boolean) {
+    const adjustment = node.dataset.androidLineHeightAdjust;
+    if (adjustment !== 'false') {
+        let offset = getLineSpacingExtra(node, value);
+        value *= adjustment && +adjustment || node.localSettings.lineHeightAdjust;
         if (node.api >= BUILD_VERSION.PIE) {
-            node.android('lineHeight', truncate(lineHeight, node.localSettings.floatPrecision) + 'px', overwrite);
+            node.android('lineHeight', truncate(value, node.localSettings.floatPrecision) + 'px', overwrite);
         }
         else if (offset > 0) {
             node.android('lineSpacingExtra', truncate(offset, node.localSettings.floatPrecision) + 'px', overwrite);
@@ -99,14 +99,15 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
             else {
                 const renderParent = node.renderParent as T;
                 if (renderParent.layoutVertical || renderParent.layoutRelative || renderParent.hasAlign(NODE_ALIGNMENT.COLUMN)) {
-                    const children = node.renderParent!.renderChildren;
+                    const children = renderParent.renderChildren;
                     for (let i = 0, length = children.length; i < length; ++i) {
                         if (children[i] === node) {
+                            const options: BoxOptions = { reset: 1, adjustment: offset, max: true };
                             if (i > 0 && offset > Math.max(node.marginTop, 0) + node.borderTopWidth) {
-                                node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: offset, max: true });
+                                node.setBox(BOX_STANDARD.MARGIN_TOP, options);
                             }
                             if ((node.blockStatic || i === length - 1) && offset > Math.max(node.marginBottom, 0) + node.borderBottomWidth) {
-                                node.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1, adjustment: offset, max: true });
+                                node.setBox(BOX_STANDARD.MARGIN_BOTTOM, options);
                             }
                             break;
                         }
@@ -117,22 +118,22 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
     }
 }
 
-function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: boolean, bottom: boolean, overwrite?: boolean, parent?: T) {
-    if (lineHeight === 0 || node.imageContainer || node.rendering && !overwrite || node.cssInitial('lineHeight') === 'normal') {
+function setLineHeight(node: T, value: number, inlineStyle: boolean, top: boolean, bottom: boolean, overwrite?: boolean, parent?: T) {
+    if (value === 0 || node.imageContainer || node.rendering && !overwrite || node.cssInitial('lineHeight') === 'normal') {
         return;
     }
     if (node.multiline) {
-        setMultiline(node, lineHeight, false);
+        setMultiline(node, value, false);
     }
     else {
         const height = node.height;
-        if (lineHeight === height) {
+        if (value === height) {
             node.mergeGravity('gravity', 'center_vertical', false);
         }
         else {
             const setBoxPadding = (offset: number, padding?: boolean) => {
                 if (offset > 0) {
-                    if (!node.inline && (inlineStyle || height > lineHeight) && (node.styleText || padding) && !(node.inputElement && !isLength(node.cssInitial('lineHeight'), true)) || parent) {
+                    if (!node.inline && (inlineStyle || height > value) && (node.styleText || padding) && !(node.inputElement && !isLength(node.cssInitial('lineHeight'), true)) || parent) {
                         if (top) {
                             let adjustment = offset - (parent ? parent.paddingTop : 0);
                             if (node.pageFlow) {
@@ -175,7 +176,7 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
                 }
             };
             if (node.textElement) {
-                setBoxPadding(getLineSpacingExtra(node, lineHeight));
+                setBoxPadding(getLineSpacingExtra(node, value));
             }
             else if (node.inputElement) {
                 const textHeight = node.actualTextHeight({ tagName: 'span' });
@@ -192,17 +193,17 @@ function setLineHeight(node: T, lineHeight: number, inlineStyle: boolean, top: b
                             rows = 1;
                             break;
                     }
-                    setBoxPadding((lineHeight - textHeight * Math.max(rows, 1)) / 2, true);
+                    setBoxPadding((value - textHeight * Math.max(rows, 1)) / 2, true);
                 }
             }
             else if (height && !node.controlElement) {
-                const offset = (lineHeight / 2) - node.paddingTop;
+                const offset = (value / 2) - node.paddingTop;
                 if (offset > 0) {
                     node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                 }
             }
             else {
-                setBoxPadding((lineHeight - node.bounds.height) / 2);
+                setBoxPadding((value - node.bounds.height) / 2);
             }
         }
     }
@@ -219,7 +220,7 @@ function getLineHeight(node: T, lineHeight: number, checkOnly?: boolean) {
     return 0;
 }
 
-function getLineSpacingExtra(node: T, lineHeight: number) {
+function getLineSpacingExtra(node: T, value: number) {
     let height = node.data<number>(Resource.KEY_NAME, 'textRange');
     if (!height) {
         if (node.plainText) {
@@ -235,7 +236,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
     if (!height && node.styleText) {
         node.cssTryAll(!node.pseudoElement ? OPTIONS_LINEHEIGHT : { ...OPTIONS_LINEHEIGHT, display: 'inline-block' }, function(this: T) { height = getRangeClientRect(this.element!)?.height; });
     }
-    return height ? (lineHeight - height) / 2 : 0;
+    return height ? (value - height) / 2 : 0;
 }
 
 function constraintMinMax(node: T, horizontal: boolean) {
@@ -472,35 +473,24 @@ function calculateBias(start: number, end: number, accuracy = 3) {
 
 const hasFlexibleContainer = (renderParent: Null<T>) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
 
-export function ascendFlexibleWidth(node: T) {
-    if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
-        return true;
-    }
-    let parent = node.renderParent as Undef<T>,
+export function ascendFlexibleWidth(node: T, container?: boolean) {
+    let current = container ? node : node.renderParent as Undef<T>,
         i = 0;
-    while (parent) {
-        if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
+    while (current && !current.inlineWidth) {
+        if (current.hasWidth || parseInt(current.layoutWidth) || (current.blockStatic || current.blockWidth) && current.innerMostWrapped.rootElement || current.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
-        else if (parent.flexibleWidth) {
-            if (++i > 1) {
-                return false;
-            }
-        }
-        else if (parent.inlineWidth || parent.naturalElement && parent.inlineVertical) {
+        else if (current.inlineVertical || current.flexibleWidth && i++ === 1 || current.flexElement && current.flexdata.row && current.flexbox.grow === 0) {
             return false;
         }
-        parent = parent.renderParent as Undef<T>;
+        current = current.renderParent as Undef<T>;
     }
     return false;
 }
 
-export function ascendFlexibleHeight(node: T) {
-    if (node.hasHeight && node.innerMostWrapped.rootElement) {
-        return true;
-    }
-    const parent = node.renderParent as Undef<T>;
-    return !!(parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.actualParent!.hasHeight);
+export function ascendFlexibleHeight(node: T, container?: boolean) {
+    const current = container ? node : node.actualParent as Undef<T>;
+    return !!(current && (current.hasHeight || current.layoutConstraint && current.blockHeight));
 }
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
@@ -1444,7 +1434,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 ({ attributes, position } = options);
             }
             const newInstance = !isNaN(id);
-            const node = new View(newInstance ? id : this.id, this.sessionId, this.element || undefined);
+            const node = new View(newInstance ? id : this.id, this.sessionId, this.element!);
             if (newInstance) {
                 node.setControlType(this.controlName, this.containerType);
             }
@@ -1518,12 +1508,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             const indent = '\n' + '\t'.repeat(depth);
-            const items = this.combine();
-            let output = '';
-            for (let i = 0, length = items.length; i < length; ++i) {
-                output += indent + items[i];
-            }
-            return output;
+            return this.combine().reduce((a, b) => a + indent + b, '');
         }
 
         public alignParent(position: string) {
@@ -1676,13 +1661,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         x += value;
                     }
                     if (contain) {
-                        const box = renderParent.box;
+                        const { left, right } = renderParent.box;
                         const linear = this.linear;
-                        if (linear.left + x < box.left) {
-                            x = Math.max(linear.left - box.left, 0);
+                        if (linear.left + x < left) {
+                            x = Math.max(linear.left - left, 0);
                         }
-                        else if (linear.right + x > box.right) {
-                            x = Math.max(box.right - linear.right, 0);
+                        else if (linear.right + x > right) {
+                            x = Math.max(right - linear.right, 0);
                         }
                     }
                     if (x !== 0) {
@@ -1716,13 +1701,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         y += value;
                     }
                     if (contain) {
-                        const box = renderParent.box;
+                        const { top, bottom } = renderParent.box;
                         const linear = this.linear;
-                        if (linear.top + y < box.top) {
-                            y = Math.max(linear.top - box.top, 0);
+                        if (linear.top + y < top) {
+                            y = Math.max(linear.top - top, 0);
                         }
-                        else if (linear.bottom + y > box.bottom) {
-                            y = Math.max(box.bottom - linear.bottom, 0);
+                        else if (linear.bottom + y > bottom) {
+                            y = Math.max(bottom - linear.bottom, 0);
                         }
                     }
                     if (y !== 0) {
@@ -1754,7 +1739,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public hasFlex(direction: FlowDirectionAttr) {
             let parent = this.actualParent as Null<T>;
             if (parent && parent.flexdata[direction]) {
-                let current = this as T;
+                let current: Undef<T>;
                 const checkDimension = (attr: DimensionAttr) => {
                     let largest = 0,
                         fitSize = 0;
@@ -1773,7 +1758,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return fitSize >= largest;
                 };
                 switch (direction) {
-                    case 'row':
+                    case 'row': {
+                        current = this as T;
                         while (parent) {
                             if (parent.flexElement) {
                                 if (parent.flexdata.column) {
@@ -1798,14 +1784,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             parent = current.actualParent as Null<T>;
                         }
                         break;
+                    }
                     case 'column':
                         if (!parent.hasHeight) {
-                            parent = current.actualParent as Null<T>;
-                            if (parent) {
-                                if (parent.flexElement && parent.flexdata.row && checkDimension('height')) {
-                                    return 0;
+                            current = parent;
+                            parent = parent.actualParent as Null<T>;
+                            if (parent && !parent.hasHeight) {
+                                if (parent.flexElement && parent.flexdata.row) {
+                                    if (checkDimension('height')) {
+                                        return 0;
+                                    }
                                 }
-                                else if (!parent.hasHeight && !parent.layoutGrid && !parent.gridElement) {
+                                else if (!parent.layoutGrid && !parent.gridElement) {
                                     return false;
                                 }
                             }

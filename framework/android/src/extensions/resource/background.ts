@@ -72,96 +72,99 @@ const CHAR_SEPARATOR = /\s*,\s*/;
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false) {
     const { style, color } = border;
     const createStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
-    const width = roundFloat(border.width);
     const result = createStrokeColor(color);
-    switch (style) {
-        case 'solid':
-            break;
-        case 'dotted':
-            result.dashWidth = formatPX(width);
-            result.dashGap = result.dashWidth;
-            break;
-        case 'dashed': {
-            let dashWidth: number,
-                dashGap: number;
-            switch (width) {
-                case 1:
-                case 2:
-                    dashWidth = width * 3;
-                    dashGap = dashWidth - 1;
-                    break;
-                case 3:
-                    dashWidth = 6;
-                    dashGap = 3;
-                    break;
-                default:
-                    dashWidth = width * 2;
-                    dashGap = 4;
-                    break;
-            }
-            result.dashWidth = formatPX(dashWidth);
-            result.dashGap = formatPX(dashGap);
-            break;
-        }
-        case 'inset':
-        case 'outset':
-        case 'groove':
-        case 'ridge': {
-            let percent = 0;
-            if (width === 1) {
-                if (style === 'inset' || style === 'outset') {
-                    percent = 0.5;
-                }
-            }
-            else {
-                const grayscale = color.grayscale;
-                switch (style) {
-                    case 'ridge':
-                    case 'outset':
-                        if (!grayscale) {
-                            halfSize = !halfSize;
-                        }
+    if (style !== 'solid') {
+        const width = roundFloat(border.width);
+        switch (style) {
+            case 'dotted':
+                result.dashWidth = formatPX(width);
+                result.dashGap = result.dashWidth;
+                break;
+            case 'dashed': {
+                let dashWidth: number,
+                    dashGap: number;
+                switch (width) {
+                    case 1:
+                    case 2:
+                        dashWidth = width * 3;
+                        dashGap = dashWidth - 1;
                         break;
-                    case 'groove':
-                    case 'inset':
-                        if (grayscale) {
-                            halfSize = !halfSize;
-                        }
+                    case 3:
+                        dashWidth = 6;
+                        dashGap = 3;
+                        break;
+                    default:
+                        dashWidth = width * 2;
+                        dashGap = 4;
                         break;
                 }
-                if (halfSize) {
+                result.dashWidth = formatPX(dashWidth);
+                result.dashGap = formatPX(dashGap);
+                break;
+            }
+            case 'inset':
+            case 'outset':
+            case 'groove':
+            case 'ridge': {
+                if (color.value === '#000000') {
+                    return result;
+                }
+                let percent = 0;
+                if (width === 1) {
+                    if (style === 'inset' || style === 'outset') {
+                        percent = 0.5;
+                    }
+                }
+                else {
+                    const grayscale = color.grayscale;
+                    switch (style) {
+                        case 'ridge':
+                        case 'outset':
+                            if (!grayscale) {
+                                halfSize = !halfSize;
+                            }
+                            break;
+                        case 'groove':
+                        case 'inset':
+                            if (grayscale) {
+                                halfSize = !halfSize;
+                            }
+                            break;
+                    }
+                    if (halfSize) {
+                        switch (direction) {
+                            case 0:
+                            case 3:
+                                direction = 1;
+                                break;
+                            default:
+                                direction = 0;
+                                break;
+                        }
+                    }
                     switch (direction) {
                         case 0:
                         case 3:
-                            direction = 1;
+                            if (grayscale) {
+                                percent = 0.5;
+                            }
                             break;
                         default:
-                            direction = 0;
+                            percent = grayscale ? 0.75 : -0.75;
                             break;
                     }
+                    if (grayscale && color.hsla.l > 50) {
+                        percent *= -1;
+                    }
                 }
-                switch (direction) {
-                    case 0:
-                    case 3:
-                        if (grayscale) {
-                            percent = 0.5;
-                        }
-                        break;
-                    default:
-                        percent = grayscale ? 0.75 : -0.75;
-                        break;
+                if (percent) {
+                    const reduced = color.lighten(percent);
+                    if (reduced) {
+                        return createStrokeColor(reduced);
+                    }
                 }
-                if (grayscale && color.hsla.l > 50) {
-                    percent *= -1;
-                }
+                break;
             }
-            if (percent) {
-                const reduced = color.lighten(percent);
-                if (reduced) {
-                    return createStrokeColor(reduced);
-                }
-            }
-            break;
         }
     }
     return result;

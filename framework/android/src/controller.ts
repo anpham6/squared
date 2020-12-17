@@ -2298,15 +2298,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 currentFloated = null;
                                 currentFloatedWidth = 0;
                             }
-                            else if (currentFloated) {
-                                let height = 0;
-                                for (let j = 0, q = rows.length; j < q; ++j) {
-                                    height += Math.ceil(Math.max(...plainMap(rows[j], sibling => Math.max(sibling.lineHeight, sibling.linear.height))));
-                                }
-                                if (height >= currentFloatedHeight) {
-                                    currentFloated = null;
-                                    currentFloatedWidth = 0;
-                                }
+                            else if (currentFloated && rows.reduce((a, b) => a + Math.ceil(Math.max(...plainMap(b, sibling => Math.max(sibling.lineHeight, sibling.linear.height)))), 0) >= currentFloatedHeight) {
+                                currentFloated = null;
+                                currentFloatedWidth = 0;
                             }
                             switch (item.tagName) {
                                 case 'SUP':
