@@ -981,15 +981,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     ({ pathname, commands, inline, compress, tasks, watch, cloudStorage, attributes } = saveAsImage);
                     [saveAs, saveTo] = checkSaveAs(uri, pathname);
                 }
-                else if (file) {
-                    let fileAs = parseFileAs('saveTo', file);
-                    if (fileAs) {
-                        [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);
-                    }
-                    else {
-                        fileAs = parseFileAs('saveAs', file);
+                else {
+                    if (file) {
+                        let fileAs = parseFileAs('saveTo', file);
                         if (fileAs) {
-                            saveAs = fileAs.file;
+                            [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);
+                        }
+                        else {
+                            fileAs = parseFileAs('saveAs', file);
+                            if (fileAs) {
+                                saveAs = fileAs.file;
+                            }
                         }
                     }
                     const { chromeCommands, chromeOptions, chromeWatch } = element.dataset;
@@ -1011,17 +1013,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (filename) {
                     data.filename = filename;
                 }
-                if (watch) {
-                    data.watch = watch;
-                }
-                if (element) {
-                    data.outerHTML = element.outerHTML;
-                }
                 if (commands && commands.length && commands[0] !== '~') {
                     data.commands = commands;
                 }
                 if (inline) {
                     data.format = 'base64';
+                }
+                if (watch) {
+                    data.watch = watch;
+                }
+                if (element) {
+                    data.outerHTML = element.outerHTML;
                 }
                 assets.push(data);
                 return data;

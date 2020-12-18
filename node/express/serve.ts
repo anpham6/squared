@@ -246,7 +246,7 @@ app.post('/api/v1/assets/copy', (req, res) => {
                 req.body as RequestBody,
                 function(this: IFileManager) {
                     res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResponseData);
-                    manager.formatMessage(Node.logType.SYSTEM, 'WRITE', [dirname, this.files.size + ' files'], '', { titleColor: 'black', titleBgColor: 'bgWhite', hintColor: 'yellow' });
+                    manager.formatMessage(Node.logType.NODE, 'WRITE', [dirname, this.files.size + ' files'], '');
                 }
             );
             installModules(manager, query as StringMap);
@@ -322,7 +322,7 @@ app.post('/api/v1/assets/archive', (req, res) => {
                     .on('finish', () => {
                         response.zipname = gz;
                         response.bytes = FileManager.getFileSize(gz);
-                        manager.formatMessage(Node.logType.SYSTEM, 'WRITE', [path.basename(gz), response.bytes + ' bytes'], '', { titleColor: 'black', titleBgColor: 'bgWhite', hintColor: 'yellow' });
+                        manager.formatMessage(Node.logType.NODE, 'WRITE', [path.basename(gz), response.bytes + ' bytes'], '');
                         res.json(response);
                     })
                     .on('error', err => {
@@ -333,7 +333,7 @@ app.post('/api/v1/assets/archive', (req, res) => {
             }
             else {
                 res.json(response);
-                manager.formatMessage(Node.logType.SYSTEM, 'WRITE', [path.basename(zipname), response.bytes + ' bytes'], '', { titleColor: 'black', titleBgColor: 'bgWhite', hintColor: 'yellow' });
+                manager.formatMessage(Node.logType.NODE, 'WRITE', [path.basename(zipname), response.bytes + ' bytes'], '');
             }
         });
         archive.pipe(output);

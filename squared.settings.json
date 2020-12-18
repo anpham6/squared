@@ -27,10 +27,9 @@
   "logger": {
     "unknown": true,
     "system": true,
-    "chrome": true,
-    "compress": true,
-    "image": true,
     "node": true,
+    "process": true,
+    "compress": true,
     "watch": true,
     "cloud_storage": true,
     "cloud_database": true,
