@@ -1,4 +1,4 @@
-/* squared 2.2.2
+/* squared 2.2.3
    https://github.com/anpham6/squared */
 
 var squared = (function (exports) {
@@ -5963,7 +5963,7 @@ var squared = (function (exports) {
                             break;
                         }
                     }
-                    if (cascade && item instanceof Container && !item.isEmpty()) {
+                    if (cascade && (cascade === true || cascade(item, i, children)) && item instanceof Container && !item.isEmpty()) {
                         recurse(item, result);
                         if (complete) {
                             break;
@@ -5994,13 +5994,13 @@ var squared = (function (exports) {
                             length = end;
                         }
                     }
-                    while (i < length) {
+                    for (; i < length; ++i) {
                         const item = children[i];
                         if (error && error(item, i, children)) {
                             complete = true;
                             break;
                         }
-                        if (predicate(item, i++, children)) {
+                        if (predicate(item, i, children)) {
                             if (count-- === 0) {
                                 if (also) {
                                     also.call(container, item);
@@ -6008,7 +6008,7 @@ var squared = (function (exports) {
                                 return item;
                             }
                         }
-                        if (cascade && item instanceof Container && !item.isEmpty()) {
+                        if (cascade && (cascade === true || cascade(item, i, children)) && item instanceof Container && !item.isEmpty()) {
                             const result = recurse(item, level + 1);
                             if (result) {
                                 return result;

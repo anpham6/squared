@@ -978,12 +978,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         cache.percentWidth = undefined;
                     case 'minWidth':
                         cache.width = undefined;
+                        cache.hasWidth = undefined;
                         break;
                     case 'height':
                         cache.actualHeight = undefined;
                         cache.percentHeight = undefined;
                     case 'minHeight':
                         cache.height = undefined;
+                        cache.hasHeight = undefined;
                         if (!this._preferInitial) {
                             this.unsetCache('blockVertical');
                             this.each(item => item.unsetCache());

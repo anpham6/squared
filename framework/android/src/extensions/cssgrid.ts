@@ -1,3 +1,4 @@
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
@@ -594,7 +595,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         const data = rowData[i];
                         for (let j = 0, length = data.length; j < length; ++j) {
                             const cell = data[j];
-                            if (cell && cell.length === 1) {
+                            if (cell && cell.length === 1 && !cell[0].has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) {
                                 nodes.push(cell[0]);
                             }
                             else {
@@ -721,7 +722,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             }
             const [rowStart, rowSpan] = applyLayout(node, parent, target, mainData, cellData, 'height');
             if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
-                target.css('minHeight', formatPX(node.box.height));
+                target.css('minHeight', formatPX(node.box.height), true);
             }
             else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent.startsWith('space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');

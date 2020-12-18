@@ -113,12 +113,10 @@
       }
     }
   },
-  "gulp": {
-    "minify": "./gulpfile.js"
-  },
+  "gulp": {},
   "chrome": {
     "eval_function": true,
-    "eval_text_template": true,
+    "eval_text_template": false,
     "html": {
       "posthtml": {
         "transform": {

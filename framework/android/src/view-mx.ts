@@ -209,9 +209,9 @@ function setLineHeight(node: T, value: number, inlineStyle: boolean, top: boolea
     }
 }
 
-function getLineHeight(node: T, lineHeight: number, checkOnly?: boolean) {
+function getLineHeight(node: T, value: number, checkOnly?: boolean) {
     if (!node.rendering && (!node.multiline || node.lineHeight === 0 && !node.android('lineHeight'))) {
-        const result = node.has('lineHeight') ? Math.max(node.lineHeight, lineHeight) : lineHeight;
+        const result = node.has('lineHeight') ? Math.max(node.lineHeight, value) : value;
         if (!checkOnly) {
             node.setCacheValue('lineHeight', 0);
         }
@@ -480,7 +480,7 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
         if (current.hasWidth || parseInt(current.layoutWidth) || (current.blockStatic || current.blockWidth) && current.innerMostWrapped.rootElement || current.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
-        else if (current.inlineVertical || current.flexibleWidth && i++ === 1 || current.flexElement && current.flexdata.row && current.flexbox.grow === 0) {
+        else if (current.inlineVertical && current.naturalElement || current.flexibleWidth && i++ === 1 || current.flexElement && current.flexdata.row && current.flexbox.grow === 0) {
             return false;
         }
         current = current.renderParent as Undef<T>;
@@ -490,7 +490,7 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
 
 export function ascendFlexibleHeight(node: T, container?: boolean) {
     const current = container ? node : node.actualParent as Undef<T>;
-    return !!(current && (current.hasHeight || current.layoutConstraint && current.blockHeight));
+    return !!(current && (current.hasHeight || current.layoutGrid || current.gridElement || current.layoutConstraint && current.blockHeight));
 }
 
 export default (Base: Constructor<squared.base.NodeUI>) => {

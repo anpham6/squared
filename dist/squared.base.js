@@ -1,4 +1,4 @@
-/* squared.base 2.2.2
+/* squared.base 2.2.3
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -1428,16 +1428,15 @@ this.squared.base = (function (exports) {
         return preceding + (preceding && value && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
     }
     function randomUUID(separator = '-') {
-        let result = '';
-        for (const length of [8, 4, 4, 4, 12]) {
-            if (result) {
-                result += separator;
+        return [8, 4, 4, 4, 12].reduce((a, b, index) => {
+            if (index > 0) {
+                a += separator;
             }
-            for (let i = 0; i < length; ++i) {
-                result += HEX[Math.floor(Math.random() * 16)];
+            for (let i = 0; i < b; ++i) {
+                a += HEX[Math.floor(Math.random() * 16)];
             }
-        }
-        return result;
+            return a;
+        }, '');
     }
     function upperCaseString(value) {
         const pattern = /\b([a-z])/g;
@@ -1454,15 +1453,7 @@ this.squared.base = (function (exports) {
         while (match = pattern.exec(value)) {
             entities.push(match[0]);
         }
-        if (entities.length) {
-            let result = '';
-            const segments = value.split(pattern);
-            for (let i = 0, length = segments.length; i < length; ++i) {
-                result += segments[i].toLowerCase() + (entities[i] || '');
-            }
-            return result;
-        }
-        return value.toLowerCase();
+        return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
     }
     function formatXml(value, options = {}) {
         const { closeEmptyTags = true, caseSensitive, indentChar = '\t' } = options;
@@ -2844,12 +2835,14 @@ this.squared.base = (function (exports) {
                             cache.percentWidth = undefined;
                         case 'minWidth':
                             cache.width = undefined;
+                            cache.hasWidth = undefined;
                             break;
                         case 'height':
                             cache.actualHeight = undefined;
                             cache.percentHeight = undefined;
                         case 'minHeight':
                             cache.height = undefined;
+                            cache.hasHeight = undefined;
                             if (!this._preferInitial) {
                                 this.unsetCache('blockVertical');
                                 this.each(item => item.unsetCache());
@@ -4018,7 +4011,7 @@ this.squared.base = (function (exports) {
             let result = this._cache.flexdata;
             if (result === undefined) {
                 if (this.flexElement) {
-                    const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
+                    const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
                     const row = flexDirection.startsWith('row');
                     result = {
                         row,
@@ -4975,13 +4968,13 @@ this.squared.base = (function (exports) {
                 content && (content = content.replace(/\\(["'])/g, (...match) => match[1]));
             }
             if (!content && !base64 && !buffer) {
-                return '';
+                return null;
             }
             if (!filename) {
                 const ext = '.' + (fromMimeType(mimeType) || 'unknown');
                 filename = uri.endsWith(ext) ? fromLastIndexOf$1(uri, '/', '\\') : this.randomUUID + ext;
             }
-            Resource.ASSETS.rawData.set(uri, {
+            const result = {
                 pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
                 filename,
                 content,
@@ -4990,8 +4983,9 @@ this.squared.base = (function (exports) {
                 buffer,
                 width,
                 height
-            });
-            return filename;
+            };
+            Resource.ASSETS.rawData.set(uri, result);
+            return result;
         }
         getImage(uri) {
             return Resource.ASSETS.image.get(uri);
@@ -5011,11 +5005,10 @@ this.squared.base = (function (exports) {
         }
         getRawData(uri) {
             if (uri.startsWith('url(')) {
-                const url = extractURL(uri);
-                if (!url) {
+                uri = extractURL(uri);
+                if (!uri) {
                     return;
                 }
-                uri = url;
             }
             return Resource.ASSETS.rawData.get(uri);
         }
@@ -5160,7 +5153,7 @@ this.squared.base = (function (exports) {
     const { STRING: STRING$2 } = squared.lib.regex;
     const { isUserAgent: isUserAgent$2 } = squared.lib.client;
     const { parseColor } = squared.lib.color;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$2, calculate, convertAngle, formatPercent, formatPX: formatPX$1, hasCoords, isCalc, isLength: isLength$1, isPercent: isPercent$1, parseAngle, parseUnit: parseUnit$1 } = squared.lib.css;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$2, calculate, convertAngle, formatPercent, formatPX: formatPX$1, getStyle: getStyle$1, hasCoords, isCalc, isLength: isLength$1, isPercent: isPercent$1, parseAngle, parseUnit: parseUnit$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$1 } = squared.lib.dom;
     const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
@@ -5408,6 +5401,71 @@ this.squared.base = (function (exports) {
             vertical: 'top',
             orientation
         };
+    }
+    function replaceSvgAttribute(src, tagName, attr, value, timestamp, start) {
+        tagName = (start ? '' : '@@' + timestamp) + `(${tagName})`;
+        const style = ' ' + attr + `="${value}"`;
+        const match = new RegExp(`<${tagName}(.+?)\\s+${attr}\\s*=\\s*["']?[^"']+["']?([^>]*>)`, 'i').exec(src);
+        if (match) {
+            return src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[3]);
+        }
+        return src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+    }
+    function replaceSvgValues(src, children, dimension) {
+        for (let i = 0, length = children.length; i < length; ++i) {
+            const item = children[i];
+            const timestamp = performance.now().toString().replace('.', '');
+            const tagName = item.tagName;
+            let start = true;
+            switch (tagName) {
+                case 'svg':
+                case 'use':
+                case 'rect':
+                case 'pattern':
+                    try {
+                        src = replaceSvgAttribute(src, tagName, 'height', dimension && dimension.height || item.height.baseVal.value, timestamp, true);
+                        src = replaceSvgAttribute(src, tagName, 'width', dimension && dimension.width || item.width.baseVal.value, timestamp);
+                        start = false;
+                    }
+                    catch (_a) {
+                    }
+                case 'symbol':
+                case 'g':
+                case 'path':
+                case 'line':
+                case 'ellipse':
+                case 'circle':
+                case 'polyline':
+                case 'polygon': {
+                    const { stroke, strokeWidth, strokeDasharray, strokeDashoffset, strokeLinecap, strokeLinejoin, strokeMiterlimit, strokeOpacity, fill, fillRule, fillOpacity, clipPath, clipRule } = getStyle$1(item);
+                    const strokeColor = parseColor(stroke);
+                    const fillColor = parseColor(fill);
+                    src = replaceSvgAttribute(src, tagName, 'stroke', strokeColor && !strokeColor.transparent ? strokeColor.valueAsRGBA : 'none', timestamp, start);
+                    src = replaceSvgAttribute(src, tagName, 'stroke-width', strokeWidth, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'stroke-dasharray', strokeDasharray, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'stroke-dashoffset', strokeDashoffset, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'stroke-linecap', strokeLinecap, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'stroke-linejoin', strokeLinejoin, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'stroke-miterlimit', strokeMiterlimit, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'stroke-opacity', strokeOpacity, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'fill', fillColor && !fillColor.transparent ? fillColor.valueAsRGBA : 'none', timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'fill-rule', fillRule, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'fill-opacity', fillOpacity, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'clip-path', clipPath, timestamp);
+                    src = replaceSvgAttribute(src, tagName, 'clip-rule', clipRule, timestamp);
+                    src = replaceSvgValues(src, item.children);
+                    break;
+                }
+                case 'stop': {
+                    const { stopColor, stopOpacity } = getStyle$1(item);
+                    const color = parseColor(stopColor);
+                    src = replaceSvgAttribute(src, tagName, 'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none', timestamp, true);
+                    src = replaceSvgAttribute(src, tagName, 'stop-opacity', stopOpacity, timestamp);
+                    break;
+                }
+            }
+        }
+        return src;
     }
     const parseLength = (value, dimension, options) => isPercent$1(value) ? Math.round(convertPercent$1(value) * dimension) : parseUnit$1(value, options);
     const parsePercent = (value, dimension, options) => isPercent$1(value) ? convertPercent$1(value) : parseUnit$1(value, options) / dimension;
@@ -6079,6 +6137,13 @@ this.squared.base = (function (exports) {
                 return result;
             }
             return null;
+        }
+        writeRawSvg(element, dimension) {
+            let src = element.outerHTML.trim().replace(/\s+/g, ' ');
+            src = replaceSvgValues(src, [element], dimension).replace(/"/g, '\\"').replace(/<@@\d+/g, '<');
+            const uri = 'data:image/svg+xml,' + src;
+            this.addRawData(uri, 'image/svg+xml', src);
+            return uri;
         }
         setBoxStyle(node) {
             const visibleStyle = node.visibleStyle;
@@ -8695,7 +8760,7 @@ this.squared.base = (function (exports) {
     }
 
     const { FILE: FILE$2 } = squared.lib.regex;
-    const { formatPX: formatPX$2, getStyle: getStyle$1, hasCoords: hasCoords$1, isCalc: isCalc$1, insertStyleSheetRule: insertStyleSheetRule$1, resolveURL } = squared.lib.css;
+    const { formatPX: formatPX$2, getStyle: getStyle$2, hasCoords: hasCoords$1, isCalc: isCalc$1, insertStyleSheetRule: insertStyleSheetRule$1, resolveURL } = squared.lib.css;
     const { getNamedItem: getNamedItem$2, removeElementsByClassName } = squared.lib.dom;
     const { getElementCache: getElementCache$2, setElementCache: setElementCache$2 } = squared.lib.session;
     const { capitalize: capitalize$1, convertWord, flatArray, isString: isString$1, iterateArray: iterateArray$2, partitionArray, trimBoth: trimBoth$1, trimString } = squared.lib.util;
@@ -8754,7 +8819,7 @@ this.squared.base = (function (exports) {
         const extractQuote = (value) => { var _a; return ((_a = /^"(.+)"$/.exec(value)) === null || _a === void 0 ? void 0 : _a[1]) || value; };
         let current = element, found = 0, i = 0, j = -1;
         while (current && current.tagName === 'Q') {
-            const quotes = (getElementCache$2(current, 'styleMap', sessionId) || getStyle$1(current)).quotes;
+            const quotes = (getElementCache$2(current, 'styleMap', sessionId) || getStyle$2(current)).quotes;
             if (quotes) {
                 const match = REGEXP_PSEUDOQUOTE.exec(quotes);
                 if (match) {
@@ -8936,12 +9001,12 @@ this.squared.base = (function (exports) {
                     return true;
                 }
                 else if (!pseudoElt) {
-                    if (hasCoords$1(getStyle$1(element).position)) {
+                    if (hasCoords$1(getStyle$2(element).position)) {
                         return this.useElement(element);
                     }
                     let current = element.parentElement;
                     while (current) {
-                        if (getStyle$1(current).display === 'none') {
+                        if (getStyle$2(current).display === 'none') {
                             return this.useElement(element);
                         }
                         current = current.parentElement;
@@ -10159,7 +10224,7 @@ this.squared.base = (function (exports) {
                     styleMap = {};
                     setElementCache$2(element, 'styleMap' + pseudoElt, styleMap, sessionId);
                 }
-                styleMap.content || (styleMap.content = getStyle$1(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote'));
+                styleMap.content || (styleMap.content = getStyle$2(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote'));
             }
             if (styleMap) {
                 let value = styleMap.content;
@@ -10186,7 +10251,7 @@ this.squared.base = (function (exports) {
                                     }
                                 }
                                 else {
-                                    const style = getStyle$1(child);
+                                    const style = getStyle$2(child);
                                     if (hasCoords$1(styleMap.position)) {
                                         continue;
                                     }
@@ -10204,7 +10269,7 @@ this.squared.base = (function (exports) {
                     else if (value === 'inherit') {
                         let current = element;
                         do {
-                            value = getStyle$1(current).content;
+                            value = getStyle$2(current).content;
                             if (value !== 'inherit') {
                                 break;
                             }
@@ -10241,7 +10306,7 @@ this.squared.base = (function (exports) {
                                 }
                             }
                             else {
-                                const style = getStyle$1(element);
+                                const style = getStyle$2(element);
                                 const getCounterIncrementValue = (parent, counterName, fallback) => { var _a; return getCounterValue((_a = getElementCache$2(parent, 'styleMap' + pseudoElt, sessionId)) === null || _a === void 0 ? void 0 : _a.counterIncrement, counterName, fallback); };
                                 let found, match;
                                 while (match = REGEXP_PSEUDOCOUNTER.exec(value)) {
@@ -10271,14 +10336,14 @@ this.squared.base = (function (exports) {
                                             }
                                         };
                                         const cascadeCounterSibling = (sibling) => {
-                                            if (getCounterValue(getStyle$1(sibling).counterReset, counterName) === undefined) {
+                                            if (getCounterValue(getStyle$2(sibling).counterReset, counterName) === undefined) {
                                                 iterateArray$2(sibling.children, (item) => {
                                                     if (item.className !== '__squared.pseudo') {
                                                         let increment = getCounterIncrementValue(item, counterName);
                                                         if (increment) {
                                                             incrementCounter(increment, true);
                                                         }
-                                                        const childStyle = getStyle$1(item);
+                                                        const childStyle = getStyle$2(item);
                                                         increment = getCounterValue(childStyle.counterIncrement, counterName);
                                                         if (increment) {
                                                             incrementCounter(increment, false);
@@ -10315,7 +10380,7 @@ this.squared.base = (function (exports) {
                                                 if (pesudoIncrement) {
                                                     incrementCounter(pesudoIncrement, true);
                                                 }
-                                                const currentStyle = getStyle$1(current);
+                                                const currentStyle = getStyle$2(current);
                                                 const counterIncrement = getCounterValue(currentStyle.counterIncrement, counterName);
                                                 if (counterIncrement) {
                                                     incrementCounter(counterIncrement, false);
@@ -10339,9 +10404,7 @@ this.squared.base = (function (exports) {
                                             if (!counterType && subcounter.length > 1) {
                                                 subcounter.reverse().splice(1, 1);
                                                 const textValue = match[7];
-                                                for (const item of subcounter) {
-                                                    content += convertListStyle(styleName, item, true) + textValue;
-                                                }
+                                                content += subcounter.reduce((a, b) => a + convertListStyle(styleName, b, true) + textValue, '');
                                             }
                                         }
                                         else {
@@ -10454,7 +10517,7 @@ this.squared.base = (function (exports) {
                     if (marginLeft !== -Infinity) {
                         const offset = floatPosition + marginOffset - (parent.box.left + marginLeft + Math.max(...target.map((child) => !paddingNodes.includes(child) ? child.marginLeft : 0)));
                         if (offset > 0 && offset < parent.actualBoxWidth()) {
-                            target.modifyBox(128 /* PADDING_LEFT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(128 /* PADDING_LEFT */, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                             setColumnMaxWidth(leftAbove, offset);
                         }
                     }
@@ -10491,7 +10554,7 @@ this.squared.base = (function (exports) {
                     if (marginRight !== -Infinity) {
                         const offset = parent.box.right - (floatPosition - marginOffset + marginRight + Math.max(...target.map((child) => !paddingNodes.includes(child) ? child.marginRight : 0)));
                         if (offset > 0 && offset < parent.actualBoxWidth()) {
-                            target.modifyBox(32 /* PADDING_RIGHT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(32 /* PADDING_RIGHT */, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                             setColumnMaxWidth(rightAbove, offset);
                         }
                     }
@@ -10528,7 +10591,7 @@ this.squared.base = (function (exports) {
     }
 
     const { isUserAgent: isUserAgent$3 } = squared.lib.client;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$4, formatPX: formatPX$3, getStyle: getStyle$2, hasCoords: hasCoords$2, isLength: isLength$2, parseUnit: parseUnit$2 } = squared.lib.css;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$4, formatPX: formatPX$3, getStyle: getStyle$3, hasCoords: hasCoords$2, isLength: isLength$2, parseUnit: parseUnit$2 } = squared.lib.css;
     const { getParentElement: getParentElement$1, withinViewport } = squared.lib.dom;
     const { getElementCache: getElementCache$3, setElementCache: setElementCache$3 } = squared.lib.session;
     const { capitalize: capitalize$2, convertFloat: convertFloat$1, iterateArray: iterateArray$3, joinArray } = squared.lib.util;
@@ -10851,7 +10914,7 @@ this.squared.base = (function (exports) {
         visibleElement(element, sessionId, pseudoElt) {
             let style, width, height, display;
             if (!pseudoElt) {
-                style = getStyle$2(element);
+                style = getStyle$3(element);
                 display = style.display;
                 if (display !== 'none') {
                     const bounds = element.getBoundingClientRect();
@@ -10867,7 +10930,7 @@ this.squared.base = (function (exports) {
             }
             else {
                 const parentElement = getParentElement$1(element);
-                style = parentElement ? getStyle$2(parentElement, pseudoElt) : getStyle$2(element);
+                style = parentElement ? getStyle$3(parentElement, pseudoElt) : getStyle$3(element);
                 display = style.display;
                 if (display === 'none') {
                     return false;
@@ -11261,7 +11324,7 @@ this.squared.base = (function (exports) {
                         if (value && isLength$2(value)) {
                             const attrMax = 'max' + capitalize$2(attr);
                             if (!styleMap[attrMax] || !attrMax.endsWith('%')) {
-                                styleMap[attr] = formatPX$3(image[attr] * parseUnit$2(value, { fontSize: parseFloat(getStyle$2(element).fontSize) }) / image[opposing]);
+                                styleMap[attr] = formatPX$3(image[attr] * parseUnit$2(value, { fontSize: parseFloat(getStyle$3(element).fontSize) }) / image[opposing]);
                             }
                         }
                     }
@@ -12553,7 +12616,7 @@ this.squared.base = (function (exports) {
         'justify-self': 'start'
     };
     function createDataAttribute$1(node, children) {
-        return Object.assign(Object.assign({}, node.flexdata), { rowCount: 0, columnCount: 0, children });
+        return Object.assign(Object.assign({}, node.flexdata), { rowCount: 0, columnCount: 0, rowGap: node.parseHeight(node.valueOf('rowGap')), columnGap: node.parseWidth(node.valueOf('columnGap')), children });
     }
     class Flexbox extends ExtensionUI {
         is(node) {
@@ -12576,7 +12639,6 @@ this.squared.base = (function (exports) {
                 }
             });
             if (mainData.wrap) {
-                const controller = this.controller;
                 const options = { dimension: 'bounds' };
                 let align, sort, size, method;
                 if (mainData.row) {
@@ -12624,14 +12686,13 @@ this.squared.base = (function (exports) {
                     for (let i = 0; i < length; ++i) {
                         const seg = rows[i];
                         maxCount = Math.max(seg.length, maxCount);
-                        const group = controller.createNodeGroup(seg[0], seg, node, { alignmentType: 64 /* SEGMENTED */, flags: 2 /* DELEGATE */ | 4 /* CASCADE */ });
+                        const group = this.controller.createNodeGroup(seg[0], seg, node, { alignmentType: 64 /* SEGMENTED */, flags: 2 /* DELEGATE */ | 4 /* CASCADE */ });
                         group.box[size] = boxSize;
                     }
                 }
                 else {
-                    const items = rows[0];
-                    node.retainAs(items);
-                    maxCount = items.length;
+                    node.retainAs(rows[0]);
+                    maxCount = rows[0].length;
                 }
                 node.addAll(absolute);
                 if (mainData.row) {
@@ -13163,7 +13224,7 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { formatPercent: formatPercent$2, formatPX: formatPX$5, getStyle: getStyle$3, isLength: isLength$6, isPercent: isPercent$3 } = squared.lib.css;
+    const { formatPercent: formatPercent$2, formatPX: formatPX$5, getStyle: getStyle$4, isLength: isLength$6, isPercent: isPercent$3 } = squared.lib.css;
     const { getNamedItem: getNamedItem$3 } = squared.lib.dom;
     const { convertPercent: convertPercent$3, isNumber: isNumber$4, replaceMap } = squared.lib.util;
     function setAutoWidth(node, td, data) {
@@ -13204,7 +13265,7 @@ this.squared.base = (function (exports) {
     function getInheritedStyle(element, attr, exclude) {
         let value = '', current = element.parentElement;
         while (current && current.tagName !== 'TABLE') {
-            value = getStyle$3(current)[attr];
+            value = getStyle$4(current)[attr];
             if (exclude.test(value)) {
                 value = '';
             }
@@ -13324,7 +13385,7 @@ this.squared.base = (function (exports) {
                         if (colgroup) {
                             const group = colgroup.children[index + 1];
                             if (group) {
-                                const { backgroundImage, backgroundColor } = getStyle$3(group);
+                                const { backgroundImage, backgroundColor } = getStyle$4(group);
                                 if (backgroundImage !== 'none') {
                                     td.css('backgroundImage', backgroundImage, true);
                                     visibleStyle.backgroundImage = true;
@@ -14517,17 +14578,17 @@ this.squared.base = (function (exports) {
                     if (renderParent && !renderParent.hasAlign(2 /* AUTO_LAYOUT */)) {
                         if (node.blockDimension && !node.floating) {
                             if (renderParent.layoutVertical) {
-                                const renderChildren = renderParent.renderChildren;
-                                for (let i = 0, length = renderChildren.length; i < length; ++i) {
-                                    if (renderChildren[i] === outerWrapper) {
+                                const children = renderParent.renderChildren;
+                                for (let i = 0, length = children.length; i < length; ++i) {
+                                    if (children[i] === outerWrapper) {
                                         if (i > 0 && !node.lineBreakLeading && !node.baselineAltered) {
-                                            const previous = renderChildren[i - 1];
+                                            const previous = children[i - 1];
                                             if (previous.pageFlow && (!previous.blockStatic || node.inlineStatic && node.blockDimension)) {
                                                 setSpacingOffset(outerWrapper, 1 /* MARGIN_TOP */, previous.actualRect('bottom'), previous.getBox(4 /* MARGIN_BOTTOM */)[1]);
                                             }
                                         }
                                         if (i < length - 1 && !node.lineBreakTrailing) {
-                                            const next = renderChildren[i + 1];
+                                            const next = children[i + 1];
                                             if (next.pageFlow && next.styleElement && !next.inlineVertical) {
                                                 setSpacingOffset(outerWrapper, 4 /* MARGIN_BOTTOM */, next.actualRect('top'), next.getBox(1 /* MARGIN_TOP */)[1]);
                                             }

@@ -1,4 +1,4 @@
-/* squared.base 2.2.2
+/* squared.base 2.2.3
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -1428,16 +1428,15 @@ this.squared.base = (function (exports) {
         return preceding + (preceding && value && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
     }
     function randomUUID(separator = '-') {
-        let result = '';
-        for (const length of [8, 4, 4, 4, 12]) {
-            if (result) {
-                result += separator;
+        return [8, 4, 4, 4, 12].reduce((a, b, index) => {
+            if (index > 0) {
+                a += separator;
             }
-            for (let i = 0; i < length; ++i) {
-                result += HEX[Math.floor(Math.random() * 16)];
+            for (let i = 0; i < b; ++i) {
+                a += HEX[Math.floor(Math.random() * 16)];
             }
-        }
-        return result;
+            return a;
+        }, '');
     }
     function upperCaseString(value) {
         const pattern = /\b([a-z])/g;
@@ -1454,15 +1453,7 @@ this.squared.base = (function (exports) {
         while (match = pattern.exec(value)) {
             entities.push(match[0]);
         }
-        if (entities.length) {
-            let result = '';
-            const segments = value.split(pattern);
-            for (let i = 0, length = segments.length; i < length; ++i) {
-                result += segments[i].toLowerCase() + (entities[i] || '');
-            }
-            return result;
-        }
-        return value.toLowerCase();
+        return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
     }
     function formatXml(value, options = {}) {
         const { closeEmptyTags = true, caseSensitive, indentChar = '\t' } = options;
@@ -2844,12 +2835,14 @@ this.squared.base = (function (exports) {
                             cache.percentWidth = undefined;
                         case 'minWidth':
                             cache.width = undefined;
+                            cache.hasWidth = undefined;
                             break;
                         case 'height':
                             cache.actualHeight = undefined;
                             cache.percentHeight = undefined;
                         case 'minHeight':
                             cache.height = undefined;
+                            cache.hasHeight = undefined;
                             if (!this._preferInitial) {
                                 this.unsetCache('blockVertical');
                                 this.each(item => item.unsetCache());
@@ -4018,7 +4011,7 @@ this.squared.base = (function (exports) {
             let result = this._cache.flexdata;
             if (result === undefined) {
                 if (this.flexElement) {
-                    const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
+                    const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
                     const row = flexDirection.startsWith('row');
                     result = {
                         row,
@@ -4975,13 +4968,13 @@ this.squared.base = (function (exports) {
                 content && (content = content.replace(/\\(["'])/g, (...match) => match[1]));
             }
             if (!content && !base64 && !buffer) {
-                return '';
+                return null;
             }
             if (!filename) {
                 const ext = '.' + (fromMimeType(mimeType) || 'unknown');
                 filename = uri.endsWith(ext) ? fromLastIndexOf$1(uri, '/', '\\') : this.randomUUID + ext;
             }
-            Resource.ASSETS.rawData.set(uri, {
+            const result = {
                 pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
                 filename,
                 content,
@@ -4990,8 +4983,9 @@ this.squared.base = (function (exports) {
                 buffer,
                 width,
                 height
-            });
-            return filename;
+            };
+            Resource.ASSETS.rawData.set(uri, result);
+            return result;
         }
         getImage(uri) {
             return Resource.ASSETS.image.get(uri);
@@ -5011,11 +5005,10 @@ this.squared.base = (function (exports) {
         }
         getRawData(uri) {
             if (uri.startsWith('url(')) {
-                const url = extractURL(uri);
-                if (!url) {
+                uri = extractURL(uri);
+                if (!uri) {
                     return;
                 }
-                uri = url;
             }
             return Resource.ASSETS.rawData.get(uri);
         }

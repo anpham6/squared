@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.2.2
+/* vdom-lite-framework 2.2.3
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -1970,12 +1970,14 @@ var vdom = (function () {
                             cache.percentWidth = undefined;
                         case 'minWidth':
                             cache.width = undefined;
+                            cache.hasWidth = undefined;
                             break;
                         case 'height':
                             cache.actualHeight = undefined;
                             cache.percentHeight = undefined;
                         case 'minHeight':
                             cache.height = undefined;
+                            cache.hasHeight = undefined;
                             if (!this._preferInitial) {
                                 this.unsetCache('blockVertical');
                                 this.each(item => item.unsetCache());
@@ -3144,7 +3146,7 @@ var vdom = (function () {
             let result = this._cache.flexdata;
             if (result === undefined) {
                 if (this.flexElement) {
-                    const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
+                    const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
                     const row = flexDirection.startsWith('row');
                     result = {
                         row,
