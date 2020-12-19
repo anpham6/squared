@@ -213,6 +213,84 @@ function calculatePercent(element: StyleElement, value: string, clampRange: bool
     return '';
 }
 
+function calculateSpecificity(value: string) {
+    CSS.SELECTOR_G.lastIndex = 0;
+    let result = 0,
+        match: Null<RegExpExecArray>;
+    while (match = CSS.SELECTOR_G.exec(value)) {
+        let segment = match[1];
+        if (segment.length === 1) {
+            switch (segment[0]) {
+                case '+':
+                case '~':
+                case '>':
+                case '*':
+                    continue;
+            }
+        }
+        else if (segment.startsWith('*|*')) {
+            if (segment.length > 3) {
+                return 0;
+            }
+        }
+        else if (segment.startsWith('*|')) {
+            segment = segment.substring(2);
+        }
+        else if (segment.startsWith('::')) {
+            return 0;
+        }
+        let subMatch: Null<RegExpExecArray>;
+        while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
+            if (subMatch[1]) {
+                result += 1;
+            }
+            if (subMatch[3] || subMatch[4] || subMatch[5]) {
+                result += 10;
+            }
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+        }
+        while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
+            const pseudoClass = subMatch[0];
+            if (pseudoClass.startsWith(':not(')) {
+                const lastIndex = CSS.SELECTOR_G.lastIndex;
+                result += calculateSpecificity(subMatch[1]);
+                CSS.SELECTOR_G.lastIndex = lastIndex;
+            }
+            else {
+                switch (pseudoClass) {
+                    case ':scope':
+                    case ':root':
+                        break;
+                    default:
+                        result += 10;
+                        break;
+                }
+            }
+            segment = spliceString(segment, subMatch.index, pseudoClass.length);
+        }
+        while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
+            result += 1;
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+        }
+        while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
+            const label = subMatch[0];
+            switch (label[0]) {
+                case '#':
+                    result += 100;
+                    break;
+                case '.':
+                    result += 10;
+                    break;
+                default:
+                    result += 1;
+                    break;
+            }
+            segment = spliceString(segment, subMatch.index, label.length);
+        }
+    }
+    return result;
+}
+
 function getWritingMode(value?: string) {
     if (value) {
         switch (value) {
@@ -1677,9 +1755,41 @@ export function hasComputedStyle(element: Element): element is HTMLElement {
 }
 
 export function parseSelectorText(value: string) {
-    value = value.trim();
-    if (value.includes(',')) {
-        let normalized = value,
+    if ((value = value.trim()).includes(',')) {
+        let timestamp: Undef<number>,
+            removed: Undef<string[]>;
+        const replaceWith = (seg: string) => {
+            timestamp ||= Date.now();
+            (removed ||= []).push(seg);
+            return timestamp + '-' + (removed.length - 1);
+        };
+        const segments = splitEnclosing(value, ':is');
+        for (let i = 0; i < segments.length; ++i) {
+            let seg = segments[i];
+            if (seg.startsWith(':is(') && seg.includes(',', 4)) {
+                segments[i] = replaceWith(seg);
+            }
+            else {
+                const where = splitEnclosing(seg, ':where');
+                if (where.length > 1) {
+                    seg = '';
+                    for (const part of where) {
+                        if (part.startsWith(':where(') && part.includes(',', 7)) {
+                            seg += replaceWith(part);
+                        }
+                        else {
+                            seg += part;
+                        }
+                    }
+                    segments[i] = seg;
+                }
+            }
+        }
+        if (removed) {
+            value = segments.join('');
+        }
+        let result: string[],
+            normalized = value,
             found: Undef<boolean>,
             match: Null<RegExpExecArray>;
         while (match = CSS.SELECTOR_ATTR.exec(normalized)) {
@@ -1689,9 +1799,9 @@ export function parseSelectorText(value: string) {
             found = true;
         }
         if (found) {
-            const result = [];
+            result = [];
             let position = 0;
-            while (true) {
+            do {
                 const index = normalized.indexOf(',', position);
                 if (index !== -1) {
                     result.push(value.substring(position, index).trim());
@@ -1704,88 +1814,49 @@ export function parseSelectorText(value: string) {
                     break;
                 }
             }
-            return result.length ? result : [value];
+            while (true);
+            if (result.length === 0) {
+                result.push(value);
+            }
         }
-        return value.split(CHAR_SEPARATOR);
+        else {
+            result = value.split(CHAR_SEPARATOR);
+        }
+        if (removed) {
+            for (let i = 0, k = 0; i < removed.length; ++i) {
+                const part = removed[i];
+                const placeholder = timestamp! + '-' + i;
+                for (let j = k; j < result.length; ++j) {
+                    const seg = result[j];
+                    result[j] = seg.replace(placeholder, part);
+                    if (seg !== result[j]) {
+                        k = j;
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
     }
     return [value];
 }
 
 export function getSpecificity(value: string) {
-    CSS.SELECTOR_G.lastIndex = 0;
-    let result = 0,
-        match: Null<RegExpExecArray>;
-    while (match = CSS.SELECTOR_G.exec(value)) {
-        let segment = match[1];
-        if (segment.length === 1) {
-            switch (segment[0]) {
-                case '+':
-                case '~':
-                case '>':
-                case '*':
-                    continue;
+    let result = 0;
+    for (const seg of splitEnclosing(value, ':is')) {
+        if (seg.startsWith(':is(')) {
+            let specificity = 0;
+            for (const part of parseSelectorText(/^:is\((.+)\)$/.exec(seg)![1])) {
+                specificity = Math.max(specificity, calculateSpecificity(part));
             }
+            result += specificity;
         }
-        else if (segment.startsWith('*|*')) {
-            if (segment.length > 3) {
-                result = 0;
-                break;
-            }
-        }
-        else if (segment.startsWith('*|')) {
-            segment = segment.substring(2);
-        }
-        else if (segment.startsWith('::')) {
-            result = 0;
-            break;
-        }
-        let subMatch: Null<RegExpExecArray>;
-        while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
-            if (subMatch[1]) {
-                result += 1;
-            }
-            if (subMatch[3] || subMatch[4] || subMatch[5]) {
-                result += 10;
-            }
-            segment = spliceString(segment, subMatch.index, subMatch[0].length);
-        }
-        while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-            const pseudoClass = subMatch[0];
-            if (pseudoClass.startsWith(':not(')) {
-                const lastIndex = CSS.SELECTOR_G.lastIndex;
-                result += getSpecificity(subMatch[1]);
-                CSS.SELECTOR_G.lastIndex = lastIndex;
-            }
-            else {
-                switch (pseudoClass) {
-                    case ':scope':
-                    case ':root':
-                        break;
-                    default:
-                        result += 10;
-                        break;
+        else {
+            for (const part of splitEnclosing(seg, ':where')) {
+                if (!part.startsWith(':where(')) {
+                    result += calculateSpecificity(part);
                 }
             }
-            segment = spliceString(segment, subMatch.index, pseudoClass.length);
-        }
-        while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
-            result += 1;
-            segment = spliceString(segment, subMatch.index, subMatch[0].length);
-        }
-        while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
-            const label = subMatch[0];
-            switch (label[0]) {
-                case '#':
-                    result += 100;
-                    break;
-                case '.':
-                    result += 10;
-                    break;
-                default:
-                    result += 1;
-                    break;
-            }
-            segment = spliceString(segment, subMatch.index, label.length);
         }
     }
     return result;

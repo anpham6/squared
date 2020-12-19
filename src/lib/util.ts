@@ -291,9 +291,6 @@ export function splitPairEnd(value: string, char: string, trim?: boolean, last?:
 }
 
 export function splitEnclosing(value: string, prefix?: string, separator = '', opening = '(', closing = ')') {
-    if (separator.length > 1) {
-        return [];
-    }
     prefix ||= opening;
     const prefixed = prefix !== opening;
     const combined = prefixed ? prefix + opening : opening;

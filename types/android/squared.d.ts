@@ -94,8 +94,8 @@ declare namespace base {
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;
         setSingleLine(maxLines: boolean, ellipsize?: boolean): void;
-        setConstraintDimension(percentWidth?: number): number;
-        setFlexDimension(dimension: DimensionAttr, percentWidth?: number): number;
+        setConstraintDimension(percentAvailable?: number): number;
+        setFlexDimension(dimension: DimensionAttr, percentAvailable?: number, weight?: number): number;
         getMatchConstraint(parent?: View, override?: boolean): string;
         getAnchorPosition(parent: View, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         isUnstyled(checkMargin?: boolean): boolean;

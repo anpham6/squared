@@ -222,15 +222,13 @@ function getLineHeight(node: T, value: number, checkOnly?: boolean) {
 
 function getLineSpacingExtra(node: T, value: number) {
     let height = node.data<number>(Resource.KEY_NAME, 'textRange');
-    if (!height) {
-        if (node.plainText) {
-            if (node.naturalChild) {
-                height = node.bounds.height / (node.bounds.numberOfLines || 1);
-            }
-            else {
-                height = node.actualTextHeight();
-                node.data<number>(Resource.KEY_NAME, 'textRange', height);
-            }
+    if (!height && node.plainText) {
+        if (node.naturalChild) {
+            height = node.bounds.height / (node.bounds.numberOfLines || 1);
+        }
+        else {
+            height = node.actualTextHeight();
+            node.data<number>(Resource.KEY_NAME, 'textRange', height);
         }
     }
     if (!height && node.styleText) {
@@ -284,8 +282,8 @@ function constraintMinMax(node: T, horizontal: boolean) {
     }
 }
 
-function setConstraintPercent(node: T, value: number, horizontal: boolean, percent: number) {
-    if (value < 1 && !isNaN(percent) && node.pageFlow) {
+function setConstraintPercent(node: T, value: number, horizontal: boolean, percentAvailable: number) {
+    if (value < 1 && !isNaN(percentAvailable) && node.pageFlow) {
         const parent = node.actualParent || node.documentParent;
         let boxPercent: number,
             marginPercent: number;
@@ -299,24 +297,24 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
             boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
             marginPercent = (Math.max(!node.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? node.marginTop : 0, 0) + (!node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? node.marginBottom : 0)) / height;
         }
-        if (percent === 1 && value + marginPercent >= 1) {
+        if (percentAvailable === 1 && value + marginPercent >= 1) {
             value = 1 - marginPercent;
         }
         else {
             if (boxPercent) {
-                if (percent < boxPercent) {
-                    boxPercent = Math.max(percent, 0);
-                    percent = 0;
+                if (percentAvailable < boxPercent) {
+                    boxPercent = Math.max(percentAvailable, 0);
+                    percentAvailable = 0;
                 }
                 else {
-                    percent -= boxPercent;
+                    percentAvailable -= boxPercent;
                 }
             }
-            if (percent === 0) {
+            if (percentAvailable === 0) {
                 boxPercent -= marginPercent;
             }
             else {
-                percent = Math.max(percent - marginPercent, 0);
+                percentAvailable = Math.max(percentAvailable - marginPercent, 0);
             }
             value = Math.min(value + boxPercent, 1);
         }
@@ -338,15 +336,15 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
             setLayoutDimension(node, '0px', horizontal, false);
         }
     }
-    return percent;
+    return percentAvailable;
 }
 
-function constraintPercentValue(node: T, horizontal: boolean, percent: number) {
+function constraintPercentValue(node: T, horizontal: boolean, percentAvailable: number) {
     const value = horizontal ? node.percentWidth : node.percentHeight;
-    return value ? setConstraintPercent(node, value, horizontal, percent) : percent;
+    return value ? setConstraintPercent(node, value, horizontal, percentAvailable) : percentAvailable;
 }
 
-function constraintPercentWidth(node: T, percent = 1) {
+function constraintPercentWidth(node: T, percentAvailable = 1) {
     const value = node.percentWidth;
     if (value) {
         const parent = node.actualParent;
@@ -359,13 +357,13 @@ function constraintPercentWidth(node: T, percent = 1) {
             }
         }
         else if (!node.inputElement) {
-            return constraintPercentValue(node, true, percent);
+            return constraintPercentValue(node, true, percentAvailable);
         }
     }
-    return percent;
+    return percentAvailable;
 }
 
-function constraintPercentHeight(node: T, percent = 1) {
+function constraintPercentHeight(node: T, percentAvailable = 1) {
     const value = node.percentHeight;
     if (value) {
         const parent = node.actualParent;
@@ -378,10 +376,10 @@ function constraintPercentHeight(node: T, percent = 1) {
             }
         }
         else if (!node.inputElement) {
-            return constraintPercentValue(node, false, percent);
+            return constraintPercentValue(node, false, percentAvailable);
         }
     }
-    return percent;
+    return percentAvailable;
 }
 
 function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite: boolean) {
@@ -472,6 +470,7 @@ function calculateBias(start: number, end: number, accuracy = 3) {
 }
 
 const hasFlexibleContainer = (renderParent: Null<T>) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
+const hasFlexibleHeight = (node: T) => node.hasHeight || node.layoutGrid || node.gridElement || node.layoutConstraint && node.blockHeight;
 
 export function ascendFlexibleWidth(node: T, container?: boolean) {
     let current = container ? node : node.renderParent as Undef<T>,
@@ -489,8 +488,15 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
 }
 
 export function ascendFlexibleHeight(node: T, container?: boolean) {
-    const current = container ? node : node.actualParent as Undef<T>;
-    return !!(current && (current.hasHeight || current.layoutGrid || current.gridElement || current.layoutConstraint && current.blockHeight));
+    let current = container ? node : node.actualParent as Undef<T>;
+    if (current && hasFlexibleHeight(current)) {
+        return true;
+    }
+    if (container && node.flexElement && node.flexdata.column) {
+        current = node.actualParent as Undef<T>;
+        return !!current && hasFlexibleHeight(current);
+    }
+    return false;
 }
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
@@ -1004,13 +1010,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             node.mergeGravity('layout_gravity', this.float);
                         }
                         else if (!setAutoMargin(node) && !this.blockStatic && this.display !== 'table') {
-                            let parentAlign: Undef<string>;
-                            if (node.tagName === 'LEGEND') {
-                                parentAlign = !isUserAgent(USER_AGENT.FIREFOX) ? textAlign || checkTextAlign(this.cssAscend('textAlign'), true) : 'left';
-                            }
-                            else {
-                                parentAlign = checkTextAlign(this.cssAscend('textAlign'), true);
-                            }
+                            const parentAlign = node.tagName === 'LEGEND' ? !isUserAgent(USER_AGENT.FIREFOX) ? textAlign || checkTextAlign(this.cssAscend('textAlign'), true) : 'left' : checkTextAlign(this.cssAscend('textAlign'), true);
                             if (parentAlign) {
                                 node.mergeGravity('layout_gravity', parentAlign, false);
                             }
@@ -1127,7 +1127,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             if (autoMargin.vertical && (renderParent.layoutFrame || renderParent.layoutVertical && renderParent.layoutLinear)) {
-                node.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : autoMargin.top ? 'bottom' : 'top');
+                (renderParent.hasAlign(NODE_ALIGNMENT.COLUMN) ? this : node).mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : autoMargin.top ? 'bottom' : 'top');
             }
         }
 
@@ -2588,65 +2588,60 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public setConstraintDimension(percentWidth = NaN) {
-            percentWidth = constraintPercentWidth(this, percentWidth);
+        public setConstraintDimension(percentAvailable = NaN) {
+            percentAvailable = constraintPercentWidth(this, percentAvailable);
             constraintPercentHeight(this, 1);
-            if (!this.inputElement) {
+            if (!this.inputElement && !this.imageContainer) {
                 constraintMinMax(this, true);
                 constraintMinMax(this, false);
             }
-            return percentWidth;
+            return percentAvailable;
         }
 
-        public setFlexDimension(dimension: DimensionAttr, percentWidth = NaN) {
-            const { grow, basis, shrink } = this.flexbox;
-            const horizontal = dimension === 'width';
-            const setFlexGrow = (value?: number, shrinkValue?: number) => {
-                if (grow > 0) {
-                    this.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, this.localSettings.floatPrecision));
-                    return true;
-                }
-                else if (value) {
-                    if (shrinkValue !== undefined) {
-                        if (shrinkValue > 1) {
-                            value /= shrinkValue;
+        public setFlexDimension(dimension: DimensionAttr, percentAvailable = NaN, weight?: number) {
+            if (!weight) {
+                const { grow, shrink, basis } = this.flexbox;
+                const horizontal = dimension === 'width';
+                const setFlexGrow = (value: number) => {
+                    if (value > 0) {
+                        if (grow > 0 || shrink !== 1) {
+                            let size = this.bounds[dimension];
+                            if (size !== value) {
+                                if (size < value) {
+                                    [value, size] = [size, value];
+                                }
+                                this.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', formatPX(size));
+                            }
                         }
-                        else if (shrinkValue > 0) {
-                            value *= 1 - shrinkValue;
-                        }
+                        this.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
+                        return true;
                     }
-                    this.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
+                    return false;
+                };
+                if (basis !== '0%' && isPercent(basis)) {
+                    setConstraintPercent(this, convertPercent(basis), horizontal, NaN);
                 }
-                return false;
-            };
-            if (isLength(basis)) {
-                setFlexGrow(this.parseUnit(basis, { dimension }), shrink);
-                setLayoutDimension(this, '0px', horizontal, true);
-            }
-            else if (basis !== '0%' && isPercent(basis)) {
-                setFlexGrow();
-                setConstraintPercent(this, convertPercent(basis), horizontal, NaN);
-            }
-            else if (this.hasFlex(horizontal ? 'row' : 'column') && setFlexGrow(this.hasPX(dimension, { percent: false }) ? horizontal ? this.actualWidth : this.actualHeight : 0, shrink)) {
-                setLayoutDimension(this, '0px', horizontal, true);
-            }
-            else if (horizontal) {
-                percentWidth = constraintPercentWidth(this, percentWidth);
-            }
-            else {
-                constraintPercentHeight(this, 0);
-            }
-            if (shrink > 1) {
-                this.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
-            }
-            if (horizontal) {
-                constraintPercentHeight(this);
+                else if (isLength(basis) && setFlexGrow(this.parseUnit(basis, { dimension }))) {
+                    setLayoutDimension(this, '0px', horizontal, true);
+                }
+                else if (horizontal) {
+                    percentAvailable = constraintPercentWidth(this, percentAvailable);
+                }
+                else {
+                    percentAvailable = constraintPercentHeight(this, percentAvailable);
+                }
+                if (shrink > 1) {
+                    this.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
+                }
+                if (horizontal) {
+                    constraintPercentHeight(this);
+                }
             }
             if (!this.inputElement && !this.imageContainer) {
                 constraintMinMax(this, true);
                 constraintMinMax(this, false);
             }
-            return percentWidth;
+            return percentAvailable;
         }
 
         public getMatchConstraint(parent = this.renderParent, override?: boolean) {

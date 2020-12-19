@@ -611,7 +611,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
             else {
                 value = attributes[attr.key];
             }
-            if (!value) {
+            if (value === undefined) {
                 return false;
             }
             if (attr.value) {
