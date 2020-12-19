@@ -6,14 +6,14 @@ import STYLE_STATE = squared.lib.internal.STYLE_STATE;
 type T = Node;
 
 const { CSS, FILE } = squared.lib.regex;
-const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
+const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS, SELECTOR_ENCLOSING } = CSS;
 
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitPair } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
 const TEXT_STYLE = [
     'fontFamily',
@@ -36,6 +36,7 @@ const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const REGEXP_EM = /\dem$/;
+const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\(([^)]+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 const REGEXP_LANG = /^:lang\(\s*(.+)\s*\)$/;
@@ -1718,7 +1719,65 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result: T[] = [];
         if (queryMap && resultCount !== 0) {
             const depthCount = queryMap.length;
-            const queries = parseSelectorText(value);
+            const queries: string[] = [];
+            for (const query of parseSelectorText(value)) {
+                let selector = '',
+                    expand: Undef<boolean>;
+                for (let seg of splitEnclosing(query, SELECTOR_ENCLOSING)) {
+                    if (seg[0] === ':') {
+                        const match = /^:([A-Za-z]+)\((.+)\)$/.exec(seg);
+                        if (match) {
+                            switch (match[1].toLowerCase()) {
+                                case 'not': {
+                                    if (match[2].includes(',')) {
+                                        seg = '';
+                                        for (const part of parseSelectorText(match[2])) {
+                                            seg += `:not(${part})`;
+                                        }
+                                    }
+                                    break;
+                                }
+                                case 'is':
+                                case 'where':
+                                    if (match[2].includes(',')) {
+                                        seg = '@';
+                                        for (const part of parseSelectorText(match[2])) {
+                                            seg += '{{' + part + '}}';
+                                        }
+                                        expand = true;
+                                    }
+                                    else {
+                                        seg = match[2];
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                    selector += seg;
+                }
+                if (expand) {
+                    (function expandQuery(segments: string[]) {
+                        for (let i = 0, length = segments.length; i < length; ++i) {
+                            const match = REGEXP_ISWHERE.exec(segments[i]);
+                            if (match) {
+                                const pending: string[] = [];
+                                const pattern = /\{\{(.+?)\}\}/g;
+                                let subMatch: Null<RegExpExecArray>;
+                                while (subMatch = pattern.exec(match[2])) {
+                                    pending.push(match[1] + subMatch[1] + match[3]);
+                                }
+                                expandQuery(pending);
+                            }
+                            else {
+                                queries.push(segments[i]);
+                            }
+                        }
+                    })([selector]);
+                }
+                else {
+                    queries.push(selector);
+                }
+            }
             for (let i = 0, length = queries.length; i < length; ++i) {
                 invalid: {
                     const query = trimSelector(queries[i]);
@@ -1809,9 +1868,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 let pseudoList: Undef<string[]>,
                                     notList: Undef<string[]>;
                                 while (subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) {
-                                    const pseudoClass = subMatch[0];
-                                    if (pseudoClass.startsWith(':not(')) {
-                                        const negate = subMatch[1];
+                                    const pseudoName = (subMatch[1] || subMatch[3]).toLowerCase();
+                                    if (pseudoName === ':not') {
+                                        const negate = subMatch[2] || subMatch[4];
                                         switch (negate[0]) {
                                             case ':':
                                                 if (!SELECTOR_PSEUDO_CLASS.test(negate)) {
@@ -1832,7 +1891,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         (notList ||= []).push(negate);
                                     }
                                     else {
-                                        switch (pseudoClass) {
+                                        switch (pseudoName) {
                                             case ':root':
                                             case ':scope':
                                                 if (selectors.length) {
@@ -1841,9 +1900,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                                 --offset;
                                                 break;
                                         }
-                                        (pseudoList ||= []).push(pseudoClass);
+                                        (pseudoList ||= []).push(subMatch[0].toLowerCase());
                                     }
-                                    segment = spliceString(segment, subMatch.index, pseudoClass.length);
+                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
                                 let tagName: Undef<string>,
                                     id: Undef<string>,

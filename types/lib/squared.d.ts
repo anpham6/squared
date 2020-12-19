@@ -285,6 +285,7 @@ declare module "lib" {
             SELECTOR_PSEUDO_CLASS: RegExp;
             SELECTOR_ATTR: RegExp;
             SELECTOR_ATTR_G: RegExp;
+            SELECTOR_ENCLOSING: RegExp;
         };
         const TRANSFORM: {
             MATRIX: RegExp;

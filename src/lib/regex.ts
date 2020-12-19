@@ -10,7 +10,7 @@ export const STRING = {
     DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
     CSS_SELECTOR_LABEL: '[\\.#]?[A-Za-z][\\w\\-]*',
     CSS_SELECTOR_PSEUDO_ELEMENT: '::[a-z\\-]+',
-    CSS_SELECTOR_PSEUDO_CLASS: ':(?:not\\(\\s*(:nth(?:-last)?-(?:child|of-type)\\([^)]+\\)|[^)]+)\\s*\\)|[A-Za-z\\-]+(?:\\(\\s*([^)]+)\\s*\\))?)',
+    CSS_SELECTOR_PSEUDO_CLASS: ':(?:([nN][oO][tT])\\(\\s*(:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE]\\([^)]+?\\s*\\))|[^)]+)\\s*\\)|([A-Za-z\\-]+)(?:\\(\\s*([^)]+?)\\s*\\))?)',
     CSS_SELECTOR_ATTR: `\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\]`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
@@ -34,7 +34,8 @@ export const CSS = {
     SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),
     SELECTOR_PSEUDO_CLASS: new RegExp(STRING.CSS_SELECTOR_PSEUDO_CLASS),
     SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR),
-    SELECTOR_ATTR_G: new RegExp(STRING.CSS_SELECTOR_ATTR, 'g')
+    SELECTOR_ATTR_G: new RegExp(STRING.CSS_SELECTOR_ATTR, 'g'),
+    SELECTOR_ENCLOSING: /:(?:is|where|not)/ig
 };
 
 export const TRANSFORM = {
