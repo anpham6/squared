@@ -32,6 +32,10 @@ const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
+const REGEXP_CSSGROUP = /:(?:is|where)/g;
+const REGEXP_CSSENCLOSING = /:(?:is|where|not)/g;
+const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
+const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -214,9 +218,16 @@ function calculatePercent(element: StyleElement, value: string, clampRange: bool
 }
 
 function calculateSpecificity(value: string) {
+    let result = 0;
+    for (const part of splitEnclosing(value, ':not')) {
+        const match = REGEXP_SELECTORNOT.exec(part);
+        if (match) {
+            result += getSelectorValue(match[1]);
+            value = value.replace(part, '');
+        }
+    }
     CSS.SELECTOR_G.lastIndex = 0;
-    let result = 0,
-        match: Null<RegExpExecArray>;
+    let match: Null<RegExpExecArray>;
     while (match = CSS.SELECTOR_G.exec(value)) {
         let segment = match[1];
         if (segment.length === 1) {
@@ -251,20 +262,13 @@ function calculateSpecificity(value: string) {
         }
         while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
             const pseudoClass = subMatch[0];
-            if (pseudoClass.startsWith(':not(')) {
-                const lastIndex = CSS.SELECTOR_G.lastIndex;
-                result += calculateSpecificity(subMatch[1]);
-                CSS.SELECTOR_G.lastIndex = lastIndex;
-            }
-            else {
-                switch (pseudoClass) {
-                    case ':scope':
-                    case ':root':
-                        break;
-                    default:
-                        result += 10;
-                        break;
-                }
+            switch (pseudoClass) {
+                case ':scope':
+                case ':root':
+                    break;
+                default:
+                    result += 10;
+                    break;
             }
             segment = spliceString(segment, subMatch.index, pseudoClass.length);
         }
@@ -287,6 +291,14 @@ function calculateSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, label.length);
         }
+    }
+    return result;
+}
+
+function getSelectorValue(value: string) {
+    let result = 0;
+    for (const part of parseSelectorText(value)) {
+        result = Math.max(result, calculateSpecificity(part));
     }
     return result;
 }
@@ -1758,31 +1770,13 @@ export function parseSelectorText(value: string) {
     if ((value = value.trim()).includes(',')) {
         let timestamp: Undef<number>,
             removed: Undef<string[]>;
-        const replaceWith = (seg: string) => {
-            timestamp ||= Date.now();
-            (removed ||= []).push(seg);
-            return timestamp + '-' + (removed.length - 1);
-        };
-        const segments = splitEnclosing(value, ':is');
+        const segments = splitEnclosing(value, REGEXP_CSSENCLOSING);
         for (let i = 0; i < segments.length; ++i) {
-            let seg = segments[i];
-            if (seg.startsWith(':is(') && seg.includes(',', 4)) {
-                segments[i] = replaceWith(seg);
-            }
-            else {
-                const where = splitEnclosing(seg, ':where');
-                if (where.length > 1) {
-                    seg = '';
-                    for (const part of where) {
-                        if (part.startsWith(':where(') && part.includes(',', 7)) {
-                            seg += replaceWith(part);
-                        }
-                        else {
-                            seg += part;
-                        }
-                    }
-                    segments[i] = seg;
-                }
+            const seg = segments[i];
+            if (seg[0] === ':' && seg.includes(',') && /^:(is|where|not)\(/.test(seg)) {
+                timestamp ||= Date.now();
+                (removed ||= []).push(seg);
+                segments[i] = timestamp + '-' + (removed.length - 1);
             }
         }
         if (removed) {
@@ -1843,21 +1837,18 @@ export function parseSelectorText(value: string) {
 
 export function getSpecificity(value: string) {
     let result = 0;
-    for (const seg of splitEnclosing(value, ':is')) {
-        if (seg.startsWith(':is(')) {
-            let specificity = 0;
-            for (const part of parseSelectorText(/^:is\((.+)\)$/.exec(seg)![1])) {
-                specificity = Math.max(specificity, calculateSpecificity(part));
+    for (const seg of splitEnclosing(value, REGEXP_CSSGROUP)) {
+        if (seg[0] === ':') {
+            const match = REGEXP_SELECTORIS.exec(seg);
+            if (match) {
+                result += getSelectorValue(match[1]);
+                continue;
             }
-            result += specificity;
-        }
-        else {
-            for (const part of splitEnclosing(seg, ':where')) {
-                if (!part.startsWith(':where(')) {
-                    result += calculateSpecificity(part);
-                }
+            else if (seg.startsWith(':where(')) {
+                continue;
             }
         }
+        result += calculateSpecificity(seg);
     }
     return result;
 }
