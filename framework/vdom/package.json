@@ -1,6 +1,6 @@
 {
   "name": "vdom-framework",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "description": "Virtual DOM framework module for use with squared.",
   "repository": {
     "type": "git",

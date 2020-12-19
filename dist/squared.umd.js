@@ -1,4 +1,4 @@
-/* squared 2.2.4
+/* squared 2.2.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1117,9 +1117,18 @@
     }
     function splitEnclosing(value, prefix, separator = '', opening = '(', closing = ')') {
         prefix || (prefix = opening);
-        const prefixed = prefix !== opening;
-        const combined = prefixed ? prefix + opening : opening;
+        let position = 0, offset = 0, index = -1, combined;
+        if (typeof prefix === 'string') {
+            if (prefix !== opening) {
+                combined = prefix + opening;
+                offset = prefix.length;
+            }
+            else {
+                combined = opening;
+            }
+        }
         const result = [];
+        const length = value.length;
         const appendValues = (segment) => {
             for (let seg of segment.split(separator)) {
                 if (seg = seg.trim()) {
@@ -1127,9 +1136,19 @@
                 }
             }
         };
-        let position = 0, index = -1;
-        const length = value.length;
-        while ((index = value.indexOf(combined, position)) !== -1) {
+        const nextIndex = () => {
+            if (combined) {
+                return value.indexOf(combined, position);
+            }
+            prefix.lastIndex = position;
+            const match = prefix.exec(value);
+            if (match) {
+                offset = match[0].length;
+                return match.index;
+            }
+            return -1;
+        };
+        while ((index = nextIndex()) !== -1) {
             let preceding = '';
             if (index !== position) {
                 let segment = value.substring(position, index);
@@ -1137,9 +1156,9 @@
                     segment = segment.trim();
                     if (segment) {
                         appendValues(segment);
-                        if (!prefixed) {
+                        if (combined === opening) {
                             const joined = lastItemOf(result);
-                            if (joined && value.substring(index - joined.length, index + 1) === joined + prefix) {
+                            if (joined && value.substring(index - joined.length, index + 1) === joined + opening) {
                                 preceding = joined;
                                 --result.length;
                             }
@@ -1151,7 +1170,7 @@
                 }
             }
             let found;
-            for (let i = index + (prefixed ? prefix.length : 0) + 1, open = 1, close = 0; i < length; ++i) {
+            for (let i = index + offset + 1, open = 1, close = 0; i < length; ++i) {
                 switch (value[i]) {
                     case opening:
                         ++open;
@@ -1703,6 +1722,10 @@
     const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
     const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
     const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
+    const REGEXP_CSSGROUP = /:(?:is|where)/g;
+    const REGEXP_CSSENCLOSING = /:(?:is|where|not)/g;
+    const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
+    const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
     const CHAR_SPACE = /\s+/;
     const CHAR_SEPARATOR = /\s*,\s*/;
     const CHAR_DIVIDER = /\s*\/\s*/;
@@ -1876,8 +1899,16 @@
         return '';
     }
     function calculateSpecificity(value) {
+        let result = 0;
+        for (const part of splitEnclosing(value, ':not')) {
+            const match = REGEXP_SELECTORNOT.exec(part);
+            if (match) {
+                result += getSelectorValue(match[1]);
+                value = value.replace(part, '');
+            }
+        }
         CSS.SELECTOR_G.lastIndex = 0;
-        let result = 0, match;
+        let match;
         while (match = CSS.SELECTOR_G.exec(value)) {
             let segment = match[1];
             if (segment.length === 1) {
@@ -1912,20 +1943,13 @@
             }
             while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
                 const pseudoClass = subMatch[0];
-                if (pseudoClass.startsWith(':not(')) {
-                    const lastIndex = CSS.SELECTOR_G.lastIndex;
-                    result += calculateSpecificity(subMatch[1]);
-                    CSS.SELECTOR_G.lastIndex = lastIndex;
-                }
-                else {
-                    switch (pseudoClass) {
-                        case ':scope':
-                        case ':root':
-                            break;
-                        default:
-                            result += 10;
-                            break;
-                    }
+                switch (pseudoClass) {
+                    case ':scope':
+                    case ':root':
+                        break;
+                    default:
+                        result += 10;
+                        break;
                 }
                 segment = spliceString(segment, subMatch.index, pseudoClass.length);
             }
@@ -1948,6 +1972,13 @@
                 }
                 segment = spliceString(segment, subMatch.index, label.length);
             }
+        }
+        return result;
+    }
+    function getSelectorValue(value) {
+        let result = 0;
+        for (const part of parseSelectorText(value)) {
+            result = Math.max(result, calculateSpecificity(part));
         }
         return result;
     }
@@ -3392,31 +3423,13 @@
     function parseSelectorText(value) {
         if ((value = value.trim()).includes(',')) {
             let timestamp, removed;
-            const replaceWith = (seg) => {
-                timestamp || (timestamp = Date.now());
-                (removed || (removed = [])).push(seg);
-                return timestamp + '-' + (removed.length - 1);
-            };
-            const segments = splitEnclosing(value, ':is');
+            const segments = splitEnclosing(value, REGEXP_CSSENCLOSING);
             for (let i = 0; i < segments.length; ++i) {
-                let seg = segments[i];
-                if (seg.startsWith(':is(') && seg.includes(',', 4)) {
-                    segments[i] = replaceWith(seg);
-                }
-                else {
-                    const where = splitEnclosing(seg, ':where');
-                    if (where.length > 1) {
-                        seg = '';
-                        for (const part of where) {
-                            if (part.startsWith(':where(') && part.includes(',', 7)) {
-                                seg += replaceWith(part);
-                            }
-                            else {
-                                seg += part;
-                            }
-                        }
-                        segments[i] = seg;
-                    }
+                const seg = segments[i];
+                if (seg[0] === ':' && seg.includes(',') && /^:(is|where|not)\(/.test(seg)) {
+                    timestamp || (timestamp = Date.now());
+                    (removed || (removed = [])).push(seg);
+                    segments[i] = timestamp + '-' + (removed.length - 1);
                 }
             }
             if (removed) {
@@ -3472,21 +3485,18 @@
     }
     function getSpecificity(value) {
         let result = 0;
-        for (const seg of splitEnclosing(value, ':is')) {
-            if (seg.startsWith(':is(')) {
-                let specificity = 0;
-                for (const part of parseSelectorText(/^:is\((.+)\)$/.exec(seg)[1])) {
-                    specificity = Math.max(specificity, calculateSpecificity(part));
+        for (const seg of splitEnclosing(value, REGEXP_CSSGROUP)) {
+            if (seg[0] === ':') {
+                const match = REGEXP_SELECTORIS.exec(seg);
+                if (match) {
+                    result += getSelectorValue(match[1]);
+                    continue;
                 }
-                result += specificity;
-            }
-            else {
-                for (const part of splitEnclosing(seg, ':where')) {
-                    if (!part.startsWith(':where(')) {
-                        result += calculateSpecificity(part);
-                    }
+                else if (seg.startsWith(':where(')) {
+                    continue;
                 }
             }
+            result += calculateSpecificity(seg);
         }
         return result;
     }
