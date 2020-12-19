@@ -1,4 +1,4 @@
-/* squared.base 2.2.3
+/* squared.base 2.2.4
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -2495,7 +2495,7 @@ this.squared.base = (function (exports) {
                 else {
                     value = attributes[attr.key];
                 }
-                if (!value) {
+                if (value === undefined) {
                     return false;
                 }
                 if (attr.value) {

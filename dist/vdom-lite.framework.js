@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.2.3
+/* vdom-lite-framework 2.2.4
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -1630,7 +1630,7 @@ var vdom = (function () {
                 else {
                     value = attributes[attr.key];
                 }
-                if (!value) {
+                if (value === undefined) {
                     return false;
                 }
                 if (attr.value) {

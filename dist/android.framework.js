@@ -1,4 +1,4 @@
-/* android-framework 2.2.3
+/* android-framework 2.2.4
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -1827,15 +1827,13 @@ var android = (function () {
     }
     function getLineSpacingExtra(node, value) {
         let height = node.data(Resource.KEY_NAME, 'textRange');
-        if (!height) {
-            if (node.plainText) {
-                if (node.naturalChild) {
-                    height = node.bounds.height / (node.bounds.numberOfLines || 1);
-                }
-                else {
-                    height = node.actualTextHeight();
-                    node.data(Resource.KEY_NAME, 'textRange', height);
-                }
+        if (!height && node.plainText) {
+            if (node.naturalChild) {
+                height = node.bounds.height / (node.bounds.numberOfLines || 1);
+            }
+            else {
+                height = node.actualTextHeight();
+                node.data(Resource.KEY_NAME, 'textRange', height);
             }
         }
         if (!height && node.styleText) {
@@ -1887,8 +1885,8 @@ var android = (function () {
             }
         }
     }
-    function setConstraintPercent(node, value, horizontal, percent) {
-        if (value < 1 && !isNaN(percent) && node.pageFlow) {
+    function setConstraintPercent(node, value, horizontal, percentAvailable) {
+        if (value < 1 && !isNaN(percentAvailable) && node.pageFlow) {
             const parent = node.actualParent || node.documentParent;
             let boxPercent, marginPercent;
             if (horizontal) {
@@ -1901,24 +1899,24 @@ var android = (function () {
                 boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
                 marginPercent = (Math.max(!node.getBox(1 /* MARGIN_TOP */)[0] ? node.marginTop : 0, 0) + (!node.getBox(4 /* MARGIN_BOTTOM */)[0] ? node.marginBottom : 0)) / height;
             }
-            if (percent === 1 && value + marginPercent >= 1) {
+            if (percentAvailable === 1 && value + marginPercent >= 1) {
                 value = 1 - marginPercent;
             }
             else {
                 if (boxPercent) {
-                    if (percent < boxPercent) {
-                        boxPercent = Math.max(percent, 0);
-                        percent = 0;
+                    if (percentAvailable < boxPercent) {
+                        boxPercent = Math.max(percentAvailable, 0);
+                        percentAvailable = 0;
                     }
                     else {
-                        percent -= boxPercent;
+                        percentAvailable -= boxPercent;
                     }
                 }
-                if (percent === 0) {
+                if (percentAvailable === 0) {
                     boxPercent -= marginPercent;
                 }
                 else {
-                    percent = Math.max(percent - marginPercent, 0);
+                    percentAvailable = Math.max(percentAvailable - marginPercent, 0);
                 }
                 value = Math.min(value + boxPercent, 1);
             }
@@ -1940,13 +1938,13 @@ var android = (function () {
                 setLayoutDimension(node, '0px', horizontal, false);
             }
         }
-        return percent;
+        return percentAvailable;
     }
-    function constraintPercentValue(node, horizontal, percent) {
+    function constraintPercentValue(node, horizontal, percentAvailable) {
         const value = horizontal ? node.percentWidth : node.percentHeight;
-        return value ? setConstraintPercent(node, value, horizontal, percent) : percent;
+        return value ? setConstraintPercent(node, value, horizontal, percentAvailable) : percentAvailable;
     }
-    function constraintPercentWidth(node, percent = 1) {
+    function constraintPercentWidth(node, percentAvailable = 1) {
         const value = node.percentWidth;
         if (value) {
             const parent = node.actualParent;
@@ -1959,12 +1957,12 @@ var android = (function () {
                 }
             }
             else if (!node.inputElement) {
-                return constraintPercentValue(node, true, percent);
+                return constraintPercentValue(node, true, percentAvailable);
             }
         }
-        return percent;
+        return percentAvailable;
     }
-    function constraintPercentHeight(node, percent = 1) {
+    function constraintPercentHeight(node, percentAvailable = 1) {
         const value = node.percentHeight;
         if (value) {
             const parent = node.actualParent;
@@ -1977,10 +1975,10 @@ var android = (function () {
                 }
             }
             else if (!node.inputElement) {
-                return constraintPercentValue(node, false, percent);
+                return constraintPercentValue(node, false, percentAvailable);
             }
         }
-        return percent;
+        return percentAvailable;
     }
     function setLayoutDimension(node, value, horizontal, overwrite) {
         if (horizontal) {
@@ -2066,6 +2064,7 @@ var android = (function () {
         return +truncate(Math.max(start / (start + end), 0), accuracy);
     }
     const hasFlexibleContainer = (renderParent) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
+    const hasFlexibleHeight = (node) => node.hasHeight || node.layoutGrid || node.gridElement || node.layoutConstraint && node.blockHeight;
     function ascendFlexibleWidth(node, container) {
         let current = container ? node : node.renderParent, i = 0;
         while (current && !current.inlineWidth) {
@@ -2080,8 +2079,15 @@ var android = (function () {
         return false;
     }
     function ascendFlexibleHeight(node, container) {
-        const current = container ? node : node.actualParent;
-        return !!(current && (current.hasHeight || current.layoutGrid || current.gridElement || current.layoutConstraint && current.blockHeight));
+        let current = container ? node : node.actualParent;
+        if (current && hasFlexibleHeight(current)) {
+            return true;
+        }
+        if (container && node.flexElement && node.flexdata.column) {
+            current = node.actualParent;
+            return !!current && hasFlexibleHeight(current);
+        }
+        return false;
     }
     var View$MX = (Base) => {
         return class View extends Base {
@@ -2568,13 +2574,7 @@ var android = (function () {
                                 node.mergeGravity('layout_gravity', this.float);
                             }
                             else if (!setAutoMargin(node) && !this.blockStatic && this.display !== 'table') {
-                                let parentAlign;
-                                if (node.tagName === 'LEGEND') {
-                                    parentAlign = !isUserAgent(4 /* FIREFOX */) ? textAlign || checkTextAlign(this.cssAscend('textAlign'), true) : 'left';
-                                }
-                                else {
-                                    parentAlign = checkTextAlign(this.cssAscend('textAlign'), true);
-                                }
+                                const parentAlign = node.tagName === 'LEGEND' ? !isUserAgent(4 /* FIREFOX */) ? textAlign || checkTextAlign(this.cssAscend('textAlign'), true) : 'left' : checkTextAlign(this.cssAscend('textAlign'), true);
                                 if (parentAlign) {
                                     node.mergeGravity('layout_gravity', parentAlign, false);
                                 }
@@ -2691,7 +2691,7 @@ var android = (function () {
                     }
                 }
                 if (autoMargin.vertical && (renderParent.layoutFrame || renderParent.layoutVertical && renderParent.layoutLinear)) {
-                    node.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : autoMargin.top ? 'bottom' : 'top');
+                    (renderParent.hasAlign(128 /* COLUMN */) ? this : node).mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : autoMargin.top ? 'bottom' : 'top');
                 }
             }
             setBoxSpacing() {
@@ -4104,64 +4104,59 @@ var android = (function () {
                     }
                 }
             }
-            setConstraintDimension(percentWidth = NaN) {
-                percentWidth = constraintPercentWidth(this, percentWidth);
+            setConstraintDimension(percentAvailable = NaN) {
+                percentAvailable = constraintPercentWidth(this, percentAvailable);
                 constraintPercentHeight(this, 1);
-                if (!this.inputElement) {
+                if (!this.inputElement && !this.imageContainer) {
                     constraintMinMax(this, true);
                     constraintMinMax(this, false);
                 }
-                return percentWidth;
+                return percentAvailable;
             }
-            setFlexDimension(dimension, percentWidth = NaN) {
-                const { grow, basis, shrink } = this.flexbox;
-                const horizontal = dimension === 'width';
-                const setFlexGrow = (value, shrinkValue) => {
-                    if (grow > 0) {
-                        this.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, this.localSettings.floatPrecision));
-                        return true;
-                    }
-                    else if (value) {
-                        if (shrinkValue !== undefined) {
-                            if (shrinkValue > 1) {
-                                value /= shrinkValue;
+            setFlexDimension(dimension, percentAvailable = NaN, weight) {
+                if (!weight) {
+                    const { grow, shrink, basis } = this.flexbox;
+                    const horizontal = dimension === 'width';
+                    const setFlexGrow = (value) => {
+                        if (value > 0) {
+                            if (grow > 0 || shrink !== 1) {
+                                let size = this.bounds[dimension];
+                                if (size !== value) {
+                                    if (size < value) {
+                                        [value, size] = [size, value];
+                                    }
+                                    this.app(horizontal ? 'layout_constraintWidth_max' : 'layout_constraintHeight_max', formatPX(size));
+                                }
                             }
-                            else if (shrinkValue > 0) {
-                                value *= 1 - shrinkValue;
-                            }
+                            this.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
+                            return true;
                         }
-                        this.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
+                        return false;
+                    };
+                    if (basis !== '0%' && isPercent(basis)) {
+                        setConstraintPercent(this, convertPercent(basis), horizontal, NaN);
                     }
-                    return false;
-                };
-                if (isLength(basis)) {
-                    setFlexGrow(this.parseUnit(basis, { dimension }), shrink);
-                    setLayoutDimension(this, '0px', horizontal, true);
-                }
-                else if (basis !== '0%' && isPercent(basis)) {
-                    setFlexGrow();
-                    setConstraintPercent(this, convertPercent(basis), horizontal, NaN);
-                }
-                else if (this.hasFlex(horizontal ? 'row' : 'column') && setFlexGrow(this.hasPX(dimension, { percent: false }) ? horizontal ? this.actualWidth : this.actualHeight : 0, shrink)) {
-                    setLayoutDimension(this, '0px', horizontal, true);
-                }
-                else if (horizontal) {
-                    percentWidth = constraintPercentWidth(this, percentWidth);
-                }
-                else {
-                    constraintPercentHeight(this, 0);
-                }
-                if (shrink > 1) {
-                    this.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
-                }
-                if (horizontal) {
-                    constraintPercentHeight(this);
+                    else if (isLength(basis) && setFlexGrow(this.parseUnit(basis, { dimension }))) {
+                        setLayoutDimension(this, '0px', horizontal, true);
+                    }
+                    else if (horizontal) {
+                        percentAvailable = constraintPercentWidth(this, percentAvailable);
+                    }
+                    else {
+                        percentAvailable = constraintPercentHeight(this, percentAvailable);
+                    }
+                    if (shrink > 1) {
+                        this.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
+                    }
+                    if (horizontal) {
+                        constraintPercentHeight(this);
+                    }
                 }
                 if (!this.inputElement && !this.imageContainer) {
                     constraintMinMax(this, true);
                     constraintMinMax(this, false);
                 }
-                return percentWidth;
+                return percentAvailable;
             }
             getMatchConstraint(parent = this.renderParent, override) {
                 if (parent && (parent.layoutWidth || parent.blockStatic || parent.hasWidth || override)) {
@@ -10539,15 +10534,12 @@ var android = (function () {
         }
     }
     function getOuterFrameChild(node) {
-        while (node) {
-            if (node.layoutFrame) {
-                return node.innerWrapped;
-            }
-            node = node.innerWrapped;
+        if (node.layoutFrame && node.hasAlign(128 /* COLUMN */)) {
+            return node.innerMostWrapped;
         }
     }
-    function setLayoutWeight(node, horizontal, dimension, attr, value, margin) {
-        if (value > 0 && (node[dimension] === 0 || margin)) {
+    function setLayoutWeight(node, horizontal, attr, value) {
+        if (value > 0) {
             node.app(attr, truncate$4(value, node.localSettings.floatPrecision));
             if (horizontal) {
                 node.setLayoutWidth('0px');
@@ -10620,7 +10612,7 @@ var android = (function () {
                         return {
                             parent: container,
                             renderAs: container,
-                            outputAs: this.application.renderNode(new LayoutUI$1(parent, container, CONTAINER_NODE.FRAME, 2048 /* SINGLE */))
+                            outputAs: this.application.renderNode(new LayoutUI$1(parent, container, CONTAINER_NODE.FRAME, 2048 /* SINGLE */ | 128 /* COLUMN */))
                         };
                     }
                 }
@@ -10745,7 +10737,7 @@ var android = (function () {
                         const segStart = seg[0];
                         const segEnd = seg[q - 1];
                         const opposing = seg === segmented;
-                        let maxSize = 0, grow = 0, percentWidth = 0, gap = 0, percentGap = 0, parentEnd = true, baseline = null, spreadInside = justifyContent === 'space-between', boundsWeight;
+                        let maxSize = 0, grow = 0, gap = 0, percentAvailable = 0, percentGap = 0, parentEnd = true, baseline = null, spreadInside = justifyContent === 'space-between', boundsWeight;
                         segStart.anchor(LT, 'parent');
                         segEnd.anchor(RB, 'parent');
                         if (opposing) {
@@ -10770,48 +10762,47 @@ var android = (function () {
                             }
                             segStart.anchorStyle(orientation, bias, chainStyle);
                         }
-                        else if (q > 1) {
-                            grow = seg.reduce((a, b) => a + b.flexbox.grow, 0);
-                            if (!spreadInside) {
+                        else {
+                            if (!spreadInside && q > 1) {
                                 spreadInside = justifyContent === 'space-around' || grow >= 1 && !wrap;
                             }
-                            if (grow > 0 || seg.some(item => item.flexbox.shrink < 1)) {
-                                boundsWeight = this.adjustGrowRatio(node, seg, WHL);
-                            }
-                            let sizeCount = 1, maxDimension = 0;
-                            for (let k = 0; k < q; ++k) {
-                                const item = seg[k];
-                                const value = (item.data(this.name, 'boundsData') || item.bounds)[HWL];
-                                if (k === 0) {
-                                    maxSize = value;
+                            [grow, boundsWeight] = this.adjustGrowRatio(node, seg, WHL);
+                            if (q > 1) {
+                                let sizeCount = 1, maxDimension = 0;
+                                for (let k = 0; k < q; ++k) {
+                                    const item = seg[k];
+                                    const value = (item.data(this.name, 'boundsData') || item.bounds)[HWL];
+                                    if (k === 0) {
+                                        maxSize = value;
+                                    }
+                                    else if (value === maxSize) {
+                                        ++sizeCount;
+                                    }
+                                    else if (value > maxSize) {
+                                        maxSize = value;
+                                        sizeCount = 1;
+                                    }
+                                    if (value > maxDimension && item[HWL]) {
+                                        maxDimension = value;
+                                    }
                                 }
-                                else if (value === maxSize) {
-                                    ++sizeCount;
+                                if (maxDimension === maxSize) {
+                                    maxSize = Infinity;
                                 }
-                                else if (value > maxSize) {
-                                    maxSize = value;
-                                    sizeCount = 1;
+                                else if (q === sizeCount) {
+                                    maxSize = NaN;
                                 }
-                                if (value > maxDimension && item[HWL]) {
-                                    maxDimension = value;
+                                if (horizontal) {
+                                    percentAvailable = View.availablePercent(seg, 'width', node.box.width);
+                                    if (columnGap > 0) {
+                                        gap = columnGap;
+                                        percentGap = (columnGap / 2) / node.bounds.width;
+                                    }
                                 }
-                            }
-                            if (maxDimension === maxSize) {
-                                maxSize = Infinity;
-                            }
-                            else if (sizeCount === q) {
-                                maxSize = NaN;
-                            }
-                            if (horizontal) {
-                                percentWidth = View.availablePercent(seg, 'width', node.box.width);
-                                if (columnGap > 0) {
-                                    gap = columnGap;
-                                    percentGap = (columnGap / 2) / node.bounds.width;
+                                else if (rowGap > 0) {
+                                    gap = rowGap;
+                                    percentGap = (rowGap / 2) / node.bounds.height;
                                 }
-                            }
-                            else if (rowGap > 0) {
-                                gap = rowGap;
-                                percentGap = (rowGap / 2) / node.bounds.height;
                             }
                         }
                         for (let k = 0; k < q; ++k) {
@@ -10828,7 +10819,7 @@ var android = (function () {
                                 chain.anchor(TL, 'parent');
                                 if (parentEnd) {
                                     if (dimensionInverse) {
-                                        setLayoutWeight(chain, horizontal, WHL, orientationWeight, 1);
+                                        setLayoutWeight(chain, horizontal, orientationWeight, 1);
                                     }
                                     else {
                                         chain.anchor(BR, 'parent');
@@ -11005,15 +10996,15 @@ var android = (function () {
                                                         if (!horizontal && chain.blockStatic) {
                                                             setLayoutWeightOpposing(chain, horizontal, belowSize() || !innerWrapped && !chain.naturalElement ? '0px' : 'match_parent');
                                                         }
+                                                        else if (q === 1) {
+                                                            setLayoutWeightOpposing(chain, horizontal, horizontal ? node.flexbox.alignSelf === 'stretch' && node.actualParent.flexdata.row && (node.hasHeight || !node.inlineHeight) ? '0px' : 'wrap_content' : dimension ? '0px' : 'match_parent');
+                                                        }
                                                         else if (isNaN(maxSize)) {
                                                             setLayoutWeightOpposing(chain, horizontal, !horizontal && !wrap && !chain.isEmpty()
                                                                 ? dimension ? '0px' : 'match_parent'
                                                                 : dimension && alignContent === 'normal'
                                                                     ? !horizontal || !wrap ? '0px' : 'match_parent'
                                                                     : 'wrap_content');
-                                                        }
-                                                        else if (q === 1) {
-                                                            setLayoutWeightOpposing(chain, horizontal, horizontal ? node.flexbox.alignSelf === 'stretch' && node.actualParent.flexdata.row && (node.hasHeight || !node.inlineHeight) ? '0px' : 'wrap_content' : dimension ? '0px' : 'match_parent');
                                                         }
                                                         else if (belowSize()) {
                                                             setLayoutWeightOpposing(chain, horizontal, !horizontal && chain.flexElement && chain.flexdata.row ? 'match_parent' : '0px');
@@ -11035,17 +11026,18 @@ var android = (function () {
                                         break;
                                     }
                                 }
+                                const weight = chain.flexbox.weight;
                                 if (horizontal) {
-                                    if (!chain.flexbox.weight && hasMultiline(chain, node)) {
+                                    if (!weight && hasMultiline(chain, node)) {
                                         setBoxPercentage(chain, node, WHL);
                                     }
-                                    percentWidth = chain.setFlexDimension(WHL, percentWidth);
+                                    percentAvailable = chain.setFlexDimension(WHL, percentAvailable, weight);
                                     if (!chain.layoutWidth && (wrap && !chain[WHL] && !chain.autoMargin.horizontal || spreadInside && chain.autoMargin[reverse ? BR : LT])) {
                                         chain.setLayoutWidth('wrap_content');
                                     }
                                 }
                                 else {
-                                    percentWidth = chain.setFlexDimension(WHL, percentWidth);
+                                    percentAvailable = chain.setFlexDimension(WHL, percentAvailable, weight);
                                 }
                                 if (parentBottom > 0 && j === length - 1) {
                                     marginBottom = Math.max(chain.linear.bottom - parentBottom, marginBottom);
@@ -11064,7 +11056,7 @@ var android = (function () {
                                             continue;
                                         }
                                     }
-                                    percentWidth -= percentGap;
+                                    percentAvailable -= percentGap;
                                 }
                             }
                             chain.anchored = true;
@@ -11076,30 +11068,33 @@ var android = (function () {
                                 const item = seg[k];
                                 const weight = item.flexbox.weight;
                                 if (weight) {
-                                    setLayoutWeight(item, horizontal, WHL, orientationWeight, weight);
+                                    setLayoutWeight(item, horizontal, orientationWeight, weight);
                                 }
                                 else {
-                                    const autoMargin = item.innerMostWrapped.autoMargin;
-                                    if (horizontal) {
-                                        if (autoMargin.leftRight) {
+                                    const innerWrapped = getOuterFrameChild(item);
+                                    if (innerWrapped) {
+                                        const autoMargin = innerWrapped.autoMargin;
+                                        if (horizontal) {
+                                            if (autoMargin.leftRight) {
+                                                layoutWeight.push([item, 2]);
+                                            }
+                                            else if (autoMargin.horizontal) {
+                                                layoutWeight.push([item, 1]);
+                                            }
+                                        }
+                                        else if (autoMargin.topBottom) {
                                             layoutWeight.push([item, 2]);
                                         }
-                                        else if (autoMargin.horizontal) {
+                                        else if (autoMargin.vertical) {
                                             layoutWeight.push([item, 1]);
                                         }
-                                    }
-                                    else if (autoMargin.topBottom) {
-                                        layoutWeight.push([item, 2]);
-                                    }
-                                    else if (autoMargin.vertical) {
-                                        layoutWeight.push([item, 1]);
                                     }
                                 }
                             }
                             const r = layoutWeight.length;
                             if (r) {
                                 for (const [item, value] of layoutWeight) {
-                                    setLayoutWeight(item, horizontal, WHL, orientationWeight, boundsWeight ? item.bounds[WHL] / boundsWeight : ((1 - grow) * value) / r, true);
+                                    setLayoutWeight(item, horizontal, orientationWeight, boundsWeight ? item.bounds[WHL] / boundsWeight : ((1 - grow) * value) / r);
                                 }
                             }
                             if (marginBottom > 0) {
@@ -11187,29 +11182,36 @@ var android = (function () {
         adjustGrowRatio(node, items, dimension) {
             const horizontal = dimension === 'width';
             const percent = (horizontal ? node.hasWidth || ascendFlexibleWidth(node, true) : node.hasHeight || ascendFlexibleHeight(node, true)) && !items.some(item => item.innerMostWrapped.autoMargin[horizontal ? 'horizontal' : 'vertical']);
-            let result = 0;
+            let resultGrow = 0, resultSize = 0;
             if (horizontal || percent) {
                 const groupGrow = [];
-                const groupBasis = [];
                 const percentage = [];
                 const options = { dimension };
                 let growShrinkType = 0, maxBasisUnit = 0, maxDimension = 0, maxRatio = NaN, maxBasis;
                 for (let i = 0, length = items.length; i < length; ++i) {
                     const item = items[i].innerMostWrapped;
                     const { alignSelf, basis, shrink, grow } = item.flexbox;
+                    resultGrow += grow;
                     if (basis === 'auto' && item.hasPX(dimension, { percent: false })) {
                         continue;
                     }
                     const size = item.bounds[dimension];
-                    if (grow > 0 || shrink !== 1) {
+                    if (grow > 0 || shrink !== 1 || isLength$2(basis, true)) {
                         let value;
-                        if (basis === 'auto') {
+                        if (basis === 'auto' || basis === '0%') {
                             if (item.hasPX(dimension)) {
                                 value = item.parseUnit(item.css(dimension));
                             }
                             else {
-                                const boundsData = item.data(this.name, 'boundsData');
-                                value = boundsData ? boundsData[dimension] : size;
+                                if (basis === '0%' && !percent) {
+                                    value = size;
+                                }
+                                else {
+                                    let boundsData;
+                                    item.cssTry('flex-grow', '0', function () { boundsData = this.boundingClientRect; });
+                                    boundsData || (boundsData = item.data(this.name, 'boundsData'));
+                                    value = boundsData ? boundsData[dimension] : size;
+                                }
                                 if (value === size) {
                                     if (grow > 0 && item.blockStatic) {
                                         percentage.push(item);
@@ -11221,42 +11223,28 @@ var android = (function () {
                         else {
                             value = item.parseUnit(basis, options);
                         }
-                        if (value > 0) {
-                            let largest;
-                            if (size < value) {
-                                if (isNaN(maxRatio) || shrink < maxRatio) {
-                                    maxRatio = shrink;
-                                    largest = true;
-                                    growShrinkType = 1;
-                                }
-                            }
-                            else if (isNaN(maxRatio) || grow > maxRatio) {
-                                maxRatio = grow;
+                        let largest;
+                        if (size < value) {
+                            if (isNaN(maxRatio) || shrink < maxRatio) {
+                                maxRatio = shrink;
                                 largest = true;
-                                growShrinkType = 2;
+                                growShrinkType = 1;
                             }
-                            if (largest) {
-                                maxBasis = item;
-                                maxBasisUnit = value;
-                                maxDimension = size;
-                            }
-                            groupGrow.push({
-                                item,
-                                size,
-                                basis: value,
-                                shrink,
-                                grow
-                            });
                         }
-                        else if (grow > 0 && alignSelf === 'auto') {
-                            percentage.push(item);
+                        else if (isNaN(maxRatio) || grow > maxRatio) {
+                            maxRatio = grow;
+                            largest = true;
+                            growShrinkType = 2;
                         }
-                    }
-                    else if (isLength$2(basis)) {
-                        groupBasis.push({
+                        if (largest) {
+                            maxBasis = item;
+                            maxBasisUnit = value;
+                            maxDimension = size;
+                        }
+                        groupGrow.push({
                             item,
                             size,
-                            basis: Math.min(size, item.parseUnit(basis, options)),
+                            basis: value,
                             shrink,
                             grow
                         });
@@ -11268,23 +11256,23 @@ var android = (function () {
                 for (let i = 0, q = percentage.length; i < q; ++i) {
                     setBoxPercentage(percentage[i], node, dimension);
                 }
-                if (groupGrow.length) {
-                    groupGrow.push(...groupBasis);
-                    for (let i = 0, q = groupGrow.length; i < q; ++i) {
-                        const data = groupGrow[i];
-                        const { basis, item } = data;
-                        if (item === maxBasis || basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
-                            item.flexbox.weight = 1;
-                            result = data.size;
-                        }
-                        else if (basis) {
-                            item.flexbox.weight = ((data.size / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
-                        }
-                        item.flexbox.basis = 'auto';
+                for (let i = 0, q = groupGrow.length; i < q; ++i) {
+                    const data = groupGrow[i];
+                    const { basis, item } = data;
+                    if (item === maxBasis) {
+                        item.flexbox.weight = 1;
+                        resultSize = data.size;
                     }
+                    else if (basis === maxBasisUnit && (growShrinkType === 1 && maxRatio !== 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio > 0 && maxRatio === data.grow)) {
+                        item.flexbox.weight = 1;
+                    }
+                    else if (basis) {
+                        item.flexbox.weight = ((data.size / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
+                    }
+                    item.flexbox.basis = 'auto';
                 }
             }
-            return result;
+            return [resultGrow, resultSize];
         }
     }
 

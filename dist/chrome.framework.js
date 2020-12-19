@@ -1,4 +1,4 @@
-/* chrome-framework 2.2.3
+/* chrome-framework 2.2.4
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -985,15 +985,17 @@ var chrome = (function () {
                         ({ pathname, commands, inline, compress, tasks, watch, cloudStorage, attributes } = saveAsImage);
                         [saveAs, saveTo] = checkSaveAs(uri, pathname);
                     }
-                    else if (file) {
-                        let fileAs = parseFileAs('saveTo', file);
-                        if (fileAs) {
-                            [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);
-                        }
-                        else {
-                            fileAs = parseFileAs('saveAs', file);
+                    else {
+                        if (file) {
+                            let fileAs = parseFileAs('saveTo', file);
                             if (fileAs) {
-                                saveAs = fileAs.file;
+                                [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);
+                            }
+                            else {
+                                fileAs = parseFileAs('saveAs', file);
+                                if (fileAs) {
+                                    saveAs = fileAs.file;
+                                }
                             }
                         }
                         const { chromeCommands, chromeOptions, chromeWatch } = element.dataset;
@@ -1015,17 +1017,17 @@ var chrome = (function () {
                     if (filename) {
                         data.filename = filename;
                     }
-                    if (watch) {
-                        data.watch = watch;
-                    }
-                    if (element) {
-                        data.outerHTML = element.outerHTML;
-                    }
                     if (commands && commands.length && commands[0] !== '~') {
                         data.commands = commands;
                     }
                     if (inline) {
                         data.format = 'base64';
+                    }
+                    if (watch) {
+                        data.watch = watch;
+                    }
+                    if (element) {
+                        data.outerHTML = element.outerHTML;
                     }
                     assets.push(data);
                     return data;
