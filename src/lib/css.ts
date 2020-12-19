@@ -239,16 +239,11 @@ function calculateSpecificity(value: string) {
                     continue;
             }
         }
-        else if (segment.startsWith('*|*')) {
-            if (segment.length > 3) {
-                return 0;
-            }
-        }
         else if (segment.startsWith('*|')) {
+            if (segment === '*|*') {
+                continue;
+            }
             segment = segment.substring(2);
-        }
-        else if (segment.startsWith('::')) {
-            return 0;
         }
         let subMatch: Null<RegExpExecArray>;
         while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
@@ -260,21 +255,21 @@ function calculateSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
+        while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
+            result += 1;
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+        }
         while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
             const pseudoClass = subMatch[0];
             switch (pseudoClass) {
-                case ':scope':
                 case ':root':
+                case ':scope':
                     break;
                 default:
                     result += 10;
                     break;
             }
             segment = spliceString(segment, subMatch.index, pseudoClass.length);
-        }
-        while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
-            result += 1;
-            segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
             const label = subMatch[0];
@@ -290,6 +285,9 @@ function calculateSpecificity(value: string) {
                     break;
             }
             segment = spliceString(segment, subMatch.index, label.length);
+        }
+        if (segment.trim()) {
+            return 0;
         }
     }
     return result;
@@ -1782,15 +1780,18 @@ export function parseSelectorText(value: string) {
         if (removed) {
             value = segments.join('');
         }
+        CSS.SELECTOR_ATTR_G.lastIndex = 0;
         let result: string[],
             normalized = value,
             found: Undef<boolean>,
             match: Null<RegExpExecArray>;
-        while (match = CSS.SELECTOR_ATTR.exec(normalized)) {
-            const index = match.index;
-            const length = match[0].length;
-            normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
-            found = true;
+        while (match = CSS.SELECTOR_ATTR_G.exec(normalized)) {
+            if (match[0].includes(',')) {
+                const index = match.index;
+                const length = match[0].length;
+                normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
+                found = true;
+            }
         }
         if (found) {
             result = [];

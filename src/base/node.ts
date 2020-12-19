@@ -1722,13 +1722,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             for (let i = 0, length = queries.length; i < length; ++i) {
                 invalid: {
                     const query = trimSelector(queries[i]);
-                    switch (query) {
-                        case ':root':
-                        case ':scope':
-                            if (this._element === document.documentElement) {
-                                result.push(this);
-                            }
-                            continue;
+                    if (query === ':root' || query === ':scope') {
+                        if (this._element === document.documentElement && !result.includes(this)) {
+                            result.push(this);
+                        }
+                        continue;
                     }
                     const selectors: QueryData[] = [];
                     let offset = -1;
@@ -1738,15 +1736,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     else {
                         SELECTOR_G.lastIndex = 0;
-                        let adjacent = '',
-                            selector = '',
-                            segment: string,
-                            all: boolean,
+                        let selector = '',
                             match: Null<RegExpExecArray>;
                         while (match = SELECTOR_G.exec(query)) {
-                            segment = match[1];
+                            let segment = match[1],
+                                adjacent: Undef<string>,
+                                all: Undef<boolean>;
                             selector += segment;
-                            all = false;
                             if (segment.length === 1) {
                                 const ch = segment[0];
                                 switch (ch) {
@@ -1764,28 +1760,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         break;
                                 }
                             }
-                            else if (segment.startsWith('*|*')) {
-                                if (segment.length > 3) {
-                                    break invalid;
-                                }
-                                all = true;
-                            }
                             else if (segment.startsWith('*|')) {
-                                segment = segment.substring(2);
-                            }
-                            else if (segment.startsWith('::')) {
-                                break invalid;
+                                if (segment === '*|*') {
+                                    all = true;
+                                }
+                                else {
+                                    segment = segment.substring(2);
+                                }
                             }
                             if (all) {
                                 selectors.push({ all: true });
                             }
                             else {
-                                let tagName: Undef<string>,
-                                    id: Undef<string>,
-                                    classList: Undef<string[]>,
-                                    attrList: Undef<QueryAttribute[]>,
-                                    pseudoList: Undef<string[]>,
-                                    notList: Undef<string[]>,
+                                let attrList: Undef<QueryAttribute[]>,
                                     subMatch: Null<RegExpExecArray>;
                                 while (subMatch = SELECTOR_ATTR.exec(segment)) {
                                     let key = subMatch[1].replace('\\:', ':'),
@@ -1819,6 +1806,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 if (segment.includes('::')) {
                                     break invalid;
                                 }
+                                let pseudoList: Undef<string[]>,
+                                    notList: Undef<string[]>;
                                 while (subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) {
                                     const pseudoClass = subMatch[0];
                                     if (pseudoClass.startsWith(':not(')) {
@@ -1856,6 +1845,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     }
                                     segment = spliceString(segment, subMatch.index, pseudoClass.length);
                                 }
+                                let tagName: Undef<string>,
+                                    id: Undef<string>,
+                                    classList: Undef<string[]>;
                                 while (subMatch = SELECTOR_LABEL.exec(segment)) {
                                     const label = subMatch[0];
                                     switch (label[0]) {
@@ -1890,7 +1882,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 });
                             }
                             ++offset;
-                            adjacent = '';
                         }
                         if (query.replace(/\s+/g, '').length !== selector.replace(/\s+/g, '').length) {
                             break invalid;
@@ -1942,7 +1933,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                         }
                         else if (currentCount === 0) {
-                            if (i === queries.length - 1 || resultCount > 0 && resultCount <= s) {
+                            if (i === length - 1 || resultCount > 0 && resultCount <= s) {
                                 if (resultCount > 0 && s > resultCount) {
                                     pending.length = resultCount;
                                 }

@@ -9,9 +9,9 @@ export const STRING = {
     UNIT_LENGTH,
     DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
     CSS_SELECTOR_LABEL: '[\\.#]?[A-Za-z][\\w\\-]*',
-    CSS_SELECTOR_PSEUDO_ELEMENT: '::[A-Za-z\\-]+',
+    CSS_SELECTOR_PSEUDO_ELEMENT: '::[a-z\\-]+',
     CSS_SELECTOR_PSEUDO_CLASS: ':(?:not\\(\\s*(:nth(?:-last)?-(?:child|of-type)\\([^)]+\\)|[^)]+)\\s*\\)|[A-Za-z\\-]+(?:\\(\\s*([^)]+)\\s*\\))?)',
-    CSS_SELECTOR_ATTR: '\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
+    CSS_SELECTOR_ATTR: `\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\]`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
     CSS_RESOLUTION: `(${DECIMAL})(dpi|dpcm|dppx)`,
@@ -29,11 +29,12 @@ export const CSS = {
     HEX: /^#?[\dA-Fa-f]{3,8}$/,
     RGBA: /rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+%?)\s*)?\)/,
     HSLA: /hsla?\(\s*(\d+),\s*(\d+)%,\s*(\d+)%(?:,\s*([\d.]+%?)\s*)?\)/,
-    SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+*])`, 'g'),
+    SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_LABEL}|\\*)+|[>~+*])`, 'g'),
     SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
     SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),
     SELECTOR_PSEUDO_CLASS: new RegExp(STRING.CSS_SELECTOR_PSEUDO_CLASS),
-    SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR)
+    SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR),
+    SELECTOR_ATTR_G: new RegExp(STRING.CSS_SELECTOR_ATTR, 'g')
 };
 
 export const TRANSFORM = {
