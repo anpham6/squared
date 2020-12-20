@@ -140,7 +140,7 @@ interface QueryData {
     fromNot?: boolean;
 }
 
-interface QueryAttribute extends StringValue {
+interface QueryAttribute extends StringValue<Undef<string>> {
     caseInsensitive: boolean;
     symbol?: string;
     endsWith?: boolean;

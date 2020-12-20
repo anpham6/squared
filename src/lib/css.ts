@@ -1825,13 +1825,15 @@ export function getSpecificity(value: string) {
     let result = 0;
     for (const seg of splitEnclosing(value, REGEXP_CSSGROUP)) {
         if (seg[0] === ':') {
-            const match = REGEXP_SELECTORIS.exec(seg);
-            if (match) {
-                result += getSelectorValue(match[1]);
+            if (seg.startsWith(':where(')) {
                 continue;
             }
-            else if (seg.startsWith(':where(')) {
-                continue;
+            else {
+                const match = REGEXP_SELECTORIS.exec(seg);
+                if (match) {
+                    result += getSelectorValue(match[1]);
+                    continue;
+                }
             }
         }
         result += calculateSpecificity(seg);

@@ -1,9 +1,9 @@
 const DECIMAL = '-?(?:\\d+(?:\\.\\d+)?|\\d*\\.\\d+)';
 const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
-const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
-const SELECTOR_PSEUDO_ELEMENT = '::[a-z\\-]+';
-const SELECTOR_PSEUDO_CLASS = ':([A-Za-z\\-]+)(?:\\(([^)]+)\\))?';
 const SELECTOR_ATTR = `\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\]`;
+const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
+const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
+const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
 
 export const STRING = {
     DECIMAL,
@@ -35,7 +35,7 @@ export const CSS = {
     SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
     SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
     SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g'),
-    SELECTOR_ENCLOSING: /:(?:is|where|not)/ig,
+    SELECTOR_ENCLOSING: /:(is|where|not)/ig,
     SELECTOR_NOT: /^:not\((.+)\)$/i
 };
 
