@@ -1,5 +1,9 @@
 const DECIMAL = '-?(?:\\d+(?:\\.\\d+)?|\\d*\\.\\d+)';
 const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
+const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
+const SELECTOR_PSEUDO_ELEMENT = '::[a-z\\-]+';
+const SELECTOR_PSEUDO_CLASS = ':([A-Za-z\\-]+)(?:\\(([^)]+)\\))?';
+const SELECTOR_ATTR = `\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\]`;
 
 export const STRING = {
     DECIMAL,
@@ -8,10 +12,6 @@ export const STRING = {
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
     UNIT_LENGTH,
     DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
-    CSS_SELECTOR_LABEL: '[\\.#]?[A-Za-z][\\w\\-]*',
-    CSS_SELECTOR_PSEUDO_ELEMENT: '::[a-z\\-]+',
-    CSS_SELECTOR_PSEUDO_CLASS: ':(?:([nN][oO][tT])\\(\\s*(:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE]\\([^)]+?\\s*\\))|[^)]+)\\s*\\)|([A-Za-z\\-]+)(?:\\(\\s*([^)]+?)\\s*\\))?)',
-    CSS_SELECTOR_ATTR: `\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\]`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
     CSS_RESOLUTION: `(${DECIMAL})(dpi|dpcm|dppx)`,
@@ -27,15 +27,16 @@ export const FILE = {
 export const CSS = {
     URL: /^\s*url\((.+)\)\s*$/,
     HEX: /^#?[\dA-Fa-f]{3,8}$/,
-    RGBA: /rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+%?)\s*)?\)/,
-    HSLA: /hsla?\(\s*(\d+),\s*(\d+)%,\s*(\d+)%(?:,\s*([\d.]+%?)\s*)?\)/,
-    SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_LABEL}|\\*)+|[>~+*])`, 'g'),
-    SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
-    SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),
-    SELECTOR_PSEUDO_CLASS: new RegExp(STRING.CSS_SELECTOR_PSEUDO_CLASS),
-    SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR),
-    SELECTOR_ATTR_G: new RegExp(STRING.CSS_SELECTOR_ATTR, 'g'),
-    SELECTOR_ENCLOSING: /:(?:is|where|not)/ig
+    RGBA: /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/,
+    HSLA: /hsla?\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+%?)\s*)?\)/,
+    SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${SELECTOR_ATTR}|${SELECTOR_PSEUDO_ELEMENT}|${SELECTOR_PSEUDO_CLASS}|${SELECTOR_LABEL}|\\*)+|[>~+*])`, 'g'),
+    SELECTOR_LABEL: new RegExp(SELECTOR_LABEL),
+    SELECTOR_PSEUDO_ELEMENT: new RegExp(SELECTOR_PSEUDO_ELEMENT),
+    SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
+    SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
+    SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g'),
+    SELECTOR_ENCLOSING: /:(?:is|where|not)/ig,
+    SELECTOR_NOT: /^:not\((.+)\)$/i
 };
 
 export const TRANSFORM = {

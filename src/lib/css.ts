@@ -34,7 +34,6 @@ const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
 const REGEXP_CSSGROUP = /:(?:is|where)/g;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
-const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -219,7 +218,7 @@ function calculatePercent(element: StyleElement, value: string, clampRange: bool
 function calculateSpecificity(value: string) {
     let result = 0;
     for (const part of splitEnclosing(value, ':not')) {
-        const match = REGEXP_SELECTORNOT.exec(part);
+        const match = CSS.SELECTOR_NOT.exec(part);
         if (match) {
             result += getSelectorValue(match[1]);
             value = value.replace(part, '');
@@ -259,16 +258,8 @@ function calculateSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-            const pseudoClass = subMatch[0];
-            switch (pseudoClass) {
-                case ':root':
-                case ':scope':
-                    break;
-                default:
-                    result += 10;
-                    break;
-            }
-            segment = spliceString(segment, subMatch.index, pseudoClass.length);
+            result += 10;
+            segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
             const label = subMatch[0];
@@ -1802,16 +1793,11 @@ export function parseSelectorText(value: string) {
                     position = index + 1;
                 }
                 else {
-                    if (position > 0) {
-                        result.push(value.substring(position).trim());
-                    }
+                    result.push(value.substring(position).trim());
                     break;
                 }
             }
             while (true);
-            if (result.length === 0) {
-                result.push(value);
-            }
         }
         else {
             result = value.split(CHAR_SEPARATOR);

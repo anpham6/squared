@@ -260,10 +260,6 @@ declare module "lib" {
             LENGTH_PERCENTAGE: string;
             UNIT_LENGTH: string;
             DATAURI: string;
-            CSS_SELECTOR_LABEL: string;
-            CSS_SELECTOR_PSEUDO_ELEMENT: string;
-            CSS_SELECTOR_PSEUDO_CLASS: string;
-            CSS_SELECTOR_ATTR: string;
             CSS_ANGLE: string;
             CSS_TIME: string;
             CSS_RESOLUTION: string;
@@ -286,6 +282,7 @@ declare module "lib" {
             SELECTOR_ATTR: RegExp;
             SELECTOR_ATTR_G: RegExp;
             SELECTOR_ENCLOSING: RegExp;
+            SELECTOR_NOT: RegExp;
         };
         const TRANSFORM: {
             MATRIX: RegExp;
