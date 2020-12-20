@@ -160,13 +160,7 @@ export function createViewAttribute(data?: PlainObject) {
 }
 
 export function createThemeAttribute(data?: PlainObject): ThemeAttribute {
-    return {
-        output: { path: 'res/values', file: '' },
-        name: '',
-        parent: '',
-        items: {},
-        ...data
-    };
+    return { name: '', parent: '', items: {}, ...data };
 }
 
 export function replaceTab(value: string, spaces = 4, preserve?: boolean) {

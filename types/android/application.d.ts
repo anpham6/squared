@@ -51,10 +51,7 @@ interface StyleAttribute extends GroupAttribute {
 
 interface ThemeAttribute extends GroupAttribute {
     items: StringMap;
-    output?: {
-        path: string;
-        file: string;
-    };
+    output?: Partial<LocationUri>;
 }
 
 type CustomizationResult<T> = (this: T, result: StandardMap, api: number, value: string) => boolean;

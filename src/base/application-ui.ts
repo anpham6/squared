@@ -326,14 +326,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
+    public saveDocument(filename: string, content: string, pathname?: string, index = -1) {
         const layout: LayoutAsset = {
             pathname: pathname ? trimString(pathname.replace(/\\/g, '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
             filename,
             content,
             index
         };
-        if (index === undefined || !(index >= 0 && index < this._layouts.length)) {
+        if (index === -1 || !(index >= 0 && index < this._layouts.length)) {
             this._layouts.push(layout);
         }
         else {
@@ -1954,18 +1954,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get layouts() {
         return this._layouts.sort((a, b) => {
-            const indexA = a.index;
-            const indexB = b.index;
+            const indexA = a.index!;
+            const indexB = b.index!;
             if (indexA !== indexB) {
-                if (indexA === 0 || indexB === Infinity || indexB === undefined && !(indexA === Infinity)) {
+                if (indexA === 0 || indexB === Infinity || indexB === -1 && indexA !== Infinity) {
                     return -1;
                 }
-                else if (indexB === 0 || indexA === Infinity || indexA === undefined && !(indexB === Infinity)) {
+                else if (indexB === 0 || indexA === Infinity || indexA === -1 && indexB !== Infinity) {
                     return 1;
                 }
-                else if (indexA !== undefined && indexB !== undefined) {
-                    return indexA - indexB;
-                }
+                return indexA - indexB;
             }
             return 0;
         });
