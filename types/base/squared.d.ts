@@ -547,6 +547,8 @@ declare module "base" {
         get percentHeight(): number;
         get firstChild(): Null<Node>;
         get lastChild(): Null<Node>;
+        get firstElementChild(): Null<Node>;
+        get lastElementChild(): Null<Node>;
         get previousSibling(): Null<Node>;
         get nextSibling(): Null<Node>;
         get previousElementSibling(): Null<Node>;

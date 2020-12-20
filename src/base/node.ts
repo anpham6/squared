@@ -224,13 +224,13 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
             switch (pseudo) {
                 case ':first-child':
                 case ':nth-child(1)':
-                    if (child !== parent!.firstChild) {
+                    if (child !== parent!.firstElementChild) {
                         return false;
                     }
                     break;
                 case ':last-child':
                 case ':nth-last-child(1)':
-                    if (child !== parent!.lastChild) {
+                    if (child !== parent!.lastElementChild) {
                         return false;
                     }
                     break;
@@ -451,8 +451,13 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
                 case ':focus-within':
                 case ':valid':
                 case ':invalid': {
-                    const element = child.element;
-                    if (iterateArray(parent!.element!.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
+                    try {
+                        const element = child.element;
+                        if (iterateArray(parent!.element!.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
+                            return false;
+                        }
+                    }
+                    catch {
                         return false;
                     }
                     break;
@@ -615,38 +620,39 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, last: boo
             if (value === undefined) {
                 return false;
             }
-            if (attr.value) {
+            const other = attr.value;
+            if (other) {
                 if (attr.caseInsensitive) {
                     value = value.toLowerCase();
                 }
                 switch (attr.symbol) {
                     case '~':
-                        if (!value.split(/\s+/).includes(attr.value)) {
+                        if (!value.split(/\s+/).includes(other)) {
                             return false;
                         }
                         break;
                     case '^':
-                        if (!value.startsWith(attr.value)) {
+                        if (!value.startsWith(other)) {
                             return false;
                         }
                         break;
                     case '$':
-                        if (!value.endsWith(attr.value)) {
+                        if (!value.endsWith(other)) {
                             return false;
                         }
                         break;
                     case '*':
-                        if (!value.includes(attr.value)) {
+                        if (!value.includes(other)) {
                             return false;
                         }
                         break;
                     case '|':
-                        if (value !== attr.value && !value.startsWith(attr.value + '-')) {
+                        if (value !== other && !value.startsWith(other + '-')) {
                             return false;
                         }
                         break;
                     default:
-                        if (value !== attr.value) {
+                        if (value !== other) {
                             return false;
                         }
                         break;
@@ -3024,6 +3030,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get lastChild(): Null<T> {
         const children = this.naturalChildren;
+        return children[children.length - 1] || null;
+    }
+
+    get firstElementChild() {
+        return this.naturalElements[0] || null;
+    }
+
+    get lastElementChild() {
+        const children = this.naturalElements;
         return children[children.length - 1] || null;
     }
 
