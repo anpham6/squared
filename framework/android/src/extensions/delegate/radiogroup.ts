@@ -132,14 +132,14 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public postBaseLayout(node: T) {
-        node.renderEach((item: T) => item.naturalElement && item.toElementBoolean('checked') && node.android('checkedButton', item.documentId));
+        node.renderEach((item: T) => item.checked && node.android('checkedButton', item.documentId));
     }
 
     private setBaselineIndex(container: T, children: T[]) {
         let valid = false;
         for (let i = 0, length = children.length; i < length; ++i) {
             const item = children[i];
-            if (item.toElementBoolean('checked')) {
+            if (item.checked) {
                 item.android('checked', 'true');
             }
             if (!valid && item.baseline && item.parent === container && container.layoutLinear && (i === 0 || container.layoutHorizontal)) {

@@ -35,8 +35,7 @@ export const CSS = {
     SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
     SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
     SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g'),
-    SELECTOR_ENCLOSING: /:(is|where|not)/ig,
-    SELECTOR_NOT: /^:not\((.+)\)$/i
+    SELECTOR_ENCLOSING: /:(not|is|where)/ig
 };
 
 export const TRANSFORM = {

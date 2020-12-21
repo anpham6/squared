@@ -554,6 +554,7 @@ declare module "base" {
         get previousElementSibling(): Null<Node>;
         get nextElementSibling(): Null<Node>;
         get attributes(): StringMap;
+        get checked(): boolean;
         get boundingClientRect(): Null<DOMRect>;
         get preserveWhiteSpace(): boolean;
         get cssStyle(): StringMap;

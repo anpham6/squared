@@ -35,11 +35,11 @@ const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const REGEXP_EM = /\dem$/;
-const REGEXP_ENCLOSING = /^:([A-Za-z])\(([^)]+)\)$/;
+const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
 const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
-const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\(([^)]+)\)$/;
+const REGEXP_NOTINDEX = /:not-(x+)/;
+const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
-const REGEXP_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
 function setStyleCache(element: HTMLElement, attr: string, value: string, style: CSSStyleDeclaration, styleMap: StringMap, sessionId: string) {
@@ -209,25 +209,135 @@ function convertPosition(node: T, attr: string) {
     return 0;
 }
 
-function validateQuerySelector(node: T, selector: QueryData, child?: T) {
-    if (selector.tagName && selector.tagName !== node.tagName.toUpperCase() || selector.id && selector.id !== node.elementId) {
+function checkReadOnly(element: HTMLInputElement, value: boolean) {
+    switch (element.tagName) {
+        case 'INPUT':
+            switch (element.type) {
+                case 'hidden':
+                case 'range':
+                case 'color':
+                case 'checkbox':
+                case 'radio':
+                case 'file':
+                case 'button':
+                case 'submit':
+                case 'reset':
+                case 'image':
+                    return false;
+            }
+        case 'TEXTAREA':
+            if (element.readOnly === value) {
+                return false;
+            }
+            break;
+        default:
+            if (element.isContentEditable === !value) {
+                return false;
+            }
+            break;
+    }
+    return true;
+}
+
+function hasScopedSelector(parent: T, element: HTMLElement, value: string) {
+    try {
+        if (iterateArray(parent.element!.querySelectorAll(':scope > ' + value), item => item === element) === Infinity) {
+            return true;
+        }
+    }
+    catch {
+    }
+    return false;
+}
+
+function validateQuerySelector(this: T, selector: QueryData, child?: T) {
+    if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
         return false;
     }
-    const { attrList, classList, notList, pseudoList } = selector;
+    const element = this.element as HTMLElement;
+    const { classList, attrList, pseudoList, notList } = selector;
+    if (classList) {
+        const classes = element.classList;
+        for (let i = 0, length = classList.length; i < length; ++i) {
+            if (!classes.contains(classList[i])) {
+                return false;
+            }
+        }
+    }
+    if (attrList) {
+        const attributes = this.attributes;
+        for (let i = 0, length = attrList.length; i < length; ++i) {
+            const attr = attrList[i];
+            let value: Undef<string>;
+            if (attr.endsWith) {
+                const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
+                for (const name in attributes) {
+                    if (pattern.test(name)) {
+                        value = attributes[name];
+                        break;
+                    }
+                }
+            }
+            else {
+                value = attributes[attr.key];
+            }
+            if (value === undefined) {
+                return false;
+            }
+            const other = attr.value;
+            if (other) {
+                if (attr.caseInsensitive) {
+                    value = value.toLowerCase();
+                }
+                switch (attr.symbol) {
+                    case '~':
+                        if (!value.split(/\s+/).includes(other)) {
+                            return false;
+                        }
+                        break;
+                    case '^':
+                        if (!value.startsWith(other)) {
+                            return false;
+                        }
+                        break;
+                    case '$':
+                        if (!value.endsWith(other)) {
+                            return false;
+                        }
+                        break;
+                    case '*':
+                        if (!value.includes(other)) {
+                            return false;
+                        }
+                        break;
+                    case '|':
+                        if (value !== other && !value.startsWith(other + '-')) {
+                            return false;
+                        }
+                        break;
+                    default:
+                        if (value !== other) {
+                            return false;
+                        }
+                        break;
+                }
+            }
+        }
+    }
     if (pseudoList) {
-        const { actualParent: parent, tagName } = node;
+        const { actualParent: parent, tagName } = this;
         for (let i = 0, length = pseudoList.length; i < length; ++i) {
             const pseudo = pseudoList[i];
             switch (pseudo) {
                 case ':first-child':
                 case ':nth-child(1)':
-                    if (node !== parent!.firstElementChild) {
+                    if (this !== parent!.firstElementChild) {
                         return false;
                     }
                     break;
                 case ':last-child':
                 case ':nth-last-child(1)':
-                    if (node !== parent!.lastElementChild) {
+                    if (this !== parent!.lastElementChild) {
                         return false;
                     }
                     break;
@@ -250,7 +360,7 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
                     for (let j = 0, q = children.length; j < q; ++j) {
                         const item = children[j];
                         if (item.tagName === tagName) {
-                            if (item !== node) {
+                            if (item !== this) {
                                 return false;
                             }
                             break;
@@ -262,112 +372,63 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
                 case ':nth-last-child(n)':
                     break;
                 case ':empty':
-                    if (node.element!.hasChildNodes()) {
+                    if (element.hasChildNodes()) {
                         return false;
                     }
                     break;
                 case ':checked':
-                    switch (tagName) {
-                        case 'INPUT':
-                            if (!node.toElementBoolean('checked')) {
-                                return false;
-                            }
-                            break;
-                        case 'OPTION':
-                            if (!node.toElementBoolean('selected')) {
-                                return false;
-                            }
-                            break;
-                        default:
-                            return false;
-                    }
-                    break;
-                case ':enabled':
-                    if (!node.inputElement || node.toElementBoolean('disabled')) {
+                    if (!this.checked) {
                         return false;
                     }
                     break;
                 case ':disabled':
-                    if (!node.inputElement || !node.toElementBoolean('disabled')) {
+                    if (!this.inputElement || !(element as HTMLInputElement).disabled) {
                         return false;
                     }
                     break;
-                case ':read-only': {
-                    const element = node.element as HTMLInputElement | HTMLTextAreaElement;
-                    if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
+                case ':enabled':
+                    if (!this.inputElement || (element as HTMLInputElement).disabled) {
                         return false;
                     }
                     break;
-                }
-                case ':read-write': {
-                    const element = node.element as HTMLInputElement | HTMLTextAreaElement;
-                    if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
+                case ':read-only':
+                    if (!checkReadOnly(element as HTMLInputElement, false)) {
                         return false;
                     }
                     break;
-                }
+                case ':read-write':
+                    if (!checkReadOnly(element as HTMLInputElement, true)) {
+                        return false;
+                    }
+                    break;
                 case ':required':
-                    if (!node.inputElement || !node.toElementBoolean('required')) {
+                    if (!this.inputElement || !(element as HTMLInputElement).required) {
                         return false;
                     }
                     break;
                 case ':optional':
-                    if (!node.inputElement || node.toElementBoolean('required')) {
+                    if (!this.inputElement || (element as HTMLInputElement).required) {
                         return false;
                     }
                     break;
                 case ':placeholder-shown':
-                    if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && node.toElementString('placeholder'))) {
-                        return false;
-                    }
-                    break;
-                case ':default':
                     switch (tagName) {
-                        case 'INPUT': {
-                            const element = node.element as HTMLInputElement;
-                            switch (element.type) {
-                                case 'radio':
-                                case 'checkbox':
-                                    if (!element.checked) {
-                                        return false;
-                                    }
+                        case 'INPUT':
+                            switch ((element as HTMLInputElement).type) {
+                                case 'text':
+                                case 'search':
+                                case 'tel':
+                                case 'url':
+                                case 'email':
                                     break;
                                 default:
                                     return false;
                             }
-                            break;
-                        }
-                        case 'OPTION':
-                            if ((node.element as HTMLOptionElement).attributes['selected'] === undefined) {
+                        case 'TEXTAREA':
+                            if ((element as HTMLInputElement).value || !(element as HTMLInputElement).placeholder) {
                                 return false;
                             }
                             break;
-                        case 'BUTTON': {
-                            const form = node.ascend({ condition: item => item.tagName === 'FORM' })[0];
-                            if (form) {
-                                let valid: Undef<boolean>;
-                                const element = node.element!;
-                                iterateArray(form.element!.querySelectorAll('*'), (item: HTMLInputElement) => {
-                                    switch (item.tagName) {
-                                        case 'BUTTON':
-                                            valid = element === item;
-                                            return true;
-                                        case 'INPUT':
-                                            switch (item.type) {
-                                                case 'submit':
-                                                case 'image':
-                                                    valid = element === item;
-                                                    return true;
-                                            }
-                                            break;
-                                    }
-                                });
-                                if (!valid) {
-                                    return false;
-                                }
-                            }
-                            break;
-                        }
                         default:
                             return false;
                     }
@@ -375,12 +436,10 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
                 case ':in-range':
                 case ':out-of-range':
                     if (tagName === 'INPUT') {
-                        const element = node.element as HTMLInputElement;
-                        const value = +element.value;
+                        const value = +(element as HTMLInputElement).value;
                         if (!isNaN(value)) {
-                            const min = +element.min;
-                            const max = +element.max;
-                            if (value >= min && value <= max) {
+                            const { min, max } = element as HTMLInputElement;
+                            if (value >= +min && value <= +max) {
                                 if (pseudo === ':out-of-range') {
                                     return false;
                                 }
@@ -397,17 +456,21 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
                         return false;
                     }
                     break;
+                case ':target':
+                    if (!location.hash || !(location.hash === '#' + this.elementId || tagName === 'A' && location.hash === '#' + this.toElementString('name'))) {
+                        return false;
+                    }
+                    break;
                 case ':indeterminate':
                     if (tagName === 'INPUT') {
-                        const element = node.element as HTMLInputElement;
-                        switch (element.type) {
+                        switch ((element as HTMLInputElement).type) {
                             case 'checkbox':
-                                if (!element.indeterminate) {
+                                if (!(element as HTMLInputElement).indeterminate) {
                                     return false;
                                 }
-                                break;
+                                continue;
                             case 'radio':
-                                if (element.checked || element.name && iterateArray((node.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Infinity) {
+                                if ((element as HTMLInputElement).checked) {
                                     return false;
                                 }
                                 break;
@@ -416,19 +479,15 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
                         }
                     }
                     else if (tagName === 'PROGRESS') {
-                        if (node.toElementInt('value', -1) !== -1) {
+                        if (!element.attributes.getNamedItem('value')) {
                             return false;
                         }
+                        break;
                     }
                     else {
                         return false;
                     }
-                    break;
-                case ':target':
-                    if (!location.hash || !(location.hash === '#' + node.elementId || tagName === 'A' && location.hash === '#' + node.toElementString('name'))) {
-                        return false;
-                    }
-                    break;
+                case ':default':
                 case ':defined':
                 case ':link':
                 case ':visited':
@@ -437,23 +496,16 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
                 case ':focus':
                 case ':focus-within':
                 case ':valid':
-                case ':invalid': {
-                    try {
-                        const element = node.element;
-                        if (iterateArray(parent!.element!.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
-                            return false;
-                        }
-                    }
-                    catch {
+                case ':invalid':
+                    if (!hasScopedSelector(parent!, element, pseudo)) {
                         return false;
                     }
                     break;
-                }
                 default: {
                     let match: Null<RegExpExecArray>;
                     if (match = REGEXP_QUERYNTH.exec(pseudo)) {
                         const children = match[1] ? parent!.naturalElements.slice(0).reverse() : parent!.naturalElements;
-                        const index = match[2] === 'child' ? children.indexOf(node) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(node) + 1;
+                        const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(this) + 1;
                         if (index) {
                             const placement = match[3].trim();
                             if (isNumber(placement)) {
@@ -522,20 +574,29 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
                             break;
                         }
                     }
-                    else if (match = REGEXP_LANG.exec(pseudo)) {
-                        const lang = node.attributes['lang'];
-                        if (lang && lang.trim().toLowerCase() === match[1].toLowerCase()) {
-                            break;
+                    else if (pseudo.startsWith(':lang(')) {
+                        if (!hasScopedSelector(parent!, element, pseudo)) {
+                            return false;
                         }
+                        break;
                     }
                     else if (match = REGEXP_DIR.exec(pseudo)) {
-                        if (node.dir === 'rtl') {
-                            if (match[1] === 'ltr') {
-                                return false;
-                            }
-                        }
-                        else if (match[1] === 'rtl') {
-                            return false;
+                        switch (this.dir) {
+                            case 'rtl':
+                                if (match[1] === 'ltr') {
+                                    return false;
+                                }
+                                break;
+                            case 'auto':
+                                if (!hasScopedSelector(parent!, element, pseudo)) {
+                                    return false;
+                                }
+                                break;
+                            default:
+                                if (match[1] === 'rtl') {
+                                    return false;
+                                }
+                                break;
                         }
                         break;
                     }
@@ -547,136 +608,80 @@ function validateQuerySelector(node: T, selector: QueryData, child?: T) {
     if (notList) {
         for (let i = 0, length = notList.length; i < length; ++i) {
             const not = notList[i];
-            const j = not.length;
-            let match: Null<RegExpExecArray>;
-            if ((match = CSS.SELECTOR_LABEL.exec(not)) && match[0].length === j || (match = CSS.SELECTOR_PSEUDO_CLASS.exec(not)) && match[0].length === j || (match = CSS.SELECTOR_ATTR.exec(not)) && match[0].length === j) {
-                const notData: QueryData = { fromNot: true };
-                switch (not[0]) {
-                    case '.':
-                        notData.classList = [not];
-                        break;
-                    case '#':
-                        notData.id = not.substring(1);
-                        break;
-                    case ':':
-                        notData.pseudoList = [not];
-                        break;
-                    case '[': {
+            let notData: Undef<QueryData>,
+                match: Null<RegExpExecArray>;
+            switch (not[0]) {
+                case ':':
+                    if ((match = CSS.SELECTOR_PSEUDO_CLASS.exec(not)) && match[0] === not) {
+                        notData = { pseudoList: [not] };
+                    }
+                    break;
+                case '[': {
+                    if ((match = CSS.SELECTOR_ATTR.exec(not)) && match[0] === not) {
                         const value = match[3] || match[4] || match[5];
                         const caseInsensitive = match[6] === 'i';
-                        notData.attrList = [{
-                            key: match[1],
-                            symbol: match[2],
-                            value: caseInsensitive && value ? value.toLowerCase() : value,
-                            caseInsensitive
-                        }];
-                        break;
+                        notData = {
+                            attrList: [{
+                                key: match[1],
+                                symbol: match[2],
+                                value: caseInsensitive && value ? value.toLowerCase() : value,
+                                caseInsensitive
+                            }]
+                        };
                     }
-                    default:
-                        notData.tagName = not.toUpperCase();
-                        break;
+                    break;
                 }
-                if (validateQuerySelector(node, notData, child)) {
+                default:
+                    if ((match = CSS.SELECTOR_LABEL.exec(not)) && match[0] === not) {
+                        switch (not[0]) {
+                            case '.':
+                                notData = { classList: [not] };
+                                break;
+                            case '#':
+                                notData = { id: not.substring(1) };
+                                break;
+                            default:
+                                notData = { tagName: not.toUpperCase() };
+                                break;
+                        }
+                    }
+                    break;
+            }
+            if (notData) {
+                notData.fromNot = true;
+                if (validateQuerySelector.call(this, notData)) {
                     return false;
                 }
             }
-            else if ((child ? node : node.actualParent!).querySelectorAll(':scope > ' + not).includes(child || node)) {
+            else if ((child ? this : this.actualParent!).querySelectorAll(':scope > ' + not).includes(child || this)) {
                 return false;
-            }
-        }
-    }
-    if (classList) {
-        const classes = node.element!.classList;
-        for (let i = 0, length = classList.length; i < length; ++i) {
-            if (!classes.contains(classList[i])) {
-                return false;
-            }
-        }
-    }
-    if (attrList) {
-        const attributes = node.attributes;
-        for (let i = 0, length = attrList.length; i < length; ++i) {
-            const attr = attrList[i];
-            let value: Undef<string>;
-            if (attr.endsWith) {
-                const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
-                for (const name in attributes) {
-                    if (pattern.test(name)) {
-                        value = attributes[name];
-                        break;
-                    }
-                }
-            }
-            else {
-                value = attributes[attr.key];
-            }
-            if (value === undefined) {
-                return false;
-            }
-            const other = attr.value;
-            if (other) {
-                if (attr.caseInsensitive) {
-                    value = value.toLowerCase();
-                }
-                switch (attr.symbol) {
-                    case '~':
-                        if (!value.split(/\s+/).includes(other)) {
-                            return false;
-                        }
-                        break;
-                    case '^':
-                        if (!value.startsWith(other)) {
-                            return false;
-                        }
-                        break;
-                    case '$':
-                        if (!value.endsWith(other)) {
-                            return false;
-                        }
-                        break;
-                    case '*':
-                        if (!value.includes(other)) {
-                            return false;
-                        }
-                        break;
-                    case '|':
-                        if (value !== other && !value.startsWith(other + '-')) {
-                            return false;
-                        }
-                        break;
-                    default:
-                        if (value !== other) {
-                            return false;
-                        }
-                        break;
-                }
             }
         }
     }
     return true;
 }
 
-function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nodes: T[], checked?: string): boolean {
+function ascendQuerySelector(this: T, selectors: QueryData[], index: number, nodes: T[], offset: number, checked?: string): boolean {
     const selector = selectors[index];
     const selectorAdjacent = index > 0 && selectors[--index];
     const adjacent = selector.adjacent;
     const next: T[] = [];
     for (let i = 0, length = nodes.length; i < length; ++i) {
-        let child = nodes[i];
-        if (checked || selector.all || validateQuerySelector(child, selector)) {
+        const child = nodes[i];
+        if (checked || selector.all || validateQuerySelector.call(child, selector)) {
+            let parent = child.actualParent;
             if (adjacent) {
-                const parent = child.actualParent;
                 if (adjacent === '>') {
-                    if (!next.includes(parent!) && (selectorAdjacent && (selectorAdjacent.all || validateQuerySelector(parent!, selectorAdjacent, child))) || !selectorAdjacent && parent === node) {
+                    if (!next.includes(parent!) && (selectorAdjacent && (selectorAdjacent.all || validateQuerySelector.call(parent!, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
                         next.push(parent!);
                     }
                 }
                 else if (selectorAdjacent) {
-                    const children = child.actualParent!.naturalElements;
+                    const children = parent!.naturalElements;
                     switch (adjacent) {
                         case '+': {
                             const j = children.indexOf(child) - 1;
-                            if (j >= 0 && (selectorAdjacent.all || validateQuerySelector(children[j], selectorAdjacent))) {
+                            if (j >= 0 && (selectorAdjacent.all || validateQuerySelector.call(children[j], selectorAdjacent))) {
                                 next.push(children[j]);
                             }
                             break;
@@ -687,7 +692,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nod
                                 if (sibling === child) {
                                     break;
                                 }
-                                else if (selectorAdjacent.all || validateQuerySelector(sibling, selectorAdjacent)) {
+                                else if (selectorAdjacent.all || validateQuerySelector.call(sibling, selectorAdjacent)) {
                                     next.push(sibling);
                                 }
                             }
@@ -696,13 +701,11 @@ function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nod
                 }
             }
             else if (selectorAdjacent) {
-                let current = child.actualParent;
-                while (current && current !== node) {
-                    if (selectorAdjacent.all || validateQuerySelector(current, selectorAdjacent, child)) {
-                        next.push(current);
+                while (parent && parent.depth - this.depth > index + offset) {
+                    if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
+                        next.push(parent);
                     }
-                    child = current;
-                    current = current.actualParent;
+                    parent = parent.actualParent;
                 }
             }
             else {
@@ -710,7 +713,7 @@ function ascendQuerySelector(node: T, selectors: QueryData[], index: number, nod
             }
         }
     }
-    return next.length > 0 && (index === 0 ? true : ascendQuerySelector(node, selectors, index, next, adjacent));
+    return next.length > 0 && (index === 0 ? true : ascendQuerySelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
 }
 
 function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions) {
@@ -725,10 +728,7 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
         current = min ? Infinity : -Infinity;
     node.each(item => {
         if (wrapperOf) {
-            const child = item.wrapperOf;
-            if (child) {
-                item = child;
-            }
+            item = item.wrapperOf || item;
         }
         const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
         if (!isNaN(value)) {
@@ -1046,7 +1046,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (!this._preferInitial && this.naturalChild) {
             let parent: T;
             if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.LAYOUT)) {
-                parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
+                parent = this.pageFlow && this.ascend({ condition: item => item.hasPX('width') && item.hasPX('height') || item.documentRoot })[0] || this;
             }
             else if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.CONTAIN)) {
                 parent = this;
@@ -1155,19 +1155,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (options) {
             ({ condition, error, every, including, excluding } = options);
         }
-        let invalid: Undef<boolean>;
+        let complete: Undef<boolean>;
         return (function recurse(children: T[], result: T[]) {
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item) || item === excluding) {
-                    invalid = true;
+                    complete = true;
                     break;
                 }
                 if (condition) {
                     if (condition(item)) {
                         result.push(item);
                         if (!every) {
-                            invalid = true;
+                            complete = true;
                             break;
                         }
                     }
@@ -1176,12 +1176,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result.push(item);
                 }
                 if (item === including) {
-                    invalid = true;
+                    complete = true;
                     break;
                 }
-                if (item instanceof Node && !item.isEmpty()) {
+                if (!item.isEmpty()) {
                     recurse(item.naturalElements, result);
-                    if (invalid) {
+                    if (complete) {
                         break;
                     }
                 }
@@ -1573,9 +1573,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public toElementBoolean(attr: string, fallback = false) {
         if (this.naturalElement) {
-            const value: Undef<boolean> = this._element![attr];
+            const value: Undef<unknown> = this._element![attr];
             if (value !== undefined) {
-                return true;
+                return value === true;
             }
         }
         return fallback;
@@ -1583,9 +1583,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public toElementString(attr: string, fallback = '') {
         if (this.naturalElement) {
-            const value: Undef<string> = this._element![attr];
+            const value: Undef<unknown> = this._element![attr];
             if (value !== undefined) {
-                return value;
+                return value !== null ? (value as string).toString() : '';
             }
         }
         return fallback;
@@ -1719,6 +1719,23 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result: T[] = [];
         if (queryMap && resultCount !== 0) {
             const queries: string[] = [];
+            let notIndex: Undef<string[]>;
+            const addNot = (part: string) => {
+                (notIndex ||= []).push(part);
+                return ':not-' + 'x'.repeat(notIndex.length);
+            };
+            const parseNot = (condition: string) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
+            const checkNot = (condition: string) => {
+                return splitEnclosing(condition, /:not/i).reduce((a, b) => {
+                    if (b[0] === ':') {
+                        const match = REGEXP_ENCLOSING.exec(b);
+                        if (match && match[1].toLowerCase() === 'not') {
+                            b = parseNot(match[2].trim());
+                        }
+                    }
+                    return a + b;
+                }, '');
+            };
             for (const query of parseSelectorText(value)) {
                 let selector = '',
                     expand: Undef<boolean>;
@@ -1726,15 +1743,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     let match: Null<RegExpExecArray>;
                     for (let seg of splitEnclosing(query, CSS.SELECTOR_ENCLOSING)) {
                         if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
-                            const condition = match[2];
+                            const condition = match[2].trim();
                             switch (match[1].toLowerCase()) {
                                 case 'not':
-                                    if (condition.includes(',')) {
-                                        seg = '';
-                                        for (const part of parseSelectorText(condition)) {
-                                            seg += `:not(${part})`;
-                                        }
-                                    }
+                                    seg = parseNot(condition);
                                     break;
                                 case 'is':
                                 case 'where':
@@ -1744,12 +1756,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     if (condition.includes(',')) {
                                         seg = '@';
                                         for (const part of parseSelectorText(condition)) {
-                                            seg += '{{' + part + '}}';
+                                            seg += '{{' + checkNot(part) + '}}';
                                         }
                                         expand = true;
                                     }
                                     else {
-                                        seg = condition.trim();
+                                        seg = checkNot(condition);
                                     }
                                     break;
                             }
@@ -1784,7 +1796,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 invalid: {
                     const query = queries[i];
                     const selectors: QueryData[] = [];
-                    let start: Undef<boolean>;
+                    let start: Undef<boolean>,
+                        offset = 0;
                     if (query === '*') {
                         selectors.push({ all: true });
                     }
@@ -1797,6 +1810,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             switch (segment) {
                                 case '+':
                                 case '~':
+                                    --offset;
                                 case '>':
                                     if (adjacent || selectors.length === 0 && (segment !== '>' || !/^:(root|scope)/.test(query))) {
                                         break invalid;
@@ -1871,13 +1885,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             if (segment.includes('::')) {
                                 break invalid;
                             }
-                            let pseudoList: Undef<string[]>,
-                                notList: Undef<string[]>,
-                                notMatch: Null<RegExpExecArray>;
-                            for (const part of splitEnclosing(segment, ':not')) {
-                                if (part[0] === ':' && (notMatch = CSS.SELECTOR_NOT.exec(part))) {
-                                    (notList ||= []).push(notMatch[1]);
-                                    segment = segment.replace(part, '');
+                            let notList: Undef<string[]>,
+                                pseudoList: Undef<string[]>;
+                            if (notIndex) {
+                                while (subMatch = REGEXP_NOTINDEX.exec(segment)) {
+                                    (notList ||= []).push(notIndex[subMatch[1].length - 1]);
+                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
                             }
                             while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
@@ -1937,11 +1950,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     if (q) {
                         let currentCount = result.length;
                         const all = currentCount === 0;
-                        for (let j = start || customMap ? 0 : q, r = queryMap.length; j < r; ++j) {
+                        for (let j = start || customMap ? 0 : q - offset, r = queryMap.length; j < r; ++j) {
                             const items = queryMap[j];
                             for (let k = 0, s = items.length; k < s; ++k) {
                                 const node = items[k];
-                                if ((all || !result.includes(node)) && ascendQuerySelector(this, selectors, q - 1, [node])) {
+                                if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
                                     result.push(node);
                                     if (++currentCount === resultCount) {
                                         return result.sort(sortById);
@@ -3017,6 +3030,23 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
+    get checked() {
+        switch (this.tagName) {
+            case 'INPUT': {
+                const element = this._element as HTMLInputElement;
+                switch (element.type) {
+                    case 'radio':
+                    case 'checkbox':
+                        return element.checked;
+                }
+                break;
+            }
+            case 'OPTION':
+                return this.parentElement!.tagName === 'SELECT' && Array.from((this.parentElement as HTMLSelectElement).selectedOptions).includes(this._element as HTMLOptionElement);
+        }
+        return false;
+    }
+
     get boundingClientRect() {
         if (this.styleElement) {
             return this._element!.getBoundingClientRect();
@@ -3143,7 +3173,22 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     set dir(value) {
-        this._cacheState.dir = value;
+        switch (value = value.toLowerCase()) {
+            case 'ltr':
+            case 'rtl':
+            case 'auto':
+                if (this.naturalElement) {
+                    (this._element as HTMLElement).dir = value;
+                    this.cascade(node => {
+                        if (node.dir === value) {
+                            return false;
+                        }
+                        node.unsetCache('dir');
+                    });
+                }
+                this._cacheState.dir = value;
+                break;
+        }
     }
     get dir(): string {
         let result = this._cacheState.dir;

@@ -32,8 +32,9 @@ const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
-const REGEXP_CSSGROUP = /:(?:is|where)/g;
+const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
+const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -216,14 +217,14 @@ function calculatePercent(element: StyleElement, value: string, clampRange: bool
 }
 
 function calculateSpecificity(value: string) {
-    let result = 0;
-    for (const part of splitEnclosing(value, ':not')) {
-        const match = CSS.SELECTOR_NOT.exec(part);
+    let result = splitEnclosing(value, ':not').reduce((a, b) => {
+        const match = REGEXP_SELECTORNOT.exec(b);
         if (match) {
-            result += getSelectorValue(match[1]);
-            value = value.replace(part, '');
+            a += getSelectorValue(match[1]);
+            value = value.replace(b, '');
         }
-    }
+        return a;
+    }, 0);
     CSS.SELECTOR_G.lastIndex = 0;
     let match: Null<RegExpExecArray>;
     while (match = CSS.SELECTOR_G.exec(value)) {
@@ -1823,7 +1824,7 @@ export function parseSelectorText(value: string) {
 
 export function getSpecificity(value: string) {
     let result = 0;
-    for (const seg of splitEnclosing(value, REGEXP_CSSGROUP)) {
+    for (const seg of splitEnclosing(value, REGEXP_SELECTORGROUP)) {
         if (seg[0] === ':') {
             if (seg.startsWith(':where(')) {
                 continue;

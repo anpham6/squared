@@ -803,10 +803,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public createSvgElement(node: T, src: string): [Undef<HTMLElement>, Undef<SVGSVGElement>] | [] {
-        const value = extractURL(src);
-        if (value) {
-            src = value;
-        }
+        src = extractURL(src) || src;
         if (FILE.SVG.test(src) || src.startsWith('data:image/svg+xml')) {
             const fileAsset = this.resource!.getRawData(src);
             if (fileAsset) {

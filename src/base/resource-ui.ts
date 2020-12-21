@@ -380,10 +380,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     imageWidth *= convertPercent(sizeW);
                                 }
                                 else {
-                                    const unit = parseUnit(sizeW, { fontSize, screenDimension });
-                                    if (unit) {
-                                        imageWidth = unit;
-                                    }
+                                    imageWidth = parseUnit(sizeW, { fontSize, screenDimension }) || imageWidth;
                                 }
                             }
                             else if (sizeH) {
@@ -408,10 +405,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     imageHeight *= convertPercent(sizeH);
                                 }
                                 else {
-                                    const unit = parseUnit(sizeH, { fontSize, screenDimension });
-                                    if (unit) {
-                                        imageHeight = unit;
-                                    }
+                                    imageHeight = parseUnit(sizeH, { fontSize, screenDimension }) || imageHeight;
                                 }
                             }
                             else if (sizeW) {
