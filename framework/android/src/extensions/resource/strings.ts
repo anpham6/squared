@@ -106,21 +106,21 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     valueString = upperCaseString(valueString);
                                     break;
                             }
-                            valueString = replaceCharacterData(valueString, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : undefined);
                             const textDecorationLine = node.css('textDecorationLine');
+                            let decoration = 0;
                             if (textDecorationLine !== 'none') {
-                                for (const style of textDecorationLine.split(' ')) {
-                                    switch (style) {
-                                        case 'underline':
-                                            valueString = `<u>${valueString}</u>`;
-                                            break;
-                                        case 'line-through':
-                                            valueString = `<strike>${valueString}</strike>`;
-                                            break;
-                                    }
+                                if (textDecorationLine.includes('underline')) {
+                                    decoration |= 1;
+                                }
+                                if (textDecorationLine.includes('line-through')) {
+                                    decoration |= 2;
                                 }
                             }
-                            if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
+                            valueString = replaceCharacterData(valueString, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : 0, decoration > 0);
+                            if (decoration & 1) {
+                                valueString = `<u>${valueString}</u>`;
+                            }
+                            if (decoration & 2) {
                                 valueString = `<strike>${valueString}</strike>`;
                             }
                             if (textIndent > 0) {

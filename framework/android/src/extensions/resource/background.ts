@@ -145,12 +145,10 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                     switch (direction) {
                         case 0:
                         case 3:
-                            if (grayscale) {
-                                percent = 0.5;
-                            }
+                            percent = grayscale ? 0.5 : 0.25;
                             break;
                         default:
-                            percent = grayscale ? 0.75 : -0.75;
+                            percent = grayscale ? 0.75 : -0.25;
                             break;
                     }
                     if (grayscale && color.hsla.l > 50) {

@@ -41,7 +41,7 @@
     "tinify_api_key": ""
   },
   "image": {
-    "proxy": "jimp"
+    "command": "@squared-functions/image/jimp"
   },
   "watch": {
     "interval": 200

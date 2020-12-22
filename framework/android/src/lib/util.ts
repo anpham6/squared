@@ -180,13 +180,15 @@ export function sanitizeString(value: string) {
     return value.trim().replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ');
 }
 
-export function replaceCharacterData(value: string, tab?: number) {
+export function replaceCharacterData(value: string, tab?: number, quote?: boolean) {
     let output = '';
     for (let i = 0, length = value.length, ch: string; i < length; ++i) {
         ch = value[i];
         switch (ch) {
             case "'":
-                output += "\\'";
+                if (!quote) {
+                    output += "\\'";
+                }
                 break;
             case '@':
                 output += i === 0 || !output.trim() ? '\\@' : '@';

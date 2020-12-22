@@ -159,6 +159,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     case 'FIELDSET':
                         styleMap.display ||= 'block';
                         break;
+                    case 'RUBY':
+                        styleMap.display ||= 'inline';
+                        break;
                 }
             }
             switch (element.tagName) {

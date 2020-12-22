@@ -1634,17 +1634,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     return false;
                 }
             }
-            if (not) {
-                if (value === not) {
-                    return false;
-                }
-                else if (Array.isArray(not)) {
-                    for (let i = 0, length = not.length; i < length; ++i) {
-                        if (value === not[i]) {
-                            return false;
-                        }
-                    }
-                }
+            if (not && (value === not || Array.isArray(not) && not.includes(value))) {
+                return false;
             }
             if (type) {
                 return (
@@ -1670,7 +1661,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public setBounds(cache = true) {
-        let bounds: Null<BoxRectDimension>;
+        let bounds: BoxRectDimension;
         if (this.styleElement) {
             bounds = assignRect(cache && this._elementData?.clientRect || this._element!.getBoundingClientRect());
         }
@@ -3185,6 +3176,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                         node.unsetCache('dir');
                     });
+                }
+                else if (this.naturalChild) {
+                    return;
                 }
                 this._cacheState.dir = value;
                 break;

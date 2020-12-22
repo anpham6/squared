@@ -158,7 +158,7 @@ function installModules(manager: IFileManager, query: StringMap) {
         ({ compress: Compress, cloud: Cloud, gulp: Gulp, chrome: Chrome } = settings);
         FileManager.loadSettings(settings, ignorePermissions);
 
-        Image = require('@squared-functions/image/' + settings.image?.proxy || 'jimp');
+        Image = require(settings.image?.command || '@squared-functions/image/jimp');
     }
     catch (err) {
         Node.writeFail('Unable to load settings', err);
