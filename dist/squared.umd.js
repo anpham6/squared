@@ -1,4 +1,4 @@
-/* squared 2.2.5
+/* squared 2.2.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -230,8 +230,13 @@
         hypotenuse: hypotenuse
     });
 
-    const DECIMAL = '-?(?:\\d+(?:\\.\\d+)?|\\d*\\.\\d+)';
+    const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
+    const DECIMAL = '-?' + DECIMAL_UN;
     const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
+    const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
+    const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
+    const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
+    const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
     const STRING = {
         DECIMAL,
         PERCENT: '-?\\d+(?:\\.\\d+)?%',
@@ -239,14 +244,9 @@
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
         UNIT_LENGTH,
         DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
-        CSS_SELECTOR_LABEL: '[\\.#]?[A-Za-z][\\w\\-]*',
-        CSS_SELECTOR_PSEUDO_ELEMENT: '::[A-Za-z\\-]+',
-        CSS_SELECTOR_PSEUDO_CLASS: ':(?:not\\(\\s*(:nth(?:-last)?-(?:child|of-type)\\([^)]+\\)|[^)]+)\\s*\\)|[A-Za-z\\-]+(?:\\(\\s*([^)]+)\\s*\\))?)',
-        CSS_SELECTOR_ATTR: '\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_TIME: `(${DECIMAL})(s|ms)`,
-        CSS_RESOLUTION: `(${DECIMAL})(dpi|dpcm|dppx)`,
-        CSS_CALC: 'calc\\((.+)\\)'
+        CSS_RESOLUTION: `(${DECIMAL_UN})(dpi|dpcm|dppx)`
     };
     const FILE = {
         NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
@@ -256,18 +256,20 @@
     const CSS = {
         URL: /^\s*url\((.+)\)\s*$/,
         HEX: /^#?[\dA-Fa-f]{3,8}$/,
-        RGBA: /rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+%?)\s*)?\)/,
-        HSLA: /hsla?\(\s*(\d+),\s*(\d+)%,\s*(\d+)%(?:,\s*([\d.]+%?)\s*)?\)/,
-        SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+*])`, 'g'),
-        SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
-        SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),
-        SELECTOR_PSEUDO_CLASS: new RegExp(STRING.CSS_SELECTOR_PSEUDO_CLASS),
-        SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR)
+        RGBA: /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/,
+        HSLA: /hsla?\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+%?)\s*)?\)/,
+        SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${SELECTOR_ATTR}|${SELECTOR_PSEUDO_ELEMENT}|${SELECTOR_PSEUDO_CLASS}|${SELECTOR_LABEL}|\\*)+|[>~+*])`, 'g'),
+        SELECTOR_LABEL: new RegExp(SELECTOR_LABEL),
+        SELECTOR_PSEUDO_ELEMENT: new RegExp(SELECTOR_PSEUDO_ELEMENT),
+        SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
+        SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
+        SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g'),
+        SELECTOR_ENCLOSING: /:(not|is|where)/ig
     };
     const TRANSFORM = {
         MATRIX: new RegExp(`(matrix|matrix3d)\\(\\s*(${DECIMAL})${`,\\s*(${DECIMAL})`.repeat(5)}(?:${`,\\s*(${DECIMAL})`.repeat(10)})?\\s*\\)`),
         ROTATE: new RegExp(`(rotate(?:[XYZ]|3d)?)\\(\\s*(?:(${DECIMAL}),\\s*(${DECIMAL}),\\s*(${DECIMAL}),\\s*)?${STRING.CSS_ANGLE}\\s*\\)`),
-        SCALE: new RegExp(`(scale(?:[XYZ]|3d)?)\\(\\s*(${DECIMAL})(?:,\\s*(${DECIMAL}))?(?:,\\s*(${DECIMAL}))?\\s*\\)`),
+        SCALE: new RegExp(`(scale(?:[XYZ]|3d)?)\\(\\s*(${DECIMAL_UN})(?:,\\s*(${DECIMAL_UN}))?(?:,\\s*(${DECIMAL_UN}))?\\s*\\)`),
         TRANSLATE: new RegExp(`(translate(?:[XYZ]|3d)?)\\(\\s*${STRING.LENGTH_PERCENTAGE}(?:,\\s*${STRING.LENGTH_PERCENTAGE})?(?:,\\s*${STRING.LENGTH_PERCENTAGE})?\\s*\\)`),
         SKEW: new RegExp(`(skew[XY]?)\\(\\s*${STRING.CSS_ANGLE}(?:,\\s*${STRING.CSS_ANGLE})?\\s*\\)`),
         PERSPECTIVE: new RegExp(`(perspective)\\(\\s*${STRING.LENGTH_PERCENTAGE}\\s*\\)`)
@@ -1153,8 +1155,7 @@
             if (index !== position) {
                 let segment = value.substring(position, index);
                 if (separator) {
-                    segment = segment.trim();
-                    if (segment) {
+                    if (segment = segment.trim()) {
                         appendValues(segment);
                         if (combined === opening) {
                             const joined = lastItemOf(result);
@@ -1203,6 +1204,9 @@
             if (!found) {
                 return [];
             }
+        }
+        if (position === 0) {
+            return [value];
         }
         if (position < length) {
             const excess = value.substring(position);
@@ -1710,7 +1714,7 @@
     const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
     const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
     const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
-    const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
+    const REGEXP_CALC = /^calc\((.+)\)$/i;
     const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
     const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
@@ -1722,8 +1726,7 @@
     const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
     const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
     const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
-    const REGEXP_CSSGROUP = /:(?:is|where)/g;
-    const REGEXP_CSSENCLOSING = /:(?:is|where|not)/g;
+    const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
     const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
     const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
     const CHAR_SPACE = /\s+/;
@@ -1746,7 +1749,7 @@
     }
     function calculatePosition(element, value, boundingBox) {
         const alignment = [];
-        for (let seg of splitEnclosing(value.trim(), 'calc')) {
+        for (let seg of splitEnclosing(value.trim(), /calc/i)) {
             if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
                 alignment.push(...seg.split(CHAR_SPACE));
             }
@@ -1867,7 +1870,7 @@
         return value;
     }
     function calculateGeneric(element, value, unitType, min, boundingBox, dimension = 'width') {
-        const segments = splitEnclosing(value, 'calc');
+        const segments = splitEnclosing(value, /calc/i);
         for (let i = 0, length = segments.length; i < length; ++i) {
             const seg = segments[i];
             if (isCalc(seg)) {
@@ -1899,14 +1902,14 @@
         return '';
     }
     function calculateSpecificity(value) {
-        let result = 0;
-        for (const part of splitEnclosing(value, ':not')) {
-            const match = REGEXP_SELECTORNOT.exec(part);
+        let result = splitEnclosing(value, ':not').reduce((a, b) => {
+            const match = REGEXP_SELECTORNOT.exec(b);
             if (match) {
-                result += getSelectorValue(match[1]);
-                value = value.replace(part, '');
+                a += getSelectorValue(match[1]);
+                value = value.replace(b, '');
             }
-        }
+            return a;
+        }, 0);
         CSS.SELECTOR_G.lastIndex = 0;
         let match;
         while (match = CSS.SELECTOR_G.exec(value)) {
@@ -1920,16 +1923,11 @@
                         continue;
                 }
             }
-            else if (segment.startsWith('*|*')) {
-                if (segment.length > 3) {
-                    return 0;
-                }
-            }
             else if (segment.startsWith('*|')) {
+                if (segment === '*|*') {
+                    continue;
+                }
                 segment = segment.substring(2);
-            }
-            else if (segment.startsWith('::')) {
-                return 0;
             }
             let subMatch;
             while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
@@ -1941,20 +1939,12 @@
                 }
                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
             }
-            while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-                const pseudoClass = subMatch[0];
-                switch (pseudoClass) {
-                    case ':scope':
-                    case ':root':
-                        break;
-                    default:
-                        result += 10;
-                        break;
-                }
-                segment = spliceString(segment, subMatch.index, pseudoClass.length);
-            }
             while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
                 result += 1;
+                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+            }
+            while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
+                result += 10;
                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
             }
             while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
@@ -3423,10 +3413,10 @@
     function parseSelectorText(value) {
         if ((value = value.trim()).includes(',')) {
             let timestamp, removed;
-            const segments = splitEnclosing(value, REGEXP_CSSENCLOSING);
+            const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING);
             for (let i = 0; i < segments.length; ++i) {
                 const seg = segments[i];
-                if (seg[0] === ':' && seg.includes(',') && /^:(is|where|not)\(/.test(seg)) {
+                if (seg[0] === ':' && seg.includes(',') && /^:(is|where|not)\(/i.test(seg)) {
                     timestamp || (timestamp = Date.now());
                     (removed || (removed = [])).push(seg);
                     segments[i] = timestamp + '-' + (removed.length - 1);
@@ -3435,12 +3425,15 @@
             if (removed) {
                 value = segments.join('');
             }
+            CSS.SELECTOR_ATTR_G.lastIndex = 0;
             let result, normalized = value, found, match;
-            while (match = CSS.SELECTOR_ATTR.exec(normalized)) {
-                const index = match.index;
-                const length = match[0].length;
-                normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
-                found = true;
+            while (match = CSS.SELECTOR_ATTR_G.exec(normalized)) {
+                if (match[0].includes(',')) {
+                    const index = match.index;
+                    const length = match[0].length;
+                    normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
+                    found = true;
+                }
             }
             if (found) {
                 result = [];
@@ -3452,15 +3445,10 @@
                         position = index + 1;
                     }
                     else {
-                        if (position > 0) {
-                            result.push(value.substring(position).trim());
-                        }
+                        result.push(value.substring(position).trim());
                         break;
                     }
                 } while (true);
-                if (result.length === 0) {
-                    result.push(value);
-                }
             }
             else {
                 result = value.split(CHAR_SEPARATOR);
@@ -3485,15 +3473,17 @@
     }
     function getSpecificity(value) {
         let result = 0;
-        for (const seg of splitEnclosing(value, REGEXP_CSSGROUP)) {
+        for (const seg of splitEnclosing(value, REGEXP_SELECTORGROUP)) {
             if (seg[0] === ':') {
-                const match = REGEXP_SELECTORIS.exec(seg);
-                if (match) {
-                    result += getSelectorValue(match[1]);
+                if (seg.startsWith(':where(')) {
                     continue;
                 }
-                else if (seg.startsWith(':where(')) {
-                    continue;
+                else {
+                    const match = REGEXP_SELECTORIS.exec(seg);
+                    if (match) {
+                        result += getSelectorValue(match[1]);
+                        continue;
+                    }
                 }
             }
             result += calculateSpecificity(seg);
@@ -4034,7 +4024,7 @@
                 if (length > 1) {
                     for (let i = 1; i < length; ++i) {
                         const previous = border[i - 1];
-                        const prefix = previous.split(CHAR_SPACE).pop();
+                        const prefix = previous.split(CHAR_SPACE).pop().toLowerCase();
                         let result;
                         if (prefix === 'calc') {
                             result = formatVar(calculateVar(element, prefix + border[i], { min: 0, supportPercent: false }));
@@ -4622,7 +4612,7 @@
         const result = [];
         for (let seg of separator ? value.split(separator) : [value]) {
             if (seg = seg.trim()) {
-                const calc = splitEnclosing(seg, 'calc');
+                const calc = splitEnclosing(seg, /calc/i);
                 const length = calc.length;
                 if (length === 0) {
                     return '';

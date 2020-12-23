@@ -331,8 +331,7 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, separato
         if (index !== position) {
             let segment = value.substring(position, index);
             if (separator) {
-                segment = segment.trim();
-                if (segment) {
+                if (segment = segment.trim()) {
                     appendValues(segment);
                     if (combined === opening) {
                         const joined = lastItemOf(result);
@@ -381,6 +380,9 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, separato
         if (!found) {
             return [];
         }
+    }
+    if (position === 0) {
+        return [value];
     }
     if (position < length) {
         const excess = value.substring(position);

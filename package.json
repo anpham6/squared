@@ -1,6 +1,6 @@
 {
   "name": "squared",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "Virtual DOM and CSS framework for parsing usable browser data.",
   "main": "dist/squared.umd.js",
   "types": "types/index.d.ts",
@@ -77,7 +77,7 @@
   "license": "MIT",
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "@squared-functions/file-manager": "^0.9.8",
+    "@squared-functions/file-manager": "^0.9.9",
     "7zip-min": "^1.2.0",
     "archiver": "^5.1.0",
     "chalk": "^4.1.0",
@@ -112,7 +112,7 @@
     "@types/yargs": "^15.0.12",
     "@typescript-eslint/eslint-plugin": "^4.11.0",
     "@typescript-eslint/parser": "^4.11.0",
-    "aws-sdk": "^2.815.0",
+    "aws-sdk": "^2.816.0",
     "clean-css": "^4.2.3",
     "csv-parse": "^4.14.2",
     "cwebp-bin": "^6.1.1",

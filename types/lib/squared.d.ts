@@ -263,7 +263,6 @@ declare module "lib" {
             CSS_ANGLE: string;
             CSS_TIME: string;
             CSS_RESOLUTION: string;
-            CSS_CALC: string;
         };
         const FILE: {
             NAME: RegExp;

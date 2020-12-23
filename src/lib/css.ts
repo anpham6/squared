@@ -20,7 +20,7 @@ const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
-const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
+const REGEXP_CALC = /^calc\((.+)\)$/i;
 const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
@@ -58,7 +58,7 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    for (let seg of splitEnclosing(value.trim(), 'calc')) {
+    for (let seg of splitEnclosing(value.trim(), /calc/i)) {
         if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
@@ -182,7 +182,7 @@ function calculateColor(element: StyleElement, value: string) {
 }
 
 function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Null<Dimension>, dimension: DimensionAttr = 'width') {
-    const segments = splitEnclosing(value, 'calc');
+    const segments = splitEnclosing(value, /calc/i);
     for (let i = 0, length = segments.length; i < length; ++i) {
         const seg = segments[i];
         if (isCalc(seg)) {
@@ -276,9 +276,6 @@ function calculateSpecificity(value: string) {
                     break;
             }
             segment = spliceString(segment, subMatch.index, label.length);
-        }
-        if (segment.trim()) {
-            return 0;
         }
     }
     return result;
@@ -2376,7 +2373,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             if (length > 1) {
                 for (let i = 1; i < length; ++i) {
                     const previous = border[i - 1];
-                    const prefix = previous.split(CHAR_SPACE).pop()!;
+                    const prefix = previous.split(CHAR_SPACE).pop()!.toLowerCase();
                     let result: string;
                     if (prefix === 'calc') {
                         result = formatVar(calculateVar(element, prefix + border[i], { min: 0, supportPercent: false }));
@@ -2979,7 +2976,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     const result: string[] = [];
     for (let seg of separator ? value.split(separator) : [value]) {
         if (seg = seg.trim()) {
-            const calc = splitEnclosing(seg, 'calc');
+            const calc = splitEnclosing(seg, /calc/i);
             const length = calc.length;
             if (length === 0) {
                 return '';

@@ -759,6 +759,18 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
     return result || node;
 }
 
+function getQueryLength(value: string) {
+    let result = 0;
+    for (let i = 0, length = value.length; i < length; ++i) {
+        const n = value.charCodeAt(i);
+        if (n < 14 && n > 8 || n === 32) {
+            continue;
+        }
+        ++result;
+    }
+    return result;
+}
+
 function getBoundsSize(node: T, options?: NodeParseUnitOptions) {
     const bounds: BoxRectDimension = (!options || options.parent !== false) && node.absoluteParent?.box || node.bounds;
     return bounds[options && options.dimension || 'width'];
@@ -1795,9 +1807,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     else {
                         CSS.SELECTOR_G.lastIndex = 0;
                         let adjacent = '',
+                            selector = '',
                             match: Null<RegExpExecArray>;
                         while (match = CSS.SELECTOR_G.exec(query)) {
                             let segment = match[1];
+                            selector += segment;
                             switch (segment) {
                                 case '+':
                                 case '~':
@@ -1922,9 +1936,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 }
                                 segment = spliceString(segment, subMatch.index, label.length);
                             }
-                            if (segment.trim()) {
-                                break invalid;
-                            }
                             selectors.push({
                                 tagName,
                                 id,
@@ -1935,6 +1946,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 attrList
                             });
                             adjacent = '';
+                        }
+                        if (getQueryLength(query) !== getQueryLength(selector)) {
+                            continue;
                         }
                     }
                     const q = selectors.length;

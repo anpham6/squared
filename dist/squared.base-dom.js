@@ -1,4 +1,4 @@
-/* squared.base 2.2.5
+/* squared.base 2.2.6
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -1902,13 +1902,12 @@ this.squared.base = (function (exports) {
     }
 
     const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
-    const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS$1;
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
     const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitPair: splitPair$1 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$1 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1928,9 +1927,11 @@ this.squared.base = (function (exports) {
     const BORDER_LEFT = CSS_PROPERTIES$1.borderLeft.value;
     const BORDER_OUTLINE = CSS_PROPERTIES$1.outline.value;
     const REGEXP_EM = /\dem$/;
-    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\(([^)]+)\)$/;
+    const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
+    const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
+    const REGEXP_NOTINDEX = /:not-(x+)/;
+    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
     const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
-    const REGEXP_LANG = /^:lang\(\s*(.+)\s*\)$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
         let current = style.getPropertyValue(attr);
@@ -2091,29 +2092,133 @@ this.squared.base = (function (exports) {
         }
         return 0;
     }
-    function validateQuerySelector(node, child, selector, last, adjacent) {
-        var _a;
-        if (selector.all) {
-            return true;
+    function checkReadOnly(element, value) {
+        switch (element.tagName) {
+            case 'INPUT':
+                switch (element.type) {
+                    case 'hidden':
+                    case 'range':
+                    case 'color':
+                    case 'checkbox':
+                    case 'radio':
+                    case 'file':
+                    case 'button':
+                    case 'submit':
+                    case 'reset':
+                    case 'image':
+                        return false;
+                }
+            case 'TEXTAREA':
+                if (element.readOnly === value) {
+                    return false;
+                }
+                break;
+            default:
+                if (element.isContentEditable === !value) {
+                    return false;
+                }
+                break;
         }
-        else if (selector.tagName && selector.tagName !== child.tagName.toUpperCase() || selector.id && selector.id !== child.elementId) {
+        return true;
+    }
+    function hasScopedSelector(parent, element, value) {
+        try {
+            if (iterateArray(parent.element.querySelectorAll(':scope > ' + value), item => item === element) === Infinity) {
+                return true;
+            }
+        }
+        catch (_a) {
+        }
+        return false;
+    }
+    function validateQuerySelector(selector, child) {
+        if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
             return false;
         }
-        const { attrList, classList, notList, pseudoList } = selector;
+        const element = this.element;
+        const { classList, attrList, pseudoList, notList } = selector;
+        if (classList) {
+            const classes = element.classList;
+            for (let i = 0, length = classList.length; i < length; ++i) {
+                if (!classes.contains(classList[i])) {
+                    return false;
+                }
+            }
+        }
+        if (attrList) {
+            const attributes = this.attributes;
+            for (let i = 0, length = attrList.length; i < length; ++i) {
+                const attr = attrList[i];
+                let value;
+                if (attr.endsWith) {
+                    const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
+                    for (const name in attributes) {
+                        if (pattern.test(name)) {
+                            value = attributes[name];
+                            break;
+                        }
+                    }
+                }
+                else {
+                    value = attributes[attr.key];
+                }
+                if (value === undefined) {
+                    return false;
+                }
+                const other = attr.value;
+                if (other) {
+                    if (attr.caseInsensitive) {
+                        value = value.toLowerCase();
+                    }
+                    switch (attr.symbol) {
+                        case '~':
+                            if (!value.split(/\s+/).includes(other)) {
+                                return false;
+                            }
+                            break;
+                        case '^':
+                            if (!value.startsWith(other)) {
+                                return false;
+                            }
+                            break;
+                        case '$':
+                            if (!value.endsWith(other)) {
+                                return false;
+                            }
+                            break;
+                        case '*':
+                            if (!value.includes(other)) {
+                                return false;
+                            }
+                            break;
+                        case '|':
+                            if (value !== other && !value.startsWith(other + '-')) {
+                                return false;
+                            }
+                            break;
+                        default:
+                            if (value !== other) {
+                                return false;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
         if (pseudoList) {
-            const { actualParent: parent, tagName } = child;
+            const { actualParent: parent, tagName } = this;
             for (let i = 0, length = pseudoList.length; i < length; ++i) {
                 const pseudo = pseudoList[i];
                 switch (pseudo) {
                     case ':first-child':
                     case ':nth-child(1)':
-                        if (child !== parent.firstChild) {
+                        if (this !== parent.firstElementChild) {
                             return false;
                         }
                         break;
                     case ':last-child':
                     case ':nth-last-child(1)':
-                        if (child !== parent.lastChild) {
+                        if (this !== parent.lastElementChild) {
                             return false;
                         }
                         break;
@@ -2136,7 +2241,7 @@ this.squared.base = (function (exports) {
                         for (let j = 0, q = children.length; j < q; ++j) {
                             const item = children[j];
                             if (item.tagName === tagName) {
-                                if (item !== child) {
+                                if (item !== this) {
                                     return false;
                                 }
                                 break;
@@ -2148,112 +2253,63 @@ this.squared.base = (function (exports) {
                     case ':nth-last-child(n)':
                         break;
                     case ':empty':
-                        if (child.element.hasChildNodes()) {
+                        if (element.hasChildNodes()) {
                             return false;
                         }
                         break;
                     case ':checked':
-                        switch (tagName) {
-                            case 'INPUT':
-                                if (!child.toElementBoolean('checked')) {
-                                    return false;
-                                }
-                                break;
-                            case 'OPTION':
-                                if (!child.toElementBoolean('selected')) {
-                                    return false;
-                                }
-                                break;
-                            default:
-                                return false;
-                        }
-                        break;
-                    case ':enabled':
-                        if (!child.inputElement || child.toElementBoolean('disabled', true)) {
+                        if (!this.checked) {
                             return false;
                         }
                         break;
                     case ':disabled':
-                        if (!child.inputElement || !child.toElementBoolean('disabled')) {
+                        if (!this.inputElement || !element.disabled) {
                             return false;
                         }
                         break;
-                    case ':read-only': {
-                        const element = child.element;
-                        if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
+                    case ':enabled':
+                        if (!this.inputElement || element.disabled) {
                             return false;
                         }
                         break;
-                    }
-                    case ':read-write': {
-                        const element = child.element;
-                        if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
+                    case ':read-only':
+                        if (!checkReadOnly(element, false)) {
                             return false;
                         }
                         break;
-                    }
+                    case ':read-write':
+                        if (!checkReadOnly(element, true)) {
+                            return false;
+                        }
+                        break;
                     case ':required':
-                        if (!child.inputElement || !child.toElementBoolean('required')) {
+                        if (!this.inputElement || !element.required) {
                             return false;
                         }
                         break;
                     case ':optional':
-                        if (!child.inputElement || child.toElementBoolean('required', true)) {
+                        if (!this.inputElement || element.required) {
                             return false;
                         }
                         break;
                     case ':placeholder-shown':
-                        if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder'))) {
-                            return false;
-                        }
-                        break;
-                    case ':default':
                         switch (tagName) {
-                            case 'INPUT': {
-                                const element = child.element;
+                            case 'INPUT':
                                 switch (element.type) {
-                                    case 'radio':
-                                    case 'checkbox':
-                                        if (!element.checked) {
-                                            return false;
-                                        }
+                                    case 'text':
+                                    case 'search':
+                                    case 'tel':
+                                    case 'url':
+                                    case 'email':
                                         break;
                                     default:
                                         return false;
                                 }
-                                break;
-                            }
-                            case 'OPTION':
-                                if (child.element.attributes['selected'] === undefined) {
+                            case 'TEXTAREA':
+                                if (element.value || !element.placeholder) {
                                     return false;
                                 }
                                 break;
-                            case 'BUTTON': {
-                                const form = child.ascend({ condition: item => item.tagName === 'FORM' })[0];
-                                if (form) {
-                                    let valid;
-                                    const element = child.element;
-                                    iterateArray(form.element.querySelectorAll('*'), (item) => {
-                                        switch (item.tagName) {
-                                            case 'BUTTON':
-                                                valid = element === item;
-                                                return true;
-                                            case 'INPUT':
-                                                switch (item.type) {
-                                                    case 'submit':
-                                                    case 'image':
-                                                        valid = element === item;
-                                                        return true;
-                                                }
-                                                break;
-                                        }
-                                    });
-                                    if (!valid) {
-                                        return false;
-                                    }
-                                }
-                                break;
-                            }
                             default:
                                 return false;
                         }
@@ -2261,12 +2317,10 @@ this.squared.base = (function (exports) {
                     case ':in-range':
                     case ':out-of-range':
                         if (tagName === 'INPUT') {
-                            const element = child.element;
                             const value = +element.value;
                             if (!isNaN(value)) {
-                                const min = +element.min;
-                                const max = +element.max;
-                                if (value >= min && value <= max) {
+                                const { min, max } = element;
+                                if (value >= +min && value <= +max) {
                                     if (pseudo === ':out-of-range') {
                                         return false;
                                     }
@@ -2283,17 +2337,21 @@ this.squared.base = (function (exports) {
                             return false;
                         }
                         break;
+                    case ':target':
+                        if (!location.hash || !(location.hash === '#' + this.elementId || tagName === 'A' && location.hash === '#' + this.toElementString('name'))) {
+                            return false;
+                        }
+                        break;
                     case ':indeterminate':
                         if (tagName === 'INPUT') {
-                            const element = child.element;
                             switch (element.type) {
                                 case 'checkbox':
                                     if (!element.indeterminate) {
                                         return false;
                                     }
-                                    break;
+                                    continue;
                                 case 'radio':
-                                    if (element.checked || element.name && iterateArray((((_a = child.ascend({ condition: item => item.tagName === 'FORM' })[0]) === null || _a === void 0 ? void 0 : _a.element) || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item) => item.checked) === Infinity) {
+                                    if (element.checked) {
                                         return false;
                                     }
                                     break;
@@ -2302,29 +2360,15 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else if (tagName === 'PROGRESS') {
-                            if (child.toElementInt('value', -1) !== -1) {
+                            if (!element.attributes.getNamedItem('value')) {
                                 return false;
                             }
+                            break;
                         }
                         else {
                             return false;
                         }
-                        break;
-                    case ':target':
-                        if (!location.hash || !(location.hash === `#${child.elementId}` || tagName === 'A' && location.hash === `#${child.toElementString('name')}`)) {
-                            return false;
-                        }
-                        break;
-                    case ':scope':
-                        if (!last || adjacent === '>' && child !== node) {
-                            return false;
-                        }
-                        break;
-                    case ':root':
-                        if (!last || adjacent === '>') {
-                            return false;
-                        }
-                        break;
+                    case ':default':
                     case ':defined':
                     case ':link':
                     case ':visited':
@@ -2333,22 +2377,20 @@ this.squared.base = (function (exports) {
                     case ':focus':
                     case ':focus-within':
                     case ':valid':
-                    case ':invalid': {
-                        const element = child.element;
-                        if (iterateArray(parent.element.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
+                    case ':invalid':
+                        if (!hasScopedSelector(parent, element, pseudo)) {
                             return false;
                         }
                         break;
-                    }
                     default: {
                         let match;
                         if (match = REGEXP_QUERYNTH.exec(pseudo)) {
                             const children = match[1] ? parent.naturalElements.slice(0).reverse() : parent.naturalElements;
-                            const index = match[2] === 'child' ? children.indexOf(child) + 1 : children.filter((item) => item.tagName === tagName).indexOf(child) + 1;
+                            const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item) => item.tagName === tagName).indexOf(this) + 1;
                             if (index) {
                                 const placement = match[3].trim();
                                 if (isNumber(placement)) {
-                                    if (+placement !== index) {
+                                    if (placement !== index.toString()) {
                                         return false;
                                     }
                                 }
@@ -2367,7 +2409,7 @@ this.squared.base = (function (exports) {
                                         default: {
                                             const subMatch = REGEXP_QUERYNTHPOSITION.exec(placement);
                                             if (subMatch) {
-                                                const modifier = convertInt(subMatch[3]);
+                                                const modifier = parseInt(subMatch[3]);
                                                 if (subMatch[2]) {
                                                     if (subMatch[1]) {
                                                         return false;
@@ -2413,24 +2455,33 @@ this.squared.base = (function (exports) {
                                 break;
                             }
                         }
-                        else if (match = REGEXP_LANG.exec(pseudo)) {
-                            const lang = child.attributes['lang'];
-                            if (lang && lang.trim().toLowerCase() === match[1].toLowerCase()) {
-                                break;
-                            }
-                        }
-                        else if (match = REGEXP_DIR.exec(pseudo)) {
-                            if (child.dir === 'rtl') {
-                                if (match[1] === 'ltr') {
-                                    return false;
-                                }
-                            }
-                            else if (match[1] === 'rtl') {
+                        else if (pseudo.startsWith(':lang(')) {
+                            if (!hasScopedSelector(parent, element, pseudo)) {
                                 return false;
                             }
                             break;
                         }
-                        return !selector.fromNot ? false : true;
+                        else if (match = REGEXP_DIR.exec(pseudo)) {
+                            switch (this.dir) {
+                                case 'rtl':
+                                    if (match[1] === 'ltr') {
+                                        return false;
+                                    }
+                                    break;
+                                case 'auto':
+                                    if (!hasScopedSelector(parent, element, pseudo)) {
+                                        return false;
+                                    }
+                                    break;
+                                default:
+                                    if (match[1] === 'rtl') {
+                                        return false;
+                                    }
+                                    break;
+                            }
+                            break;
+                        }
+                        return selector.fromNot ? true : false;
                     }
                 }
             }
@@ -2438,160 +2489,110 @@ this.squared.base = (function (exports) {
         if (notList) {
             for (let i = 0, length = notList.length; i < length; ++i) {
                 const not = notList[i];
-                const notData = { fromNot: true };
+                let notData, match;
                 switch (not[0]) {
-                    case '.':
-                        notData.classList = [not];
-                        break;
-                    case '#':
-                        notData.id = not.substring(1);
-                        break;
                     case ':':
-                        notData.pseudoList = [not];
+                        if ((match = CSS$1.SELECTOR_PSEUDO_CLASS.exec(not)) && match[0] === not) {
+                            notData = { pseudoList: [not] };
+                        }
                         break;
                     case '[': {
-                        const match = SELECTOR_ATTR.exec(not);
-                        const caseInsensitive = match[6] === 'i';
-                        const value = match[3] || match[4] || match[5];
-                        notData.attrList = [{
-                                key: match[1],
-                                symbol: match[2],
-                                value: caseInsensitive && value ? value.toLowerCase() : value,
-                                caseInsensitive
-                            }];
+                        if ((match = CSS$1.SELECTOR_ATTR.exec(not)) && match[0] === not) {
+                            const value = match[3] || match[4] || match[5];
+                            const caseInsensitive = match[6] === 'i';
+                            notData = {
+                                attrList: [{
+                                        key: match[1],
+                                        symbol: match[2],
+                                        value: caseInsensitive && value ? value.toLowerCase() : value,
+                                        caseInsensitive
+                                    }]
+                            };
+                        }
                         break;
                     }
                     default:
-                        notData.tagName = not.toUpperCase();
+                        if ((match = CSS$1.SELECTOR_LABEL.exec(not)) && match[0] === not) {
+                            switch (not[0]) {
+                                case '.':
+                                    notData = { classList: [not] };
+                                    break;
+                                case '#':
+                                    notData = { id: not.substring(1) };
+                                    break;
+                                default:
+                                    notData = { tagName: not.toUpperCase() };
+                                    break;
+                            }
+                        }
                         break;
                 }
-                if (validateQuerySelector(node, child, notData, false)) {
-                    return false;
-                }
-            }
-        }
-        if (classList) {
-            const elementList = child.element.classList;
-            for (let i = 0, length = classList.length; i < length; ++i) {
-                if (!elementList.contains(classList[i])) {
-                    return false;
-                }
-            }
-        }
-        if (attrList) {
-            const attributes = child.attributes;
-            for (let i = 0, length = attrList.length; i < length; ++i) {
-                const attr = attrList[i];
-                let value;
-                if (attr.endsWith) {
-                    const pattern = new RegExp(`:?${attr.key}$`);
-                    for (const name in attributes) {
-                        if (pattern.test(name)) {
-                            value = attributes[name];
-                            break;
-                        }
+                if (notData) {
+                    notData.fromNot = true;
+                    if (validateQuerySelector.call(this, notData)) {
+                        return false;
                     }
                 }
-                else {
-                    value = attributes[attr.key];
-                }
-                if (value === undefined) {
+                else if ((child ? this : this.actualParent).querySelectorAll(':scope > ' + not).includes(child || this)) {
                     return false;
-                }
-                if (attr.value) {
-                    if (attr.caseInsensitive) {
-                        value = value.toLowerCase();
-                    }
-                    switch (attr.symbol) {
-                        case '~':
-                            if (!value.split(/\s+/).includes(attr.value)) {
-                                return false;
-                            }
-                            break;
-                        case '^':
-                            if (!value.startsWith(attr.value)) {
-                                return false;
-                            }
-                            break;
-                        case '$':
-                            if (!value.endsWith(attr.value)) {
-                                return false;
-                            }
-                            break;
-                        case '*':
-                            if (!value.includes(attr.value)) {
-                                return false;
-                            }
-                            break;
-                        case '|':
-                            if (value !== attr.value && !value.startsWith(attr.value + '-')) {
-                                return false;
-                            }
-                            break;
-                        default:
-                            if (value !== attr.value) {
-                                return false;
-                            }
-                            break;
-                    }
                 }
             }
         }
         return true;
     }
-    function ascendQuerySelector(node, selectors, index, nodes, adjacent) {
-        const depth = node.depth;
+    function ascendQuerySelector(selectors, index, nodes, offset, checked) {
         const selector = selectors[index];
-        const length = selectors.length;
-        const last = index === length - 1;
+        const selectorAdjacent = index > 0 && selectors[--index];
+        const adjacent = selector.adjacent;
         const next = [];
-        for (let k = 0, q = nodes.length; k < q; ++k) {
-            const child = nodes[k];
-            if (adjacent) {
-                const parent = child.actualParent;
-                if (adjacent === '>') {
-                    if (validateQuerySelector(node, parent, selector, last, adjacent)) {
-                        next.push(parent);
+        for (let i = 0, length = nodes.length; i < length; ++i) {
+            const child = nodes[i];
+            if (checked || selector.all || validateQuerySelector.call(child, selector)) {
+                let parent = child.actualParent;
+                if (adjacent) {
+                    if (adjacent === '>') {
+                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
+                            next.push(parent);
+                        }
+                    }
+                    else if (selectorAdjacent) {
+                        const children = parent.naturalElements;
+                        switch (adjacent) {
+                            case '+': {
+                                const j = children.indexOf(child) - 1;
+                                if (j >= 0 && (selectorAdjacent.all || validateQuerySelector.call(children[j], selectorAdjacent))) {
+                                    next.push(children[j]);
+                                }
+                                break;
+                            }
+                            case '~':
+                                for (let j = 0, q = children.length; j < q; ++j) {
+                                    const sibling = children[j];
+                                    if (sibling === child) {
+                                        break;
+                                    }
+                                    else if (selectorAdjacent.all || validateQuerySelector.call(sibling, selectorAdjacent)) {
+                                        next.push(sibling);
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                }
+                else if (selectorAdjacent) {
+                    while (parent && parent.depth - this.depth > index + offset) {
+                        if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
+                            next.push(parent);
+                        }
+                        parent = parent.actualParent;
                     }
                 }
                 else {
-                    const children = parent.naturalElements;
-                    switch (adjacent) {
-                        case '+': {
-                            const l = children.indexOf(child) - 1;
-                            if (l >= 0) {
-                                const sibling = children[l];
-                                if (validateQuerySelector(node, sibling, selector, last, adjacent)) {
-                                    next.push(sibling);
-                                }
-                            }
-                            break;
-                        }
-                        case '~':
-                            for (let l = 0, r = children.length; l < r; ++l) {
-                                const sibling = children[l];
-                                if (sibling === child) {
-                                    break;
-                                }
-                                else if (validateQuerySelector(node, sibling, selector, last, adjacent)) {
-                                    next.push(sibling);
-                                }
-                            }
-                            break;
-                    }
-                }
-            }
-            else if (child.depth - depth >= length - index) {
-                let parent = child.actualParent;
-                while (parent) {
-                    if (validateQuerySelector(node, parent, selector, last)) {
-                        next.push(parent);
-                    }
-                    parent = parent.actualParent;
+                    next.push(child);
                 }
             }
         }
-        return next.length > 0 && (++index === length ? true : ascendQuerySelector(node, selectors, index, next, selector.adjacent));
+        return next.length > 0 && (index === 0 ? true : ascendQuerySelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
     }
     function getMinMax(node, min, attr, options) {
         let self, last, wrapperOf, initial;
@@ -2601,10 +2602,7 @@ this.squared.base = (function (exports) {
         let result, current = min ? Infinity : -Infinity;
         node.each(item => {
             if (wrapperOf) {
-                const child = item.wrapperOf;
-                if (child) {
-                    item = child;
-                }
+                item = item.wrapperOf || item;
             }
             const value = parseFloat(self ? item[attr] : initial ? item.cssInitial(attr, options) : item.css(attr));
             if (!isNaN(value)) {
@@ -2634,12 +2632,22 @@ this.squared.base = (function (exports) {
         });
         return result || node;
     }
+    function getQueryLength(value) {
+        let result = 0;
+        for (let i = 0, length = value.length; i < length; ++i) {
+            const n = value.charCodeAt(i);
+            if (n < 14 && n > 8 || n === 32) {
+                continue;
+            }
+            ++result;
+        }
+        return result;
+    }
     function getBoundsSize(node, options) {
         var _a;
         const bounds = (!options || options.parent !== false) && ((_a = node.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || node.bounds;
         return bounds[options && options.dimension || 'width'];
     }
-    const trimSelector = (value) => value[0] !== '*' || value.includes(':root') ? value : /^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, '');
     const aboveRange = (a, b, offset = 1) => a + offset > b;
     const belowRange = (a, b, offset = 1) => a - offset < b;
     const sortById = (a, b) => a.id - b.id;
@@ -2902,7 +2910,7 @@ this.squared.base = (function (exports) {
             if (!this._preferInitial && this.naturalChild) {
                 let parent;
                 if (attrs.some(value => CSS_PROPERTIES$1[value].trait & 4 /* LAYOUT */)) {
-                    parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
+                    parent = this.pageFlow && this.ascend({ condition: item => item.hasPX('width') && item.hasPX('height') || item.documentRoot })[0] || this;
                 }
                 else if (attrs.some(value => CSS_PROPERTIES$1[value].trait & 8 /* CONTAIN */)) {
                     parent = this;
@@ -2998,19 +3006,19 @@ this.squared.base = (function (exports) {
             if (options) {
                 ({ condition, error, every, including, excluding } = options);
             }
-            let invalid;
+            let complete;
             return (function recurse(children, result) {
                 for (let i = 0, length = children.length; i < length; ++i) {
                     const item = children[i];
                     if (error && error(item) || item === excluding) {
-                        invalid = true;
+                        complete = true;
                         break;
                     }
                     if (condition) {
                         if (condition(item)) {
                             result.push(item);
                             if (!every) {
-                                invalid = true;
+                                complete = true;
                                 break;
                             }
                         }
@@ -3019,12 +3027,12 @@ this.squared.base = (function (exports) {
                         result.push(item);
                     }
                     if (item === including) {
-                        invalid = true;
+                        complete = true;
                         break;
                     }
-                    if (item instanceof Node && !item.isEmpty()) {
+                    if (!item.isEmpty()) {
                         recurse(item.naturalElements, result);
-                        if (invalid) {
+                        if (complete) {
                             break;
                         }
                     }
@@ -3380,7 +3388,7 @@ this.squared.base = (function (exports) {
             if (this.naturalElement) {
                 const value = this._element[attr];
                 if (value !== undefined) {
-                    return !!value;
+                    return value === true;
                 }
             }
             return fallback;
@@ -3389,7 +3397,7 @@ this.squared.base = (function (exports) {
             if (this.naturalElement) {
                 const value = this._element[attr];
                 if (value !== undefined) {
-                    return value ? value.toString() : '';
+                    return value !== null ? value.toString() : '';
                 }
             }
             return fallback;
@@ -3433,17 +3441,8 @@ this.squared.base = (function (exports) {
                         return false;
                     }
                 }
-                if (not) {
-                    if (value === not) {
-                        return false;
-                    }
-                    else if (Array.isArray(not)) {
-                        for (let i = 0, length = not.length; i < length; ++i) {
-                            if (value === not[i]) {
-                                return false;
-                            }
-                        }
-                    }
+                if (not && (value === not || Array.isArray(not) && not.includes(value))) {
+                    return false;
                 }
                 if (type) {
                     return ((type & 1 /* LENGTH */) > 0 && isLength(value) ||
@@ -3506,237 +3505,240 @@ this.squared.base = (function (exports) {
         }
         querySelectorAll(value, customMap, resultCount = -1) {
             const queryMap = customMap || this.queryMap;
-            let result = [];
+            const result = [];
             if (queryMap && resultCount !== 0) {
-                const depthCount = queryMap.length;
-                const queries = parseSelectorText$1(value);
-                for (let i = 0, length = queries.length; i < length; ++i) {
+                const queries = [];
+                let notIndex;
+                const addNot = (part) => {
+                    (notIndex || (notIndex = [])).push(part);
+                    return ':not-' + 'x'.repeat(notIndex.length);
+                };
+                const parseNot = (condition) => condition.includes(',') ? parseSelectorText$1(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
+                const checkNot = (condition) => {
+                    return splitEnclosing(condition, /:not/i).reduce((a, b) => {
+                        if (b[0] === ':') {
+                            const match = REGEXP_ENCLOSING.exec(b);
+                            if (match && match[1].toLowerCase() === 'not') {
+                                b = parseNot(match[2].trim());
+                            }
+                        }
+                        return a + b;
+                    }, '');
+                };
+                for (const query of parseSelectorText$1(value)) {
+                    let selector = '', expand;
                     invalid: {
-                        const query = trimSelector(queries[i]);
-                        switch (query) {
-                            case ':root':
-                            case ':scope':
-                                if (this._element === document.documentElement) {
-                                    result.push(this);
-                                }
-                                continue;
-                        }
-                        const selectors = [];
-                        let offset = -1;
-                        if (query === '*') {
-                            selectors.push({ all: true });
-                            ++offset;
-                        }
-                        else {
-                            SELECTOR_G.lastIndex = 0;
-                            let adjacent = '', selector = '', segment, all, match;
-                            while (match = SELECTOR_G.exec(query)) {
-                                segment = match[1];
-                                selector += segment;
-                                all = false;
-                                if (segment.length === 1) {
-                                    const ch = segment[0];
-                                    switch (ch) {
-                                        case '+':
-                                        case '~':
-                                            --offset;
-                                        case '>':
-                                            if (adjacent || selectors.length === 0) {
-                                                break invalid;
-                                            }
-                                            adjacent = ch;
-                                            continue;
-                                        case '*':
-                                            all = true;
-                                            break;
-                                    }
-                                }
-                                else if (segment.startsWith('*|*')) {
-                                    if (segment.length > 3) {
-                                        break invalid;
-                                    }
-                                    all = true;
-                                }
-                                else if (segment.startsWith('*|')) {
-                                    segment = segment.substring(2);
-                                }
-                                else if (segment.startsWith('::')) {
-                                    break invalid;
-                                }
-                                if (all) {
-                                    selectors.push({ all: true });
-                                }
-                                else {
-                                    let tagName, id, classList, attrList, pseudoList, notList, subMatch;
-                                    while (subMatch = SELECTOR_ATTR.exec(segment)) {
-                                        let key = subMatch[1].replace('\\:', ':'), endsWith;
-                                        switch (key.indexOf('|')) {
-                                            case -1:
-                                                break;
-                                            case 1:
-                                                if (key[0] === '*') {
-                                                    endsWith = true;
-                                                    key = key.substring(2);
-                                                    break;
-                                                }
-                                            default:
-                                                break invalid;
+                        let match;
+                        for (let seg of splitEnclosing(query, CSS$1.SELECTOR_ENCLOSING)) {
+                            if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
+                                const condition = match[2].trim();
+                                switch (match[1].toLowerCase()) {
+                                    case 'not':
+                                        seg = parseNot(condition);
+                                        break;
+                                    case 'is':
+                                    case 'where':
+                                        if (selector && !/\s/.test(selector[selector.length - 1])) {
+                                            break invalid;
                                         }
-                                        const caseInsensitive = subMatch[6] === 'i';
-                                        let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
-                                        if (caseInsensitive) {
-                                            attrValue = attrValue.toLowerCase();
-                                        }
-                                        (attrList || (attrList = [])).push({
-                                            key,
-                                            symbol: subMatch[2],
-                                            value: attrValue,
-                                            endsWith,
-                                            caseInsensitive
-                                        });
-                                        segment = spliceString(segment, subMatch.index, subMatch[0].length);
-                                    }
-                                    if (segment.includes('::')) {
-                                        break invalid;
-                                    }
-                                    while (subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) {
-                                        const pseudoClass = subMatch[0];
-                                        if (pseudoClass.startsWith(':not(')) {
-                                            const negate = subMatch[1];
-                                            switch (negate[0]) {
-                                                case ':':
-                                                    if (!SELECTOR_PSEUDO_CLASS.test(negate)) {
-                                                        break invalid;
-                                                    }
-                                                    break;
-                                                case '[':
-                                                    if (!SELECTOR_ATTR.test(negate)) {
-                                                        break invalid;
-                                                    }
-                                                    break;
-                                                default:
-                                                    if (!SELECTOR_LABEL.test(negate)) {
-                                                        break invalid;
-                                                    }
-                                                    break;
+                                        if (condition.includes(',')) {
+                                            seg = '@';
+                                            for (const part of parseSelectorText$1(condition)) {
+                                                seg += '{{' + checkNot(part) + '}}';
                                             }
-                                            (notList || (notList = [])).push(negate);
+                                            expand = true;
                                         }
                                         else {
-                                            switch (pseudoClass) {
-                                                case ':root':
-                                                case ':scope':
-                                                    if (selectors.length) {
-                                                        break invalid;
-                                                    }
-                                                    --offset;
-                                                    break;
-                                            }
-                                            (pseudoList || (pseudoList = [])).push(pseudoClass);
+                                            seg = checkNot(condition);
                                         }
-                                        segment = spliceString(segment, subMatch.index, pseudoClass.length);
-                                    }
-                                    while (subMatch = SELECTOR_LABEL.exec(segment)) {
-                                        const label = subMatch[0];
-                                        switch (label[0]) {
-                                            case '#': {
-                                                const subId = label.substring(1);
-                                                if (id && id !== subId) {
-                                                    break invalid;
-                                                }
-                                                id = subId;
-                                                break;
-                                            }
-                                            case '.':
-                                                (classList || (classList = [])).push(label.substring(1));
-                                                break;
-                                            default:
-                                                if (id || classList || tagName) {
-                                                    break invalid;
-                                                }
-                                                tagName = label.toUpperCase();
-                                                break;
-                                        }
-                                        segment = spliceString(segment, subMatch.index, label.length);
-                                    }
-                                    selectors.push({
-                                        tagName,
-                                        id,
-                                        adjacent,
-                                        classList,
-                                        pseudoList,
-                                        notList,
-                                        attrList
-                                    });
+                                        break;
                                 }
-                                ++offset;
+                            }
+                            selector += seg;
+                        }
+                    }
+                    if (expand) {
+                        (function expandQuery(segments) {
+                            for (let i = 0, length = segments.length; i < length; ++i) {
+                                const match = REGEXP_ISWHERE.exec(segments[i]);
+                                if (match) {
+                                    const pending = [];
+                                    const pattern = /\{\{(.+?)\}\}/g;
+                                    let subMatch;
+                                    while (subMatch = pattern.exec(match[2])) {
+                                        pending.push(match[1] + subMatch[1] + match[3]);
+                                    }
+                                    expandQuery(pending);
+                                }
+                                else {
+                                    queries.push(segments[i]);
+                                }
+                            }
+                        })([selector]);
+                    }
+                    else {
+                        queries.push(selector);
+                    }
+                }
+                for (let i = 0, length = queries.length; i < length; ++i) {
+                    invalid: {
+                        const query = queries[i];
+                        const selectors = [];
+                        let start, offset = 0;
+                        if (query === '*') {
+                            selectors.push({ all: true });
+                        }
+                        else {
+                            CSS$1.SELECTOR_G.lastIndex = 0;
+                            let adjacent = '', selector = '', match;
+                            while (match = CSS$1.SELECTOR_G.exec(query)) {
+                                let segment = match[1];
+                                selector += segment;
+                                switch (segment) {
+                                    case '+':
+                                    case '~':
+                                        --offset;
+                                    case '>':
+                                        if (adjacent || selectors.length === 0 && (segment !== '>' || !/^:(root|scope)/.test(query))) {
+                                            break invalid;
+                                        }
+                                        adjacent = segment;
+                                        continue;
+                                    case '*':
+                                    case '*|*':
+                                        if (match.index) {
+                                            if (match[0][0] !== ' ') {
+                                                break invalid;
+                                            }
+                                        }
+                                        else {
+                                            start = true;
+                                        }
+                                        selectors.push({ all: true, adjacent });
+                                        adjacent = '';
+                                        continue;
+                                    case ':root':
+                                        if (selectors.length === 0 && this._element === document.documentElement) {
+                                            if (result.includes(this)) {
+                                                result.push(this);
+                                            }
+                                            start = true;
+                                            continue;
+                                        }
+                                        break invalid;
+                                    case ':scope':
+                                        if (selectors.length) {
+                                            break invalid;
+                                        }
+                                        start = true;
+                                        continue;
+                                    default:
+                                        if (segment.startsWith('*|')) {
+                                            segment = segment.substring(2);
+                                        }
+                                        break;
+                                }
+                                let attrList, subMatch;
+                                while (subMatch = CSS$1.SELECTOR_ATTR.exec(segment)) {
+                                    let key = subMatch[1].replace('\\:', ':').toLowerCase(), endsWith;
+                                    switch (key.indexOf('|')) {
+                                        case -1:
+                                            break;
+                                        case 1:
+                                            if (key[0] === '*') {
+                                                endsWith = true;
+                                                key = key.substring(2);
+                                                break;
+                                            }
+                                        default:
+                                            break invalid;
+                                    }
+                                    const caseInsensitive = subMatch[6] === 'i';
+                                    let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
+                                    if (caseInsensitive) {
+                                        attrValue = attrValue.toLowerCase();
+                                    }
+                                    (attrList || (attrList = [])).push({
+                                        key,
+                                        symbol: subMatch[2],
+                                        value: attrValue,
+                                        endsWith,
+                                        caseInsensitive
+                                    });
+                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                }
+                                if (segment.includes('::')) {
+                                    break invalid;
+                                }
+                                let notList, pseudoList;
+                                if (notIndex) {
+                                    while (subMatch = REGEXP_NOTINDEX.exec(segment)) {
+                                        (notList || (notList = [])).push(notIndex[subMatch[1].length - 1]);
+                                        segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                    }
+                                }
+                                while (subMatch = CSS$1.SELECTOR_PSEUDO_CLASS.exec(segment)) {
+                                    const pseudoClass = subMatch[0].toLowerCase();
+                                    switch (pseudoClass) {
+                                        case ':root':
+                                        case ':scope':
+                                            break invalid;
+                                        default:
+                                            (pseudoList || (pseudoList = [])).push(pseudoClass);
+                                            break;
+                                    }
+                                    segment = spliceString(segment, subMatch.index, pseudoClass.length);
+                                }
+                                let tagName, id, classList;
+                                while (subMatch = CSS$1.SELECTOR_LABEL.exec(segment)) {
+                                    const label = subMatch[0];
+                                    switch (label[0]) {
+                                        case '#': {
+                                            const subId = label.substring(1);
+                                            if (id && id !== subId) {
+                                                break invalid;
+                                            }
+                                            id = subId;
+                                            break;
+                                        }
+                                        case '.':
+                                            (classList || (classList = [])).push(label.substring(1));
+                                            break;
+                                        default:
+                                            if (id || classList || tagName) {
+                                                break invalid;
+                                            }
+                                            tagName = label.toUpperCase();
+                                            break;
+                                    }
+                                    segment = spliceString(segment, subMatch.index, label.length);
+                                }
+                                selectors.push({
+                                    tagName,
+                                    id,
+                                    adjacent,
+                                    classList,
+                                    pseudoList,
+                                    notList,
+                                    attrList
+                                });
                                 adjacent = '';
                             }
-                            if (query.replace(/\s+/g, '').length !== selector.replace(/\s+/g, '').length) {
-                                break invalid;
+                            if (getQueryLength(query) !== getQueryLength(selector)) {
+                                continue;
                             }
                         }
-                        if (customMap) {
-                            offset = 0;
-                        }
-                        let r = selectors.length;
-                        if (r && offset !== -1 && offset < depthCount) {
-                            const dataEnd = selectors.pop();
-                            const lastEnd = --r === 0;
-                            const currentCount = result.length;
-                            let pending;
-                            if (dataEnd.all && depthCount - offset === 1) {
-                                pending = queryMap[offset];
-                            }
-                            else {
-                                pending = [];
-                                for (let j = offset; j < depthCount; ++j) {
-                                    const children = queryMap[j];
-                                    if (dataEnd.all) {
-                                        pending.push(...children);
-                                    }
-                                    else {
-                                        for (let k = 0, s = children.length; k < s; ++k) {
-                                            const node = children[k];
-                                            if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, lastEnd)) {
-                                                pending.push(node);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            const s = pending.length;
-                            if (!lastEnd && (dataEnd.adjacent || resultCount !== -Infinity)) {
-                                if (r > 1) {
-                                    selectors.reverse();
-                                }
-                                let count = currentCount;
-                                for (let j = 0; j < s; ++j) {
-                                    const node = pending[j];
-                                    if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, 0, [node], dataEnd.adjacent)) {
+                        const q = selectors.length;
+                        if (q) {
+                            let currentCount = result.length;
+                            const all = currentCount === 0;
+                            for (let j = start || customMap ? 0 : q - offset, r = queryMap.length; j < r; ++j) {
+                                const items = queryMap[j];
+                                for (let k = 0, s = items.length; k < s; ++k) {
+                                    const node = items[k];
+                                    if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
                                         result.push(node);
-                                        if (++count === resultCount) {
-                                            return result.sort(sortById);
-                                        }
-                                    }
-                                }
-                            }
-                            else if (currentCount === 0) {
-                                if (i === queries.length - 1 || resultCount > 0 && resultCount <= s) {
-                                    if (resultCount > 0 && s > resultCount) {
-                                        pending.length = resultCount;
-                                    }
-                                    return pending.sort(sortById);
-                                }
-                                result = pending;
-                            }
-                            else {
-                                let count = currentCount;
-                                for (let j = 0; j < s; ++j) {
-                                    const node = pending[j];
-                                    if (currentCount === 0 || !result.includes(node)) {
-                                        result.push(node);
-                                        if (resultCount > 0 && ++count === resultCount) {
+                                        if (++currentCount === resultCount) {
                                             return result.sort(sortById);
                                         }
                                     }
@@ -3762,7 +3764,7 @@ this.squared.base = (function (exports) {
                     customMap.push([item]);
                     depth = item.depth;
                 });
-                return this.querySelectorAll(value, customMap, -Infinity);
+                return this.querySelectorAll(value, customMap);
             }
             return result.sort(sortById);
         }
@@ -3772,21 +3774,19 @@ this.squared.base = (function (exports) {
                     const children = this.descend(options).filter(item => item.naturalElement);
                     let length = children.length;
                     if (value && length) {
-                        const result = [];
+                        const customMap = [];
                         const depth = this.depth + 1;
                         let index;
                         for (let i = 0; i < length; ++i) {
                             const item = children[i];
                             index = item.depth - depth;
-                            (result[index] || (result[index] = [])).push(item);
+                            (customMap[index] || (customMap[index] = [])).push(item);
                         }
-                        length = result.length;
+                        length = customMap.length;
                         for (let i = 0; i < length; ++i) {
-                            if (!result[i]) {
-                                result[i] = [];
-                            }
+                            customMap[i] || (customMap[i] = []);
                         }
-                        return this.querySelectorAll(value, result);
+                        return this.querySelectorAll(value, customMap);
                     }
                     return children.sort(sortById);
                 }
@@ -4675,6 +4675,13 @@ this.squared.base = (function (exports) {
             const children = this.naturalChildren;
             return children[children.length - 1] || null;
         }
+        get firstElementChild() {
+            return this.naturalElements[0] || null;
+        }
+        get lastElementChild() {
+            const children = this.naturalElements;
+            return children[children.length - 1] || null;
+        }
         get previousSibling() {
             var _a;
             return ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.naturalChildren[this.childIndex - 1]) || null;
@@ -4719,6 +4726,22 @@ this.squared.base = (function (exports) {
                 this._cacheState.attributes = result;
             }
             return result;
+        }
+        get checked() {
+            switch (this.tagName) {
+                case 'INPUT': {
+                    const element = this._element;
+                    switch (element.type) {
+                        case 'radio':
+                        case 'checkbox':
+                            return element.checked;
+                    }
+                    break;
+                }
+                case 'OPTION':
+                    return this.parentElement.tagName === 'SELECT' && Array.from(this.parentElement.selectedOptions).includes(this._element);
+            }
+            return false;
         }
         get boundingClientRect() {
             if (this.styleElement) {
@@ -4839,7 +4862,25 @@ this.squared.base = (function (exports) {
             return this._elementData;
         }
         set dir(value) {
-            this._cacheState.dir = value;
+            switch (value = value.toLowerCase()) {
+                case 'ltr':
+                case 'rtl':
+                case 'auto':
+                    if (this.naturalElement) {
+                        this._element.dir = value;
+                        this.cascade(node => {
+                            if (node.dir === value) {
+                                return false;
+                            }
+                            node.unsetCache('dir');
+                        });
+                    }
+                    else if (this.naturalChild) {
+                        return;
+                    }
+                    this._cacheState.dir = value;
+                    break;
+            }
         }
         get dir() {
             let result = this._cacheState.dir;

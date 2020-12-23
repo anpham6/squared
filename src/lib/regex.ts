@@ -1,6 +1,7 @@
-const DECIMAL = '-?(?:\\d+(?:\\.\\d+)?|\\d*\\.\\d+)';
+const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
+const DECIMAL = '-?' + DECIMAL_UN;
 const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
-const SELECTOR_ATTR = `\\[((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\]`;
+const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
 const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
 const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
 const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
@@ -14,8 +15,7 @@ export const STRING = {
     DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
-    CSS_RESOLUTION: `(${DECIMAL})(dpi|dpcm|dppx)`,
-    CSS_CALC: 'calc\\((.+)\\)'
+    CSS_RESOLUTION: `(${DECIMAL_UN})(dpi|dpcm|dppx)`
 };
 
 export const FILE = {
@@ -41,7 +41,7 @@ export const CSS = {
 export const TRANSFORM = {
     MATRIX: new RegExp(`(matrix|matrix3d)\\(\\s*(${DECIMAL})${`,\\s*(${DECIMAL})`.repeat(5)}(?:${`,\\s*(${DECIMAL})`.repeat(10)})?\\s*\\)`),
     ROTATE: new RegExp(`(rotate(?:[XYZ]|3d)?)\\(\\s*(?:(${DECIMAL}),\\s*(${DECIMAL}),\\s*(${DECIMAL}),\\s*)?${STRING.CSS_ANGLE}\\s*\\)`),
-    SCALE: new RegExp(`(scale(?:[XYZ]|3d)?)\\(\\s*(${DECIMAL})(?:,\\s*(${DECIMAL}))?(?:,\\s*(${DECIMAL}))?\\s*\\)`),
+    SCALE: new RegExp(`(scale(?:[XYZ]|3d)?)\\(\\s*(${DECIMAL_UN})(?:,\\s*(${DECIMAL_UN}))?(?:,\\s*(${DECIMAL_UN}))?\\s*\\)`),
     TRANSLATE: new RegExp(`(translate(?:[XYZ]|3d)?)\\(\\s*${STRING.LENGTH_PERCENTAGE}(?:,\\s*${STRING.LENGTH_PERCENTAGE})?(?:,\\s*${STRING.LENGTH_PERCENTAGE})?\\s*\\)`),
     SKEW: new RegExp(`(skew[XY]?)\\(\\s*${STRING.CSS_ANGLE}(?:,\\s*${STRING.CSS_ANGLE})?\\s*\\)`),
     PERSPECTIVE: new RegExp(`(perspective)\\(\\s*${STRING.LENGTH_PERCENTAGE}\\s*\\)`)

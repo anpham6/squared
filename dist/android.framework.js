@@ -1,4 +1,4 @@
-/* android-framework 2.2.5
+/* android-framework 2.2.6
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -469,7 +469,7 @@ var android = (function () {
         return options;
     }
     function createThemeAttribute(data) {
-        return Object.assign({ output: { path: 'res/values', file: '' }, name: '', parent: '', items: {} }, data);
+        return Object.assign({ name: '', parent: '', items: {} }, data);
     }
     function replaceTab(value, spaces = 4, preserve) {
         if (spaces > 0) {
@@ -486,13 +486,15 @@ var android = (function () {
     function sanitizeString(value) {
         return value.trim().replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ');
     }
-    function replaceCharacterData(value, tab) {
+    function replaceCharacterData(value, tab, quote) {
         let output = '';
         for (let i = 0, length = value.length, ch; i < length; ++i) {
             ch = value[i];
             switch (ch) {
                 case "'":
-                    output += "\\'";
+                    if (!quote) {
+                        output += "\\'";
+                    }
                     break;
                 case '@':
                     output += i === 0 || !output.trim() ? '\\@' : '@';
@@ -705,18 +707,18 @@ var android = (function () {
         }
         static addTheme(theme) {
             const { items, output } = theme;
-            let path = 'res/values', file = 'themes.xml', name = theme.name, appTheme = '';
+            let pathname = 'res/values', filename = 'themes.xml', name = theme.name, appTheme = '';
             if (output) {
-                if (output.path) {
-                    path = trimString(output.path.trim().replace(/\\/g, '/'), '/');
+                if (output.pathname) {
+                    pathname = trimString(output.pathname.replace(/\\/g, '/'), '/');
                 }
-                if (output.file) {
-                    file = trimString(output.file.trim().replace(/\\/g, '/'), '/');
+                if (output.filename) {
+                    filename = output.filename;
                 }
             }
             const themes = Resource.STORED.themes;
-            const filename = `${path}/${file}`;
-            const storedFile = themes.get(filename) || new Map();
+            const filepath = pathname + '/' + filename;
+            const storedFile = themes.get(filepath) || new Map();
             if (!name || name[0] === '.') {
                 found: {
                     for (const data of themes.values()) {
@@ -748,7 +750,7 @@ var android = (function () {
             else {
                 storedFile.set(name, theme);
             }
-            themes.set(filename, storedFile);
+            themes.set(filepath, storedFile);
             return true;
         }
         static addString(value, name, numberAlias) {
@@ -13302,13 +13304,13 @@ var android = (function () {
             }
         }
         postBaseLayout(node) {
-            node.renderEach((item) => item.naturalElement && item.toElementBoolean('checked') && node.android('checkedButton', item.documentId));
+            node.renderEach((item) => item.checked && node.android('checkedButton', item.documentId));
         }
         setBaselineIndex(container, children) {
             let valid = false;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
-                if (item.toElementBoolean('checked')) {
+                if (item.checked) {
                     item.android('checked', 'true');
                 }
                 if (!valid && item.baseline && item.parent === container && container.layoutLinear && (i === 0 || container.layoutHorizontal)) {
@@ -13631,12 +13633,10 @@ var android = (function () {
                         switch (direction) {
                             case 0:
                             case 3:
-                                if (grayscale) {
-                                    percent = 0.5;
-                                }
+                                percent = grayscale ? 0.5 : 0.25;
                                 break;
                             default:
-                                percent = grayscale ? 0.75 : -0.75;
+                                percent = grayscale ? 0.75 : -0.25;
                                 break;
                         }
                         if (grayscale && color.hsla.l > 50) {
@@ -15848,21 +15848,21 @@ var android = (function () {
                                         valueString = upperCaseString(valueString);
                                         break;
                                 }
-                                valueString = replaceCharacterData(valueString, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : undefined);
                                 const textDecorationLine = node.css('textDecorationLine');
+                                let decoration = 0;
                                 if (textDecorationLine !== 'none') {
-                                    for (const style of textDecorationLine.split(' ')) {
-                                        switch (style) {
-                                            case 'underline':
-                                                valueString = `<u>${valueString}</u>`;
-                                                break;
-                                            case 'line-through':
-                                                valueString = `<strike>${valueString}</strike>`;
-                                                break;
-                                        }
+                                    if (textDecorationLine.includes('underline')) {
+                                        decoration |= 1;
+                                    }
+                                    if (textDecorationLine.includes('line-through')) {
+                                        decoration |= 2;
                                     }
                                 }
-                                if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
+                                valueString = replaceCharacterData(valueString, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : 0, decoration > 0);
+                                if (decoration & 1) {
+                                    valueString = `<u>${valueString}</u>`;
+                                }
+                                if (decoration & 2) {
                                     valueString = `<strike>${valueString}</strike>`;
                                 }
                                 if (textIndent > 0) {
@@ -16836,10 +16836,7 @@ var android = (function () {
             }
         }
         createSvgElement(node, src) {
-            const value = extractURL$2(src);
-            if (value) {
-                src = value;
-            }
+            src = extractURL$2(src) || src;
             if (FILE$1.SVG.test(src) || src.startsWith('data:image/svg+xml')) {
                 const fileAsset = this.resource.getRawData(src);
                 if (fileAsset) {
