@@ -83,13 +83,15 @@ interface ColumnData<T> {
     columnWidth: number;
     columnSized: number;
     columnGap: number;
-    columnRule: {
-        borderLeftStyle: string;
-        borderLeftWidth: number;
-        borderLeftColor: string;
-    };
+    columnRule: ColumnRuleData;
     boxWidth: number;
     multiline: boolean;
+}
+
+interface ColumnRuleData {
+    borderLeftStyle: string;
+    borderLeftWidth: number;
+    borderLeftColor: string;
 }
 
 interface SpriteData extends Dimension {

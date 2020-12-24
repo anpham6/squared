@@ -18,59 +18,13 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
         node.containerType = CONTAINER_NODE.CONSTRAINT;
         node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
         node.addAlign(NODE_ALIGNMENT.COLUMN);
-        return {
-            complete: true,
-            subscribe: true
-        };
+        return { complete: true, subscribe: true };
     }
 
     public postBaseLayout(node: T) {
         const mainData = this.data.get(node) as Undef<ColumnData<T>>;
         if (mainData) {
-            const application = this.application;
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
-            const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
-            const createColumnRule = () => {
-                const rule = application.createNode(node.sessionId, { parent: node });
-                rule.containerName = node.containerName + '_COLUMNRULE';
-                rule.inherit(node, 'base');
-                rule.setControlType(CONTAINER_TAGNAME.LINE, CONTAINER_NODE.LINE);
-                rule.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.ALL });
-                let width: string;
-                if (borderLeftWidth) {
-                    width = formatPX(borderLeftWidth);
-                    rule.cssApply({
-                        width,
-                        paddingLeft: width,
-                        borderLeftStyle,
-                        borderLeftWidth: width,
-                        borderLeftColor,
-                        lineHeight: 'inherit',
-                        boxSizing: 'border-box',
-                        display: 'inline-block'
-                    });
-                }
-                else {
-                    width = formatPX(columnGap);
-                    rule.cssApply({ width, lineHeight: 'inherit', display: 'inline-block' });
-                }
-                rule.saveAsInitial();
-                rule.setLayoutWidth(width);
-                rule.setLayoutHeight('0px');
-                rule.render(node);
-                rule.positioned = true;
-                rule.renderExclude = false;
-                application.addLayoutTemplate(
-                    node,
-                    rule,
-                    {
-                        type: NODE_TEMPLATE.XML,
-                        node: rule,
-                        controlName: rule.controlName
-                    } as NodeXmlTemplate<T>
-                );
-                return rule;
-            };
             let previousRow!: T;
             for (let i = 0, length = rows.length; i < length; ++i) {
                 const row = rows[i];
@@ -85,14 +39,15 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         previousRow.anchor('bottomTop', item.documentId);
                         item.anchor('topBottom', previousRow.documentId);
                     }
-                    if (i === length - 1) {
-                        item.anchor('bottom', 'parent');
-                    }
-                    else {
+                    if (i < length - 1) {
                         previousRow = row[0];
                     }
+                    else {
+                        item.anchor('bottom', 'parent');
+                    }
                     if (!item.isEmpty()) {
-                        item.box.width = Math.max(boxWidth, item.box.width);
+                        item.bounds.width = boxWidth - (Math.max(item.marginLeft, 0) + item.marginRight);
+                        item.resetBounds(true);
                     }
                     item.anchorParent('horizontal', item.centerAligned ? 0.5 : item.rightAligned ? 1 : 0);
                     item.anchored = true;
@@ -110,7 +65,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         for (let j = 0, k = 0, l = 0; j < q; ++j, ++l) {
                             const item = row[j];
                             const iteration = l % perRowCount === 0;
-                            if (k < columnMin - 1 && (iteration || excessCount <= 0 || j && !item.contentAltered && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                            if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && !item.contentAltered && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                                 if (j > 0) {
                                     ++k;
                                     if (iteration) {
@@ -151,15 +106,17 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     for (let j = 0; j < r; ++j) {
                         const data = columns[j];
                         for (let k = 0, s = data.length; k < s; ++k) {
-                            const item = data[k];
+                            const column = data[k];
                             const percent = (1 / columnMin) - percentGap;
-                            item.app('layout_constraintWidth_percent', truncate(percent, node.localSettings.floatPrecision));
-                            item.setLayoutWidth('0px');
-                            item.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1 });
-                            item.exclude({ section: APP_SECTION.EXTENSION });
-                            item.box.width = percent * boxWidth;
-                            item.anchored = true;
-                            item.positioned = true;
+                            column.app('layout_constraintWidth_percent', truncate(percent, node.localSettings.floatPrecision));
+                            column.setLayoutWidth('0px');
+                            column.setCacheValue('marginRight', '0px');
+                            column.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1 });
+                            column.bounds.width = percent * boxWidth;
+                            column.resetBounds(true);
+                            column.exclude({ section: APP_SECTION.EXTENSION });
+                            column.anchored = true;
+                            column.positioned = true;
                         }
                         above[j] = data[0];
                     }
@@ -176,11 +133,12 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     }
                     const columnHeight: number[] = new Array(r);
                     for (let j = 0; j < r; ++j) {
-                        const seg = columns[j];
-                        const elements: Element[] = [];
-                        let height = 0;
-                        for (let k = 0, s = seg.length; k < s; ++k) {
-                            const column = seg[k];
+                        const data = columns[j];
+                        const children: Element[] = [];
+                        let width = columnWidth || node.box.width / columnMin,
+                            height = 0;
+                        for (let k = 0, s = data.length; k < s; ++k) {
+                            const column = data[k];
                             if (column.naturalChild) {
                                 const element = column.element!.cloneNode(true) as HTMLElement;
                                 if (column.styleElement) {
@@ -189,48 +147,38 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                         style.height = formatPX(column.bounds.height);
                                     }
                                     else {
-                                        const textStyle = column.textStyle;
-                                        style.fontSize = column.fontSize + 'px';
+                                        const { fontSize, lineHeight, textStyle } = column;
                                         for (const attr in textStyle) {
                                             style[attr] = textStyle[attr];
                                         }
+                                        style.fontSize = fontSize + 'px';
+                                        if (lineHeight) {
+                                            style.lineHeight = lineHeight + 'px';
+                                        }
                                     }
                                 }
-                                elements.push(element);
+                                children.push(element);
+                                width = Math.max(column.bounds.width, width);
                             }
                             else {
                                 height += column.linear.height;
                             }
                         }
-                        const s = elements.length;
-                        if (s) {
+                        if (children.length) {
                             const container = createElement('div', {
                                 parent: document.body,
-                                style: {
-                                    width: formatPX(columnWidth || node.box.width / columnMin),
-                                    visibility: 'hidden'
-                                }
+                                style: { width: formatPX(width), visibility: 'hidden' },
+                                children
                             });
-                            for (let k = 0; k < s; ++k) {
-                                container.appendChild(elements[k]);
-                            }
                             height += container.getBoundingClientRect().height;
                             document.body.removeChild(container);
                         }
                         columnHeight[j] = height;
                     }
+                    const rules: T[] = [];
                     let anchorTop!: T,
                         anchorBottom!: T,
                         maxHeight = 0;
-                    for (let j = 0; j < r; ++j) {
-                        const value = columnHeight[j];
-                        if (value >= maxHeight) {
-                            const column = columns[j];
-                            anchorTop = column[0];
-                            anchorBottom = column[column.length - 1];
-                            maxHeight = value;
-                        }
-                    }
                     for (let j = 0; j < r; ++j) {
                         const item = above[j];
                         if (j === 0) {
@@ -248,15 +196,21 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         else {
                             item.anchor('rightLeft', above[j + 1].documentId);
                         }
+                        const height = columnHeight[j];
+                        if (height >= maxHeight) {
+                            const column = columns[j];
+                            anchorTop = column[0];
+                            anchorBottom = column[column.length - 1];
+                            maxHeight = height;
+                        }
                     }
-                    const rules: T[] = [];
                     for (let j = 0; j < r; ++j) {
                         const seg = columns[j];
                         for (let k = 0, s = seg.length; k < s; ++k) {
                             const item = seg[k];
                             if (k === 0) {
                                 if (j > 0) {
-                                    const rule = createColumnRule();
+                                    const rule = this.createColumnRule(node, columnGap, columnRule);
                                     rule.anchor('top', anchorTop.documentId);
                                     rule.anchor('left', columns[j - 1][0].documentId);
                                     rule.anchor('right', item.documentId);
@@ -298,5 +252,49 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 }
             }
         }
+    }
+
+    private createColumnRule(node: T, columnGap: number, columnRule: ColumnRuleData) {
+        const application = this.application;
+        const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
+        const rule = application.createNode(node.sessionId, { parent: node });
+        rule.containerName = node.containerName + '_COLUMNRULE';
+        rule.inherit(node, 'base');
+        rule.setControlType(CONTAINER_TAGNAME.LINE, CONTAINER_NODE.LINE);
+        rule.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.ALL });
+        let width: string;
+        if (borderLeftWidth) {
+            width = formatPX(borderLeftWidth);
+            rule.cssApply({
+                width,
+                paddingLeft: width,
+                borderLeftStyle,
+                borderLeftWidth: width,
+                borderLeftColor,
+                lineHeight: 'inherit',
+                boxSizing: 'border-box',
+                display: 'inline-block'
+            });
+        }
+        else {
+            width = formatPX(columnGap);
+            rule.cssApply({ width, lineHeight: 'inherit', display: 'inline-block' });
+        }
+        rule.saveAsInitial();
+        rule.setLayoutWidth(width);
+        rule.setLayoutHeight('0px');
+        rule.render(node);
+        rule.positioned = true;
+        rule.renderExclude = false;
+        application.addLayoutTemplate(
+            node,
+            rule,
+            {
+                type: NODE_TEMPLATE.XML,
+                node: rule,
+                controlName: rule.controlName
+            } as NodeXmlTemplate<T>
+        );
+        return rule;
     }
 }

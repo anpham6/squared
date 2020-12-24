@@ -1017,28 +1017,54 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     case 'bottom':
                         cache.bottomAligned = undefined;
                         break;
+                    case 'paddingLeft':
+                    case 'paddingRight':
+                        cache.contentBoxWidth = undefined;
+                        break;
+                    case 'marginLeft':
+                    case 'marginRight':
+                        cache.rightAligned = undefined;
+                        cache.centerAligned = undefined;
+                        cache.autoMargin = undefined;
+                        break;
+                    case 'marginTop':
+                    case 'marginBottom':
+                        cache.bottomAligned = undefined;
+                        cache.autoMargin = undefined;
+                        break;
+                    case 'paddingTop':
+                    case 'paddingBottom':
+                        cache.contentBoxHeight = undefined;
+                        break;
+                    case 'fontSize':
+                        cache.lineHeight = undefined;
+                        break;
                     case 'whiteSpace':
                         cache.preserveWhiteSpace = undefined;
                         cache.textStyle = undefined;
                         this._cacheState.textEmpty = undefined;
                         continue;
                     default:
-                        if (attr.startsWith('margin')) {
-                            cache.autoMargin = undefined;
-                            cache.rightAligned = undefined;
-                            cache.centerAligned = undefined;
-                            cache.bottomAligned = undefined;
-                        }
-                        else if (attr.startsWith('padding')) {
-                            cache.contentBoxWidth = undefined;
-                            cache.contentBoxHeight = undefined;
+                        if (attr.startsWith('background')) {
+                            cache.visibleStyle = undefined;
                         }
                         else if (attr.startsWith('border')) {
-                            cache.visibleStyle = undefined;
-                            cache.contentBoxWidth = undefined;
-                            cache.contentBoxHeight = undefined;
-                        }
-                        else if (attr.startsWith('background')) {
+                            if (attr.startsWith('borderTop')) {
+                                cache.borderTopWidth = undefined;
+                                cache.contentBoxHeight = undefined;
+                            }
+                            else if (attr.startsWith('borderRight')) {
+                                cache.borderRightWidth = undefined;
+                                cache.contentBoxWidth = undefined;
+                            }
+                            else if (attr.startsWith('borderBottom')) {
+                                cache.borderBottomWidth = undefined;
+                                cache.contentBoxHeight = undefined;
+                            }
+                            else {
+                                cache.borderLeftWidth = undefined;
+                                cache.contentBoxWidth = undefined;
+                            }
                             cache.visibleStyle = undefined;
                         }
                         else if (TEXT_STYLE.includes(attr)) {

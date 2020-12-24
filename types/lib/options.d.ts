@@ -53,6 +53,7 @@ interface CreateElementOptions {
     parent?: HTMLElement;
     attrs?: StandardMap;
     style?: StringMap;
+    children?: Element[];
 }
 
 interface TransformOptions {

@@ -57,7 +57,7 @@ export function getRangeClientRect(element: Element) {
     range.selectNodeContents(element);
     const clientRects = range.getClientRects();
     for (let i = 0, length = clientRects.length; i < length; ++i) {
-        const item = clientRects.item(i) as ClientRect;
+        const item = clientRects[i];
         if (Math.round(item.width) && !withinRange(item.left, item.right, 0.5)) {
             domRect.push(item);
         }
@@ -116,12 +116,11 @@ export function getParentElement(element: Element) {
 }
 
 export function removeElementsByClassName(className: string) {
-    const elements = Array.from(document.getElementsByClassName(className));
+    const elements = document.getElementsByClassName(className);
     for (let i = 0, length = elements.length; i < length; ++i) {
         const element = elements[i];
-        const parentElement = element.parentElement;
-        if (parentElement) {
-            parentElement.removeChild(element);
+        if (element) {
+            element.parentElement?.removeChild(element);
         }
     }
 }
@@ -160,7 +159,7 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
 }
 
 export function createElement(tagName: string, options: CreateElementOptions) {
-    const { parent, attrs, style } = options;
+    const { parent, style, attrs, children } = options;
     const element = document.createElement(tagName);
     if (style) {
         const cssStyle = element.style;
@@ -182,6 +181,9 @@ export function createElement(tagName: string, options: CreateElementOptions) {
     }
     if (parent) {
         parent.appendChild(element);
+    }
+    if (children) {
+        children.forEach(child => element.appendChild(child));
     }
     return element;
 }
