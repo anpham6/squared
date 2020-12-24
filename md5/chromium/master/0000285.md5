@@ -1,5 +1,5 @@
 3b1cdf7c524a2c35609e8bfdc94ba076  ./app/src/main/res/drawable/backdrop.gif
-789cf16a4e8da8e0bb557c745c1f6969  ./app/src/main/res/drawable/body_constraintlayout_2.xml
+789cf16a4e8da8e0bb557c745c1f6969  ./app/src/main/res/drawable/body_constraintlayout_3.xml
 f5fd4260cd3b897bc9a71c30e9093a53  ./app/src/main/res/drawable/div_framelayout_1.xml
 a6e4ae6b15878cf32b10407ff1f6cc73  ./app/src/main/res/drawable/figcaption_textview_1.xml
 16fa25b74cb60732d9ed4f4c08116b15  ./app/src/main/res/drawable/icon.png
@@ -12,9 +12,9 @@ eb30de48786f449454ca970aad728950  ./app/src/main/res/drawable/print_05.jpg
 1dade3e3be7c5feb315a3db76c493073  ./app/src/main/res/drawable/print_06.jpg
 913c0aaaa377b4141bc8b07c74218725  ./app/src/main/res/drawable/shadow.png
 f813efe6661f191865cbedd4997c99e4  ./app/src/main/res/drawable/title.gif
-ea8d31a2854ce40bec2d9266706cb61e  ./app/src/main/res/layout/activity_main.xml
+12b50c2227c11697fc08e6d9fd23cbb7  ./app/src/main/res/layout/activity_main.xml
 44fb43e015e3ac0cba345aa4984af392  ./app/src/main/res/values/colors.xml
 195fe32fa9e4d8a16c7a8b305023a42a  ./app/src/main/res/values/dimens.xml
 a2011f26f657953eef83b0ed75ebbf12  ./app/src/main/res/values/strings.xml
-1a96a554c7a9d802357220fc563d6b5d  ./app/src/main/res/values/styles.xml
-4fd015ce5cf764df548d07912dfb5acc  ./app/src/main/res/values/themes.xml
+bc88ca6f5afe2e7b2e1efb0ec6b02954  ./app/src/main/res/values/styles.xml
+52c67f62aa6c536ce4abf014773d4e49  ./app/src/main/res/values/themes.xml

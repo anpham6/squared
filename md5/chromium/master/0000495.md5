@@ -1,10 +1,10 @@
 5efd10bbf2e9a55a0e8dd1d9696e5d94  ./app/src/main/res/drawable/div_constraintlayout_1.xml
-55350169530561bedea8fc782cc4201a  ./app/src/main/res/drawable/div_linearlayout_2.xml
+55350169530561bedea8fc782cc4201a  ./app/src/main/res/drawable/div_linearlayout_1.xml
 bec8577545b80f4cb4745e96674e185b  ./app/src/main/res/drawable/span_abs.xml
 b9cd600035c66414f49d0417bb9e6e2c  ./app/src/main/res/drawable/star.gif
-140c680455a0b2e6ba1807a0cf0b2ab2  ./app/src/main/res/layout/activity_main.xml
+84b1639f79dc1d56aa50897ec2c9191c  ./app/src/main/res/layout/activity_main.xml
 6fa7ae282df228b14fbe2f570f5c254c  ./app/src/main/res/values/colors.xml
-da0b0e1c760ee4aed63cbc3551e449fb  ./app/src/main/res/values/dimens.xml
+3ffeb1d0a5427562f06f114a163ef602  ./app/src/main/res/values/dimens.xml
 759d3e619a55d1406f74a9f5e867cc63  ./app/src/main/res/values/strings.xml
 7997f93c5a95abd22ea7c658a65979d5  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

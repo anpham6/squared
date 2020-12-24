@@ -902,31 +902,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public processTraverseVertical(layout: LayoutUI<T>) {
-        const clearMap = this.application.clearMap;
         const { parent, floated } = layout;
-        if (layout.find((item, index) => item.lineBreakTrailing && index < layout.size() - 1)) {
-            if (!parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
-                const containerType = getVerticalLayout(layout);
-                if (isUnknownParent(parent, containerType, layout.size())) {
-                    setVerticalLayout(parent);
-                    return;
-                }
-                if (parent.layoutConstraint) {
-                    parent.addAlign(NODE_ALIGNMENT.VERTICAL);
-                    if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
-                        return;
-                    }
-                }
-                layout.node = this.createLayoutGroup(layout);
-                layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
-            }
-        }
-        else if (floated) {
+        const size = layout.size();
+        let layoutType = NaN;
+        if (floated) {
             if (floated.size === 1 && layout.every(item => item.floating)) {
                 layout.node = this.createLayoutGroup(layout);
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
             }
-            else if (hasCleared(layout, clearMap)) {
+            else if (hasCleared(layout, this.application.clearMap)) {
                 layout.node = this.createLayoutGroup(layout);
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.VERTICAL);
@@ -936,22 +920,28 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
+            else {
+                layoutType = 0;
+            }
+        }
+        else {
+            layoutType = layout.find((item, index) => item.lineBreakTrailing && index < size - 1) ? NODE_ALIGNMENT.UNKNOWN : 0;
         }
         if (!parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             const containerType = getVerticalAlignedLayout(layout);
-            if (isUnknownParent(parent, containerType, length)) {
+            if (isUnknownParent(parent, containerType, size)) {
                 setVerticalLayout(parent);
                 return;
             }
             if (parent.layoutConstraint) {
                 parent.addAlign(NODE_ALIGNMENT.VERTICAL);
-                if (!parent.hasAlign(NODE_ALIGNMENT.ABSOLUTE)) {
-                    return;
-                }
+                return;
             }
-            layout.node = this.createLayoutGroup(layout);
-            layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL);
-}
+            if (!isNaN(layoutType)) {
+                layout.node = this.createLayoutGroup(layout);
+                layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL | layoutType);
+            }
+        }
         return layout;
     }
 
@@ -1212,9 +1202,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (children.length) {
                         if (node.layoutHorizontal) {
                             this.processConstraintHorizontal(node, children);
+                            this.evaluateAnchors(children);
                         }
                         else if (children.length > 1) {
-                            this.processConstraintChain(node, children);
+                            if (node.layoutVertical) {
+                                this.processConstraintVertical(node, children);
+                            }
+                            else {
+                                this.processConstraintChain(node, children);
+                            }
+                            this.evaluateAnchors(children);
                         }
                         else {
                             const item = children[0];
@@ -1227,7 +1224,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             item.setConstraintDimension(1);
                         }
-                        this.evaluateAnchors(children);
                     }
                 }
                 else if (node.layoutRelative) {
@@ -3209,6 +3205,33 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
+    protected processConstraintVertical(node: T, children: T[]) {
+        const bias = node.css('textAlign') === 'center' ? 0.5 : 0;
+        for (let i = 0, length = children.length; i < length; ++i) {
+            const chain = children[i];
+            if (i === 0) {
+                chain.anchor('top', 'parent');
+                chain.anchorStyle('vertical', 0, 'packed');
+            }
+            if (i > 0) {
+                const previous = children[i - 1];
+                previous.anchor('bottomTop', chain.documentId);
+                chain.anchor('topBottom', previous.documentId);
+            }
+            if (i < length - 1) {
+                const next = children[i + 1];
+                chain.anchor('bottomTop', next.documentId);
+                next.anchor('topBottom', chain.documentId);
+            }
+            else {
+                chain.anchor('bottom', 'parent');
+            }
+            chain.setConstraintDimension(1);
+            chain.anchorParent('horizontal', chain.rightAligned ? 1 : chain.centerAligned ? 0.5 : bias);
+            chain.constraint.vertical = true;
+        }
+    }
+
     protected processConstraintChain(node: T, children: T[]) {
         const clearMap = this.application.clearMap;
         const emptyMap = clearMap.size === 0;
@@ -3290,9 +3313,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         chain.anchorParent('horizontal');
                     }
                     else if (q > 1) {
-                        const previous = seg[k - 1];
-                        const next = seg[k + 1];
-                        if (previous) {
+                        if (k > 0) {
+                            const previous = seg[k - 1];
                             if (!previous.pageFlow && previous.autoPosition) {
                                 let found: Undef<T>;
                                 for (let l = k - 2; l >= 0; --l) {
@@ -3313,8 +3335,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 chain.anchor(chainStart, previous.documentId);
                             }
                         }
-                        if (next) {
-                            chain.anchor(chainEnd, next.documentId);
+                        if (k < q - 1) {
+                            chain.anchor(chainEnd, seg[k + 1].documentId);
                         }
                     }
                     percentWidth = chain.setConstraintDimension(percentWidth);

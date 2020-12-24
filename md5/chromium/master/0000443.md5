@@ -1,4 +1,4 @@
-95cdc0daca1218796f50133d6dbd1ada  ./app/src/main/res/drawable/article_constraintlayout_6.xml
+95cdc0daca1218796f50133d6dbd1ada  ./app/src/main/res/drawable/article_constraintlayout_4.xml
 8facddfeae453e89411a2058547c23aa  ./app/src/main/res/drawable/body_linearlayout_1.xml
 f53fdb5bef1b9fac2b79f6019a3725b2  ./app/src/main/res/drawable/chua75.jpg
 c54b18dbc579b33ce1a1d3d94049b6b2  ./app/src/main/res/drawable/header_linearlayout_5.xml
@@ -9,9 +9,9 @@ a83668c85396cb3911e1bc8c0ffb3360  ./app/src/main/res/drawable/sampson75.jpg
 f99d6a3db910190ec71a5c49df4692d6  ./app/src/main/res/drawable/sorkin75.jpg
 78fad86d5712382e8384f878c42c547f  ./app/src/main/res/drawable/toobin75.jpg
 5030866e11e23c5116541cbdb69d035b  ./app/src/main/res/drawable/town_hall_logo.gif
-67dfbddecb6cbf05fd0aa09d82b3f700  ./app/src/main/res/layout/activity_main.xml
+dc1961bf5a5b6e3a35cc1050d4bd1acb  ./app/src/main/res/layout/activity_main.xml
 02c428308d05b43e0331d9c302f41e0b  ./app/src/main/res/values/colors.xml
 8f89c556500ed4b212cf2fad525ec066  ./app/src/main/res/values/dimens.xml
 2ebbd9674d17ab2b88284c0a950bdf99  ./app/src/main/res/values/strings.xml
-d77dccbd8d30ccde9d3ef327d0136283  ./app/src/main/res/values/styles.xml
+c8c803fa381890da1f1317d2a1ef1c01  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

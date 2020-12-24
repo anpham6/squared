@@ -1,7 +1,7 @@
 fad076226ff38a567ffab7fcefc284cb  ./app/src/main/res/drawable/article.jpg
 895fb9ac34d396b55063e860466b2c47  ./app/src/main/res/drawable/article_columnrule_view_3.xml
-148ddb376059fd28bad7225d7793fa61  ./app/src/main/res/drawable/article_constraintlayout_10.xml
-fcc8aacdc258fa737410883fdef95826  ./app/src/main/res/drawable/article_constraintlayout_11.xml
+fcc8aacdc258fa737410883fdef95826  ./app/src/main/res/drawable/article_constraintlayout_10.xml
+148ddb376059fd28bad7225d7793fa61  ./app/src/main/res/drawable/article_constraintlayout_9.xml
 2ad50b83658dc6c262def99f1c16460d  ./app/src/main/res/drawable/callout1.jpg
 51440aac0076ac7000792ec9fb3a9443  ./app/src/main/res/drawable/callout2.jpg
 8b1f090edb11672970afef2be2225815  ./app/src/main/res/drawable/callout3.jpg
@@ -22,7 +22,7 @@ d15a657cdccd4dc26d18488656f36ad0  ./app/src/main/res/drawable/h3_textview_4.xml
 0eb2e6fa1ba9a1730b1c0dbec86159e6  ./app/src/main/res/drawable/promoted2.jpg
 81eb08fe2e2425411c9e0c1120134385  ./app/src/main/res/drawable/rightarrow.png
 4b3440544def1f4eef3603451711a75e  ./app/src/main/res/drawable/span_textview_25.xml
-ba8a8d195d31aec68a68a5032b3d5829  ./app/src/main/res/layout/activity_main.xml
+8299ae77da3d809c6721d2dc9654dcbe  ./app/src/main/res/layout/activity_main.xml
 322e6ee406c98886ddc5a28a26bd006c  ./app/src/main/res/values/colors.xml
 93c1d1f24afabd91f6317a8c79b58e4e  ./app/src/main/res/values/dimens.xml
 5154cc65850dbece9697f91e714906d6  ./app/src/main/res/values/strings.xml

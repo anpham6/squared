@@ -149,11 +149,9 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                 return 0;
         }
         const width = node.css(border[0]);
-        if (width) {
-            const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
-            if (result) {
-                return Math.max(Math.round(result), 1);
-            }
+        const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+        if (result > 0) {
+            return Math.max(Math.round(result), 1);
         }
     }
     return 0;
@@ -241,9 +239,7 @@ function checkReadOnly(element: HTMLInputElement, value: boolean) {
 
 function hasScopedSelector(parent: T, element: HTMLElement, value: string) {
     try {
-        if (iterateArray(parent.element!.querySelectorAll(':scope > ' + value), item => item === element) === Infinity) {
-            return true;
-        }
+        return iterateArray(parent.element!.querySelectorAll(':scope > ' + value), item => item === element) === Infinity;
     }
     catch {
     }

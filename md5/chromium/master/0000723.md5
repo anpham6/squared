@@ -4,9 +4,9 @@ c45d7744e51bb10acab7911a2d5e6a9b  ./app/src/main/res/drawable/button_fab_browse_
 caedc404a83a0e8dbe81359612fcfa5f  ./app/src/main/res/drawable/div_toolbar_demo.xml
 df444bee0bf9b2051fb72d8cf5ba92ce  ./app/src/main/res/drawable/icons8_browse_page_24.png
 9e20f5dd2f7f4e6db1b3d27e1e8580c6  ./app/src/main/res/drawable/icons8_web_24.png
-92b19458ee1a5154293e9021de465157  ./app/src/main/res/layout/activity_main.xml
+85defcb1d127e0bc3576e982ef2b403c  ./app/src/main/res/layout/activity_main.xml
 4ecbebc67b4fa3e7ea601fb5e889a15d  ./app/src/main/res/values/colors.xml
-a004422f0f9492285ecbd54617744e3f  ./app/src/main/res/values/dimens.xml
+73040f3f59a7319382644e59db65bb03  ./app/src/main/res/values/dimens.xml
 d79762365f89a112a1e450c51d4ffe05  ./app/src/main/res/values/strings.xml
-0b1aae25ac7000f551e608e7588a46af  ./app/src/main/res/values/styles.xml
+463258e53c6744965e68955445b2d097  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
