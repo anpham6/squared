@@ -728,7 +728,7 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
         if (rootElement) {
             const elements = rootElement.querySelectorAll('*');
             for (let i = 0, length = elements.length; i < length; ++i) {
-                const target = elements.item(i);
+                const target = elements[i];
                 if (target.id.trim() === id && target instanceof SVGElement) {
                     return target;
                 }

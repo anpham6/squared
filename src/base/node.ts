@@ -237,15 +237,6 @@ function checkReadOnly(element: HTMLInputElement, value: boolean) {
     return true;
 }
 
-function hasScopedSelector(parent: T, element: HTMLElement, value: string) {
-    try {
-        return iterateArray(parent.element!.querySelectorAll(':scope > ' + value), item => item === element) === Infinity;
-    }
-    catch {
-    }
-    return false;
-}
-
 function validateQuerySelector(this: T, selector: QueryData, child?: T) {
     if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
         return false;
@@ -322,6 +313,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
     }
     if (pseudoList) {
         const { actualParent: parent, tagName } = this;
+        const scoped: string[] = [];
         for (let i = 0, length = pseudoList.length; i < length; ++i) {
             const pseudo = pseudoList[i];
             switch (pseudo) {
@@ -493,9 +485,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                 case ':focus-within':
                 case ':valid':
                 case ':invalid':
-                    if (!hasScopedSelector(parent!, element, pseudo)) {
-                        return false;
-                    }
+                    scoped.push(pseudo);
                     break;
                 default: {
                     let match: Null<RegExpExecArray>;
@@ -571,9 +561,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                         }
                     }
                     else if (pseudo.startsWith(':lang(')) {
-                        if (!hasScopedSelector(parent!, element, pseudo)) {
-                            return false;
-                        }
+                        scoped.push(pseudo);
                         break;
                     }
                     else if (match = REGEXP_DIR.exec(pseudo)) {
@@ -584,9 +572,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                 }
                                 break;
                             case 'auto':
-                                if (!hasScopedSelector(parent!, element, pseudo)) {
-                                    return false;
-                                }
+                                scoped.push(pseudo);
                                 break;
                             default:
                                 if (match[1] === 'rtl') {
@@ -598,6 +584,16 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                     }
                     return selector.fromNot ? true : false;
                 }
+            }
+        }
+        if (scoped.length) {
+            try {
+                if (iterateArray(element.parentElement!.querySelectorAll(':scope > ' + scoped.join('')), item => item === element) !== Infinity) {
+                    return false;
+                }
+            }
+            catch {
+                return selector.fromNot ? true : false;
             }
         }
     }
@@ -900,15 +896,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 elementData = this._elementData;
             }
             if (elementData) {
-                const styleMap: Undef<StringMap> = elementData.styleMap;
+                const styleMap = elementData.styleMap;
                 if (styleMap) {
                     if (!this.plainText && this.naturalChild) {
                         if (!this.pseudoElement) {
-                            const items = Array.from(element.style);
-                            const length = items.length;
+                            const length = element.style.length;
                             if (length) {
+                                const style = element.style;
                                 for (let i = 0; i < length; ++i) {
-                                    const attr = items[i];
+                                    const attr = style[i];
                                     styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
                                 }
                             }
@@ -3045,7 +3041,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (this.styleElement) {
                 const attributes = this._element!.attributes;
                 for (let i = 0, length = attributes.length; i < length; ++i) {
-                    const item = attributes.item(i) as Attr;
+                    const item = attributes[i];
                     result[item.name] = item.value;
                 }
             }

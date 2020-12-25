@@ -87,7 +87,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             let columns = -1,
                                 previousLeft = -Infinity;
                             for (let j = 0, r = clientRects.length; j < r; ++j) {
-                                const { left, right } = clientRects.item(j) as ClientRect;
+                                const { left, right } = clientRects[j];
                                 if (Math.floor(left) >= previousLeft) {
                                     ++columns;
                                 }
@@ -190,14 +190,17 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         const { children, sessionId } = parentContainer;
         const breakable = mainData || [[1, node]];
         let modified: Undef<boolean>,
-            partition: Undef<boolean>;
+            layoutColumn: Undef<boolean>;
         for (let i = 0, length = breakable.length; i < length; ++i) {
             const [columns, seg] = breakable[i];
             const element = seg.element!;
-            partition = columns > 1;
+            const wrapperContainer: T[] = [];
+            const partition = columns > 1;
+            if (partition) {
+                layoutColumn = true;
+            }
             let adjustment = fontAdjust,
-                textContent: string,
-                wrapperContainer: Undef<T[]>;
+                textContent: string;
             if (seg.naturalElement) {
                 textContent = this.resource!.removeExcludedFromText(seg, element);
                 const value = getFontMeasureAdjust(seg);
@@ -218,7 +221,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             }
             REGEXP_WORD.lastIndex = 0;
             if (partition && words.length <= 1) {
-                (wrapperContainer ||= []).push(seg);
+                wrapperContainer.push(seg);
             }
             else {
                 const q = words.length;
@@ -299,7 +302,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             }
                             container.setCacheValue('marginLeft', marginLeft);
                             container.setCacheValue('marginRight', marginRight);
-                            (wrapperContainer ||= []).push(container);
+                            wrapperContainer.push(container);
                             previous = container;
                         }
                     }
@@ -372,7 +375,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     }
                 }
             }
-            if (wrapperContainer) {
+            if (wrapperContainer.length) {
                 const index = children.findIndex(item => item === seg);
                 if (index !== -1) {
                     children.splice(index, 1, ...wrapperContainer);
@@ -383,7 +386,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         if (modified) {
             setContentAltered(parentContainer, true);
             if (mainData) {
-                if (!partition) {
+                if (!layoutColumn) {
                     parentContainer.setControlType(View.getControlName(CONTAINER_NODE.RELATIVE), CONTAINER_NODE.RELATIVE);
                     parentContainer.alignmentType = NODE_ALIGNMENT.HORIZONTAL;
                     if (hasTextIndent(node) || isNaN(breakable[0][0])) {

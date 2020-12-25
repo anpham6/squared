@@ -1397,7 +1397,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 for (const [name, target] of this._animateTarget) {
                     const animate = target.animate;
-                    let objectAnimator: Undef<PropertyValue[]>;
+                    const objectAnimator: PropertyValue[] = [];
                     for (let i = 0, length = animate.length; i < length; ++i) {
                         const item = animate[i];
                         if (SvgBuild.asAnimateMotion(item)) {
@@ -1407,7 +1407,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 if (path) {
                                     const { value, baseValue } = path;
                                     if (value !== baseValue) {
-                                        (objectAnimator ||= []).push(createPropertyValue('pathData', 'pathType', baseValue, '0', precision, value));
+                                        objectAnimator.push(createPropertyValue('pathData', 'pathType', baseValue, '0', precision, value));
                                         if (item.iterationCount !== -1 && !item.setterType) {
                                             objectAnimator.push(createPropertyValue('pathData', 'pathType', value, '0', precision, baseValue, item.getTotalDuration().toString()));
                                         }
@@ -1416,7 +1416,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             }
                         }
                     }
-                    if (objectAnimator) {
+                    if (objectAnimator.length) {
                         insertTargetAnimation(
                             data,
                             name,
