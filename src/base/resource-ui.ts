@@ -98,9 +98,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         let expanded = '';
         for (const item of colors) {
             const color = item[0];
-            for (const unit of value.substring(item[1], item[2]).replace(/\s*,\s*$/, '').trim().split(/\s*,\s*/)) {
-                expanded += (expanded ? ', ' : '') + color + ' ' + unit;
-            }
+            expanded = value.substring(item[1], item[2]).split(',').reduce((a, b) => b = b.trim() ? a + (a ? ', ' : '') + color + ' ' + b : a, expanded);
         }
         value = expanded;
     }

@@ -106,9 +106,7 @@ if (output) {
                 }
             }
         }
-        for (const value of extensions) {
-            content += fs.readFileSync(value);
-        }
+        content = extensions.reduce((a, b) => a + fs.readFileSync(b), content);
         const dirname = path.dirname(output);
         if (!fs.existsSync(dirname)) {
             fs.mkdirpSync(dirname);

@@ -1779,10 +1779,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         break invalid;
                                     }
                                     if (condition.includes(',')) {
-                                        seg = '@';
-                                        for (const part of parseSelectorText(condition)) {
-                                            seg += '{{' + checkNot(part) + '}}';
-                                        }
+                                        seg = parseSelectorText(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
                                         expand = true;
                                     }
                                     else {

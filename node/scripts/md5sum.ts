@@ -349,10 +349,7 @@ else if (host && data && browserName && snapshot) {
                     for (const item of items) {
                         const files = await readdirp.promise(item.filepath);
                         files.sort((a, b) => a.path < b.path ? -1 : 1);
-                        let output = '';
-                        for (const file of files) {
-                            output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/\\/g, '/') + '\n';
-                        }
+                        const output = files.reduce((a, b) => a + md5(fs.readFileSync(b.fullPath)) + '  ./' + b.path.replace(/\\/g, '/') + '\n', '');
                         fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
                         stderr.write(chalk.bgBlue.bold(item.files!.length !== files.length ? chalk.black('!') : chalk.white('>')));
                     }
