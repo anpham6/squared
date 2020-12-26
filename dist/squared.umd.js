@@ -1,4 +1,4 @@
-/* squared 2.2.6
+/* squared 2.2.7
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -5638,7 +5638,7 @@
         range.selectNodeContents(element);
         const clientRects = range.getClientRects();
         for (let i = 0, length = clientRects.length; i < length; ++i) {
-            const item = clientRects.item(i);
+            const item = clientRects[i];
             if (Math.round(item.width) && !withinRange(item.left, item.right, 0.5)) {
                 domRect.push(item);
             }
@@ -5693,12 +5693,12 @@
         return parentNode && parentNode instanceof ShadowRoot ? parentNode.host : null;
     }
     function removeElementsByClassName(className) {
-        const elements = Array.from(document.getElementsByClassName(className));
+        var _a;
+        const elements = document.getElementsByClassName(className);
         for (let i = 0, length = elements.length; i < length; ++i) {
             const element = elements[i];
-            const parentElement = element.parentElement;
-            if (parentElement) {
-                parentElement.removeChild(element);
+            if (element) {
+                (_a = element.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(element);
             }
         }
     }
@@ -5733,7 +5733,7 @@
         return result;
     }
     function createElement(tagName, options) {
-        const { parent, attrs, style } = options;
+        const { parent, style, attrs, children } = options;
         const element = document.createElement(tagName);
         if (style) {
             const cssStyle = element.style;
@@ -5755,6 +5755,9 @@
         }
         if (parent) {
             parent.appendChild(element);
+        }
+        if (children) {
+            children.forEach(child => element.appendChild(child));
         }
         return element;
     }

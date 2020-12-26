@@ -512,46 +512,46 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                         }
                                         break;
                                     default: {
-                                        const subMatch = REGEXP_QUERYNTHPOSITION.exec(placement);
-                                        if (subMatch) {
-                                            const modifier = parseInt(subMatch[3]);
-                                            if (subMatch[2]) {
-                                                if (subMatch[1]) {
-                                                    return false;
-                                                }
-                                                const increment = +subMatch[2];
-                                                if (increment !== 0) {
-                                                    if (index !== modifier) {
-                                                        for (let j = increment; ; j += increment) {
-                                                            const total = increment + modifier;
-                                                            if (total === index) {
-                                                                break;
-                                                            }
-                                                            else if (total > index) {
-                                                                return false;
+                                        match = REGEXP_QUERYNTHPOSITION.exec(placement);
+                                        if (match) {
+                                            const modifier = parseInt(match[3]);
+                                            if (match[2] && !match[1]) {
+                                                const increment = +match[2];
+                                                if (!isNaN(modifier)) {
+                                                    if (increment !== 0) {
+                                                        if (index !== modifier) {
+                                                            for (let j = increment; ; j += increment) {
+                                                                const total = j + modifier;
+                                                                if (total === index) {
+                                                                    break;
+                                                                }
+                                                                else if (total > index) {
+                                                                    return false;
+                                                                }
                                                             }
                                                         }
                                                     }
-                                                }
-                                                else if (index !== modifier) {
-                                                    return false;
-                                                }
-                                            }
-                                            else if (subMatch[3]) {
-                                                if (modifier > 0) {
-                                                    if (subMatch[1]) {
-                                                        if (index > modifier) {
-                                                            return false;
-                                                        }
-                                                    }
-                                                    else if (index < modifier) {
+                                                    else if (index !== modifier) {
                                                         return false;
                                                     }
                                                 }
-                                                else {
+                                                else if (index % increment !== 0) {
                                                     return false;
                                                 }
                                             }
+                                            else if (match[3] && modifier > 0) {
+                                                if (match[1]) {
+                                                    if (index > modifier) {
+                                                        return false;
+                                                    }
+                                                }
+                                                else if (index < modifier) {
+                                                    return false;
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            return selector.fromNot ? true : false;
                                         }
                                         break;
                                     }
@@ -608,7 +608,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                         notData = { pseudoList: [not] };
                     }
                     break;
-                case '[': {
+                case '[':
                     if ((match = CSS.SELECTOR_ATTR.exec(not)) && match[0] === not) {
                         const value = match[3] || match[4] || match[5];
                         const caseInsensitive = match[6] === 'i';
@@ -622,7 +622,6 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                         };
                     }
                     break;
-                }
                 default:
                     if ((match = CSS.SELECTOR_LABEL.exec(not)) && match[0] === not) {
                         switch (not[0]) {
@@ -1970,7 +1969,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     if (q) {
                         let currentCount = result.length;
                         const all = currentCount === 0;
-                        for (let j = start || customMap ? 0 : q - offset, r = queryMap.length; j < r; ++j) {
+                        for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                             const items = queryMap[j];
                             for (let k = 0, s = items.length; k < s; ++k) {
                                 const node = items[k];

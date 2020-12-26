@@ -1,4 +1,4 @@
-/* squared.base 2.2.6
+/* squared.base 2.2.7
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -2034,11 +2034,9 @@ this.squared.base = (function (exports) {
                     return 0;
             }
             const width = node.css(border[0]);
-            if (width) {
-                const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
-                if (result) {
-                    return Math.max(Math.round(result), 1);
-                }
+            const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+            if (result > 0) {
+                return Math.max(Math.round(result), 1);
             }
         }
         return 0;
@@ -2121,16 +2119,6 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    function hasScopedSelector(parent, element, value) {
-        try {
-            if (iterateArray(parent.element.querySelectorAll(':scope > ' + value), item => item === element) === Infinity) {
-                return true;
-            }
-        }
-        catch (_a) {
-        }
-        return false;
-    }
     function validateQuerySelector(selector, child) {
         if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
             return false;
@@ -2207,6 +2195,7 @@ this.squared.base = (function (exports) {
         }
         if (pseudoList) {
             const { actualParent: parent, tagName } = this;
+            const scoped = [];
             for (let i = 0, length = pseudoList.length; i < length; ++i) {
                 const pseudo = pseudoList[i];
                 switch (pseudo) {
@@ -2378,9 +2367,7 @@ this.squared.base = (function (exports) {
                     case ':focus-within':
                     case ':valid':
                     case ':invalid':
-                        if (!hasScopedSelector(parent, element, pseudo)) {
-                            return false;
-                        }
+                        scoped.push(pseudo);
                         break;
                     default: {
                         let match;
@@ -2407,46 +2394,46 @@ this.squared.base = (function (exports) {
                                             }
                                             break;
                                         default: {
-                                            const subMatch = REGEXP_QUERYNTHPOSITION.exec(placement);
-                                            if (subMatch) {
-                                                const modifier = parseInt(subMatch[3]);
-                                                if (subMatch[2]) {
-                                                    if (subMatch[1]) {
-                                                        return false;
-                                                    }
-                                                    const increment = +subMatch[2];
-                                                    if (increment !== 0) {
-                                                        if (index !== modifier) {
-                                                            for (let j = increment;; j += increment) {
-                                                                const total = increment + modifier;
-                                                                if (total === index) {
-                                                                    break;
-                                                                }
-                                                                else if (total > index) {
-                                                                    return false;
+                                            match = REGEXP_QUERYNTHPOSITION.exec(placement);
+                                            if (match) {
+                                                const modifier = parseInt(match[3]);
+                                                if (match[2] && !match[1]) {
+                                                    const increment = +match[2];
+                                                    if (!isNaN(modifier)) {
+                                                        if (increment !== 0) {
+                                                            if (index !== modifier) {
+                                                                for (let j = increment;; j += increment) {
+                                                                    const total = j + modifier;
+                                                                    if (total === index) {
+                                                                        break;
+                                                                    }
+                                                                    else if (total > index) {
+                                                                        return false;
+                                                                    }
                                                                 }
                                                             }
                                                         }
-                                                    }
-                                                    else if (index !== modifier) {
-                                                        return false;
-                                                    }
-                                                }
-                                                else if (subMatch[3]) {
-                                                    if (modifier > 0) {
-                                                        if (subMatch[1]) {
-                                                            if (index > modifier) {
-                                                                return false;
-                                                            }
-                                                        }
-                                                        else if (index < modifier) {
+                                                        else if (index !== modifier) {
                                                             return false;
                                                         }
                                                     }
-                                                    else {
+                                                    else if (index % increment !== 0) {
                                                         return false;
                                                     }
                                                 }
+                                                else if (match[3] && modifier > 0) {
+                                                    if (match[1]) {
+                                                        if (index > modifier) {
+                                                            return false;
+                                                        }
+                                                    }
+                                                    else if (index < modifier) {
+                                                        return false;
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                return selector.fromNot ? true : false;
                                             }
                                             break;
                                         }
@@ -2456,9 +2443,7 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else if (pseudo.startsWith(':lang(')) {
-                            if (!hasScopedSelector(parent, element, pseudo)) {
-                                return false;
-                            }
+                            scoped.push(pseudo);
                             break;
                         }
                         else if (match = REGEXP_DIR.exec(pseudo)) {
@@ -2469,9 +2454,7 @@ this.squared.base = (function (exports) {
                                     }
                                     break;
                                 case 'auto':
-                                    if (!hasScopedSelector(parent, element, pseudo)) {
-                                        return false;
-                                    }
+                                    scoped.push(pseudo);
                                     break;
                                 default:
                                     if (match[1] === 'rtl') {
@@ -2485,6 +2468,16 @@ this.squared.base = (function (exports) {
                     }
                 }
             }
+            if (scoped.length) {
+                try {
+                    if (iterateArray(element.parentElement.querySelectorAll(':scope > ' + scoped.join('')), item => item === element) !== Infinity) {
+                        return false;
+                    }
+                }
+                catch (_a) {
+                    return selector.fromNot ? true : false;
+                }
+            }
         }
         if (notList) {
             for (let i = 0, length = notList.length; i < length; ++i) {
@@ -2496,7 +2489,7 @@ this.squared.base = (function (exports) {
                             notData = { pseudoList: [not] };
                         }
                         break;
-                    case '[': {
+                    case '[':
                         if ((match = CSS$1.SELECTOR_ATTR.exec(not)) && match[0] === not) {
                             const value = match[3] || match[4] || match[5];
                             const caseInsensitive = match[6] === 'i';
@@ -2510,7 +2503,6 @@ this.squared.base = (function (exports) {
                             };
                         }
                         break;
-                    }
                     default:
                         if ((match = CSS$1.SELECTOR_LABEL.exec(not)) && match[0] === not) {
                             switch (not[0]) {
@@ -2763,11 +2755,11 @@ this.squared.base = (function (exports) {
                     if (styleMap) {
                         if (!this.plainText && this.naturalChild) {
                             if (!this.pseudoElement) {
-                                const items = Array.from(element.style);
-                                const length = items.length;
+                                const length = element.style.length;
                                 if (length) {
+                                    const style = element.style;
                                     for (let i = 0; i < length; ++i) {
-                                        const attr = items[i];
+                                        const attr = style[i];
                                         styleMap[convertCamelCase$1(attr)] = element.style.getPropertyValue(attr);
                                     }
                                 }
@@ -2869,28 +2861,54 @@ this.squared.base = (function (exports) {
                         case 'bottom':
                             cache.bottomAligned = undefined;
                             break;
+                        case 'paddingLeft':
+                        case 'paddingRight':
+                            cache.contentBoxWidth = undefined;
+                            break;
+                        case 'marginLeft':
+                        case 'marginRight':
+                            cache.rightAligned = undefined;
+                            cache.centerAligned = undefined;
+                            cache.autoMargin = undefined;
+                            break;
+                        case 'marginTop':
+                        case 'marginBottom':
+                            cache.bottomAligned = undefined;
+                            cache.autoMargin = undefined;
+                            break;
+                        case 'paddingTop':
+                        case 'paddingBottom':
+                            cache.contentBoxHeight = undefined;
+                            break;
+                        case 'fontSize':
+                            cache.lineHeight = undefined;
+                            break;
                         case 'whiteSpace':
                             cache.preserveWhiteSpace = undefined;
                             cache.textStyle = undefined;
                             this._cacheState.textEmpty = undefined;
                             continue;
                         default:
-                            if (attr.startsWith('margin')) {
-                                cache.autoMargin = undefined;
-                                cache.rightAligned = undefined;
-                                cache.centerAligned = undefined;
-                                cache.bottomAligned = undefined;
-                            }
-                            else if (attr.startsWith('padding')) {
-                                cache.contentBoxWidth = undefined;
-                                cache.contentBoxHeight = undefined;
+                            if (attr.startsWith('background')) {
+                                cache.visibleStyle = undefined;
                             }
                             else if (attr.startsWith('border')) {
-                                cache.visibleStyle = undefined;
-                                cache.contentBoxWidth = undefined;
-                                cache.contentBoxHeight = undefined;
-                            }
-                            else if (attr.startsWith('background')) {
+                                if (attr.startsWith('borderTop')) {
+                                    cache.borderTopWidth = undefined;
+                                    cache.contentBoxHeight = undefined;
+                                }
+                                else if (attr.startsWith('borderRight')) {
+                                    cache.borderRightWidth = undefined;
+                                    cache.contentBoxWidth = undefined;
+                                }
+                                else if (attr.startsWith('borderBottom')) {
+                                    cache.borderBottomWidth = undefined;
+                                    cache.contentBoxHeight = undefined;
+                                }
+                                else {
+                                    cache.borderLeftWidth = undefined;
+                                    cache.contentBoxWidth = undefined;
+                                }
                                 cache.visibleStyle = undefined;
                             }
                             else if (TEXT_STYLE.includes(attr)) {
@@ -3542,10 +3560,7 @@ this.squared.base = (function (exports) {
                                             break invalid;
                                         }
                                         if (condition.includes(',')) {
-                                            seg = '@';
-                                            for (const part of parseSelectorText$1(condition)) {
-                                                seg += '{{' + checkNot(part) + '}}';
-                                            }
+                                            seg = parseSelectorText$1(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
                                             expand = true;
                                         }
                                         else {
@@ -3732,7 +3747,7 @@ this.squared.base = (function (exports) {
                         if (q) {
                             let currentCount = result.length;
                             const all = currentCount === 0;
-                            for (let j = start || customMap ? 0 : q - offset, r = queryMap.length; j < r; ++j) {
+                            for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                                 const items = queryMap[j];
                                 for (let k = 0, s = items.length; k < s; ++k) {
                                     const node = items[k];
@@ -4719,7 +4734,7 @@ this.squared.base = (function (exports) {
                 if (this.styleElement) {
                     const attributes = this._element.attributes;
                     for (let i = 0, length = attributes.length; i < length; ++i) {
-                        const item = attributes.item(i);
+                        const item = attributes[i];
                         result[item.name] = item.value;
                     }
                 }
@@ -5272,9 +5287,7 @@ this.squared.base = (function (exports) {
             let expanded = '';
             for (const item of colors) {
                 const color = item[0];
-                for (const unit of value.substring(item[1], item[2]).replace(/\s*,\s*$/, '').trim().split(/\s*,\s*/)) {
-                    expanded += (expanded ? ', ' : '') + color + ' ' + unit;
-                }
+                expanded = value.substring(item[1], item[2]).split(',').reduce((a, b) => b = b.trim() ? a + (a ? ', ' : '') + color + ' ' + b : a, expanded);
             }
             value = expanded;
         }

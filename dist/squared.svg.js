@@ -1,4 +1,4 @@
-/* squared.svg 2.2.6
+/* squared.svg 2.2.7
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -711,7 +711,7 @@ this.squared.svg = (function (exports) {
             if (rootElement) {
                 const elements = rootElement.querySelectorAll('*');
                 for (let i = 0, length = elements.length; i < length; ++i) {
-                    const target = elements.item(i);
+                    const target = elements[i];
                     if (target.id.trim() === id && target instanceof SVGElement) {
                         return target;
                     }
