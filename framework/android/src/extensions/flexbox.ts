@@ -73,12 +73,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public processNode(node: T, parent: T): ExtensionResult<T> {
         super.processNode(node, parent);
         const mainData = this.data.get(node) as FlexboxData<T>;
-        if (mainData.row && mainData.rowCount === 1 || mainData.column && mainData.columnCount === 1) {
+        if (mainData.singleRow) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
             node.addAlign(mainData.column ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
             node.flexdata.wrap = false;
-            mainData.singleRow = true;
             return { include: true, complete: true };
         }
         return {
@@ -742,8 +741,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     private adjustGrowRatio(node: T, items: T[], dimension: DimensionAttr) {
         const horizontal = dimension === 'width';
         const percent = (horizontal ? node.hasWidth || ascendFlexibleWidth(node, true) : node.hasHeight || ascendFlexibleHeight(node, true)) && !items.some(item => item.innerMostWrapped.autoMargin[horizontal ? 'horizontal' : 'vertical']);
-        let resultGrow = 0,
-            resultSize = 0;
+        let result = 0,
+            basisSize = 0;
         if (horizontal || percent) {
             const groupGrow: FlexBasis<T>[] = [];
             const percentage: T[] = [];
@@ -756,19 +755,19 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             for (let i = 0, length = items.length; i < length; ++i) {
                 const item = items[i].innerMostWrapped as T;
                 const { alignSelf, basis, shrink, grow } = item.flexbox;
-                resultGrow += grow;
-                if (basis === 'auto' && item.hasPX(dimension, { percent: false })) {
+                if (basis === 'auto' && grow === 0 && item.hasPX(dimension, { percent: false })) {
                     continue;
                 }
                 const size = item.bounds[dimension];
                 if (grow > 0 || shrink !== 1 || isLength(basis, true)) {
+                    result += grow;
                     let value: number;
                     if (basis === 'auto' || basis === '0%') {
                         if (item.hasPX(dimension)) {
                             value = item.parseUnit(item.css(dimension));
                         }
                         else {
-                            if (basis === '0%' && !percent) {
+                            if (!percent && basis === '0%') {
                                 value = size;
                             }
                             else {
@@ -826,7 +825,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const { basis, item } = data;
                 if (item === maxBasis) {
                     item.flexbox.weight = 1;
-                    resultSize = data.size;
+                    basisSize = data.size;
                 }
                 else if (basis === maxBasisUnit && (growShrinkType === 1 && maxRatio !== 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio > 0 && maxRatio === data.grow)) {
                     item.flexbox.weight = 1;
@@ -837,6 +836,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 item.flexbox.basis = 'auto';
             }
         }
-        return [resultGrow, resultSize];
+        return [result, basisSize];
     }
 }

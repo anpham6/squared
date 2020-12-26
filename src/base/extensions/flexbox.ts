@@ -34,9 +34,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
+        const dataName = this.name;
         const [children, absolute] = partitionArray(node.children, (item: T) => item.pageFlow && item.visible) as [T[], T[]];
         const mainData = createDataAttribute(node, children);
-        const dataName = this.name;
+        const row = mainData.row;
         node.cssTryAll({ 'align-items': 'start', 'justify-items': 'start' }, () => {
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
@@ -52,7 +53,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 sort: "top" | "left",
                 size: "right" | "bottom",
                 method: "intersectX" | "intersectY";
-            if (mainData.row) {
+            if (row) {
                 align = 'top';
                 sort = 'left';
                 size = 'right';
@@ -78,19 +79,19 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 return 0;
             });
             let rowStart = children[0],
-                row: T[] = [rowStart],
+                items: T[] = [rowStart],
                 length = children.length,
                 maxCount = 0;
-            const rows: T[][] = [row];
+            const rows: T[][] = [items];
             for (let i = 1; i < length; ++i) {
                 const item = children[i];
                 if (rowStart[method](item.bounds, options)) {
-                    row.push(item);
+                    items.push(item);
                 }
                 else {
                     rowStart = item;
-                    row = [item];
-                    rows.push(row);
+                    items = [item];
+                    rows.push(items);
                 }
             }
             node.clear();
@@ -109,7 +110,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 maxCount = rows[0].length;
             }
             node.addAll(absolute);
-            if (mainData.row) {
+            if (row) {
                 mainData.rowCount = length;
                 mainData.columnCount = maxCount;
             }
@@ -133,7 +134,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             else if (mainData.reverse && children.length > 1) {
                 children.reverse();
             }
-            if (mainData.row) {
+            if (row) {
                 mainData.rowCount = 1;
                 mainData.columnCount = node.size();
             }
@@ -142,6 +143,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 mainData.columnCount = 1;
             }
         }
+        mainData.singleRow = row && mainData.rowCount === 1 || !row && mainData.columnCount === 1;
         this.data.set(node, mainData);
     }
 }
