@@ -1820,8 +1820,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     else {
                         CSS.SELECTOR_G.lastIndex = 0;
-                        let adjacent = '',
-                            selector = '',
+                        let selector = '',
+                            adjacent = '',
                             match: Null<RegExpExecArray>;
                         while (match = CSS.SELECTOR_G.exec(query)) {
                             let segment = match[1];
@@ -2072,9 +2072,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (value) {
                 const ancestors: T[] = this.ascend();
                 const customMap: T[][] = [];
-                iterateReverseArray(ancestors, (item: T) => {
-                    customMap.push([item]);
-                });
+                iterateReverseArray(ancestors, (item: T) => customMap.push([item]));
                 customMap.push(result);
                 result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
             }

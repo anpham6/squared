@@ -15,7 +15,7 @@ declare module "lib" {
             every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
             removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerRemoveIfOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
-            cascade(predicate?: IteratorPredicate<T, void | boolean>, options?: ContainerCascadeOptions<T>): T[];
+            cascade(predicate?: IteratorPredicate<T, unknown>, options?: ContainerCascadeOptions<T>): T[];
             map<U = unknown>(predicate: IteratorPredicate<T, U>): U[];
             sortBy(...attrs: (string | boolean)[]): this;
             contains(item: T): boolean;
@@ -350,8 +350,8 @@ declare module "lib" {
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
         function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string): string;
-        function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
-        function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;
+        function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;
         function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>): U[];
         function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
     }

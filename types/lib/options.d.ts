@@ -5,7 +5,7 @@ interface ContainerRangeOptions {
 
 interface ContainerCascadeOptions<T> {
     count?: number;
-    also?: BindGeneric<T, void>;
+    also?: BindGeneric<T, unknown>;
     error?: IteratorPredicate<T, boolean>;
 }
 

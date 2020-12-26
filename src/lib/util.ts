@@ -827,7 +827,7 @@ export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     return result;
 }
 
-export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
+export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start = 0, end = Infinity) {
     for (let i = Math.max(start, 0), length = Math.min(list.length, end); i < length; ++i) {
         const result = predicate(list[i], i, list);
         if (result === true) {
@@ -837,7 +837,7 @@ export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate
     return length;
 }
 
-export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
+export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start = 0, end = Infinity) {
     start = Math.max(start, 0);
     for (let i = Math.min(list.length, end) - 1; i >= start; --i) {
         const result = predicate(list[i], i, list);
