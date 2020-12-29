@@ -106,6 +106,7 @@ module.exports = {
         "@typescript-eslint/no-unused-vars": "off",
         "@typescript-eslint/restrict-plus-operands": "off",
         "@typescript-eslint/triple-slash-reference": "off",
+        "@typescript-eslint/unbound-method": "off",
         "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/consistent-type-imports": "error",

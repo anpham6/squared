@@ -222,6 +222,7 @@ declare module "base" {
         addRawData(uri: string, mimeType: string, content?: string, options?: RawDataOptions): Null<RawAsset>;
         getRawData(uri: string): Undef<RawAsset>;
         addImageData(uri: string, width?: number, height?: number): void;
+        fromImageUrl(value: string): ImageAsset[];
         set fileHandler(value);
         get fileHandler(): Null<File<T>>;
         get controllerSettings(): ControllerSettings;
@@ -293,15 +294,16 @@ declare module "base" {
         processNode(node: T, parent: T): Void<ExtensionResult<T>>;
         processChild(node: T, parent: T): Void<ExtensionResult<T>>;
         addDescendant(node: T): void;
-        postBaseLayout(node: T): void;
-        postConstraints(node: T): void;
-        postOptimize(node: T, rendered: T[]): void;
         afterBaseLayout(sessionId: string): void;
         afterConstraints(sessionId: string): void;
         afterResources(sessionId: string): void;
         beforeBaseLayout(sessionId: string): void;
         beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>): void;
         afterFinalize(): void;
+        postBaseLayout?(node: T): void;
+        postConstraints?(node: T): void;
+        postOptimize?(node: T, rendered: T[]): void;
+        postBoxSpacing?(node: T, rendered: T[]): void;
         set application(value);
         get application(): ApplicationUI<T>;
         constructor(name: string, framework: number, options?: ExtensionUIOptions);

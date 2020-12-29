@@ -38,6 +38,11 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public abstract set application(value);
     public abstract get application(): ApplicationUI<T>;
 
+    public postBaseLayout?(node: T): void;
+    public postConstraints?(node: T): void;
+    public postOptimize?(node: T, rendered: T[]): void;
+    public postBoxSpacing?(node: T, rendered: T[]): void;
+
     public is(node: T) {
         return this.tagNames ? this.tagNames.includes(node.tagName) : true;
     }
@@ -65,10 +70,6 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
             map.set(node, [this]);
         }
     }
-
-    public postBaseLayout(node: T) {}
-    public postConstraints(node: T) {}
-    public postOptimize(node: T, rendered: T[]) {}
 
     public afterBaseLayout(sessionId: string) {}
     public afterConstraints(sessionId: string) {}

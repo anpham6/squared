@@ -6,7 +6,7 @@ import { fromMimeType, randomUUID } from './lib/util';
 
 const { STRING } = squared.lib.regex;
 
-const { extractURL } = squared.lib.css;
+const { extractURL, resolveURL } = squared.lib.css;
 const { convertBase64, fromLastIndexOf, parseMimeType } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
@@ -183,6 +183,26 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         if (uri && (width && height || !this.getImage(uri))) {
             Resource.ASSETS.image.set(uri, { width, height, uri });
         }
+    }
+
+    public fromImageUrl(value: string) {
+        const data = this.getRawData(value);
+        if (data) {
+            return [data as ImageAsset];
+        }
+        const result: ImageAsset[] = [];
+        const pattern = /url\([^)]+\)/g;
+        let match: Null<RegExpExecArray>;
+        while (match = pattern.exec(value)) {
+            const url = resolveURL(match[0]);
+            if (url) {
+                const image = this.getImage(url);
+                if (image) {
+                    result.push(image);
+                }
+            }
+        }
+        return result;
     }
 
     set fileHandler(value) {

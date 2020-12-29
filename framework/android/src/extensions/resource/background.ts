@@ -429,6 +429,7 @@ function setBorderStyle(layerList: LayerList, borders: Undef<BorderAttribute>[],
     }
 }
 
+const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 const roundFloat = (value: string) => Math.round(parseFloat(value));
 const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
 
@@ -463,10 +464,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     }
 
     public afterResources(sessionId: string) {
-        const settings = (this.application as android.base.Application<T>).userSettings;
+        const settings = this.application.userSettings;
         const drawOutline = this.options.outlineAsInsetBorder;
         let themeBackground: Undef<boolean>;
-        const deleteBodyWrapper = (body: View, wrapper: View) => {
+        const deleteBodyWrapper = (body: T, wrapper: T) => {
             if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
                 switch (body.cssInitial('maxWidth')) {
                     case '':
@@ -513,12 +514,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         this.application.getProcessingCache(sessionId).each(node => {
             let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
-            const boxImage = node.data<T[]>(Resource.KEY_NAME, 'boxImage');
+            const boxImage = node.containerName === 'INPUT_IMAGE' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE) ? [node] : undefined;
             if (stored || boxImage) {
                 stored ||= {} as BoxStyle;
                 if (node.inputElement) {
                     const companion = node.companion;
-                    if (companion && companion.tagName === 'LABEL' && !companion.visible) {
+                    if (companion && !companion.visible && companion.tagName === 'LABEL') {
                         const backgroundColor = companion.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle')?.backgroundColor;
                         if (backgroundColor) {
                             stored.backgroundColor = backgroundColor;
@@ -817,8 +818,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     else {
                                         value = resolvePath(uri);
                                         const src = resource.addImageSet({ mdpi: value });
-                                        images[length] = src;
                                         if (src) {
+                                            images[length] = src;
                                             imageDimensions[length] = resource.getImage(value)!;
                                             valid = true;
                                         }
@@ -862,12 +863,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             if (boxImage) {
-                const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
                 if (length === 0) {
                     backgroundRepeat = [];
                     backgroundSize = [];
                 }
-                for (const image of boxImage.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'))) {
+                for (const image of boxImage) {
                     const element = image.element as HTMLImageElement;
                     const src = resource.addImageSrc(element);
                     if (src) {

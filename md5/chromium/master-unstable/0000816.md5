@@ -5,7 +5,7 @@ bbb31f66804d1e732c6834c2ad676fcc  ./app/src/main/res/drawable/a_textview_1.xml
 71dfffd3d6b78bd0fdfec163b4ca5bd4  ./app/src/main/res/drawable/bg_body.jpg
 c1796d8c39e4734834a09c4517138a02  ./app/src/main/res/drawable/bg_footer.jpg
 293caefd744d2fcd76e4e23f5b1bea3c  ./app/src/main/res/drawable/bg_newsletter.png
-01dbd4af586023260967ca060a16fdd6  ./app/src/main/res/drawable/body_constraintlayout_3.xml
+01dbd4af586023260967ca060a16fdd6  ./app/src/main/res/drawable/body_constraintlayout_13.xml
 ff85f224130b4208339bf6ef3cbb6c99  ./app/src/main/res/drawable/check.png
 9ba32b08c4ee8cb64457e53e8dfcb760  ./app/src/main/res/drawable/div_main.xml
 9e5086af990541ab07519397ca44494b  ./app/src/main/res/drawable/footer_footer.xml
@@ -17,10 +17,10 @@ f50dbf35def88fc8122bffabeb4d109a  ./app/src/main/res/drawable/li_framelayout_9.x
 b340a823755a3fc6b865a71456244d20  ./app/src/main/res/drawable/logo.png
 cc29508fa0534833161f19213ad4cb59  ./app/src/main/res/drawable/logo_small.png
 06e2dfea6a6f0863d8957ea38f0df65c  ./app/src/main/res/drawable/socks_horses.png
-4db5b160f08c5e87380a72a0e833a13c  ./app/src/main/res/drawable/ul_constraintlayout_15.xml
-393ea98def66e0dd882c2462a00072e9  ./app/src/main/res/layout/activity_main.xml
+4db5b160f08c5e87380a72a0e833a13c  ./app/src/main/res/drawable/ul_constraintlayout_11.xml
+46d461f4e670158fbd8b0353af7b1876  ./app/src/main/res/layout/activity_main.xml
 0506a2a3c7916d9a2fb83f13f061a1d3  ./app/src/main/res/values/colors.xml
 ee59eeb64be0dd85f7b6ca1bd97dd2a9  ./app/src/main/res/values/dimens.xml
 bf50a64d8cf4f6e58bde66ccaa57e32e  ./app/src/main/res/values/strings.xml
-45c31c21db4f94e125be8e27b2701cad  ./app/src/main/res/values/styles.xml
-52c67f62aa6c536ce4abf014773d4e49  ./app/src/main/res/values/themes.xml
+ff27ef508c6f9caab7da794e9c636978  ./app/src/main/res/values/styles.xml
+af59947433f7050586d9fa09368cc694  ./app/src/main/res/values/themes.xml

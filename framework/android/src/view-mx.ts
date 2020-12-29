@@ -237,23 +237,34 @@ function getLineSpacingExtra(node: T, value: number) {
     return height ? (value - height) / 2 : 0;
 }
 
-function constraintMinMax(node: T, horizontal: boolean) {
-    if (!node.hasPX(horizontal ? 'width' : 'height', { percent: false })) {
-        const minWH = node.valueAt(horizontal ? 'minWidth' : 'minHeight');
-        if (minWH && isLength(minWH, true) && minWH !== '100%' && parseFloat(minWH) > 0) {
-            if (horizontal) {
-                if (ascendFlexibleWidth(node)) {
+function constraintMinMax(node: T) {
+    if (!node.inputElement && !node.imageContainer) {
+        setMinMax(node, true);
+        setMinMax(node, false);
+    }
+}
+
+function setMinMax(node: T, horizontal: boolean) {
+    const minWH = node.valueAt(horizontal ? 'minWidth' : 'minHeight');
+    if (minWH && isLength(minWH, true) && minWH !== '100%' && parseFloat(minWH) > 0) {
+        if (horizontal) {
+            if (ascendFlexibleWidth(node)) {
+                const value = node.parseUnit(minWH);
+                if (!node.hasPX('width', { percent: false }) || value > node.parseWidth(node.valueAt('width'))) {
                     node.setLayoutWidth('0px', false);
                     if (node.flexibleWidth) {
-                        node.app('layout_constraintWidth_min', formatPX(node.parseUnit(minWH) + node.contentBoxWidth));
+                        node.app('layout_constraintWidth_min', formatPX(value + node.contentBoxWidth));
                         node.css('minWidth', 'auto');
                     }
                 }
             }
-            else if (ascendFlexibleHeight(node)) {
+        }
+        else if (ascendFlexibleHeight(node)) {
+            const value = node.parseHeight(minWH);
+            if (!node.hasPX('height', { percent: false }) || value > node.parseHeight(node.valueAt('height'))) {
                 node.setLayoutHeight('0px', false);
                 if (node.flexibleHeight) {
-                    node.app('layout_constraintHeight_min', formatPX(node.parseHeight(minWH) + node.contentBoxHeight));
+                    node.app('layout_constraintHeight_min', formatPX(value + node.contentBoxHeight));
                     node.css('minHeight', 'auto');
                 }
             }
@@ -2464,15 +2475,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             else if (this.inputElement) {
-                if (this.flexibleWidth && renderParent.inlineWidth) {
-                    this.android('minWidth', Math.ceil(this.bounds.width) + 'px');
-                    this.setLayoutWidth('wrap_content');
-                    this.delete('app', 'layout_constraintWidth*');
-                }
-                if (this.flexibleHeight && renderParent.inlineHeight) {
-                    this.android('minHeight', Math.ceil(this.bounds.height) + 'px');
-                    this.setLayoutHeight('wrap_content');
-                    this.delete('app', 'layout_constraintHeight*');
+                if (!this.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
+                    if (this.flexibleWidth && renderParent.inlineWidth) {
+                        this.android('minWidth', Math.ceil(this.bounds.width) + 'px');
+                        this.setLayoutWidth('wrap_content');
+                        this.delete('app', 'layout_constraintWidth*');
+                    }
+                    if (this.flexibleHeight && renderParent.inlineHeight) {
+                        this.android('minHeight', Math.ceil(this.bounds.height) + 'px');
+                        this.setLayoutHeight('wrap_content');
+                        this.delete('app', 'layout_constraintHeight*');
+                    }
                 }
             }
             else if (this.rendering) {
@@ -2591,10 +2604,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public setConstraintDimension(percentAvailable = NaN) {
             percentAvailable = constraintPercentWidth(this, percentAvailable);
             constraintPercentHeight(this, 1);
-            if (!this.inputElement && !this.imageContainer) {
-                constraintMinMax(this, true);
-                constraintMinMax(this, false);
-            }
+            constraintMinMax(this);
             return percentAvailable;
         }
 
@@ -2637,10 +2647,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     constraintPercentHeight(this);
                 }
             }
-            if (!this.inputElement && !this.imageContainer) {
-                constraintMinMax(this, true);
-                constraintMinMax(this, false);
-            }
+            constraintMinMax(this);
             return percentAvailable;
         }
 

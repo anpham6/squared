@@ -199,7 +199,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             return true;
         }
         const controller = this.controllerHandler;
-        const [extensions, children] = this.sessionAll;
+        const [extensions, children] = this.sessionAll as [ExtensionUI<T>[], T[]];
         let itemCount = 0,
             length = children.length;
         const rendered: T[] = new Array(length);
@@ -221,12 +221,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         controller.optimize(rendered);
         length = extensions.length;
         for (let i = 0; i < length; ++i) {
-            const ext = extensions[i] as ExtensionUI<T>;
-            for (const node of ext.subscribers) {
-                ext.postOptimize(node, rendered);
+            const ext = extensions[i];
+            const postOptimize = ext.postOptimize;
+            if (postOptimize) {
+                for (const node of ext.subscribers) {
+                    postOptimize.call(ext, node, rendered);
+                }
             }
         }
         const documentRoot: squared.base.LayoutRoot<T>[] = [];
+        const documentWriteData: squared.base.DocumentWriteDataExtensionUI<T> = { rendered, documentRoot };
         itemCount = rendered.length;
         for (let i = 0; i < itemCount; ++i) {
             const node = rendered[i];
@@ -241,9 +245,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        const documentWriteData: squared.base.DocumentWriteDataExtensionUI<T> = { rendered, documentRoot };
         for (let i = 0; i < length; ++i) {
-            (extensions[i] as ExtensionUI<T>).beforeDocumentWrite(documentWriteData);
+            const ext = extensions[i];
+            const postBoxSpacing = ext.postBoxSpacing;
+            if (postBoxSpacing) {
+                for (const node of ext.subscribers) {
+                    postBoxSpacing.call(ext, node, rendered);
+                }
+            }
+            ext.beforeDocumentWrite(documentWriteData);
         }
         for (let i = 0, q = documentRoot.length; i < q; ++i) {
             const { node, layoutName, renderTemplates } = documentRoot[i];
@@ -257,7 +267,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.resourceHandler.finalize(this._layouts);
         controller.finalize(this._layouts);
         for (let i = 0; i < length; ++i) {
-            (extensions[i] as ExtensionUI<T>).afterFinalize();
+            extensions[i].afterFinalize();
         }
         removeElementsByClassName('__squared.pseudo');
         return this.closed = true;
@@ -1207,9 +1217,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         });
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            for (const node of ext.subscribers) {
-                if (node.sessionId === sessionId) {
-                    ext.postBaseLayout(node);
+            const postBaseLayout = ext.postBaseLayout;
+            if (postBaseLayout) {
+                for (const node of ext.subscribers) {
+                    if (node.sessionId === sessionId) {
+                        postBaseLayout.call(ext, node);
+                    }
                 }
             }
             ext.afterBaseLayout(sessionId);
@@ -1221,9 +1234,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.controllerHandler.setConstraints(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            for (const node of ext.subscribers) {
-                if (node.sessionId === sessionId) {
-                    ext.postConstraints(node);
+            const postConstraints = ext.postConstraints;
+            if (postConstraints) {
+                for (const node of ext.subscribers) {
+                    if (node.sessionId === sessionId) {
+                        postConstraints.call(ext, node);
+                    }
                 }
             }
             ext.afterConstraints(sessionId);

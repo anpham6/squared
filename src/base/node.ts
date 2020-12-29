@@ -83,20 +83,20 @@ function hasTextAlign(node: T, ...values: string[]) {
     return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : node.display.startsWith('inline'));
 }
 
-function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
-    const options: NodeParseUnitOptions = { dimension: attr };
-    const value = styleMap[attr];
-    const min = styleMap[attr === 'width' ? 'minWidth' : 'minHeight'];
+function setDimension(node: T, styleMap: StringMap, dimension: DimensionAttr) {
+    const options: NodeParseUnitOptions = { dimension };
+    const value = styleMap[dimension];
+    const minValue = styleMap[dimension === 'width' ? 'minWidth' : 'minHeight'];
     const baseValue = value ? node.parseUnit(value, options) : 0;
-    let result = Math.max(baseValue, min ? node.parseUnit(min, options) : 0);
+    let result = minValue ? Math.max(baseValue, node.parseUnit(minValue, options)) : baseValue;
     if (result === 0 && node.styleElement) {
         const element = node.element as HTMLInputElement;
         switch (element.tagName) {
-            case 'IMG':
             case 'INPUT':
                 if (element.type !== 'image') {
                     break;
                 }
+            case 'IMG':
             case 'TD':
             case 'TH':
             case 'svg':
@@ -106,11 +106,11 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
             case 'CANVAS':
             case 'OBJECT':
             case 'EMBED': {
-                const size = getNamedItem(element, attr);
+                const size = getNamedItem(element, dimension);
                 if (size) {
                     result = isNumber(size) ? +size : node.parseUnit(size, options);
                     if (result) {
-                        node.css(attr, isPercent(size) ? size : size + 'px');
+                        node.css(dimension, isPercent(size) ? size : size + 'px');
                     }
                 }
                 break;
@@ -118,17 +118,17 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr) {
         }
     }
     if (baseValue && !node.imageElement) {
-        const attrMax = attr === 'width' ? 'maxWidth' : 'maxHeight';
+        const attrMax = dimension === 'width' ? 'maxWidth' : 'maxHeight';
         const max = styleMap[attrMax];
         if (max) {
             if (value === max) {
                 delete styleMap[attrMax];
             }
             else {
-                const maxValue = node.parseUnit(max, { dimension: attr });
+                const maxValue = node.parseUnit(max, { dimension });
                 if (maxValue) {
                     if (maxValue <= baseValue && value && isLength(value)) {
-                        styleMap[attr] = max;
+                        styleMap[dimension] = max;
                         delete styleMap[attrMax];
                     }
                     else {
@@ -150,7 +150,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
         }
         const width = node.css(border[0]);
         const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
-        if (result > 0) {
+        if (result) {
             return Math.max(Math.round(result), 1);
         }
     }
@@ -356,9 +356,6 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                     }
                     break;
                 }
-                case ':nth-child(n)':
-                case ':nth-last-child(n)':
-                    break;
                 case ':empty':
                     if (element.hasChildNodes()) {
                         return false;
@@ -444,11 +441,13 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                         return false;
                     }
                     break;
-                case ':target':
-                    if (!location.hash || !(location.hash === '#' + this.elementId || tagName === 'A' && location.hash === '#' + this.toElementString('name'))) {
+                case ':target': {
+                    const hash = location.hash;
+                    if (!hash || !(hash === '#' + this.elementId || tagName === 'A' && hash === '#' + this.toElementString('name'))) {
                         return false;
                     }
                     break;
+                }
                 case ':indeterminate':
                     if (tagName === 'INPUT') {
                         switch ((element as HTMLInputElement).type) {
@@ -494,24 +493,28 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                         const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(this) + 1;
                         if (index) {
                             const placement = match[3].trim();
-                            if (isNumber(placement)) {
-                                if (placement !== index.toString()) {
+                            switch (placement) {
+                                case 'even':
+                                    if (index % 2 !== 0) {
+                                        return false;
+                                    }
+                                    break;
+                                case 'odd':
+                                    if (index % 2 === 0) {
+                                        return false;
+                                    }
+                                    break;
+                                case 'n':
+                                    break;
+                                case '-n':
                                     return false;
-                                }
-                            }
-                            else {
-                                switch (placement) {
-                                    case 'even':
-                                        if (index % 2 !== 0) {
+                                default:
+                                    if (isNumber(placement)) {
+                                        if (placement !== index.toString()) {
                                             return false;
                                         }
-                                        break;
-                                    case 'odd':
-                                        if (index % 2 === 0) {
-                                            return false;
-                                        }
-                                        break;
-                                    default: {
+                                    }
+                                    else {
                                         match = REGEXP_QUERYNTHPOSITION.exec(placement);
                                         if (match) {
                                             const modifier = parseInt(match[3]);
@@ -549,13 +552,11 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                                     return false;
                                                 }
                                             }
+                                            break;
                                         }
-                                        else {
-                                            return selector.fromNot ? true : false;
-                                        }
-                                        break;
+                                        return selector.fromNot ? true : false;
                                     }
-                                }
+                                    break;
                             }
                             break;
                         }
@@ -711,39 +712,59 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
     let self: Undef<boolean>,
         last: Undef<boolean>,
         wrapperOf: Undef<boolean>,
+        subAttr: Undef<string>,
+        initialValue: Undef<number>,
         initial: Undef<boolean>;
     if (options) {
-        ({ self, last, wrapperOf, initial } = options);
+        ({ self, subAttr, last, wrapperOf, initialValue, initial } = options);
     }
-    let result: Undef<T>,
-        current = min ? Infinity : -Infinity;
+    if (initialValue === undefined) {
+        initialValue = min ? Infinity : -Infinity;
+    }
+    let result: Undef<T>;
     node.each(item => {
         if (wrapperOf) {
             item = item.wrapperOf || item;
         }
-        const value = parseFloat(self ? item[attr] as string : initial ? item.cssInitial(attr, options) : item.css(attr));
+        let value = NaN;
+        if (self || subAttr) {
+            const subValue = (subAttr ? item[attr][subAttr] : item[attr]) as unknown;
+            switch (typeof subValue) {
+                case 'number':
+                    value = subValue;
+                    break;
+                case 'string':
+                    value = parseFloat(subValue);
+                    break;
+                default:
+                    return;
+            }
+        }
+        else {
+            value = parseFloat(initial ? item.cssInitial(attr, options) : item.css(attr));
+        }
         if (!isNaN(value)) {
             if (min) {
                 if (last) {
-                    if (value <= current) {
+                    if (value <= initialValue!) {
                         result = item;
-                        current = value;
+                        initialValue = value;
                     }
                 }
-                else if (value < current) {
+                else if (value < initialValue!) {
                     result = item;
-                    current = value;
+                    initialValue = value;
                 }
             }
             else if (last) {
-                if (value >= current) {
+                if (value >= initialValue!) {
                     result = item;
-                    current = value;
+                    initialValue = value;
                 }
             }
-            else if (value > current) {
+            else if (value > initialValue!) {
                 result = item;
-                current = value;
+                initialValue = value;
             }
         }
     });

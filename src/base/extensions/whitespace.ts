@@ -305,13 +305,13 @@ function checkOverflowValue(value: string) {
     }
 }
 
-function resetBox(node: NodeUI, region: number, register?: NodeUI, wrappers?: NodeUI[]) {
+function resetBox(node: NodeUI, region: number, register?: NodeUI, wrapper?: NodeUI[]) {
     node.setBox(region, { reset: 1 });
     if (register) {
         node.registerBox(region, register);
     }
-    if (wrappers) {
-        for (const parent of wrappers) {
+    if (wrapper) {
+        for (const parent of wrapper) {
             parent.setBox(region, { reset: 1 });
         }
     }
@@ -370,26 +370,33 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         inheritedTop: Undef<boolean>;
                                     if (previous.floating || !previous.pageFlow) {
                                         if (node.layoutVertical) {
-                                            const previousSiblings = current.previousSiblings() as T[];
-                                            const currentTop = current.bounds.top;
-                                            if (previousSiblings.some(sibling => sibling.float === 'right' && currentTop > sibling.bounds.top)) {
-                                                const previousTop = previous.bounds.top;
-                                                const aboveFloating = previousSiblings.length > 1 ? previousSiblings.filter(sibling => sibling.floating && previousTop === sibling.bounds.top) : previousSiblings;
-                                                const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
-                                                if (nearest!.marginBottom > 0 && currentTop < previousBottom) {
-                                                    if (nearest!.marginBottom < current.marginTop) {
-                                                        for (const sibling of aboveFloating) {
-                                                            resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
+                                            const previousSiblings = current.previousSiblings();
+                                            if (previousSiblings.some(sibling => sibling.float === 'right' && current.bounds.top > sibling.bounds.top)) {
+                                                const aboveFloating = previousSiblings.filter(sibling => sibling.floating && previous.bounds.top === sibling.bounds.top);
+                                                if (aboveFloating.length) {
+                                                    const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
+                                                    if (nearest!.marginBottom > 0 && current.bounds.top < previousBottom) {
+                                                        if (nearest!.marginBottom < current.marginTop) {
+                                                            for (const sibling of aboveFloating) {
+                                                                resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
+                                                            }
                                                         }
-                                                    }
-                                                    else if (current.marginTop > 0) {
-                                                        resetBox(current, BOX_STANDARD.MARGIN_TOP);
+                                                        else if (current.marginTop > 0) {
+                                                            resetBox(current, BOX_STANDARD.MARGIN_TOP);
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                         if (previousChild) {
                                             previous = previousChild;
+                                        }
+                                    }
+                                    else if (previous.bounds.height === 0 && previous.find(item => item.floating)) {
+                                        const value = current.linear.top - previous.max('linear', { subAttr: 'bottom' }).linear.bottom;
+                                        if (value < 0) {
+                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(value), false);
+                                            continue;
                                         }
                                     }
                                     if (isBlockElement(previous, false)) {

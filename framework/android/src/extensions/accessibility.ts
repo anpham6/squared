@@ -1,8 +1,10 @@
 import type View from '../view';
 
+import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
+
 import Resource from '../resource';
 
-const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
+const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_TEMPLATE } = squared.base.lib.constant;
 
 function addTextDecorationLine(node: View, attr: string) {
     node.cascade(item => {
@@ -36,152 +38,102 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         }
                     }
                 }
-                if (node.inputElement) {
-                    switch (node.containerName) {
-                        case 'INPUT_RADIO':
-                        case 'INPUT_CHECKBOX':
-                            if (!node.rightAligned && !node.centerAligned) {
-                                const id = node.elementId;
-                                [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
-                                    if (sibling && sibling.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
-                                        let valid: Undef<boolean>;
-                                        if (id && id === sibling.toElementString('htmlFor')) {
-                                            valid = true;
-                                        }
-                                        else if (sibling.textElement) {
-                                            const parent = sibling.actualParent!;
-                                            if (parent.tagName === 'LABEL') {
-                                                parent.renderAs = node;
+                switch (node.tagName) {
+                    case 'INPUT':
+                        switch (node.toElementString('type')) {
+                            case 'radio':
+                            case 'checkbox':
+                                if (!node.rightAligned && !node.centerAligned) {
+                                    const id = node.elementId;
+                                    [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
+                                        if (sibling && sibling.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
+                                            let valid: Undef<boolean>;
+                                            if (id && id === sibling.toElementString('htmlFor')) {
                                                 valid = true;
                                             }
-                                            else if (sibling.plainText) {
-                                                valid = true;
-                                            }
-                                        }
-                                        if (valid) {
-                                            sibling.labelFor = node;
-                                            if (!this.options.displayLabel) {
-                                                sibling.hide();
-                                                if (node.hasPX('width')) {
-                                                    if (!node.hasPX('minWidth')) {
-                                                        node.css('minWidth', node.valueAt('width'));
-                                                    }
-                                                    node.css('width', 'auto', true);
+                                            else if (sibling.textElement) {
+                                                const parent = sibling.actualParent!;
+                                                if (parent.tagName === 'LABEL') {
+                                                    parent.renderAs = node;
+                                                    valid = true;
+                                                }
+                                                else if (sibling.plainText) {
+                                                    valid = true;
                                                 }
                                             }
-                                            return true;
-                                        }
-                                    }
-                                    return false;
-                                });
-                            }
-                            break;
-                        case 'INPUT_IMAGE':
-                            if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                                node.data(Resource.KEY_NAME, 'boxImage', [node]);
-                            }
-                            break;
-                        case 'BUTTON':
-                            if (!node.isEmpty()) {
-                                const textContent = node.textContent.trim();
-                                let { width, height } = node.bounds,
-                                    backgroundImage: Undef<string[]>,
-                                    backgroundPositionX: Undef<string[]>,
-                                    backgroundPositionY: Undef<string[]>;
-                                node.cascade((item: T) => {
-                                    if (item.svgElement) {
-                                        let x = 'left',
-                                            y = 'top';
-                                        if (node.flexElement) {
-                                            switch (item.flexbox.alignSelf) {
-                                                case 'flex-end':
-                                                    x = 'right';
-                                                    break;
-                                                case 'center':
-                                                    x = 'center';
-                                                    break;
-                                            }
-                                            switch (node.flexdata.justifyContent) {
-                                                case 'flex-end':
-                                                    y = 'bottom';
-                                                    break;
-                                                case 'center':
-                                                case 'space-around':
-                                                case 'space-evenly':
-                                                    y = 'center';
-                                                    break;
+                                            if (valid) {
+                                                sibling.labelFor = node;
+                                                if (!this.options.displayLabel) {
+                                                    sibling.hide();
+                                                    if (node.hasPX('width')) {
+                                                        if (!node.hasPX('minWidth')) {
+                                                            node.css('minWidth', node.valueAt('width'));
+                                                        }
+                                                        node.css('width', 'auto', true);
+                                                    }
+                                                }
+                                                return true;
                                             }
                                         }
-                                        else {
-                                            if (item.rightAligned) {
-                                                x = 'right';
-                                            }
-                                            else if (!item.blockStatic) {
-                                                x = 'center';
-                                            }
-                                            y = 'center';
-                                        }
-                                        switch (x) {
-                                            case 'left':
-                                                x += ' ' + Math.round(item.bounds.left - node.box.left) + 'px';
-                                                break;
-                                            case 'right':
-                                                x += ' ' + Math.round(node.box.right - item.bounds.right) + 'px';
-                                                break;
-                                        }
-                                        switch (y) {
-                                            case 'top':
-                                                y += ' ' + Math.round(item.bounds.top - node.box.top) + 'px';
-                                                break;
-                                            case 'bottom':
-                                                y += ' ' + Math.round(node.box.bottom - item.bounds.bottom) + 'px';
-                                                break;
-                                        }
-                                        (backgroundImage ||= []).push(this.resource!.writeRawSvg(item.element as SVGSVGElement, item));
-                                        (backgroundPositionX ||= []).push(x);
-                                        (backgroundPositionY ||= []).push(y);
-                                        item.visible = false;
-                                    }
-                                    if (item.width >= width && item.height >= height) {
-                                        ({ width, height } = item);
-                                        node.css('minWidth', Math.ceil(width) + 'px');
-                                        node.css('minHeight', Math.ceil(height) + 'px');
-                                        node.inherit(item, 'boxStyle');
-                                    }
-                                    if (item.textContent.trim() === textContent) {
-                                        node.inherit(item, 'textStyle');
-                                    }
-                                });
-                                if (backgroundImage) {
-                                    node.cssApply({
-                                        backgroundImage: backgroundImage.map(value => `url(${value})`).join(', '),
-                                        backgroundRepeat: 'no-repeat',
-                                        backgroundPositionX: backgroundPositionX!.join(', '),
-                                        backgroundPositionY: backgroundPositionY!.join(', ')
+                                        return false;
                                     });
                                 }
-                                if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                                    const images = node.children.filter(item => item.imageElement);
-                                    if (images.length) {
-                                        node.data(Resource.KEY_NAME, 'boxImage', images);
-                                    }
-                                }
-                                node.clear();
-                            }
-                            break;
-                    }
-                }
-                else {
-                    switch (node.tagName) {
-                        case 'DEL':
-                            addTextDecorationLine(node, 'line-through');
-                            break;
-                        case 'INS':
-                            addTextDecorationLine(node, 'underline');
-                            break;
-                    }
+                                break;
+                        }
+                        break;
+                    case 'BUTTON':
+                        this.subscribers.add(node);
+                        break;
+                    case 'DEL':
+                        addTextDecorationLine(node, 'line-through');
+                        break;
+                    case 'INS':
+                        addTextDecorationLine(node, 'underline');
+                        break;
                 }
             }
         });
+    }
+
+    public postConstraints(node: T) {
+        if (node.containerType !== CONTAINER_NODE.BUTTON) {
+            const button = this.application.createNode(node.sessionId, { parent: node });
+            button.containerName = 'BUTTON';
+            button.positioned = true;
+            button.renderExclude = false;
+            button.setControlType(CONTAINER_TAGNAME.BUTTON, CONTAINER_NODE.BUTTON);
+            button.addAlign(NODE_ALIGNMENT.WRAPPER);
+            button.cssApply({
+                backgroundRepeat: 'repeat',
+                backgroundPositionX: 'left',
+                backgroundPositionY: 'top'
+            });
+            button.setCacheValue('backgroundColor', 'rgba(0, 0, 0, 0)');
+            button.setCacheValue('inputElement', true);
+            button.render(node);
+            if (node.layoutConstraint) {
+                button.anchorParent('horizontal');
+                button.anchorParent('vertical');
+                button.setLayoutWidth('0px');
+                button.setLayoutHeight('0px');
+            }
+            else {
+                if (node.layoutRelative) {
+                    button.anchor('left', 'true');
+                    button.anchor('top', 'true');
+                }
+                button.setLayoutWidth('match_parent');
+                button.setLayoutHeight('match_parent');
+            }
+            this.application.addLayoutTemplate(
+                node,
+                button,
+                {
+                    type: NODE_TEMPLATE.XML,
+                    node: button,
+                    controlName: button.controlName
+                } as NodeXmlTemplate<T>
+            );
+        }
     }
 }

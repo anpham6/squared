@@ -83,7 +83,7 @@ function traverseElementSibling(element: Null<Element>, direction: "previousSibl
     return result;
 }
 
-function applyBoxReset(node: T, start: number, region: number, other?: NodeUI) {
+function applyBoxReset(node: T, start: number, region: number, other?: T) {
     const boxReset = node.boxReset;
     for (let i = start; i < start + 4; ++i) {
         const key = CSS_SPACINGINDEX[i];
@@ -108,7 +108,7 @@ function applyBoxReset(node: T, start: number, region: number, other?: NodeUI) {
     }
 }
 
-function applyBoxAdjustment(node: T, start: number, region: number, other: NodeUI, boxAdjustment: Undef<number[]>) {
+function applyBoxAdjustment(node: T, start: number, region: number, other: T, boxAdjustment: Undef<number[]>) {
     for (let i = start; i < start + 4; ++i) {
         const key = CSS_SPACINGINDEX[i];
         if (region & key) {
@@ -1228,12 +1228,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 'borderLeftStyle'
             );
         Object.assign(style, this.textStyle);
-        if (this.naturalElement) {
-            style.fontSize = this.valueOf('fontSize') || this.fontSize + 'px';
-        }
-        else {
-            style.fontSize = this.fontSize + 'px';
-        }
+        style.fontSize = this.naturalElement && this.valueOf('fontSize') || this.fontSize + 'px';
         if (width) {
             style.width = width;
         }

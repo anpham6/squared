@@ -116,6 +116,8 @@ interface MinMaxOptions extends CssInitialOptions {
     self?: boolean;
     last?: boolean;
     wrapperOf?: boolean;
+    subAttr?: string;
+    initialValue?: number;
 }
 
 interface NodeParseUnitOptions extends ParseUnitOptions {

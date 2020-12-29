@@ -3,7 +3,7 @@ import type NodeUI from '../node-ui';
 import ExtensionUI from '../extension-ui';
 import ResourceUI from '../resource-ui';
 
-const { resolveURL, isLength } = squared.lib.css;
+const { isLength } = squared.lib.css;
 
 const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
 
@@ -13,19 +13,13 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        const backgroundImage = node.backgroundImage;
-        let image = this.resource!.getRawData(backgroundImage) as Undef<ImageAsset>;
-        if (!image) {
-            const url = resolveURL(backgroundImage);
-            if (url) {
-                image = this.resource!.getImage(url);
-            }
-        }
-        if (image) {
+        const images = this.resource!.fromImageUrl(node.backgroundImage);
+        if (images.length === 1) {
             const dimension = node.actualDimension;
             const [backgroundPositionX, backgroundPositionY, backgroundSize] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY', 'backgroundSize');
             const position = ResourceUI.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, { fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension });
             const [sizeW, sizeH] = backgroundSize.split(' ');
+            const image = images[0];
             let { width, height } = image;
             if (isLength(sizeW, true)) {
                 width = node.parseWidth(sizeW, false);
