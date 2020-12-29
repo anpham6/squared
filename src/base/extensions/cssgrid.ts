@@ -29,7 +29,7 @@ interface RepeatItem {
     unitMin?: string;
 }
 
-const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
+const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { convertPercent, isNumber, splitPairEnd, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -84,7 +84,7 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
             if (isPercent(value)) {
                 sizeMin = Math.max(convertPercent(value) * dimension, sizeMin);
             }
-            else if (value.endsWith('px')) {
+            else if (isPx(value)) {
                 sizeMin = Math.max(parseFloat(value), sizeMin);
             }
         }
@@ -105,7 +105,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     const length = unit.length;
     for (let i = 0; i < length; ++i) {
         const value = unit[i];
-        if (value.endsWith('px')) {
+        if (isPx(value)) {
             filled += parseFloat(value);
         }
         else if (value.endsWith('fr')) {

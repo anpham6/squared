@@ -199,6 +199,7 @@ declare module "lib" {
         function isCustomProperty(value: string): boolean;
         function isTime(value: string): boolean;
         function isAngle(value: string): boolean;
+        function isPx(value: string): boolean;
         function hasEm(value: string): boolean;
         function hasCalc(value: string): boolean;
         function hasCoords(value: string): boolean;

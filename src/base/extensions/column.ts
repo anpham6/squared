@@ -2,7 +2,7 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
-const { isLength } = squared.lib.css;
+const { isLength, isPx } = squared.lib.css;
 
 export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
@@ -67,7 +67,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             columnSized,
             columnRule: {
                 borderLeftStyle,
-                borderLeftWidth: borderLeftStyle !== 'none' ? borderLeftWidth.endsWith('px') ? parseFloat(borderLeftWidth) : isLength(borderLeftWidth, true) ? node.parseUnit(borderLeftWidth) : parseFloat(node.style.borderLeftWidth) : 0,
+                borderLeftWidth: borderLeftStyle !== 'none' ? isPx(borderLeftWidth) ? parseFloat(borderLeftWidth) : isLength(borderLeftWidth, true) ? node.parseUnit(borderLeftWidth) : parseFloat(node.style.borderLeftWidth) : 0,
                 borderLeftColor
             },
             boxWidth: parent.actualBoxWidth(boxWidth),

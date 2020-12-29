@@ -6,7 +6,7 @@ import Node from './node';
 
 type T = NodeUI;
 
-const { CSS_PROPERTIES } = squared.lib.css;
+const { CSS_PROPERTIES, isPx } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -564,7 +564,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!value) {
             return 0;
         }
-        else if (value.endsWith('px')) {
+        else if (isPx(value)) {
             return parseFloat(value);
         }
         (options ||= {}).screenDimension ||= this.localSettings.screenDimension;

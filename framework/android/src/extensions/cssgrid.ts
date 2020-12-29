@@ -20,7 +20,7 @@ interface ICssGridData<T> extends CssGridData<T> {
 
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
-const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
+const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { convertPercent, flatArray } = squared.lib.util;
 
@@ -51,7 +51,7 @@ function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionDat
     if (length) {
         for (let i = 0; i < length; ++i) {
             const unitPX = unit[i];
-            if (unitPX.endsWith('px')) {
+            if (isPx(unitPX)) {
                 value += parseFloat(unitPX);
             }
             else {
@@ -219,7 +219,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
         height: Undef<string>,
         columnWeight: Undef<string>,
         rowWeight: Undef<string>;
-    if (section.every(value => value.endsWith('px'))) {
+    if (section.every(value => isPx(value))) {
         const px = section.reduce((a, b) => a + parseFloat(b), insideGap);
         const dimension = formatPX(px);
         if (horizontal) {
@@ -272,7 +272,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
         percent = 0;
     for (let i = 0, length = unit.length; i < length; ++i) {
         const value = unit[i];
-        if (value.endsWith('px')) {
+        if (isPx(value)) {
             size += parseFloat(value);
         }
         else if (isPercent(value)) {
@@ -1002,7 +1002,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     layout_gravity: 'fill'
                                 }
                             }),
-                            width.endsWith('px') || height.endsWith('px')
+                            isPx(width) || isPx(height)
                         );
                         k = -1;
                     }
@@ -1071,7 +1071,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 let minWidth = gap * (length - 1);
                 for (let i = 0, q = unit.length; i < q; ++i) {
                     const value = unit[i];
-                    if (value.endsWith('px')) {
+                    if (isPx(value)) {
                         minWidth += parseFloat(value);
                     }
                     else {

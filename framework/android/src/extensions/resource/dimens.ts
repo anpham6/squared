@@ -6,6 +6,7 @@ import Pattern = squared.lib.base.Pattern;
 
 type GroupData = ObjectMap<View[]>;
 
+const { isPx } = squared.lib.css;
 const { convertHyphenated, fromLastIndexOf } = squared.lib.util;
 
 const CACHE_UNDERSCORE: StringMap = {};
@@ -29,7 +30,7 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
     for (const attr in obj) {
         if (attr !== 'text') {
             const value = obj[attr]!;
-            if (value.endsWith('px')) {
+            if (isPx(value)) {
                 const name = namespace + ',' + attr + ',' + value;
                 (group[name] ||= []).push(node);
             }

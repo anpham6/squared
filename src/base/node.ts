@@ -8,7 +8,7 @@ type T = Node;
 const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
@@ -48,7 +48,7 @@ function setStyleCache(element: HTMLElement, attr: string, value: string, style:
         element.style.setProperty(attr, value);
         const newValue = element.style.getPropertyValue(attr);
         if (current !== newValue) {
-            if (current.endsWith('px')) {
+            if (isPx(current)) {
                 const styleValue = styleMap[convertCamelCase(attr)];
                 if (styleValue) {
                     current = styleValue;
@@ -149,7 +149,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                 return 0;
         }
         const width = node.css(border[0]);
-        const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+        const result = isPx(width) ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
         if (result) {
             return Math.max(Math.round(result), 1);
         }
@@ -196,7 +196,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
 function convertPosition(node: T, attr: string) {
     if (!node.positionStatic) {
         const unit = node.valueOf(attr, { modified: true });
-        if (unit.endsWith('px')) {
+        if (isPx(unit)) {
             return parseFloat(unit);
         }
         else if (isPercent(unit)) {
@@ -1645,7 +1645,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (!value) {
             return 0;
         }
-        else if (value.endsWith('px')) {
+        else if (isPx(value)) {
             return parseFloat(value);
         }
         else if (isPercent(value)) {
@@ -2666,7 +2666,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             const value = this.css('verticalAlign');
             if (value !== 'baseline' && this.pageFlow) {
-                if (value.endsWith('px')) {
+                if (isPx(value)) {
                     result = parseFloat(value);
                 }
                 else if (isLength(value)) {
@@ -3120,7 +3120,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (this.styleElement) {
                     const fixedWidth = isFontFixedWidth(this);
                     let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
-                    if (value.endsWith('px')) {
+                    if (isPx(value)) {
                         result = parseFloat(value);
                     }
                     else if (isPercent(value)) {
