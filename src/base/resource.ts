@@ -58,8 +58,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             if (uri.startsWith('data:image/')) {
                 const match = REGEXP_DATAURI.exec(uri);
                 if (match) {
-                    const mimeType = match[1].split(/\s*;\s*/);
-                    this.addRawData(uri, mimeType[0], match[2], { encoding: mimeType[1] || 'base64', width: element.naturalWidth, height: element.naturalHeight });
+                    const [mimeType, encoding] = match[1].split(/\s*;\s*/);
+                    this.addRawData(uri, match[2], { encoding: encoding || 'base64', mimeType, width: element.naturalWidth, height: element.naturalHeight });
                 }
             }
             if (uri) {
@@ -68,12 +68,12 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
-    public addVideo(uri: string, mimeType?: string, options?: ElementScope) {
-        Resource.ASSETS.video.set(uri, { uri, mimeType, ...options });
+    public addAudio(uri: string, options?: AudioVideoOptions) {
+        Resource.ASSETS.audio.set(uri, { uri, ...options });
     }
 
-    public addAudio(uri: string, mimeType?: string, options?: ElementScope) {
-        Resource.ASSETS.audio.set(uri, { uri, mimeType, ...options });
+    public addVideo(uri: string, options?: AudioVideoOptions) {
+        Resource.ASSETS.video.set(uri, { uri, ...options });
     }
 
     public addFont(data: FontFaceData) {
@@ -89,18 +89,18 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
-    public addRawData(uri: string, mimeType: string, content?: string, options?: RawDataOptions) {
+    public addRawData(uri: string, content: Undef<string>, options?: RawDataOptions) {
         let filename: Undef<string>,
+            mimeType: Undef<string>,
             encoding: Undef<string>,
             data: Undef<string | ArrayBuffer>,
             width: Undef<number>,
             height: Undef<number>;
         if (options) {
-            ({ filename, encoding, data, width, height } = options);
-            mimeType ||= options.mimeType || '';
+            ({ filename, mimeType, encoding, data, width, height } = options);
+            mimeType &&= mimeType.toLowerCase();
             encoding &&= encoding.toLowerCase();
         }
-        mimeType = mimeType.toLowerCase();
         content &&= content.trim();
         let base64: Undef<string>,
             buffer: Undef<ArrayBuffer>;
@@ -132,7 +132,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             return null;
         }
         if (!filename) {
-            const ext = '.' + (fromMimeType(mimeType) || 'unknown');
+            const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
             filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
         }
         const result = {

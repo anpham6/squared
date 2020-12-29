@@ -1046,7 +1046,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         let src = element.outerHTML.trim().replace(/\s+/g, ' ');
         src = replaceSvgValues(src, [element], dimension).replace(/"/g, '\\"').replace(/<@@\d+/g, '<');
         const uri = 'data:image/svg+xml,' + src;
-        this.addRawData(uri, 'image/svg+xml', src);
+        this.addRawData(uri, src, { mimeType: 'image/svg+xml' });
         return uri;
     }
 

@@ -168,7 +168,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
     }
 }
 
-function getTextBottom<T extends View>(nodes: T[]): T[] {
+function getTextBottom(nodes: View[]) {
     return nodes.filter(node => (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.toElementInt('size') > 1) && (node.baseline || node.verticalAligned) || node.css('verticalAlign') === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
         const height = b.baselineHeight - a.baselineHeight;
         switch (a.tagName) {
@@ -283,16 +283,15 @@ function flattenContainer(node: View) {
             item.hide();
             const depth = item.depth;
             const children = flattenContainer(item);
-            const r = children.length - 1;
             children[0].modifyBox(BOX_STANDARD.MARGIN_LEFT, item.marginLeft);
-            children[r].modifyBox(BOX_STANDARD.MARGIN_RIGHT, item.marginRight);
+            lastItemOf(children)!.modifyBox(BOX_STANDARD.MARGIN_RIGHT, item.marginRight);
             renderChildren.splice(i, 0, ...children);
             renderTemplates!.splice(i, 0, ...plainMap(children, child => {
                 child.init(node, depth);
                 child.renderParent = node;
                 return child.renderedAs!;
             }));
-            i += r;
+            i += children.length - 1;
             length = renderChildren.length;
         }
     }
@@ -811,7 +810,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processUnknownChild(layout: ContentUI<T>) {
         const node = layout.node;
-        switch (node.tagName) {
+        const tagName = node.tagName;
+        switch (tagName) {
             case 'OBJECT':
                 setObjectContainer(layout);
                 return;
@@ -843,7 +843,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.next = true;
         }
         else {
-            switch (node.tagName) {
+            switch (tagName) {
                 case 'LI':
                 case 'OUTPUT':
                     layout.containerType = CONTAINER_NODE.TEXT;
@@ -1331,7 +1331,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             scaleType = 'center';
                             break;
                         default:
-                            if (node.width > 0 && node.height > 0) {
+                            if (node.width && node.height) {
                                 scaleType = 'fitXY';
                             }
                             break;
@@ -1529,7 +1529,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (maxLength) {
                     node.android('maxLength', maxLength.toString());
                 }
-                if (!node.hasWidth && cols > 0) {
+                if (cols > 0 && !node.hasWidth) {
                     node.css('width', formatPX(cols * 8));
                 }
                 if (!node.hasHeight) {
@@ -1653,7 +1653,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setInlineBlock();
                 }
                 if (src) {
-                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, mimeType, { tasks: node.tasks, watch: node.watch });
+                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, { mimeType, tasks: node.tasks, watch: node.watch });
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
                     if (element.poster) {
@@ -2812,76 +2812,72 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             horizontalRows.push(items);
+                            previousBaseline = baseline;
                         }
-                        else {
+                        else if (r) {
                             baseline = items[0];
-                            if (baseline) {
-                                if (firstLineStyle && i === 0 && j === 0) {
-                                    applyFirstLine(baseline);
-                                }
-                                if (currentFloated) {
-                                    if (currentFloated.float === 'left') {
-                                        if (rightAligned || baseline.rightAligned) {
-                                            baseline.anchor('right', 'true');
-                                        }
-                                        else {
-                                            baseline.anchor('leftRight', currentFloated.documentId);
-                                        }
-                                    }
-                                    else if (rightAligned || baseline.rightAligned) {
-                                        baseline.anchor('rightLeft', currentFloated.documentId);
+                            if (firstLineStyle && i === 0 && j === 0) {
+                                applyFirstLine(baseline);
+                            }
+                            if (currentFloated) {
+                                if (currentFloated.float === 'left') {
+                                    if (rightAligned || baseline.rightAligned) {
+                                        baseline.anchor('right', 'true');
                                     }
                                     else {
-                                        baseline.anchor('left', 'true');
+                                        baseline.anchor('leftRight', currentFloated.documentId);
                                     }
-                                }
-                                else if (baseline.floating) {
-                                    baseline.anchor(baseline.float as AnchorPositionAttr, 'true');
-                                }
-                                else if (textAlignLast && i === length - 1) {
-                                    switch (textAlignLast) {
-                                        case 'center':
-                                            baseline.anchor('centerHorizontal', 'true');
-                                            break;
-                                        case 'right':
-                                        case 'end':
-                                            baseline.anchor('right', 'true');
-                                            break;
-                                        case 'justify':
-                                            baseline.android('justificationMode', 'inter_word');
-                                        default:
-                                            baseline.anchor('left', 'true');
-                                            break;
-                                    }
-                                }
-                                else if (centerAligned || baseline.centerAligned) {
-                                    baseline.anchor('centerHorizontal', 'true');
                                 }
                                 else if (rightAligned || baseline.rightAligned) {
-                                    baseline.anchor('right', 'true');
+                                    baseline.anchor('rightLeft', currentFloated.documentId);
                                 }
                                 else {
                                     baseline.anchor('left', 'true');
                                 }
-                                setLayoutBelow(baseline);
-                                if (!rightAligned) {
-                                    setTextIndent(baseline);
+                            }
+                            else if (baseline.floating) {
+                                baseline.anchor(baseline.float as AnchorPositionAttr, 'true');
+                            }
+                            else if (textAlignLast && i === length - 1) {
+                                switch (textAlignLast) {
+                                    case 'center':
+                                        baseline.anchor('centerHorizontal', 'true');
+                                        break;
+                                    case 'right':
+                                    case 'end':
+                                        baseline.anchor('right', 'true');
+                                        break;
+                                    case 'justify':
+                                        baseline.android('justificationMode', 'inter_word');
+                                    default:
+                                        baseline.anchor('left', 'true');
+                                        break;
                                 }
-                                if (singleLine && i < length - 1 && !baseline.lineBreakTrailing && !baseline.multiline) {
-                                    baseline.setSingleLine(true, true);
-                                }
-                                baseline.horizontalRowStart = true;
-                                baseline.horizontalRowEnd = true;
-                                horizontalRows.push(items);
+                            }
+                            else if (centerAligned || baseline.centerAligned) {
+                                baseline.anchor('centerHorizontal', 'true');
+                            }
+                            else if (rightAligned || baseline.rightAligned) {
+                                baseline.anchor('right', 'true');
                             }
                             else {
-                                if (currentFloated) {
-                                    previousBaseline = currentFloated;
-                                }
-                                continue;
+                                baseline.anchor('left', 'true');
                             }
+                            setLayoutBelow(baseline);
+                            if (!rightAligned) {
+                                setTextIndent(baseline);
+                            }
+                            if (singleLine && i < length - 1 && !baseline.lineBreakTrailing && !baseline.multiline) {
+                                baseline.setSingleLine(true, true);
+                            }
+                            baseline.horizontalRowStart = true;
+                            baseline.horizontalRowEnd = true;
+                            horizontalRows.push(items);
+                            previousBaseline = baseline;
                         }
-                        previousBaseline = baseline;
+                        else if (currentFloated) {
+                            previousBaseline = currentFloated;
+                        }
                     }
                 }
                 node.horizontalRows = horizontalRows;
@@ -3041,7 +3037,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 break;
                             case 'middle':
                                 if (textBottom === undefined) {
-                                    textBottom = getTextBottom(children)[0] || null;
+                                    textBottom = getTextBottom(children)[0] as Undef<T> || null;
                                 }
                                 if (Math.ceil(item.linear.bottom) >= Math.floor(node.box.bottom)) {
                                     item.anchor('bottom', 'parent');
@@ -3059,7 +3055,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 if (textBaseline && item !== textBaseline) {
                                     if (textBottom === undefined) {
-                                        textBottom = getTextBottom(children)[0] || null;
+                                        textBottom = getTextBottom(children)[0] as Undef<T> || null;
                                     }
                                     if (item !== textBottom) {
                                         item.anchor('bottom', textBaseline.documentId);

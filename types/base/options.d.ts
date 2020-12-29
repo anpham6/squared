@@ -36,6 +36,10 @@ interface ExtensionUIOptions extends ExtensionOptions {
     tagNames?: string[];
 }
 
+interface AudioVideoOptions extends ElementScope {
+    mimeType?: string;
+}
+
 interface RawDataOptions extends Partial<Dimension>, ElementScope {
     mimeType?: string;
     data?: string | ArrayBuffer;

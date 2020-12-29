@@ -215,11 +215,11 @@ declare module "base" {
         getImage(uri: string): Undef<ImageAsset>;
         addFont(data: FontFaceData): void;
         getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
-        addVideo(uri: string, mimeType?: string, options?: ElementScope): void;
+        addVideo(uri: string, options?: AudioVideoOptions): void;
         getVideo(uri: string): Undef<Asset>;
-        addAudio(uri: string, mimeType?: string, options?: ElementScope): void;
+        addAudio(uri: string, options?: AudioVideoOptions): void;
         getAudio(uri: string): Undef<Asset>;
-        addRawData(uri: string, mimeType: string, content?: string, options?: RawDataOptions): Null<RawAsset>;
+        addRawData(uri: string, content: Undef<string>, options?: RawDataOptions): Null<RawAsset>;
         getRawData(uri: string): Undef<RawAsset>;
         addImageData(uri: string, width?: number, height?: number): void;
         fromImageUrl(value: string): ImageAsset[];

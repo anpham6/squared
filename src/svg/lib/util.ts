@@ -785,7 +785,7 @@ export function getNearestViewBox(element: SVGElement) {
             const viewBox = current.viewBox;
             if (viewBox) {
                 const baseVal = viewBox.baseVal;
-                return baseVal && baseVal.width > 0 && baseVal.height > 0 ? baseVal : getDOMRect(current);
+                return baseVal && baseVal.width && baseVal.height ? baseVal : getDOMRect(current);
             }
         }
         current = current.parentElement;

@@ -314,7 +314,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (result[i]) {
                         const item = preloadItems[i];
                         if (typeof item === 'string') {
-                            resource!.addRawData(item, '', '', result[i] as RawDataOptions);
+                            resource!.addRawData(item, '', result[i] as RawDataOptions);
                         }
                         else {
                             resource!.addImage(item);
@@ -636,7 +636,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             if (match[2]) {
                                 if (resource) {
                                     const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                    resource.addRawData(match[1], mimeType, match[3], { encoding });
+                                    resource.addRawData(match[1], match[3], { mimeType, encoding });
                                 }
                             }
                             else {
@@ -841,7 +841,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri) {
-                                this.resourceHandler?.addRawData(uri, 'text/css', '', { encoding: 'utf8' });
+                                this.resourceHandler?.addRawData(uri, '', { mimeType: 'text/css', encoding: 'utf8' });
                             }
                             this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, documentRoot, queryRoot);
                             break;
