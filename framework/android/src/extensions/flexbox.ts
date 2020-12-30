@@ -547,10 +547,19 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                         setLayoutWeightOpposing(chain, horizontal, belowSize() || !innerWrapped && !chain.naturalElement ? '0px' : 'match_parent');
                                                     }
                                                     else if (q === 1) {
+                                                        const hasStretch = () => {
+                                                            switch (node.flexbox.alignSelf) {
+                                                                case 'normal':
+                                                                case 'stretch':
+                                                                    return node.wrapperOf?.inputElement ? false : true;
+                                                                default:
+                                                                    return false;
+                                                            }
+                                                        };
                                                         setLayoutWeightOpposing(
                                                             chain,
                                                             horizontal,
-                                                            horizontal ? node.flexbox.alignSelf === 'stretch' && node.actualParent!.flexdata.row && (node.hasHeight || !node.inlineHeight) ? '0px' : 'wrap_content' : dimension ? '0px' : 'match_parent'
+                                                            horizontal ? (node.hasHeight || !node.inlineHeight) && node.actualParent!.flexdata.row && hasStretch() ? '0px' : 'wrap_content' : dimension ? '0px' : 'match_parent'
                                                         );
                                                     }
                                                     else if (isNaN(maxSize)) {

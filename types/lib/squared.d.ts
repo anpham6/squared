@@ -76,6 +76,7 @@ declare module "lib" {
         function convertRGBA(value: HSLA): RGBA;
         function formatRGBA(value: RGBA): string;
         function formatHSLA(value: HSLA): string;
+        function isTransparent(value: string): boolean;
     }
 
     namespace client {

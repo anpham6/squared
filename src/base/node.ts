@@ -8,6 +8,7 @@ type T = Node;
 const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
+const { isTransparent } = squared.lib.color;
 const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
@@ -216,10 +217,10 @@ function checkReadOnly(element: HTMLInputElement, value: boolean) {
                 case 'color':
                 case 'checkbox':
                 case 'radio':
-                case 'file':
                 case 'button':
                 case 'submit':
                 case 'reset':
+                case 'file':
                 case 'image':
                     return false;
             }
@@ -474,6 +475,18 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                     else {
                         return false;
                     }
+                case ':focus':
+                    if (element !== document.activeElement) {
+                        return false;
+                    }
+                    break;
+                case ':focus-within': {
+                    const activeElement = document.activeElement;
+                    if (element !== activeElement && !this.querySelectorAll('*').find(item => item.element === activeElement)) {
+                        return false;
+                    }
+                    break;
+                }
                 case ':default':
                 case ':defined':
                 case ':link':
@@ -482,8 +495,6 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                 case ':active':
                 case ':any-link':
                 case ':fullscreen':
-                case ':focus':
-                case ':focus-within':
                 case ':valid':
                 case ':invalid':
                     scoped.push(pseudo);
@@ -1472,7 +1483,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssSpecificity(attr: string) {
         if (this.styleElement) {
-            const styleData = !this.pseudoElt ? this._elementData?.['styleSpecificity'] : this.actualParent?.elementData?.['styleSpecificity' + this.pseudoElt] as Undef<ObjectMap<number>>;
+            const styleData = !this.pseudoElt ? this._elementData?.styleSpecificity : this.actualParent?.elementData?.['styleSpecificity' + this.pseudoElt] as Undef<ObjectMap<number>>;
             if (styleData) {
                 return styleData[attr] || 0;
             }
@@ -1841,6 +1852,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         offset = 0;
                     if (query === '*') {
                         selectors.push({ all: true });
+                        start = true;
                     }
                     else {
                         CSS.SELECTOR_G.lastIndex = 0;
@@ -2203,6 +2215,24 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             case 'SELECT':
             case 'TEXTAREA':
                 return true;
+            default:
+                return false;
+        }
+    }
+
+    get buttonElement() {
+        switch (this.tagName) {
+            case 'BUTTON':
+                return true;
+            case 'INPUT':
+                switch (this.toElementString('type')) {
+                    case 'button':
+                    case 'submit':
+                    case 'reset':
+                    case 'file':
+                    case 'image':
+                        return true;
+                }
             default:
                 return false;
         }
@@ -2767,66 +2797,32 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.backgroundColor;
         if (result === undefined) {
             if (!this.plainText) {
-                const isTransparent = (value: string) => value === 'transparent' || value === 'rgba(0, 0, 0, 0)';
                 result = this.css('backgroundColor');
-                if (isTransparent(result)) {
-                    if (this.inputElement) {
-                        if (this.tagName !== 'BUTTON') {
-                            switch (this.toElementString('type')) {
-                                case 'button':
-                                case 'submit':
-                                case 'reset':
-                                case 'image':
-                                    break;
-                                default:
-                                    result = '';
-                                    break;
-                            }
-                        }
-                    }
-                    else {
-                        result = '';
-                    }
-                }
-                if (result && this.styleElement && this.pageFlow && (!this.inputElement && this.opacity === 1 || isTransparent(result))) {
-                    let parent = this.actualParent;
-                    while (parent) {
-                        const backgroundImage = parent.valueOf('backgroundImage');
-                        if (!backgroundImage || backgroundImage === 'none') {
-                            const color = parent.backgroundColor;
-                            if (color && !isTransparent(color)) {
-                                if (color === result && parent.opacity === 1) {
-                                    result = '';
-                                }
-                                else if (isTransparent(result)) {
-                                    result = color;
-                                }
-                                break;
-                            }
-                            parent = parent.actualParent;
-                        }
-                        else {
-                            break;
-                        }
-                    }
+                if (isTransparent(result) && !this.buttonElement) {
+                    result = '';
                 }
             }
-            return this._cache.backgroundColor = result || '';
+            else {
+                result = '';
+            }
+            this._cache.backgroundColor = result;
         }
         return result;
     }
 
     get backgroundImage() {
-        const result = this._cache.backgroundImage;
+        let result = this._cache.backgroundImage;
         if (result === undefined) {
-            let value = '';
             if (!this.plainText) {
-                value = this.css('backgroundImage');
-                if (value === 'none') {
-                    value = '';
+                result = this.css('backgroundImage');
+                if (result === 'none') {
+                    result = '';
                 }
             }
-            return this._cache.backgroundImage = value;
+            else {
+                result = '';
+            }
+            this._cache.backgroundImage = result;
         }
         return result;
     }

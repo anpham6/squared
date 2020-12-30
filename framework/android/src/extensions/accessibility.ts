@@ -108,6 +108,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                 backgroundPositionX: 'left',
                 backgroundPositionY: 'top'
             });
+            const height = !node.hasHeight ? Math.floor(node.actualHeight - node.contentBoxHeight) : 0;
             button.setCacheValue('backgroundColor', 'rgba(0, 0, 0, 0)');
             button.setCacheValue('inputElement', true);
             button.render(node);
@@ -116,6 +117,9 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                 button.anchorParent('vertical');
                 button.setLayoutWidth('0px');
                 button.setLayoutHeight('0px');
+                if (height > 0) {
+                    button.app('layout_constraintHeight_min', height + 'px');
+                }
             }
             else {
                 if (node.layoutRelative) {
@@ -124,6 +128,9 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                 }
                 button.setLayoutWidth('match_parent');
                 button.setLayoutHeight('match_parent');
+                if (height > 0) {
+                    button.android('minHeight', height + 'px');
+                }
             }
             this.application.addLayoutTemplate(
                 node,

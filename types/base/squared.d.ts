@@ -484,6 +484,7 @@ declare module "base" {
         get textElement(): boolean;
         get tableElement(): boolean;
         get inputElement(): boolean;
+        get buttonElement(): boolean;
         get pseudoElement(): boolean;
         get documentBody(): boolean;
         get dataset(): DOMStringMap;

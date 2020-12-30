@@ -331,7 +331,7 @@ export function parseColor(value: string, opacity = 1) {
             value = '';
         }
     }
-    else if (value === 'transparent' || value === 'rgba(0, 0, 0, 0)') {
+    else if (isTransparent(value)) {
         return new Color();
     }
     else {
@@ -483,4 +483,8 @@ export function formatRGBA(value: RGBA) {
 
 export function formatHSLA(value: HSLA) {
     return `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%${value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : ''})`;
+}
+
+export function isTransparent(value: string) {
+    return value === 'transparent' || value === 'rgba(0, 0, 0, 0)';
 }

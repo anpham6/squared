@@ -381,6 +381,23 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
     return depth;
 }
 
+function setInlineBlock(node : View) {
+    const { centerAligned, rightAligned } = node;
+    node.css('display', 'inline-block', true);
+    node.setCacheValue('centerAligned', centerAligned);
+    node.setCacheValue('rightAligned', rightAligned);
+}
+
+function setLegendLayout(node : View, offset: number) {
+    if (!node.hasWidth) {
+        node.css('minWidth', formatPX(node.actualWidth));
+        setInlineBlock(node);
+    }
+    offset *= node.actualHeight;
+    node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+    node.linear.bottom += offset;
+}
+
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const getAnchorDirection = (reverse?: boolean): AnchorPositionAttr[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getAnchorBaseline = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
@@ -701,6 +718,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                 return;
             }
+            case 'LEGEND':
+                setLegendLayout(node, this.localSettings.deviations.legendBottomOffset);
+                break;
         }
         if (layout.find(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
@@ -819,6 +839,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'BUTTON':
                 layout.containerType = CONTAINER_NODE.BUTTON;
                 return;
+            case 'LEGEND':
+                setLegendLayout(node, this.localSettings.deviations.legendBottomOffset);
+                break;
         }
         const background = node.visibleStyle.background;
         if (node.inlineText && (background || !node.textEmpty)) {
@@ -1277,12 +1300,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.android('enabled', 'false');
             }
         };
-        const setInlineBlock = () => {
-            const { centerAligned, rightAligned } = node;
-            node.css('display', 'inline-block', true);
-            node.setCacheValue('centerAligned', centerAligned);
-            node.setCacheValue('rightAligned', rightAligned);
-        };
         const setBoundsWidth = () => node.css('width', Math.ceil(node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0)) + 'px', true);
         const setBoundsHeight = () => node.css('height', Math.ceil(node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0)) + 'px', true);
         switch (tagName) {
@@ -1546,16 +1563,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
             }
-            case 'LEGEND': {
-                if (!node.hasWidth) {
-                    node.css('minWidth', formatPX(node.actualWidth));
-                    setInlineBlock();
-                }
-                const offset = node.actualHeight * this.localSettings.deviations.legendBottomOffset;
-                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                node.linear.bottom += offset;
-                break;
-            }
             case 'METER':
             case 'PROGRESS': {
                 const { min, max, value } = node.element as HTMLMeterElement;
@@ -1651,7 +1658,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setBoundsHeight();
                 }
                 if (node.inline) {
-                    setInlineBlock();
+                    setInlineBlock(node);
                 }
                 if (src) {
                     this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, { mimeType, tasks: node.tasks, watch: node.watch });

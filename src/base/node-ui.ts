@@ -1831,6 +1831,34 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._boxAdjustment ||= [0, 0, 0, 0, 0, 0, 0, 0];
     }
 
+    get backgroundColor(): string {
+        let result = this._cache.backgroundColor;
+        if (result === undefined) {
+            result = super.backgroundColor;
+            if (result && this.styleElement && !this.inputElement && this.opacity === 1 && this.pageFlow) {
+                let parent = this.actualParent;
+                while (parent) {
+                    const backgroundImage = parent.backgroundImage;
+                    if (!backgroundImage) {
+                        const color = parent.backgroundColor;
+                        if (color) {
+                            if (color === result && parent.opacity === 1) {
+                                result = '';
+                            }
+                            break;
+                        }
+                        parent = parent.actualParent;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                this._cache.backgroundColor = result;
+            }
+        }
+        return result;
+    }
+
     get textEmpty() {
         let result = this._cacheState.textEmpty;
         if (result === undefined) {
