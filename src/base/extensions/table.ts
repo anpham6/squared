@@ -120,7 +120,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const hasWidth = node.hasWidth;
         const colgroup = node.element!.querySelector('COLGROUP');
-        const caption = node.find(item => item.tagName === 'CAPTION');
+        const caption = node.find(item => item.tagName === 'CAPTION') as Undef<T>;
         const captionBottom = caption && node.valueOf('captionSide') === 'bottom';
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
@@ -350,7 +350,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     return LAYOUT_TABLETYPE.VARIABLE;
                 }
                 else if (mapWidth.every(value => value === mapWidth[0])) {
-                    if (node.find(td => td.hasHeight, { cascade: true })) {
+                    if (node.find(td => td.tagName === 'TD' && td.hasHeight, { cascade: true })) {
                         mainData.flags |= LAYOUT_TABLE.EXPAND;
                         return LAYOUT_TABLETYPE.VARIABLE;
                     }
@@ -360,8 +360,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     else if (hasWidth) {
                         return LAYOUT_TABLETYPE.FIXED;
                     }
+                    else if (mapWidth[0] === '0px') {
+                        return LAYOUT_TABLETYPE.NONE;
+                    }
                 }
-                if (mapWidth.every(value => value === 'auto' || isLength(value) && value !== '0px')) {
+                if (mapWidth.every(value => value === 'auto' || value !== '0px' && isLength(value, true))) {
                     if (!hasWidth) {
                         mainData.flags |= LAYOUT_TABLE.EXPAND;
                     }
@@ -379,13 +382,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 else if (caption.bounds.width > Math.max(...rowWidth)) {
-                    setBoundsWidth(caption as T);
+                    setBoundsWidth(caption);
                 }
             }
             if (!caption.valueOf('textAlign')) {
                 caption.css('textAlign', 'center');
             }
-            this.data.set(caption as T, { colSpan: columnCount } as TableCellSpanData);
+            this.data.set(caption, { colSpan: columnCount } as TableCellSpanData);
             if (!captionBottom) {
                 caption.parent = node;
             }

@@ -660,11 +660,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         text = content[0];
                     }
                     if (rt && text) {
-                        const group = this.createNodeGroup(rt, [rt, text], node, { containerType: CONTAINER_NODE.LINEAR, alignmentType: NODE_ALIGNMENT.VERTICAL, flags: CREATE_NODE.DELEGATE });
+                        const under = node.valueAt('rubyPosition') === 'under';
+                        const group = this.createNodeGroup(rt, under ? [text, rt] : [rt, text], node, { containerType: CONTAINER_NODE.LINEAR, alignmentType: NODE_ALIGNMENT.VERTICAL, flags: CREATE_NODE.DELEGATE });
                         group.setLayoutWidth('wrap_content');
                         group.setLayoutHeight('wrap_content');
                         group.mergeGravity('gravity', 'center_horizontal');
-                        group.android('baselineAlignedChildIndex', '1');
+                        group.android('baselineAlignedChildIndex', under ? '0' : '1');
                         children.push(group);
                     }
                     else if (rt) {

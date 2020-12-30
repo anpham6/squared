@@ -1,7 +1,6 @@
-import { FILE, STRING } from './regex';
+import { FILE } from './regex';
 
 const CACHE_CAMELCASE: StringMap = {};
-const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
 const REGEXP_NONWORD = /[^\w]+/g;
 const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
 
@@ -451,7 +450,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string) {
-    return REGEXP_DECIMAL.test(value);
+    return value ? !isNaN(+value) : false;
 }
 
 export function isString(value: any): value is string {

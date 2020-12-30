@@ -118,18 +118,18 @@ function setDimension(node: T, styleMap: StringMap, dimension: DimensionAttr) {
         }
     }
     if (baseValue && !node.imageElement) {
-        const attrMax = dimension === 'width' ? 'maxWidth' : 'maxHeight';
-        const max = styleMap[attrMax];
+        const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
+        const max = styleMap[attr];
         if (max) {
             if (value === max) {
-                delete styleMap[attrMax];
+                delete styleMap[attr];
             }
             else {
                 const maxValue = node.parseUnit(max, { dimension });
                 if (maxValue) {
                     if (maxValue <= baseValue && value && isLength(value)) {
                         styleMap[dimension] = max;
-                        delete styleMap[attrMax];
+                        delete styleMap[attr];
                     }
                     else {
                         return Math.min(result, maxValue);
@@ -478,8 +478,10 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                 case ':defined':
                 case ':link':
                 case ':visited':
-                case ':any-link':
                 case ':hover':
+                case ':active':
+                case ':any-link':
+                case ':fullscreen':
                 case ':focus':
                 case ':focus-within':
                 case ':valid':
@@ -552,18 +554,17 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                                     return false;
                                                 }
                                             }
-                                            break;
                                         }
-                                        return selector.fromNot ? true : false;
+                                        else {
+                                            return selector.fromNot ? true : false;
+                                        }
                                     }
                                     break;
                             }
-                            break;
                         }
-                    }
-                    else if (pseudo.startsWith(':lang(')) {
-                        scoped.push(pseudo);
-                        break;
+                        else {
+                            return selector.fromNot ? true : false;
+                        }
                     }
                     else if (match = REGEXP_DIR.exec(pseudo)) {
                         switch (this.dir) {
@@ -581,9 +582,11 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                 }
                                 break;
                         }
-                        break;
                     }
-                    return selector.fromNot ? true : false;
+                    else {
+                        scoped.push(pseudo);
+                    }
+                    break;
                 }
             }
         }
@@ -3142,7 +3145,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             value = 'inherit';
                         }
                         if (value === 'inherit') {
-                            let parent: Null<T> = this.actualParent;
+                            let parent = this.actualParent;
                             if (parent) {
                                 do {
                                     if (parent.tagName === 'HTML') {
