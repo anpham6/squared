@@ -1392,7 +1392,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get pseudoElement() {
         const result = this._cacheState.pseudoElement;
-        return result === undefined ? this._cacheState.pseudoElement = this._element ? this._element.className === '__squared.pseudo' : false : result;
+        return result === undefined ? this._cacheState.pseudoElement = this._element ? this._element.className === '__squared-pseudo' : false : result;
     }
 
     get scrollElement() {
@@ -1469,6 +1469,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get inputElement() {
         const result = this._cache.inputElement;
         return result === undefined ? this._cache.inputElement = super.inputElement : result;
+    }
+
+    get buttonElement() {
+        const result = this._cache.buttonElement;
+        return result === undefined ? this._cache.buttonElement = super.buttonElement : result;
     }
 
     get floating() {

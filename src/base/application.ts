@@ -447,13 +447,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected createRootNode(rootElement: HTMLElement, sessionId: string) {
         const processing = this.getProcessing(sessionId)!;
         const extensions = processing.extensions.filter(item => !!item.beforeInsertNode) as Extension<T>[];
-        const node = this.cascadeParentNode(
-            processing,
-            rootElement,
-            sessionId,
-            0,
-            extensions.length ? extensions : null
-        );
+        const node = this.cascadeParentNode(processing, rootElement, sessionId, 0, extensions.length ? extensions : null);
         if (node) {
             node.documentRoot = true;
             processing.node = node;

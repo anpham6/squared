@@ -269,7 +269,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         for (let i = 0; i < length; ++i) {
             extensions[i].afterFinalize();
         }
-        removeElementsByClassName('__squared.pseudo');
+        removeElementsByClassName('__squared-pseudo');
         return this.closed = true;
     }
 
@@ -605,7 +605,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, cascadeAll?: boolean) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
         const node = this.insertNode(parentElement, sessionId, cascadeAll);
         if (parentElement.tagName === 'svg') {
             setElementState(node, true, true, false, true);
@@ -621,6 +621,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     break;
                 }
             }
+            beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
+            afterElement = this.createPseduoElement(parentElement, '::after', sessionId);
         }
         const display = node.display;
         if (display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as ExtensionUI<T>)?.documentBase)) {
@@ -630,8 +632,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const { cache, rootElements } = processing;
             const pierceShadowRoot = this.userSettings.pierceShadowRoot;
             const hostElement = parentElement.shadowRoot || parentElement;
-            const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId, hostElement);
-            const afterElement = this.createPseduoElement(parentElement, '::after', sessionId, hostElement);
             const childNodes = hostElement.childNodes;
             const children: T[] = [];
             const elements: T[] = [];
@@ -688,8 +688,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 this.setStyleMap(sessionId, shadowRoot);
                             }
                         }
-                        if ((shadowRoot || element).childNodes.length) {
-                            child = this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent, cascadeAll);
+                        const hostElementChild = shadowRoot || element;
+                        const beforeElementChild = this.createPseduoElement(element, '::before', sessionId, hostElementChild);
+                        const afterElementChild = this.createPseduoElement(element, '::after', sessionId, hostElementChild);
+                        if (hostElementChild.childNodes.length) {
+                            child = this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent, beforeElementChild, afterElementChild, cascadeAll);
                             if (child.display === 'contents' && !child.excluded && !shadowRoot) {
                                 for (const item of child.naturalChildren as T[]) {
                                     if (item.naturalElement) {
@@ -1603,7 +1606,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return layout;
     }
 
-    protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string, parentRoot: HTMLElement | ShadowRoot) {
+    protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string, elementRoot: HTMLElement | ShadowRoot = element.shadowRoot || element) {
         let styleMap = getElementCache<StringMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
@@ -1628,7 +1631,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     else {
-                        const childNodes = parentRoot.childNodes;
+                        const childNodes = elementRoot.childNodes;
                         for (let i = 0, length = childNodes.length; i < length; ++i) {
                             const child = childNodes[i] as Element;
                             if (child.nodeName[0] === '#') {
@@ -1731,7 +1734,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     const cascadeCounterSibling = (sibling: Element) => {
                                         if (getCounterValue(getStyle(sibling).counterReset, counterName) === undefined) {
                                             iterateArray(sibling.children, (item: HTMLElement) => {
-                                                if (item.className !== '__squared.pseudo') {
+                                                if (item.className !== '__squared-pseudo') {
                                                     let increment = getCounterIncrementValue(item, counterName);
                                                     if (increment) {
                                                         incrementCounter(increment, true);
@@ -1768,7 +1771,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             ascending = true;
                                         }
-                                        if (current.className !== '__squared.pseudo') {
+                                        if (current.className !== '__squared-pseudo') {
                                             const pesudoIncrement = getCounterIncrementValue(current, counterName);
                                             if (pesudoIncrement) {
                                                 incrementCounter(pesudoIncrement, true);
@@ -1822,13 +1825,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     styleMap.display ||= 'inline';
                     tagName ||= /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
-                    pseudoElement.className = '__squared.pseudo';
+                    pseudoElement.className = '__squared-pseudo';
                     pseudoElement.style.setProperty('display', 'none');
                     if (pseudoElt === '::before') {
-                        parentRoot.insertBefore(pseudoElement, parentRoot.childNodes[0]);
+                        elementRoot.insertBefore(pseudoElement, elementRoot.childNodes[0]);
                     }
                     else {
-                        parentRoot.appendChild(pseudoElement);
+                        elementRoot.appendChild(pseudoElement);
                     }
                     if (content) {
                         if (tagName === 'img') {

@@ -1,6 +1,7 @@
 import { FILE } from './regex';
 
 const CACHE_CAMELCASE: StringMap = {};
+const CACHE_TRIMBOTH: ObjectMap<RegExp> = {};
 const REGEXP_NONWORD = /[^\w]+/g;
 const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
 
@@ -472,7 +473,7 @@ export function isPlainObject<T = PlainObject>(value: any): value is T {
 export function isEmptyString(value: string) {
     for (let i = 0, length = value.length; i < length; ++i) {
         const n = value.charCodeAt(i);
-        if (n < 14 && n > 8 || n === 32) {
+        if (n === 32 || n < 14 && n > 8) {
             continue;
         }
         return false;
@@ -592,21 +593,50 @@ export function resolvePath(value: string, href?: string) {
 }
 
 export function trimBoth(value: string, pattern: string) {
-    const match = new RegExp(`^(${pattern})+([\\s\\S]*?)\\1$`).exec(value);
+    const match = (CACHE_TRIMBOTH[pattern] ||= new RegExp(`^(${pattern})+([\\s\\S]*)\\1$`)).exec(value);
     return match ? match[2] : value;
 }
 
 export function trimString(value: string, pattern: string) {
+    if (pattern.length === 1) {
+        return trimEnd(trimStart(value, pattern), pattern);
+    }
     const match = new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`).exec(value);
     return match ? match[1] : value;
 }
 
 export function trimStart(value: string, pattern: string) {
-    return value.replace(new RegExp(`^(?:${pattern})+`), '');
+    if (value) {
+        if (pattern.length === 1) {
+            for (let i = 0, length = value.length; i < length; ++i) {
+                if (value[i] !== pattern) {
+                    return i > 0 ? value.substring(i) : value;
+                }
+            }
+        }
+        else {
+            const match = new RegExp(`^(?:${pattern})+`).exec(value);
+            return match ? value.substring(match[0].length) : value;
+        }
+    }
+    return '';
 }
 
 export function trimEnd(value: string, pattern: string) {
-    return value.replace(new RegExp(`(?:${pattern})+$`), '');
+    if (value) {
+        if (pattern.length === 1) {
+            for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
+                if (value[i] !== pattern) {
+                    return j > 0 ? value.substring(0, value.length - j) : value;
+                }
+            }
+        }
+        else {
+            const match = new RegExp(`(?:${pattern})+$`).exec(value);
+            return match ? value.substring(0, value.length - match[0].length) : value;
+        }
+    }
+    return '';
 }
 
 export function fromLastIndexOf(value: string, ...char: string[]) {
@@ -800,7 +830,7 @@ export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
 export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>) {
     const length = list.length;
     if (length) {
-        let baseValue!: U;
+        let baseValue: Undef<U>;
         for (let i = 0; i < length; ++i) {
             const value = predicate(list[i], i, list);
             if (i === 0) {

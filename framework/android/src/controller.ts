@@ -440,7 +440,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
     }
     else {
         const parent = node.actualParent!;
-        if (parent.display === 'table-cell') {
+        if (parent.display === 'table-cell' || parent.buttonElement && parent.has('verticalAlign')) {
             switch (parent.css('verticalAlign')) {
                 case 'middle':
                     bias = 0.5;
@@ -2959,12 +2959,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const { top: boxTop, width: boxWidth } = node.box;
         const baseline = NodeUI.baseline(children, false, true);
         const getMaxHeight = (item: T) => Math.max(item.actualHeight, item.lineHeight);
-        let percentWidth = View.availablePercent(children, 'width', boxWidth),
+        let parent: Null<T> = null,
+            percentWidth = View.availablePercent(children, 'width', boxWidth),
             checkPercent = !node.hasPX('width'),
             baselineActive: boolean,
-            documentId: string;
+            documentId: string,
+            buttonElement: Undef<boolean>;
         if (baseline) {
-            baselineActive = baseline.baselineElement && !baseline.imageElement;
+            parent = baseline.actualParent as Null<T>;
+            buttonElement = parent ? parent.buttonElement && parent.has('verticalAlign') : false;
+            baselineActive = baseline.baselineElement && !baseline.imageElement && !buttonElement;
             documentId = baseline.documentId;
         }
         else {
@@ -3141,9 +3145,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (baseline) {
             baseline.constraint.horizontal = true;
             baseline.baselineActive = baselineCount > 0;
-            if (baseline.documentParent.display === 'table-cell') {
-                setVerticalAlignment(baseline, false);
+            if (parent!.display === 'table-cell' || buttonElement) {
                 baseline.anchorParent('vertical');
+                setVerticalAlignment(baseline, false, true);
                 return;
             }
             if (tallest && !tallest.textElement && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {

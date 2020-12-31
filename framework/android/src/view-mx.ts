@@ -119,7 +119,7 @@ function setMultiline(node: T, value: number, overwrite: boolean) {
 }
 
 function setLineHeight(node: T, value: number, inlineStyle: boolean, top: boolean, bottom: boolean, overwrite?: boolean, parent?: T) {
-    if (value === 0 || node.imageContainer || node.rendering && !overwrite || node.cssInitial('lineHeight') === 'normal') {
+    if (value === 0 || node.imageContainer || node.rendering && !overwrite || node.cssInitial('lineHeight') === 'normal' || node.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
         return;
     }
     if (node.multiline) {
@@ -2143,7 +2143,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                                 value = data.value;
                                             }
                                         }
-                                        result.push(`${prefix + attr}="${value}"`);
+                                        result.push(prefix + attr + `="${value}"`);
                                     }
                                 }
                             }
@@ -2153,7 +2153,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         id = obj.id;
                                     }
                                     else {
-                                        result.push(`${prefix + attr}="${obj[attr]!}"`);
+                                        result.push(prefix + attr + `="${obj[attr]!}"`);
                                     }
                                 }
                             }
@@ -2163,7 +2163,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             prefix = '';
                         default:
                             for (const attr in obj) {
-                                result.push(`${prefix + attr}="${obj[attr]!}"`);
+                                result.push(prefix + attr + `="${obj[attr]!}"`);
                             }
                             break;
                     }
@@ -3033,6 +3033,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get renderExclude(): boolean {
             let result = this._cache.renderExclude;
             if (result === undefined) {
+                result = false;
                 if (this.naturalChild && !this.positioned) {
                     const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
                     const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.valueAt('overflowY') === 'hidden');
@@ -3044,34 +3045,33 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else {
                         const parent = this.renderParent || this.parent as T;
-                        if (parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-                            result = false;
-                        }
-                        else if (this.pseudoElement) {
-                            result = parent.layoutConstraint && (excludeHorizontal(this) || excludeVertical(this)) && parent.every((item: T) => {
-                                if (item === this || !item.pageFlow) {
-                                    return true;
-                                }
-                                else if (item.pseudoElement) {
-                                    return excludeHorizontal(item) || excludeVertical(item);
-                                }
-                                return item.renderExclude;
-                            });
-                        }
-                        else if (this.isEmpty() && !this.imageContainer && (!this.textElement || this.textEmpty)) {
-                            if (parent.layoutFrame) {
-                                result = excludeHorizontal(this) || excludeVertical(this);
+                        if (!parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                            if (this.pseudoElement) {
+                                result = parent.layoutConstraint && (excludeHorizontal(this) || excludeVertical(this)) && parent.every((item: T) => {
+                                    if (item === this || !item.pageFlow) {
+                                        return true;
+                                    }
+                                    else if (item.pseudoElement) {
+                                        return excludeHorizontal(item) || excludeVertical(item);
+                                    }
+                                    return item.renderExclude;
+                                });
                             }
-                            else if (parent.layoutVertical) {
-                                result = excludeVertical(this);
-                            }
-                            else if (!parent.layoutGrid) {
-                                result = excludeHorizontal(this) && (parent.layoutHorizontal || excludeVertical(this));
+                            else if (this.isEmpty() && !this.imageContainer && (!this.textElement || this.textEmpty)) {
+                                if (parent.layoutFrame) {
+                                    result = excludeHorizontal(this) || excludeVertical(this);
+                                }
+                                else if (parent.layoutVertical) {
+                                    result = excludeVertical(this);
+                                }
+                                else if (!parent.layoutGrid) {
+                                    result = excludeHorizontal(this) && (parent.layoutHorizontal || excludeVertical(this));
+                                }
                             }
                         }
                     }
                 }
-                return this._cache.renderExclude = !!result;
+                return this._cache.renderExclude = result;
             }
             return result;
         }

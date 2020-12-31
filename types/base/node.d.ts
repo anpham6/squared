@@ -48,6 +48,7 @@ interface CacheValueUI extends CacheValue {
     flexElement?: boolean;
     gridElement?: boolean;
     inputElement?: boolean;
+    buttonElement?: boolean;
     tableElement?: boolean;
     layoutElement?: boolean;
     scrollElement?: boolean;

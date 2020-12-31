@@ -284,6 +284,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         percentGap = 0,
                         parentEnd = true,
                         baseline: Null<T> = null,
+                        emptyContent: Undef<T[]>,
                         spreadInside = justifyContent === 'space-between',
                         boundsWeight: Undef<number>;
                     segStart.anchor(LT, 'parent');
@@ -341,6 +342,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                             else if (q === sizeCount) {
                                 maxSize = NaN;
+                                emptyContent = seg.filter(item => !item.isEmpty() && !item.imageContainer && !item.controlElement && (!item.inputElement || item.tagName === 'BUTTON') && !item.find(child => child.isEmpty() && (child.pseudoElement ? child.textContent !== '' || child[HWL] > 0 : child.bounds[HWL] > 0), { cascade: true }));
                             }
                             if (horizontal) {
                                 percentAvailable = View.availablePercent(seg, 'width', node.box.width);
@@ -570,7 +572,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                                 ? dimension ? '0px' : 'match_parent'
                                                                 : dimension && alignContent === 'normal'
                                                                     ? !horizontal || !wrap ? '0px' : 'match_parent'
-                                                                    : 'wrap_content'
+                                                                    : emptyContent && emptyContent.length < q && emptyContent.includes(chain) ? '0px' : 'wrap_content'
                                                         );
                                                     }
                                                     else if (belowSize()) {

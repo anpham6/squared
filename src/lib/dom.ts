@@ -116,12 +116,10 @@ export function getParentElement(element: Element) {
 }
 
 export function removeElementsByClassName(className: string) {
-    const elements = document.getElementsByClassName(className);
+    const elements = Array.from(document.getElementsByClassName(className));
     for (let i = 0, length = elements.length; i < length; ++i) {
         const element = elements[i];
-        if (element) {
-            element.parentElement?.removeChild(element);
-        }
+        element.parentElement?.removeChild(element);
     }
 }
 

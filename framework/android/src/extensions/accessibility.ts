@@ -18,6 +18,8 @@ function addTextDecorationLine(node: View, attr: string) {
     });
 }
 
+const getBoundsHeight = (node: View) => Math.floor(node.actualHeight - node.contentBoxHeight);
+
 export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
     public readonly options: ExtensionAccessibilityOptions = {
         displayLabel: false
@@ -108,17 +110,16 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                 backgroundPositionX: 'left',
                 backgroundPositionY: 'top'
             });
-            const height = !node.hasHeight ? Math.floor(node.actualHeight - node.contentBoxHeight) : 0;
             button.setCacheValue('backgroundColor', 'rgba(0, 0, 0, 0)');
             button.setCacheValue('inputElement', true);
             button.render(node);
             if (node.layoutConstraint) {
-                button.anchorParent('horizontal');
-                button.anchorParent('vertical');
+                button.anchorParent('horizontal', 0);
+                button.anchorParent('vertical', 0);
                 button.setLayoutWidth('0px');
                 button.setLayoutHeight('0px');
-                if (height > 0) {
-                    button.app('layout_constraintHeight_min', height + 'px');
+                if (!node.hasHeight) {
+                    this.subscribers.add(button);
                 }
             }
             else {
@@ -128,6 +129,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                 }
                 button.setLayoutWidth('match_parent');
                 button.setLayoutHeight('match_parent');
+                const height = !node.hasHeight ? getBoundsHeight(node) : 0;
                 if (height > 0) {
                     button.android('minHeight', height + 'px');
                 }
@@ -141,6 +143,15 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                     controlName: button.controlName
                 } as NodeXmlTemplate<T>
             );
+        }
+    }
+
+    public postOptimize(node: T) {
+        if (node.hasAlign(NODE_ALIGNMENT.WRAPPER) && node.renderParent!.inlineHeight) {
+            const height = getBoundsHeight(node.renderParent as T);
+            if (height > 0) {
+                node.app('layout_constraintHeight_min', height + 'px');
+            }
         }
     }
 }
