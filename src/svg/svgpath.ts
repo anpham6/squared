@@ -241,8 +241,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         const element = this.element;
         const parent = this.parent as SvgContainer;
         const patternParent = this.patternParent as SvgShapePattern;
-        const requireRefit = parent ? parent.requireRefit : false;
-        const patternRefit = patternParent ? patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX : false;
+        const requireRefit = parent && parent.requireRefit;
+        const patternRefit = patternParent && patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
         this.transformed = null;
         let d: string;
         if (SVG.path(element)) {

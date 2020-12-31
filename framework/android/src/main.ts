@@ -52,7 +52,7 @@ type FileActionOptions = FileCopyingOptions & FileArchivingOptions;
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
-const checkApplication = () => application ? application.closed || !application.initializing && application.finalize() : false;
+const checkApplication = () => !!application && (application.closed || !application.initializing && application.finalize());
 const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
 
 const appBase: android.AppFramework<View> = {

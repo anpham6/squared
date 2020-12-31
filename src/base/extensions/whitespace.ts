@@ -7,7 +7,7 @@ import ExtensionUI from '../extension-ui';
 const { formatPX } = squared.lib.css;
 const { iterateReverseArray, minMaxOf } = squared.lib.util;
 
-const DOCTYPE_HTML = document.doctype ? document.doctype.name === 'html' : false;
+const DOCTYPE_HTML = !!document.doctype && document.doctype.name === 'html';
 
 function setSpacingOffset(node: NodeUI, region: number, value: number, adjustment = 0) {
     let offset: number;

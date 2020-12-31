@@ -2967,7 +2967,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             buttonElement: Undef<boolean>;
         if (baseline) {
             parent = baseline.actualParent as Null<T>;
-            buttonElement = parent ? parent.buttonElement && parent.has('verticalAlign') : false;
+            buttonElement = !!parent && parent.buttonElement && parent.has('verticalAlign');
             baselineActive = baseline.baselineElement && !baseline.imageElement && !buttonElement;
             documentId = baseline.documentId;
         }

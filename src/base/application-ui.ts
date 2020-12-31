@@ -598,7 +598,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public useElement(element: HTMLElement) {
         const use = this.getDatasetName('use', element);
-        return use ? use.split(',').some(value => this.extensionManager.get(value.trim())) : false;
+        return !!use && use.split(',').some(value => this.extensionManager.get(value.trim()));
     }
 
     public toString() {

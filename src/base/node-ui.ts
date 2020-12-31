@@ -1436,7 +1436,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         break;
                 }
             }
-            return this._cache.scrollElement = !!result;
+            else {
+                result = false;
+            }
+            this._cache.scrollElement = result;
         }
         return result;
     }
@@ -1572,7 +1575,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const value = this.display;
                 result = (value.startsWith('inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
             }
-            return this._cache.inlineVertical = !!result;
+            else {
+                result = false;
+            }
+            this._cache.inlineVertical = result;
         }
         return result;
     }
@@ -1620,7 +1626,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const { top, right, bottom, left } = this._styleMap;
                 result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
             }
-            return this._cache.autoPosition = !!result;
+            else {
+                result = false;
+            }
+            this._cache.autoPosition = result;
         }
         return result;
     }
@@ -1679,7 +1688,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     result = this.inlineText && this.textElement || this.plainText && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
                 }
             }
-            return this._cache.baselineElement = !!result;
+            else {
+                result = false;
+            }
+            this._cache.baselineElement = result;
         }
         return result;
     }
@@ -1871,7 +1883,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const value = this.textContent;
                 result = value === '' || !this.preserveWhiteSpace && isEmptyString(value);
             }
-            return this._cacheState.textEmpty = !!result;
+            else {
+                result = false;
+            }
+            this._cacheState.textEmpty = result;
         }
         return result;
     }

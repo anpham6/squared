@@ -7,7 +7,7 @@ import Extension from './extension';
 
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static includes(source: Undef<string>, value: string) {
-        return source ? source.trim().split(/\s*,\s*/).includes(value) : false;
+        return !!source && source.trim().split(/\s*,\s*/).includes(value);
     }
 
     public static findNestedElement(node: NodeUI, name: string) {
@@ -44,7 +44,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public postBoxSpacing?(node: T, rendered: T[]): void;
 
     public is(node: T) {
-        return this.tagNames ? this.tagNames.includes(node.tagName) : true;
+        return !this.tagNames || this.tagNames.includes(node.tagName);
     }
 
     public condition(node: T, parent: T) {

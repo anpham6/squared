@@ -160,8 +160,8 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
     return !incomplete ? result : result.filter(item => item);
 }
 
-const checkWritable = (app: Null<Main>): app is Main => app ? !app.initializing && app.length > 0 : false;
-const checkFrom = (value: string, options: FileActionOptions) => util.isPlainObject<FileActionOptions>(options) && options.assets ? checkWritable(main) && util.isString(value) && options.assets.length > 0 : false;
+const checkWritable = (app: Null<Main>): app is Main => !!app && !app.initializing && app.length > 0;
+const checkFrom = (value: string, options: FileActionOptions) => util.isPlainObject<FileActionOptions>(options) && !!options.assets && checkWritable(main) && util.isString(value) && options.assets.length > 0;
 const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionManager!.cache, item => item.name === value) || extensionCache.find(item => item.name === value);
 const frameworkNotInstalled = () => error.reject(error.FRAMEWORK_NOT_INSTALLED);
 

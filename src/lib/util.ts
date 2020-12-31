@@ -451,7 +451,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string) {
-    return value ? !isNaN(+value) : false;
+    return !!value && !isNaN(+value);
 }
 
 export function isString(value: any): value is string {

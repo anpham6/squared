@@ -2657,9 +2657,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     let current: Null<T> = parent;
                     while (current && (current.blockWidth || current.blockStatic && !current.hasWidth)) {
                         if (current.flexElement) {
-                            const { row, wrap } = current.flexdata;
-                            if (row) {
-                                if (wrap) {
+                            const flexdata = current.flexdata;
+                            if (flexdata.row) {
+                                if (flexdata.wrap) {
                                     return 'wrap_content';
                                 }
                             }
@@ -3033,7 +3033,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get renderExclude(): boolean {
             let result = this._cache.renderExclude;
             if (result === undefined) {
-                result = false;
                 if (this.naturalChild && !this.positioned) {
                     const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
                     const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.valueAt('overflowY') === 'hidden');
@@ -3071,7 +3070,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                return this._cache.renderExclude = result;
+                return this._cache.renderExclude = !!result;
             }
             return result;
         }

@@ -553,7 +553,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                             switch (node.flexbox.alignSelf) {
                                                                 case 'normal':
                                                                 case 'stretch':
-                                                                    return node.wrapperOf?.inputElement ? false : true;
+                                                                    return !node.wrapperOf?.inputElement;
                                                                 default:
                                                                     return false;
                                                             }

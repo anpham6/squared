@@ -567,14 +567,14 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                             }
                                         }
                                         else {
-                                            return selector.fromNot ? true : false;
+                                            return !!selector.fromNot;
                                         }
                                     }
                                     break;
                             }
                         }
                         else {
-                            return selector.fromNot ? true : false;
+                            return !!selector.fromNot;
                         }
                     }
                     else if (match = REGEXP_DIR.exec(pseudo)) {
@@ -608,7 +608,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                 }
             }
             catch {
-                return selector.fromNot ? true : false;
+                return !!selector.fromNot;
             }
         }
     }
@@ -2682,14 +2682,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get baseline() {
         let result = this._cache.baseline;
         if (result === undefined) {
-            if (this.pageFlow && !this.floating && !this.tableElement) {
-                const display = this.display;
-                if (display.startsWith('inline') || display === 'list-item') {
-                    const value = this.css('verticalAlign');
-                    result = value === 'baseline' || !isNaN(parseFloat(value));
-                }
+            const display = this.display;
+            if ((display.startsWith('inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                const value = this.css('verticalAlign');
+                result = value === 'baseline' || !isNaN(parseFloat(value));
             }
-            return this._cache.baseline = !!result;
+            else {
+                result = false;
+            }
+            this._cache.baseline = result;
         }
         return result;
     }
