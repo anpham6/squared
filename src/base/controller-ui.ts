@@ -1,6 +1,5 @@
 import USER_AGENT = squared.lib.constant.USER_AGENT;
-
-import { NODE_TEMPLATE } from './lib/constant';
+import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 
 import type ApplicationUI from './application-ui';
 import type ContentUI from './content-ui';
@@ -23,7 +22,7 @@ const BORDER_BOX = [
     CSS_PROPERTIES.borderLeft.value as string[]
 ];
 
-function setBorderStyle(styleMap: StringMap, defaultColor: string) {
+function setBorderStyle(styleMap: CssStyleMap, defaultColor: string) {
     if (!BORDER_BOX.some(item => item[0] in styleMap)) {
         for (let i = 0; i < 4; ++i) {
             const border = BORDER_BOX[i];
@@ -36,7 +35,7 @@ function setBorderStyle(styleMap: StringMap, defaultColor: string) {
     return false;
 }
 
-function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: string) {
+function setButtonStyle(styleMap: CssStyleMap, applied: boolean, defaultColor: string) {
     if (applied) {
         const backgroundColor = styleMap.backgroundColor;
         if (!backgroundColor || backgroundColor === 'initial') {
@@ -138,7 +137,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }, sessionId);
         }
         else {
-            let styleMap = getElementCache<StringMap>(element, 'styleMap', sessionId);
+            let styleMap = getElementCache<CssStyleMap>(element, 'styleMap', sessionId);
             if (!styleMap) {
                 styleMap = {};
                 setElementCache(element, 'styleMap', styleMap, sessionId);
@@ -774,7 +773,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return '<' + controlName + attributes + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
-    private setElementDimension(element: Element, styleMap: StringMap, attr: string, opposing: string) {
+    private setElementDimension(element: Element, styleMap: CssStyleMap, attr: CssStyleAttr, opposing: string) {
         const dimension = styleMap[attr];
         if (!dimension || dimension === 'auto') {
             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);

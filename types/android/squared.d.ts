@@ -82,7 +82,7 @@ declare namespace base {
         applyOptimizations(): boolean;
         applyCustomizations(overwrite?: boolean): void;
         formatted(value: string, overwrite?: boolean): void;
-        mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;
+        mergeGravity(attr: LayoutGravityAttr, alignment: LayoutGravityDirectionAttr, overwrite?: boolean): void;
         anchor(position: AnchorPositionAttr, documentId?: string, overwrite?: boolean): boolean;
         anchorChain(direction: PositionAttr): View[];
         anchorParent(orientation: OrientationAttr, bias?: number, style?: string, overwrite?: boolean): boolean;
@@ -103,7 +103,7 @@ declare namespace base {
         getVerticalBias(rect?: BoxRect): number;
         getAbsolutePaddingOffset(direction: number, value: number): number;
         hasFlex(direction: FlowDirectionAttr): boolean | 0;
-        valueAt(attr: string): string;
+        valueAt(attr: CssStyleAttr): string;
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);

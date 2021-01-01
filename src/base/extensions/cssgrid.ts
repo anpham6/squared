@@ -1,6 +1,5 @@
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
-
-import { BOX_STANDARD } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
 

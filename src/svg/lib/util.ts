@@ -41,12 +41,12 @@ function getDataSetValue(element: SVGElement, attr: string) {
 }
 
 function getStyleValue(element: Element, attr: string) {
-    const styleMap = getElementCache<StringMap>(element, 'styleMap');
-    return styleMap && styleMap[convertCamelCase(attr)];
+    const styleMap = getElementCache<CssStyleMap>(element, 'styleMap');
+    return styleMap && styleMap[convertCamelCase(attr) as CssStyleAttr];
 }
 
 function getDataValue(element: SVGElement, attr: string) {
-    const attrStyle = convertCamelCase(attr);
+    const attrStyle = convertCamelCase(attr) as CssStyleAttr;
     return getDataSetValue(element, attr) || element.style[attrStyle] as Undef<string> || getStyleValue(element, attrStyle);
 }
 
@@ -696,7 +696,7 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
 }
 
 export function getAttribute(element: SVGElement, attr: string, computed?: boolean) {
-    return getDataValue(element, attr) || getNamedItem(element, attr) || (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) || '';
+    return getDataValue(element, attr) as string || getNamedItem(element, attr) || (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) || '';
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed?: boolean) {

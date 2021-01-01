@@ -283,8 +283,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     }
                                 }
                             }
-                            if (node.has('fontVariationSettings')) {
-                                for (const variant of node.valueAt('fontVariationSettings').replace(/"/g, "'").split(',')) {
+                            if (node.has('fontVariationSettings' as CssStyleAttr)) {
+                                for (const variant of node.valueAt('fontVariationSettings' as CssStyleAttr).replace(/"/g, "'").split(',')) {
                                     fontVariation = delimitString({ value: fontVariation }, variant.trim());
                                 }
                             }

@@ -151,7 +151,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     else {
                                         const { fontSize, lineHeight, textStyle } = column;
                                         for (const attr in textStyle) {
-                                            style[attr] = textStyle[attr];
+                                            style[attr] = textStyle[attr]!;
                                         }
                                         style.fontSize = fontSize + 'px';
                                         if (lineHeight) {

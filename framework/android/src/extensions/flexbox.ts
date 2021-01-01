@@ -384,7 +384,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
                                     if (innerWrapped) {
-                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight ? 'center_horizontal' : autoMargin.left ? chain.localizeString('right') : chain.localizeString('left'));
+                                        innerWrapped.mergeGravity('layout_gravity', (autoMargin.leftRight ? 'center_horizontal' : autoMargin.left ? chain.localizeString('right') : chain.localizeString('left')) as LayoutGravityDirectionAttr);
                                     }
                                     else if (!autoMargin.leftRight) {
                                         if (autoMargin.left) {

@@ -52,7 +52,7 @@ interface CalculateVarOptions extends Omit<CalculateVarAsStringOptions, "ordered
 interface CreateElementOptions {
     parent?: HTMLElement;
     attrs?: StandardMap;
-    style?: StringMap;
+    style?: CssStyleMap;
     children?: Element[];
 }
 

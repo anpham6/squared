@@ -618,10 +618,10 @@ export default abstract class Application<T extends Node> implements squared.bas
             case CSSRule.STYLE_RULE: {
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const unusedStyles = !hostElement && this.session.unusedStyles;
-                const baseMap: StringMap = {};
+                const baseMap: CssStyleMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
-                const parseImageUrl = (attr: string) => {
+                const parseImageUrl = (attr: CssStyleAttr) => {
                     const value = baseMap[attr];
                     if (value && value !== 'initial') {
                         let result: Undef<string>,
@@ -649,11 +649,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                         REGEXP_DATAURI.lastIndex = 0;
                     }
                 };
-                const hasExactValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                const hasPartialValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
+                const hasExactValue = (attr: CssStyleAttr, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
+                const hasPartialValue = (attr: CssStyleAttr, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 const items = Array.from(cssStyle);
                 for (let i = 0, length = items.length; i < length; ++i) {
-                    const attr = items[i];
+                    const attr = items[i] as CssStyleAttr;
                     if (attr[0] === '-') {
                         continue;
                     }
@@ -674,7 +674,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
-                                            if (hasExactValue(css.name!, 'none|initial') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                            if (hasExactValue(css.name as CssStyleAttr, 'none|initial') || value === 'initial' && hasPartialValue(css.name as CssStyleAttr, 'initial') || css.valueOfNone && hasExactValue(css.name as CssStyleAttr, css.valueOfNone)) {
                                                 break required;
                                             }
                                             break;
@@ -689,7 +689,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 let match: Null<RegExpExecArray>;
                 while (match = REGEXP_IMPORTANT.exec(cssText)) {
-                    const attr = convertCamelCase(match[1]);
+                    const attr = convertCamelCase(match[1]) as CssStyleAttr;
                     const value = CSS_PROPERTIES[attr]?.value;
                     if (Array.isArray(value)) {
                         for (let i = 0, length = value.length; i < length; ++i) {
@@ -755,7 +755,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const element = elements[i];
                         const attrStyle = 'styleMap' + targetElt;
                         const attrSpecificity = 'styleSpecificity' + targetElt;
-                        const styleData = getElementCache<StringMap>(element, attrStyle, sessionId);
+                        const styleData = getElementCache<CssStyleMap>(element, attrStyle, sessionId);
                         if (styleData) {
                             const specificityData = getElementCache<ObjectMap<number>>(element, attrSpecificity, sessionId)!;
                             for (const attr in baseMap) {

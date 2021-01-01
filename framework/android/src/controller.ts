@@ -2364,12 +2364,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const plainText = item.plainText && !item.naturalElement;
                         for (const attr in firstLineStyle) {
                             if (!plainText) {
-                                const value = item.cssInitial(attr);
+                                const value = item.cssInitial(attr as CssStyleAttr);
                                 if (value) {
                                     continue;
                                 }
                             }
-                            item.css(attr, firstLineStyle[attr]);
+                            item.css(attr as CssStyleAttr, firstLineStyle[attr]);
                         }
                         item.unsetCache('textStyle');
                     }

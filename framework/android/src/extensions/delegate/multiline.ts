@@ -230,12 +230,12 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     const { fontSize, lineHeight, naturalElement, elementData } = seg;
                     const depth = seg.depth + (seg === node ? 1 : 0);
                     const fontFamily = seg.textStyle.fontFamily!;
-                    const styleMap: StringMap = { ...seg.unsafe<StringMap>('styleMap') };
+                    const styleMap: CssStyleMap = { ...seg.unsafe<CssStyleMap>('styleMap') };
                     if ('lineHeight' in styleMap) {
                         delete styleMap.lineHeight;
                     }
                     const initialData: InitialData<T> = Object.freeze({ styleMap });
-                    const cssData: StringMap = {
+                    const cssData: CssStyleMap = {
                         position: 'static',
                         display: partition ? seg.display : 'inline',
                         verticalAlign: 'baseline',

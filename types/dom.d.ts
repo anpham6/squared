@@ -3,8 +3,11 @@ type DocumentElement = HTMLElement | SVGSVGElement;
 type DocumentRoot = Document | ShadowRoot;
 type DocumentQueryRoot = DocumentRoot | HTMLElement;
 type PositionAttr = "top" | "right" | "bottom" | "left";
+type HorizontalDirectionAttr = "start" | "end";
 type DimensionAttr = "width" | "height";
 type PseudoElt = "::before" | "::after" | "::first-letter" | "::first-line";
+type CssStyleMap = Partial<MapOfType<CSSStyleDeclaration, string, string>>;
+type CssStyleAttr = KeyOfType<CSSStyleDeclaration, string, string>;
 
 interface BoxRect<T = number> {
     top: T;

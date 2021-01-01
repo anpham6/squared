@@ -161,6 +161,7 @@ function installModules(manager: IFileManager, query: StringMap) {
         Image = require(settings.image?.command || '@squared-functions/image/jimp');
     }
     catch (err) {
+        Image = require('@squared-functions/image/jimp');
         Node.writeFail('Unable to load settings', err);
     }
 

@@ -1,5 +1,5 @@
 interface InitialData<T> extends StandardMap {
-    styleMap?: StringMap;
+    styleMap?: CssStyleMap;
     children?: T[];
     bounds?: Null<BoxRectDimension>;
 }
@@ -36,7 +36,7 @@ interface CacheValue extends Partial<BoxModel>, Partial<Dimension>, Partial<BoxR
     backgroundColor?: string;
     backgroundImage?: string;
     visibleStyle?: VisibleStyle;
-    textStyle?: StringMap;
+    textStyle?: CssStyleMap;
     fontSize?: number;
 }
 
@@ -81,8 +81,8 @@ interface CacheState<T> {
     wrapperOf?: Null<T>;
     textContent?: string;
     textEmpty?: boolean;
-    firstLineStyle?: Null<StringMap>;
-    firstLetterStyle?: Null<StringMap>;
+    firstLineStyle?: Null<CssStyleMap>;
+    firstLetterStyle?: Null<CssStyleMap>;
     dir?: string;
     attributes?: StringMap;
     extensions?: string[];

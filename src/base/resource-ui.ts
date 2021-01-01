@@ -1,7 +1,6 @@
 import USER_AGENT = squared.lib.constant.USER_AGENT;
+import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
-
-import { NODE_ALIGNMENT } from './lib/constant';
 
 import type ControllerUI from './controller-ui';
 import type NodeUI from './node-ui';
@@ -205,8 +204,8 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
 function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
     let width = node[border[0]] as number;
     if (width > 0) {
-        const style = node.css(border[1]) || 'solid';
-        let color: Null<string | ColorData> = node.css(border[2]) || 'rgb(0, 0, 0)';
+        const style = node.css(border[1] as CssStyleAttr) || 'solid';
+        let color: Null<string | ColorData> = node.css(border[2] as CssStyleAttr) || 'rgb(0, 0, 0)';
         if (color.startsWith('current')) {
             color = node.css('color');
         }

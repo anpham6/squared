@@ -1,4 +1,5 @@
-import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/constant';
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 
 import type NodeUI from '../node-ui';
 
@@ -51,7 +52,7 @@ function adjustRegion(item: NodeUI, region: number, adjustment: number) {
 
 function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
     if (!direction || isBlockElement(child, true)) {
-        let marginName: string,
+        let marginName: CssStyleAttr,
             borderWidth: string,
             paddingName: string,
             region: number;

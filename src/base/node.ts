@@ -15,7 +15,7 @@ const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair } = squared.lib.util;
 
-const TEXT_STYLE = [
+const TEXT_STYLE: CssStyleAttr[] = [
     'fontFamily',
     'fontWeight',
     'fontStyle',
@@ -43,14 +43,14 @@ const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
-function setStyleCache(element: HTMLElement, attr: string, value: string, style: CSSStyleDeclaration, styleMap: StringMap, sessionId: string) {
+function setStyleCache(element: HTMLElement, attr: string, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
     let current = style.getPropertyValue(attr);
     if (value !== current) {
         element.style.setProperty(attr, value);
         const newValue = element.style.getPropertyValue(attr);
         if (current !== newValue) {
             if (isPx(current)) {
-                const styleValue = styleMap[convertCamelCase(attr)];
+                const styleValue = styleMap[convertCamelCase(attr) as CssStyleAttr];
                 if (styleValue) {
                     current = styleValue;
                     value = '';
@@ -74,7 +74,7 @@ function isFontFixedWidth(node: T) {
     return fontFirst === 'monospace' && fontSecond !== 'monospace';
 }
 
-function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Node>): number {
+function getFlexValue(node: T, attr: CssStyleAttr, fallback: number, parent?: Null<Node>): number {
     const value = (parent || node).css(attr);
     return isNumber(value) ? +value : fallback;
 }
@@ -84,7 +84,7 @@ function hasTextAlign(node: T, ...values: string[]) {
     return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : node.display.startsWith('inline'));
 }
 
-function setDimension(node: T, styleMap: StringMap, dimension: DimensionAttr) {
+function setDimension(node: T, styleMap: CssStyleMap, dimension: DimensionAttr) {
     const options: NodeParseUnitOptions = { dimension };
     const value = styleMap[dimension];
     const minValue = styleMap[dimension === 'width' ? 'minWidth' : 'minHeight'];
@@ -144,12 +144,12 @@ function setDimension(node: T, styleMap: StringMap, dimension: DimensionAttr) {
 
 function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[]) {
     if (!node.plainText) {
-        switch (node.css(border[1])) {
+        switch (node.css(border[1] as CssStyleAttr)) {
             case 'none':
             case 'hidden':
                 return 0;
         }
-        const width = node.css(border[0]);
+        const width = node.css(border[0] as CssStyleAttr);
         const result = isPx(width) ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
         if (result) {
             return Math.max(Math.round(result), 1);
@@ -158,7 +158,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
     return 0;
 }
 
-function convertBox(node: T, attr: string, margin: boolean) {
+function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
     switch (node.display) {
         case 'table':
             if (!margin && node.valueOf('borderCollapse') === 'collapse') {
@@ -194,7 +194,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
     return node.parseUnit(node.css(attr), node.actualParent?.gridElement ? { parent: false } : undefined);
 }
 
-function convertPosition(node: T, attr: string) {
+function convertPosition(node: T, attr: CssStyleAttr) {
     if (!node.positionStatic) {
         const unit = node.valueOf(attr, { modified: true });
         if (isPx(unit)) {
@@ -755,7 +755,7 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
             }
         }
         else {
-            value = parseFloat(initial ? item.cssInitial(attr, options) : item.css(attr));
+            value = parseFloat(initial ? item.cssInitial(attr as CssStyleAttr, options) : item.css(attr as CssStyleAttr));
         }
         if (!isNaN(value)) {
             if (min) {
@@ -809,10 +809,10 @@ const isInlineVertical = (value: string) => value.startsWith('inline') || value 
 const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static sanitizeCss(element: DocumentElement, styleMap: StringMap, writingMode?: string) {
-        const result: StringMap = {};
+    public static sanitizeCss(element: DocumentElement, styleMap: CssStyleMap, writingMode?: string) {
+        const result: CssStyleMap = {};
         for (let attr in styleMap) {
-            let value = styleMap[attr]!;
+            let value = styleMap[attr as CssStyleAttr]!;
             const alias = checkWritingMode(attr, writingMode);
             if (alias !== attr) {
                 if (typeof alias === 'string') {
@@ -837,7 +837,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             value = checkStyleValue(element, attr, value);
             if (value) {
-                result[attr] = value;
+                result[attr as CssStyleAttr] = value;
             }
         }
         return result;
@@ -858,8 +858,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _box: Null<BoxRectDimension> = null;
     protected _linear: Null<BoxRectDimension> = null;
     protected _initial: Null<InitialData<T>> = null;
-    protected _cssStyle: Null<StringMap> = null;
-    protected _styleMap!: StringMap;
+    protected _cssStyle: Null<CssStyleMap> = null;
+    protected _styleMap!: CssStyleMap;
     protected _naturalChildren: Null<T[]> = null;
     protected _naturalElements: Null<T[]> = null;
     protected _childIndex = Infinity;
@@ -992,7 +992,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public unsetCache(...attrs: string[]) {
+    public unsetCache(...attrs: (CssStyleAttr | keyof CacheValue)[]) {
         const length = attrs.length;
         if (length) {
             const cache = this._cache;
@@ -1093,7 +1093,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                             cache.visibleStyle = undefined;
                         }
-                        else if (TEXT_STYLE.includes(attr)) {
+                        else if (TEXT_STYLE.includes(attr as CssStyleAttr)) {
                             cache.lineHeight = undefined;
                             cache.textStyle = undefined;
                         }
@@ -1128,7 +1128,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public unsetState(...attrs: string[]) {
+    public unsetState(...attrs: (keyof CacheState<T>)[]) {
         let reset: Undef<boolean>;
         const length = attrs.length;
         if (length) {
@@ -1148,6 +1148,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             cacheState.textEmpty = undefined;
                             reset = true;
                             break;
+                        case 'inlineText':
+                            cacheState.inlineText = false;
+                            continue;
                     }
                     cacheState[attr] = undefined;
                 }
@@ -1328,7 +1331,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public css(attr: string, value?: string, cache = true): string {
+    public css(attr: CssStyleAttr, value?: string, cache = true): string {
         if (this.styleElement) {
             if (value === '') {
                 this.style[attr] = 'initial';
@@ -1359,31 +1362,31 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return '';
             }
         }
-        return this._styleMap[attr] as string || this.style[attr] as string || '';
+        return this._styleMap[attr] || this.style[attr] || '';
     }
 
-    public cssApply(values: StringMap, overwrite = true, cache = true) {
+    public cssApply(values: CssStyleMap, overwrite = true, cache = true) {
         if (overwrite) {
             for (const attr in values) {
-                this.css(attr, values[attr], cache);
+                this.css(attr as CssStyleAttr, values[attr], cache);
             }
         }
         else {
             const styleMap = this._styleMap;
             for (const attr in values) {
                 if (!styleMap[attr]) {
-                    this.css(attr, values[attr], cache);
+                    this.css(attr as CssStyleAttr, values[attr], cache);
                 }
             }
         }
         return this;
     }
 
-    public cssParent(attr: string, value?: string, cache = false) {
+    public cssParent(attr: CssStyleAttr, value?: string, cache = false) {
         return this.actualParent?.css(attr, value, cache) || '';
     }
 
-    public cssInitial(attr: string, options?: CssInitialOptions) {
+    public cssInitial(attr: CssStyleAttr, options?: CssInitialOptions) {
         const initial = this._initial;
         const dataMap = initial && initial.styleMap || this._styleMap;
         if (options) {
@@ -1392,10 +1395,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return dataMap[attr] = value;
             }
         }
-        return dataMap[attr] || options && (options.modified && this._styleMap[attr] as string || options.computed && this.style[attr] as string) || '';
+        return dataMap[attr] || options && (options.modified && this._styleMap[attr] || options.computed && this.style[attr]) || '';
     }
 
-    public cssAscend(attr: string, options?: CssAscendOptions) {
+    public cssAscend(attr: CssStyleAttr, options?: CssAscendOptions) {
         let parent = options && options.startSelf ? this : this.actualParent,
             value: string;
         while (parent) {
@@ -1408,7 +1411,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return '';
     }
 
-    public cssAny(attr: string, values: string[], options?: CssAnyOptions) {
+    public cssAny(attr: CssStyleAttr, values: string[], options?: CssAnyOptions) {
         let ascend: Undef<boolean>,
             initial: Undef<boolean>;
         if (options) {
@@ -1425,7 +1428,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return value !== '' && values.includes(value);
     }
 
-    public cssSort(attr: string, options?: CssSortOptions) {
+    public cssSort(attr: CssStyleAttr, options?: CssSortOptions) {
         let ascending: Undef<boolean>,
             byFloat: Undef<boolean>,
             byInt: Undef<boolean>,
@@ -1437,12 +1440,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             let valueA: NumString,
                 valueB: NumString;
             if (byFloat) {
-                valueA = a.toFloat(attr, a.childIndex);
-                valueB = b.toFloat(attr, b.childIndex);
+                valueA = a.toFloat(attr as string, a.childIndex);
+                valueB = b.toFloat(attr as string, b.childIndex);
             }
             else if (byInt) {
-                valueA = a.toInt(attr, a.childIndex);
-                valueB = b.toInt(attr, b.childIndex);
+                valueA = a.toInt(attr as string, a.childIndex);
+                valueB = b.toInt(attr as string, b.childIndex);
             }
             else {
                 valueA = a.css(attr);
@@ -1458,7 +1461,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         });
     }
 
-    public cssPX(attr: string, value: number, cache?: boolean, options?: CssPXOptions) {
+    public cssPX(attr: CssStyleAttr, value: number, cache?: boolean, options?: CssPXOptions) {
         const current = this._styleMap[attr];
         if (current && isLength(current)) {
             value += parseUnit(current, { fontSize: this.fontSize });
@@ -1475,7 +1478,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return '';
     }
 
-    public cssSpecificity(attr: string) {
+    public cssSpecificity(attr: CssStyleAttr) {
         if (this.styleElement) {
             const styleData = !this.pseudoElt ? this._elementData?.styleSpecificity : this.actualParent?.elementData?.['styleSpecificity' + this.pseudoElt] as Undef<ObjectMap<number>>;
             if (styleData) {
@@ -1501,7 +1504,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssTryAll(values: StringMap, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
-            const result: StringMap = {};
+            const result: CssStyleMap = {};
             const sessionId = this.sessionId;
             const element = this._element as HTMLElement;
             const style = !this.pseudoElement ? this.style : getStyle(element);
@@ -1550,7 +1553,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public cssCopy(node: T, ...attrs: string[]) {
+    public cssCopy(node: T, ...attrs: CssStyleAttr[]) {
         const styleMap = this._styleMap;
         for (let i = 0, length = attrs.length; i < length; ++i) {
             const attr = attrs[i];
@@ -1558,7 +1561,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public cssCopyIfEmpty(node: T, ...attrs: string[]) {
+    public cssCopyIfEmpty(node: T, ...attrs: CssStyleAttr[]) {
         const styleMap = this._styleMap;
         for (let i = 0, length = attrs.length; i < length; ++i) {
             const attr = attrs[i];
@@ -1568,7 +1571,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public cssAsTuple(...attrs: string[]) {
+    public cssAsTuple(...attrs: CssStyleAttr[]) {
         const length = attrs.length;
         const result: string[] = new Array(length);
         for (let i = 0; i < length; ++i) {
@@ -1577,8 +1580,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    public cssAsObject(...attrs: string[]) {
-        const result: StringMap = {};
+    public cssAsObject(...attrs: CssStyleAttr[]) {
+        const result: CssStyleMap = {};
         for (let i = 0, length = attrs.length; i < length; ++i) {
             const attr = attrs[i];
             result[attr] = this.css(attr);
@@ -1586,12 +1589,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    public cssPseudoElement(name: PseudoElt, attr?: string) {
+    public cssPseudoElement(name: PseudoElt, attr?: CssStyleAttr) {
         if (this.naturalElement) {
             if (attr) {
                 return getStyle(this._element!, name)[attr] as Undef<string>;
             }
-            const styleMap = this._elementData!['styleMap' + name] as Undef<StringMap>;
+            const styleMap = this._elementData!['styleMap' + name] as Undef<CssStyleMap>;
             if (styleMap) {
                 switch (name) {
                     case '::first-letter':
@@ -1695,7 +1698,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return convertUnit(result, unit, options);
     }
 
-    public has(attr: string, options?: HasOptions) {
+    public has(attr: CssStyleAttr, options?: HasOptions) {
         const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         if (value) {
             let type: Undef<number>,
@@ -1726,7 +1729,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public hasPX(attr: string, options?: HasPXOptions) {
+    public hasPX(attr: CssStyleAttr, options?: HasPXOptions) {
         let percent: Undef<boolean>,
             initial: Undef<boolean>;
         if (options) {
@@ -2129,8 +2132,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return [];
     }
 
-    public valueOf(attr: string, options?: CssInitialOptions) {
-        return this._preferInitial ? this.cssInitial(attr, options) : this._styleMap[attr] || options && options.computed && this.style[attr] as string || '';
+    public valueOf(attr: CssStyleAttr, options?: CssInitialOptions) {
+        return this._preferInitial ? this.cssInitial(attr, options) : this._styleMap[attr] || options && options.computed && this.style[attr] || '';
     }
 
     get naturalChild() { return true; }
@@ -3233,7 +3236,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         if (node.dir === value) {
                             return false;
                         }
-                        node.unsetCache('dir');
+                        node.unsetState('dir');
                     });
                 }
                 else if (this.naturalChild) {

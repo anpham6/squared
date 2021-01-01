@@ -1,6 +1,5 @@
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import LAYOUT_GRIDCELL = squared.lib.internal.LAYOUT_GRIDCELL;
-
-import { BOX_STANDARD } from '../lib/constant';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';

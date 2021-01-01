@@ -1,9 +1,8 @@
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import LAYOUT_TABLE = squared.lib.internal.LAYOUT_TABLE;
 import LAYOUT_TABLETYPE = squared.lib.internal.LAYOUT_TABLETYPE;
 import LAYOUT_TABLECELL = squared.lib.internal.LAYOUT_TABLECELL;
-
-import { BOX_STANDARD } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
 
@@ -19,12 +18,12 @@ function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
     data.expand = true;
 }
 
-function setBorderStyle(node: NodeUI, attr: string, including: NodeUI) {
-    const cssStyle = attr + 'Style';
+function setBorderStyle(node: NodeUI, attr: "borderTop" | "borderRight" | "borderBottom" | "borderLeft", including: NodeUI) {
+    const cssStyle = attr + 'Style' as CssStyleAttr;
     node.ascend({ including }).some((item: NodeUI) => {
         if (item.has(cssStyle)) {
-            const cssWidth = attr + 'Width';
-            node.cssApply(item.cssAsObject(cssStyle, attr + 'Color', cssWidth));
+            const cssWidth = attr + 'Width' as CssStyleAttr;
+            node.cssApply(item.cssAsObject(cssStyle, attr + 'Color' as CssStyleAttr, cssWidth));
             node.unsetCache(cssWidth);
             return true;
         }

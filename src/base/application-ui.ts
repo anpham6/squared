@@ -1,9 +1,10 @@
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import NODE_TRAVERSE = squared.base.lib.constant.NODE_TRAVERSE;
 import APP_SECTION = squared.base.lib.constant.APP_SECTION;
 import NODE_PROCEDURE = squared.base.lib.constant.NODE_PROCEDURE;
 import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
-
-import { BOX_STANDARD, NODE_ALIGNMENT, NODE_TRAVERSE } from './lib/constant';
 
 import type ExtensionManager from './extensionmanager';
 import type ControllerUI from './controller-ui';
@@ -60,7 +61,7 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     return result;
 }
 
-function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boolean) {
+function checkPseudoDimension(styleMap: CssStyleMap, after: boolean, absolute: boolean) {
     switch (styleMap.display) {
         case 'inline':
         case 'block':
@@ -468,14 +469,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (item.positionRelative) {
-                        const setPosition = (attr: string) => {
+                        const setPosition = (attr: CssStyleAttr) => {
                             if (item.hasPX(attr)) {
                                 if (!data) {
                                     data = {};
                                     preAlignment.set(item, data);
                                 }
                                 data[attr] = item.css(attr);
-                                element.style.setProperty(attr, 'auto');
+                                element.style[attr] = 'auto';
                                 resetBounds = true;
                             }
                         };
@@ -1610,7 +1611,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string, elementRoot: HTMLElement | ShadowRoot = element.shadowRoot || element) {
-        let styleMap = getElementCache<StringMap>(element, 'styleMap' + pseudoElt, sessionId);
+        let styleMap = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
                 styleMap = {};

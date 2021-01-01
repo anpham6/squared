@@ -217,7 +217,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.cssTry('display', 'inline-block', function (this: T) { this.setBounds(); });
                     ordinal.saveAsInitial();
                     if (gravity) {
-                        ordinal.mergeGravity('gravity', node.localizeString(gravity));
+                        ordinal.mergeGravity('gravity', node.localizeString(gravity) as LayoutGravityDirectionAttr);
                     }
                     if (top !== 0) {
                         ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, top);

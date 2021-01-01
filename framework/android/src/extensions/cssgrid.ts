@@ -293,13 +293,13 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     return 0;
 }
 
-function applyLayout(node: View, parent: View, item: View, mainData: CssGridData<View>, cellData: CssGridCellData, dimension: string) {
+function applyLayout(node: View, parent: View, item: View, mainData: CssGridData<View>, cellData: CssGridCellData, dimension: DimensionAttr) {
     const horizontal = dimension === 'width';
     const { column, row } = mainData;
     let data: CssGridDirectionData,
         cellStart: number,
         cellSpan: number,
-        minDimension: string;
+        minDimension: CssStyleAttr;
     if (horizontal) {
         data = column;
         cellStart = cellData.columnStart;

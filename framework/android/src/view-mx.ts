@@ -39,17 +39,23 @@ const OPTIONS_LINEHEIGHT: StringMap = {
 const REGEXP_CONTROLID = /[^\w$\-_.]/g;
 const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
 
-function checkTextAlign(value: string, ignoreStart?: boolean) {
+function checkTextAlign(value: string, ignoreStart?: boolean): Undef<LayoutGravityDirectionAttr> {
     switch (value) {
         case 'left':
         case 'start':
-            return !ignoreStart ? value : '';
+            if (!ignoreStart) {
+                return value;
+            }
+            break;
         case 'center':
             return 'center_horizontal';
         case 'justify':
-            return !ignoreStart ? 'start' : '';
+            if (!ignoreStart) {
+                return 'start';
+            }
+            break;
         default:
-            return value;
+            return value as LayoutGravityDirectionAttr;
     }
 }
 
@@ -360,7 +366,7 @@ function constraintPercentWidth(node: T, percentAvailable = 1) {
     const value = node.percentWidth;
     if (value) {
         const parent = node.actualParent;
-        if (parent && !parent.layoutElement && parent.hasPX('width', { percent: false }) && node.pageFlow) {
+        if (parent && parent.hasPX('width', { percent: false }) && !parent.layoutElement && node.pageFlow) {
             if (value < 1) {
                 node.setLayoutWidth(formatPX(node.actualWidth));
             }
@@ -379,7 +385,7 @@ function constraintPercentHeight(node: T, percentAvailable = 1) {
     const value = node.percentHeight;
     if (value) {
         const parent = node.actualParent;
-        if (parent && !parent.layoutElement && parent.hasPX('height', { percent: false }) && node.pageFlow) {
+        if (parent && parent.hasPX('height', { percent: false }) && !parent.layoutElement && node.pageFlow) {
             if (value < 1) {
                 node.setLayoutHeight(formatPX(node.actualHeight));
             }
@@ -557,7 +563,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _containerType = 0;
         protected _cache!: CacheValueUI;
         protected _localSettings!: LocalSettingsUI;
-        protected _styleMap!: StringMap;
+        protected _styleMap!: CssStyleMap;
         protected _boxReset?: number[];
         protected _boxAdjustment?: number[];
         protected _documentParent?: T;
@@ -1001,7 +1007,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let textAlign = checkTextAlign(this.valueAt('textAlign') || this.nodeGroup && !this.hasAlign(NODE_ALIGNMENT.FLOAT) && (this.actualParent as Null<T>)?.valueAt('textAlign') || ''),
                 marginAlign: Undef<boolean>;
             if (this.pageFlow) {
-                let floatAlign = '';
+                let floatAlign: Undef<LayoutGravityDirectionAttr>;
                 if (this.inlineVertical && (outerRenderParent.layoutFrame || outerRenderParent.layoutGrid) || this.display === 'table-cell') {
                     const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                     switch (this.css('verticalAlign')) {
@@ -1019,7 +1025,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (!this.blockWidth) {
                     if (outerRenderParent.layoutVertical || this.documentRoot && (this.layoutVertical || this.layoutFrame)) {
                         if (this.floating) {
-                            node.mergeGravity('layout_gravity', this.float);
+                            node.mergeGravity('layout_gravity', this.float as LayoutGravityDirectionAttr);
                         }
                         else if (!setAutoMargin(node) && !this.blockStatic && this.display !== 'table') {
                             const parentAlign = node.tagName === 'LEGEND' ? !isUserAgent(USER_AGENT.FIREFOX) ? textAlign || checkTextAlign(this.cssAscend('textAlign'), true) : 'left' : checkTextAlign(this.cssAscend('textAlign'), true);
@@ -1051,22 +1057,22 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (!setAutoMargin(this)) {
                         if (!this.innerWrapped) {
                             if (this.floating) {
-                                floatAlign = this.float;
+                                floatAlign = this.float as LayoutGravityDirectionAttr;
                             }
                             if (floatAlign && !renderParent.naturalElement && (renderParent.inlineWidth || !renderParent.documentRoot && this.onlyChild)) {
                                 renderParent.mergeGravity('layout_gravity', floatAlign);
-                                floatAlign = '';
+                                floatAlign = undefined;
                             }
                         }
                         if (this.centerAligned) {
-                            this.mergeGravity('layout_gravity', checkTextAlign('center')!);
+                            this.mergeGravity('layout_gravity', 'center_horizontal');
                         }
-                        else if (this.rightAligned && renderParent.blockWidth) {
+                        else if (this.rightAligned) {
                             this.mergeGravity('layout_gravity', 'right');
                         }
                     }
                     if (this.onlyChild && node.documentParent.display === 'table-cell') {
-                        let gravity: string;
+                        let gravity: LayoutGravityDirectionAttr;
                         switch (node.documentParent.css('verticalAlign')) {
                             case 'top':
                                 gravity = 'top';
@@ -1523,7 +1529,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return this.combine().reduce((a, b) => a + indent + b, '');
         }
 
-        public alignParent(position: string) {
+        public alignParent(position: AnchorPositionAttr) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
@@ -1552,10 +1558,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else {
                         switch (position) {
                             case 'left':
-                            case 'start':
                                 return node === children[0];
                             case 'right':
-                            case 'end':
                                 return node === children[children.length - 1];
                         }
                     }
@@ -1564,7 +1568,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public alignSibling(position: string, documentId?: string) {
+        public alignSibling(position: AnchorPositionAttr, documentId?: string) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
@@ -1599,7 +1603,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return '';
         }
 
-        public actualRect(direction: string, dimension: BoxType = 'linear') {
+        public actualRect(direction: PositionAttr, dimension: BoxType = 'linear') {
             let value: number = this[dimension][direction];
             if (this.positionRelative && this.floating) {
                 switch (direction) {
@@ -1982,8 +1986,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
-                let anchorA: string,
-                    anchorB: string;
+                let anchorA: AnchorPositionAttr,
+                    anchorB: AnchorPositionAttr;
                 switch (direction) {
                     case 'top':
                         anchorA = 'topBottom';
@@ -2177,7 +2181,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return result;
         }
 
-        public mergeGravity(attr: string, alignment: string, overwrite = true) {
+        public mergeGravity(attr: LayoutGravityAttr, alignment: LayoutGravityDirectionAttr, overwrite = true) {
             if (attr === 'layout_gravity') {
                 const renderParent = this.renderParent;
                 if (renderParent) {
@@ -2675,8 +2679,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public getAnchorPosition(parent: T, horizontal: boolean, modifyAnchor = true) {
-            let orientation: string,
-                dimension: string,
+            let orientation: OrientationAttr,
+                dimension: DimensionAttr,
                 posA: AnchorPositionAttr,
                 posB: AnchorPositionAttr,
                 marginA: number,
@@ -2728,7 +2732,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else if (modifyAnchor) {
-                    this.anchorParent(orientation as OrientationAttr, 0.5);
+                    this.anchorParent(orientation, 0.5);
                     this.modifyBox(marginA, this[posA]);
                     this.modifyBox(marginB, this[posB]);
                 }
@@ -2743,7 +2747,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const offsetA = hasA && parent.getAbsolutePaddingOffset(paddingA, this[posA]);
                     const offsetB = hasB && parent.getAbsolutePaddingOffset(paddingB, this[posB]);
                     if (modifyAnchor) {
-                        this.anchorParent(orientation as OrientationAttr);
+                        this.anchorParent(orientation);
                         if (horizontal) {
                             this.setLayoutWidth(this.getMatchConstraint(parent));
                         }
@@ -2929,7 +2933,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this.android('layout_height', value, overwrite);
         }
 
-        public valueAt(attr: string) {
+        public valueAt(attr: CssStyleAttr) {
             return this._styleMap[attr] || '';
         }
 
