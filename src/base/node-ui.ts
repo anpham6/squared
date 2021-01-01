@@ -1342,8 +1342,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         cache.baselineElement = undefined;
                         this.actualParent?.unsetCache('baselineElement');
                         break;
-                    case 'width':
                     case 'height':
+                        cache.overflow = undefined;
+                    case 'minHeight':
+                        cache.blockVertical = undefined;
+                        break;
+                    case 'width':
                     case 'maxWidth':
                     case 'maxHeight':
                     case 'overflowX':

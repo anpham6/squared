@@ -845,13 +845,13 @@ declare module "base" {
                 XML = 1,
                 INCLUDE
             }
-            enum APP_SECTION {
+            const enum APP_SECTION {
                 DOM_TRAVERSE = 1,
                 EXTENSION = 1 << 1,
                 RENDER = 1 << 2,
                 ALL = DOM_TRAVERSE | EXTENSION | RENDER
             }
-            enum NODE_RESOURCE {
+            const enum NODE_RESOURCE {
                 BOX_STYLE = 1,
                 BOX_SPACING = 1 << 1,
                 FONT_STYLE = 1 << 2,
@@ -860,7 +860,7 @@ declare module "base" {
                 ASSET = FONT_STYLE | VALUE_STRING | IMAGE_SOURCE,
                 ALL = BOX_STYLE | BOX_SPACING | ASSET
             }
-            enum NODE_PROCEDURE {
+            const enum NODE_PROCEDURE {
                 CONSTRAINT = 1,
                 LAYOUT = 1 << 1,
                 ALIGNMENT = 1 << 2,

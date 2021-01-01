@@ -1,16 +1,14 @@
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
-import CSS_UNIT = squared.lib.constant.CSS_UNIT;
-
-import { CONTAINER_NODE } from '../../lib/constant';
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
 import View from '../../view';
 
 import LayoutUI = squared.base.LayoutUI;
 import CssGrid = squared.base.extensions.CssGrid;
-
-const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasPX('width') || node.has('width', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && node.cssInitial('minWidth') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
 const hasFullHeight = (node: View) => node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%';

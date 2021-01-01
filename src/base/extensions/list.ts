@@ -1,4 +1,4 @@
-import { NODE_RESOURCE } from '../lib/constant';
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 
 import type NodeUI from '../node-ui';
 

@@ -237,17 +237,17 @@ declare namespace lib {
             ALL = 0,
             LATEST = 30
         }
-        enum CONTAINER_NODE {
-            EDIT = 1,
-            RANGE,
-            RADIO,
+        const enum CONTAINER_NODE {
+            RADIO = 1,
             CHECKBOX,
             SELECT,
-            TEXT,
             SVG,
             IMAGE,
-            BUTTON,
             PROGRESS,
+            RANGE,
+            EDIT,
+            BUTTON,
+            TEXT,
             INLINE,
             LINE,
             SPACE,
@@ -257,8 +257,8 @@ declare namespace lib {
             GRID,
             RELATIVE,
             CONSTRAINT,
-            VIDEOVIEW,
             WEBVIEW,
+            VIDEOVIEW,
             UNKNOWN
         }
         const SCREEN_DENSITY: {

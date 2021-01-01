@@ -1,3 +1,5 @@
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+
 import { CONTAINER_TAGNAME } from '../../lib/constant';
 
 import type View from '../../view';
@@ -5,8 +7,6 @@ import type View from '../../view';
 import Resource from '../../resource';
 
 import { replaceCharacterData, sanitizeString } from '../../lib/util';
-
-const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { parseAngle } = squared.lib.css;
 const { getTextMetrics } = squared.lib.dom;

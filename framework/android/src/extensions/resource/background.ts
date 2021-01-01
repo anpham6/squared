@@ -1,6 +1,8 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { BUILD_VERSION, CONTAINER_NODE, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
+import { BUILD_VERSION, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
@@ -60,8 +62,6 @@ interface LayerData {
     bottom?: string;
     shape?: StandardMap;
 }
-
-const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { extractURL, formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;

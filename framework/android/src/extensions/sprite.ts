@@ -1,13 +1,15 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import APP_SECTION = squared.base.lib.constant.APP_SECTION;
+import NODE_PROCEDURE = squared.base.lib.constant.NODE_PROCEDURE;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
+import { CONTAINER_TAGNAME } from '../lib/constant';
 
 import type View from '../view';
 
 import LayoutUI = squared.base.LayoutUI;
-
-const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { formatPX } = squared.lib.css;
 

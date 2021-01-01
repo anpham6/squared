@@ -1,11 +1,15 @@
-import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
+import PLATFORM = squared.lib.constant.PLATFORM;
+import USER_AGENT = squared.lib.constant.USER_AGENT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
-import PLATFORM = squared.lib.constant.PLATFORM;
-import USER_AGENT = squared.lib.constant.USER_AGENT;
+import APP_SECTION = squared.base.lib.constant.APP_SECTION;
+import NODE_PROCEDURE = squared.base.lib.constant.NODE_PROCEDURE;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { BUILD_VERSION, CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from './lib/constant';
+import { BUILD_VERSION, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from './lib/constant';
 
 import type Application from './application';
 
@@ -18,8 +22,6 @@ import LayoutUI = squared.base.LayoutUI;
 import NodeUI = squared.base.NodeUI;
 
 import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor, replaceTab } from './lib/util';
-
-const { APP_SECTION, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { isPlatform, isUserAgent } = squared.lib.client;
 const { formatPX, getSrcSet, hasCoords, parseTransform } = squared.lib.css;

@@ -53,6 +53,11 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
     }
 }
 
+function isLeadingDigit(value: string) {
+    const n = value.charCodeAt(0);
+    return n >= 48 && n <= 57;
+}
+
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
     public static formatOptions(options: ViewAttribute, numberAlias?: boolean) {
         for (const namespace in options) {
@@ -65,7 +70,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public static formatName(value: string) {
-        return (/^\d/.test(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
+        return (isLeadingDigit(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
     }
 
     public static addTheme(theme: ThemeAttribute) {
@@ -147,7 +152,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 }
                 else {
                     name = name.toLowerCase();
-                    if (numeric || /^\d/.test(name) || RESERVED_JAVA.has(name)) {
+                    if (numeric || isLeadingDigit(name) || RESERVED_JAVA.has(name)) {
                         name = '__' + name;
                     }
                 }

@@ -1,8 +1,9 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
+import { CONTAINER_TAGNAME } from '../lib/constant';
 
 import type View from '../view';
 

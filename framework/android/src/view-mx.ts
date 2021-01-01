@@ -1,10 +1,11 @@
-import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
-import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
+import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
+import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 import LAYOUT_STRING = android.internal.LAYOUT_STRING;
 
-import { BUILD_VERSION, CONTAINER_ELEMENT, CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, LAYOUT_MAP, RESERVED_JAVA } from './lib/constant';
+import { BUILD_VERSION, CONTAINER_ELEMENT, CONTAINER_NODE as CONTAINER_NODE_ENUM, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, LAYOUT_MAP, RESERVED_JAVA } from './lib/constant';
 import { API_VERSION, DEPRECATED_ATTRIBUTE } from './lib/customization';
 
 import Resource from './resource';
@@ -480,11 +481,11 @@ function calculateBias(start: number, end: number, accuracy = 3) {
     return +truncate(Math.max(start / (start + end), 0), accuracy);
 }
 
-const hasFlexibleContainer = (renderParent: Null<T>) => !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
+const hasFlexibleContainer = (parent: Null<T>) => !!parent && (parent.layoutConstraint || parent.layoutGrid);
 const hasFlexibleHeight = (node: T) => node.hasHeight || node.layoutGrid || node.gridElement || node.layoutConstraint && node.blockHeight;
 
 export function ascendFlexibleWidth(node: T, container?: boolean) {
-    let current = container ? node : node.renderParent as Undef<T>,
+    let current = container ? node : node.renderParent as Null<T>,
         i = 0;
     while (current && !current.inlineWidth) {
         if (current.hasWidth || parseInt(current.layoutWidth) || (current.blockStatic || current.blockWidth) && current.innerMostWrapped.rootElement || current.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK)) {
@@ -493,18 +494,18 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
         else if (current.inlineVertical && current.naturalElement || current.flexibleWidth && i++ === 1 || current.flexElement && current.flexdata.row && current.flexbox.grow === 0) {
             return false;
         }
-        current = current.renderParent as Undef<T>;
+        current = current.renderParent as Null<T>;
     }
     return false;
 }
 
 export function ascendFlexibleHeight(node: T, container?: boolean) {
-    let current = container ? node : node.actualParent as Undef<T>;
+    let current = container ? node : node.actualParent as Null<T>;
     if (current && hasFlexibleHeight(current)) {
         return true;
     }
     if (container && node.flexElement && node.flexdata.column) {
-        current = node.actualParent as Undef<T>;
+        current = node.actualParent as Null<T>;
         return !!current && hasFlexibleHeight(current);
     }
     return false;
@@ -540,7 +541,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public static getControlName(containerType: number, api = BUILD_VERSION.LATEST) {
-            const name = CONTAINER_NODE[containerType];
+            const name = CONTAINER_NODE_ENUM[containerType];
             return api >= BUILD_VERSION.Q && CONTAINER_TAGNAME_X[name] as string || CONTAINER_TAGNAME[name] as string || '';
         }
 
@@ -1524,7 +1525,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public alignParent(position: string) {
             const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
+            const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
@@ -1565,7 +1566,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public alignSibling(position: string, documentId?: string) {
             const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
+            const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
                 if (documentId) {
                     if (renderParent.layoutConstraint) {
@@ -1656,7 +1657,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public translateX(value: number, options?: TranslateOptions) {
             if (!isNaN(value)) {
                 const node = this.anchorTarget;
-                const renderParent = node.renderParent as Undef<T>;
+                const renderParent = node.renderParent as Null<T>;
                 if (renderParent && renderParent.layoutConstraint) {
                     let oppose: Undef<boolean>,
                         accumulate: Undef<boolean>,
@@ -1696,7 +1697,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public translateY(value: number, options?: TranslateOptions) {
             if (!isNaN(value)) {
                 const node = this.anchorTarget;
-                const renderParent = node.renderParent as Undef<T>;
+                const renderParent = node.renderParent as Null<T>;
                 if (renderParent && renderParent.layoutConstraint) {
                     let oppose: Undef<boolean>,
                         accumulate: Undef<boolean>,
@@ -1870,7 +1871,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public anchor(position: AnchorPositionAttr, documentId = '', overwrite?: boolean) {
             const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
+            const renderParent = node.renderParent as Null<T>;
             if (renderParent && node.documentId !== documentId) {
                 if (renderParent.layoutConstraint) {
                     if (!documentId || !node.constraint.current[position] || overwrite) {
@@ -1931,7 +1932,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public anchorParent(orientation: OrientationAttr, bias?: number, style?: string, overwrite?: boolean) {
             const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
+            const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
                 const horizontal = orientation === 'horizontal';
                 if (renderParent.layoutConstraint) {
@@ -1979,7 +1980,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public anchorChain(direction: PositionAttr) {
             const result: T[] = [];
             const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
+            const renderParent = node.renderParent as Null<T>;
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
                 let anchorA: string,
                     anchorB: string;
@@ -2026,7 +2027,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public anchorDelete(...position: AnchorPositionAttr[]) {
             const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
+            const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     node.delete('app', ...replaceMap(position, value => this.localizeString(LAYOUT_CONSTRAINT[value])));
@@ -2051,7 +2052,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public anchorClear(update?: T | true) {
             const node = this.anchorTarget;
-            const renderParent = node.renderParent as Undef<T>;
+            const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
                 const transferLayoutAlignment = (replaceWith: T) => {
                     replaceWith.anchorClear();
@@ -2222,28 +2223,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             else {
-                switch (this.tagName) {
-                    case '#text':
-                    case 'IMG':
-                    case 'svg':
-                    case 'HR':
-                    case 'VIDEO':
-                    case 'AUDIO':
-                    case 'CANVAS':
-                    case 'OBJECT':
-                    case 'EMBED':
+                switch (this.containerType) {
+                    case CONTAINER_NODE.IMAGE:
+                    case CONTAINER_NODE.SVG:
+                    case CONTAINER_NODE.RADIO:
+                    case CONTAINER_NODE.CHECKBOX:
+                    case CONTAINER_NODE.LINE:
+                    case CONTAINER_NODE.PROGRESS:
+                    case CONTAINER_NODE.RANGE:
+                    case CONTAINER_NODE.VIDEOVIEW:
+                    case CONTAINER_NODE.WEBVIEW:
+                    case CONTAINER_NODE.SPACE:
                         return;
-                    case 'INPUT':
-                        switch (this.toElementString('type')) {
-                            case 'radio':
-                            case 'checkbox':
-                            case 'image':
-                            case 'range':
-                                return;
-                        }
-                        break;
                     default:
-                        if (!this.isEmpty() && (this.layoutFrame || this.layoutConstraint || this.layoutRelative && this.layoutHorizontal || this.layoutGrid) || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.controlElement) {
+                        if (this.plainText || !this.isEmpty() && (this.layoutFrame || this.layoutConstraint || this.layoutRelative && this.layoutHorizontal || this.layoutGrid) || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.controlElement) {
                             return;
                         }
                         break;
@@ -3135,7 +3128,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get anchorTarget(): T {
             let target = this as T;
             do {
-                const renderParent = target.renderParent as Undef<T>;
+                const renderParent = target.renderParent as Null<T>;
                 if (renderParent) {
                     if (renderParent.layoutConstraint || renderParent.layoutRelative) {
                         return target;

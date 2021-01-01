@@ -1,6 +1,7 @@
 import USER_AGENT = squared.lib.constant.USER_AGENT;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 
-import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/constant';
+import { NODE_ALIGNMENT } from './lib/constant';
 
 import type ControllerUI from './controller-ui';
 import type NodeUI from './node-ui';
@@ -988,7 +989,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (node.plainText) {
             const parent = node.actualParent!;
             if (parent.preserveWhiteSpace && parent.ancestors('pre', { startSelf: true }).length) {
-                let nextSibling = node.nextSibling as Undef<NodeUI>;
+                let nextSibling = node.nextSibling as UndefNull<NodeUI>;
                 if (nextSibling && nextSibling.naturalElement) {
                     const textContent = node.textContent;
                     if (isString(textContent)) {

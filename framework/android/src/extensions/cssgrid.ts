@@ -1,11 +1,14 @@
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
-import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import NODE_PROCEDURE = squared.base.lib.constant.NODE_PROCEDURE;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import LAYOUT_STRING = android.internal.LAYOUT_STRING;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
+import { CONTAINER_TAGNAME } from '../lib/constant';
 
 import type View from '../view';
 
@@ -17,8 +20,6 @@ interface ICssGridData<T> extends CssGridData<T> {
     unsetContentBox?: boolean;
     constraintData?: T[][];
 }
-
-const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;

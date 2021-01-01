@@ -1,6 +1,8 @@
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
+
 import type View from '../view';
 
-import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../lib/constant';
+import { CONTAINER_TAGNAME } from '../lib/constant';
 
 import Resource from '../resource';
 

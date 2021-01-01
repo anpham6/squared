@@ -2,8 +2,7 @@ import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import LAYOUT_GRIDCELL = squared.lib.internal.LAYOUT_GRIDCELL;
-
-import { CONTAINER_NODE } from '../lib/constant';
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
 import type View from '../view';
 

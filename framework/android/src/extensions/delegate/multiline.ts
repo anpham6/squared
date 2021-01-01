@@ -1,16 +1,17 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
+import APP_SECTION = squared.base.lib.constant.APP_SECTION;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { CONTAINER_NODE, CONTAINER_TAGNAME } from '../../lib/constant';
+import { CONTAINER_TAGNAME } from '../../lib/constant';
 
 import View from '../../view';
 
 import { concatString } from '../../lib/util';
 
 type MultilineData<T> = [number, T][];
-
-const { APP_SECTION, NODE_RESOURCE } = squared.base.lib.constant;
 
 const { getTextMetrics } = squared.lib.dom;
 

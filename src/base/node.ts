@@ -1011,6 +1011,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     case 'float':
                     case 'tagName':
                         this._cache = {};
+                        i = length;
                         break;
                     case 'width':
                         cache.actualWidth = undefined;
@@ -1026,8 +1027,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         cache.height = undefined;
                         cache.hasHeight = undefined;
                         if (!this._preferInitial) {
-                            this.unsetCache('blockVertical');
-                            this.each(item => item.unsetCache());
+                            this.cascade(item => item.unsetCache('height', 'bottomAligned'));
                         }
                         break;
                     case 'verticalAlign':
@@ -1119,14 +1119,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return;
             }
             parent.resetBounds();
-            const queryMap = parent.queryMap;
-            if (queryMap) {
-                for (let i = 0, q = queryMap.length; i < q; ++i) {
-                    const children = queryMap[i];
-                    for (let j = 0, r = children.length; j < r; ++j) {
-                        children[j].resetBounds();
-                    }
-                }
+            if (parent.queryMap) {
+                parent.querySelectorAll('*').forEach(item => item.resetBounds());
             }
             else {
                 this.cascade(item => item.resetBounds());
@@ -1628,16 +1622,34 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public toElementInt(attr: string, fallback = NaN) {
-        return this.naturalElement ? convertInt(this._element![attr], fallback) : fallback;
+        if (this.naturalElement) {
+            const value: unknown = this._element![attr];
+            switch (typeof value) {
+                case 'number':
+                    return Math.floor(value);
+                case 'string':
+                    return convertInt(value, fallback);
+            }
+        }
+        return fallback;
     }
 
     public toElementFloat(attr: string, fallback = NaN) {
-        return this.naturalElement ? convertFloat(this._element![attr], fallback) : fallback;
+        if (this.naturalElement) {
+            const value: unknown = this._element![attr];
+            switch (typeof value) {
+                case 'number':
+                    return value;
+                case 'string':
+                    return convertFloat(value, fallback);
+            }
+        }
+        return fallback;
     }
 
     public toElementBoolean(attr: string, fallback = false) {
         if (this.naturalElement) {
-            const value: Undef<unknown> = this._element![attr];
+            const value: unknown = this._element![attr];
             if (value !== undefined) {
                 return value === true;
             }
@@ -1647,7 +1659,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public toElementString(attr: string, fallback = '') {
         if (this.naturalElement) {
-            const value: Undef<unknown> = this._element![attr];
+            const value: unknown = this._element![attr];
             if (value !== undefined) {
                 return value !== null ? (value as string).toString() : '';
             }

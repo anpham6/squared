@@ -1,6 +1,9 @@
+import APP_SECTION = squared.base.lib.constant.APP_SECTION;
+import NODE_PROCEDURE = squared.base.lib.constant.NODE_PROCEDURE;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 
-import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/constant';
+import { BOX_STANDARD, NODE_ALIGNMENT, NODE_TRAVERSE } from './lib/constant';
 
 import type ExtensionManager from './extensionmanager';
 import type ControllerUI from './controller-ui';

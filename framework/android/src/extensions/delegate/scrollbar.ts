@@ -1,11 +1,11 @@
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { BUILD_VERSION, CONTAINER_NODE, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from '../../lib/constant';
+import { BUILD_VERSION, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from '../../lib/constant';
 
 import type View from '../../view';
-
-const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { formatPX } = squared.lib.css;
 

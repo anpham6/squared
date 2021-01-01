@@ -1,3 +1,5 @@
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
+
 import { BUILD_VERSION } from '../../lib/constant';
 
 import type View from '../../view';
@@ -12,8 +14,6 @@ type AttributeMap<T> = ObjectMap<T[]>;
 interface IStyleAttribute<T> extends StyleAttribute {
     nodes: T[];
 }
-
-const { NODE_RESOURCE } = squared.base.lib.constant;
 
 const { truncate } = squared.lib.math;
 const { capitalize, convertWord, hasKeys, joinArray, spliceArray, trimBoth } = squared.lib.util;

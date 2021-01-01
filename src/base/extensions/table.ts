@@ -1,8 +1,9 @@
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import LAYOUT_TABLE = squared.lib.internal.LAYOUT_TABLE;
 import LAYOUT_TABLETYPE = squared.lib.internal.LAYOUT_TABLETYPE;
 import LAYOUT_TABLECELL = squared.lib.internal.LAYOUT_TABLECELL;
 
-import { BOX_STANDARD, NODE_RESOURCE } from '../lib/constant';
+import { BOX_STANDARD } from '../lib/constant';
 
 import type NodeUI from '../node-ui';
 

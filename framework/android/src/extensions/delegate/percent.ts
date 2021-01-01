@@ -1,12 +1,13 @@
-import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
+import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 import LAYOUT_STRING = android.internal.LAYOUT_STRING;
-import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 
 import type View from '../../view';
 
-import { CONTAINER_NODE, LAYOUT_MAP } from '../../lib/constant';
+import { LAYOUT_MAP } from '../../lib/constant';
 
 import LayoutUI = squared.base.LayoutUI;
 
