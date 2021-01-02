@@ -43,14 +43,14 @@ const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
-function setStyleCache(element: HTMLElement, attr: string, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
-    let current = style.getPropertyValue(attr);
+function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
+    let current = style[attr];
     if (value !== current) {
-        element.style.setProperty(attr, value);
-        const newValue = element.style.getPropertyValue(attr);
+        element.style[attr] = value;
+        const newValue = element.style[attr];
         if (current !== newValue) {
             if (isPx(current)) {
-                const styleValue = styleMap[convertCamelCase(attr) as CssStyleAttr];
+                const styleValue = styleMap[attr];
                 if (styleValue) {
                     current = styleValue;
                     value = '';
@@ -1440,12 +1440,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             let valueA: NumString,
                 valueB: NumString;
             if (byFloat) {
-                valueA = a.toFloat(attr as string, a.childIndex);
-                valueB = b.toFloat(attr as string, b.childIndex);
+                valueA = a.toFloat(attr, a.childIndex);
+                valueB = b.toFloat(attr, b.childIndex);
             }
             else if (byInt) {
-                valueA = a.toInt(attr as string, a.childIndex);
-                valueB = b.toInt(attr as string, b.childIndex);
+                valueA = a.toInt(attr, a.childIndex);
+                valueB = b.toInt(attr, b.childIndex);
             }
             else {
                 valueA = a.css(attr);
@@ -1488,7 +1488,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return 0;
     }
 
-    public cssTry(attr: string, value: string, callback?: FunctionSelf<this>) {
+    public cssTry(attr: CssStyleAttr, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
             if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this._styleMap, this.sessionId)) {
@@ -1502,7 +1502,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public cssTryAll(values: StringMap, callback?: FunctionSelf<this>) {
+    public cssTryAll(values: CssStyleMap, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const result: CssStyleMap = {};
             const sessionId = this.sessionId;
@@ -1510,7 +1510,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const style = !this.pseudoElement ? this.style : getStyle(element);
             for (const attr in values) {
                 const value = values[attr]!;
-                switch (setStyleCache(element, attr, value, style, this._styleMap, sessionId)) {
+                switch (setStyleCache(element, attr as CssStyleAttr, value, style, this._styleMap, sessionId)) {
                     case STYLE_STATE.FAIL:
                         this.cssFinally(result);
                         return false;
@@ -1531,21 +1531,21 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public cssFinally(attrs: string | StringMap) {
+    public cssFinally(attrs: CssStyleAttr | CssStyleMap) {
         if (this.styleElement) {
             const elementData = this._elementData;
             if (elementData) {
                 if (typeof attrs === 'string') {
                     const value = elementData[attrs] as Undef<string>;
                     if (value) {
-                        (this._element as HTMLElement).style.setProperty(attrs, value);
+                        (this._element as HTMLElement).style[attrs] = value;
                     }
                 }
                 else {
                     for (const attr in attrs) {
                         const value = elementData[attr] as Undef<string>;
                         if (value) {
-                            (this._element as HTMLElement).style.setProperty(attr, value);
+                            (this._element as HTMLElement).style[attr] = value;
                         }
                     }
                 }
@@ -1616,11 +1616,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public toInt(attr: string, fallback = NaN, initial?: boolean) {
+    public toInt(attr: CssStyleAttr, fallback = NaN, initial?: boolean) {
         return convertInt((initial && this._initial?.styleMap || this._styleMap)[attr]!, fallback);
     }
 
-    public toFloat(attr: string, fallback = NaN, initial?: boolean) {
+    public toFloat(attr: CssStyleAttr, fallback = NaN, initial?: boolean) {
         return convertFloat((initial && this._initial?.styleMap || this._styleMap)[attr]!, fallback);
     }
 
@@ -2742,12 +2742,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             valid = isPercent(value);
                             break;
                     }
-                    if (valid && this.cssTry('vertical-align', 'baseline')) {
+                    if (valid && this.cssTry('verticalAlign', 'baseline')) {
                         const bounds = this.boundingClientRect;
                         if (bounds) {
                             result = bounds.top - this.bounds.top;
                         }
-                        this.cssFinally('vertical-align');
+                        this.cssFinally('verticalAlign');
                     }
                 }
             }

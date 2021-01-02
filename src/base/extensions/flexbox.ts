@@ -8,11 +8,6 @@ import ExtensionUI from '../extension-ui';
 
 const { partitionArray, withinRange } = squared.lib.util;
 
-const OPTIONS_BOUNDSDATA: StringMap = {
-    'align-self': 'start',
-    'justify-self': 'start'
-};
-
 function createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<NodeUI> {
     return {
         ...(node.flexdata as Required<FlexData>),
@@ -38,10 +33,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         const [children, absolute] = partitionArray(node.children, (item: T) => item.pageFlow && item.visible) as [T[], T[]];
         const mainData = createDataAttribute(node, children);
         const row = mainData.row;
-        node.cssTryAll({ 'align-items': 'start', 'justify-items': 'start' }, () => {
+        node.cssTryAll({ alignItems: 'start', justifyItems: 'start' }, () => {
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
-                item.cssTryAll(OPTIONS_BOUNDSDATA, function(this: T) {
+                item.cssTryAll({ alignSelf: 'start', justifySelf: 'start' }, function(this: T) {
                     const bounds = this.boundingClientRect;
                     this.data(dataName, 'boundsData', bounds ? { ...this.bounds, width: bounds.width, height: bounds.height } : this.bounds);
                 });

@@ -782,7 +782,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                             else {
                                 let boundsData: UndefNull<BoxRectDimension>;
-                                item.cssTry('flex-grow', '0', function (this: T) { boundsData = this.boundingClientRect; });
+                                item.cssTry('flexGrow', '0', function (this: T) { boundsData = this.boundingClientRect; });
                                 boundsData ||= item.data<BoxRectDimension>(this.name, 'boundsData');
                                 value = boundsData ? boundsData[dimension] : size;
                             }

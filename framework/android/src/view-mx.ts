@@ -29,11 +29,11 @@ const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
 const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
 
-const OPTIONS_LINEHEIGHT: StringMap = {
-    'height': 'auto',
-    'min-height': 'auto',
-    'line-height': 'normal',
-    'white-space': 'nowrap'
+const OPTIONS_LINEHEIGHT: CssStyleMap = {
+    height: 'auto',
+    minHeight: 'auto',
+    lineHeight: 'normal',
+    whiteSpace: 'nowrap'
 };
 
 const REGEXP_CONTROLID = /[^\w$\-_.]/g;
@@ -3080,9 +3080,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     result = height / (numberOfLines || 1);
                 }
                 else {
-                    if (this.multiline && this.cssTry('white-space', 'nowrap')) {
+                    if (this.multiline && this.cssTry('whiteSpace', 'nowrap')) {
                         result = this.boundingClientRect?.height ?? this.bounds.height;
-                        this.cssFinally('white-space');
+                        this.cssFinally('whiteSpace');
                     }
                     else if (this.hasHeight) {
                         result = this.actualHeight;

@@ -469,13 +469,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (item.positionRelative) {
-                        const setPosition = (attr: CssStyleAttr) => {
+                        const setPosition = (attr: PositionAttr) => {
                             if (item.hasPX(attr)) {
                                 if (!data) {
                                     data = {};
                                     preAlignment.set(item, data);
                                 }
-                                data[attr] = item.css(attr);
+                                data[attr] = item.valueOf(attr);
                                 element.style[attr] = 'auto';
                                 resetBounds = true;
                             }

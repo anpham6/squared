@@ -651,9 +651,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 };
                 const hasExactValue = (attr: CssStyleAttr, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                 const hasPartialValue = (attr: CssStyleAttr, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
-                const items = Array.from(cssStyle);
-                for (let i = 0, length = items.length; i < length; ++i) {
-                    const attr = items[i] as CssStyleAttr;
+                for (let i = 0, length = cssStyle.length; i < length; ++i) {
+                    const attr = cssStyle[i] as CssStyleAttr;
                     if (attr[0] === '-') {
                         continue;
                     }
