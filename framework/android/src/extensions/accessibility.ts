@@ -71,7 +71,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                                     sibling.hide();
                                                     if (node.hasPX('width')) {
                                                         if (!node.hasPX('minWidth')) {
-                                                            node.css('minWidth', node.valueAt('width'));
+                                                            node.css('minWidth', node.cssValue('width'));
                                                         }
                                                         node.css('width', 'auto', true);
                                                     }

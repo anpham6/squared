@@ -679,7 +679,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         text = content[0];
                     }
                     if (rt && text) {
-                        const under = node.valueAt('rubyPosition') === 'under';
+                        const under = node.cssValue('rubyPosition') === 'under';
                         const group = this.createNodeGroup(rt, under ? [text, rt] : [rt, text], node, { containerType: CONTAINER_NODE.LINEAR, alignmentType: NODE_ALIGNMENT.VERTICAL, flags: CREATE_NODE.DELEGATE });
                         group.setLayoutWidth('wrap_content');
                         group.setLayoutHeight('wrap_content');
@@ -756,7 +756,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             layout.containerType = CONTAINER_NODE.FRAME;
                         }
                     }
-                    else if (child.baselineElement && (parent.layoutGrid && !parent.tableElement || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
+                    else if (child.baselineElement && (parent.layoutGrid && parent.hasAlign(NODE_ALIGNMENT.VERTICAL) || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
@@ -1311,8 +1311,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const element = node.element as HTMLImageElement;
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
-                    imageSet = getSrcSet(element, this.localSettings.mimeType.image);
-                    if (imageSet) {
+                    if (imageSet = getSrcSet(element, this.localSettings.mimeType.image)) {
                         const setImageDimension = (width: number, image: Undef<ImageAsset>) => {
                             node.css('width', formatPX(width), true);
                             if (image && image.width && image.height) {
@@ -1334,7 +1333,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     let scaleType: Undef<string>;
-                    switch (node.valueAt('objectFit')) {
+                    switch (node.cssValue('objectFit')) {
                         case 'fill':
                             scaleType = 'fitXY';
                             break;
@@ -1397,7 +1396,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.android('src', `@drawable/${src}`);
                     }
                 }
-                if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.valueAt('overflowX') === 'hidden' || node.top < 0 && parent.valueAt('overflowY') === 'hidden')) {
+                if (!node.pageFlow && parent === node.absoluteParent && (node.left < 0 && parent.cssValue('overflowX') === 'hidden' || node.top < 0 && parent.cssValue('overflowY') === 'hidden')) {
                     const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
                     container.setControlType(CONTAINER_TAGNAME.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
@@ -1702,10 +1701,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.has('letterSpacing')) {
                     node.android('letterSpacing', truncate(node.toFloat('letterSpacing') / node.fontSize, node.localSettings.floatPrecision));
                 }
-                if (node.valueAt('textAlign') === 'justify') {
+                if (node.cssValue('textAlign') === 'justify') {
                     node.android('justificationMode', 'inter_word');
                 }
-                const textShadow = node.valueAt('textShadow');
+                const textShadow = node.cssValue('textShadow');
                 if (textShadow) {
                     const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/.exec(textShadow);
                     if (match) {
@@ -1725,7 +1724,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 switch (node.css('whiteSpace')) {
                     case 'nowrap':
                         node.android('singleLine', 'true');
-                        if (node.valueAt('textOverflow') === 'ellipsis' && node.valueAt('overflowX') === 'hidden') {
+                        if (node.cssValue('textOverflow') === 'ellipsis' && node.cssValue('overflowX') === 'hidden') {
                             node.android('ellipsize', 'end');
                         }
                         break;
@@ -1733,7 +1732,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.android('breakStrategy', 'simple');
                         break;
                     default:
-                        if (node.valueAt('overflowWrap') === 'break-word') {
+                        if (node.cssValue('overflowWrap') === 'break-word') {
                             node.android('breakStrategy', 'high_quality');
                         }
                         break;
@@ -3500,7 +3499,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.anchor(LT, 'parent', true);
                     return;
                 }
-                if (!node.pageFlow && node.valueAt('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                if (!node.pageFlow && node.cssValue('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     const adjustBodyMargin = (item: T, position: string) => {
                         if (item.leftTopAxis) {
                             const absoluteParent = item.absoluteParent as T;
@@ -3604,7 +3603,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const TL = horizontal ? 'top' : 'left';
                     const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
                         if (node.has('transform')) {
-                            const translate = parseTransform(node.valueAt('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.group === 'translate');
+                            const translate = parseTransform(node.cssValue('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.group === 'translate');
                             if (translate.length) {
                                 adjustment -= translate[0].values[horizontal ? 0 : 1];
                             }
@@ -3797,7 +3796,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     private isConstraintLayout(layout: LayoutUI<T>, vertical?: boolean) {
         const { parent, node } = layout;
-        if (parent.flexElement && parent.flexdata.row && (parent.valueAt('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(node.box.bottom))) {
+        if (parent.flexElement && parent.flexdata.row && (parent.cssValue('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(node.box.bottom))) {
             return false;
         }
         return layout.find(item => (item.rightAligned || item.centerAligned) && layout.size() > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0)) || this.hasClippedBackground(node);

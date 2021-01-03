@@ -1392,6 +1392,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return value;
     }
 
+    public cssValue(attr: CssStyleAttr) {
+        return this._styleMap[attr] || '';
+    }
+
+    public cssValues(...attrs: CssStyleAttr[]) {
+        const styleMap = this._styleMap;
+        const length = attrs.length;
+        const result: string[] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            result[i] = styleMap[attrs[i]] || '';
+        }
+        return result;
+    }
+
     get element() {
         return this._element || this.innerWrapped && this.innerMostWrapped.unsafe<Null<Element>>('element') || null;
     }

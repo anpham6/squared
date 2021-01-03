@@ -84,7 +84,7 @@ function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionDat
 }
 
 function setCssPX(node: View, attr: CssStyleAttr, value: number) {
-    const current = node.valueAt(attr);
+    const current = node.cssValue(attr);
     if (isPercent(current)) {
         node.css(attr, formatPercent(parseFloat(current) / 100 + value / node.actualParent!.box.width), true);
     }
@@ -557,7 +557,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 node.resetBox(BOX_STANDARD.PADDING, container);
                 unsetContentBox = true;
                 if (CssGrid.isJustified(node)) {
-                    node.setLayoutWidth(getLayoutDimension(node.valueAt('justifyContent')));
+                    node.setLayoutWidth(getLayoutDimension(node.cssValue('justifyContent')));
                 }
                 else if (node.hasPX('width', { percent: false })) {
                     node.setLayoutWidth('match_parent');
@@ -566,7 +566,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
                 }
                 if (CssGrid.isAligned(node)) {
-                    node.setLayoutHeight(getLayoutDimension(node.valueAt('alignContent')));
+                    node.setLayoutHeight(getLayoutDimension(node.cssValue('alignContent')));
                 }
                 else if (node.hasPX('height', { percent: false })) {
                     node.setLayoutHeight('match_parent');
@@ -647,8 +647,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         const cellData = this.data.get(node) as Undef<CssGridCellData>;
         if (mainData && cellData) {
             const row = mainData.row;
-            const alignSelf = node.valueAt('alignSelf') || mainData.alignItems;
-            const justifySelf = node.valueAt('justifySelf') || mainData.justifyItems;
+            const alignSelf = node.cssValue('alignSelf') || mainData.alignItems;
+            const justifySelf = node.cssValue('justifySelf') || mainData.justifyItems;
             let renderAs: Undef<T>,
                 outputAs: Undef<NodeXmlTemplate<T>>;
             if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf) || parent.layoutConstraint) {

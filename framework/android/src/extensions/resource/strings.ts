@@ -132,7 +132,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             let fontVariation = getFontVariationStyle(node.css('fontStyle')),
                                 fontFeature = '';
                             if (node.has('fontStretch')) {
-                                let percent = node.valueAt('fontStretch');
+                                let percent = node.cssValue('fontStretch');
                                 switch (percent) {
                                     case '100%':
                                         percent = '';
@@ -167,7 +167,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantCaps')) {
-                                for (const variant of node.valueAt('fontVariantCaps').split(' ')) {
+                                for (const variant of node.cssValue('fontVariantCaps').split(' ')) {
                                     switch (variant) {
                                         case 'small-caps':
                                             fontFeature = delimitString({ value: fontFeature }, "'smcp'");
@@ -191,7 +191,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantNumeric')) {
-                                for (const variant of node.valueAt('fontVariantNumeric').split(' ')) {
+                                for (const variant of node.cssValue('fontVariantNumeric').split(' ')) {
                                     switch (variant) {
                                         case 'ordinal':
                                             fontFeature = delimitString({ value: fontFeature }, "'ordn'");
@@ -221,7 +221,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantLigatures')) {
-                                for (const variant of node.valueAt('fontVariantLigatures').split(' ')) {
+                                for (const variant of node.cssValue('fontVariantLigatures').split(' ')) {
                                     switch (variant) {
                                         case 'common-ligatures':
                                             fontFeature = delimitString({ value: fontFeature }, "'liga'");
@@ -251,7 +251,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantEastAsian')) {
-                                for (const variant of node.valueAt('fontVariantEastAsian').split(' ')) {
+                                for (const variant of node.cssValue('fontVariantEastAsian').split(' ')) {
                                     switch (variant) {
                                         case 'ruby':
                                             fontFeature = delimitString({ value: fontFeature }, "'ruby'");
@@ -284,12 +284,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariationSettings' as CssStyleAttr)) {
-                                for (const variant of node.valueAt('fontVariationSettings' as CssStyleAttr).replace(/"/g, "'").split(',')) {
+                                for (const variant of node.cssValue('fontVariationSettings' as CssStyleAttr).replace(/"/g, "'").split(',')) {
                                     fontVariation = delimitString({ value: fontVariation }, variant.trim());
                                 }
                             }
                             if (node.has('fontFeatureSettings')) {
-                                for (const feature of node.valueAt('fontFeatureSettings').replace(/"/g, "'").split(',')) {
+                                for (const feature of node.cssValue('fontFeatureSettings').replace(/"/g, "'").split(',')) {
                                     fontFeature = delimitString({ value: fontFeature }, feature.trim());
                                 }
                             }

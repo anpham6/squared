@@ -653,6 +653,8 @@ declare module "base" {
         translateY(value: number, options?: TranslateOptions): boolean;
         getBoxSpacing(): [number, number, number, number];
         fitToScreen(value: Dimension): Dimension;
+        cssValue(attr: CssStyleAttr): string;
+        cssValues(...attrs: CssStyleAttr[]): string[];
         set documentParent(value);
         get documentParent(): NodeUI;
         set containerName(value);
