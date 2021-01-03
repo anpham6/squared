@@ -1,7 +1,9 @@
 import USER_AGENT = squared.lib.constant.USER_AGENT;
+import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
 
 import type ApplicationUI from './application-ui';
+import type ResourceUI from './resource-ui';
 import type ContentUI from './content-ui';
 import type LayoutUI from './layout-ui';
 import type NodeUI from './node-ui';
@@ -731,6 +733,18 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 return parentA.id - parentB.id;
             }
             return 0;
+        });
+    }
+
+    public setResources(rendering: NodeList<T>, resource: ResourceUI<T>) {
+        rendering.each(node => {
+            if (node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
+                resource.setBoxStyle(node);
+            }
+            if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && (node.visible && !node.imageContainer || node.labelFor)) {
+                resource.setFontStyle(node);
+                resource.setValueString(node);
+            }
         });
     }
 

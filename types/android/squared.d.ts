@@ -102,7 +102,7 @@ declare namespace base {
         getHorizontalBias(rect?: BoxRect): number;
         getVerticalBias(rect?: BoxRect): number;
         getAbsolutePaddingOffset(direction: number, value: number): number;
-        hasFlex(direction: FlowDirectionAttr): boolean | 0;
+        hasFlex(direction: LayoutDirectionAttr): boolean | 0;
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);

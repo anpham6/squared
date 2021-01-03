@@ -2921,15 +2921,15 @@ export function checkMediaRule(value: string, fontSize?: number) {
 export function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration) {
     let match: Null<RegExpMatchArray>;
     while (match = REGEXP_VAR.exec(value)) {
-        let customValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
+        let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
         const fallback = match[3];
-        if (fallback && (!customValue || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
-            customValue = fallback.trim();
+        if (fallback && (!propertyValue || isLength(fallback, true) && !isLength(propertyValue, true) || isNumber(fallback) && !isNumber(propertyValue) || parseColor(fallback) && !parseColor(propertyValue))) {
+            propertyValue = fallback.trim();
         }
-        if (!customValue) {
+        if (!propertyValue) {
             return '';
         }
-        value = match[1] + customValue + match[4];
+        value = match[1] + propertyValue + match[4];
     }
     return value;
 }

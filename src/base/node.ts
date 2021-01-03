@@ -939,7 +939,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 const style = element.style;
                                 for (let i = 0; i < length; ++i) {
                                     const attr = style[i];
-                                    styleMap[convertCamelCase(attr)] = element.style.getPropertyValue(attr);
+                                    styleMap[convertCamelCase(attr)] = style.getPropertyValue(attr);
                                 }
                             }
                         }
@@ -2260,7 +2260,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get float() {
-        return this.pageFlow && this.css('float') || 'none';
+        return this.pageFlow && this.css('float') as FloatDirectionAttr || 'none';
     }
 
     get floating() {

@@ -1735,7 +1735,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return super.removeTry(options);
         }
 
-        public hasFlex(direction: FlowDirectionAttr) {
+        public hasFlex(direction: LayoutDirectionAttr) {
             let parent = this.actualParent as Null<T>;
             if (parent && parent.flexdata[direction]) {
                 let current: Undef<T>;

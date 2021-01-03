@@ -178,6 +178,7 @@ declare module "base" {
         processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
         setConstraints(rendering: NodeList<T>): void;
+        setResources(rendering: NodeList<T>, resource: ResourceUI<T>): void;
         renderNode(layout: ContentUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
@@ -302,6 +303,7 @@ declare module "base" {
         afterFinalize(): void;
         postBaseLayout?(node: T): void;
         postConstraints?(node: T): void;
+        postResources?(node: T): void;
         postOptimize?(node: T, rendered: T[]): void;
         postBoxSpacing?(node: T, rendered: T[]): void;
         set application(value);
@@ -526,7 +528,7 @@ declare module "base" {
         get pageFlow(): boolean;
         get autoMargin(): AutoMargin;
         get floating(): boolean;
-        get float(): string;
+        get float(): FloatDirectionAttr;
         get baseline(): boolean;
         get multiline(): boolean;
         get contentBox(): boolean;

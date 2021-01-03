@@ -40,6 +40,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public postBaseLayout?(node: T): void;
     public postConstraints?(node: T): void;
+    public postResources?(node: T): void;
     public postOptimize?(node: T, rendered: T[]): void;
     public postBoxSpacing?(node: T, rendered: T[]): void;
 

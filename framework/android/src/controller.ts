@@ -1273,10 +1273,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
             }
             default:
-                if (layout.isEmpty()) {
-                    return this.renderNode(layout);
-                }
-                return;
+                return layout.isEmpty() ? this.renderNode(layout) : undefined;
         }
         node.setControlType(View.getControlName(containerType, node.api), containerType);
         node.addAlign(layout.alignmentType);

@@ -1255,18 +1255,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setResources(sessionId: string) {
         const { cache, extensions } = this.getProcessing(sessionId)!;
-        const resource = this.resourceHandler;
-        cache.each(node => {
-            if (node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
-                resource.setBoxStyle(node);
-            }
-            if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && !node.imageContainer && (node.visible || node.labelFor)) {
-                resource.setFontStyle(node);
-                resource.setValueString(node);
-            }
-        });
+        this.controllerHandler.setResources(cache, this.resourceHandler);
         for (let i = 0, length = extensions.length; i < length; ++i) {
-            (extensions[i] as ExtensionUI<T>).afterResources(sessionId);
+            const ext = extensions[i] as ExtensionUI<T>;
+            const postResources = ext.postResources;
+            if (postResources) {
+                for (const node of ext.subscribers) {
+                    if (node.sessionId === sessionId) {
+                        postResources.call(ext, node);
+                    }
+                }
+            }
+            ext.afterResources(sessionId);
         }
     }
 

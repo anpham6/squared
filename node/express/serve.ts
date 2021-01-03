@@ -433,7 +433,7 @@ app.get('/api/v1/loader/json', (req, res) => {
                             break;
                         case '.yaml':
                         case '.yml':
-                            data = yaml.safeLoad(body);
+                            data = yaml.load(body);
                             break;
                     }
                 }

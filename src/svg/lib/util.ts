@@ -5,7 +5,7 @@ import Pattern = squared.lib.base.Pattern;
 
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 
-const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, getStyle, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
@@ -696,7 +696,7 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
 }
 
 export function getAttribute(element: SVGElement, attr: string, computed?: boolean) {
-    return getDataValue(element, attr) as string || getNamedItem(element, attr) || (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) || '';
+    return getDataValue(element, attr) as string || getNamedItem(element, attr) || (computed || Array.from(element.style).includes(attr)) && getStyle(element).getPropertyValue(attr) || '';
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed?: boolean) {

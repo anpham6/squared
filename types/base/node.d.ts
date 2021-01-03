@@ -41,7 +41,7 @@ interface CacheValue extends Partial<BoxModel>, Partial<Dimension>, Partial<BoxR
 }
 
 interface CacheValueUI extends CacheValue {
-    float?: string;
+    float?: FloatDirectionAttr;
     floating?: boolean;
     contentBox?: boolean;
     imageElement?: boolean;
