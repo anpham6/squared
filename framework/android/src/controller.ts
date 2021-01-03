@@ -490,7 +490,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
             node.delete('layout_constraintVertical_chainStyle');
         }
         else {
-            node.anchorStyle('vertical', bias, onlyChild ? '' : 'packed', false);
+            node.anchorStyle('vertical', bias, onlyChild ? undefined : 'packed', false);
         }
     }
 }
@@ -1867,7 +1867,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         this.applyGuideline('vertical', options);
     }
 
-    public addBarrier(nodes: T[], barrierDirection: string) {
+    public addBarrier(nodes: T[], barrierDirection: PositionAllAttr) {
         const unbound: T[] = [];
         for (let i = 0, length = nodes.length; i < length; ++i) {
             const node = nodes[i];
@@ -3159,7 +3159,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         baseline.anchorParent('vertical', 0);
                         return;
                     case 'middle':
-                        baseline.anchorParent('vertical', 0.5, '', true);
+                        baseline.anchorParent('vertical', 0.5, undefined, true);
                         return;
                     case 'baseline':
                         baseline.anchor(getAnchorBaseline(tallest), tallest.documentId);

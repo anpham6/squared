@@ -31,7 +31,7 @@ declare namespace base {
         checkConstraintHorizontal(data: LayoutUI<T>): boolean;
         checkLinearHorizontal(data: LayoutUI<T>): boolean;
         addGuideline(options: GuidelineOptions<T>): void;
-        addBarrier(nodes: T[], barrierDirection: string): string;
+        addBarrier(nodes: T[], barrierDirection: PositionAllAttr): string;
         evaluateAnchors(nodes: T[]): void;
         get userSettings(): UserResourceSettingsUI;
         get screenDimension(): Dimension;
@@ -85,8 +85,8 @@ declare namespace base {
         mergeGravity(attr: LayoutGravityAttr, alignment: LayoutGravityDirectionAttr, overwrite?: boolean): void;
         anchor(position: AnchorPositionAttr, documentId?: string, overwrite?: boolean): boolean;
         anchorChain(direction: PositionAttr): View[];
-        anchorParent(orientation: OrientationAttr, bias?: number, style?: string, overwrite?: boolean): boolean;
-        anchorStyle(orientation: OrientationAttr, bias: number, style?: string, overwrite?: boolean): void;
+        anchorParent(orientation: OrientationAttr, bias?: number, style?: LayoutChainStyle, overwrite?: boolean): boolean;
+        anchorStyle(orientation: OrientationAttr, bias: number, style?: LayoutChainStyle, overwrite?: boolean): void;
         anchorDelete(...position: AnchorPositionAttr[]): void;
         anchorClear(update?: View | true): void;
         supported(attr: string, value: string, result: PlainObject): boolean;

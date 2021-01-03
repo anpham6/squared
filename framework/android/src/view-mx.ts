@@ -1931,7 +1931,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public anchorParent(orientation: OrientationAttr, bias?: number, style?: string, overwrite?: boolean) {
+        public anchorParent(orientation: OrientationAttr, bias?: number, style?: LayoutChainStyle, overwrite?: boolean) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
@@ -1962,7 +1962,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public anchorStyle(orientation: OrientationAttr, bias: number, style?: string, overwrite = true) {
+        public anchorStyle(orientation: OrientationAttr, bias: number, style?: LayoutChainStyle, overwrite = true) {
             const node = this.anchorTarget;
             if (orientation === 'horizontal') {
                 node.app('layout_constraintHorizontal_bias', bias.toString(), overwrite);

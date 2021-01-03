@@ -289,7 +289,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
                     if (opposing) {
-                        let chainStyle = 'spread',
+                        let chainStyle: LayoutChainStyle = 'spread',
                             bias = 0;
                         if (dimensionInverse) {
                             switch (alignContent) {
