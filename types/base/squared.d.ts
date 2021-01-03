@@ -420,7 +420,7 @@ declare module "base" {
         cssSort(attr: CssStyleAttr, options?: CssSortOptions): Node[];
         cssSpecificity(attr: CssStyleAttr): number;
         cssParent(attr: CssStyleAttr, value?: string, cache?: boolean): string;
-        cssPX(attr: CssStyleAttr, value: number, cache?: boolean, options?: CssPXOptions): string;
+        cssUnit(attr: CssStyleAttr, options?: CssUnitOptions): number;
         cssAsTuple(...attrs: CssStyleAttr[]): string[];
         cssAsObject(...attrs: CssStyleAttr[]): CssStyleMap;
         cssApply(values: CssStyleMap, overwrite?: boolean, cache?: boolean): this;

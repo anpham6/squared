@@ -2182,7 +2182,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const isMultiline = (item: T) => item.plainText && Resource.hasLineBreak(item, false, true) || item.preserveWhiteSpace && /^\s*\n+/.test(item.textContent);
                 if (node.naturalElement) {
                     if (node.blockDimension) {
-                        textIndent = node.parseUnit(node.css('textIndent'));
+                        textIndent = node.cssUnit('textIndent');
                         if (textIndent < 0) {
                             node.setCacheValue('paddingLeft', Math.max(0, node.paddingLeft + textIndent));
                         }
@@ -2198,7 +2198,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 else if (documentParent.layoutVertical) {
-                    textIndent = documentParent.parseUnit(documentParent.css('textIndent'));
+                    textIndent = documentParent.cssUnit('textIndent');
                     if (textIndent < 0 && documentParent.getBox(BOX_STANDARD.PADDING_LEFT)[1] === 0) {
                         documentParent.modifyBox(BOX_STANDARD.PADDING_LEFT, textIndent, false);
                     }
@@ -3239,7 +3239,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const clearMap = this.application.clearMap;
         const emptyMap = clearMap.size === 0;
         const floating = node.hasAlign(NODE_ALIGNMENT.FLOAT);
-        const parent = children[0].actualParent || node;
         const horizontal = NodeUI.partitionRows(children, clearMap);
         const checkClearMap = (item: T) => {
             if (!emptyMap) {
@@ -3279,7 +3278,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         rowEnd.anchorStyle('horizontal', 1, 'packed');
                     }
                     else {
-                        rowStart.anchorStyle('horizontal', !floating && parent.css('textAlign') === 'center' ? 0.5 : 0, length === 1 && rowStart.innerMostWrapped.textJustified ? 'spread_inside' : 'packed');
+                        rowStart.anchorStyle('horizontal', !floating && rowStart.cssParent('textAlign') === 'center' ? 0.5 : 0, length === 1 && rowStart.innerMostWrapped.textJustified ? 'spread_inside' : 'packed');
                     }
                     rowEnd.anchor(anchorEnd, 'parent');
                 }
@@ -3350,29 +3349,27 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (!emptyMap && clearMap.has(chain) && !chain.floating) {
                             chain.modifyBox(BOX_STANDARD.MARGIN_TOP, lastItemOf(previousRow)!.bounds.height * -1, false);
                         }
-                        if (floating) {
-                            if (Math.ceil(chain.bounds.top) < minMaxOf(previousSiblings, item => Math.floor(item.bounds.bottom), '>')[1]) {
-                                aboveRowEnd = lastItemOf(previousRow)!;
-                                for (let l = previousSiblings.length - 2; l >= 0; --l) {
-                                    const aboveBefore = previousSiblings[l];
-                                    if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
-                                        if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) < chain.linear.width) {
-                                            continue;
-                                        }
-                                        chain.anchorDelete(anchorStart);
-                                        chain.anchor(chainStart, aboveBefore.documentId, true);
-                                        if (reverse) {
-                                            chain.modifyBox(BOX_STANDARD.MARGIN_RIGHT, aboveBefore.marginLeft);
-                                        }
-                                        else {
-                                            chain.modifyBox(BOX_STANDARD.MARGIN_LEFT, aboveBefore.marginRight);
-                                        }
-                                        rowStart.delete('app', 'layout_constraintHorizontal*');
-                                        rowStart.anchorDelete(chainEnd);
-                                        rowEnd.anchorDelete(anchorEnd);
-                                        currentRowTop ||= chain;
-                                        break;
+                        if (floating && Math.ceil(chain.bounds.top) < minMaxOf(previousSiblings, item => Math.floor(item.bounds.bottom), '>')[1]) {
+                            aboveRowEnd = lastItemOf(previousRow)!;
+                            for (let l = previousSiblings.length - 2; l >= 0; --l) {
+                                const aboveBefore = previousSiblings[l];
+                                if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
+                                    if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(chain.documentParent.box[anchorEnd]) < chain.linear.width) {
+                                        continue;
                                     }
+                                    chain.anchorDelete(anchorStart);
+                                    chain.anchor(chainStart, aboveBefore.documentId, true);
+                                    if (reverse) {
+                                        chain.modifyBox(BOX_STANDARD.MARGIN_RIGHT, aboveBefore.marginLeft);
+                                    }
+                                    else {
+                                        chain.modifyBox(BOX_STANDARD.MARGIN_LEFT, aboveBefore.marginRight);
+                                    }
+                                    rowStart.delete('app', 'layout_constraintHorizontal*');
+                                    rowStart.anchorDelete(chainEnd);
+                                    rowEnd.anchorDelete(anchorEnd);
+                                    currentRowTop ||= chain;
+                                    break;
                                 }
                             }
                         }

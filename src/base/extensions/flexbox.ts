@@ -13,8 +13,8 @@ function createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<Node
         ...(node.flexdata as Required<FlexData>),
         rowCount: 0,
         columnCount: 0,
-        rowGap: node.parseHeight(node.valueOf('rowGap')),
-        columnGap: node.parseWidth(node.valueOf('columnGap')),
+        rowGap: node.cssUnit('rowGap', { dimension: 'height' }),
+        columnGap: node.cssUnit('columnGap'),
         children
     };
 }

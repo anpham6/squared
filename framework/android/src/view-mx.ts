@@ -2,6 +2,7 @@ import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
+import EXT_NAME = squared.base.lib.internal.EXT_NAME;
 import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 import LAYOUT_STRING = android.internal.LAYOUT_STRING;
 
@@ -235,7 +236,7 @@ function getLineSpacingExtra(node: T, value: number) {
         }
         else {
             height = node.actualTextHeight();
-            node.data<number>(Resource.KEY_NAME, 'textRange', height);
+            node.data(Resource.KEY_NAME, 'textRange', height);
         }
     }
     if (!height && node.styleText) {
@@ -257,7 +258,7 @@ function setMinMax(node: T, horizontal: boolean) {
         if (horizontal) {
             if (ascendFlexibleWidth(node)) {
                 const value = node.parseUnit(minWH);
-                if (!node.hasPX('width', { percent: false }) || value > node.parseWidth(node.valueAt('width'))) {
+                if (!node.hasPX('width', { percent: false }) || value > node.cssUnit('width')) {
                     node.setLayoutWidth('0px', false);
                     if (node.flexibleWidth) {
                         node.app('layout_constraintWidth_min', formatPX(value + node.contentBoxWidth));
@@ -268,7 +269,7 @@ function setMinMax(node: T, horizontal: boolean) {
         }
         else if (ascendFlexibleHeight(node)) {
             const value = node.parseHeight(minWH);
-            if (!node.hasPX('height', { percent: false }) || value > node.parseHeight(node.valueAt('height'))) {
+            if (!node.hasPX('height', { percent: false }) || value > node.cssUnit('height', { dimension: 'height' })) {
                 node.setLayoutHeight('0px', false);
                 if (node.flexibleHeight) {
                     node.app('layout_constraintHeight_min', formatPX(value + node.contentBoxHeight));
@@ -609,9 +610,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.hide({ collapse: true });
                     break;
             }
-            const actualParent = (this.actualParent || this.documentParent) as T;
+            const actualParent = this.actualParent as T;
             const containsWidth = !renderParent.inlineWidth;
             const containsHeight = !renderParent.inlineHeight;
+            const box = (this.absoluteParent || actualParent).box;
             let { layoutWidth, layoutHeight } = this;
             if (!layoutWidth) {
                 if (this.hasPX('width') && (!this.inlineStatic || !this.cssInitial('width'))) {
@@ -665,9 +667,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (!this.support.maxDimension && this.hasPX('maxWidth')) {
                                 const maxWidth = this.valueAt('maxWidth');
                                 const maxValue = this.parseUnit(maxWidth);
-                                const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxWidth === '100%') {
-                                    if (containsWidth && Math.ceil(maxValue) >= absoluteParent.box.width) {
+                                    if (containsWidth && Math.ceil(maxValue) >= box.width) {
                                         layoutWidth = this.getMatchConstraint(renderParent);
                                     }
                                     else {
@@ -679,7 +680,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualWidth, maxValue);
                                     }
                                     else {
-                                        layoutWidth = Math.floor(maxValue) < absoluteParent.box.width ? 'wrap_content' : this.getMatchConstraint(renderParent);
+                                        layoutWidth = Math.floor(maxValue) < box.width ? 'wrap_content' : this.getMatchConstraint(renderParent);
                                     }
                                 }
                             }
@@ -741,9 +742,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (!layoutWidth) {
                     if (this.textElement && this.textEmpty && this.inlineFlow && !this.visibleStyle.backgroundImage) {
                         layoutWidth = formatPX(this.actualWidth);
-                    }
-                    else if (this.imageElement && this.hasHeight) {
-                        layoutWidth = 'wrap_content';
                     }
                     else if (
                         containsWidth && (
@@ -826,9 +824,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (!this.support.maxDimension) {
                                 const maxHeight = this.valueAt('maxHeight');
                                 const maxValue = this.parseHeight(maxHeight);
-                                const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxHeight === '100%') {
-                                    if (containsHeight || Math.ceil(maxValue) >= absoluteParent.box.height) {
+                                    if (containsHeight || Math.ceil(maxValue) >= box.height) {
                                         layoutHeight = 'match_parent';
                                     }
                                     else {
@@ -840,7 +837,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualHeight, maxValue);
                                     }
                                     else {
-                                        layoutHeight = Math.floor(maxValue) < absoluteParent.box.height ? 'wrap_content' : 'match_parent';
+                                        layoutHeight = Math.floor(maxValue) < box.height ? 'wrap_content' : 'match_parent';
                                     }
                                 }
                                 else if (containsHeight) {
@@ -883,7 +880,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (!layoutHeight) {
                     if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
-                        if (renderParent.layoutConstraint && !this.floating && this.alignParent('top') && this.actualHeight >= (this.absoluteParent || actualParent).box.height) {
+                        if (renderParent.layoutConstraint && !this.floating && this.alignParent('top') && this.actualHeight >= box.height) {
                             layoutHeight = '0px';
                             this.anchor('bottom', 'parent');
                         }
@@ -1071,9 +1068,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.mergeGravity('layout_gravity', 'right');
                         }
                     }
-                    if (this.onlyChild && node.documentParent.display === 'table-cell') {
+                    if (this.onlyChild && this.cssParent('display') === 'table-cell') {
                         let gravity: LayoutGravityDirectionAttr;
-                        switch (node.documentParent.css('verticalAlign')) {
+                        switch (this.cssParent('verticalAlign')) {
                             case 'top':
                                 gravity = 'top';
                                 break;
@@ -1760,7 +1757,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     let largest = 0,
                         fitSize = 0;
                     for (const item of parent!) {
-                        const value = (item.data<BoxRectDimension>(squared.base.lib.internal.EXT_NAME.FLEXBOX, 'boundsData') || item.bounds)[attr];
+                        const value = (item.data<BoxRectDimension>(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds)[attr];
                         if (value > largest) {
                             largest = value;
                         }

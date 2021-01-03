@@ -9,7 +9,7 @@ const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { isTransparent } = squared.lib.color;
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
@@ -191,7 +191,7 @@ function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
             }
             break;
     }
-    return node.parseUnit(node.css(attr), node.actualParent?.gridElement ? { parent: false } : undefined);
+    return node.cssUnit(attr, node.actualParent?.gridElement ? { parent: false } : undefined);
 }
 
 function convertPosition(node: T, attr: CssStyleAttr) {
@@ -1331,10 +1331,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public css(attr: CssStyleAttr, value?: string, cache = true): string {
-        if (this.styleElement) {
+    public css(attr: CssStyleAttr, value?: string, cache = true) {
+        const style = this.style;
+        if (this.styleElement && attr in style) {
             if (value === '') {
-                this.style[attr] = 'initial';
+                style[attr] = 'initial';
                 const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
                 if (property && typeof property.value === 'string') {
                     this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & CSS_TRAITS.UNIT ? 'px' : ''));
@@ -1347,22 +1348,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             else if (value) {
-                const current = this.style[attr] as Undef<string>;
-                if (current !== undefined) {
-                    this.style[attr] = value;
-                    if (current !== this.style[attr]) {
-                        this._styleMap[attr] = value;
-                        if (cache) {
-                            this.unsetCache(attr);
-                        }
-                        return value;
+                const current = style[attr];
+                this.style[attr] = value;
+                if (current !== style[attr]) {
+                    this._styleMap[attr] = value;
+                    if (cache) {
+                        this.unsetCache(attr);
                     }
-                    return current;
+                    return value;
                 }
-                return '';
+                return current;
             }
         }
-        return this._styleMap[attr] || this.style[attr] || '';
+        return this._styleMap[attr] || style[attr] || '';
     }
 
     public cssApply(values: CssStyleMap, overwrite = true, cache = true) {
@@ -1383,7 +1381,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssParent(attr: CssStyleAttr, value?: string, cache = false) {
-        return this.actualParent?.css(attr, value, cache) || '';
+        const parent = this.actualParent;
+        return parent ? parent.css(attr, value, cache) : '';
     }
 
     public cssInitial(attr: CssStyleAttr, options?: CssInitialOptions) {
@@ -1461,21 +1460,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         });
     }
 
-    public cssPX(attr: CssStyleAttr, value: number, cache?: boolean, options?: CssPXOptions) {
-        const current = this._styleMap[attr];
-        if (current && isLength(current)) {
-            value += parseUnit(current, { fontSize: this.fontSize });
-            if (value < 0 && !(options && options.negative)) {
-                value = 0;
-            }
-            const unit = formatPX(value);
-            this.css(attr, unit);
-            if (cache) {
-                this.unsetCache(attr);
-            }
-            return unit;
-        }
-        return '';
+    public cssUnit(attr: CssStyleAttr, options?: CssUnitOptions) {
+        return this.parseUnit(options && options.initial ? this.cssInitial(attr, options) : this.css(attr), options);
     }
 
     public cssSpecificity(attr: CssStyleAttr) {

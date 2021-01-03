@@ -774,7 +774,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let value: number;
                     if (basis === 'auto' || basis === '0%') {
                         if (item.hasPX(dimension)) {
-                            value = item.parseUnit(item.css(dimension));
+                            value = item.cssUnit(dimension);
                         }
                         else {
                             if (!percent && basis === '0%') {

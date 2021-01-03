@@ -83,6 +83,16 @@ function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionDat
     return (maxScreenHeight > value && node.documentBody ? Math.min(maxScreenHeight, node.actualHeight) : node.actualHeight) - value;
 }
 
+function setCssPX(node: View, attr: CssStyleAttr, value: number) {
+    const current = node.valueAt(attr);
+    if (isPercent(current)) {
+        node.css(attr, formatPercent(parseFloat(current) / 100 + value / node.actualParent!.box.width), true);
+    }
+    else if (isLength(current)) {
+        node.css(attr, formatPX(value + node.parseUnit(current)), true);
+    }
+}
+
 function getMarginSize(value: number, gridSize: number) {
     const size = Math.floor(gridSize / value);
     return [size, gridSize - (size * value)];
@@ -118,7 +128,7 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                         for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
                             if (adjusted.has(item)) {
-                                item.cssPX(dimension, offset / itemCount, true);
+                                setCssPX(item, dimension, offset / itemCount);
                             }
                             else {
                                 item.modifyBox(MARGIN_START, marginStart);
@@ -137,7 +147,7 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                                 if (i < itemCount - 1) {
                                     const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                                     if (adjusted.has(item)) {
-                                        item.cssPX(dimension, marginEnd, true);
+                                        setCssPX(item, dimension, marginEnd);
                                     }
                                     else {
                                         item.modifyBox(MARGIN_END, marginEnd);
@@ -148,7 +158,7 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                                     const unitSpan = +item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan');
                                     if (unitSpan > 1) {
                                         const marginEnd = marginSize + (marginExcess > 0 ? Math.max(marginExcess - 1, 1) : 0);
-                                        item.cssPX(dimension, marginEnd, true);
+                                        setCssPX(item, dimension, marginEnd);
                                         if (adjusted.has(item)) {
                                             item.modifyBox(MARGIN_END, marginEnd * -1, false);
                                         }
@@ -179,7 +189,7 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
                                 adjusted.add(item);
                             }
                             else {
-                                item.cssPX(dimension, marginEnd, true);
+                                setCssPX(item, dimension, marginEnd);
                             }
                         }
                     }

@@ -87,9 +87,7 @@ interface CssSortOptions {
     byInt?: true;
 }
 
-interface CssPXOptions {
-    negative?: boolean;
-}
+interface CssUnitOptions extends NodeParseUnitOptions, CssInitialOptions {}
 
 interface CssInitialOptions {
     initial?: boolean;

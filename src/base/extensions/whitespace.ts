@@ -815,7 +815,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                             }
                             else if (!actualParent.hasHeight) {
-                                actualParent.css('minHeight', formatPX(Math.max(offset, actualParent.hasPX('minHeight', { percent: false }) ? actualParent.parseHeight(actualParent.css('minHeight')) : 0)));
+                                const value = Math.max(offset, actualParent.hasPX('minHeight', { percent: false }) ? actualParent.cssUnit('minHeight', { dimension: 'height' }) : 0);
+                                if (value) {
+                                    actualParent.css('minHeight', formatPX(value));
+                                }
                             }
                         }
                     }

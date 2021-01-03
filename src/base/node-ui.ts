@@ -1923,7 +1923,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (!result) {
                     const parent = this.actualParent;
                     if (parent && parent.firstStaticChild === this && hasTextIndent(parent)) {
-                        result = parent.parseUnit(parent.css('textIndent'));
+                        result = parent.cssUnit('textIndent');
                     }
                 }
             }

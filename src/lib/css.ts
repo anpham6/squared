@@ -3901,11 +3901,8 @@ export function formatPX(value: number) {
 }
 
 export function formatPercent(value: NumString, round?: boolean) {
-    if (typeof value === 'string') {
-        value = +value;
-        if (isNaN(value)) {
-            return '0%';
-        }
+    if (typeof value === 'string' && isNaN(value = +value)) {
+        return '0%';
     }
     value *= 100;
     return (round ? Math.round(value) : value) + '%';

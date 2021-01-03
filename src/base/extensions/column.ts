@@ -48,8 +48,8 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
         const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
         const boxWidth = node.box.width;
         const columnCount = node.toInt('columnCount');
-        const columnWidth = node.parseUnit(node.valueOf('columnWidth'));
-        let columnGap = node.parseUnit(node.valueOf('columnGap')),
+        const columnWidth = node.cssUnit('columnWidth');
+        let columnGap = node.cssUnit('columnGap'),
             columnSized: number;
         const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
         if (columnGap) {
