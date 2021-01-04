@@ -14,6 +14,7 @@ module.exports = {
     "rules": {
         "no-console": "off",
         "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/no-unnecessary-type-arguments": "off",
         "@typescript-eslint/no-var-requires": "off"
     }
 };

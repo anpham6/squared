@@ -1,5 +1,6 @@
-import type { Arguments, ExtendedSettings, IFileManager, ImageConstructor, RequestBody, Settings } from '@squared-functions/types';
+import type { Arguments, ExtendedSettings, IFileManager, Settings as ISettings, ImageConstructor, RequestBody } from '@squared-functions/types';
 import type { ResponseData } from '@squared-functions/types/lib/squared';
+import type { CorsOptions } from 'cors';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -15,6 +16,38 @@ import yaml = require('js-yaml');
 import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
+import Chrome = require('@squared-functions/chrome');
+
+interface Settings extends ISettings {
+    cors?: CorsOptions;
+    env?: string;
+    port?: StringMap;
+    routing?: RoutingModule;
+    request_post_limit?: string;
+}
+
+interface HttpMethod {
+    all?: string;
+    get?: string;
+    head?: string;
+    post?: string;
+    put?: string;
+    delete?: string;
+    trace?: string;
+    options?: string;
+    connect?: string;
+    patch?: string;
+}
+
+interface Route extends HttpMethod {
+    mount?: string;
+    path?: string;
+    handler?: string;
+}
+
+interface RoutingModule {
+    [key: string]: Route[];
+}
 
 const app = express();
 app.use(body_parser.urlencoded({ extended: true }));
@@ -22,10 +55,10 @@ app.use(body_parser.urlencoded({ extended: true }));
 const Node = FileManager.moduleNode();
 
 let Image: Undef<ImageConstructor>,
-    Chrome: Undef<ExtendedSettings.ChromeModule>,
-    Gulp: Undef<ExtendedSettings.GulpModule>,
-    Cloud: Undef<ExtendedSettings.CloudModule>,
-    Compress: Undef<ExtendedSettings.CompressModule>,
+    chromeModule: Undef<ExtendedSettings.ChromeModule>,
+    gulpModule: Undef<ExtendedSettings.GulpModule>,
+    cloudModule: Undef<ExtendedSettings.CloudModule>,
+    compressModule: Undef<ExtendedSettings.CompressModule>,
     watchInterval: Undef<number>;
 
 function installModules(manager: IFileManager, query: StringMap) {
@@ -33,18 +66,18 @@ function installModules(manager: IFileManager, query: StringMap) {
     if (Image) {
         manager.install('image', Image);
     }
-    if (Gulp) {
-        manager.install('gulp', Gulp);
+    if (gulpModule) {
+        manager.install('gulp', gulpModule);
     }
-    if (Cloud) {
-        manager.install('cloud', Cloud);
+    if (cloudModule) {
+        manager.install('cloud', cloudModule);
     }
     if (chrome === '1') {
-        if (Chrome) {
-            manager.install('chrome', Chrome, release === '1');
+        if (chromeModule) {
+            manager.install('chrome', chromeModule, release === '1');
         }
-        if (Compress) {
-            manager.install('compress', Compress);
+        if (compressModule) {
+            manager.install('compress', compressModule);
         }
     }
     if (watch === '1') {
@@ -155,7 +188,7 @@ function installModules(manager: IFileManager, query: StringMap) {
     let settings: Settings = {};
     try {
         settings = fs.existsSync('./squared.settings.yml') && yaml.safeLoad(fs.readFileSync(path.resolve('./squared.settings.yml'), 'utf8')) as Settings || require('./squared.settings.json');
-        ({ compress: Compress, cloud: Cloud, gulp: Gulp, chrome: Chrome } = settings);
+        ({ compress: compressModule, cloud: cloudModule, gulp: gulpModule, chrome: chromeModule } = settings);
         FileManager.loadSettings(settings, ignorePermissions);
 
         Image = require(settings.image?.command || '@squared-functions/image/jimp');
@@ -175,26 +208,72 @@ function installModules(manager: IFileManager, query: StringMap) {
         if (!ENV || !settings.routing[ENV]) {
             ENV = 'development';
         }
-        let mounted = 0;
-        for (const routes of [settings.routing['__SHARED__'], settings.routing[ENV]]) {
-            if (Array.isArray(routes)) {
-                for (const route of routes) {
+        let mounts = 0,
+            routes = 0;
+        const chromeInstance = new Chrome({} as RequestBody);
+        const expressMethods: (keyof HttpMethod)[] = ['get', 'head', 'post', 'put', 'delete', 'trace', 'options', 'connect', 'patch', 'all'];
+        for (const item of [settings.routing['__SHARED__'], settings.routing[ENV]]) {
+            if (Array.isArray(item)) {
+                for (const route of item) {
                     const { path: dirname, mount } = route;
                     if (dirname && mount) {
                         const pathname = path.join(__dirname, mount);
                         try {
                             app.use(dirname, express.static(pathname));
                             Node.formatMessage(Node.logType.SYSTEM, 'MOUNT', `${chalk.bgGrey(pathname)} ${chalk.yellow('->')} ${chalk.bold(dirname)}`, '', { titleColor: 'yellow' });
-                            ++mounted;
+                            ++mounts;
                         }
                         catch (err) {
                             Node.writeFail(['Unable to mount directory', dirname], err);
                         }
                     }
+                    else {
+                        const handler = route.handler?.trim();
+                        if (handler) {
+                            let callback: FunctionType<string>[] | FunctionType<string> = [];
+                            for (const method of handler.startsWith('function') ? [handler] : handler.split('::')) {
+                                const transpiler = chromeInstance.loadTranspiler(method);
+                                if (transpiler) {
+                                    callback.push(transpiler);
+                                }
+                            }
+                            switch (callback.length) {
+                                case 0:
+                                    continue;
+                                case 1:
+                                    callback = callback[0];
+                                    break;
+                            }
+                            let found = false;
+                            for (const attr of expressMethods) {
+                                const pathname = route[attr];
+                                if (pathname && typeof pathname === 'string') {
+                                    try {
+                                        app[attr](pathname, callback);
+                                        Node.formatMessage(Node.logType.SYSTEM, 'ROUTE', chalk.bgGrey(pathname), '', { titleColor: 'yellow' });
+                                        ++routes;
+                                    }
+                                    catch (err) {
+                                        Node.writeFail(['Unable to create route', pathname], err);
+                                    }
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                app.use(callback);
+                            }
+                        }
+                    }
                 }
             }
         }
-        console.log(`\n${chalk.bold(mounted)} directories were mounted.\n`);
+        if (mounts) {
+            console.log(`\n${chalk.bold(mounts)} directories were mounted.${routes ? '' : '\n'}`);
+        }
+        if (routes) {
+            console.log(`\n${chalk.bold(routes)} routes were created.\n`);
+        }
     }
     else {
         ENV ||= 'development';

@@ -573,6 +573,30 @@ squared.add([sample, {/* config */}]);
 
 Some extensions have a few settings which can be configured. Usually default settings are at their maximum optimized levels.
 
+### ALL: Express routing
+
+Simple routing and also middleware can be loaded using locally evaluated functions in case you need additional functionality. It is not recommended you use the provided Express server in production environments when custom routes are defined.
+
+https://expressjs.com/en/guide/routing.html
+
+```javascript
+// squared.settings.json
+
+{
+  "routing": {
+    "__SHARED__": [
+      { "mount": "html", "path": "/" },
+      { "mount": "dist", "path": "/dist" },
+      { "get": "/index.html", "handler": "./index-html.js" } // handler file paths are relative and start with either './' OR '../'
+      { "all": "/route/pathname", "handler": "./handler-1.js::./handler-2.js" } // multiple handler method files use '::' as the separator
+    ],
+    "production": [
+      { "post": "/data/:userId", "handler": "function (req, res, next) { res.send(req.params); }" } // handler contents always start with "function"
+    ]
+  }
+}
+```
+
 ### LICENSE
 
 MIT

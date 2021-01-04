@@ -10,15 +10,14 @@
         document.addEventListener('DOMContentLoaded', async function() {
             squared.setFramework(vdom);
             const result = await squared.parseDocument(document.body);
-            console.log(result.querySelectorAll('ul * a, * * * li'));
-            console.log(document.body.querySelectorAll('ul * a, * * * li'));
+            console.log(result.querySelectorAll('*'));
         });
     </script>
 </head>
 <body>
     <ul>
         <li><a href="https://github.com/anpham6/squared">squared</a></li>
-        <li><a href="https://github.com/anpham6/squared-apache">squared-apache</a></li>
+        <li><a href="https://github.com/anpham6/squared-functions">squared-functions</a></li>
     </ul>
 </body>
 </html>
