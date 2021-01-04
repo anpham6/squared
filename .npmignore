@@ -6,7 +6,7 @@ html/*
 md5/
 node/
 src/
-temp/
+tmp/
 .eslint*
 .git*
 *.code-workspace

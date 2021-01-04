@@ -26,6 +26,6 @@
     "md5",
     "node",
     "node_modules",
-    "temp"
+    "tmp"
   ]
 }

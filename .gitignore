@@ -1,6 +1,6 @@
 build/
 node_modules/
-temp/
+tmp/
 *.code-workspace
 package-lock.json
 serve.js

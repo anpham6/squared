@@ -17,7 +17,7 @@
     "production": [],
     "development": [
       { "mount": "build", "path": "/build" },
-      { "mount": "temp", "path": "/temp" }
+      { "mount": "tmp", "path": "/tmp" }
     ]
   },
   "cors": {

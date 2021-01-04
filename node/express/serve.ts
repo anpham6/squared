@@ -1,6 +1,7 @@
 import type { Arguments, ExtendedSettings, IFileManager, Settings as ISettings, ImageConstructor, RequestBody } from '@squared-functions/types';
 import type { ResponseData } from '@squared-functions/types/lib/squared';
 import type { CorsOptions } from 'cors';
+import type { IRoute } from 'express';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -16,30 +17,10 @@ import yaml = require('js-yaml');
 import chalk = require('chalk');
 
 import FileManager = require('@squared-functions/file-manager');
-import Chrome = require('@squared-functions/chrome');
 
-interface Settings extends ISettings {
-    cors?: CorsOptions;
-    env?: string;
-    port?: StringMap;
-    routing?: RoutingModule;
-    request_post_limit?: string;
-}
+type RouteHandler = { [K in keyof Omit<IRoute, "path" | "stack"> | "connect" | "propfind" | "proppatch"]: string };
 
-interface HttpMethod {
-    all?: string;
-    get?: string;
-    head?: string;
-    post?: string;
-    put?: string;
-    delete?: string;
-    trace?: string;
-    options?: string;
-    connect?: string;
-    patch?: string;
-}
-
-interface Route extends HttpMethod {
+interface Route extends Partial<RouteHandler> {
     mount?: string;
     path?: string;
     handler?: string;
@@ -47,6 +28,14 @@ interface Route extends HttpMethod {
 
 interface RoutingModule {
     [key: string]: Route[];
+}
+
+interface Settings extends ISettings {
+    cors?: CorsOptions;
+    env?: string;
+    port?: StringMap;
+    routing?: RoutingModule;
+    request_post_limit?: string;
 }
 
 const app = express();
@@ -208,10 +197,37 @@ function installModules(manager: IFileManager, query: StringMap) {
         if (!ENV || !settings.routing[ENV]) {
             ENV = 'development';
         }
+        const expressMethods: (keyof RouteHandler)[] = [
+            'all',
+            'get',
+            'post',
+            'put',
+            'delete',
+            'patch',
+            'options',
+            'head',
+            'checkout',
+            'connect',
+            'copy',
+            'lock',
+            'merge',
+            'mkactivity',
+            'mkcol',
+            'move',
+            'm-search',
+            'notify',
+            'propfind',
+            'proppatch',
+            'purge',
+            'report',
+            'search',
+            'subscribe',
+            'trace',
+            'unlock',
+            'unsubscribe'
+        ];
         let mounts = 0,
             routes = 0;
-        const chromeInstance = new Chrome({} as RequestBody);
-        const expressMethods: (keyof HttpMethod)[] = ['get', 'head', 'post', 'put', 'delete', 'trace', 'options', 'connect', 'patch', 'all'];
         for (const item of [settings.routing['__SHARED__'], settings.routing[ENV]]) {
             if (Array.isArray(item)) {
                 for (const route of item) {
@@ -232,7 +248,7 @@ function installModules(manager: IFileManager, query: StringMap) {
                         if (handler) {
                             let callback: FunctionType<string>[] | FunctionType<string> = [];
                             for (const method of handler.startsWith('function') ? [handler] : handler.split('::')) {
-                                const transpiler = chromeInstance.loadTranspiler(method);
+                                const transpiler = Node.parseFunction(method);
                                 if (transpiler) {
                                     callback.push(transpiler);
                                 }
@@ -269,10 +285,10 @@ function installModules(manager: IFileManager, query: StringMap) {
             }
         }
         if (mounts) {
-            console.log(`\n${chalk.bold(mounts)} directories were mounted.${routes ? '' : '\n'}`);
+            console.log(`\n${chalk.bold(mounts)} ${mounts === 1 ? 'directory was' : 'directories were'} mounted.${routes ? '' : '\n'}`);
         }
         if (routes) {
-            console.log(`\n${chalk.bold(routes)} routes were created.\n`);
+            console.log(`\n${chalk.bold(routes)} ${routes === 1 ? 'route was' : 'routes were'} created.\n`);
         }
     }
     else {
@@ -341,7 +357,7 @@ app.post('/api/v1/assets/copy', (req, res) => {
 app.post('/api/v1/assets/archive', (req, res) => {
     const query = req.query;
     const copy_to = query.to && path.normalize(query.to as string);
-    const dirname = path.join(__dirname, 'temp' + path.sep + uuid.v4());
+    const dirname = path.join(__dirname, 'tmp' + path.sep + uuid.v4());
     let dirname_zip: string;
     try {
         fs.mkdirpSync(dirname);

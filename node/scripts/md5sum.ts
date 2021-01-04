@@ -165,7 +165,7 @@ if (master) {
                         }
                         html += '</ol></body></html>';
                         if (modified) {
-                            const pathname = `temp${master!.substring(1)}.html`;
+                            const pathname = `tmp${master!.substring(1)}.html`;
                             fs.mkdirpSync(path.dirname(pathname));
                             fs.writeFileSync(path.resolve(__dirname, pathname), html);
                             successMessage(modified + ' modifications', host + '/' + pathname);
@@ -385,7 +385,7 @@ else {
         requiredMessage('Browser', '-b chromium');
     }
     if (!snapshot) {
-        requiredMessage('Output directory', '-o ./temp/chromium');
+        requiredMessage('Output directory', '-o ./tmp/chromium');
     }
     console.log('');
 }

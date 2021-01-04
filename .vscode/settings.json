@@ -6,6 +6,6 @@
     "**/md5": true,
     "**/html": true,
     "**/node_modules": true,
-    "**/temp": true
+    "**/tmp": true
   }
 }
