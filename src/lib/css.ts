@@ -1623,13 +1623,12 @@ export const PROXY_INLINESTYLE = Object.freeze(
         }
     ) as CSSStyleDeclaration,
     {
-        get: (target, attr) => {
+        get: (target, attr: CssStyleAttr) => {
             let value: Undef<string | string[]> = target[attr];
             if (value) {
-                return value as string;
+                return value;
             }
-            value = CSS_PROPERTIES[attr.toString()]?.value;
-            if (value) {
+            if (value = CSS_PROPERTIES[attr]?.value) {
                 return typeof value === 'string' ? value : '';
             }
         }
@@ -3037,8 +3036,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
 }
 
 export function calculateVar(element: StyleElement, value: string, options: CalculateVarOptions = {}) {
-    value = parseVar(element, value);
-    if (value) {
+    if (value = parseVar(element, value)) {
         const { precision, supportPercent, unitType } = options;
         const boundingSize = !unitType || unitType === CSS_UNIT.LENGTH;
         if (value.includes('%')) {
@@ -3171,10 +3169,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             return 0;
         });
         if (isString(sizes)) {
-            let width = NaN;
+            let width = NaN,
+                match: Null<RegExpExecArray>;
             for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
-                let match = REGEXP_SOURCESIZES.exec(value);
-                if (match) {
+                if (match = REGEXP_SOURCESIZES.exec(value)) {
                     const ruleA = match[1] ? checkMediaRule(match[1]) : null;
                     const ruleB = match[4] ? checkMediaRule(match[4]) : null;
                     switch (match[3]) {
@@ -3201,8 +3199,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                     }
                     const unit = match[6];
                     if (unit) {
-                        match = REGEXP_CALC.exec(unit);
-                        if (match) {
+                        if (match = REGEXP_CALC.exec(unit)) {
                             width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
                         }
                         else if (isPercent(unit)) {

@@ -1822,8 +1822,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public android(attr: string, value?: string, overwrite = true) {
             if (value) {
-                value = this.attr('android', attr, value, overwrite);
-                if (value) {
+                if (value = this.attr('android', attr, value, overwrite)) {
                     return value;
                 }
             }
@@ -1836,8 +1835,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public app(attr: string, value?: string, overwrite = true) {
             if (value) {
-                value = this.attr('app', attr, value, overwrite);
-                if (value) {
+                if (value = this.attr('app', attr, value, overwrite)) {
                     return value;
                 }
             }
@@ -2021,14 +2019,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     const layout: string[] = [];
-                    for (let i = 0, length = position.length; i < length; ++i) {
+                    for (let i = 0, length = position.length, attr: Undef<string>; i < length; ++i) {
                         const value = position[i];
-                        let attr: Undef<string> = LAYOUT_RELATIVE[value];
-                        if (attr) {
+                        if (attr = LAYOUT_RELATIVE[value]) {
                             layout.push(this.localizeString(attr));
                         }
-                        attr = LAYOUT_RELATIVE_PARENT[value];
-                        if (attr) {
+                        if (attr = LAYOUT_RELATIVE_PARENT[value]) {
                             layout.push(this.localizeString(attr));
                         }
                     }
@@ -2967,12 +2963,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.styleElement) {
                         const value = this.elementId || getNamedItem(this.element as HTMLElement, 'name');
                         if (value) {
-                            if (value === 'parent' || RESERVED_JAVA.has(value)) {
-                                name = '_' + value;
-                            }
-                            else {
-                                name = value.replace(REGEXP_CONTROLID, '_');
-                            }
+                            name = value === 'parent' || RESERVED_JAVA.has(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
                         }
                     }
                     return this._controlId = convertWord(Resource.generateId('android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));

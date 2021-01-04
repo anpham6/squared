@@ -685,12 +685,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (!rootElements.has(element)) {
                         let shadowRoot: UndefNull<ShadowRoot>;
-                        if (pierceShadowRoot) {
-                            shadowRoot = element.shadowRoot;
-                            if (shadowRoot) {
-                                this.replaceShadowRootSlots(shadowRoot);
-                                this.setStyleMap(sessionId, shadowRoot);
-                            }
+                        if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
+                            this.replaceShadowRootSlots(shadowRoot);
+                            this.setStyleMap(sessionId, shadowRoot);
                         }
                         const hostElementChild = shadowRoot || element;
                         const beforeElementChild = this.createPseduoElement(element, '::before', sessionId, hostElementChild);
@@ -946,8 +943,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             ++k;
                         }
                         traverse: {
-                            let floatActive: Undef<boolean>,
-                                floating: Undef<boolean>;
+                            let floatActive: Undef<boolean>;
                             for ( ; j < q; ++j, ++k) {
                                 const item = axisY[j];
                                 if (item.pageFlow) {
@@ -962,8 +958,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 floatActive = false;
                                             }
                                         }
-                                        floating = item.floating;
-                                        if (floating) {
+                                        if (item.floating) {
                                             floatActive = true;
                                         }
                                     }
@@ -1744,8 +1739,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                         incrementCounter(increment, true);
                                                     }
                                                     const childStyle = getStyle(item);
-                                                    increment = getCounterValue(childStyle.counterIncrement, counterName);
-                                                    if (increment) {
+                                                    if (increment = getCounterValue(childStyle.counterIncrement, counterName)) {
                                                         incrementCounter(increment, false);
                                                     }
                                                     increment = getCounterValue(childStyle.counterReset, counterName);
@@ -1760,8 +1754,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     while (current) {
                                         ascending = false;
                                         if (current.previousElementSibling) {
-                                            current = current.previousElementSibling as Null<HTMLElement>;
-                                            if (current) {
+                                            if (current = current.previousElementSibling as Null<HTMLElement>) {
                                                 cascadeCounterSibling(current);
                                             }
                                             else {
@@ -1926,8 +1919,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        q = rightAbove.length;
-        if (q) {
+        if (q = rightAbove.length) {
             let floatPosition = Infinity,
                 marginOffset = 0,
                 spacing: Undef<boolean>;

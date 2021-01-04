@@ -46,8 +46,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             }
             return Math.round(time);
         }
-        match = REGGXP_TIMEDELIMITED.exec(value);
-        if (match) {
+        if (match = REGGXP_TIMEDELIMITED.exec(value)) {
             const ms = match[5];
             let time = +match[4] * (match[1] ? -1 : 1);
             if (match[1]) {

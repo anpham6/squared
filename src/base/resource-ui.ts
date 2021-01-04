@@ -212,8 +212,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
         if (width === 2 && (style === 'inset' || style === 'outset')) {
             width = 1;
         }
-        color = parseColor(color);
-        if (color) {
+        if (color = parseColor(color)) {
             boxStyle[attr] = {
                 width: formatPX(width),
                 style,

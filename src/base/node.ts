@@ -108,11 +108,8 @@ function setDimension(node: T, styleMap: CssStyleMap, dimension: DimensionAttr) 
             case 'OBJECT':
             case 'EMBED': {
                 const size = getNamedItem(element, dimension);
-                if (size) {
-                    result = isNumber(size) ? +size : node.parseUnit(size, options);
-                    if (result) {
-                        node.css(dimension, isPercent(size) ? size : size + 'px');
-                    }
+                if (size && (result = isNumber(size) ? +size : node.parseUnit(size, options))) {
+                    node.css(dimension, isPercent(size) ? size : size + 'px');
                 }
                 break;
             }
@@ -527,48 +524,45 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                             return false;
                                         }
                                     }
-                                    else {
-                                        match = REGEXP_QUERYNTHPOSITION.exec(placement);
-                                        if (match) {
-                                            const modifier = parseInt(match[3]);
-                                            if (match[2] && !match[1]) {
-                                                const increment = +match[2];
-                                                if (!isNaN(modifier)) {
-                                                    if (increment !== 0) {
-                                                        if (index !== modifier) {
-                                                            for (let j = increment; ; j += increment) {
-                                                                const total = j + modifier;
-                                                                if (total === index) {
-                                                                    break;
-                                                                }
-                                                                else if (total > index) {
-                                                                    return false;
-                                                                }
+                                    else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
+                                        const modifier = parseInt(match[3]);
+                                        if (match[2] && !match[1]) {
+                                            const increment = +match[2];
+                                            if (!isNaN(modifier)) {
+                                                if (increment !== 0) {
+                                                    if (index !== modifier) {
+                                                        for (let j = increment; ; j += increment) {
+                                                            const total = j + modifier;
+                                                            if (total === index) {
+                                                                break;
+                                                            }
+                                                            else if (total > index) {
+                                                                return false;
                                                             }
                                                         }
                                                     }
-                                                    else if (index !== modifier) {
-                                                        return false;
-                                                    }
                                                 }
-                                                else if (index % increment !== 0) {
+                                                else if (index !== modifier) {
                                                     return false;
                                                 }
                                             }
-                                            else if (match[3] && modifier > 0) {
-                                                if (match[1]) {
-                                                    if (index > modifier) {
-                                                        return false;
-                                                    }
-                                                }
-                                                else if (index < modifier) {
+                                            else if (index % increment !== 0) {
+                                                return false;
+                                            }
+                                        }
+                                        else if (match[3] && modifier > 0) {
+                                            if (match[1]) {
+                                                if (index > modifier) {
                                                     return false;
                                                 }
                                             }
+                                            else if (index < modifier) {
+                                                return false;
+                                            }
                                         }
-                                        else {
-                                            return !!selector.fromNot;
-                                        }
+                                    }
+                                    else {
+                                        return !!selector.fromNot;
                                     }
                                     break;
                             }
@@ -707,7 +701,7 @@ function ascendQuerySelector(this: T, selectors: QueryData[], index: number, nod
                 }
             }
             else if (selectorAdjacent) {
-                while (parent && parent.depth - this.depth > index + offset) {
+                while (parent && parent.depth - this.depth >= index + offset) {
                     if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
                         next.push(parent);
                     }
@@ -835,8 +829,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     continue;
                 }
             }
-            value = checkStyleValue(element, attr, value);
-            if (value) {
+            if (value = checkStyleValue(element, attr, value)) {
                 result[attr as CssStyleAttr] = value;
             }
         }
@@ -917,8 +910,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     return true;
                 }
                 else if (sessionId) {
-                    elementData = getElementData(element, sessionId);
-                    if (elementData) {
+                    if (elementData = getElementData(element, sessionId)) {
                         this._elementData = elementData;
                     }
                 }
@@ -2416,20 +2408,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 else {
                     let parent = this.ascend({ condition: item => item.has('lineHeight', { initial: true, not: 'inherit' }) })[0];
-                    if (parent) {
-                        value = parseLineHeight(parent.css('lineHeight'), this.fontSize);
-                        if (value) {
-                            if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
-                                this.css('lineHeight', value + 'px');
-                            }
-                            hasOwnStyle = true;
+                    if (parent && (value = parseLineHeight(parent.css('lineHeight'), this.fontSize))) {
+                        if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
+                            this.css('lineHeight', value + 'px');
                         }
+                        hasOwnStyle = true;
                     }
-                    if (value === 0) {
-                        parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
-                        if (parent) {
-                            value = parent.lineHeight;
-                        }
+                    if (value === 0 && (parent = this.ascend({ condition: item => item.lineHeight > 0 })[0])) {
+                        value = parent.lineHeight;
                     }
                 }
                 result = hasOwnStyle || value > this.height || this.multiline || this.block && this.naturalChildren.some((node: T) => node.textElement) ? value : 0;
@@ -3239,8 +3225,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (!result) {
                 let parent = this.actualParent;
                 while (parent) {
-                    result = parent.dir;
-                    if (result) {
+                    if (result = parent.dir) {
                         break;
                     }
                     parent = parent.actualParent;

@@ -350,8 +350,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (index !== -1) {
                         const endPoint = keyPoints[index + 1];
                         if (endPoint) {
-                            rotating = rotatingPoints[index + 1];
-                            if (rotating) {
+                            if (rotating = rotatingPoints[index + 1]) {
                                 center = SvgBuild.centerOf(keyPoints[index], endPoint);
                                 rotateFixed = 0;
                             }

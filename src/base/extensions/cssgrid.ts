@@ -598,10 +598,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 let rowSpan = -1,
                     columnSpan = -1;
                 if (Object.keys(templateAreas).length) {
-                    for (let i = 0; i < 4; ++i) {
+                    for (let i = 0, template: Undef<CssGridCellData>; i < 4; ++i) {
                         const name = positions[i];
-                        let template = templateAreas[name];
-                        if (template) {
+                        if (template = templateAreas[name]) {
                             switch (i) {
                                 case 0:
                                     placement[0] = template.rowStart + 1;
@@ -619,32 +618,29 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else {
                             const match = /^([\w-]+)-(start|end)$/.exec(name);
-                            if (match) {
-                                template = templateAreas[match[1]];
-                                if (template) {
-                                    if (match[2] === 'start') {
-                                        switch (i) {
-                                            case 0:
-                                            case 2:
-                                                placement[i] = template.rowStart + 1;
-                                                break;
-                                            case 1:
-                                            case 3:
-                                                placement[i] = template.columnStart + 1;
-                                                break;
-                                        }
+                            if (match && (template = templateAreas[match[1]])) {
+                                if (match[2] === 'start') {
+                                    switch (i) {
+                                        case 0:
+                                        case 2:
+                                            placement[i] = template.rowStart + 1;
+                                            break;
+                                        case 1:
+                                        case 3:
+                                            placement[i] = template.columnStart + 1;
+                                            break;
                                     }
-                                    else {
-                                        switch (i) {
-                                            case 0:
-                                            case 2:
-                                                placement[i] = template.rowStart + template.rowSpan + 1;
-                                                break;
-                                            case 1:
-                                            case 3:
-                                                placement[i] = template.columnStart + template.columnSpan + 1;
-                                                break;
-                                        }
+                                }
+                                else {
+                                    switch (i) {
+                                        case 0:
+                                        case 2:
+                                            placement[i] = template.rowStart + template.rowSpan + 1;
+                                            break;
+                                        case 1:
+                                        case 3:
+                                            placement[i] = template.columnStart + template.columnSpan + 1;
+                                            break;
                                     }
                                 }
                             }

@@ -617,8 +617,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'initial':
-                    result = node.unsafe<InitialData<T>>('initial');
-                    if (result) {
+                    if (result = node.unsafe<InitialData<T>>('initial')) {
                         this.inheritApply('initial', result);
                     }
                     break;

@@ -634,17 +634,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (base64) {
                 if (saveAsBase64) {
                     let commands: Undef<string[]>;
-                    if (mimeType && mimeType.startsWith('image/')) {
-                        commands = saveAsBase64.commands;
-                        if (commands) {
-                            for (let i = 0; i < commands.length; ++i) {
-                                const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)([\S\s]*)$/.exec(commands[i]);
-                                if (match) {
-                                    commands[i] = match[1] + '@' + match[2].trim();
-                                }
-                                else {
-                                    commands.splice(i--, 1);
-                                }
+                    if (mimeType && mimeType.startsWith('image/') && (commands = saveAsBase64.commands)) {
+                        for (let i = 0; i < commands.length; ++i) {
+                            const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)([\S\s]*)$/.exec(commands[i]);
+                            if (match) {
+                                commands[i] = match[1] + '@' + match[2].trim();
+                            }
+                            else {
+                                commands.splice(i--, 1);
                             }
                         }
                     }
@@ -657,7 +654,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     );
                     if (data) {
                         data.base64 = base64;
-                        if (commands?.length) {
+                        if (commands && commands.length) {
                             data.commands ||= commands;
                         }
                         data.cloudStorage = saveAsBase64.cloudStorage;
@@ -884,8 +881,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             filename = saveAsOptions.filename;
             ({ preserve, inline, process, compress, tasks, watch, cloudStorage, attributes } = saveAsOptions);
             if (src) {
-                file = filename && getCustomPath(src, saveAsOptions.pathname, filename);
-                if (file) {
+                if (file = filename && getCustomPath(src, saveAsOptions.pathname, filename)) {
                     filename = '';
                 }
             }
@@ -920,8 +916,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     ({ file, format } = command);
                 }
             }
-            data = createBundleAsset(assets, element, file, format, preserve, inline);
-            if (data) {
+            if (data = createBundleAsset(assets, element, file, format, preserve, inline)) {
                 data.bundleIndex = -1;
             }
         }
@@ -987,11 +982,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         if (fileAs) {
                             [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);
                         }
-                        else {
-                            fileAs = parseFileAs('saveAs', file);
-                            if (fileAs) {
-                                saveAs = fileAs.file;
-                            }
+                        else if (fileAs = parseFileAs('saveAs', file)) {
+                            saveAs = fileAs.file;
                         }
                     }
                     const { chromeCommands, chromeOptions, chromeWatch } = element.dataset;

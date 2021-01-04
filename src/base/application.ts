@@ -522,8 +522,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 let child: Undef<T>;
                 if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
-                        child = this.insertNode(element, sessionId);
-                        if (child) {
+                        if (child = this.insertNode(element, sessionId)) {
                             child.cssApply(node.textStyle);
                         }
                         plainText = true;
@@ -535,23 +534,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                         (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
                     let shadowRoot: UndefNull<ShadowRoot>;
-                    if (pierceShadowRoot) {
-                        shadowRoot = element.shadowRoot;
-                        if (shadowRoot) {
-                            this.setStyleMap(sessionId, shadowRoot);
-                        }
+                    if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
+                        this.setStyleMap(sessionId, shadowRoot);
                     }
-                    child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId);
-                    if (child) {
+                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId)) {
                         elements.push(child);
                         inlineText = false;
                     }
                 }
-                else {
-                    child = this.insertNode(element, sessionId);
-                    if (child) {
-                        processing.excluded.add(child);
-                    }
+                else if (child = this.insertNode(element, sessionId)) {
+                    processing.excluded.add(child);
                 }
                 if (child) {
                     child.init(node, childDepth, j++);

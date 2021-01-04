@@ -86,8 +86,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
             do {
                 if (SvgBuild.asSvg(container) || SvgBuild.isUse(container)) {
                     const { x: offsetX, y: offsetY } = container;
-                    container = container.parent;
-                    if (container) {
+                    if (container = container.parent) {
                         if (offsetX !== 0) {
                             x += container.refitX(offsetX);
                         }

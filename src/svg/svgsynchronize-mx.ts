@@ -1306,8 +1306,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         setterInterrupt: Undef<SvgAnimation>;
                                     if (item.animationElement && setterData.length) {
                                         const interruptTime = Math.min(nextDelayTime, totalDuration, maxThreadTime);
-                                        setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime);
-                                        if (setterInterrupt) {
+                                        if (setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime)) {
                                             switch (setterInterrupt.delay) {
                                                 case actualMaxTime:
                                                     baseValue = setterInterrupt.to;

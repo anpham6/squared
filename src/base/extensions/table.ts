@@ -201,8 +201,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             td.css('backgroundImage', value, true);
                             visibleStyle.backgroundImage = true;
                         }
-                        value = getInheritedStyle(element, 'backgroundColor', exclude);
-                        if (value) {
+                        if (value = getInheritedStyle(element, 'backgroundColor', exclude)) {
                             td.css('backgroundColor', value);
                             td.setCacheValue('backgroundColor', value);
                             visibleStyle.backgroundColor = true;

@@ -357,20 +357,17 @@ export function parseColor(value: string, opacity = 1) {
                 };
                 value = '';
             }
+            else if (match = CSS.HSLA.exec(value)) {
+                rgba = convertRGBA({
+                    h: +match[1],
+                    s: +match[2],
+                    l: +match[3],
+                    a: clamp(match[4] ? convertOpacity(match[4]) : opacity)
+                });
+                value = '';
+            }
             else {
-                match = CSS.HSLA.exec(value);
-                if (match) {
-                    rgba = convertRGBA({
-                        h: +match[1],
-                        s: +match[2],
-                        l: +match[3],
-                        a: clamp(match[4] ? convertOpacity(match[4]) : opacity)
-                    });
-                    value = '';
-                }
-                else {
-                    return null;
-                }
+                return null;
             }
         }
     }

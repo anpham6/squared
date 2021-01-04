@@ -680,17 +680,14 @@ function insertFillAfter(propertyName: string, valueType: string, item: SvgAnima
                 previousValue = lastValue.valueTo;
             }
         }
-        if (valueTo && valueTo !== previousValue) {
-            valueTo = convertValueType(item, valueTo);
-            if (valueTo) {
-                switch (propertyName) {
-                    case 'trimPathStart':
-                    case 'trimPathEnd':
-                        valueTo = valueTo.split(' ')[propertyName === 'trimPathStart' ? 0 : 1];
-                        break;
-                }
-                afterAnimator.push(createPropertyValue(propertyName, valueType, valueTo, '1', precision, valueType === 'pathType' ? previousValue : '', startOffset ? startOffset.toString() : ''));
+        if (valueTo && valueTo !== previousValue && (valueTo = convertValueType(item, valueTo))) {
+            switch (propertyName) {
+                case 'trimPathStart':
+                case 'trimPathEnd':
+                    valueTo = valueTo.split(' ')[propertyName === 'trimPathStart' ? 0 : 1];
+                    break;
             }
+            afterAnimator.push(createPropertyValue(propertyName, valueType, valueTo, '1', precision, valueType === 'pathType' ? previousValue : '', startOffset ? startOffset.toString() : ''));
         }
         if (transformOrigin) {
             if (lastItemOf(propertyName) === 'X') {
