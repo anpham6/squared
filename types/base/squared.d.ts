@@ -207,7 +207,6 @@ declare module "base" {
         static readonly KEY_NAME: string;
         static readonly ASSETS: ResourceAssetMap;
         static hasMimeType(formats: MIMEOrAll, value: string): boolean;
-        static canCompressImage(filename: string, mimeType?: string): boolean;
         static getExtension(value: string): string;
         static resetDataMap(data: ResourceMap): void;
         readonly application: Application<T>;
@@ -247,14 +246,13 @@ declare module "base" {
         static getBackgroundSize<U extends NodeUI>(node: U, value: string, dimension?: Dimension): Null<Dimension>;
         static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
-        finalize(layouts: FileAsset[]): void;
         writeRawImage(options: RawDataOptions): Null<RawAsset>;
         writeRawSvg(element: SVGSVGElement, dimension?: Dimension): string;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
         preFormatString(value: string): string
-        removeExcludedFromText(node: T, element: Element): string;
+        removeExcludedText(node: T, element: Element): string;
         get controllerSettings(): ControllerSettingsUI;
         get mapOfStored(): ResourceStoredMap;
     }

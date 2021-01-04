@@ -268,7 +268,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
             );
         }
-        this.resourceHandler.finalize(this._layouts);
         controller.finalize(this._layouts);
         for (let i = 0; i < length; ++i) {
             extensions[i].afterFinalize();

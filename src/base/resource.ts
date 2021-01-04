@@ -25,10 +25,6 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         return formats === '*' || formats.has(parseMimeType(value));
     }
 
-    public static canCompressImage(filename: string, mimeType?: string) {
-        return /\.(png|jpg|jpeg)$/i.test(filename) || !!mimeType && (mimeType.endsWith('png') || mimeType.endsWith('jpeg'));
-    }
-
     public static getExtension(value: string) {
         const match = /\.(\w+)\s*$/.exec(value);
         return match ? match[1] : '';

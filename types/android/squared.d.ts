@@ -39,6 +39,7 @@ declare namespace base {
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
         static STORED: ResourceStoredMap;
+        static canCompressImage(filename: string, mimeType?: string): boolean;
         static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         static formatName(value: string): string;
         static addTheme(theme: ThemeAttribute): boolean;

@@ -59,6 +59,10 @@ function isLeadingDigit(value: string) {
 }
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
+    public static canCompressImage(filename: string, mimeType?: string) {
+        return /\.(png|jpg|jpeg)$/i.test(filename) || !!mimeType && (mimeType.endsWith('png') || mimeType.endsWith('jpeg'));
+    }
+
     public static formatOptions(options: ViewAttribute, numberAlias?: boolean) {
         for (const namespace in options) {
             const obj: StandardMap = options[namespace];

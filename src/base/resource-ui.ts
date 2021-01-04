@@ -270,14 +270,17 @@ function newBoxRectPosition(orientation = ['left', 'top']): BoxRectPosition {
     };
 }
 
-function replaceSvgAttribute(src: string, tagName: string, attr: string, value: NumString, timestamp: string, start?: boolean) {
-    tagName = (start ? '' : '@@' + timestamp) + `(${tagName})`;
-    const style = ' ' + attr + `="${value}"`;
-    const match = new RegExp(`<${tagName}(.+?)\\s+${attr}\\s*=\\s*["']?[^"']+["']?([^>]*>)`, 'i').exec(src);
-    if (match) {
-        return src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[3]);
+function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], timestamp: string, start?: boolean) {
+    const length = attrs.length;
+    let i = 0;
+    while (i < length) {
+        const attr = attrs[i++];
+        tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
+        const style = ' ' + attr + `="${attrs[i++]}"`;
+        const match = new RegExp(`<${tagName}(.+?)\\s+${attr}\\s*=\\s*["']?[^"']+["']?([^>]*>)`, 'i').exec(src);
+        src = match ? src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[3]) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
     }
-    return src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+    return src;
 }
 
 function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], dimension?: Dimension) {
@@ -292,8 +295,16 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
             case 'rect':
             case 'pattern':
                 try {
-                    src = replaceSvgAttribute(src, tagName, 'height', dimension && dimension.height || (item as SVGSVGElement).height.baseVal.value, timestamp, true);
-                    src = replaceSvgAttribute(src, tagName, 'width', dimension && dimension.width || (item as SVGSVGElement).width.baseVal.value, timestamp);
+                    src = replaceSvgAttribute(
+                        src,
+                        tagName,
+                        [
+                            'height', dimension && dimension.height || (item as SVGSVGElement).height.baseVal.value,
+                            'width', dimension && dimension.width || (item as SVGSVGElement).width.baseVal.value
+                        ],
+                        timestamp,
+                        true
+                    );
                     start = false;
                 }
                 catch {
@@ -309,27 +320,43 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
                 const { stroke, strokeWidth, strokeDasharray, strokeDashoffset, strokeLinecap, strokeLinejoin, strokeMiterlimit, strokeOpacity, fill, fillRule, fillOpacity, clipPath, clipRule } = getStyle(item);
                 const strokeColor = parseColor(stroke);
                 const fillColor = parseColor(fill);
-                src = replaceSvgAttribute(src, tagName, 'stroke', strokeColor && !strokeColor.transparent ? strokeColor.valueAsRGBA : 'none', timestamp, start);
-                src = replaceSvgAttribute(src, tagName, 'stroke-width', strokeWidth, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'stroke-dasharray', strokeDasharray, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'stroke-dashoffset', strokeDashoffset, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'stroke-linecap', strokeLinecap, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'stroke-linejoin', strokeLinejoin, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'stroke-miterlimit', strokeMiterlimit, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'stroke-opacity', strokeOpacity, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'fill', fillColor && !fillColor.transparent ? fillColor.valueAsRGBA : 'none', timestamp);
-                src = replaceSvgAttribute(src, tagName, 'fill-rule', fillRule, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'fill-opacity', fillOpacity, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'clip-path', clipPath, timestamp);
-                src = replaceSvgAttribute(src, tagName, 'clip-rule', clipRule, timestamp);
+                src = replaceSvgAttribute(
+                    src,
+                    tagName,
+                    [
+                        'stroke', strokeColor && !strokeColor.transparent ? strokeColor.valueAsRGBA : 'none',
+                        'stroke-width', strokeWidth,
+                        'stroke-dasharray', strokeDasharray,
+                        'stroke-dashoffset', strokeDashoffset,
+                        'stroke-linecap', strokeLinecap,
+                        'stroke-linejoin', strokeLinejoin,
+                        'stroke-miterlimit', strokeMiterlimit,
+                        'stroke-opacity', strokeOpacity,
+                        'fill', fillColor && !fillColor.transparent ? fillColor.valueAsRGBA : 'none',
+                        'fill-rule', fillRule,
+                        'fill-opacity', fillOpacity,
+                        'clip-path', clipPath,
+                        'clip-rule', clipRule
+                    ],
+                    timestamp,
+                    start
+                );
                 src = replaceSvgValues(src, item.children);
                 break;
             }
             case 'stop': {
                 const { stopColor, stopOpacity } = getStyle(item);
                 const color = parseColor(stopColor);
-                src = replaceSvgAttribute(src, tagName, 'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none', timestamp, true);
-                src = replaceSvgAttribute(src, tagName, 'stop-opacity', stopOpacity, timestamp);
+                src = replaceSvgAttribute(
+                    src,
+                    tagName,
+                    [
+                        'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none',
+                        'stop-opacity', stopOpacity
+                    ],
+                    timestamp,
+                    true
+                );
                 break;
             }
         }
@@ -355,7 +382,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     };
 
     public static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
-        if (value) {
+        if (value && value !== 'left top' && value !== '0% 0%') {
             let fontSize: Undef<number>,
                 imageDimension: UndefNull<Dimension>,
                 imageSize: Undef<string>,
@@ -1006,8 +1033,6 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
     }
 
-    public finalize(layouts: FileAsset[]) {}
-
     public reset() {
         super.reset();
         ResourceUI.resetDataMap(ResourceUI.STORED);
@@ -1272,7 +1297,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         inlined = true;
                     }
                     else if (node.inlineText) {
-                        value = node.textEmpty ? ResourceUI.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedFromText(node, element);
+                        value = node.textEmpty ? ResourceUI.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedText(node, element);
                     }
                     break;
             }
@@ -1411,7 +1436,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         return value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
     }
 
-    public removeExcludedFromText(node: T, element: Element) {
+    public removeExcludedText(node: T, element: Element) {
         const { preserveWhiteSpace, sessionId } = node;
         const styled = element.children.length > 0 || element.tagName === 'CODE';
         const attr = styled ? 'innerHTML' : 'textContent';

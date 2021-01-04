@@ -201,7 +201,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             let adjustment = fontAdjust,
                 textContent: string;
             if (seg.naturalElement) {
-                textContent = this.resource!.removeExcludedFromText(seg, element);
+                textContent = this.resource!.removeExcludedText(seg, element);
                 const value = getFontMeasureAdjust(seg);
                 if (value === Infinity) {
                     continue;
