@@ -4,34 +4,46 @@
 
 Option #1 - [Node.js](http://www.nodejs.org)
 
-GitHub  
-&nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared  
-&nbsp;&nbsp;&nbsp;&gt; cd squared  
-&nbsp;&nbsp;&nbsp;&gt; npm install --only=prod && npm run prod  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *OR*  
-&nbsp;&nbsp;&nbsp;&gt; npm install && npm run dev
+GitHub
+```xml
+> git clone https://github.com/anpham6/squared
+> cd squared
 
-NPM  
-&nbsp;&nbsp;&nbsp;&gt; npm install squared  
-&nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
+> npm install --only=prod
+> npm run prod
 
-Express  
-&nbsp;&nbsp;&nbsp;&gt; README: [squared-functions](https://github.com/anpham6/squared-functions#readme)  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings.[json|yml] (configure)  
-&nbsp;&nbsp;&nbsp;&gt; node serve.js [--help]
+  <!-- OR -->
 
-* http://localhost:3000
+> npm install
+> npm run dev
+```
+
+NPM
+```xml
+> npm install squared  
+> cd node_modules/squared  
+```
+
+* README: [squared-express](https://github.com/anpham6/squared-express#readme)  
+* README: [squared-functions](https://github.com/anpham6/squared-functions#readme)  
+
+```xml
+> squared.settings.[json|yml] (configure)  
+> node serve.js [--help]
+
+> http://localhost:3000
+```
 
 Option #2 - Browser
 
 * Download (squared@version): https://unpkg.com/squared
 
-&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
-&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.base-dom.min.js  
-&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom.framework.min.js  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *OR*  
-&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/squared.min.js  
-&nbsp;&nbsp;&nbsp;&gt; https://unpkg.com/squared/dist/vdom-lite.framework.min.js
+&nbsp;* https://unpkg.com/squared/dist/squared.min.js  
+&nbsp;* https://unpkg.com/squared/dist/squared.base-dom.min.js  
+&nbsp;* https://unpkg.com/squared/dist/vdom.framework.min.js  
+  
+&nbsp;* https://unpkg.com/squared/dist/squared.min.js  
+&nbsp;* https://unpkg.com/squared/dist/vdom-lite.framework.min.js
 
 ### ALL: Usage
 
@@ -572,51 +584,6 @@ squared.add([sample, {/* config */}]);
 ```
 
 Some extensions have a few settings which can be configured. Usually default settings are at their maximum optimized levels.
-
-### ALL: Express routing
-
-Simple routing and also middleware can be loaded using locally evaluated functions in case you need additional functionality. It is not recommended you use the provided Express server in production environments when custom routes are defined.
-
-https://expressjs.com/en/guide/routing.html
-
-```javascript
-// squared.settings.json
-
-{
-  "routing": {
-    "__SHARED__": [
-      { "mount": "html", "path": "/" },
-      { "mount": "dist", "path": "/dist" },
-      { "get": "/index.html", "handler": "./index-html.js" }, // handler file paths are relative and start with either './' OR '../'
-      { "all": "/route/pathname", "handler": ["./handler-1.js", "./handler-2.js"] },
-      { "handler": "./middleware.js" }
-    ],
-    "production": [
-      { "post": "/data/:userId", "handler": "function (req, res) { res.send(req.params); }" } // handler contents always start with "function"
-    ]
-  }
-}
-
-// index-html.js
-function (req, res) {
-    res.send('<html><body><!-- content --></body></html>');
-}
-
-// handler-1.js
-function (req, res, next) {
-    /* handler-1: code */
-    next();
-}
-
-// handler-2.js
-function (req, res) { /* handler-2: code */ }
-
-// middleware.js
-function () {
-    const cookieParser = require('cookie-parser'); // npm i cookie-parser
-    return cookieParser();
-}
-```
 
 ### LICENSE
 

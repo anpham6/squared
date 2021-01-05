@@ -24,8 +24,8 @@
     "dist",
     "html",
     "md5",
-    "node",
     "node_modules",
+    "scripts",
     "tmp"
   ]
 }
