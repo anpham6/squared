@@ -16,4 +16,5 @@ bundle.js
 md5sum.js
 gulpfile.js
 !serve.js
+!squared.settings.json
 !html/index.html

@@ -9,20 +9,6 @@
       "webRoot": "${workspaceFolder}"
     },
     {
-      "name": "Launch Express (ts)",
-      "type": "node",
-      "request": "launch",
-      "preLaunchTask": "npm dev-express",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register"
-      ],
-      "args": [
-        "${workspaceFolder}/serve.js",
-        "--access-all"
-      ]
-    },
-    {
       "name": "Launch Express",
       "type": "node",
       "request": "launch",
