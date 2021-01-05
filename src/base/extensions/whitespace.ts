@@ -703,7 +703,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 const previousSiblings = node.previousSiblings() as T[];
                 const q = previousSiblings.length;
                 if (q) {
-                    const actualParent = node.actualParent!;
+                    const parent = node.actualParent!;
                     const nextSiblings = node.siblingsTrailing as T[];
                     const r = nextSiblings.length;
                     if (r) {
@@ -732,11 +732,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             let aboveParent = above.renderParent,
                                 belowParent = below.renderParent;
                             if (aboveParent !== belowParent) {
-                                while (aboveParent && aboveParent !== actualParent) {
+                                while (aboveParent && aboveParent !== parent) {
                                     above = aboveParent as T;
                                     aboveParent = above.renderParent;
                                 }
-                                while (belowParent && belowParent !== actualParent) {
+                                while (belowParent && belowParent !== parent) {
                                     below = belowParent as T;
                                     belowParent = below.renderParent;
                                 }
@@ -795,29 +795,29 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         else {
                             [offset, below] = getMarginOffset(below, above, lineHeight);
                             if (offset >= 1) {
-                                if ((below.lineBreak || below.excluded) && actualParent.lastChild === below) {
-                                    actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+                                if ((below.lineBreak || below.excluded) && parent.lastChild === below) {
+                                    parent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                     valid = true;
                                 }
-                                else if ((above.lineBreak || above.excluded) && actualParent.firstChild === above) {
-                                    actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                                else if ((above.lineBreak || above.excluded) && parent.firstChild === above) {
+                                    parent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                                     valid = true;
                                 }
                             }
                         }
                     }
-                    else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE' && !actualParent.documentRoot && !actualParent.documentBody) {
+                    else if (parent.visible && !parent.preserveWhiteSpace && parent.tagName !== 'CODE' && !parent.documentRoot && !parent.documentBody) {
                         const previousStart = previousSiblings[previousSiblings.length - 1];
                         const rect = previousStart.bounds.height === 0 && !previousStart.isEmpty() ? previousStart.outerRegion : previousStart.linear;
-                        const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
+                        const offset = parent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
                         if (offset !== 0) {
-                            if (previousStart.rendered || actualParent.visibleStyle.background) {
-                                actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+                            if (previousStart.rendered || parent.visibleStyle.background) {
+                                parent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                             }
-                            else if (!actualParent.hasHeight) {
-                                const value = Math.max(offset, actualParent.hasPX('minHeight', { percent: false }) ? actualParent.cssUnit('minHeight', { dimension: 'height' }) : 0);
+                            else if (!parent.hasHeight) {
+                                const value = Math.max(offset, parent.hasPX('minHeight', { percent: false }) ? parent.cssUnit('minHeight', { dimension: 'height' }) : 0);
                                 if (value) {
-                                    actualParent.css('minHeight', formatPX(value));
+                                    parent.css('minHeight', formatPX(value));
                                 }
                             }
                         }

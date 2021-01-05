@@ -344,16 +344,18 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
     return percentAvailable;
 }
 
-function constraintPercentValue(node: T, horizontal: boolean, percentAvailable: number) {
-    const value = horizontal ? node.percentWidth : node.percentHeight;
-    return value ? setConstraintPercent(node, value, horizontal, percentAvailable) : percentAvailable;
+function withinFixedBoxDimension(node: T, dimension: DimensionAttr) {
+    if (node.pageFlow) {
+        const parent = node.actualParent!;
+        return parent.hasPX(dimension, { percent: false }) && (!parent.flexElement || !parent.flexdata[dimension === 'width' ? 'row' : 'column']);
+    }
+    return false;
 }
 
 function constraintPercentWidth(node: T, percentAvailable = 1) {
     const value = node.percentWidth;
     if (value) {
-        const parent = node.actualParent;
-        if (parent && parent.hasPX('width', { percent: false }) && !parent.layoutElement && node.pageFlow) {
+        if (withinFixedBoxDimension(node, 'width')) {
             if (value < 1) {
                 node.setLayoutWidth(formatPX(node.actualWidth));
             }
@@ -361,8 +363,8 @@ function constraintPercentWidth(node: T, percentAvailable = 1) {
                 node.setLayoutWidth(node.getMatchConstraint(), false);
             }
         }
-        else if (!node.inputElement) {
-            return constraintPercentValue(node, true, percentAvailable);
+        else if (!node.inputElement || node.buttonElement) {
+            return setConstraintPercent(node, value, true, percentAvailable);
         }
     }
     return percentAvailable;
@@ -371,8 +373,7 @@ function constraintPercentWidth(node: T, percentAvailable = 1) {
 function constraintPercentHeight(node: T, percentAvailable = 1) {
     const value = node.percentHeight;
     if (value) {
-        const parent = node.actualParent;
-        if (parent && parent.hasPX('height', { percent: false }) && !parent.layoutElement && node.pageFlow) {
+        if (withinFixedBoxDimension(node, 'height')) {
             if (value < 1) {
                 node.setLayoutHeight(formatPX(node.actualHeight));
             }
@@ -380,8 +381,8 @@ function constraintPercentHeight(node: T, percentAvailable = 1) {
                 node.setLayoutHeight('match_parent', false);
             }
         }
-        else if (!node.inputElement) {
-            return constraintPercentValue(node, false, percentAvailable);
+        else if (!node.inputElement || node.buttonElement) {
+            return setConstraintPercent(node, value, false, percentAvailable);
         }
     }
     return percentAvailable;
@@ -393,6 +394,24 @@ function setLayoutDimension(node: T, value: string, horizontal: boolean, overwri
     }
     else {
         node.setLayoutHeight(value, overwrite);
+    }
+}
+
+function transferLayoutAlignment(node: T, target: T) {
+    target.anchorClear();
+    for (const [name, item] of node.namespaces()) {
+        for (const attr in item) {
+            switch (attr) {
+                case 'layout_width':
+                case 'layout_height':
+                    break;
+                default:
+                    if (attr.startsWith('layout_') && !attr.includes('margin')) {
+                        target.attr(name, attr, item[attr], true);
+                    }
+                    break;
+            }
+        }
     }
 }
 
@@ -553,11 +572,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _styleMap!: CssStyleMap;
         protected _boxReset?: number[];
         protected _boxAdjustment?: number[];
-        protected _documentParent?: T;
         protected _innerWrapped?: T;
 
+        private _controlId = '';
         private _positioned = false;
-        private _controlId?: string;
         private _labelFor?: T;
         private _constraint?: Constraint;
         private _anchored?: boolean;
@@ -2037,29 +2055,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
-                const transferLayoutAlignment = (replaceWith: T) => {
-                    replaceWith.anchorClear();
-                    for (const [name, item] of node.namespaces()) {
-                        for (const attr in item) {
-                            switch (attr) {
-                                case 'layout_width':
-                                case 'layout_height':
-                                    continue;
-                                default:
-                                    if (attr.startsWith('layout_') && !attr.includes('margin')) {
-                                        replaceWith.attr(name, attr, item[attr], true);
-                                    }
-                                    continue;
-                            }
-                        }
-                    }
-                };
                 if (renderParent.layoutConstraint) {
                     if (update === true) {
                         replaceLayoutPosition(node, 'parent');
                     }
                     else if (update) {
-                        transferLayoutAlignment(update);
+                        transferLayoutAlignment(node, update);
                     }
                     node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT) as AnchorPositionAttr[]);
                     node.delete('app', 'layout_constraint*');
@@ -2069,7 +2070,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         replaceLayoutPosition(node, 'true');
                     }
                     else if (update) {
-                        transferLayoutAlignment(update);
+                        transferLayoutAlignment(node, update);
                     }
                     node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT) as AnchorPositionAttr[]);
                     node.anchorDelete(...Object.keys(LAYOUT_RELATIVE) as AnchorPositionAttr[]);
@@ -2935,20 +2936,21 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get imageContainer() {
-            return this.imageElement || this.svgElement || this._containerType === CONTAINER_NODE.IMAGE;
+            return this._containerType === CONTAINER_NODE.IMAGE || this.imageElement || this.svgElement;
         }
 
         set containerType(value) {
             this._containerType = value;
         }
         get containerType() {
-            if (this._containerType === 0) {
+            const result = this._containerType;
+            if (result === 0) {
                 const value: Undef<number> = CONTAINER_ELEMENT[this.containerName];
                 if (value) {
-                    this._containerType = value;
+                    return this._containerType = value;
                 }
             }
-            return this._containerType;
+            return result;
         }
 
         set controlId(value) {
@@ -2956,7 +2958,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get controlId() {
             const result = this._controlId;
-            if (result === undefined) {
+            if (!result) {
                 const controlName = this.controlName;
                 if (controlName) {
                     let name: Undef<string>;
@@ -2968,15 +2970,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     return this._controlId = convertWord(Resource.generateId('android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));
                 }
-                const id = this.id;
-                return id <= 0 ? 'baseroot' + (id === 0 ? '' : '_' + Math.abs(id)) : '';
+                else if (this.id <= 0) {
+                    return this._controlId = 'baseroot' + (this.id === 0 ? '' : '_' + Math.abs(this.id));
+                }
             }
             return result;
         }
 
         get documentId() {
             const controlId = this.controlId;
-            return controlId ? `@id/${controlId}` : '';
+            return controlId && `@id/${controlId}`;
         }
 
         get support() {
@@ -3210,9 +3213,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get tasks() {
             if (this.naturalElement) {
-                let tasks = (this.element as HTMLElement).dataset.androidTasks;
-                if (tasks && (tasks = tasks.trim())) {
-                    return tasks.split(/\s*\+\s*/);
+                const tasks = (this.element as HTMLElement).dataset.androidTasks;
+                if (tasks) {
+                    return tasks.trim().split(/\s*\+\s*/);
                 }
             }
         }

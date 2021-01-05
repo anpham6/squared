@@ -913,12 +913,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                         if (siblings.every(item => item.inlineDimension)) {
-                            const actualParent = this.actualParent!;
-                            if (actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
+                            const parent = this.actualParent!;
+                            if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                 const length = siblings.length;
-                                if (actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
+                                if (parent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
                                     const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
-                                    let width = actualParent.box.width - getLayoutWidth(this);
+                                    let width = parent.box.width - getLayoutWidth(this);
                                     for (let i = 0; i < length; ++i) {
                                         width -= getLayoutWidth(siblings[i]);
                                     }

@@ -27,7 +27,7 @@ const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\
 const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
 const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
 const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
-const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
+const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
@@ -3130,17 +3130,15 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             const match = REGEXP_IMGSRCSET.exec(value);
             if (match) {
                 let width = 0,
-                    pixelRatio = 0;
-                switch (match[3]) {
-                    case 'w':
+                    pixelRatio = 1;
+                if (match[3]) {
+                    if (match[3].toLowerCase() === 'w') {
                         width = +match[2];
-                        break;
-                    case 'x':
+                        pixelRatio = 0;
+                    }
+                    else {
                         pixelRatio = +match[2];
-                        break;
-                    default:
-                        pixelRatio = 1;
-                        break;
+                    }
                 }
                 result.push({ src: resolvePath(match[1].split(CHAR_SPACE)[0]), pixelRatio, width });
             }
@@ -3201,9 +3199,6 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                     if (unit) {
                         if (match = REGEXP_CALC.exec(unit)) {
                             width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
-                        }
-                        else if (isPercent(unit)) {
-                            width = convertPercent(unit) * getContentBoxDimension(element.parentElement).width;
                         }
                         else if (isLength(unit)) {
                             width = parseUnit(unit);

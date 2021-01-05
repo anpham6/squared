@@ -68,6 +68,8 @@
   type: image
   commands:
     - png(100x200^cover)
+    - webp~800w(800x600)
+    - webp~480w(480x300)
   attributes:
     alt: Picture 1
   cloudStorage:

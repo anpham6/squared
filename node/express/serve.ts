@@ -23,7 +23,7 @@ type RouteHandler = { [K in keyof Omit<IRoute, "path" | "stack"> | "connect" | "
 interface Route extends Partial<RouteHandler> {
     mount?: string;
     path?: string;
-    handler?: string;
+    handler?: string | string[];
 }
 
 interface RoutingModule {
@@ -244,13 +244,16 @@ function installModules(manager: IFileManager, query: StringMap) {
                         }
                     }
                     else {
-                        const handler = route.handler?.trim();
+                        let handler = route.handler;
                         if (handler) {
+                            if (typeof handler === 'string') {
+                                handler = [handler];
+                            }
                             let callback: FunctionType<string>[] | FunctionType<string> = [];
-                            for (const method of handler.startsWith('function') ? [handler] : handler.split('::')) {
-                                const transpiler = Node.parseFunction(method);
-                                if (transpiler) {
-                                    callback.push(transpiler);
+                            for (const content of handler) {
+                                const method = Node.parseFunction(content);
+                                if (method) {
+                                    callback.push(method);
                                 }
                             }
                             switch (callback.length) {
@@ -413,7 +416,7 @@ app.post('/api/v1/assets/archive', (req, res) => {
                 bytes: archive.pointer()
             };
             if (formatGzip && success) {
-                const gz = query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
+                const gz = query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : zipname + '.gz';
                 FileManager.moduleCompress().createWriteStreamAsGzip(zipname, gz)
                     .on('finish', () => {
                         response.zipname = gz;

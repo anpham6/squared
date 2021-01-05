@@ -5,11 +5,12 @@ import View$MX from './view-mx';
 export default class ViewGroup<T extends View> extends View$MX(squared.base.NodeGroupUI) {
     constructor(id: number, node: T, children: T[], parent?: T) {
         super(id, node.sessionId);
+        const actualParent = node.actualParent!;
         this.depth = node.depth;
         this.containerName = node.containerName + '_GROUP';
-        this.actualParent = node.actualParent;
+        this.actualParent = actualParent;
         this.documentParent = node.documentParent;
-        this.dir = this.actualParent!.dir;
+        this.dir = actualParent.dir;
         this.retainAs(children, node, parent);
     }
 
@@ -29,12 +30,5 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
         super.retainAs(children);
         this.setBounds();
         return this;
-    }
-
-    set containerType(value) {
-        this._containerType = value;
-    }
-    get containerType() {
-        return this._containerType;
     }
 }

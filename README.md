@@ -587,13 +587,34 @@ https://expressjs.com/en/guide/routing.html
     "__SHARED__": [
       { "mount": "html", "path": "/" },
       { "mount": "dist", "path": "/dist" },
-      { "get": "/index.html", "handler": "./index-html.js" } // handler file paths are relative and start with either './' OR '../'
-      { "all": "/route/pathname", "handler": "./handler-1.js::./handler-2.js" } // multiple handler method files use '::' as the separator
+      { "get": "/index.html", "handler": "./index-html.js" }, // handler file paths are relative and start with either './' OR '../'
+      { "all": "/route/pathname", "handler": ["./handler-1.js", "./handler-2.js"] },
+      { "handler": "./middleware.js" }
     ],
     "production": [
-      { "post": "/data/:userId", "handler": "function (req, res, next) { res.send(req.params); }" } // handler contents always start with "function"
+      { "post": "/data/:userId", "handler": "function (req, res) { res.send(req.params); }" } // handler contents always start with "function"
     ]
   }
+}
+
+// index-html.js
+function (req, res) {
+    res.send('<html><body><!-- content --></body></html>');
+}
+
+// handler-1.js
+function (req, res, next) {
+    /* handler-1: code */
+    next();
+}
+
+// handler-2.js
+function (req, res) { /* handler-2: code */ }
+
+// middleware.js
+function () {
+    const cookieParser = require('cookie-parser'); // npm i cookie-parser
+    return cookieParser();
 }
 ```
 
