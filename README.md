@@ -1,6 +1,6 @@
-# squared 2.2
+## squared 2.2
 
-## Installation (global js variable: squared)
+### Installation (global js variable: squared)
 
 Option #1 - [Node.js](http://www.nodejs.org)
 

@@ -89,7 +89,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     private _endpoints = {
         ASSETS_COPY: '/api/v1/assets/copy',
         ASSETS_ARCHIVE: '/api/v1/assets/archive',
-        BROWSER_DOWNLOAD: '/api/v1/browser/download?uri=',
+        BROWSER_DOWNLOAD: '/api/v1/browser/download?key=',
         LOADER_JSON: '/api/v1/loader/json?uri='
     };
 
@@ -209,13 +209,13 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     if (typeof options.callback === 'function') {
                         options.callback(result);
                     }
-                    const zipname = result.zipname;
-                    if (zipname) {
-                        fetch(getEndpoint(this.hostname, this._endpoints.BROWSER_DOWNLOAD) + encodeURIComponent(zipname))
-                            .then(async download => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
+                    const { downloadKey, zipname, error } = result;
+                    if (downloadKey && zipname) {
+                        fetch(getEndpoint(this.hostname, this._endpoints.BROWSER_DOWNLOAD) + downloadKey)
+                            .then(async download => File.downloadFile(await download.blob(), zipname));
                     }
-                    else if (result.error) {
-                        this.writeErrorMesssage(result.error);
+                    else if (error) {
+                        this.writeErrorMesssage(error);
                     }
                     return result;
                 });
