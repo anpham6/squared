@@ -330,8 +330,7 @@ declare module "base" {
         assets: FileAsset[];
         readonly archiveFormats: Set<string>;
         addAsset(asset: RawAsset): void;
-        reset(): void;
-        loadJSON(value: string): Promise<Void<ResponseData>>;
+        loadData(value: string, options: LoadDataOptions): Promise<unknown>;
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;

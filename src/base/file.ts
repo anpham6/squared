@@ -89,8 +89,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     private _endpoints = {
         ASSETS_COPY: '/api/v1/assets/copy',
         ASSETS_ARCHIVE: '/api/v1/assets/archive',
-        BROWSER_DOWNLOAD: '/api/v1/browser/download?key=',
-        LOADER_JSON: '/api/v1/loader/json?uri='
+        LOADER_DATA: '/api/v1/loader/data'
     };
 
     public abstract copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
@@ -132,15 +131,30 @@ export default abstract class File<T extends Node> implements squared.base.File<
         this.assets = [];
     }
 
-    public loadJSON(value: string) {
-        if (this.hasHttpProtocol()) {
-            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_JSON) + encodeURIComponent(value), {
+    public loadData(value: string, options: LoadDataOptions): Promise<unknown> {
+        const { type, cache } = options;
+        if (this.hasHttpProtocol() && type) {
+            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? `&cache=${cache ? '1' : '0'}` : ''), {
                 method: 'GET',
-                headers: new Headers({ 'Accept': 'application/json, text/plain' })
+                headers: new Headers({ Accept: options.accept || '*/*' })
             })
-            .then(response => response.json());
+            .then(response => {
+                switch (type) {
+                    case 'json':
+                        return response.json();
+                    case 'blob':
+                        return response.blob();
+                    case 'text':
+                    case 'document':
+                        return response.text();
+                    case 'arraybuffer':
+                        return response.arrayBuffer();
+                    default:
+                        return null;
+                }
+            });
         }
-        return Promise.resolve();
+        return Promise.resolve(null);
     }
 
     public copying(options: FileCopyingOptions) {
@@ -211,10 +225,12 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     }
                     const { downloadKey, zipname, error } = result;
                     if (downloadKey && zipname) {
-                        fetch(getEndpoint(this.hostname, this._endpoints.BROWSER_DOWNLOAD) + downloadKey)
-                            .then(async download => File.downloadFile(await download.blob(), zipname));
+                        const download = await this.loadData(downloadKey, { type: 'blob', cache: false }) as Null<Blob>;
+                        if (download) {
+                            File.downloadFile(download, zipname);
+                        }
                     }
-                    else if (error) {
+                    if (error) {
                         this.writeErrorMesssage(error);
                     }
                     return result;

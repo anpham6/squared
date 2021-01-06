@@ -59,7 +59,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             options.assetMap = assetMap;
             options.database ||= [];
             const database = options.database;
-            const config = await fileHandler.loadJSON(options.configUri);
+            const config = await fileHandler.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     const data = config.data as AssetCommand[];

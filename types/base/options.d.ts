@@ -185,3 +185,9 @@ interface ParseGlobOptions {
     fromEnd?: boolean;
     caseSensitive?: boolean;
 }
+
+interface LoadDataOptions {
+    type?: XMLHttpRequestResponseType;
+    accept?: string;
+    cache?: boolean;
+}

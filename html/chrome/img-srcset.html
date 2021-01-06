@@ -13,12 +13,13 @@
             background-color: darkgrey;
         }
     </style>
-    <script src="/dist/bundles/squared.chrome.bundle.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/chrome.framework.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            squared.settings.preloadImages = false;
-            squared.settings.compressImages = false;
+            squared.setFramework(chrome);
             squared.parseDocument('squared_ui').then(function() {
                 chrome.system.saveHtmlPage();
                 chrome.system.saveImageAssets();
@@ -62,7 +63,7 @@
                         }
                     ]
                 };
-                squared.saveFiles('gz', options);
+                squared.saveFiles('7z', options);
                 options.filename = 'chrome-base-7z';
                 squared.appendFiles('http://localhost:3000/common/base_project.7z', options);
                 options.filename = 'chrome-base-zip';

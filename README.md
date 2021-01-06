@@ -279,7 +279,7 @@ There is no official documentation for this project. The entire source code incl
 
 setFramework(module: {}, options?: FrameworkOptions) // install application interpreter
 setHostname(value: string) // use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
-setEndpoint(name: string, value: string) // set pathname for serverless cloud functions (ASSETS_COPY | ASSETS_ARCHIVE | BROWSER_DOWNLOAD | LOADER_JSON)
+setEndpoint(name: string, value: string) // set pathname for serverless cloud functions (ASSETS_COPY | ASSETS_ARCHIVE | LOADER_DATA)
 
 parseDocument(...elements: (Element | string)[]) // see installation section (Promise)
 parseDocumentSync(...elements: (Element | string)[]) // skips preloadImages and preloadFonts (synchronous)

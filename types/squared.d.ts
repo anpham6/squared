@@ -13,6 +13,7 @@ export interface FileActionOptions {
     exclusions?: Exclusions;
     callback?: (result: unknown) => void;
     configUri?: string;
+    cache?: boolean;
 }
 
 export type ExtensionRequest = squared.base.Extension<Node> | string;
