@@ -166,10 +166,11 @@ function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: st
             content,
             format,
             preserve,
-            inlineContent: inline ? getContentType(element) : undefined
+            inlineContent: inline ? getContentType(element) : undefined,
+            document: ['chrome']
         } as ChromeAsset;
         if (previous && hasSamePath(previous, data, true)) {
-            (previous.trailingContent ||= []).push({ value: content, preserve });
+            (previous.trailingContent ||= []).push(content);
         }
         else {
             checkFilename(assets, data);
@@ -401,7 +402,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 mimeType: ext && parseMimeType(ext),
                 format,
                 outerHTML,
-                inlineContent: inline && element ? getContentType(element) : undefined
+                inlineContent: inline && element ? getContentType(element) : undefined,
+                document: ['chrome']
             };
         }
         return null;
@@ -810,7 +812,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const item = assets[i];
                 switch (item.mimeType) {
                     case 'text/html':
-                        item.baseUrl = location.origin + (item.rootDir || location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1));
                     case 'text/css':
                         item.mimeType = '@' + item.mimeType;
                         break;
@@ -829,10 +830,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ...this.getFontAssets(options)
         );
         options.assets = assets;
-        delete options.assetMap;
+        options.baseUrl = location.href;
         if (templateMap) {
             options.templateMap = templateMap;
         }
+        delete options.assetMap;
         return options;
     }
 

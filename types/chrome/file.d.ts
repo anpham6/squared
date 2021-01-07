@@ -1,22 +1,11 @@
-interface ChromeAsset extends FileAsset {
-    rootDir?: string;
-    moveTo?: string;
+interface ChromeAsset extends FileAsset, BundleAction {
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
-    baseUrl?: string;
-    bundleId?: number;
-    bundleIndex?: number;
-    bundleRoot?: string;
-    trailingContent?: FormattableContent[];
-    inlineContent?: string;
+    rootDir?: string;
     outerHTML?: string;
+    inlineContent?: string;
     attributes?: ObjectMap<UndefNull<string>>;
-}
-
-interface FormattableContent {
-    value: string;
-    preserve?: boolean;
 }
 
 interface OutputModifiers extends ElementScope {

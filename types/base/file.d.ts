@@ -32,9 +32,18 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
 }
 
 interface OutputAction {
+    moveTo?: string;
     commands?: string[];
     compress?: CompressFormat[];
+    document?: string[];
     cloudStorage?: CloudStorage[];
+}
+
+interface BundleAction {
+    bundleId?: number;
+    bundleIndex?: number;
+    bundleRoot?: string;
+    trailingContent?: string[];
 }
 
 interface CloudService extends ObjectMap<unknown> {
