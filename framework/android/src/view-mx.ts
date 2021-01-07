@@ -527,12 +527,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
         public static availablePercent(nodes: T[], dimension: DimensionAttr, boxSize: number) {
             const horizontal = dimension === 'width';
-            let percent = 1,
-                valid = false;
+            let percent = 1;
             for (let i = 0, length = nodes.length; i < length; ++i) {
                 const sibling = nodes[i].innerMostWrapped;
                 if (sibling.pageFlow) {
-                    valid = true;
                     if (sibling.hasPX(dimension, { initial: true })) {
                         const value = sibling.cssInitial(dimension);
                         if (isPercent(value)) {
@@ -549,7 +547,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     percent -= sibling.linear[dimension] / boxSize;
                 }
             }
-            return valid ? Math.max(0, percent) : 1;
+            return Math.max(0, percent);
         }
 
         public static getControlName(containerType: number, api = BUILD_VERSION.LATEST) {

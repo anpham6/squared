@@ -8,9 +8,9 @@ export default class <T extends Node> extends Application<T> implements vdom.bas
 
     public init() {}
 
-    public insertNode(element: Element, sessionId: string) {
+    public insertNode(processing: squared.base.AppProcessing<T>, element: Element) {
         if (element.nodeName[0] !== '#') {
-            return new this.Node(this.nextId, sessionId, element);
+            return new this.Node(this.nextId, processing.sessionId, element);
         }
     }
 }

@@ -4,6 +4,7 @@ import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 
 import type ControllerUI from './controller-ui';
 import type NodeUI from './node-ui';
+import type NodeList from './nodelist';
 
 import Resource from './resource';
 
@@ -1036,6 +1037,18 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     public reset() {
         super.reset();
         ResourceUI.resetDataMap(ResourceUI.STORED);
+    }
+
+    public setData(rendering: NodeList<T>) {
+        rendering.each(node => {
+            if (node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
+                this.setBoxStyle(node);
+            }
+            if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && (node.visible && !node.imageContainer || node.labelFor)) {
+                this.setFontStyle(node);
+                this.setValueString(node);
+            }
+        });
     }
 
     public writeRawImage(options: RawDataOptions) {

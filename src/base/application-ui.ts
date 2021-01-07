@@ -328,12 +328,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public insertNode(element: Element, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
-        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, sessionId, cascadeAll, pseudoElt)) {
-            this._applyDefaultStyles(element, sessionId, pseudoElt);
-            return this.createNodeStatic(sessionId, element);
+    public insertNode(processing: squared.base.AppProcessing<T>, element: Element, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
+        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, processing.sessionId, cascadeAll, pseudoElt)) {
+            this._applyDefaultStyles(element, processing.sessionId, pseudoElt);
+            return this.createNodeStatic(processing, element);
         }
-        const node = this.createNodeStatic(sessionId, element);
+        const node = this.createNodeStatic(processing, element);
         node.visible = false;
         node.excluded = true;
         return node;
@@ -593,10 +593,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         dataset['iteration' + systemName] = suffix.toString();
         dataset['layoutName' + systemName] = layoutName;
         node.data(Application.KEY_NAME, 'layoutName', layoutName);
-        const sessionId = node.sessionId;
-        this.setBaseLayout(sessionId);
-        this.setConstraints(sessionId);
-        this.setResources(sessionId);
+        const processing = this.getProcessing(node.sessionId)!;
+        this.setBaseLayout(processing);
+        this.setConstraints(processing);
+        this.setResources(processing);
     }
 
     public useElement(element: HTMLElement) {
@@ -609,7 +609,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
-        const node = this.insertNode(parentElement, sessionId, cascadeAll);
+        const node = this.insertNode(processing, parentElement, cascadeAll);
         if (parentElement.tagName === 'svg') {
             setElementState(node, true, true, false, true);
         }
@@ -647,7 +647,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const element = childNodes[i] as HTMLElement;
                 let child: T;
                 if (element === beforeElement) {
-                    child = this.insertNode(beforeElement, sessionId, cascadeAll, '::before');
+                    child = this.insertNode(processing, beforeElement, cascadeAll, '::before');
                     setElementState(child, true, false, true, false);
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
@@ -657,7 +657,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     node.innerBefore = child;
                 }
                 else if (element === afterElement) {
-                    child = this.insertNode(afterElement, sessionId, cascadeAll, '::after');
+                    child = this.insertNode(processing, afterElement, cascadeAll, '::after');
                     setElementState(child, true, false, true, false);
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
@@ -668,7 +668,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
-                        child = this.insertNode(element, sessionId);
+                        child = this.insertNode(processing, element);
                         setElementState(child, false, false, false, false);
                         child.cssApply(node.textStyle);
                         plainText = j;
@@ -710,7 +710,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            child = this.insertNode(element, sessionId, cascadeAll);
+                            child = this.insertNode(processing, element, cascadeAll);
                             if (element.tagName === 'svg') {
                                 setElementState(child, true, true, false, true);
                             }
@@ -726,7 +726,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     else {
-                        child = this.insertNode(element, sessionId);
+                        child = this.insertNode(processing, element);
                         child.documentRoot = true;
                         child.visible = false;
                         child.excluded = true;
@@ -843,10 +843,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    protected setBaseLayout(sessionId: string) {
+    protected setBaseLayout(processing: squared.base.AppProcessing<T>) {
         const controller = this.controllerHandler;
         const { extensionMap, clearMap } = this.session;
-        const { extensions, cache, node: rootNode } = this.getProcessing(sessionId)!;
+        const { sessionId, extensions, cache, node: rootNode } = processing;
         const mapData = new Map<number, Set<T>>();
         const setMapDepth = (depth: number, node: T) => {
             const data = mapData.get(depth);
@@ -1230,8 +1230,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    protected setConstraints(sessionId: string) {
-        const { cache, extensions } = this.getProcessing(sessionId)!;
+    protected setConstraints(processing: squared.base.AppProcessing<T>) {
+        const { sessionId, cache, extensions } = processing;
         this.controllerHandler.setConstraints(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
@@ -1247,9 +1247,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    protected setResources(sessionId: string) {
-        const { cache, extensions } = this.getProcessing(sessionId)!;
-        this.controllerHandler.setResources(cache, this.resourceHandler);
+    protected setResources(processing: squared.base.AppProcessing<T>) {
+        const { sessionId, cache, extensions } = processing;
+        this.resourceHandler.setData(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
             const postResources = ext.postResources;

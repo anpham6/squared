@@ -18,14 +18,14 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         super.reset();
     }
 
-    public insertNode(element: Element, sessionId: string) {
+    public insertNode(processing: squared.base.AppProcessing<T>, element: Element) {
         if (element.nodeName[0] === '#') {
             if (this.userSettings.excludePlainText) {
                 return;
             }
-            this.controllerHandler.applyDefaultStyles(element, sessionId);
+            this.controllerHandler.applyDefaultStyles(element, processing.sessionId);
         }
-        return this.createNodeStatic(sessionId, element);
+        return this.createNodeStatic(processing, element);
     }
 
     public saveAs(filename?: string, options?: FileArchivingOptions) {

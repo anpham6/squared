@@ -95,7 +95,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public abstract init(): void;
-    public abstract insertNode(element: Element, sessionId: string): Undef<T>;
+    public abstract insertNode(processing: squared.base.AppProcessing<T>, element: Element): Undef<T>;
 
     public finalize() { return true; }
 
@@ -107,15 +107,14 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
-        return this.createNodeStatic(sessionId, options.element);
+        return this.createNodeStatic(this.getProcessing(sessionId)!, options.element);
     }
 
-    public createNodeStatic(sessionId: string, element?: Element) {
-        const afterInsertNode = this.getProcessing(sessionId)!.afterInsertNode;
-        const node = new this.Node(this.nextId, sessionId, element);
+    public createNodeStatic(processing: squared.base.AppProcessing<T>, element?: Element) {
+        const node = new this.Node(this.nextId, processing.sessionId, element);
         this._afterInsertNode(node);
-        if (afterInsertNode) {
-            afterInsertNode.some(item => item.afterInsertNode!(node));
+        if (processing.afterInsertNode) {
+            processing.afterInsertNode.some(item => item.afterInsertNode!(node));
         }
         return node;
     }
@@ -498,7 +497,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
-        const node = this.insertNode(parentElement, sessionId);
+        const node = this.insertNode(processing, parentElement);
         if (node) {
             const cache = processing.cache;
             if (depth === 0) {
@@ -522,7 +521,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 let child: Undef<T>;
                 if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
-                        if (child = this.insertNode(element, sessionId)) {
+                        if (child = this.insertNode(processing, element)) {
                             child.cssApply(node.textStyle);
                         }
                         plainText = true;
@@ -537,12 +536,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                         this.setStyleMap(sessionId, shadowRoot);
                     }
-                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId)) {
+                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                         elements.push(child);
                         inlineText = false;
                     }
                 }
-                else if (child = this.insertNode(element, sessionId)) {
+                else if (child = this.insertNode(processing, element)) {
                     processing.excluded.add(child);
                 }
                 if (child) {

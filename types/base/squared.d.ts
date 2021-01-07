@@ -99,8 +99,8 @@ declare module "base" {
         setStyleMap(sessionId: string, documentRoot?: DocumentRoot, queryRoot?: DocumentQueryRoot): void;
         replaceShadowRootSlots(shadowRoot: ShadowRoot): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
-        createNodeStatic(sessionId: string, element?: Element): T;
-        insertNode(element: Element, sessionId: string): Undef<T>;
+        createNodeStatic(processing: AppProcessing<T>, element?: Element): T;
+        insertNode(processing: AppProcessing<T>, element: Element): Undef<T>;
         afterCreateCache(node: T): void;
         getProcessing(sessionId: string): Undef<AppProcessing<T>>;
         getProcessingCache(sessionId: string): NodeList<T>;
@@ -139,7 +139,7 @@ declare module "base" {
         readonly extensions: ExtensionUI<T>[];
         conditionElement(element: HTMLElement, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): boolean;
         useElement(element: HTMLElement): boolean;
-        insertNode(element: Element, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): Undef<T>;
+        insertNode(processing: AppProcessing<T>, element: Element, cacadeAll?: boolean, pseudoElt?: string): Undef<T>;
         createNode(sessionId: string, options: CreateNodeUIOptions<T>): T;
         renderNode(layout: ContentUI<T>): Undef<NodeTemplate<T>>;
         addLayout(layout: ContentUI<T>): void;
@@ -178,7 +178,6 @@ declare module "base" {
         processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
         setConstraints(rendering: NodeList<T>): void;
-        setResources(rendering: NodeList<T>, resource: ResourceUI<T>): void;
         renderNode(layout: ContentUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupUIOptions): T;
@@ -246,6 +245,7 @@ declare module "base" {
         static getBackgroundSize<U extends NodeUI>(node: U, value: string, dimension?: Dimension): Null<Dimension>;
         static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
+        setData(rendering: NodeList<T>): void;
         writeRawImage(options: RawDataOptions): Null<RawAsset>;
         writeRawSvg(element: SVGSVGElement, dimension?: Dimension): string;
         setBoxStyle(node: T): void;
