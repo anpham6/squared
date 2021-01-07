@@ -1,6 +1,6 @@
 interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
     assetMap?: Map<Element, AssetCommand>;
-    transpileMap?: TranspileMap;
+    templateMap?: TemplateMap;
     database?: CloudDatabase[];
 }
 

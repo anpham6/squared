@@ -20,8 +20,8 @@ interface FileActionAttribute extends PlainObject {
     preserveCrossOrigin?: boolean;
 }
 
-interface TranspileMap {
-    html: ObjectMap<StringMap>;
-    js: ObjectMap<StringMap>;
-    css: ObjectMap<StringMap>;
+interface TemplateMap extends StandardMap {
+    html: ObjectMap<PlainObject>;
+    js: ObjectMap<PlainObject>;
+    css: ObjectMap<PlainObject>;
 }

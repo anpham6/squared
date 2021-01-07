@@ -478,7 +478,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return [];
     }
 
-    public getScriptAssets(options?: FileActionOptions): [ChromeAsset[], Undef<TranspileMap>] {
+    public getScriptAssets(options?: FileActionOptions): [ChromeAsset[], Undef<TemplateMap>] {
         let assetMap: Undef<Map<Element, AssetCommand>>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsScript: Undef<SaveAsOptions>;
@@ -488,7 +488,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
-        let transpileMap: Undef<TranspileMap>;
+        let templateMap: Undef<TemplateMap>;
         if (assetMap) {
             for (const item of assetMap.values()) {
                 if (!item.selector) {
@@ -501,7 +501,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 const { module, identifier } = template;
                                 let value = template.value;
                                 if (module && identifier && value && (value = value.trim()) && value.startsWith('function')) {
-                                    ((transpileMap ||= { html: {}, js: {}, css: {} })[item.type][module] ||= {})[identifier] = value;
+                                    ((templateMap ||= { html: {}, js: {}, css: {} })[item.type][module] ||= {})[identifier] = value;
                                 }
                                 break;
                             }
@@ -532,7 +532,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         case 'html':
                         case 'js':
                         case 'css':
-                            ((transpileMap ||= { html: {}, js: {}, css: {} })[category][module] ||= {})[identifier] = element.textContent!.trim();
+                            ((templateMap ||= { html: {}, js: {}, css: {} })[category][module] ||= {})[identifier] = element.textContent!.trim();
                             break;
                     }
                 }
@@ -543,7 +543,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         });
         setBundleIndex(bundleIndex);
-        return [result, transpileMap];
+        return [result, templateMap];
     }
 
     public getLinkAssets(options?: FileActionOptions) {
@@ -704,7 +704,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {
         data.database = options.database;
         data.unusedStyles = options.unusedStyles;
-        data.transpileMap = options.transpileMap;
+        data.templateMap = options.templateMap;
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
@@ -817,7 +817,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         }
-        const [scriptAssets, transpileMap] = this.getScriptAssets(options);
+        const [scriptAssets, templateMap] = this.getScriptAssets(options);
         assets.push(
             ...scriptAssets,
             ...this.getImageAssets(options),
@@ -830,8 +830,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         );
         options.assets = assets;
         delete options.assetMap;
-        if (transpileMap) {
-            options.transpileMap = transpileMap;
+        if (templateMap) {
+            options.templateMap = templateMap;
         }
         return options;
     }

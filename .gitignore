@@ -9,6 +9,7 @@ bundle.js
 md5sum.js
 gulpfile.js
 .DS_Store
+*-cloud.json
 *.dev.yml
 *.7z
 *.zip
