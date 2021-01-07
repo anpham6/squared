@@ -10,7 +10,7 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 const { SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
-const { fromLastIndexOf, isPlainObject, trimEnd } = squared.lib.util;
+const { fromLastIndexOf, hasValue, isPlainObject, splitPair, trimEnd } = squared.lib.util;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
@@ -83,7 +83,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public resource!: Resource<T>;
     public assets: RawAsset[] = [];
-    public readonly archiveFormats = new Set(['zip', 'tar', 'gz', 'tgz']);
+    public readonly archiveFormats = new Set(['zip', '7z', 'tar', 'gz', 'tgz']);
 
     private _hostname = '';
     private _endpoints = {
@@ -102,8 +102,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
-    public saveFiles(format: string, options: FileArchivingOptions) {
-        return this.archiving({ filename: this.userSettings.outputArchiveName, ...options, format });
+    public saveFiles(filename: string, options: FileArchivingOptions) {
+        return this.archiving({ ...options, filename });
     }
 
     public appendFiles(uri: string, options: FileArchivingOptions) {
@@ -160,11 +160,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public copying(options: FileCopyingOptions) {
         if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
-            if (body && options.directory) {
+            let directory = options.directory;
+            if (body && directory && (directory = directory.trim())) {
+                if (!hasValue(options.emptyDir)) {
+                    options.emptyDir = this.userSettings.outputEmptyCopyDirectory;
+                }
                 return fetch(
                     getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
-                    '?to=' + encodeURIComponent(options.directory.trim()) +
-                    '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
+                    '?to=' + encodeURIComponent(directory) +
+                    '&empty=' + (options.emptyDir ? '1' : '0') +
                     this.getCopyQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -192,26 +196,35 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public archiving(options: FileArchivingOptions) {
         if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
-            let filename = options.filename?.trim();
-            if (body && filename) {
-                const index = filename.lastIndexOf('.');
-                let format: string;
-                if (index !== -1) {
-                    format = filename.substring(index + 1).toLowerCase();
-                    if (this.archiveFormats.has(format)) {
-                        filename = filename.substring(0, index);
+            if (body) {
+                let { filename, format } = options;
+                const setFilename = () => {
+                    if (!format || !this.archiveFormats.has(format = format.toLowerCase())) {
+                        [filename, format] = splitPair(filename!, '.', true, true);
+                        if (format && !this.archiveFormats.has(format)) {
+                            filename += '.' + format;
+                            format = '';
+                        }
+                    }
+                };
+                if (!options.appendTo) {
+                    if (!filename) {
+                        filename = this.userSettings.outputArchiveName;
                     }
                     else {
-                        format = '';
+                        setFilename();
                     }
                 }
-                format ||= (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase();
+                else {
+                    filename ||= fromLastIndexOf(options.appendTo, '/', '\\');
+                    setFilename();
+                }
                 return fetch(
                     getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
-                    '?filename=' + encodeURIComponent(filename) +
-                    '&format=' + format +
-                    '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
-                    '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
+                    '?format=' + (format || this.userSettings.outputArchiveFormat) +
+                    '&filename=' + encodeURIComponent(filename || '') +
+                    '&to=' + encodeURIComponent(options.copyTo || '') +
+                    '&append_to=' + encodeURIComponent(options.appendTo || '') +
                     this.getArchiveQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),

@@ -142,12 +142,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public appendTo(pathname: string, options?: FileArchivingOptions) {
-        return this.archiving({
-            filename: this.userSettings.outputArchiveName,
-            ...options,
-            assets: this.combineAssets(options && options.assets),
-            appendTo: pathname
-        });
+        return this.archiving({ ...options, assets: this.combineAssets(options && options.assets), appendTo: pathname });
     }
 
     public saveAs(filename: string, options?: FileArchivingOptions) {

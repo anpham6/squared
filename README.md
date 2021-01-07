@@ -314,7 +314,7 @@ Packaging methods will return a Promise and require either node-express or squar
 
 ```javascript
 saveAs(filename: string, options?: {}) // save current sessionas a new archive
-saveFiles(format: string, options: {}) // create new archive from FileAsset[]
+saveFiles(filename: string, options: {}) // create new archive from FileAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 

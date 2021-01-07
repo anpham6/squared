@@ -35,7 +35,7 @@ export function latest(value?: number): string | string[];
 export function close(): boolean;
 export function save(): PromiseResult;
 export function reset(): void;
-export function saveAs(value?: string, options?: FileActionOptions): PromiseResult;
+export function saveAs(value: string, options?: FileActionOptions): PromiseResult;
 export function appendTo(value: string, options?: FileActionOptions): PromiseResult;
 export function copyTo(value: string, options?: FileActionOptions): PromiseResult;
 export function saveFiles(value: string, options: FileActionOptions): PromiseResult;

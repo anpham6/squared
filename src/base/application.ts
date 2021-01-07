@@ -127,12 +127,12 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.fileHandler?.appendTo(pathname, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
-    public saveAs(filename?: string, options?: FileActionOptions) {
-        return this.fileHandler?.saveAs(filename || this.resourceHandler!.userSettings.outputArchiveName, options) || reject(OPERATION_NOT_SUPPORTED);
+    public saveAs(filename: string, options?: FileActionOptions) {
+        return this.fileHandler?.saveAs(filename, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
-    public saveFiles(format: string, options: FileActionOptions) {
-        return this.fileHandler?.saveFiles(format, options) || reject(OPERATION_NOT_SUPPORTED);
+    public saveFiles(filename: string, options: FileActionOptions) {
+        return this.fileHandler?.saveFiles(filename, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public appendFiles(filename: string, options: FileActionOptions) {

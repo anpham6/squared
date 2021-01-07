@@ -415,7 +415,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public appendTo(pathname: string, options: FileArchivingOptions = {}) {
-        options.filename ||= this.userSettings.outputArchiveName;
         options.appendTo = pathname;
         return this.archiving(this.processAssets(options));
     }

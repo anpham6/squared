@@ -284,7 +284,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return super.appendTo(pathname, this.createAssetOptions(options));
     }
 
-    public saveAs(filename?: string, options?: FileActionOptions) {
+    public saveAs(filename: string, options?: FileActionOptions) {
         return super.saveAs(filename, this.createAssetOptions(options));
     }
 

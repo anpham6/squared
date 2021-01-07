@@ -4,6 +4,7 @@ declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
         directory?: string;
         watch?: boolean;
+        emptyDir?: boolean;
     }
 
     interface FileArchivingOptions extends squared.FileActionOptions {
@@ -14,8 +15,8 @@ declare module "base" {
     }
 
     interface FileActionAsync {
-        saveAs(filename?: string, options?: squared.FileActionOptions): FileActionResult;
-        saveFiles(format: string, options: squared.FileActionOptions): FileActionResult;
+        saveAs(filename: string, options?: squared.FileActionOptions): FileActionResult;
+        saveFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
         copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
         copyFiles(directory: string, options: squared.FileActionOptions): FileActionResult;
         appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
@@ -108,8 +109,8 @@ declare module "base" {
         setDatasetName(attr: string, element: DocumentElement, value: string): void;
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
         appendTo(uri: string, options?: FileArchivingOptions): FileActionResult;
-        saveAs(filename?: string, options?: FileArchivingOptions): FileActionResult;
-        saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
+        saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
+        saveFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         appendFiles(uri: string, options: FileArchivingOptions): FileActionResult;
         copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
         toString(): string;
@@ -334,7 +335,7 @@ declare module "base" {
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
-        saveFiles(format: string, options: FileArchivingOptions): FileActionResult;
+        saveFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
         copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
         appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;

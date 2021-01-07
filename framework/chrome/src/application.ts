@@ -28,8 +28,8 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         return this.createNodeStatic(processing, element);
     }
 
-    public saveAs(filename?: string, options?: FileArchivingOptions) {
-        return this.processAssets('saveAs', filename || this.userSettings.outputArchiveName, options);
+    public saveAs(filename: string, options?: FileArchivingOptions) {
+        return this.processAssets('saveAs', filename, options);
     }
 
     public copyTo(directory: string, options?: FileCopyingOptions) {
