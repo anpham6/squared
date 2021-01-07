@@ -1,6 +1,6 @@
 {
   "name": "chrome-framework",
-  "version": "2.2.7",
+  "version": "2.3.0",
   "description": "Chrome framework module for use with squared.",
   "repository": {
     "type": "git",

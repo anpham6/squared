@@ -4,7 +4,7 @@ config/
 framework/
 html/*
 md5/
-node/
+scripts/
 src/
 tmp/
 .eslint*

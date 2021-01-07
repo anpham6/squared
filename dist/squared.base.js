@@ -1,4 +1,4 @@
-/* squared.base 2.2.7
+/* squared.base 2.3.0
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -89,14 +89,13 @@ this.squared.base = (function (exports) {
             }
         }
         createNode(sessionId, options) {
-            return this.createNodeStatic(sessionId, options.element);
+            return this.createNodeStatic(this.getProcessing(sessionId), options.element);
         }
-        createNodeStatic(sessionId, element) {
-            const afterInsertNode = this.getProcessing(sessionId).afterInsertNode;
-            const node = new this.Node(this.nextId, sessionId, element);
+        createNodeStatic(processing, element) {
+            const node = new this.Node(this.nextId, processing.sessionId, element);
             this._afterInsertNode(node);
-            if (afterInsertNode) {
-                afterInsertNode.some(item => item.afterInsertNode(node));
+            if (processing.afterInsertNode) {
+                processing.afterInsertNode.some(item => item.afterInsertNode(node));
             }
             return node;
         }
@@ -110,11 +109,11 @@ this.squared.base = (function (exports) {
         }
         saveAs(filename, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveAs(filename || this.resourceHandler.userSettings.outputArchiveName, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveAs(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
-        saveFiles(format, options) {
+        saveFiles(filename, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveFiles(format, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveFiles(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
         appendFiles(filename, options) {
             var _a;
@@ -292,7 +291,7 @@ this.squared.base = (function (exports) {
                         if (result[i]) {
                             const item = preloadItems[i];
                             if (typeof item === 'string') {
-                                resource.addRawData(item, '', '', result[i]);
+                                resource.addRawData(item, '', result[i]);
                             }
                             else {
                                 resource.addImage(item);
@@ -461,7 +460,7 @@ this.squared.base = (function (exports) {
             return node;
         }
         cascadeParentNode(processing, parentElement, sessionId, depth, extensions, shadowParent) {
-            const node = this.insertNode(parentElement, sessionId);
+            const node = this.insertNode(processing, parentElement);
             if (node) {
                 const cache = processing.cache;
                 if (depth === 0) {
@@ -483,8 +482,7 @@ this.squared.base = (function (exports) {
                     let child;
                     if (element.nodeName[0] === '#') {
                         if (this.visibleText(node, element)) {
-                            child = this.insertNode(element, sessionId);
-                            if (child) {
+                            if (child = this.insertNode(processing, element)) {
                                 child.cssApply(node.textStyle);
                             }
                             plainText = true;
@@ -496,23 +494,16 @@ this.squared.base = (function (exports) {
                             (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode(element, sessionId));
                         }
                         let shadowRoot;
-                        if (pierceShadowRoot) {
-                            shadowRoot = element.shadowRoot;
-                            if (shadowRoot) {
-                                this.setStyleMap(sessionId, shadowRoot);
-                            }
+                        if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
+                            this.setStyleMap(sessionId, shadowRoot);
                         }
-                        child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId);
-                        if (child) {
+                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                             elements.push(child);
                             inlineText = false;
                         }
                     }
-                    else {
-                        child = this.insertNode(element, sessionId);
-                        if (child) {
-                            processing.excluded.add(child);
-                        }
+                    else if (child = this.insertNode(processing, element)) {
+                        processing.excluded.add(child);
                     }
                     if (child) {
                         child.init(node, childDepth, j++);
@@ -588,7 +579,7 @@ this.squared.base = (function (exports) {
                                 if (match[2]) {
                                     if (resource) {
                                         const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                        resource.addRawData(match[1], mimeType, match[3], { encoding });
+                                        resource.addRawData(match[1], match[3], { mimeType, encoding });
                                     }
                                 }
                                 else {
@@ -609,9 +600,8 @@ this.squared.base = (function (exports) {
                     };
                     const hasExactValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                     const hasPartialValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
-                    const items = Array.from(cssStyle);
-                    for (let i = 0, length = items.length; i < length; ++i) {
-                        const attr = items[i];
+                    for (let i = 0, length = cssStyle.length; i < length; ++i) {
+                        const attr = cssStyle[i];
                         if (attr[0] === '-') {
                             continue;
                         }
@@ -794,7 +784,7 @@ this.squared.base = (function (exports) {
                             case CSSRule.IMPORT_RULE: {
                                 const uri = resolvePath(rule.href, ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href);
                                 if (uri) {
-                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(uri, 'text/css', '', { encoding: 'utf8' });
+                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(uri, '', { mimeType: 'text/css', encoding: 'utf8' });
                                 }
                                 this.applyStyleSheet(rule.styleSheet, sessionId, documentRoot, queryRoot);
                                 break;
@@ -1638,7 +1628,7 @@ this.squared.base = (function (exports) {
 
     const { SERVER_REQUIRED } = squared.lib.error;
     const { createElement } = squared.lib.dom;
-    const { fromLastIndexOf, isPlainObject, trimEnd } = squared.lib.util;
+    const { fromLastIndexOf, hasValue, isPlainObject, splitPair: splitPair$1, trimEnd } = squared.lib.util;
     function validateAsset(file, exclusions) {
         const { pathname, filename } = file;
         const glob = exclusions.glob;
@@ -1692,13 +1682,12 @@ this.squared.base = (function (exports) {
     class File {
         constructor() {
             this.assets = [];
-            this.archiveFormats = new Set(['zip', 'tar', 'gz', 'tgz']);
+            this.archiveFormats = new Set(['zip', '7z', 'tar', 'gz', 'tgz']);
             this._hostname = '';
             this._endpoints = {
                 ASSETS_COPY: '/api/v1/assets/copy',
                 ASSETS_ARCHIVE: '/api/v1/assets/archive',
-                BROWSER_DOWNLOAD: '/api/v1/browser/download?uri=',
-                LOADER_JSON: '/api/v1/loader/json?uri='
+                LOADER_DATA: '/api/v1/loader/data'
             };
         }
         static downloadFile(data, filename, mimeType) {
@@ -1719,8 +1708,8 @@ this.squared.base = (function (exports) {
         finalizeRequestBody(data, options) { }
         getCopyQueryParameters(options) { return ''; }
         getArchiveQueryParameters(options) { return ''; }
-        saveFiles(format, options) {
-            return this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { format }));
+        saveFiles(filename, options) {
+            return this.archiving(Object.assign(Object.assign({}, options), { filename }));
         }
         appendFiles(uri, options) {
             return this.archiving(Object.assign(Object.assign({}, options), { appendTo: uri }));
@@ -1743,23 +1732,42 @@ this.squared.base = (function (exports) {
         reset() {
             this.assets = [];
         }
-        loadJSON(value) {
-            if (this.hasHttpProtocol()) {
-                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_JSON) + encodeURIComponent(value), {
+        loadData(value, options) {
+            const { type, cache } = options;
+            if (this.hasHttpProtocol() && type) {
+                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? `&cache=${cache ? '1' : '0'}` : ''), {
                     method: 'GET',
-                    headers: new Headers({ 'Accept': 'application/json, text/plain' })
+                    headers: new Headers({ Accept: options.accept || '*/*' })
                 })
-                    .then(response => response.json());
+                    .then(response => {
+                    switch (type) {
+                        case 'json':
+                            return response.json();
+                        case 'blob':
+                            return response.blob();
+                        case 'text':
+                        case 'document':
+                            return response.text();
+                        case 'arraybuffer':
+                            return response.arrayBuffer();
+                        default:
+                            return null;
+                    }
+                });
             }
-            return Promise.resolve();
+            return Promise.resolve(null);
         }
         copying(options) {
             if (this.hasHttpProtocol()) {
                 const body = this.createRequestBody(options.assets, options);
-                if (body && options.directory) {
+                let directory = options.directory;
+                if (body && directory && (directory = directory.trim())) {
+                    if (!hasValue(options.emptyDir)) {
+                        options.emptyDir = this.userSettings.outputEmptyCopyDirectory;
+                    }
                     return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
-                        '?to=' + encodeURIComponent(options.directory.trim()) +
-                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
+                        '?to=' + encodeURIComponent(directory) +
+                        '&empty=' + (options.emptyDir ? '1' : '0') +
                         this.getCopyQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -1783,28 +1791,36 @@ this.squared.base = (function (exports) {
             return Promise.resolve();
         }
         archiving(options) {
-            var _a;
             if (this.hasHttpProtocol()) {
                 const body = this.createRequestBody(options.assets, options);
-                let filename = (_a = options.filename) === null || _a === void 0 ? void 0 : _a.trim();
-                if (body && filename) {
-                    const index = filename.lastIndexOf('.');
-                    let format;
-                    if (index !== -1) {
-                        format = filename.substring(index + 1).toLowerCase();
-                        if (this.archiveFormats.has(format)) {
-                            filename = filename.substring(0, index);
+                if (body) {
+                    let { filename, format } = options;
+                    const setFilename = () => {
+                        if (!format || !this.archiveFormats.has(format = format.toLowerCase())) {
+                            [filename, format] = splitPair$1(filename, '.', true, true);
+                            if (format && !this.archiveFormats.has(format)) {
+                                filename += '.' + format;
+                                format = '';
+                            }
+                        }
+                    };
+                    if (!options.appendTo) {
+                        if (!filename) {
+                            filename = this.userSettings.outputArchiveName;
                         }
                         else {
-                            format = '';
+                            setFilename();
                         }
                     }
-                    format || (format = (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase());
+                    else {
+                        filename || (filename = fromLastIndexOf(options.appendTo, '/', '\\'));
+                        setFilename();
+                    }
                     return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
-                        '?filename=' + encodeURIComponent(filename) +
-                        '&format=' + format +
-                        '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
-                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
+                        '?format=' + (format || this.userSettings.outputArchiveFormat) +
+                        '&filename=' + encodeURIComponent(filename || '') +
+                        '&to=' + encodeURIComponent(options.copyTo || '') +
+                        '&append_to=' + encodeURIComponent(options.appendTo || '') +
                         this.getArchiveQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -1815,13 +1831,15 @@ this.squared.base = (function (exports) {
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
-                        const zipname = result.zipname;
-                        if (zipname) {
-                            fetch(getEndpoint(this.hostname, this._endpoints.BROWSER_DOWNLOAD) + encodeURIComponent(zipname))
-                                .then(async (download) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
+                        const { downloadKey, zipname, error } = result;
+                        if (downloadKey && zipname) {
+                            const download = await this.loadData(downloadKey, { type: 'blob', cache: false });
+                            if (download) {
+                                File.downloadFile(download, zipname);
+                            }
                         }
-                        else if (result.error) {
-                            this.writeErrorMesssage(result.error);
+                        if (error) {
+                            this.writeErrorMesssage(error);
                         }
                         return result;
                     });
@@ -1903,11 +1921,12 @@ this.squared.base = (function (exports) {
 
     const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
+    const { isTransparent } = squared.lib.color;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$1 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue: hasValue$1, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$2 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1934,13 +1953,13 @@ this.squared.base = (function (exports) {
     const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
-        let current = style.getPropertyValue(attr);
+        let current = style[attr];
         if (value !== current) {
-            element.style.setProperty(attr, value);
-            const newValue = element.style.getPropertyValue(attr);
+            element.style[attr] = value;
+            const newValue = element.style[attr];
             if (current !== newValue) {
-                if (current.endsWith('px')) {
-                    const styleValue = styleMap[convertCamelCase$1(attr)];
+                if (isPx(current)) {
+                    const styleValue = styleMap[attr];
                     if (styleValue) {
                         current = styleValue;
                         value = '';
@@ -1958,7 +1977,7 @@ this.squared.base = (function (exports) {
         return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit(value, { fontSize });
     }
     function isFontFixedWidth(node) {
-        const [fontFirst, fontSecond] = splitPair$1(node.css('fontFamily'), ',', true);
+        const [fontFirst, fontSecond] = splitPair$2(node.css('fontFamily'), ',', true);
         return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
     function getFlexValue(node, attr, fallback, parent) {
@@ -1969,20 +1988,20 @@ this.squared.base = (function (exports) {
         const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
         return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : node.display.startsWith('inline'));
     }
-    function setDimension(node, styleMap, attr) {
-        const options = { dimension: attr };
-        const value = styleMap[attr];
-        const min = styleMap[attr === 'width' ? 'minWidth' : 'minHeight'];
+    function setDimension(node, styleMap, dimension) {
+        const options = { dimension };
+        const value = styleMap[dimension];
+        const minValue = styleMap[dimension === 'width' ? 'minWidth' : 'minHeight'];
         const baseValue = value ? node.parseUnit(value, options) : 0;
-        let result = Math.max(baseValue, min ? node.parseUnit(min, options) : 0);
+        let result = minValue ? Math.max(baseValue, node.parseUnit(minValue, options)) : baseValue;
         if (result === 0 && node.styleElement) {
             const element = node.element;
             switch (element.tagName) {
-                case 'IMG':
                 case 'INPUT':
                     if (element.type !== 'image') {
                         break;
                     }
+                case 'IMG':
                 case 'TD':
                 case 'TH':
                 case 'svg':
@@ -1992,30 +2011,27 @@ this.squared.base = (function (exports) {
                 case 'CANVAS':
                 case 'OBJECT':
                 case 'EMBED': {
-                    const size = getNamedItem(element, attr);
-                    if (size) {
-                        result = isNumber(size) ? +size : node.parseUnit(size, options);
-                        if (result) {
-                            node.css(attr, isPercent(size) ? size : size + 'px');
-                        }
+                    const size = getNamedItem(element, dimension);
+                    if (size && (result = isNumber(size) ? +size : node.parseUnit(size, options))) {
+                        node.css(dimension, isPercent(size) ? size : size + 'px');
                     }
                     break;
                 }
             }
         }
         if (baseValue && !node.imageElement) {
-            const attrMax = attr === 'width' ? 'maxWidth' : 'maxHeight';
-            const max = styleMap[attrMax];
+            const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
+            const max = styleMap[attr];
             if (max) {
                 if (value === max) {
-                    delete styleMap[attrMax];
+                    delete styleMap[attr];
                 }
                 else {
-                    const maxValue = node.parseUnit(max, { dimension: attr });
+                    const maxValue = node.parseUnit(max, { dimension });
                     if (maxValue) {
                         if (maxValue <= baseValue && value && isLength(value)) {
-                            styleMap[attr] = max;
-                            delete styleMap[attrMax];
+                            styleMap[dimension] = max;
+                            delete styleMap[attr];
                         }
                         else {
                             return Math.min(result, maxValue);
@@ -2034,8 +2050,8 @@ this.squared.base = (function (exports) {
                     return 0;
             }
             const width = node.css(border[0]);
-            const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
-            if (result > 0) {
+            const result = isPx(width) ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+            if (result) {
                 return Math.max(Math.round(result), 1);
             }
         }
@@ -2060,7 +2076,7 @@ this.squared.base = (function (exports) {
                         default: {
                             const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
                             if (parent) {
-                                const [horizontal, vertical] = splitPair$1(parent.css('borderSpacing'), ' ');
+                                const [horizontal, vertical] = splitPair$2(parent.css('borderSpacing'), ' ');
                                 switch (attr) {
                                     case 'marginTop':
                                     case 'marginBottom':
@@ -2075,12 +2091,12 @@ this.squared.base = (function (exports) {
                 }
                 break;
         }
-        return node.parseUnit(node.css(attr), ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.gridElement) ? { parent: false } : undefined);
+        return node.cssUnit(attr, ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.gridElement) ? { parent: false } : undefined);
     }
     function convertPosition(node, attr) {
         if (!node.positionStatic) {
             const unit = node.valueOf(attr, { modified: true });
-            if (unit.endsWith('px')) {
+            if (isPx(unit)) {
                 return parseFloat(unit);
             }
             else if (isPercent(unit)) {
@@ -2099,10 +2115,10 @@ this.squared.base = (function (exports) {
                     case 'color':
                     case 'checkbox':
                     case 'radio':
-                    case 'file':
                     case 'button':
                     case 'submit':
                     case 'reset':
+                    case 'file':
                     case 'image':
                         return false;
                 }
@@ -2238,9 +2254,6 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     }
-                    case ':nth-child(n)':
-                    case ':nth-last-child(n)':
-                        break;
                     case ':empty':
                         if (element.hasChildNodes()) {
                             return false;
@@ -2252,12 +2265,12 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     case ':disabled':
-                        if (!this.inputElement || !element.disabled) {
+                        if (!this.inputElement && this.tagName !== 'OPTION' || !element.disabled) {
                             return false;
                         }
                         break;
                     case ':enabled':
-                        if (!this.inputElement || element.disabled) {
+                        if (!this.inputElement && this.tagName !== 'OPTION' || element.disabled) {
                             return false;
                         }
                         break;
@@ -2272,12 +2285,12 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     case ':required':
-                        if (!this.inputElement || !element.required) {
+                        if (!this.inputElement || this.tagName === 'BUTTON' || !element.required) {
                             return false;
                         }
                         break;
                     case ':optional':
-                        if (!this.inputElement || element.required) {
+                        if (!this.inputElement || this.tagName === 'BUTTON' || element.required) {
                             return false;
                         }
                         break;
@@ -2326,11 +2339,13 @@ this.squared.base = (function (exports) {
                             return false;
                         }
                         break;
-                    case ':target':
-                        if (!location.hash || !(location.hash === '#' + this.elementId || tagName === 'A' && location.hash === '#' + this.toElementString('name'))) {
+                    case ':target': {
+                        const hash = location.hash;
+                        if (!hash || !(hash === '#' + this.elementId || tagName === 'A' && hash === '#' + this.toElementString('name'))) {
                             return false;
                         }
                         break;
+                    }
                     case ':indeterminate':
                         if (tagName === 'INPUT') {
                             switch (element.type) {
@@ -2357,14 +2372,26 @@ this.squared.base = (function (exports) {
                         else {
                             return false;
                         }
+                    case ':focus':
+                        if (element !== document.activeElement) {
+                            return false;
+                        }
+                        break;
+                    case ':focus-within': {
+                        const activeElement = document.activeElement;
+                        if (element !== activeElement && !this.querySelectorAll('*').find(item => item.element === activeElement)) {
+                            return false;
+                        }
+                        break;
+                    }
                     case ':default':
                     case ':defined':
                     case ':link':
                     case ':visited':
-                    case ':any-link':
                     case ':hover':
-                    case ':focus':
-                    case ':focus-within':
+                    case ':active':
+                    case ':any-link':
+                    case ':fullscreen':
                     case ':valid':
                     case ':invalid':
                         scoped.push(pseudo);
@@ -2376,75 +2403,81 @@ this.squared.base = (function (exports) {
                             const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item) => item.tagName === tagName).indexOf(this) + 1;
                             if (index) {
                                 const placement = match[3].trim();
-                                if (isNumber(placement)) {
-                                    if (placement !== index.toString()) {
+                                switch (placement) {
+                                    case 'even':
+                                        if (index % 2 !== 0) {
+                                            return false;
+                                        }
+                                        break;
+                                    case 'odd':
+                                        if (index % 2 === 0) {
+                                            return false;
+                                        }
+                                        break;
+                                    case 'n':
+                                        break;
+                                    case '-n':
                                         return false;
-                                    }
-                                }
-                                else {
-                                    switch (placement) {
-                                        case 'even':
-                                            if (index % 2 !== 0) {
+                                    default:
+                                        if (isNumber(placement)) {
+                                            if (placement !== index.toString()) {
                                                 return false;
                                             }
-                                            break;
-                                        case 'odd':
-                                            if (index % 2 === 0) {
-                                                return false;
-                                            }
-                                            break;
-                                        default: {
-                                            match = REGEXP_QUERYNTHPOSITION.exec(placement);
-                                            if (match) {
-                                                const modifier = parseInt(match[3]);
-                                                if (match[2] && !match[1]) {
-                                                    const increment = +match[2];
-                                                    if (!isNaN(modifier)) {
-                                                        if (increment !== 0) {
-                                                            if (index !== modifier) {
-                                                                for (let j = increment;; j += increment) {
-                                                                    const total = j + modifier;
-                                                                    if (total === index) {
-                                                                        break;
-                                                                    }
-                                                                    else if (total > index) {
+                                        }
+                                        else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
+                                            const modifier = parseInt(match[3]);
+                                            if (match[2]) {
+                                                const increment = +match[2];
+                                                if (!isNaN(modifier)) {
+                                                    if (increment !== 0) {
+                                                        if (index !== modifier) {
+                                                            const reverse = match[1];
+                                                            let j = modifier + increment * (reverse ? -1 : 1);
+                                                            do {
+                                                                if (j === index) {
+                                                                    break;
+                                                                }
+                                                                if (reverse) {
+                                                                    j -= increment;
+                                                                    if (j < 0) {
                                                                         return false;
                                                                     }
                                                                 }
-                                                            }
-                                                        }
-                                                        else if (index !== modifier) {
-                                                            return false;
+                                                                else {
+                                                                    j += increment;
+                                                                    if (j > index) {
+                                                                        return false;
+                                                                    }
+                                                                }
+                                                            } while (true);
                                                         }
                                                     }
-                                                    else if (index % increment !== 0) {
+                                                    else if (index !== modifier) {
                                                         return false;
                                                     }
                                                 }
-                                                else if (match[3] && modifier > 0) {
-                                                    if (match[1]) {
-                                                        if (index > modifier) {
-                                                            return false;
-                                                        }
-                                                    }
-                                                    else if (index < modifier) {
-                                                        return false;
-                                                    }
+                                                else if (match[1] || index % increment !== 0) {
+                                                    return false;
                                                 }
                                             }
-                                            else {
-                                                return selector.fromNot ? true : false;
+                                            else if (match[3] && modifier > 0) {
+                                                if (index < modifier) {
+                                                    return false;
+                                                }
                                             }
-                                            break;
+                                            else if (match[1]) {
+                                                return false;
+                                            }
                                         }
-                                    }
+                                        else {
+                                            return !!selector.fromNot;
+                                        }
+                                        break;
                                 }
-                                break;
                             }
-                        }
-                        else if (pseudo.startsWith(':lang(')) {
-                            scoped.push(pseudo);
-                            break;
+                            else {
+                                return !!selector.fromNot;
+                            }
                         }
                         else if (match = REGEXP_DIR.exec(pseudo)) {
                             switch (this.dir) {
@@ -2462,9 +2495,11 @@ this.squared.base = (function (exports) {
                                     }
                                     break;
                             }
-                            break;
                         }
-                        return selector.fromNot ? true : false;
+                        else {
+                            scoped.push(pseudo);
+                        }
+                        break;
                     }
                 }
             }
@@ -2475,7 +2510,7 @@ this.squared.base = (function (exports) {
                     }
                 }
                 catch (_a) {
-                    return selector.fromNot ? true : false;
+                    return !!selector.fromNot;
                 }
             }
         }
@@ -2572,7 +2607,7 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else if (selectorAdjacent) {
-                    while (parent && parent.depth - this.depth > index + offset) {
+                    while (parent && parent.depth - this.depth >= index + offset) {
                         if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
                             next.push(parent);
                         }
@@ -2587,38 +2622,57 @@ this.squared.base = (function (exports) {
         return next.length > 0 && (index === 0 ? true : ascendQuerySelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
     }
     function getMinMax(node, min, attr, options) {
-        let self, last, wrapperOf, initial;
+        let self, last, wrapperOf, subAttr, initialValue, initial;
         if (options) {
-            ({ self, last, wrapperOf, initial } = options);
+            ({ self, subAttr, last, wrapperOf, initialValue, initial } = options);
         }
-        let result, current = min ? Infinity : -Infinity;
+        if (initialValue === undefined) {
+            initialValue = min ? Infinity : -Infinity;
+        }
+        let result;
         node.each(item => {
             if (wrapperOf) {
                 item = item.wrapperOf || item;
             }
-            const value = parseFloat(self ? item[attr] : initial ? item.cssInitial(attr, options) : item.css(attr));
+            let value = NaN;
+            if (self || subAttr) {
+                const subValue = (subAttr ? item[attr][subAttr] : item[attr]);
+                switch (typeof subValue) {
+                    case 'number':
+                        value = subValue;
+                        break;
+                    case 'string':
+                        value = parseFloat(subValue);
+                        break;
+                    default:
+                        return;
+                }
+            }
+            else {
+                value = parseFloat(initial ? item.cssInitial(attr, options) : item.css(attr));
+            }
             if (!isNaN(value)) {
                 if (min) {
                     if (last) {
-                        if (value <= current) {
+                        if (value <= initialValue) {
                             result = item;
-                            current = value;
+                            initialValue = value;
                         }
                     }
-                    else if (value < current) {
+                    else if (value < initialValue) {
                         result = item;
-                        current = value;
+                        initialValue = value;
                     }
                 }
                 else if (last) {
-                    if (value >= current) {
+                    if (value >= initialValue) {
                         result = item;
-                        current = value;
+                        initialValue = value;
                     }
                 }
-                else if (value > current) {
+                else if (value > initialValue) {
                     result = item;
-                    current = value;
+                    initialValue = value;
                 }
             }
         });
@@ -2711,8 +2765,7 @@ this.squared.base = (function (exports) {
                         continue;
                     }
                 }
-                value = checkStyleValue(element, attr, value);
-                if (value) {
+                if (value = checkStyleValue(element, attr, value)) {
                     result[attr] = value;
                 }
             }
@@ -2738,8 +2791,7 @@ this.squared.base = (function (exports) {
                         return true;
                     }
                     else if (sessionId) {
-                        elementData = getElementData(element, sessionId);
-                        if (elementData) {
+                        if (elementData = getElementData(element, sessionId)) {
                             this._elementData = elementData;
                         }
                     }
@@ -2760,7 +2812,7 @@ this.squared.base = (function (exports) {
                                     const style = element.style;
                                     for (let i = 0; i < length; ++i) {
                                         const attr = style[i];
-                                        styleMap[convertCamelCase$1(attr)] = element.style.getPropertyValue(attr);
+                                        styleMap[convertCamelCase$1(attr)] = style.getPropertyValue(attr);
                                     }
                                 }
                             }
@@ -2801,7 +2853,7 @@ this.squared.base = (function (exports) {
                     obj = {};
                     data[name] = obj;
                 }
-                if (overwrite || !hasValue(obj[attr])) {
+                if (overwrite || !hasValue$1(obj[attr])) {
                     obj[attr] = value;
                 }
             }
@@ -2829,6 +2881,7 @@ this.squared.base = (function (exports) {
                         case 'float':
                         case 'tagName':
                             this._cache = {};
+                            i = length;
                             break;
                         case 'width':
                             cache.actualWidth = undefined;
@@ -2844,8 +2897,7 @@ this.squared.base = (function (exports) {
                             cache.height = undefined;
                             cache.hasHeight = undefined;
                             if (!this._preferInitial) {
-                                this.unsetCache('blockVertical');
-                                this.each(item => item.unsetCache());
+                                this.cascade(item => item.unsetCache('height', 'bottomAligned'));
                             }
                             break;
                         case 'verticalAlign':
@@ -2937,14 +2989,8 @@ this.squared.base = (function (exports) {
                     return;
                 }
                 parent.resetBounds();
-                const queryMap = parent.queryMap;
-                if (queryMap) {
-                    for (let i = 0, q = queryMap.length; i < q; ++i) {
-                        const children = queryMap[i];
-                        for (let j = 0, r = children.length; j < r; ++j) {
-                            children[j].resetBounds();
-                        }
-                    }
+                if (parent.queryMap) {
+                    parent.querySelectorAll('*').forEach(item => item.resetBounds());
                 }
                 else {
                     this.cascade(item => item.resetBounds());
@@ -2971,6 +3017,9 @@ this.squared.base = (function (exports) {
                                 cacheState.textEmpty = undefined;
                                 reset = true;
                                 break;
+                            case 'inlineText':
+                                cacheState.inlineText = false;
+                                continue;
                         }
                         cacheState[attr] = undefined;
                     }
@@ -3125,9 +3174,10 @@ this.squared.base = (function (exports) {
             return false;
         }
         css(attr, value, cache = true) {
-            if (this.styleElement) {
+            const style = this.style;
+            if (this.styleElement && attr in style) {
                 if (value === '') {
-                    this.style[attr] = 'initial';
+                    style[attr] = 'initial';
                     const property = CSS_PROPERTIES$1[attr];
                     if (property && typeof property.value === 'string') {
                         this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & 256 /* UNIT */ ? 'px' : ''));
@@ -3140,22 +3190,19 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else if (value) {
-                    const current = this.style[attr];
-                    if (current !== undefined) {
-                        this.style[attr] = value;
-                        if (current !== this.style[attr]) {
-                            this._styleMap[attr] = value;
-                            if (cache) {
-                                this.unsetCache(attr);
-                            }
-                            return value;
+                    const current = style[attr];
+                    this.style[attr] = value;
+                    if (current !== style[attr]) {
+                        this._styleMap[attr] = value;
+                        if (cache) {
+                            this.unsetCache(attr);
                         }
-                        return current;
+                        return value;
                     }
-                    return '';
+                    return current;
                 }
             }
-            return this._styleMap[attr] || this.style[attr] || '';
+            return this._styleMap[attr] || style[attr] || '';
         }
         cssApply(values, overwrite = true, cache = true) {
             if (overwrite) {
@@ -3174,8 +3221,8 @@ this.squared.base = (function (exports) {
             return this;
         }
         cssParent(attr, value, cache = false) {
-            var _a;
-            return ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.css(attr, value, cache)) || '';
+            const parent = this.actualParent;
+            return parent ? parent.css(attr, value, cache) : '';
         }
         cssInitial(attr, options) {
             const initial = this._initial;
@@ -3242,26 +3289,13 @@ this.squared.base = (function (exports) {
                 return valueA > valueB ? -1 : 1;
             });
         }
-        cssPX(attr, value, cache, options) {
-            const current = this._styleMap[attr];
-            if (current && isLength(current)) {
-                value += parseUnit(current, { fontSize: this.fontSize });
-                if (value < 0 && !(options && options.negative)) {
-                    value = 0;
-                }
-                const unit = formatPX(value);
-                this.css(attr, unit);
-                if (cache) {
-                    this.unsetCache(attr);
-                }
-                return unit;
-            }
-            return '';
+        cssUnit(attr, options) {
+            return this.parseUnit(options && options.initial ? this.cssInitial(attr, options) : this.css(attr), options);
         }
         cssSpecificity(attr) {
             var _a, _b, _c;
             if (this.styleElement) {
-                const styleData = !this.pseudoElt ? (_a = this._elementData) === null || _a === void 0 ? void 0 : _a['styleSpecificity'] : (_c = (_b = this.actualParent) === null || _b === void 0 ? void 0 : _b.elementData) === null || _c === void 0 ? void 0 : _c['styleSpecificity' + this.pseudoElt];
+                const styleData = !this.pseudoElt ? (_a = this._elementData) === null || _a === void 0 ? void 0 : _a.styleSpecificity : (_c = (_b = this.actualParent) === null || _b === void 0 ? void 0 : _b.elementData) === null || _c === void 0 ? void 0 : _c['styleSpecificity' + this.pseudoElt];
                 if (styleData) {
                     return styleData[attr] || 0;
                 }
@@ -3316,14 +3350,14 @@ this.squared.base = (function (exports) {
                     if (typeof attrs === 'string') {
                         const value = elementData[attrs];
                         if (value) {
-                            this._element.style.setProperty(attrs, value);
+                            this._element.style[attrs] = value;
                         }
                     }
                     else {
                         for (const attr in attrs) {
                             const value = elementData[attr];
                             if (value) {
-                                this._element.style.setProperty(attr, value);
+                                this._element.style[attr] = value;
                             }
                         }
                     }
@@ -3397,10 +3431,28 @@ this.squared.base = (function (exports) {
             return convertFloat((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], fallback);
         }
         toElementInt(attr, fallback = NaN) {
-            return this.naturalElement ? convertInt(this._element[attr], fallback) : fallback;
+            if (this.naturalElement) {
+                const value = this._element[attr];
+                switch (typeof value) {
+                    case 'number':
+                        return Math.floor(value);
+                    case 'string':
+                        return convertInt(value, fallback);
+                }
+            }
+            return fallback;
         }
         toElementFloat(attr, fallback = NaN) {
-            return this.naturalElement ? convertFloat(this._element[attr], fallback) : fallback;
+            if (this.naturalElement) {
+                const value = this._element[attr];
+                switch (typeof value) {
+                    case 'number':
+                        return value;
+                    case 'string':
+                        return convertFloat(value, fallback);
+                }
+            }
+            return fallback;
         }
         toElementBoolean(attr, fallback = false) {
             if (this.naturalElement) {
@@ -3424,7 +3476,7 @@ this.squared.base = (function (exports) {
             if (!value) {
                 return 0;
             }
-            else if (value.endsWith('px')) {
+            else if (isPx(value)) {
                 return parseFloat(value);
             }
             else if (isPercent(value)) {
@@ -3602,10 +3654,11 @@ this.squared.base = (function (exports) {
                         let start, offset = 0;
                         if (query === '*') {
                             selectors.push({ all: true });
+                            start = true;
                         }
                         else {
                             CSS$1.SELECTOR_G.lastIndex = 0;
-                            let adjacent = '', selector = '', match;
+                            let selector = '', adjacent = '', match;
                             while (match = CSS$1.SELECTOR_G.exec(query)) {
                                 let segment = match[1];
                                 selector += segment;
@@ -3842,9 +3895,7 @@ this.squared.base = (function (exports) {
                 if (value) {
                     const ancestors = this.ascend();
                     const customMap = [];
-                    iterateReverseArray(ancestors, (item) => {
-                        customMap.push([item]);
-                    });
+                    iterateReverseArray(ancestors, (item) => customMap.push([item]));
                     customMap.push(result);
                     result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
                 }
@@ -3935,6 +3986,23 @@ this.squared.base = (function (exports) {
                 case 'SELECT':
                 case 'TEXTAREA':
                     return true;
+                default:
+                    return false;
+            }
+        }
+        get buttonElement() {
+            switch (this.tagName) {
+                case 'BUTTON':
+                    return true;
+                case 'INPUT':
+                    switch (this.toElementString('type')) {
+                        case 'button':
+                        case 'submit':
+                        case 'reset':
+                        case 'file':
+                        case 'image':
+                            return true;
+                    }
                 default:
                     return false;
             }
@@ -4038,7 +4106,10 @@ this.squared.base = (function (exports) {
                         justifyContent
                     };
                 }
-                return this._cache.flexdata = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.flexdata = result;
             }
             return result;
         }
@@ -4057,7 +4128,10 @@ this.squared.base = (function (exports) {
                         order: this.toInt('order', 0)
                     };
                 }
-                return this._cache.flexbox = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.flexbox = result;
             }
             return result;
         }
@@ -4092,20 +4166,14 @@ this.squared.base = (function (exports) {
                     }
                     else {
                         let parent = this.ascend({ condition: item => item.has('lineHeight', { initial: true, not: 'inherit' }) })[0];
-                        if (parent) {
-                            value = parseLineHeight(parent.css('lineHeight'), this.fontSize);
-                            if (value) {
-                                if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
-                                    this.css('lineHeight', value + 'px');
-                                }
-                                hasOwnStyle = true;
+                        if (parent && (value = parseLineHeight(parent.css('lineHeight'), this.fontSize))) {
+                            if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
+                                this.css('lineHeight', value + 'px');
                             }
+                            hasOwnStyle = true;
                         }
-                        if (value === 0) {
-                            parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
-                            if (parent) {
-                                value = parent.lineHeight;
-                            }
+                        if (value === 0 && (parent = this.ascend({ condition: item => item.lineHeight > 0 })[0])) {
+                            value = parent.lineHeight;
                         }
                     }
                     result = hasOwnStyle || value > this.height || this.multiline || this.block && this.naturalChildren.some((node) => node.textElement) ? value : 0;
@@ -4260,8 +4328,8 @@ this.squared.base = (function (exports) {
                         result = true;
                     }
                     else {
-                        const actualParent = this.actualParent;
-                        if (actualParent && (actualParent.block && !actualParent.floating || actualParent.hasWidth)) {
+                        const parent = this.actualParent;
+                        if (parent && (parent.block && !parent.floating || parent.hasWidth)) {
                             if (this.inlineStatic && ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
                                 result = true;
                             }
@@ -4314,7 +4382,7 @@ this.squared.base = (function (exports) {
         get autoMargin() {
             let result = this._cache.autoMargin;
             if (result === undefined) {
-                if (!this.pageFlow || this.blockStatic || this.display === 'table') {
+                if (this.blockStatic || !this.pageFlow || this.display === 'table') {
                     const styleMap = this._styleMap;
                     const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasPX('right'));
                     const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
@@ -4331,21 +4399,25 @@ this.squared.base = (function (exports) {
                         topBottom: top && bottom
                     };
                 }
-                return this._cache.autoMargin = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.autoMargin = result;
             }
             return result;
         }
         get baseline() {
             let result = this._cache.baseline;
             if (result === undefined) {
-                if (this.pageFlow && !this.floating && !this.tableElement) {
-                    const display = this.display;
-                    if (display.startsWith('inline') || display === 'list-item') {
-                        const value = this.css('verticalAlign');
-                        result = value === 'baseline' || !isNaN(parseFloat(value));
-                    }
+                const display = this.display;
+                if ((display.startsWith('inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                    const value = this.css('verticalAlign');
+                    result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
-                return this._cache.baseline = !!result;
+                else {
+                    result = false;
+                }
+                this._cache.baseline = result;
             }
             return result;
         }
@@ -4354,7 +4426,7 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 const value = this.css('verticalAlign');
                 if (value !== 'baseline' && this.pageFlow) {
-                    if (value.endsWith('px')) {
+                    if (isPx(value)) {
                         result = parseFloat(value);
                     }
                     else if (isLength(value)) {
@@ -4381,12 +4453,12 @@ this.squared.base = (function (exports) {
                                 valid = isPercent(value);
                                 break;
                         }
-                        if (valid && this.cssTry('vertical-align', 'baseline')) {
+                        if (valid && this.cssTry('verticalAlign', 'baseline')) {
                             const bounds = this.boundingClientRect;
                             if (bounds) {
                                 result = bounds.top - this.bounds.top;
                             }
-                            this.cssFinally('vertical-align');
+                            this.cssFinally('verticalAlign');
                         }
                     }
                 }
@@ -4446,65 +4518,31 @@ this.squared.base = (function (exports) {
             let result = this._cache.backgroundColor;
             if (result === undefined) {
                 if (!this.plainText) {
-                    const isTransparent = (value) => value === 'transparent' || value === 'rgba(0, 0, 0, 0)';
                     result = this.css('backgroundColor');
-                    if (isTransparent(result)) {
-                        if (this.inputElement) {
-                            if (this.tagName !== 'BUTTON') {
-                                switch (this.toElementString('type')) {
-                                    case 'button':
-                                    case 'submit':
-                                    case 'reset':
-                                    case 'image':
-                                        break;
-                                    default:
-                                        result = '';
-                                        break;
-                                }
-                            }
-                        }
-                        else {
-                            result = '';
-                        }
-                    }
-                    if (result && this.styleElement && this.pageFlow && (!this.inputElement && this.opacity === 1 || isTransparent(result))) {
-                        let parent = this.actualParent;
-                        while (parent) {
-                            const backgroundImage = parent.valueOf('backgroundImage');
-                            if (!backgroundImage || backgroundImage === 'none') {
-                                const color = parent.backgroundColor;
-                                if (color && !isTransparent(color)) {
-                                    if (color === result && parent.opacity === 1) {
-                                        result = '';
-                                    }
-                                    else if (isTransparent(result)) {
-                                        result = color;
-                                    }
-                                    break;
-                                }
-                                parent = parent.actualParent;
-                            }
-                            else {
-                                break;
-                            }
-                        }
+                    if (isTransparent(result) && !this.buttonElement) {
+                        result = '';
                     }
                 }
-                return this._cache.backgroundColor = result || '';
+                else {
+                    result = '';
+                }
+                this._cache.backgroundColor = result;
             }
             return result;
         }
         get backgroundImage() {
-            const result = this._cache.backgroundImage;
+            let result = this._cache.backgroundImage;
             if (result === undefined) {
-                let value = '';
                 if (!this.plainText) {
-                    value = this.css('backgroundImage');
-                    if (value === 'none') {
-                        value = '';
+                    result = this.css('backgroundImage');
+                    if (result === 'none') {
+                        result = '';
                     }
                 }
-                return this._cache.backgroundImage = value;
+                else {
+                    result = '';
+                }
+                this._cache.backgroundImage = result;
             }
             return result;
         }
@@ -4535,7 +4573,7 @@ this.squared.base = (function (exports) {
                     let backgroundRepeatX = false, backgroundRepeatY = false;
                     if (backgroundImage) {
                         for (const repeat of this.css('backgroundRepeat').split(',')) {
-                            const [repeatX, repeatY] = splitPair$1(repeat.trim(), ' ');
+                            const [repeatX, repeatY] = splitPair$2(repeat.trim(), ' ');
                             backgroundRepeatX || (backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x');
                             backgroundRepeatY || (backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
                         }
@@ -4551,7 +4589,10 @@ this.squared.base = (function (exports) {
                         outline: this.outlineWidth > 0
                     };
                 }
-                return this._cache.visibleStyle = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.visibleStyle = result;
             }
             return result;
         }
@@ -4605,7 +4646,6 @@ this.squared.base = (function (exports) {
             return result;
         }
         get actualWidth() {
-            var _a;
             let result = this._cache.actualWidth;
             if (result === undefined) {
                 if (this.plainText) {
@@ -4622,43 +4662,30 @@ this.squared.base = (function (exports) {
                             break;
                     }
                 }
-                else if (this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.row)) {
-                    result = this.bounds.width;
-                }
                 else {
-                    result = this.width;
-                    if (result) {
-                        if (this.contentBox && !this.tableElement) {
+                    let parent;
+                    if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.row)) {
+                        result = this.width;
+                        if (result && this.contentBox && !this.tableElement) {
                             result += this.contentBoxWidth;
                         }
                     }
-                    else {
-                        result = this.bounds.width;
-                    }
                 }
-                this._cache.actualWidth = result;
+                return this._cache.actualWidth = result || this.bounds.width;
             }
             return result;
         }
         get actualHeight() {
-            var _a;
             let result = this._cache.actualHeight;
             if (result === undefined) {
-                if (this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.column)) {
-                    result = this.bounds.height;
-                }
-                else {
+                let parent;
+                if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.column)) {
                     result = this.height;
-                    if (result) {
-                        if (this.contentBox && !this.tableElement) {
-                            result += this.contentBoxHeight;
-                        }
-                    }
-                    else {
-                        result = this.bounds.height;
+                    if (result && this.contentBox && !this.tableElement) {
+                        result += this.contentBoxHeight;
                     }
                 }
-                this._cache.actualHeight = result;
+                return this._cache.actualHeight = result || this.bounds.height;
             }
             return result;
         }
@@ -4743,6 +4770,7 @@ this.squared.base = (function (exports) {
             return result;
         }
         get checked() {
+            var _a;
             switch (this.tagName) {
                 case 'INPUT': {
                     const element = this._element;
@@ -4754,7 +4782,7 @@ this.squared.base = (function (exports) {
                     break;
                 }
                 case 'OPTION':
-                    return this.parentElement.tagName === 'SELECT' && Array.from(this.parentElement.selectedOptions).includes(this._element);
+                    return ((_a = this.parentElement) === null || _a === void 0 ? void 0 : _a.tagName) === 'SELECT' && Array.from(this.parentElement.selectedOptions).includes(this._element);
             }
             return false;
         }
@@ -4792,7 +4820,7 @@ this.squared.base = (function (exports) {
                     if (this.styleElement) {
                         const fixedWidth = isFontFixedWidth(this);
                         let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
-                        if (value.endsWith('px')) {
+                        if (isPx(value)) {
                             result = parseFloat(value);
                         }
                         else if (isPercent(value)) {
@@ -4887,7 +4915,7 @@ this.squared.base = (function (exports) {
                             if (node.dir === value) {
                                 return false;
                             }
-                            node.unsetCache('dir');
+                            node.unsetState('dir');
                         });
                     }
                     else if (this.naturalChild) {
@@ -4904,8 +4932,7 @@ this.squared.base = (function (exports) {
                 if (!result) {
                     let parent = this.actualParent;
                     while (parent) {
-                        result = parent.dir;
-                        if (result) {
+                        if (result = parent.dir) {
                             break;
                         }
                         parent = parent.actualParent;
@@ -4925,7 +4952,7 @@ this.squared.base = (function (exports) {
     }
 
     const { STRING: STRING$1 } = squared.lib.regex;
-    const { extractURL } = squared.lib.css;
+    const { extractURL, resolveURL } = squared.lib.css;
     const { convertBase64, fromLastIndexOf: fromLastIndexOf$1, parseMimeType: parseMimeType$1 } = squared.lib.util;
     const REGEXP_DATAURI$1 = new RegExp(`^${STRING$1.DATAURI}$`);
     class Resource {
@@ -4935,9 +4962,6 @@ this.squared.base = (function (exports) {
         }
         static hasMimeType(formats, value) {
             return formats === '*' || formats.has(parseMimeType$1(value));
-        }
-        static canCompressImage(filename, mimeType) {
-            return /\.(png|jpg|jpeg)$/i.test(filename) || !!mimeType && (mimeType.endsWith('png') || mimeType.endsWith('jpeg'));
         }
         static getExtension(value) {
             const match = /\.(\w+)\s*$/.exec(value);
@@ -4962,8 +4986,8 @@ this.squared.base = (function (exports) {
                 if (uri.startsWith('data:image/')) {
                     const match = REGEXP_DATAURI$1.exec(uri);
                     if (match) {
-                        const mimeType = match[1].split(/\s*;\s*/);
-                        this.addRawData(uri, mimeType[0], match[2], { encoding: mimeType[1] || 'base64', width: element.naturalWidth, height: element.naturalHeight });
+                        const [mimeType, encoding] = match[1].split(/\s*;\s*/);
+                        this.addRawData(uri, match[2], { encoding: encoding || 'base64', mimeType, width: element.naturalWidth, height: element.naturalHeight });
                     }
                 }
                 if (uri) {
@@ -4971,11 +4995,11 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        addVideo(uri, mimeType, options) {
-            Resource.ASSETS.video.set(uri, Object.assign({ uri, mimeType }, options));
+        addAudio(uri, options) {
+            Resource.ASSETS.audio.set(uri, Object.assign({ uri }, options));
         }
-        addAudio(uri, mimeType, options) {
-            Resource.ASSETS.audio.set(uri, Object.assign({ uri, mimeType }, options));
+        addVideo(uri, options) {
+            Resource.ASSETS.video.set(uri, Object.assign({ uri }, options));
         }
         addFont(data) {
             const fonts = Resource.ASSETS.fonts;
@@ -4989,14 +5013,13 @@ this.squared.base = (function (exports) {
                 fonts.set(fontFamily, [data]);
             }
         }
-        addRawData(uri, mimeType, content, options) {
-            let filename, encoding, data, width, height;
+        addRawData(uri, content, options) {
+            let filename, mimeType, encoding, data, width, height;
             if (options) {
-                ({ filename, encoding, data, width, height } = options);
-                mimeType || (mimeType = options.mimeType || '');
+                ({ filename, mimeType, encoding, data, width, height } = options);
+                mimeType && (mimeType = mimeType.toLowerCase());
                 encoding && (encoding = encoding.toLowerCase());
             }
-            mimeType = mimeType.toLowerCase();
             content && (content = content.trim());
             let base64, buffer;
             if (encoding === 'base64') {
@@ -5027,7 +5050,7 @@ this.squared.base = (function (exports) {
                 return null;
             }
             if (!filename) {
-                const ext = '.' + (fromMimeType(mimeType) || 'unknown');
+                const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
                 filename = uri.endsWith(ext) ? fromLastIndexOf$1(uri, '/', '\\') : this.randomUUID + ext;
             }
             const result = {
@@ -5073,6 +5096,25 @@ this.squared.base = (function (exports) {
                 Resource.ASSETS.image.set(uri, { width, height, uri });
             }
         }
+        fromImageUrl(value) {
+            const data = this.getRawData(value);
+            if (data) {
+                return [data];
+            }
+            const result = [];
+            const pattern = /url\([^)]+\)/g;
+            let match;
+            while (match = pattern.exec(value)) {
+                const url = resolveURL(match[0]);
+                if (url) {
+                    const image = this.getImage(url);
+                    if (image) {
+                        result.push(image);
+                    }
+                }
+            }
+            return result;
+        }
         set fileHandler(value) {
             if (value) {
                 value.resource = this;
@@ -5107,113 +5149,14 @@ this.squared.base = (function (exports) {
         rawData: new Map()
     };
 
-    var APP_FRAMEWORK;
-    (function (APP_FRAMEWORK) {
-        APP_FRAMEWORK[APP_FRAMEWORK["UNIVERSAL"] = 0] = "UNIVERSAL";
-        APP_FRAMEWORK[APP_FRAMEWORK["VDOM"] = 1] = "VDOM";
-        APP_FRAMEWORK[APP_FRAMEWORK["ANDROID"] = 2] = "ANDROID";
-        APP_FRAMEWORK[APP_FRAMEWORK["CHROME"] = 4] = "CHROME";
-    })(APP_FRAMEWORK || (APP_FRAMEWORK = {}));
-    var NODE_ALIGNMENT;
-    (function (NODE_ALIGNMENT) {
-        NODE_ALIGNMENT[NODE_ALIGNMENT["UNKNOWN"] = 1] = "UNKNOWN";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["AUTO_LAYOUT"] = 2] = "AUTO_LAYOUT";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["HORIZONTAL"] = 4] = "HORIZONTAL";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["VERTICAL"] = 8] = "VERTICAL";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["ABSOLUTE"] = 16] = "ABSOLUTE";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["BLOCK"] = 32] = "BLOCK";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["SEGMENTED"] = 64] = "SEGMENTED";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["COLUMN"] = 128] = "COLUMN";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["FLOAT"] = 256] = "FLOAT";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["INLINE"] = 512] = "INLINE";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["RIGHT"] = 1024] = "RIGHT";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["SINGLE"] = 2048] = "SINGLE";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["EXTENDABLE"] = 4096] = "EXTENDABLE";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["WRAPPER"] = 8192] = "WRAPPER";
-        NODE_ALIGNMENT[NODE_ALIGNMENT["PERCENT"] = 16384] = "PERCENT";
-    })(NODE_ALIGNMENT || (NODE_ALIGNMENT = {}));
-    var BOX_STANDARD;
-    (function (BOX_STANDARD) {
-        BOX_STANDARD[BOX_STANDARD["MARGIN_TOP"] = 1] = "MARGIN_TOP";
-        BOX_STANDARD[BOX_STANDARD["MARGIN_RIGHT"] = 2] = "MARGIN_RIGHT";
-        BOX_STANDARD[BOX_STANDARD["MARGIN_BOTTOM"] = 4] = "MARGIN_BOTTOM";
-        BOX_STANDARD[BOX_STANDARD["MARGIN_LEFT"] = 8] = "MARGIN_LEFT";
-        BOX_STANDARD[BOX_STANDARD["PADDING_TOP"] = 16] = "PADDING_TOP";
-        BOX_STANDARD[BOX_STANDARD["PADDING_RIGHT"] = 32] = "PADDING_RIGHT";
-        BOX_STANDARD[BOX_STANDARD["PADDING_BOTTOM"] = 64] = "PADDING_BOTTOM";
-        BOX_STANDARD[BOX_STANDARD["PADDING_LEFT"] = 128] = "PADDING_LEFT";
-        BOX_STANDARD[BOX_STANDARD["MARGIN"] = 15] = "MARGIN";
-        BOX_STANDARD[BOX_STANDARD["MARGIN_VERTICAL"] = 5] = "MARGIN_VERTICAL";
-        BOX_STANDARD[BOX_STANDARD["MARGIN_HORIZONTAL"] = 10] = "MARGIN_HORIZONTAL";
-        BOX_STANDARD[BOX_STANDARD["PADDING"] = 240] = "PADDING";
-        BOX_STANDARD[BOX_STANDARD["PADDING_VERTICAL"] = 80] = "PADDING_VERTICAL";
-        BOX_STANDARD[BOX_STANDARD["PADDING_HORIZONTAL"] = 160] = "PADDING_HORIZONTAL";
-    })(BOX_STANDARD || (BOX_STANDARD = {}));
-    var NODE_TRAVERSE;
-    (function (NODE_TRAVERSE) {
-        NODE_TRAVERSE[NODE_TRAVERSE["HORIZONTAL"] = 0] = "HORIZONTAL";
-        NODE_TRAVERSE[NODE_TRAVERSE["VERTICAL"] = 1] = "VERTICAL";
-        NODE_TRAVERSE[NODE_TRAVERSE["LINEBREAK"] = 2] = "LINEBREAK";
-        NODE_TRAVERSE[NODE_TRAVERSE["INLINE_WRAP"] = 3] = "INLINE_WRAP";
-        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_CLEAR"] = 4] = "FLOAT_CLEAR";
-        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_BLOCK"] = 5] = "FLOAT_BLOCK";
-        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_WRAP"] = 6] = "FLOAT_WRAP";
-        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_INTERSECT"] = 7] = "FLOAT_INTERSECT";
-        NODE_TRAVERSE[NODE_TRAVERSE["PERCENT_WRAP"] = 8] = "PERCENT_WRAP";
-    })(NODE_TRAVERSE || (NODE_TRAVERSE = {}));
-    var NODE_TEMPLATE;
-    (function (NODE_TEMPLATE) {
-        NODE_TEMPLATE[NODE_TEMPLATE["XML"] = 1] = "XML";
-        NODE_TEMPLATE[NODE_TEMPLATE["INCLUDE"] = 2] = "INCLUDE";
-    })(NODE_TEMPLATE || (NODE_TEMPLATE = {}));
-    var APP_SECTION;
-    (function (APP_SECTION) {
-        APP_SECTION[APP_SECTION["DOM_TRAVERSE"] = 1] = "DOM_TRAVERSE";
-        APP_SECTION[APP_SECTION["EXTENSION"] = 2] = "EXTENSION";
-        APP_SECTION[APP_SECTION["RENDER"] = 4] = "RENDER";
-        APP_SECTION[APP_SECTION["ALL"] = 7] = "ALL";
-    })(APP_SECTION || (APP_SECTION = {}));
-    var NODE_RESOURCE;
-    (function (NODE_RESOURCE) {
-        NODE_RESOURCE[NODE_RESOURCE["BOX_STYLE"] = 1] = "BOX_STYLE";
-        NODE_RESOURCE[NODE_RESOURCE["BOX_SPACING"] = 2] = "BOX_SPACING";
-        NODE_RESOURCE[NODE_RESOURCE["FONT_STYLE"] = 4] = "FONT_STYLE";
-        NODE_RESOURCE[NODE_RESOURCE["VALUE_STRING"] = 8] = "VALUE_STRING";
-        NODE_RESOURCE[NODE_RESOURCE["IMAGE_SOURCE"] = 16] = "IMAGE_SOURCE";
-        NODE_RESOURCE[NODE_RESOURCE["ASSET"] = 28] = "ASSET";
-        NODE_RESOURCE[NODE_RESOURCE["ALL"] = 31] = "ALL";
-    })(NODE_RESOURCE || (NODE_RESOURCE = {}));
-    var NODE_PROCEDURE;
-    (function (NODE_PROCEDURE) {
-        NODE_PROCEDURE[NODE_PROCEDURE["CONSTRAINT"] = 1] = "CONSTRAINT";
-        NODE_PROCEDURE[NODE_PROCEDURE["LAYOUT"] = 2] = "LAYOUT";
-        NODE_PROCEDURE[NODE_PROCEDURE["ALIGNMENT"] = 4] = "ALIGNMENT";
-        NODE_PROCEDURE[NODE_PROCEDURE["ACCESSIBILITY"] = 8] = "ACCESSIBILITY";
-        NODE_PROCEDURE[NODE_PROCEDURE["LOCALIZATION"] = 16] = "LOCALIZATION";
-        NODE_PROCEDURE[NODE_PROCEDURE["CUSTOMIZATION"] = 32] = "CUSTOMIZATION";
-        NODE_PROCEDURE[NODE_PROCEDURE["ALL"] = 63] = "ALL";
-    })(NODE_PROCEDURE || (NODE_PROCEDURE = {}));
-
-    var constant = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        get APP_FRAMEWORK () { return APP_FRAMEWORK; },
-        get NODE_ALIGNMENT () { return NODE_ALIGNMENT; },
-        get BOX_STANDARD () { return BOX_STANDARD; },
-        get NODE_TRAVERSE () { return NODE_TRAVERSE; },
-        get NODE_TEMPLATE () { return NODE_TEMPLATE; },
-        get APP_SECTION () { return APP_SECTION; },
-        get NODE_RESOURCE () { return NODE_RESOURCE; },
-        get NODE_PROCEDURE () { return NODE_PROCEDURE; }
-    });
-
     const { STRING: STRING$2 } = squared.lib.regex;
     const { isUserAgent: isUserAgent$2 } = squared.lib.client;
     const { parseColor } = squared.lib.color;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$2, calculate, convertAngle, formatPercent, formatPX: formatPX$1, getStyle: getStyle$1, hasCoords, isCalc, isLength: isLength$1, isPercent: isPercent$1, parseAngle, parseUnit: parseUnit$1 } = squared.lib.css;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$2, calculate, convertAngle, formatPercent, formatPX, getStyle: getStyle$1, hasCoords, isCalc, isLength: isLength$1, isPercent: isPercent$1, parseAngle, parseUnit: parseUnit$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$1 } = squared.lib.dom;
     const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { convertBase64: convertBase64$1, convertCamelCase: convertCamelCase$2, convertPercent: convertPercent$1, hasValue: hasValue$1, isEqual, isNumber: isNumber$1, isString, iterateArray: iterateArray$1, splitPair: splitPair$2 } = squared.lib.util;
+    const { convertBase64: convertBase64$1, convertCamelCase: convertCamelCase$2, convertPercent: convertPercent$1, hasValue: hasValue$2, isEqual, isNumber: isNumber$1, isString, iterateArray: iterateArray$1, splitPair: splitPair$3 } = squared.lib.util;
     const BORDER_TOP$1 = CSS_PROPERTIES$2.borderTop.value;
     const BORDER_RIGHT$1 = CSS_PROPERTIES$2.borderRight.value;
     const BORDER_BOTTOM$1 = CSS_PROPERTIES$2.borderBottom.value;
@@ -5400,10 +5343,9 @@ this.squared.base = (function (exports) {
             if (width === 2 && (style === 'inset' || style === 'outset')) {
                 width = 1;
             }
-            color = parseColor(color);
-            if (color) {
+            if (color = parseColor(color)) {
                 boxStyle[attr] = {
-                    width: formatPX$1(width),
+                    width: formatPX(width),
                     style,
                     color
                 };
@@ -5455,14 +5397,17 @@ this.squared.base = (function (exports) {
             orientation
         };
     }
-    function replaceSvgAttribute(src, tagName, attr, value, timestamp, start) {
-        tagName = (start ? '' : '@@' + timestamp) + `(${tagName})`;
-        const style = ' ' + attr + `="${value}"`;
-        const match = new RegExp(`<${tagName}(.+?)\\s+${attr}\\s*=\\s*["']?[^"']+["']?([^>]*>)`, 'i').exec(src);
-        if (match) {
-            return src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[3]);
+    function replaceSvgAttribute(src, tagName, attrs, timestamp, start) {
+        const length = attrs.length;
+        let i = 0;
+        while (i < length) {
+            const attr = attrs[i++];
+            tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
+            const style = ' ' + attr + `="${attrs[i++]}"`;
+            const match = new RegExp(`<${tagName}(.+?)\\s+${attr}\\s*=\\s*["']?[^"']+["']?([^>]*>)`, 'i').exec(src);
+            src = match ? src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[3]) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
         }
-        return src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+        return src;
     }
     function replaceSvgValues(src, children, dimension) {
         for (let i = 0, length = children.length; i < length; ++i) {
@@ -5476,8 +5421,12 @@ this.squared.base = (function (exports) {
                 case 'rect':
                 case 'pattern':
                     try {
-                        src = replaceSvgAttribute(src, tagName, 'height', dimension && dimension.height || item.height.baseVal.value, timestamp, true);
-                        src = replaceSvgAttribute(src, tagName, 'width', dimension && dimension.width || item.width.baseVal.value, timestamp);
+                        src = replaceSvgAttribute(src, tagName, [
+                            'height',
+                            dimension && dimension.height || item.height.baseVal.value,
+                            'width',
+                            dimension && dimension.width || item.width.baseVal.value
+                        ], timestamp, true);
                         start = false;
                     }
                     catch (_a) {
@@ -5493,27 +5442,31 @@ this.squared.base = (function (exports) {
                     const { stroke, strokeWidth, strokeDasharray, strokeDashoffset, strokeLinecap, strokeLinejoin, strokeMiterlimit, strokeOpacity, fill, fillRule, fillOpacity, clipPath, clipRule } = getStyle$1(item);
                     const strokeColor = parseColor(stroke);
                     const fillColor = parseColor(fill);
-                    src = replaceSvgAttribute(src, tagName, 'stroke', strokeColor && !strokeColor.transparent ? strokeColor.valueAsRGBA : 'none', timestamp, start);
-                    src = replaceSvgAttribute(src, tagName, 'stroke-width', strokeWidth, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'stroke-dasharray', strokeDasharray, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'stroke-dashoffset', strokeDashoffset, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'stroke-linecap', strokeLinecap, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'stroke-linejoin', strokeLinejoin, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'stroke-miterlimit', strokeMiterlimit, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'stroke-opacity', strokeOpacity, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'fill', fillColor && !fillColor.transparent ? fillColor.valueAsRGBA : 'none', timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'fill-rule', fillRule, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'fill-opacity', fillOpacity, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'clip-path', clipPath, timestamp);
-                    src = replaceSvgAttribute(src, tagName, 'clip-rule', clipRule, timestamp);
+                    src = replaceSvgAttribute(src, tagName, [
+                        'stroke', strokeColor && !strokeColor.transparent ? strokeColor.valueAsRGBA : 'none',
+                        'stroke-width', strokeWidth,
+                        'stroke-dasharray', strokeDasharray,
+                        'stroke-dashoffset', strokeDashoffset,
+                        'stroke-linecap', strokeLinecap,
+                        'stroke-linejoin', strokeLinejoin,
+                        'stroke-miterlimit', strokeMiterlimit,
+                        'stroke-opacity', strokeOpacity,
+                        'fill', fillColor && !fillColor.transparent ? fillColor.valueAsRGBA : 'none',
+                        'fill-rule', fillRule,
+                        'fill-opacity', fillOpacity,
+                        'clip-path', clipPath,
+                        'clip-rule', clipRule
+                    ], timestamp, start);
                     src = replaceSvgValues(src, item.children);
                     break;
                 }
                 case 'stop': {
                     const { stopColor, stopOpacity } = getStyle$1(item);
                     const color = parseColor(stopColor);
-                    src = replaceSvgAttribute(src, tagName, 'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none', timestamp, true);
-                    src = replaceSvgAttribute(src, tagName, 'stop-opacity', stopOpacity, timestamp);
+                    src = replaceSvgAttribute(src, tagName, [
+                        'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none',
+                        'stop-opacity', stopOpacity
+                    ], timestamp, true);
                     break;
                 }
             }
@@ -5525,7 +5478,7 @@ this.squared.base = (function (exports) {
     const checkPreviousSibling = (node) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
     class ResourceUI extends Resource {
         static getBackgroundPosition(value, dimension, options) {
-            if (value) {
+            if (value && value !== 'left top' && value !== '0% 0%') {
                 let fontSize, imageDimension, imageSize, screenDimension;
                 if (options) {
                     ({ fontSize, imageDimension, imageSize, screenDimension } = options);
@@ -5832,7 +5785,7 @@ this.squared.base = (function (exports) {
         }
         static insertStoredAsset(asset, name, value) {
             const stored = ResourceUI.STORED[asset];
-            if (stored && hasValue$1(value)) {
+            if (stored && hasValue$2(value)) {
                 let result = '';
                 if (stored) {
                     for (const data of stored) {
@@ -5998,7 +5951,7 @@ this.squared.base = (function (exports) {
                                         shape = 'circle';
                                     }
                                     else {
-                                        const [radiusX, radiusY] = splitPair$2(name, ' ', true);
+                                        const [radiusX, radiusY] = splitPair$3(name, ' ', true);
                                         let minRadius = Infinity;
                                         if (radiusX) {
                                             minRadius = node.parseWidth(radiusX, false);
@@ -6152,10 +6105,20 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        finalize(layouts) { }
         reset() {
             super.reset();
             ResourceUI.resetDataMap(ResourceUI.STORED);
+        }
+        setData(rendering) {
+            rendering.each(node => {
+                if (node.hasResource(1 /* BOX_STYLE */)) {
+                    this.setBoxStyle(node);
+                }
+                if (node.hasResource(8 /* VALUE_STRING */) && (node.visible && !node.imageContainer || node.labelFor)) {
+                    this.setFontStyle(node);
+                    this.setValueString(node);
+                }
+            });
         }
         writeRawImage(options) {
             var _a;
@@ -6166,7 +6129,7 @@ this.squared.base = (function (exports) {
                     base64 = convertBase64$1(data);
                 }
                 else if (typeof data === 'string' && options.encoding === 'base64') {
-                    base64 = data.startsWith('data:image/') ? splitPair$2(data, ',')[1] : data;
+                    base64 = data.startsWith('data:image/') ? splitPair$3(data, ',')[1] : data;
                 }
                 else {
                     return null;
@@ -6189,7 +6152,7 @@ this.squared.base = (function (exports) {
             let src = element.outerHTML.trim().replace(/\s+/g, ' ');
             src = replaceSvgValues(src, [element], dimension).replace(/"/g, '\\"').replace(/<@@\d+/g, '<');
             const uri = 'data:image/svg+xml,' + src;
-            this.addRawData(uri, 'image/svg+xml', src);
+            this.addRawData(uri, src, { mimeType: 'image/svg+xml' });
             return uri;
         }
         setBoxStyle(node) {
@@ -6209,7 +6172,7 @@ this.squared.base = (function (exports) {
                 if (!backgroundColor && !node.documentParent.visible && node.has('backgroundColor')) {
                     backgroundColor = node.css('backgroundColor');
                 }
-                if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                if (node.hasResource(16 /* IMAGE_SOURCE */)) {
                     const value = node.backgroundImage;
                     if (value) {
                         backgroundImage = ResourceUI.parseBackgroundImage(node, value);
@@ -6227,10 +6190,10 @@ this.squared.base = (function (exports) {
                     }
                     if (node.css('borderRadius') !== '0px') {
                         const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
-                        const [A, B] = splitPair$2(borderTopLeftRadius, ' ');
-                        const [C, D] = splitPair$2(borderTopRightRadius, ' ');
-                        const [E, F] = splitPair$2(borderBottomRightRadius, ' ');
-                        const [G, H] = splitPair$2(borderBottomLeftRadius, ' ');
+                        const [A, B] = splitPair$3(borderTopLeftRadius, ' ');
+                        const [C, D] = splitPair$3(borderTopRightRadius, ' ');
+                        const [E, F] = splitPair$3(borderBottomRightRadius, ' ');
+                        const [G, H] = splitPair$3(borderBottomLeftRadius, ' ');
                         const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
                         const horizontal = node.actualWidth >= node.actualHeight;
                         const radius = borderRadius[0];
@@ -6241,7 +6204,7 @@ this.squared.base = (function (exports) {
                         if (length) {
                             const dimension = horizontal ? 'width' : 'height';
                             for (let i = 0; i < length; ++i) {
-                                borderRadius[i] = formatPX$1(node.parseUnit(borderRadius[i], { dimension, parent: false }));
+                                borderRadius[i] = formatPX(node.parseUnit(borderRadius[i], { dimension, parent: false }));
                             }
                             boxStyle.borderRadius = borderRadius;
                         }
@@ -6410,7 +6373,7 @@ this.squared.base = (function (exports) {
                             inlined = true;
                         }
                         else if (node.inlineText) {
-                            value = node.textEmpty ? ResourceUI.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedFromText(node, element);
+                            value = node.textEmpty ? ResourceUI.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedText(node, element);
                         }
                         break;
                 }
@@ -6545,7 +6508,7 @@ this.squared.base = (function (exports) {
         preFormatString(value) {
             return value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
         }
-        removeExcludedFromText(node, element) {
+        removeExcludedText(node, element) {
             const { preserveWhiteSpace, sessionId } = node;
             const styled = element.children.length > 0 || element.tagName === 'CODE';
             const attr = styled ? 'innerHTML' : 'textContent';
@@ -6629,7 +6592,106 @@ this.squared.base = (function (exports) {
         get itemCount() { return 0; }
     }
 
-    const { CSS_PROPERTIES: CSS_PROPERTIES$3 } = squared.lib.css;
+    var APP_FRAMEWORK;
+    (function (APP_FRAMEWORK) {
+        APP_FRAMEWORK[APP_FRAMEWORK["UNIVERSAL"] = 0] = "UNIVERSAL";
+        APP_FRAMEWORK[APP_FRAMEWORK["VDOM"] = 1] = "VDOM";
+        APP_FRAMEWORK[APP_FRAMEWORK["ANDROID"] = 2] = "ANDROID";
+        APP_FRAMEWORK[APP_FRAMEWORK["CHROME"] = 4] = "CHROME";
+    })(APP_FRAMEWORK || (APP_FRAMEWORK = {}));
+    var NODE_ALIGNMENT;
+    (function (NODE_ALIGNMENT) {
+        NODE_ALIGNMENT[NODE_ALIGNMENT["UNKNOWN"] = 1] = "UNKNOWN";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["AUTO_LAYOUT"] = 2] = "AUTO_LAYOUT";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["HORIZONTAL"] = 4] = "HORIZONTAL";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["VERTICAL"] = 8] = "VERTICAL";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["ABSOLUTE"] = 16] = "ABSOLUTE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["BLOCK"] = 32] = "BLOCK";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["SEGMENTED"] = 64] = "SEGMENTED";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["COLUMN"] = 128] = "COLUMN";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["FLOAT"] = 256] = "FLOAT";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["INLINE"] = 512] = "INLINE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["RIGHT"] = 1024] = "RIGHT";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["SINGLE"] = 2048] = "SINGLE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["EXTENDABLE"] = 4096] = "EXTENDABLE";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["WRAPPER"] = 8192] = "WRAPPER";
+        NODE_ALIGNMENT[NODE_ALIGNMENT["PERCENT"] = 16384] = "PERCENT";
+    })(NODE_ALIGNMENT || (NODE_ALIGNMENT = {}));
+    var BOX_STANDARD;
+    (function (BOX_STANDARD) {
+        BOX_STANDARD[BOX_STANDARD["MARGIN_TOP"] = 1] = "MARGIN_TOP";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_RIGHT"] = 2] = "MARGIN_RIGHT";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_BOTTOM"] = 4] = "MARGIN_BOTTOM";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_LEFT"] = 8] = "MARGIN_LEFT";
+        BOX_STANDARD[BOX_STANDARD["PADDING_TOP"] = 16] = "PADDING_TOP";
+        BOX_STANDARD[BOX_STANDARD["PADDING_RIGHT"] = 32] = "PADDING_RIGHT";
+        BOX_STANDARD[BOX_STANDARD["PADDING_BOTTOM"] = 64] = "PADDING_BOTTOM";
+        BOX_STANDARD[BOX_STANDARD["PADDING_LEFT"] = 128] = "PADDING_LEFT";
+        BOX_STANDARD[BOX_STANDARD["MARGIN"] = 15] = "MARGIN";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_VERTICAL"] = 5] = "MARGIN_VERTICAL";
+        BOX_STANDARD[BOX_STANDARD["MARGIN_HORIZONTAL"] = 10] = "MARGIN_HORIZONTAL";
+        BOX_STANDARD[BOX_STANDARD["PADDING"] = 240] = "PADDING";
+        BOX_STANDARD[BOX_STANDARD["PADDING_VERTICAL"] = 80] = "PADDING_VERTICAL";
+        BOX_STANDARD[BOX_STANDARD["PADDING_HORIZONTAL"] = 160] = "PADDING_HORIZONTAL";
+    })(BOX_STANDARD || (BOX_STANDARD = {}));
+    var NODE_TRAVERSE;
+    (function (NODE_TRAVERSE) {
+        NODE_TRAVERSE[NODE_TRAVERSE["HORIZONTAL"] = 0] = "HORIZONTAL";
+        NODE_TRAVERSE[NODE_TRAVERSE["VERTICAL"] = 1] = "VERTICAL";
+        NODE_TRAVERSE[NODE_TRAVERSE["LINEBREAK"] = 2] = "LINEBREAK";
+        NODE_TRAVERSE[NODE_TRAVERSE["INLINE_WRAP"] = 3] = "INLINE_WRAP";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_CLEAR"] = 4] = "FLOAT_CLEAR";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_BLOCK"] = 5] = "FLOAT_BLOCK";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_WRAP"] = 6] = "FLOAT_WRAP";
+        NODE_TRAVERSE[NODE_TRAVERSE["FLOAT_INTERSECT"] = 7] = "FLOAT_INTERSECT";
+        NODE_TRAVERSE[NODE_TRAVERSE["PERCENT_WRAP"] = 8] = "PERCENT_WRAP";
+    })(NODE_TRAVERSE || (NODE_TRAVERSE = {}));
+    var NODE_TEMPLATE;
+    (function (NODE_TEMPLATE) {
+        NODE_TEMPLATE[NODE_TEMPLATE["XML"] = 1] = "XML";
+        NODE_TEMPLATE[NODE_TEMPLATE["INCLUDE"] = 2] = "INCLUDE";
+    })(NODE_TEMPLATE || (NODE_TEMPLATE = {}));
+    var APP_SECTION;
+    (function (APP_SECTION) {
+        APP_SECTION[APP_SECTION["DOM_TRAVERSE"] = 1] = "DOM_TRAVERSE";
+        APP_SECTION[APP_SECTION["EXTENSION"] = 2] = "EXTENSION";
+        APP_SECTION[APP_SECTION["RENDER"] = 4] = "RENDER";
+        APP_SECTION[APP_SECTION["ALL"] = 7] = "ALL";
+    })(APP_SECTION || (APP_SECTION = {}));
+    var NODE_RESOURCE;
+    (function (NODE_RESOURCE) {
+        NODE_RESOURCE[NODE_RESOURCE["BOX_STYLE"] = 1] = "BOX_STYLE";
+        NODE_RESOURCE[NODE_RESOURCE["BOX_SPACING"] = 2] = "BOX_SPACING";
+        NODE_RESOURCE[NODE_RESOURCE["FONT_STYLE"] = 4] = "FONT_STYLE";
+        NODE_RESOURCE[NODE_RESOURCE["VALUE_STRING"] = 8] = "VALUE_STRING";
+        NODE_RESOURCE[NODE_RESOURCE["IMAGE_SOURCE"] = 16] = "IMAGE_SOURCE";
+        NODE_RESOURCE[NODE_RESOURCE["ASSET"] = 28] = "ASSET";
+        NODE_RESOURCE[NODE_RESOURCE["ALL"] = 31] = "ALL";
+    })(NODE_RESOURCE || (NODE_RESOURCE = {}));
+    var NODE_PROCEDURE;
+    (function (NODE_PROCEDURE) {
+        NODE_PROCEDURE[NODE_PROCEDURE["CONSTRAINT"] = 1] = "CONSTRAINT";
+        NODE_PROCEDURE[NODE_PROCEDURE["LAYOUT"] = 2] = "LAYOUT";
+        NODE_PROCEDURE[NODE_PROCEDURE["ALIGNMENT"] = 4] = "ALIGNMENT";
+        NODE_PROCEDURE[NODE_PROCEDURE["ACCESSIBILITY"] = 8] = "ACCESSIBILITY";
+        NODE_PROCEDURE[NODE_PROCEDURE["LOCALIZATION"] = 16] = "LOCALIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["CUSTOMIZATION"] = 32] = "CUSTOMIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["ALL"] = 63] = "ALL";
+    })(NODE_PROCEDURE || (NODE_PROCEDURE = {}));
+
+    var constant = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        get APP_FRAMEWORK () { return APP_FRAMEWORK; },
+        get NODE_ALIGNMENT () { return NODE_ALIGNMENT; },
+        get BOX_STANDARD () { return BOX_STANDARD; },
+        get NODE_TRAVERSE () { return NODE_TRAVERSE; },
+        get NODE_TEMPLATE () { return NODE_TEMPLATE; },
+        get APP_SECTION () { return APP_SECTION; },
+        get NODE_RESOURCE () { return NODE_RESOURCE; },
+        get NODE_PROCEDURE () { return NODE_PROCEDURE; }
+    });
+
+    const { CSS_PROPERTIES: CSS_PROPERTIES$3, isPx: isPx$1 } = squared.lib.css;
     const { createElement: createElement$1, getRangeClientRect: getRangeClientRect$1 } = squared.lib.dom;
     const { equal: equal$1 } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$2 } = squared.lib.session;
@@ -7106,7 +7168,7 @@ this.squared.base = (function (exports) {
             if (!value) {
                 return 0;
             }
-            else if (value.endsWith('px')) {
+            else if (isPx$1(value)) {
                 return parseFloat(value);
             }
             (_a = (options || (options = {}))).screenDimension || (_a.screenDimension = this.localSettings.screenDimension);
@@ -7150,8 +7212,7 @@ this.squared.base = (function (exports) {
                         break;
                     }
                     case 'initial':
-                        result = node.unsafe('initial');
-                        if (result) {
+                        if (result = node.unsafe('initial')) {
                             this.inheritApply('initial', result);
                         }
                         break;
@@ -7411,12 +7472,12 @@ this.squared.base = (function (exports) {
                         }
                         else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                             if (siblings.every(item => item.inlineDimension)) {
-                                const actualParent = this.actualParent;
-                                if (actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item) => item.layoutElement, startSelf: true })) {
+                                const parent = this.actualParent;
+                                if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item) => item.layoutElement, startSelf: true })) {
                                     const length = siblings.length;
-                                    if (actualParent.naturalChildren.filter((item) => item.visible && item.pageFlow).length === length + 1) {
+                                    if (parent.naturalChildren.filter((item) => item.visible && item.pageFlow).length === length + 1) {
                                         const getLayoutWidth = (node) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
-                                        let width = actualParent.box.width - getLayoutWidth(this);
+                                        let width = parent.box.width - getLayoutWidth(this);
                                         for (let i = 0; i < length; ++i) {
                                             width -= getLayoutWidth(siblings[i]);
                                         }
@@ -7699,12 +7760,7 @@ this.squared.base = (function (exports) {
                 ? {}
                 : this.cssAsObject('paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 'borderTopStyle', 'borderRightStyle', 'borderBottomStyle', 'borderLeftStyle');
             Object.assign(style, this.textStyle);
-            if (this.naturalElement) {
-                style.fontSize = this.valueOf('fontSize') || this.fontSize + 'px';
-            }
-            else {
-                style.fontSize = this.fontSize + 'px';
-            }
+            style.fontSize = this.naturalElement && this.valueOf('fontSize') || this.fontSize + 'px';
             if (width) {
                 style.width = width;
             }
@@ -7785,7 +7841,14 @@ this.squared.base = (function (exports) {
             this._cache[attr] = value;
         }
         setCacheState(attr, value) {
-            this._cacheState[attr] = value;
+            switch (attr) {
+                case 'inlineText':
+                    this._cacheState.inlineText = value === true;
+                    break;
+                default:
+                    this._cacheState[attr] = value;
+                    break;
+            }
         }
         unsetCache(...attrs) {
             var _a;
@@ -7812,8 +7875,12 @@ this.squared.base = (function (exports) {
                             cache.baselineElement = undefined;
                             (_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.unsetCache('baselineElement');
                             break;
-                        case 'width':
                         case 'height':
+                            cache.overflow = undefined;
+                        case 'minHeight':
+                            cache.blockVertical = undefined;
+                            break;
+                        case 'width':
                         case 'maxWidth':
                         case 'maxHeight':
                         case 'overflowX':
@@ -7844,6 +7911,18 @@ this.squared.base = (function (exports) {
             }
             return value;
         }
+        cssValue(attr) {
+            return this._styleMap[attr] || '';
+        }
+        cssValues(...attrs) {
+            const styleMap = this._styleMap;
+            const length = attrs.length;
+            const result = new Array(length);
+            for (let i = 0; i < length; ++i) {
+                result[i] = styleMap[attrs[i]] || '';
+            }
+            return result;
+        }
         get element() {
             return this._element || this.innerWrapped && this.innerMostWrapped.unsafe('element') || null;
         }
@@ -7857,7 +7936,7 @@ this.squared.base = (function (exports) {
         }
         get pseudoElement() {
             const result = this._cacheState.pseudoElement;
-            return result === undefined ? this._cacheState.pseudoElement = this._element ? this._element.className === '__squared.pseudo' : false : result;
+            return result === undefined ? this._cacheState.pseudoElement = this._element ? this._element.className === '__squared-pseudo' : false : result;
         }
         get scrollElement() {
             let result = this._cache.scrollElement;
@@ -7900,7 +7979,10 @@ this.squared.base = (function (exports) {
                             break;
                     }
                 }
-                return this._cache.scrollElement = !!result;
+                else {
+                    result = false;
+                }
+                this._cache.scrollElement = result;
             }
             return result;
         }
@@ -7927,6 +8009,10 @@ this.squared.base = (function (exports) {
         get inputElement() {
             const result = this._cache.inputElement;
             return result === undefined ? this._cache.inputElement = super.inputElement : result;
+        }
+        get buttonElement() {
+            const result = this._cache.buttonElement;
+            return result === undefined ? this._cache.buttonElement = super.buttonElement : result;
         }
         get floating() {
             const result = this._cache.floating;
@@ -8014,7 +8100,10 @@ this.squared.base = (function (exports) {
                     const value = this.display;
                     result = (value.startsWith('inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
                 }
-                return this._cache.inlineVertical = !!result;
+                else {
+                    result = false;
+                }
+                this._cache.inlineVertical = result;
             }
             return result;
         }
@@ -8056,7 +8145,10 @@ this.squared.base = (function (exports) {
                     const { top, right, bottom, left } = this._styleMap;
                     result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
                 }
-                return this._cache.autoPosition = !!result;
+                else {
+                    result = false;
+                }
+                this._cache.autoPosition = result;
             }
             return result;
         }
@@ -8111,7 +8203,10 @@ this.squared.base = (function (exports) {
                         result = this.inlineText && this.textElement || this.plainText && !this.multiline || this.inputElement || this.imageElement || this.svgElement;
                     }
                 }
-                return this._cache.baselineElement = !!result;
+                else {
+                    result = false;
+                }
+                this._cache.baselineElement = result;
             }
             return result;
         }
@@ -8212,7 +8307,7 @@ this.squared.base = (function (exports) {
         }
         get onlyChild() {
             var _a, _b;
-            if (!this.documentRoot) {
+            if (!this.rootElement) {
                 const children = ((_a = this.renderParent) === null || _a === void 0 ? void 0 : _a.renderChildren) || ((_b = this.parent) === null || _b === void 0 ? void 0 : _b.children);
                 if (children) {
                     for (let i = 0, length = children.length; i < length; ++i) {
@@ -8251,6 +8346,33 @@ this.squared.base = (function (exports) {
         get boxAdjustment() {
             return this._boxAdjustment || (this._boxAdjustment = [0, 0, 0, 0, 0, 0, 0, 0]);
         }
+        get backgroundColor() {
+            let result = this._cache.backgroundColor;
+            if (result === undefined) {
+                result = super.backgroundColor;
+                if (result && this.styleElement && !this.inputElement && this.opacity === 1 && this.pageFlow) {
+                    let parent = this.actualParent;
+                    while (parent) {
+                        const backgroundImage = parent.backgroundImage;
+                        if (!backgroundImage) {
+                            const color = parent.backgroundColor;
+                            if (color) {
+                                if (color === result && parent.opacity === 1) {
+                                    result = '';
+                                }
+                                break;
+                            }
+                            parent = parent.actualParent;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    this._cache.backgroundColor = result;
+                }
+            }
+            return result;
+        }
         get textEmpty() {
             let result = this._cacheState.textEmpty;
             if (result === undefined) {
@@ -8258,7 +8380,10 @@ this.squared.base = (function (exports) {
                     const value = this.textContent;
                     result = value === '' || !this.preserveWhiteSpace && isEmptyString$1(value);
                 }
-                return this._cacheState.textEmpty = !!result;
+                else {
+                    result = false;
+                }
+                this._cacheState.textEmpty = result;
             }
             return result;
         }
@@ -8279,7 +8404,7 @@ this.squared.base = (function (exports) {
                     if (!result) {
                         const parent = this.actualParent;
                         if (parent && parent.firstStaticChild === this && hasTextIndent(parent)) {
-                            result = parent.parseUnit(parent.css('textIndent'));
+                            result = parent.cssUnit('textIndent');
                         }
                     }
                 }
@@ -8588,7 +8713,7 @@ this.squared.base = (function (exports) {
             this.tagNames = options && options.tagNames;
         }
         static includes(source, value) {
-            return source ? source.trim().split(/\s*,\s*/).includes(value) : false;
+            return !!source && source.trim().split(/\s*,\s*/).includes(value);
         }
         static findNestedElement(node, name) {
             if (node.styleElement) {
@@ -8603,7 +8728,7 @@ this.squared.base = (function (exports) {
             }
         }
         is(node) {
-            return this.tagNames ? this.tagNames.includes(node.tagName) : true;
+            return !this.tagNames || this.tagNames.includes(node.tagName);
         }
         condition(node, parent) {
             return node.use ? this.included(node.element) : !!this.tagNames;
@@ -8625,9 +8750,6 @@ this.squared.base = (function (exports) {
                 map.set(node, [this]);
             }
         }
-        postBaseLayout(node) { }
-        postConstraints(node) { }
-        postOptimize(node, rendered) { }
         afterBaseLayout(sessionId) { }
         afterConstraints(sessionId) { }
         afterResources(sessionId) { }
@@ -8789,7 +8911,7 @@ this.squared.base = (function (exports) {
                                         if (src) {
                                             mainData.imageSrc = src;
                                             mainData.imagePosition = item.css('backgroundPosition');
-                                            item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
+                                            item.exclude({ resource: 16 /* IMAGE_SOURCE */ });
                                         }
                                     }
                                     return;
@@ -8807,7 +8929,7 @@ this.squared.base = (function (exports) {
     }
 
     const { FILE: FILE$2 } = squared.lib.regex;
-    const { formatPX: formatPX$2, getStyle: getStyle$2, hasCoords: hasCoords$1, isCalc: isCalc$1, insertStyleSheetRule: insertStyleSheetRule$1, resolveURL } = squared.lib.css;
+    const { formatPX: formatPX$1, getStyle: getStyle$2, hasCoords: hasCoords$1, isCalc: isCalc$1, insertStyleSheetRule: insertStyleSheetRule$1, resolveURL: resolveURL$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$2, removeElementsByClassName } = squared.lib.dom;
     const { getElementCache: getElementCache$2, setElementCache: setElementCache$2 } = squared.lib.session;
     const { capitalize: capitalize$1, convertWord, flatArray, isString: isString$1, iterateArray: iterateArray$2, partitionArray, trimBoth: trimBoth$1, trimString } = squared.lib.util;
@@ -8923,7 +9045,7 @@ this.squared.base = (function (exports) {
         for (let i = 0, length = nodes.length; i < length; ++i) {
             const child = nodes[i];
             if (!child.hasPX('width') && !child.hasPX('maxWidth') && !child.imageElement && !child.svgElement) {
-                child.css('maxWidth', formatPX$2(offset));
+                child.css('maxWidth', formatPX$1(offset));
             }
         }
     }
@@ -8969,10 +9091,10 @@ this.squared.base = (function (exports) {
             for (let i = 0; i < length; ++i) {
                 const node = children[i];
                 if (node.renderParent && node.visible) {
-                    if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
+                    if (node.hasProcedure(2 /* LAYOUT */)) {
                         node.setLayout();
                     }
-                    if (node.hasProcedure(NODE_PROCEDURE.ALIGNMENT)) {
+                    if (node.hasProcedure(4 /* ALIGNMENT */)) {
                         node.setAlignment();
                     }
                     rendered[itemCount++] = node;
@@ -8985,15 +9107,19 @@ this.squared.base = (function (exports) {
             length = extensions.length;
             for (let i = 0; i < length; ++i) {
                 const ext = extensions[i];
-                for (const node of ext.subscribers) {
-                    ext.postOptimize(node, rendered);
+                const postOptimize = ext.postOptimize;
+                if (postOptimize) {
+                    for (const node of ext.subscribers) {
+                        postOptimize.call(ext, node, rendered);
+                    }
                 }
             }
             const documentRoot = [];
+            const documentWriteData = { rendered, documentRoot };
             itemCount = rendered.length;
             for (let i = 0; i < itemCount; ++i) {
                 const node = rendered[i];
-                if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
+                if (node.hasResource(2 /* BOX_SPACING */)) {
                     node.setBoxSpacing();
                 }
                 if (node.documentRoot && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
@@ -9004,20 +9130,25 @@ this.squared.base = (function (exports) {
                     }
                 }
             }
-            const documentWriteData = { rendered, documentRoot };
             for (let i = 0; i < length; ++i) {
-                extensions[i].beforeDocumentWrite(documentWriteData);
+                const ext = extensions[i];
+                const postBoxSpacing = ext.postBoxSpacing;
+                if (postBoxSpacing) {
+                    for (const node of ext.subscribers) {
+                        postBoxSpacing.call(ext, node, rendered);
+                    }
+                }
+                ext.beforeDocumentWrite(documentWriteData);
             }
             for (let i = 0, q = documentRoot.length; i < q; ++i) {
                 const { node, layoutName, renderTemplates } = documentRoot[i];
                 this.saveDocument(layoutName, this._controllerSettings.layout.baseTemplate + controller.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes), node.dataset['pathname' + capitalize$1(this.systemName)], ((_b = node.renderExtension) === null || _b === void 0 ? void 0 : _b.some(item => item.documentBase)) ? 0 : undefined);
             }
-            this.resourceHandler.finalize(this._layouts);
             controller.finalize(this._layouts);
             for (let i = 0; i < length; ++i) {
                 extensions[i].afterFinalize();
             }
-            removeElementsByClassName('__squared.pseudo');
+            removeElementsByClassName('__squared-pseudo');
             return this.closed = true;
         }
         copyTo(directory, options) {
@@ -9067,12 +9198,12 @@ this.squared.base = (function (exports) {
             }
             return false;
         }
-        insertNode(element, sessionId, cascadeAll, pseudoElt) {
-            if (element.nodeName === '#text' || this.conditionElement(element, sessionId, cascadeAll, pseudoElt)) {
-                this._applyDefaultStyles(element, sessionId, pseudoElt);
-                return this.createNodeStatic(sessionId, element);
+        insertNode(processing, element, cascadeAll, pseudoElt) {
+            if (element.nodeName === '#text' || this.conditionElement(element, processing.sessionId, cascadeAll, pseudoElt)) {
+                this._applyDefaultStyles(element, processing.sessionId, pseudoElt);
+                return this.createNodeStatic(processing, element);
             }
-            const node = this.createNodeStatic(sessionId, element);
+            const node = this.createNodeStatic(processing, element);
             node.visible = false;
             node.excluded = true;
             return node;
@@ -9173,7 +9304,7 @@ this.squared.base = (function (exports) {
                     setElementState(parent, true, true, true, false);
                     if (parent.tagName === 'HTML') {
                         parent.addAlign(2 /* AUTO_LAYOUT */);
-                        parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
+                        parent.exclude({ resource: 4 /* FONT_STYLE */ | 8 /* VALUE_STRING */, procedure: 63 /* ALL */ });
                         cache.add(parent);
                     }
                 }
@@ -9207,8 +9338,8 @@ this.squared.base = (function (exports) {
                                         data = {};
                                         preAlignment.set(item, data);
                                     }
-                                    data[attr] = item.css(attr);
-                                    element.style.setProperty(attr, 'auto');
+                                    data[attr] = item.valueOf(attr);
+                                    element.style[attr] = 'auto';
                                     resetBounds = true;
                                 }
                             };
@@ -9324,22 +9455,22 @@ this.squared.base = (function (exports) {
             dataset['iteration' + systemName] = suffix.toString();
             dataset['layoutName' + systemName] = layoutName;
             node.data(Application.KEY_NAME, 'layoutName', layoutName);
-            const sessionId = node.sessionId;
-            this.setBaseLayout(sessionId);
-            this.setConstraints(sessionId);
-            this.setResources(sessionId);
+            const processing = this.getProcessing(node.sessionId);
+            this.setBaseLayout(processing);
+            this.setConstraints(processing);
+            this.setResources(processing);
         }
         useElement(element) {
             const use = this.getDatasetName('use', element);
-            return use ? use.split(',').some(value => this.extensionManager.get(value.trim())) : false;
+            return !!use && use.split(',').some(value => this.extensionManager.get(value.trim()));
         }
         toString() {
             var _a;
             return ((_a = this.layouts[0]) === null || _a === void 0 ? void 0 : _a.content) || '';
         }
-        cascadeParentNode(processing, parentElement, sessionId, depth, extensions, shadowParent, cascadeAll) {
+        cascadeParentNode(processing, parentElement, sessionId, depth, extensions, shadowParent, beforeElement, afterElement, cascadeAll) {
             var _a;
-            const node = this.insertNode(parentElement, sessionId, cascadeAll);
+            const node = this.insertNode(processing, parentElement, cascadeAll);
             if (parentElement.tagName === 'svg') {
                 setElementState(node, true, true, false, true);
             }
@@ -9354,6 +9485,8 @@ this.squared.base = (function (exports) {
                         break;
                     }
                 }
+                beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
+                afterElement = this.createPseduoElement(parentElement, '::after', sessionId);
             }
             const display = node.display;
             if (display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => { var _a; return (_a = this.extensionManager.get(name)) === null || _a === void 0 ? void 0 : _a.documentBase; })) {
@@ -9363,8 +9496,6 @@ this.squared.base = (function (exports) {
                 const { cache, rootElements } = processing;
                 const pierceShadowRoot = this.userSettings.pierceShadowRoot;
                 const hostElement = parentElement.shadowRoot || parentElement;
-                const beforeElement = this.createPseduoElement(parentElement, '::before', sessionId, hostElement);
-                const afterElement = this.createPseduoElement(parentElement, '::after', sessionId, hostElement);
                 const childNodes = hostElement.childNodes;
                 const children = [];
                 const elements = [];
@@ -9374,7 +9505,7 @@ this.squared.base = (function (exports) {
                     const element = childNodes[i];
                     let child;
                     if (element === beforeElement) {
-                        child = this.insertNode(beforeElement, sessionId, cascadeAll, '::before');
+                        child = this.insertNode(processing, beforeElement, cascadeAll, '::before');
                         setElementState(child, true, false, true, false);
                         if (!child.textEmpty) {
                             child.cssApply(node.textStyle, false);
@@ -9384,7 +9515,7 @@ this.squared.base = (function (exports) {
                         node.innerBefore = child;
                     }
                     else if (element === afterElement) {
-                        child = this.insertNode(afterElement, sessionId, cascadeAll, '::after');
+                        child = this.insertNode(processing, afterElement, cascadeAll, '::after');
                         setElementState(child, true, false, true, false);
                         if (!child.textEmpty) {
                             child.cssApply(node.textStyle, false);
@@ -9395,7 +9526,7 @@ this.squared.base = (function (exports) {
                     }
                     else if (element.nodeName[0] === '#') {
                         if (this.visibleText(node, element)) {
-                            child = this.insertNode(element, sessionId);
+                            child = this.insertNode(processing, element);
                             setElementState(child, false, false, false, false);
                             child.cssApply(node.textStyle);
                             plainText = j;
@@ -9411,15 +9542,15 @@ this.squared.base = (function (exports) {
                         }
                         if (!rootElements.has(element)) {
                             let shadowRoot;
-                            if (pierceShadowRoot) {
-                                shadowRoot = element.shadowRoot;
-                                if (shadowRoot) {
-                                    this.replaceShadowRootSlots(shadowRoot);
-                                    this.setStyleMap(sessionId, shadowRoot);
-                                }
+                            if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
+                                this.replaceShadowRootSlots(shadowRoot);
+                                this.setStyleMap(sessionId, shadowRoot);
                             }
-                            if ((shadowRoot || element).childNodes.length) {
-                                child = this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent, cascadeAll);
+                            const hostElementChild = shadowRoot || element;
+                            const beforeElementChild = this.createPseduoElement(element, '::before', sessionId, hostElementChild);
+                            const afterElementChild = this.createPseduoElement(element, '::after', sessionId, hostElementChild);
+                            if (hostElementChild.childNodes.length) {
+                                child = this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent, beforeElementChild, afterElementChild, cascadeAll);
                                 if (child.display === 'contents' && !child.excluded && !shadowRoot) {
                                     for (const item of child.naturalChildren) {
                                         if (item.naturalElement) {
@@ -9437,7 +9568,7 @@ this.squared.base = (function (exports) {
                                 }
                             }
                             else {
-                                child = this.insertNode(element, sessionId, cascadeAll);
+                                child = this.insertNode(processing, element, cascadeAll);
                                 if (element.tagName === 'svg') {
                                     setElementState(child, true, true, false, true);
                                 }
@@ -9453,7 +9584,7 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else {
-                            child = this.insertNode(element, sessionId);
+                            child = this.insertNode(processing, element);
                             child.documentRoot = true;
                             child.visible = false;
                             child.excluded = true;
@@ -9565,10 +9696,10 @@ this.squared.base = (function (exports) {
             }
             return node;
         }
-        setBaseLayout(sessionId) {
+        setBaseLayout(processing) {
             const controller = this.controllerHandler;
             const { extensionMap, clearMap } = this.session;
-            const { extensions, cache, node: rootNode } = this.getProcessing(sessionId);
+            const { sessionId, extensions, cache, node: rootNode } = processing;
             const mapData = new Map();
             const setMapDepth = (depth, node) => {
                 const data = mapData.get(depth);
@@ -9656,7 +9787,7 @@ this.squared.base = (function (exports) {
                             continue;
                         }
                         let parentY = nodeY.parent;
-                        if (q > 1 && i < q - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(1 /* UNKNOWN */) || nodeY.hasAlign(4096 /* EXTENDABLE */)) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                        if (q > 1 && i < q - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(1 /* UNKNOWN */) || nodeY.hasAlign(4096 /* EXTENDABLE */)) && !nodeY.nodeGroup && nodeY.hasSection(1 /* DOM_TRAVERSE */)) {
                             const horizontal = [];
                             const vertical = [];
                             let j = i, k = 0;
@@ -9666,7 +9797,7 @@ this.squared.base = (function (exports) {
                                 ++k;
                             }
                             traverse: {
-                                let floatActive, floating;
+                                let floatActive;
                                 for (; j < q; ++j, ++k) {
                                     const item = axisY[j];
                                     if (item.pageFlow) {
@@ -9681,8 +9812,7 @@ this.squared.base = (function (exports) {
                                                     floatActive = false;
                                                 }
                                             }
-                                            floating = item.floating;
-                                            if (floating) {
+                                            if (item.floating) {
                                                 floatActive = true;
                                             }
                                         }
@@ -9801,7 +9931,7 @@ this.squared.base = (function (exports) {
                                 parentY = nodeY.parent;
                             }
                         }
-                        if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
+                        if (!nodeY.rendered && nodeY.hasSection(2 /* EXTENSION */)) {
                             const descendant = extensionMap.get(nodeY);
                             let combined = descendant ? renderExtension ? renderExtension.concat(descendant) : descendant : renderExtension, next;
                             if (combined) {
@@ -9875,7 +10005,7 @@ this.squared.base = (function (exports) {
                                 }
                             }
                         }
-                        if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
+                        if (!nodeY.rendered && nodeY.hasSection(4 /* RENDER */)) {
                             const containerType = nodeY.containerType;
                             let layout;
                             if (!nodeY.isEmpty()) {
@@ -9932,41 +10062,47 @@ this.squared.base = (function (exports) {
             });
             for (let i = 0; i < length; ++i) {
                 const ext = extensions[i];
-                for (const node of ext.subscribers) {
-                    if (node.sessionId === sessionId) {
-                        ext.postBaseLayout(node);
+                const postBaseLayout = ext.postBaseLayout;
+                if (postBaseLayout) {
+                    for (const node of ext.subscribers) {
+                        if (node.sessionId === sessionId) {
+                            postBaseLayout.call(ext, node);
+                        }
                     }
                 }
                 ext.afterBaseLayout(sessionId);
             }
         }
-        setConstraints(sessionId) {
-            const { cache, extensions } = this.getProcessing(sessionId);
+        setConstraints(processing) {
+            const { sessionId, cache, extensions } = processing;
             this.controllerHandler.setConstraints(cache);
             for (let i = 0, length = extensions.length; i < length; ++i) {
                 const ext = extensions[i];
-                for (const node of ext.subscribers) {
-                    if (node.sessionId === sessionId) {
-                        ext.postConstraints(node);
+                const postConstraints = ext.postConstraints;
+                if (postConstraints) {
+                    for (const node of ext.subscribers) {
+                        if (node.sessionId === sessionId) {
+                            postConstraints.call(ext, node);
+                        }
                     }
                 }
                 ext.afterConstraints(sessionId);
             }
         }
-        setResources(sessionId) {
-            const { cache, extensions } = this.getProcessing(sessionId);
-            const resource = this.resourceHandler;
-            cache.each(node => {
-                if (node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
-                    resource.setBoxStyle(node);
-                }
-                if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && !node.imageContainer && (node.visible || node.labelFor)) {
-                    resource.setFontStyle(node);
-                    resource.setValueString(node);
-                }
-            });
+        setResources(processing) {
+            const { sessionId, cache, extensions } = processing;
+            this.resourceHandler.setData(cache);
             for (let i = 0, length = extensions.length; i < length; ++i) {
-                extensions[i].afterResources(sessionId);
+                const ext = extensions[i];
+                const postResources = ext.postResources;
+                if (postResources) {
+                    for (const node of ext.subscribers) {
+                        if (node.sessionId === sessionId) {
+                            postResources.call(ext, node);
+                        }
+                    }
+                }
+                ext.afterResources(sessionId);
             }
         }
         processFloatHorizontal(layout) {
@@ -10263,7 +10399,7 @@ this.squared.base = (function (exports) {
             }
             return layout;
         }
-        createPseduoElement(element, pseudoElt, sessionId, parentRoot) {
+        createPseduoElement(element, pseudoElt, sessionId, elementRoot = element.shadowRoot || element) {
             var _a;
             let styleMap = getElementCache$2(element, 'styleMap' + pseudoElt, sessionId);
             if (element.tagName === 'Q') {
@@ -10289,7 +10425,7 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else {
-                            const childNodes = parentRoot.childNodes;
+                            const childNodes = elementRoot.childNodes;
                             for (let i = 0, length = childNodes.length; i < length; ++i) {
                                 const child = childNodes[i];
                                 if (child.nodeName[0] === '#') {
@@ -10345,7 +10481,7 @@ this.squared.base = (function (exports) {
                             }
                             break;
                         default: {
-                            const url = resolveURL(value);
+                            const url = resolveURL$1(value);
                             if (url) {
                                 if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
                                     tagName = 'img';
@@ -10385,14 +10521,13 @@ this.squared.base = (function (exports) {
                                         const cascadeCounterSibling = (sibling) => {
                                             if (getCounterValue(getStyle$2(sibling).counterReset, counterName) === undefined) {
                                                 iterateArray$2(sibling.children, (item) => {
-                                                    if (item.className !== '__squared.pseudo') {
+                                                    if (item.className !== '__squared-pseudo') {
                                                         let increment = getCounterIncrementValue(item, counterName);
                                                         if (increment) {
                                                             incrementCounter(increment, true);
                                                         }
                                                         const childStyle = getStyle$2(item);
-                                                        increment = getCounterValue(childStyle.counterIncrement, counterName);
-                                                        if (increment) {
+                                                        if (increment = getCounterValue(childStyle.counterIncrement, counterName)) {
                                                             incrementCounter(increment, false);
                                                         }
                                                         increment = getCounterValue(childStyle.counterReset, counterName);
@@ -10407,8 +10542,7 @@ this.squared.base = (function (exports) {
                                         while (current) {
                                             ascending = false;
                                             if (current.previousElementSibling) {
-                                                current = current.previousElementSibling;
-                                                if (current) {
+                                                if (current = current.previousElementSibling) {
                                                     cascadeCounterSibling(current);
                                                 }
                                                 else {
@@ -10422,7 +10556,7 @@ this.squared.base = (function (exports) {
                                                 }
                                                 ascending = true;
                                             }
-                                            if (current.className !== '__squared.pseudo') {
+                                            if (current.className !== '__squared-pseudo') {
                                                 const pesudoIncrement = getCounterIncrementValue(current, counterName);
                                                 if (pesudoIncrement) {
                                                     incrementCounter(pesudoIncrement, true);
@@ -10476,13 +10610,13 @@ this.squared.base = (function (exports) {
                         styleMap.display || (styleMap.display = 'inline');
                         tagName || (tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div');
                         const pseudoElement = document.createElement(tagName);
-                        pseudoElement.className = '__squared.pseudo';
+                        pseudoElement.className = '__squared-pseudo';
                         pseudoElement.style.setProperty('display', 'none');
                         if (pseudoElt === '::before') {
-                            parentRoot.insertBefore(pseudoElement, parentRoot.childNodes[0]);
+                            elementRoot.insertBefore(pseudoElement, elementRoot.childNodes[0]);
                         }
                         else {
-                            parentRoot.appendChild(pseudoElement);
+                            elementRoot.appendChild(pseudoElement);
                         }
                         if (content) {
                             if (tagName === 'img') {
@@ -10570,8 +10704,7 @@ this.squared.base = (function (exports) {
                     }
                 }
             }
-            q = rightAbove.length;
-            if (q) {
+            if (q = rightAbove.length) {
                 let floatPosition = Infinity, marginOffset = 0, spacing;
                 for (let i = 0; i < q; ++i) {
                     const child = rightAbove[i];
@@ -10636,7 +10769,7 @@ this.squared.base = (function (exports) {
     }
 
     const { isUserAgent: isUserAgent$3 } = squared.lib.client;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$4, formatPX: formatPX$3, getStyle: getStyle$3, hasCoords: hasCoords$2, isLength: isLength$2, parseUnit: parseUnit$2 } = squared.lib.css;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$4, formatPX: formatPX$2, getStyle: getStyle$3, hasCoords: hasCoords$2, isLength: isLength$2, parseUnit: parseUnit$2 } = squared.lib.css;
     const { getParentElement: getParentElement$1, withinViewport } = squared.lib.dom;
     const { getElementCache: getElementCache$3, setElementCache: setElementCache$3 } = squared.lib.session;
     const { capitalize: capitalize$2, convertFloat: convertFloat$1, iterateArray: iterateArray$3, joinArray } = squared.lib.util;
@@ -10772,10 +10905,10 @@ this.squared.base = (function (exports) {
                             case 'time':
                             case 'date':
                             case 'datetime-local':
-                                styleMap.paddingTop = formatPX$3(convertFloat$1(styleMap.paddingTop) + 1);
-                                styleMap.paddingRight = formatPX$3(convertFloat$1(styleMap.paddingRight) + 1);
-                                styleMap.paddingBottom = formatPX$3(convertFloat$1(styleMap.paddingBottom) + 1);
-                                styleMap.paddingLeft = formatPX$3(convertFloat$1(styleMap.paddingLeft) + 1);
+                                styleMap.paddingTop = formatPX$2(convertFloat$1(styleMap.paddingTop) + 1);
+                                styleMap.paddingRight = formatPX$2(convertFloat$1(styleMap.paddingRight) + 1);
+                                styleMap.paddingBottom = formatPX$2(convertFloat$1(styleMap.paddingBottom) + 1);
+                                styleMap.paddingLeft = formatPX$2(convertFloat$1(styleMap.paddingLeft) + 1);
                                 break;
                             default: {
                                 const result = setBorderStyle$1(styleMap, this._settingsStyle.inputBorderColor);
@@ -11372,7 +11505,7 @@ this.squared.base = (function (exports) {
                         if (value && isLength$2(value)) {
                             const attrMax = 'max' + capitalize$2(attr);
                             if (!styleMap[attrMax] || !attrMax.endsWith('%')) {
-                                styleMap[attr] = formatPX$3(image[attr] * parseUnit$2(value, { fontSize: parseFloat(getStyle$3(element).fontSize) }) / image[opposing]);
+                                styleMap[attr] = formatPX$2(image[attr] * parseUnit$2(value, { fontSize: parseFloat(getStyle$3(element).fontSize) }) / image[opposing]);
                             }
                         }
                     }
@@ -11538,7 +11671,7 @@ this.squared.base = (function (exports) {
     class Accessibility extends ExtensionUI {
     }
 
-    const { isLength: isLength$3 } = squared.lib.css;
+    const { isLength: isLength$3, isPx: isPx$2 } = squared.lib.css;
     class Column extends ExtensionUI {
         is(node) {
             return node.size() > 1 && (node.blockDimension && node.display !== 'table') && !node.layoutElement;
@@ -11580,8 +11713,8 @@ this.squared.base = (function (exports) {
             const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
             const boxWidth = node.box.width;
             const columnCount = node.toInt('columnCount');
-            const columnWidth = node.parseUnit(node.valueOf('columnWidth'));
-            let columnGap = node.parseUnit(node.valueOf('columnGap')), columnSized;
+            const columnWidth = node.cssUnit('columnWidth');
+            let columnGap = node.cssUnit('columnGap'), columnSized;
             const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
             if (columnGap) {
                 columnSized = Math.floor(getColumnSizing());
@@ -11598,7 +11731,7 @@ this.squared.base = (function (exports) {
                 columnSized,
                 columnRule: {
                     borderLeftStyle,
-                    borderLeftWidth: borderLeftStyle !== 'none' ? borderLeftWidth.endsWith('px') ? parseFloat(borderLeftWidth) : isLength$3(borderLeftWidth, true) ? node.parseUnit(borderLeftWidth) : parseFloat(node.style.borderLeftWidth) : 0,
+                    borderLeftWidth: borderLeftStyle !== 'none' ? isPx$2(borderLeftWidth) ? parseFloat(borderLeftWidth) : isLength$3(borderLeftWidth, true) ? node.parseUnit(borderLeftWidth) : parseFloat(node.style.borderLeftWidth) : 0,
                     borderLeftColor
                 },
                 boxWidth: parent.actualBoxWidth(boxWidth),
@@ -11607,7 +11740,7 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { formatPercent: formatPercent$1, formatPX: formatPX$4, isLength: isLength$4, isPercent: isPercent$2 } = squared.lib.css;
+    const { formatPercent: formatPercent$1, formatPX: formatPX$3, isLength: isLength$4, isPercent: isPercent$2, isPx: isPx$3 } = squared.lib.css;
     const { convertPercent: convertPercent$2, isNumber: isNumber$3, splitPairEnd, trimString: trimString$1, withinRange: withinRange$1 } = squared.lib.util;
     const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
     const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
@@ -11659,7 +11792,7 @@ this.squared.base = (function (exports) {
                 if (isPercent$2(value)) {
                     sizeMin = Math.max(convertPercent$2(value) * dimension, sizeMin);
                 }
-                else if (value.endsWith('px')) {
+                else if (isPx$3(value)) {
                     sizeMin = Math.max(parseFloat(value), sizeMin);
                 }
             }
@@ -11677,7 +11810,7 @@ this.squared.base = (function (exports) {
         const length = unit.length;
         for (let i = 0; i < length; ++i) {
             const value = unit[i];
-            if (value.endsWith('px')) {
+            if (isPx$3(value)) {
                 filled += parseFloat(value);
             }
             else if (value.endsWith('fr')) {
@@ -11693,7 +11826,7 @@ this.squared.base = (function (exports) {
                 for (let i = 0; i < length; ++i) {
                     const value = unit[i];
                     if (value.endsWith('fr')) {
-                        unit[i] = formatPX$4(parseFloat(value) * ratio);
+                        unit[i] = formatPX$3(parseFloat(value) * ratio);
                     }
                 }
             }
@@ -11802,7 +11935,7 @@ this.squared.base = (function (exports) {
             }
         }
     }
-    const convertLength = (node, value, index) => isLength$4(value) ? formatPX$4(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
+    const convertLength = (node, value, index) => isLength$4(value) ? formatPX$3(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
     class CssGrid extends ExtensionUI {
         static isAligned(node) {
             return node.hasHeight && /^space-|center|flex-end|end/.test(node.valueOf('alignContent'));
@@ -11965,7 +12098,7 @@ this.squared.base = (function (exports) {
                                 break;
                             case 2:
                             case 3:
-                                (index === 2 ? row : column).auto.push(isLength$4(command) ? formatPX$4(node.parseUnit(command, { dimension: index !== 2 ? 'width' : 'height' })) : command);
+                                (index === 2 ? row : column).auto.push(isLength$4(command) ? formatPX$3(node.parseUnit(command, { dimension: index !== 2 ? 'width' : 'height' })) : command);
                                 break;
                         }
                     }
@@ -12123,10 +12256,9 @@ this.squared.base = (function (exports) {
                     const placement = [0, 0, 0, 0];
                     let rowSpan = -1, columnSpan = -1;
                     if (Object.keys(templateAreas).length) {
-                        for (let i = 0; i < 4; ++i) {
+                        for (let i = 0, template; i < 4; ++i) {
                             const name = positions[i];
-                            let template = templateAreas[name];
-                            if (template) {
+                            if (template = templateAreas[name]) {
                                 switch (i) {
                                     case 0:
                                         placement[0] = template.rowStart + 1;
@@ -12144,32 +12276,29 @@ this.squared.base = (function (exports) {
                             }
                             else {
                                 const match = /^([\w-]+)-(start|end)$/.exec(name);
-                                if (match) {
-                                    template = templateAreas[match[1]];
-                                    if (template) {
-                                        if (match[2] === 'start') {
-                                            switch (i) {
-                                                case 0:
-                                                case 2:
-                                                    placement[i] = template.rowStart + 1;
-                                                    break;
-                                                case 1:
-                                                case 3:
-                                                    placement[i] = template.columnStart + 1;
-                                                    break;
-                                            }
+                                if (match && (template = templateAreas[match[1]])) {
+                                    if (match[2] === 'start') {
+                                        switch (i) {
+                                            case 0:
+                                            case 2:
+                                                placement[i] = template.rowStart + 1;
+                                                break;
+                                            case 1:
+                                            case 3:
+                                                placement[i] = template.columnStart + 1;
+                                                break;
                                         }
-                                        else {
-                                            switch (i) {
-                                                case 0:
-                                                case 2:
-                                                    placement[i] = template.rowStart + template.rowSpan + 1;
-                                                    break;
-                                                case 1:
-                                                case 3:
-                                                    placement[i] = template.columnStart + template.columnSpan + 1;
-                                                    break;
-                                            }
+                                    }
+                                    else {
+                                        switch (i) {
+                                            case 0:
+                                            case 2:
+                                                placement[i] = template.rowStart + template.rowSpan + 1;
+                                                break;
+                                            case 1:
+                                            case 3:
+                                                placement[i] = template.columnStart + template.columnSpan + 1;
+                                                break;
                                         }
                                     }
                                 }
@@ -12659,12 +12788,8 @@ this.squared.base = (function (exports) {
     }
 
     const { partitionArray: partitionArray$1, withinRange: withinRange$2 } = squared.lib.util;
-    const OPTIONS_BOUNDSDATA = {
-        'align-self': 'start',
-        'justify-self': 'start'
-    };
     function createDataAttribute$1(node, children) {
-        return Object.assign(Object.assign({}, node.flexdata), { rowCount: 0, columnCount: 0, rowGap: node.parseHeight(node.valueOf('rowGap')), columnGap: node.parseWidth(node.valueOf('columnGap')), children });
+        return Object.assign(Object.assign({}, node.flexdata), { rowCount: 0, columnCount: 0, rowGap: node.cssUnit('rowGap', { dimension: 'height' }), columnGap: node.cssUnit('columnGap'), children });
     }
     class Flexbox extends ExtensionUI {
         is(node) {
@@ -12674,13 +12799,14 @@ this.squared.base = (function (exports) {
             return !node.isEmpty();
         }
         processNode(node) {
+            const dataName = this.name;
             const [children, absolute] = partitionArray$1(node.children, (item) => item.pageFlow && item.visible);
             const mainData = createDataAttribute$1(node, children);
-            const dataName = this.name;
-            node.cssTryAll({ 'align-items': 'start', 'justify-items': 'start' }, () => {
+            const row = mainData.row;
+            node.cssTryAll({ alignItems: 'start', justifyItems: 'start' }, () => {
                 for (let i = 0, length = children.length; i < length; ++i) {
                     const item = children[i];
-                    item.cssTryAll(OPTIONS_BOUNDSDATA, function () {
+                    item.cssTryAll({ alignSelf: 'start', justifySelf: 'start' }, function () {
                         const bounds = this.boundingClientRect;
                         this.data(dataName, 'boundsData', bounds ? Object.assign(Object.assign({}, this.bounds), { width: bounds.width, height: bounds.height }) : this.bounds);
                     });
@@ -12689,7 +12815,7 @@ this.squared.base = (function (exports) {
             if (mainData.wrap) {
                 const options = { dimension: 'bounds' };
                 let align, sort, size, method;
-                if (mainData.row) {
+                if (row) {
                     align = 'top';
                     sort = 'left';
                     size = 'right';
@@ -12714,17 +12840,17 @@ this.squared.base = (function (exports) {
                     }
                     return 0;
                 });
-                let rowStart = children[0], row = [rowStart], length = children.length, maxCount = 0;
-                const rows = [row];
+                let rowStart = children[0], items = [rowStart], length = children.length, maxCount = 0;
+                const rows = [items];
                 for (let i = 1; i < length; ++i) {
                     const item = children[i];
                     if (rowStart[method](item.bounds, options)) {
-                        row.push(item);
+                        items.push(item);
                     }
                     else {
                         rowStart = item;
-                        row = [item];
-                        rows.push(row);
+                        items = [item];
+                        rows.push(items);
                     }
                 }
                 node.clear();
@@ -12743,7 +12869,7 @@ this.squared.base = (function (exports) {
                     maxCount = rows[0].length;
                 }
                 node.addAll(absolute);
-                if (mainData.row) {
+                if (row) {
                     mainData.rowCount = length;
                     mainData.columnCount = maxCount;
                 }
@@ -12767,7 +12893,7 @@ this.squared.base = (function (exports) {
                 else if (mainData.reverse && children.length > 1) {
                     children.reverse();
                 }
-                if (mainData.row) {
+                if (row) {
                     mainData.rowCount = 1;
                     mainData.columnCount = node.size();
                 }
@@ -12776,6 +12902,7 @@ this.squared.base = (function (exports) {
                     mainData.columnCount = 1;
                 }
             }
+            mainData.singleRow = row && mainData.rowCount === 1 || !row && mainData.columnCount === 1;
             this.data.set(node, mainData);
         }
     }
@@ -13228,26 +13355,20 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { resolveURL: resolveURL$1, isLength: isLength$5 } = squared.lib.css;
+    const { isLength: isLength$5 } = squared.lib.css;
     const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
     class Sprite extends ExtensionUI {
         is(node) {
             return node.visibleStyle.backgroundImage && node.isEmpty() && node.hasWidth && node.hasHeight && (!node.use || this.included(node.element));
         }
         condition(node) {
-            const backgroundImage = node.backgroundImage;
-            let image = this.resource.getRawData(backgroundImage);
-            if (!image) {
-                const url = resolveURL$1(backgroundImage);
-                if (url) {
-                    image = this.resource.getImage(url);
-                }
-            }
-            if (image) {
+            const images = this.resource.fromImageUrl(node.backgroundImage);
+            if (images.length === 1) {
                 const dimension = node.actualDimension;
                 const [backgroundPositionX, backgroundPositionY, backgroundSize] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY', 'backgroundSize');
                 const position = ResourceUI.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, { fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension });
                 const [sizeW, sizeH] = backgroundSize.split(' ');
+                const image = images[0];
                 let { width, height } = image;
                 if (isLength$5(sizeW, true)) {
                     width = node.parseWidth(sizeW, false);
@@ -13272,7 +13393,7 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { formatPercent: formatPercent$2, formatPX: formatPX$5, getStyle: getStyle$4, isLength: isLength$6, isPercent: isPercent$3 } = squared.lib.css;
+    const { formatPercent: formatPercent$2, formatPX: formatPX$4, getStyle: getStyle$4, isLength: isLength$6, isPercent: isPercent$3 } = squared.lib.css;
     const { getNamedItem: getNamedItem$3 } = squared.lib.dom;
     const { convertPercent: convertPercent$3, isNumber: isNumber$4, replaceMap } = squared.lib.util;
     function setAutoWidth(node, td, data) {
@@ -13292,7 +13413,7 @@ this.squared.base = (function (exports) {
         });
     }
     function hideCell(node) {
-        node.exclude({ resource: NODE_RESOURCE.ALL });
+        node.exclude({ resource: 31 /* ALL */ });
         node.hide();
     }
     function createDataAttribute$2(node) {
@@ -13324,7 +13445,7 @@ this.squared.base = (function (exports) {
         }
         return value;
     }
-    const setBoundsWidth = (node) => node.css('width', formatPX$5(node.bounds.width), true);
+    const setBoundsWidth = (node) => node.css('width', formatPX$4(node.bounds.width), true);
     class Table extends ExtensionUI {
         processNode(node) {
             const mainData = createDataAttribute$2(node);
@@ -13412,7 +13533,7 @@ this.squared.base = (function (exports) {
                             td.css('width', value, true);
                         }
                         else if (isNumber$4(value)) {
-                            td.css('width', formatPX$5(+value), true);
+                            td.css('width', formatPX$4(+value), true);
                         }
                     }
                     if (!td.hasPX('height')) {
@@ -13421,7 +13542,7 @@ this.squared.base = (function (exports) {
                             td.css('height', value);
                         }
                         else if (isNumber$4(value)) {
-                            td.css('height', formatPX$5(+value));
+                            td.css('height', formatPX$4(+value));
                         }
                     }
                     if (!td.valueOf('verticalAlign')) {
@@ -13451,8 +13572,7 @@ this.squared.base = (function (exports) {
                                 td.css('backgroundImage', value, true);
                                 visibleStyle.backgroundImage = true;
                             }
-                            value = getInheritedStyle(element, 'backgroundColor', exclude);
-                            if (value) {
+                            if (value = getInheritedStyle(element, 'backgroundColor', exclude)) {
                                 td.css('backgroundColor', value);
                                 td.setCacheValue('backgroundColor', value);
                                 visibleStyle.backgroundColor = true;
@@ -13543,7 +13663,7 @@ this.squared.base = (function (exports) {
                     if (value === 'auto') {
                         const dimension = mapBounds[index];
                         if (dimension) {
-                            return formatPX$5(dimension);
+                            return formatPX$4(dimension);
                         }
                     }
                     return value;
@@ -13587,7 +13707,7 @@ this.squared.base = (function (exports) {
                     }
                 }
                 if (layoutFixed && !node.hasPX('width')) {
-                    node.css('width', formatPX$5(node.bounds.width));
+                    node.css('width', formatPX$4(node.bounds.width));
                 }
             }
             mainData.layoutType = (() => {
@@ -13600,7 +13720,7 @@ this.squared.base = (function (exports) {
                         return 3 /* VARIABLE */;
                     }
                     else if (mapWidth.every(value => value === mapWidth[0])) {
-                        if (node.find(td => td.hasHeight, { cascade: true })) {
+                        if (node.find(td => td.tagName === 'TD' && td.hasHeight, { cascade: true })) {
                             mainData.flags |= 4 /* EXPAND */;
                             return 3 /* VARIABLE */;
                         }
@@ -13610,8 +13730,11 @@ this.squared.base = (function (exports) {
                         else if (hasWidth) {
                             return 2 /* FIXED */;
                         }
+                        else if (mapWidth[0] === '0px') {
+                            return 0 /* NONE */;
+                        }
                     }
-                    if (mapWidth.every(value => value === 'auto' || isLength$6(value) && value !== '0px')) {
+                    if (mapWidth.every(value => value === 'auto' || value !== '0px' && isLength$6(value, true))) {
                         if (!hasWidth) {
                             mainData.flags |= 4 /* EXPAND */;
                         }
@@ -13625,7 +13748,7 @@ this.squared.base = (function (exports) {
                 if (!caption.hasWidth) {
                     if (caption.textElement) {
                         if (!caption.hasPX('maxWidth')) {
-                            caption.css('maxWidth', formatPX$5(caption.bounds.width));
+                            caption.css('maxWidth', formatPX$4(caption.bounds.width));
                         }
                     }
                     else if (caption.bounds.width > Math.max(...rowWidth)) {
@@ -13820,9 +13943,9 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { formatPX: formatPX$6 } = squared.lib.css;
+    const { formatPX: formatPX$5 } = squared.lib.css;
     const { iterateReverseArray: iterateReverseArray$1, minMaxOf } = squared.lib.util;
-    const DOCTYPE_HTML = document.doctype ? document.doctype.name === 'html' : false;
+    const DOCTYPE_HTML = !!document.doctype && document.doctype.name === 'html';
     function setSpacingOffset(node, region, value, adjustment = 0) {
         let offset;
         switch (region) {
@@ -14107,13 +14230,13 @@ this.squared.base = (function (exports) {
                 return true;
         }
     }
-    function resetBox(node, region, register, wrappers) {
+    function resetBox(node, region, register, wrapper) {
         node.setBox(region, { reset: 1 });
         if (register) {
             node.registerBox(region, register);
         }
-        if (wrappers) {
-            for (const parent of wrappers) {
+        if (wrapper) {
+            for (const parent of wrapper) {
                 parent.setBox(region, { reset: 1 });
             }
         }
@@ -14170,25 +14293,32 @@ this.squared.base = (function (exports) {
                                         if (previous.floating || !previous.pageFlow) {
                                             if (node.layoutVertical) {
                                                 const previousSiblings = current.previousSiblings();
-                                                const currentTop = current.bounds.top;
-                                                if (previousSiblings.some(sibling => sibling.float === 'right' && currentTop > sibling.bounds.top)) {
-                                                    const previousTop = previous.bounds.top;
-                                                    const aboveFloating = previousSiblings.length > 1 ? previousSiblings.filter(sibling => sibling.floating && previousTop === sibling.bounds.top) : previousSiblings;
-                                                    const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
-                                                    if (nearest.marginBottom > 0 && currentTop < previousBottom) {
-                                                        if (nearest.marginBottom < current.marginTop) {
-                                                            for (const sibling of aboveFloating) {
-                                                                resetBox(sibling, 4 /* MARGIN_BOTTOM */);
+                                                if (previousSiblings.some(sibling => sibling.float === 'right' && current.bounds.top > sibling.bounds.top)) {
+                                                    const aboveFloating = previousSiblings.filter(sibling => sibling.floating && previous.bounds.top === sibling.bounds.top);
+                                                    if (aboveFloating.length) {
+                                                        const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
+                                                        if (nearest.marginBottom > 0 && current.bounds.top < previousBottom) {
+                                                            if (nearest.marginBottom < current.marginTop) {
+                                                                for (const sibling of aboveFloating) {
+                                                                    resetBox(sibling, 4 /* MARGIN_BOTTOM */);
+                                                                }
                                                             }
-                                                        }
-                                                        else if (current.marginTop > 0) {
-                                                            resetBox(current, 1 /* MARGIN_TOP */);
+                                                            else if (current.marginTop > 0) {
+                                                                resetBox(current, 1 /* MARGIN_TOP */);
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                             if (previousChild) {
                                                 previous = previousChild;
+                                            }
+                                        }
+                                        else if (previous.bounds.height === 0 && previous.find(item => item.floating)) {
+                                            const value = current.linear.top - previous.max('linear', { subAttr: 'bottom' }).linear.bottom;
+                                            if (value < 0) {
+                                                current.modifyBox(1 /* MARGIN_TOP */, Math.floor(value), false);
+                                                continue;
                                             }
                                         }
                                         if (isBlockElement(previous, false)) {
@@ -14491,7 +14621,7 @@ this.squared.base = (function (exports) {
                     const previousSiblings = node.previousSiblings();
                     const q = previousSiblings.length;
                     if (q) {
-                        const actualParent = node.actualParent;
+                        const parent = node.actualParent;
                         const nextSiblings = node.siblingsTrailing;
                         const r = nextSiblings.length;
                         if (r) {
@@ -14515,11 +14645,11 @@ this.squared.base = (function (exports) {
                                 }
                                 let aboveParent = above.renderParent, belowParent = below.renderParent;
                                 if (aboveParent !== belowParent) {
-                                    while (aboveParent && aboveParent !== actualParent) {
+                                    while (aboveParent && aboveParent !== parent) {
                                         above = aboveParent;
                                         aboveParent = above.renderParent;
                                     }
-                                    while (belowParent && belowParent !== actualParent) {
+                                    while (belowParent && belowParent !== parent) {
                                         below = belowParent;
                                         belowParent = below.renderParent;
                                     }
@@ -14578,27 +14708,30 @@ this.squared.base = (function (exports) {
                             else {
                                 [offset, below] = getMarginOffset(below, above, lineHeight);
                                 if (offset >= 1) {
-                                    if ((below.lineBreak || below.excluded) && actualParent.lastChild === below) {
-                                        actualParent.modifyBox(64 /* PADDING_BOTTOM */, offset);
+                                    if ((below.lineBreak || below.excluded) && parent.lastChild === below) {
+                                        parent.modifyBox(64 /* PADDING_BOTTOM */, offset);
                                         valid = true;
                                     }
-                                    else if ((above.lineBreak || above.excluded) && actualParent.firstChild === above) {
-                                        actualParent.modifyBox(16 /* PADDING_TOP */, offset);
+                                    else if ((above.lineBreak || above.excluded) && parent.firstChild === above) {
+                                        parent.modifyBox(16 /* PADDING_TOP */, offset);
                                         valid = true;
                                     }
                                 }
                             }
                         }
-                        else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE' && !actualParent.documentRoot && !actualParent.documentBody) {
+                        else if (parent.visible && !parent.preserveWhiteSpace && parent.tagName !== 'CODE' && !parent.documentRoot && !parent.documentBody) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const rect = previousStart.bounds.height === 0 && !previousStart.isEmpty() ? previousStart.outerRegion : previousStart.linear;
-                            const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
+                            const offset = parent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
                             if (offset !== 0) {
-                                if (previousStart.rendered || actualParent.visibleStyle.background) {
-                                    actualParent.modifyBox(64 /* PADDING_BOTTOM */, offset);
+                                if (previousStart.rendered || parent.visibleStyle.background) {
+                                    parent.modifyBox(64 /* PADDING_BOTTOM */, offset);
                                 }
-                                else if (!actualParent.hasHeight) {
-                                    actualParent.css('minHeight', formatPX$6(Math.max(offset, actualParent.hasPX('minHeight', { percent: false }) ? actualParent.parseHeight(actualParent.css('minHeight')) : 0)));
+                                else if (!parent.hasHeight) {
+                                    const value = Math.max(offset, parent.hasPX('minHeight', { percent: false }) ? parent.cssUnit('minHeight', { dimension: 'height' }) : 0);
+                                    if (value) {
+                                        parent.css('minHeight', formatPX$5(value));
+                                    }
                                 }
                             }
                         }

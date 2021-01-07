@@ -1,4 +1,4 @@
-/* squared.base 2.2.7
+/* squared.base 2.3.0
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -89,14 +89,13 @@ this.squared.base = (function (exports) {
             }
         }
         createNode(sessionId, options) {
-            return this.createNodeStatic(sessionId, options.element);
+            return this.createNodeStatic(this.getProcessing(sessionId), options.element);
         }
-        createNodeStatic(sessionId, element) {
-            const afterInsertNode = this.getProcessing(sessionId).afterInsertNode;
-            const node = new this.Node(this.nextId, sessionId, element);
+        createNodeStatic(processing, element) {
+            const node = new this.Node(this.nextId, processing.sessionId, element);
             this._afterInsertNode(node);
-            if (afterInsertNode) {
-                afterInsertNode.some(item => item.afterInsertNode(node));
+            if (processing.afterInsertNode) {
+                processing.afterInsertNode.some(item => item.afterInsertNode(node));
             }
             return node;
         }
@@ -110,11 +109,11 @@ this.squared.base = (function (exports) {
         }
         saveAs(filename, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveAs(filename || this.resourceHandler.userSettings.outputArchiveName, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveAs(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
-        saveFiles(format, options) {
+        saveFiles(filename, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveFiles(format, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveFiles(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
         appendFiles(filename, options) {
             var _a;
@@ -292,7 +291,7 @@ this.squared.base = (function (exports) {
                         if (result[i]) {
                             const item = preloadItems[i];
                             if (typeof item === 'string') {
-                                resource.addRawData(item, '', '', result[i]);
+                                resource.addRawData(item, '', result[i]);
                             }
                             else {
                                 resource.addImage(item);
@@ -461,7 +460,7 @@ this.squared.base = (function (exports) {
             return node;
         }
         cascadeParentNode(processing, parentElement, sessionId, depth, extensions, shadowParent) {
-            const node = this.insertNode(parentElement, sessionId);
+            const node = this.insertNode(processing, parentElement);
             if (node) {
                 const cache = processing.cache;
                 if (depth === 0) {
@@ -483,8 +482,7 @@ this.squared.base = (function (exports) {
                     let child;
                     if (element.nodeName[0] === '#') {
                         if (this.visibleText(node, element)) {
-                            child = this.insertNode(element, sessionId);
-                            if (child) {
+                            if (child = this.insertNode(processing, element)) {
                                 child.cssApply(node.textStyle);
                             }
                             plainText = true;
@@ -496,23 +494,16 @@ this.squared.base = (function (exports) {
                             (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode(element, sessionId));
                         }
                         let shadowRoot;
-                        if (pierceShadowRoot) {
-                            shadowRoot = element.shadowRoot;
-                            if (shadowRoot) {
-                                this.setStyleMap(sessionId, shadowRoot);
-                            }
+                        if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
+                            this.setStyleMap(sessionId, shadowRoot);
                         }
-                        child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(element, sessionId);
-                        if (child) {
+                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                             elements.push(child);
                             inlineText = false;
                         }
                     }
-                    else {
-                        child = this.insertNode(element, sessionId);
-                        if (child) {
-                            processing.excluded.add(child);
-                        }
+                    else if (child = this.insertNode(processing, element)) {
+                        processing.excluded.add(child);
                     }
                     if (child) {
                         child.init(node, childDepth, j++);
@@ -588,7 +579,7 @@ this.squared.base = (function (exports) {
                                 if (match[2]) {
                                     if (resource) {
                                         const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                        resource.addRawData(match[1], mimeType, match[3], { encoding });
+                                        resource.addRawData(match[1], match[3], { mimeType, encoding });
                                     }
                                 }
                                 else {
@@ -609,9 +600,8 @@ this.squared.base = (function (exports) {
                     };
                     const hasExactValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                     const hasPartialValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
-                    const items = Array.from(cssStyle);
-                    for (let i = 0, length = items.length; i < length; ++i) {
-                        const attr = items[i];
+                    for (let i = 0, length = cssStyle.length; i < length; ++i) {
+                        const attr = cssStyle[i];
                         if (attr[0] === '-') {
                             continue;
                         }
@@ -794,7 +784,7 @@ this.squared.base = (function (exports) {
                             case CSSRule.IMPORT_RULE: {
                                 const uri = resolvePath(rule.href, ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href);
                                 if (uri) {
-                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(uri, 'text/css', '', { encoding: 'utf8' });
+                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(uri, '', { mimeType: 'text/css', encoding: 'utf8' });
                                 }
                                 this.applyStyleSheet(rule.styleSheet, sessionId, documentRoot, queryRoot);
                                 break;
@@ -1638,7 +1628,7 @@ this.squared.base = (function (exports) {
 
     const { SERVER_REQUIRED } = squared.lib.error;
     const { createElement } = squared.lib.dom;
-    const { fromLastIndexOf, isPlainObject, trimEnd } = squared.lib.util;
+    const { fromLastIndexOf, hasValue, isPlainObject, splitPair: splitPair$1, trimEnd } = squared.lib.util;
     function validateAsset(file, exclusions) {
         const { pathname, filename } = file;
         const glob = exclusions.glob;
@@ -1692,13 +1682,12 @@ this.squared.base = (function (exports) {
     class File {
         constructor() {
             this.assets = [];
-            this.archiveFormats = new Set(['zip', 'tar', 'gz', 'tgz']);
+            this.archiveFormats = new Set(['zip', '7z', 'tar', 'gz', 'tgz']);
             this._hostname = '';
             this._endpoints = {
                 ASSETS_COPY: '/api/v1/assets/copy',
                 ASSETS_ARCHIVE: '/api/v1/assets/archive',
-                BROWSER_DOWNLOAD: '/api/v1/browser/download?uri=',
-                LOADER_JSON: '/api/v1/loader/json?uri='
+                LOADER_DATA: '/api/v1/loader/data'
             };
         }
         static downloadFile(data, filename, mimeType) {
@@ -1719,8 +1708,8 @@ this.squared.base = (function (exports) {
         finalizeRequestBody(data, options) { }
         getCopyQueryParameters(options) { return ''; }
         getArchiveQueryParameters(options) { return ''; }
-        saveFiles(format, options) {
-            return this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { format }));
+        saveFiles(filename, options) {
+            return this.archiving(Object.assign(Object.assign({}, options), { filename }));
         }
         appendFiles(uri, options) {
             return this.archiving(Object.assign(Object.assign({}, options), { appendTo: uri }));
@@ -1743,23 +1732,42 @@ this.squared.base = (function (exports) {
         reset() {
             this.assets = [];
         }
-        loadJSON(value) {
-            if (this.hasHttpProtocol()) {
-                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_JSON) + encodeURIComponent(value), {
+        loadData(value, options) {
+            const { type, cache } = options;
+            if (this.hasHttpProtocol() && type) {
+                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? `&cache=${cache ? '1' : '0'}` : ''), {
                     method: 'GET',
-                    headers: new Headers({ 'Accept': 'application/json, text/plain' })
+                    headers: new Headers({ Accept: options.accept || '*/*' })
                 })
-                    .then(response => response.json());
+                    .then(response => {
+                    switch (type) {
+                        case 'json':
+                            return response.json();
+                        case 'blob':
+                            return response.blob();
+                        case 'text':
+                        case 'document':
+                            return response.text();
+                        case 'arraybuffer':
+                            return response.arrayBuffer();
+                        default:
+                            return null;
+                    }
+                });
             }
-            return Promise.resolve();
+            return Promise.resolve(null);
         }
         copying(options) {
             if (this.hasHttpProtocol()) {
                 const body = this.createRequestBody(options.assets, options);
-                if (body && options.directory) {
+                let directory = options.directory;
+                if (body && directory && (directory = directory.trim())) {
+                    if (!hasValue(options.emptyDir)) {
+                        options.emptyDir = this.userSettings.outputEmptyCopyDirectory;
+                    }
                     return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
-                        '?to=' + encodeURIComponent(options.directory.trim()) +
-                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
+                        '?to=' + encodeURIComponent(directory) +
+                        '&empty=' + (options.emptyDir ? '1' : '0') +
                         this.getCopyQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -1783,28 +1791,36 @@ this.squared.base = (function (exports) {
             return Promise.resolve();
         }
         archiving(options) {
-            var _a;
             if (this.hasHttpProtocol()) {
                 const body = this.createRequestBody(options.assets, options);
-                let filename = (_a = options.filename) === null || _a === void 0 ? void 0 : _a.trim();
-                if (body && filename) {
-                    const index = filename.lastIndexOf('.');
-                    let format;
-                    if (index !== -1) {
-                        format = filename.substring(index + 1).toLowerCase();
-                        if (this.archiveFormats.has(format)) {
-                            filename = filename.substring(0, index);
+                if (body) {
+                    let { filename, format } = options;
+                    const setFilename = () => {
+                        if (!format || !this.archiveFormats.has(format = format.toLowerCase())) {
+                            [filename, format] = splitPair$1(filename, '.', true, true);
+                            if (format && !this.archiveFormats.has(format)) {
+                                filename += '.' + format;
+                                format = '';
+                            }
+                        }
+                    };
+                    if (!options.appendTo) {
+                        if (!filename) {
+                            filename = this.userSettings.outputArchiveName;
                         }
                         else {
-                            format = '';
+                            setFilename();
                         }
                     }
-                    format || (format = (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase());
+                    else {
+                        filename || (filename = fromLastIndexOf(options.appendTo, '/', '\\'));
+                        setFilename();
+                    }
                     return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
-                        '?filename=' + encodeURIComponent(filename) +
-                        '&format=' + format +
-                        '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
-                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
+                        '?format=' + (format || this.userSettings.outputArchiveFormat) +
+                        '&filename=' + encodeURIComponent(filename || '') +
+                        '&to=' + encodeURIComponent(options.copyTo || '') +
+                        '&append_to=' + encodeURIComponent(options.appendTo || '') +
                         this.getArchiveQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -1815,13 +1831,15 @@ this.squared.base = (function (exports) {
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
-                        const zipname = result.zipname;
-                        if (zipname) {
-                            fetch(getEndpoint(this.hostname, this._endpoints.BROWSER_DOWNLOAD) + encodeURIComponent(zipname))
-                                .then(async (download) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
+                        const { downloadKey, zipname, error } = result;
+                        if (downloadKey && zipname) {
+                            const download = await this.loadData(downloadKey, { type: 'blob', cache: false });
+                            if (download) {
+                                File.downloadFile(download, zipname);
+                            }
                         }
-                        else if (result.error) {
-                            this.writeErrorMesssage(result.error);
+                        if (error) {
+                            this.writeErrorMesssage(error);
                         }
                         return result;
                     });
@@ -1903,11 +1921,12 @@ this.squared.base = (function (exports) {
 
     const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, formatPX, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
+    const { isTransparent } = squared.lib.color;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$1 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue: hasValue$1, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$2 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1934,13 +1953,13 @@ this.squared.base = (function (exports) {
     const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
-        let current = style.getPropertyValue(attr);
+        let current = style[attr];
         if (value !== current) {
-            element.style.setProperty(attr, value);
-            const newValue = element.style.getPropertyValue(attr);
+            element.style[attr] = value;
+            const newValue = element.style[attr];
             if (current !== newValue) {
-                if (current.endsWith('px')) {
-                    const styleValue = styleMap[convertCamelCase$1(attr)];
+                if (isPx(current)) {
+                    const styleValue = styleMap[attr];
                     if (styleValue) {
                         current = styleValue;
                         value = '';
@@ -1958,7 +1977,7 @@ this.squared.base = (function (exports) {
         return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit(value, { fontSize });
     }
     function isFontFixedWidth(node) {
-        const [fontFirst, fontSecond] = splitPair$1(node.css('fontFamily'), ',', true);
+        const [fontFirst, fontSecond] = splitPair$2(node.css('fontFamily'), ',', true);
         return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
     function getFlexValue(node, attr, fallback, parent) {
@@ -1969,20 +1988,20 @@ this.squared.base = (function (exports) {
         const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
         return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : node.display.startsWith('inline'));
     }
-    function setDimension(node, styleMap, attr) {
-        const options = { dimension: attr };
-        const value = styleMap[attr];
-        const min = styleMap[attr === 'width' ? 'minWidth' : 'minHeight'];
+    function setDimension(node, styleMap, dimension) {
+        const options = { dimension };
+        const value = styleMap[dimension];
+        const minValue = styleMap[dimension === 'width' ? 'minWidth' : 'minHeight'];
         const baseValue = value ? node.parseUnit(value, options) : 0;
-        let result = Math.max(baseValue, min ? node.parseUnit(min, options) : 0);
+        let result = minValue ? Math.max(baseValue, node.parseUnit(minValue, options)) : baseValue;
         if (result === 0 && node.styleElement) {
             const element = node.element;
             switch (element.tagName) {
-                case 'IMG':
                 case 'INPUT':
                     if (element.type !== 'image') {
                         break;
                     }
+                case 'IMG':
                 case 'TD':
                 case 'TH':
                 case 'svg':
@@ -1992,30 +2011,27 @@ this.squared.base = (function (exports) {
                 case 'CANVAS':
                 case 'OBJECT':
                 case 'EMBED': {
-                    const size = getNamedItem(element, attr);
-                    if (size) {
-                        result = isNumber(size) ? +size : node.parseUnit(size, options);
-                        if (result) {
-                            node.css(attr, isPercent(size) ? size : size + 'px');
-                        }
+                    const size = getNamedItem(element, dimension);
+                    if (size && (result = isNumber(size) ? +size : node.parseUnit(size, options))) {
+                        node.css(dimension, isPercent(size) ? size : size + 'px');
                     }
                     break;
                 }
             }
         }
         if (baseValue && !node.imageElement) {
-            const attrMax = attr === 'width' ? 'maxWidth' : 'maxHeight';
-            const max = styleMap[attrMax];
+            const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
+            const max = styleMap[attr];
             if (max) {
                 if (value === max) {
-                    delete styleMap[attrMax];
+                    delete styleMap[attr];
                 }
                 else {
-                    const maxValue = node.parseUnit(max, { dimension: attr });
+                    const maxValue = node.parseUnit(max, { dimension });
                     if (maxValue) {
                         if (maxValue <= baseValue && value && isLength(value)) {
-                            styleMap[attr] = max;
-                            delete styleMap[attrMax];
+                            styleMap[dimension] = max;
+                            delete styleMap[attr];
                         }
                         else {
                             return Math.min(result, maxValue);
@@ -2034,8 +2050,8 @@ this.squared.base = (function (exports) {
                     return 0;
             }
             const width = node.css(border[0]);
-            const result = width.endsWith('px') ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
-            if (result > 0) {
+            const result = isPx(width) ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+            if (result) {
                 return Math.max(Math.round(result), 1);
             }
         }
@@ -2060,7 +2076,7 @@ this.squared.base = (function (exports) {
                         default: {
                             const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
                             if (parent) {
-                                const [horizontal, vertical] = splitPair$1(parent.css('borderSpacing'), ' ');
+                                const [horizontal, vertical] = splitPair$2(parent.css('borderSpacing'), ' ');
                                 switch (attr) {
                                     case 'marginTop':
                                     case 'marginBottom':
@@ -2075,12 +2091,12 @@ this.squared.base = (function (exports) {
                 }
                 break;
         }
-        return node.parseUnit(node.css(attr), ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.gridElement) ? { parent: false } : undefined);
+        return node.cssUnit(attr, ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.gridElement) ? { parent: false } : undefined);
     }
     function convertPosition(node, attr) {
         if (!node.positionStatic) {
             const unit = node.valueOf(attr, { modified: true });
-            if (unit.endsWith('px')) {
+            if (isPx(unit)) {
                 return parseFloat(unit);
             }
             else if (isPercent(unit)) {
@@ -2099,10 +2115,10 @@ this.squared.base = (function (exports) {
                     case 'color':
                     case 'checkbox':
                     case 'radio':
-                    case 'file':
                     case 'button':
                     case 'submit':
                     case 'reset':
+                    case 'file':
                     case 'image':
                         return false;
                 }
@@ -2238,9 +2254,6 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     }
-                    case ':nth-child(n)':
-                    case ':nth-last-child(n)':
-                        break;
                     case ':empty':
                         if (element.hasChildNodes()) {
                             return false;
@@ -2252,12 +2265,12 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     case ':disabled':
-                        if (!this.inputElement || !element.disabled) {
+                        if (!this.inputElement && this.tagName !== 'OPTION' || !element.disabled) {
                             return false;
                         }
                         break;
                     case ':enabled':
-                        if (!this.inputElement || element.disabled) {
+                        if (!this.inputElement && this.tagName !== 'OPTION' || element.disabled) {
                             return false;
                         }
                         break;
@@ -2272,12 +2285,12 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     case ':required':
-                        if (!this.inputElement || !element.required) {
+                        if (!this.inputElement || this.tagName === 'BUTTON' || !element.required) {
                             return false;
                         }
                         break;
                     case ':optional':
-                        if (!this.inputElement || element.required) {
+                        if (!this.inputElement || this.tagName === 'BUTTON' || element.required) {
                             return false;
                         }
                         break;
@@ -2326,11 +2339,13 @@ this.squared.base = (function (exports) {
                             return false;
                         }
                         break;
-                    case ':target':
-                        if (!location.hash || !(location.hash === '#' + this.elementId || tagName === 'A' && location.hash === '#' + this.toElementString('name'))) {
+                    case ':target': {
+                        const hash = location.hash;
+                        if (!hash || !(hash === '#' + this.elementId || tagName === 'A' && hash === '#' + this.toElementString('name'))) {
                             return false;
                         }
                         break;
+                    }
                     case ':indeterminate':
                         if (tagName === 'INPUT') {
                             switch (element.type) {
@@ -2357,14 +2372,26 @@ this.squared.base = (function (exports) {
                         else {
                             return false;
                         }
+                    case ':focus':
+                        if (element !== document.activeElement) {
+                            return false;
+                        }
+                        break;
+                    case ':focus-within': {
+                        const activeElement = document.activeElement;
+                        if (element !== activeElement && !this.querySelectorAll('*').find(item => item.element === activeElement)) {
+                            return false;
+                        }
+                        break;
+                    }
                     case ':default':
                     case ':defined':
                     case ':link':
                     case ':visited':
-                    case ':any-link':
                     case ':hover':
-                    case ':focus':
-                    case ':focus-within':
+                    case ':active':
+                    case ':any-link':
+                    case ':fullscreen':
                     case ':valid':
                     case ':invalid':
                         scoped.push(pseudo);
@@ -2376,75 +2403,81 @@ this.squared.base = (function (exports) {
                             const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item) => item.tagName === tagName).indexOf(this) + 1;
                             if (index) {
                                 const placement = match[3].trim();
-                                if (isNumber(placement)) {
-                                    if (placement !== index.toString()) {
+                                switch (placement) {
+                                    case 'even':
+                                        if (index % 2 !== 0) {
+                                            return false;
+                                        }
+                                        break;
+                                    case 'odd':
+                                        if (index % 2 === 0) {
+                                            return false;
+                                        }
+                                        break;
+                                    case 'n':
+                                        break;
+                                    case '-n':
                                         return false;
-                                    }
-                                }
-                                else {
-                                    switch (placement) {
-                                        case 'even':
-                                            if (index % 2 !== 0) {
+                                    default:
+                                        if (isNumber(placement)) {
+                                            if (placement !== index.toString()) {
                                                 return false;
                                             }
-                                            break;
-                                        case 'odd':
-                                            if (index % 2 === 0) {
-                                                return false;
-                                            }
-                                            break;
-                                        default: {
-                                            match = REGEXP_QUERYNTHPOSITION.exec(placement);
-                                            if (match) {
-                                                const modifier = parseInt(match[3]);
-                                                if (match[2] && !match[1]) {
-                                                    const increment = +match[2];
-                                                    if (!isNaN(modifier)) {
-                                                        if (increment !== 0) {
-                                                            if (index !== modifier) {
-                                                                for (let j = increment;; j += increment) {
-                                                                    const total = j + modifier;
-                                                                    if (total === index) {
-                                                                        break;
-                                                                    }
-                                                                    else if (total > index) {
+                                        }
+                                        else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
+                                            const modifier = parseInt(match[3]);
+                                            if (match[2]) {
+                                                const increment = +match[2];
+                                                if (!isNaN(modifier)) {
+                                                    if (increment !== 0) {
+                                                        if (index !== modifier) {
+                                                            const reverse = match[1];
+                                                            let j = modifier + increment * (reverse ? -1 : 1);
+                                                            do {
+                                                                if (j === index) {
+                                                                    break;
+                                                                }
+                                                                if (reverse) {
+                                                                    j -= increment;
+                                                                    if (j < 0) {
                                                                         return false;
                                                                     }
                                                                 }
-                                                            }
-                                                        }
-                                                        else if (index !== modifier) {
-                                                            return false;
+                                                                else {
+                                                                    j += increment;
+                                                                    if (j > index) {
+                                                                        return false;
+                                                                    }
+                                                                }
+                                                            } while (true);
                                                         }
                                                     }
-                                                    else if (index % increment !== 0) {
+                                                    else if (index !== modifier) {
                                                         return false;
                                                     }
                                                 }
-                                                else if (match[3] && modifier > 0) {
-                                                    if (match[1]) {
-                                                        if (index > modifier) {
-                                                            return false;
-                                                        }
-                                                    }
-                                                    else if (index < modifier) {
-                                                        return false;
-                                                    }
+                                                else if (match[1] || index % increment !== 0) {
+                                                    return false;
                                                 }
                                             }
-                                            else {
-                                                return selector.fromNot ? true : false;
+                                            else if (match[3] && modifier > 0) {
+                                                if (index < modifier) {
+                                                    return false;
+                                                }
                                             }
-                                            break;
+                                            else if (match[1]) {
+                                                return false;
+                                            }
                                         }
-                                    }
+                                        else {
+                                            return !!selector.fromNot;
+                                        }
+                                        break;
                                 }
-                                break;
                             }
-                        }
-                        else if (pseudo.startsWith(':lang(')) {
-                            scoped.push(pseudo);
-                            break;
+                            else {
+                                return !!selector.fromNot;
+                            }
                         }
                         else if (match = REGEXP_DIR.exec(pseudo)) {
                             switch (this.dir) {
@@ -2462,9 +2495,11 @@ this.squared.base = (function (exports) {
                                     }
                                     break;
                             }
-                            break;
                         }
-                        return selector.fromNot ? true : false;
+                        else {
+                            scoped.push(pseudo);
+                        }
+                        break;
                     }
                 }
             }
@@ -2475,7 +2510,7 @@ this.squared.base = (function (exports) {
                     }
                 }
                 catch (_a) {
-                    return selector.fromNot ? true : false;
+                    return !!selector.fromNot;
                 }
             }
         }
@@ -2572,7 +2607,7 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else if (selectorAdjacent) {
-                    while (parent && parent.depth - this.depth > index + offset) {
+                    while (parent && parent.depth - this.depth >= index + offset) {
                         if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
                             next.push(parent);
                         }
@@ -2587,38 +2622,57 @@ this.squared.base = (function (exports) {
         return next.length > 0 && (index === 0 ? true : ascendQuerySelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
     }
     function getMinMax(node, min, attr, options) {
-        let self, last, wrapperOf, initial;
+        let self, last, wrapperOf, subAttr, initialValue, initial;
         if (options) {
-            ({ self, last, wrapperOf, initial } = options);
+            ({ self, subAttr, last, wrapperOf, initialValue, initial } = options);
         }
-        let result, current = min ? Infinity : -Infinity;
+        if (initialValue === undefined) {
+            initialValue = min ? Infinity : -Infinity;
+        }
+        let result;
         node.each(item => {
             if (wrapperOf) {
                 item = item.wrapperOf || item;
             }
-            const value = parseFloat(self ? item[attr] : initial ? item.cssInitial(attr, options) : item.css(attr));
+            let value = NaN;
+            if (self || subAttr) {
+                const subValue = (subAttr ? item[attr][subAttr] : item[attr]);
+                switch (typeof subValue) {
+                    case 'number':
+                        value = subValue;
+                        break;
+                    case 'string':
+                        value = parseFloat(subValue);
+                        break;
+                    default:
+                        return;
+                }
+            }
+            else {
+                value = parseFloat(initial ? item.cssInitial(attr, options) : item.css(attr));
+            }
             if (!isNaN(value)) {
                 if (min) {
                     if (last) {
-                        if (value <= current) {
+                        if (value <= initialValue) {
                             result = item;
-                            current = value;
+                            initialValue = value;
                         }
                     }
-                    else if (value < current) {
+                    else if (value < initialValue) {
                         result = item;
-                        current = value;
+                        initialValue = value;
                     }
                 }
                 else if (last) {
-                    if (value >= current) {
+                    if (value >= initialValue) {
                         result = item;
-                        current = value;
+                        initialValue = value;
                     }
                 }
-                else if (value > current) {
+                else if (value > initialValue) {
                     result = item;
-                    current = value;
+                    initialValue = value;
                 }
             }
         });
@@ -2711,8 +2765,7 @@ this.squared.base = (function (exports) {
                         continue;
                     }
                 }
-                value = checkStyleValue(element, attr, value);
-                if (value) {
+                if (value = checkStyleValue(element, attr, value)) {
                     result[attr] = value;
                 }
             }
@@ -2738,8 +2791,7 @@ this.squared.base = (function (exports) {
                         return true;
                     }
                     else if (sessionId) {
-                        elementData = getElementData(element, sessionId);
-                        if (elementData) {
+                        if (elementData = getElementData(element, sessionId)) {
                             this._elementData = elementData;
                         }
                     }
@@ -2760,7 +2812,7 @@ this.squared.base = (function (exports) {
                                     const style = element.style;
                                     for (let i = 0; i < length; ++i) {
                                         const attr = style[i];
-                                        styleMap[convertCamelCase$1(attr)] = element.style.getPropertyValue(attr);
+                                        styleMap[convertCamelCase$1(attr)] = style.getPropertyValue(attr);
                                     }
                                 }
                             }
@@ -2801,7 +2853,7 @@ this.squared.base = (function (exports) {
                     obj = {};
                     data[name] = obj;
                 }
-                if (overwrite || !hasValue(obj[attr])) {
+                if (overwrite || !hasValue$1(obj[attr])) {
                     obj[attr] = value;
                 }
             }
@@ -2829,6 +2881,7 @@ this.squared.base = (function (exports) {
                         case 'float':
                         case 'tagName':
                             this._cache = {};
+                            i = length;
                             break;
                         case 'width':
                             cache.actualWidth = undefined;
@@ -2844,8 +2897,7 @@ this.squared.base = (function (exports) {
                             cache.height = undefined;
                             cache.hasHeight = undefined;
                             if (!this._preferInitial) {
-                                this.unsetCache('blockVertical');
-                                this.each(item => item.unsetCache());
+                                this.cascade(item => item.unsetCache('height', 'bottomAligned'));
                             }
                             break;
                         case 'verticalAlign':
@@ -2937,14 +2989,8 @@ this.squared.base = (function (exports) {
                     return;
                 }
                 parent.resetBounds();
-                const queryMap = parent.queryMap;
-                if (queryMap) {
-                    for (let i = 0, q = queryMap.length; i < q; ++i) {
-                        const children = queryMap[i];
-                        for (let j = 0, r = children.length; j < r; ++j) {
-                            children[j].resetBounds();
-                        }
-                    }
+                if (parent.queryMap) {
+                    parent.querySelectorAll('*').forEach(item => item.resetBounds());
                 }
                 else {
                     this.cascade(item => item.resetBounds());
@@ -2971,6 +3017,9 @@ this.squared.base = (function (exports) {
                                 cacheState.textEmpty = undefined;
                                 reset = true;
                                 break;
+                            case 'inlineText':
+                                cacheState.inlineText = false;
+                                continue;
                         }
                         cacheState[attr] = undefined;
                     }
@@ -3125,9 +3174,10 @@ this.squared.base = (function (exports) {
             return false;
         }
         css(attr, value, cache = true) {
-            if (this.styleElement) {
+            const style = this.style;
+            if (this.styleElement && attr in style) {
                 if (value === '') {
-                    this.style[attr] = 'initial';
+                    style[attr] = 'initial';
                     const property = CSS_PROPERTIES$1[attr];
                     if (property && typeof property.value === 'string') {
                         this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & 256 /* UNIT */ ? 'px' : ''));
@@ -3140,22 +3190,19 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else if (value) {
-                    const current = this.style[attr];
-                    if (current !== undefined) {
-                        this.style[attr] = value;
-                        if (current !== this.style[attr]) {
-                            this._styleMap[attr] = value;
-                            if (cache) {
-                                this.unsetCache(attr);
-                            }
-                            return value;
+                    const current = style[attr];
+                    this.style[attr] = value;
+                    if (current !== style[attr]) {
+                        this._styleMap[attr] = value;
+                        if (cache) {
+                            this.unsetCache(attr);
                         }
-                        return current;
+                        return value;
                     }
-                    return '';
+                    return current;
                 }
             }
-            return this._styleMap[attr] || this.style[attr] || '';
+            return this._styleMap[attr] || style[attr] || '';
         }
         cssApply(values, overwrite = true, cache = true) {
             if (overwrite) {
@@ -3174,8 +3221,8 @@ this.squared.base = (function (exports) {
             return this;
         }
         cssParent(attr, value, cache = false) {
-            var _a;
-            return ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.css(attr, value, cache)) || '';
+            const parent = this.actualParent;
+            return parent ? parent.css(attr, value, cache) : '';
         }
         cssInitial(attr, options) {
             const initial = this._initial;
@@ -3242,26 +3289,13 @@ this.squared.base = (function (exports) {
                 return valueA > valueB ? -1 : 1;
             });
         }
-        cssPX(attr, value, cache, options) {
-            const current = this._styleMap[attr];
-            if (current && isLength(current)) {
-                value += parseUnit(current, { fontSize: this.fontSize });
-                if (value < 0 && !(options && options.negative)) {
-                    value = 0;
-                }
-                const unit = formatPX(value);
-                this.css(attr, unit);
-                if (cache) {
-                    this.unsetCache(attr);
-                }
-                return unit;
-            }
-            return '';
+        cssUnit(attr, options) {
+            return this.parseUnit(options && options.initial ? this.cssInitial(attr, options) : this.css(attr), options);
         }
         cssSpecificity(attr) {
             var _a, _b, _c;
             if (this.styleElement) {
-                const styleData = !this.pseudoElt ? (_a = this._elementData) === null || _a === void 0 ? void 0 : _a['styleSpecificity'] : (_c = (_b = this.actualParent) === null || _b === void 0 ? void 0 : _b.elementData) === null || _c === void 0 ? void 0 : _c['styleSpecificity' + this.pseudoElt];
+                const styleData = !this.pseudoElt ? (_a = this._elementData) === null || _a === void 0 ? void 0 : _a.styleSpecificity : (_c = (_b = this.actualParent) === null || _b === void 0 ? void 0 : _b.elementData) === null || _c === void 0 ? void 0 : _c['styleSpecificity' + this.pseudoElt];
                 if (styleData) {
                     return styleData[attr] || 0;
                 }
@@ -3316,14 +3350,14 @@ this.squared.base = (function (exports) {
                     if (typeof attrs === 'string') {
                         const value = elementData[attrs];
                         if (value) {
-                            this._element.style.setProperty(attrs, value);
+                            this._element.style[attrs] = value;
                         }
                     }
                     else {
                         for (const attr in attrs) {
                             const value = elementData[attr];
                             if (value) {
-                                this._element.style.setProperty(attr, value);
+                                this._element.style[attr] = value;
                             }
                         }
                     }
@@ -3397,10 +3431,28 @@ this.squared.base = (function (exports) {
             return convertFloat((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], fallback);
         }
         toElementInt(attr, fallback = NaN) {
-            return this.naturalElement ? convertInt(this._element[attr], fallback) : fallback;
+            if (this.naturalElement) {
+                const value = this._element[attr];
+                switch (typeof value) {
+                    case 'number':
+                        return Math.floor(value);
+                    case 'string':
+                        return convertInt(value, fallback);
+                }
+            }
+            return fallback;
         }
         toElementFloat(attr, fallback = NaN) {
-            return this.naturalElement ? convertFloat(this._element[attr], fallback) : fallback;
+            if (this.naturalElement) {
+                const value = this._element[attr];
+                switch (typeof value) {
+                    case 'number':
+                        return value;
+                    case 'string':
+                        return convertFloat(value, fallback);
+                }
+            }
+            return fallback;
         }
         toElementBoolean(attr, fallback = false) {
             if (this.naturalElement) {
@@ -3424,7 +3476,7 @@ this.squared.base = (function (exports) {
             if (!value) {
                 return 0;
             }
-            else if (value.endsWith('px')) {
+            else if (isPx(value)) {
                 return parseFloat(value);
             }
             else if (isPercent(value)) {
@@ -3602,10 +3654,11 @@ this.squared.base = (function (exports) {
                         let start, offset = 0;
                         if (query === '*') {
                             selectors.push({ all: true });
+                            start = true;
                         }
                         else {
                             CSS$1.SELECTOR_G.lastIndex = 0;
-                            let adjacent = '', selector = '', match;
+                            let selector = '', adjacent = '', match;
                             while (match = CSS$1.SELECTOR_G.exec(query)) {
                                 let segment = match[1];
                                 selector += segment;
@@ -3842,9 +3895,7 @@ this.squared.base = (function (exports) {
                 if (value) {
                     const ancestors = this.ascend();
                     const customMap = [];
-                    iterateReverseArray(ancestors, (item) => {
-                        customMap.push([item]);
-                    });
+                    iterateReverseArray(ancestors, (item) => customMap.push([item]));
                     customMap.push(result);
                     result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
                 }
@@ -3935,6 +3986,23 @@ this.squared.base = (function (exports) {
                 case 'SELECT':
                 case 'TEXTAREA':
                     return true;
+                default:
+                    return false;
+            }
+        }
+        get buttonElement() {
+            switch (this.tagName) {
+                case 'BUTTON':
+                    return true;
+                case 'INPUT':
+                    switch (this.toElementString('type')) {
+                        case 'button':
+                        case 'submit':
+                        case 'reset':
+                        case 'file':
+                        case 'image':
+                            return true;
+                    }
                 default:
                     return false;
             }
@@ -4038,7 +4106,10 @@ this.squared.base = (function (exports) {
                         justifyContent
                     };
                 }
-                return this._cache.flexdata = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.flexdata = result;
             }
             return result;
         }
@@ -4057,7 +4128,10 @@ this.squared.base = (function (exports) {
                         order: this.toInt('order', 0)
                     };
                 }
-                return this._cache.flexbox = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.flexbox = result;
             }
             return result;
         }
@@ -4092,20 +4166,14 @@ this.squared.base = (function (exports) {
                     }
                     else {
                         let parent = this.ascend({ condition: item => item.has('lineHeight', { initial: true, not: 'inherit' }) })[0];
-                        if (parent) {
-                            value = parseLineHeight(parent.css('lineHeight'), this.fontSize);
-                            if (value) {
-                                if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
-                                    this.css('lineHeight', value + 'px');
-                                }
-                                hasOwnStyle = true;
+                        if (parent && (value = parseLineHeight(parent.css('lineHeight'), this.fontSize))) {
+                            if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
+                                this.css('lineHeight', value + 'px');
                             }
+                            hasOwnStyle = true;
                         }
-                        if (value === 0) {
-                            parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
-                            if (parent) {
-                                value = parent.lineHeight;
-                            }
+                        if (value === 0 && (parent = this.ascend({ condition: item => item.lineHeight > 0 })[0])) {
+                            value = parent.lineHeight;
                         }
                     }
                     result = hasOwnStyle || value > this.height || this.multiline || this.block && this.naturalChildren.some((node) => node.textElement) ? value : 0;
@@ -4260,8 +4328,8 @@ this.squared.base = (function (exports) {
                         result = true;
                     }
                     else {
-                        const actualParent = this.actualParent;
-                        if (actualParent && (actualParent.block && !actualParent.floating || actualParent.hasWidth)) {
+                        const parent = this.actualParent;
+                        if (parent && (parent.block && !parent.floating || parent.hasWidth)) {
                             if (this.inlineStatic && ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
                                 result = true;
                             }
@@ -4314,7 +4382,7 @@ this.squared.base = (function (exports) {
         get autoMargin() {
             let result = this._cache.autoMargin;
             if (result === undefined) {
-                if (!this.pageFlow || this.blockStatic || this.display === 'table') {
+                if (this.blockStatic || !this.pageFlow || this.display === 'table') {
                     const styleMap = this._styleMap;
                     const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasPX('right'));
                     const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
@@ -4331,21 +4399,25 @@ this.squared.base = (function (exports) {
                         topBottom: top && bottom
                     };
                 }
-                return this._cache.autoMargin = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.autoMargin = result;
             }
             return result;
         }
         get baseline() {
             let result = this._cache.baseline;
             if (result === undefined) {
-                if (this.pageFlow && !this.floating && !this.tableElement) {
-                    const display = this.display;
-                    if (display.startsWith('inline') || display === 'list-item') {
-                        const value = this.css('verticalAlign');
-                        result = value === 'baseline' || !isNaN(parseFloat(value));
-                    }
+                const display = this.display;
+                if ((display.startsWith('inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                    const value = this.css('verticalAlign');
+                    result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
-                return this._cache.baseline = !!result;
+                else {
+                    result = false;
+                }
+                this._cache.baseline = result;
             }
             return result;
         }
@@ -4354,7 +4426,7 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 const value = this.css('verticalAlign');
                 if (value !== 'baseline' && this.pageFlow) {
-                    if (value.endsWith('px')) {
+                    if (isPx(value)) {
                         result = parseFloat(value);
                     }
                     else if (isLength(value)) {
@@ -4381,12 +4453,12 @@ this.squared.base = (function (exports) {
                                 valid = isPercent(value);
                                 break;
                         }
-                        if (valid && this.cssTry('vertical-align', 'baseline')) {
+                        if (valid && this.cssTry('verticalAlign', 'baseline')) {
                             const bounds = this.boundingClientRect;
                             if (bounds) {
                                 result = bounds.top - this.bounds.top;
                             }
-                            this.cssFinally('vertical-align');
+                            this.cssFinally('verticalAlign');
                         }
                     }
                 }
@@ -4446,65 +4518,31 @@ this.squared.base = (function (exports) {
             let result = this._cache.backgroundColor;
             if (result === undefined) {
                 if (!this.plainText) {
-                    const isTransparent = (value) => value === 'transparent' || value === 'rgba(0, 0, 0, 0)';
                     result = this.css('backgroundColor');
-                    if (isTransparent(result)) {
-                        if (this.inputElement) {
-                            if (this.tagName !== 'BUTTON') {
-                                switch (this.toElementString('type')) {
-                                    case 'button':
-                                    case 'submit':
-                                    case 'reset':
-                                    case 'image':
-                                        break;
-                                    default:
-                                        result = '';
-                                        break;
-                                }
-                            }
-                        }
-                        else {
-                            result = '';
-                        }
-                    }
-                    if (result && this.styleElement && this.pageFlow && (!this.inputElement && this.opacity === 1 || isTransparent(result))) {
-                        let parent = this.actualParent;
-                        while (parent) {
-                            const backgroundImage = parent.valueOf('backgroundImage');
-                            if (!backgroundImage || backgroundImage === 'none') {
-                                const color = parent.backgroundColor;
-                                if (color && !isTransparent(color)) {
-                                    if (color === result && parent.opacity === 1) {
-                                        result = '';
-                                    }
-                                    else if (isTransparent(result)) {
-                                        result = color;
-                                    }
-                                    break;
-                                }
-                                parent = parent.actualParent;
-                            }
-                            else {
-                                break;
-                            }
-                        }
+                    if (isTransparent(result) && !this.buttonElement) {
+                        result = '';
                     }
                 }
-                return this._cache.backgroundColor = result || '';
+                else {
+                    result = '';
+                }
+                this._cache.backgroundColor = result;
             }
             return result;
         }
         get backgroundImage() {
-            const result = this._cache.backgroundImage;
+            let result = this._cache.backgroundImage;
             if (result === undefined) {
-                let value = '';
                 if (!this.plainText) {
-                    value = this.css('backgroundImage');
-                    if (value === 'none') {
-                        value = '';
+                    result = this.css('backgroundImage');
+                    if (result === 'none') {
+                        result = '';
                     }
                 }
-                return this._cache.backgroundImage = value;
+                else {
+                    result = '';
+                }
+                this._cache.backgroundImage = result;
             }
             return result;
         }
@@ -4535,7 +4573,7 @@ this.squared.base = (function (exports) {
                     let backgroundRepeatX = false, backgroundRepeatY = false;
                     if (backgroundImage) {
                         for (const repeat of this.css('backgroundRepeat').split(',')) {
-                            const [repeatX, repeatY] = splitPair$1(repeat.trim(), ' ');
+                            const [repeatX, repeatY] = splitPair$2(repeat.trim(), ' ');
                             backgroundRepeatX || (backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x');
                             backgroundRepeatY || (backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
                         }
@@ -4551,7 +4589,10 @@ this.squared.base = (function (exports) {
                         outline: this.outlineWidth > 0
                     };
                 }
-                return this._cache.visibleStyle = result || {};
+                else {
+                    result = {};
+                }
+                this._cache.visibleStyle = result;
             }
             return result;
         }
@@ -4605,7 +4646,6 @@ this.squared.base = (function (exports) {
             return result;
         }
         get actualWidth() {
-            var _a;
             let result = this._cache.actualWidth;
             if (result === undefined) {
                 if (this.plainText) {
@@ -4622,43 +4662,30 @@ this.squared.base = (function (exports) {
                             break;
                     }
                 }
-                else if (this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.row)) {
-                    result = this.bounds.width;
-                }
                 else {
-                    result = this.width;
-                    if (result) {
-                        if (this.contentBox && !this.tableElement) {
+                    let parent;
+                    if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.row)) {
+                        result = this.width;
+                        if (result && this.contentBox && !this.tableElement) {
                             result += this.contentBoxWidth;
                         }
                     }
-                    else {
-                        result = this.bounds.width;
-                    }
                 }
-                this._cache.actualWidth = result;
+                return this._cache.actualWidth = result || this.bounds.width;
             }
             return result;
         }
         get actualHeight() {
-            var _a;
             let result = this._cache.actualHeight;
             if (result === undefined) {
-                if (this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexdata.column)) {
-                    result = this.bounds.height;
-                }
-                else {
+                let parent;
+                if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.column)) {
                     result = this.height;
-                    if (result) {
-                        if (this.contentBox && !this.tableElement) {
-                            result += this.contentBoxHeight;
-                        }
-                    }
-                    else {
-                        result = this.bounds.height;
+                    if (result && this.contentBox && !this.tableElement) {
+                        result += this.contentBoxHeight;
                     }
                 }
-                this._cache.actualHeight = result;
+                return this._cache.actualHeight = result || this.bounds.height;
             }
             return result;
         }
@@ -4743,6 +4770,7 @@ this.squared.base = (function (exports) {
             return result;
         }
         get checked() {
+            var _a;
             switch (this.tagName) {
                 case 'INPUT': {
                     const element = this._element;
@@ -4754,7 +4782,7 @@ this.squared.base = (function (exports) {
                     break;
                 }
                 case 'OPTION':
-                    return this.parentElement.tagName === 'SELECT' && Array.from(this.parentElement.selectedOptions).includes(this._element);
+                    return ((_a = this.parentElement) === null || _a === void 0 ? void 0 : _a.tagName) === 'SELECT' && Array.from(this.parentElement.selectedOptions).includes(this._element);
             }
             return false;
         }
@@ -4792,7 +4820,7 @@ this.squared.base = (function (exports) {
                     if (this.styleElement) {
                         const fixedWidth = isFontFixedWidth(this);
                         let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
-                        if (value.endsWith('px')) {
+                        if (isPx(value)) {
                             result = parseFloat(value);
                         }
                         else if (isPercent(value)) {
@@ -4887,7 +4915,7 @@ this.squared.base = (function (exports) {
                             if (node.dir === value) {
                                 return false;
                             }
-                            node.unsetCache('dir');
+                            node.unsetState('dir');
                         });
                     }
                     else if (this.naturalChild) {
@@ -4904,8 +4932,7 @@ this.squared.base = (function (exports) {
                 if (!result) {
                     let parent = this.actualParent;
                     while (parent) {
-                        result = parent.dir;
-                        if (result) {
+                        if (result = parent.dir) {
                             break;
                         }
                         parent = parent.actualParent;
@@ -4925,7 +4952,7 @@ this.squared.base = (function (exports) {
     }
 
     const { STRING: STRING$1 } = squared.lib.regex;
-    const { extractURL } = squared.lib.css;
+    const { extractURL, resolveURL } = squared.lib.css;
     const { convertBase64, fromLastIndexOf: fromLastIndexOf$1, parseMimeType: parseMimeType$1 } = squared.lib.util;
     const REGEXP_DATAURI$1 = new RegExp(`^${STRING$1.DATAURI}$`);
     class Resource {
@@ -4935,9 +4962,6 @@ this.squared.base = (function (exports) {
         }
         static hasMimeType(formats, value) {
             return formats === '*' || formats.has(parseMimeType$1(value));
-        }
-        static canCompressImage(filename, mimeType) {
-            return /\.(png|jpg|jpeg)$/i.test(filename) || !!mimeType && (mimeType.endsWith('png') || mimeType.endsWith('jpeg'));
         }
         static getExtension(value) {
             const match = /\.(\w+)\s*$/.exec(value);
@@ -4962,8 +4986,8 @@ this.squared.base = (function (exports) {
                 if (uri.startsWith('data:image/')) {
                     const match = REGEXP_DATAURI$1.exec(uri);
                     if (match) {
-                        const mimeType = match[1].split(/\s*;\s*/);
-                        this.addRawData(uri, mimeType[0], match[2], { encoding: mimeType[1] || 'base64', width: element.naturalWidth, height: element.naturalHeight });
+                        const [mimeType, encoding] = match[1].split(/\s*;\s*/);
+                        this.addRawData(uri, match[2], { encoding: encoding || 'base64', mimeType, width: element.naturalWidth, height: element.naturalHeight });
                     }
                 }
                 if (uri) {
@@ -4971,11 +4995,11 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        addVideo(uri, mimeType, options) {
-            Resource.ASSETS.video.set(uri, Object.assign({ uri, mimeType }, options));
+        addAudio(uri, options) {
+            Resource.ASSETS.audio.set(uri, Object.assign({ uri }, options));
         }
-        addAudio(uri, mimeType, options) {
-            Resource.ASSETS.audio.set(uri, Object.assign({ uri, mimeType }, options));
+        addVideo(uri, options) {
+            Resource.ASSETS.video.set(uri, Object.assign({ uri }, options));
         }
         addFont(data) {
             const fonts = Resource.ASSETS.fonts;
@@ -4989,14 +5013,13 @@ this.squared.base = (function (exports) {
                 fonts.set(fontFamily, [data]);
             }
         }
-        addRawData(uri, mimeType, content, options) {
-            let filename, encoding, data, width, height;
+        addRawData(uri, content, options) {
+            let filename, mimeType, encoding, data, width, height;
             if (options) {
-                ({ filename, encoding, data, width, height } = options);
-                mimeType || (mimeType = options.mimeType || '');
+                ({ filename, mimeType, encoding, data, width, height } = options);
+                mimeType && (mimeType = mimeType.toLowerCase());
                 encoding && (encoding = encoding.toLowerCase());
             }
-            mimeType = mimeType.toLowerCase();
             content && (content = content.trim());
             let base64, buffer;
             if (encoding === 'base64') {
@@ -5027,7 +5050,7 @@ this.squared.base = (function (exports) {
                 return null;
             }
             if (!filename) {
-                const ext = '.' + (fromMimeType(mimeType) || 'unknown');
+                const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
                 filename = uri.endsWith(ext) ? fromLastIndexOf$1(uri, '/', '\\') : this.randomUUID + ext;
             }
             const result = {
@@ -5072,6 +5095,25 @@ this.squared.base = (function (exports) {
             if (uri && (width && height || !this.getImage(uri))) {
                 Resource.ASSETS.image.set(uri, { width, height, uri });
             }
+        }
+        fromImageUrl(value) {
+            const data = this.getRawData(value);
+            if (data) {
+                return [data];
+            }
+            const result = [];
+            const pattern = /url\([^)]+\)/g;
+            let match;
+            while (match = pattern.exec(value)) {
+                const url = resolveURL(match[0]);
+                if (url) {
+                    const image = this.getImage(url);
+                    if (image) {
+                        result.push(image);
+                    }
+                }
+            }
+            return result;
         }
         set fileHandler(value) {
             if (value) {

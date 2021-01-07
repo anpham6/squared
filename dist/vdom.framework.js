@@ -1,4 +1,4 @@
-/* vdom-framework 2.2.7
+/* vdom-framework 2.3.0
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -10,9 +10,9 @@ var vdom = (function () {
             this.systemName = 'vdom';
         }
         init() { }
-        insertNode(element, sessionId) {
+        insertNode(processing, element) {
             if (element.nodeName[0] !== '#') {
-                return new this.Node(this.nextId, sessionId, element);
+                return new this.Node(this.nextId, processing.sessionId, element);
             }
         }
     }

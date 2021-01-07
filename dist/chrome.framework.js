@@ -1,4 +1,4 @@
-/* chrome-framework 2.2.7
+/* chrome-framework 2.3.0
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -19,17 +19,17 @@ var chrome = (function () {
             this.session.unusedStyles.clear();
             super.reset();
         }
-        insertNode(element, sessionId) {
+        insertNode(processing, element) {
             if (element.nodeName[0] === '#') {
                 if (this.userSettings.excludePlainText) {
                     return;
                 }
-                this.controllerHandler.applyDefaultStyles(element, sessionId);
+                this.controllerHandler.applyDefaultStyles(element, processing.sessionId);
             }
-            return this.createNodeStatic(sessionId, element);
+            return this.createNodeStatic(processing, element);
         }
         saveAs(filename, options) {
-            return this.processAssets('saveAs', filename || this.userSettings.outputArchiveName, options);
+            return this.processAssets('saveAs', filename, options);
         }
         copyTo(directory, options) {
             return this.processAssets('copyTo', directory, options);
@@ -56,7 +56,7 @@ var chrome = (function () {
                 options.assetMap = assetMap;
                 options.database || (options.database = []);
                 const database = options.database;
-                const config = await fileHandler.loadJSON(options.configUri);
+                const config = await fileHandler.loadData(options.configUri, { type: 'json', cache: options.cache });
                 if (config) {
                     if (config.success && Array.isArray(config.data)) {
                         const data = config.data;
@@ -272,10 +272,11 @@ var chrome = (function () {
                 content,
                 format,
                 preserve,
-                inlineContent: inline ? getContentType(element) : undefined
+                inlineContent: inline ? getContentType(element) : undefined,
+                document: ['chrome']
             };
             if (previous && hasSamePath(previous, data, true)) {
-                (previous.trailingContent || (previous.trailingContent = [])).push({ value: content, preserve });
+                (previous.trailingContent || (previous.trailingContent = [])).push(content);
             }
             else {
                 checkFilename(assets, data);
@@ -485,7 +486,8 @@ var chrome = (function () {
                     mimeType: ext && parseMimeType(ext),
                     format,
                     outerHTML,
-                    inlineContent: inline && element ? getContentType(element) : undefined
+                    inlineContent: inline && element ? getContentType(element) : undefined,
+                    document: ['chrome']
                 };
             }
             return null;
@@ -495,7 +497,6 @@ var chrome = (function () {
             return this.copying(this.processAssets(options));
         }
         appendTo(pathname, options = {}) {
-            options.filename || (options.filename = this.userSettings.outputArchiveName);
             options.appendTo = pathname;
             return this.archiving(this.processAssets(options));
         }
@@ -560,7 +561,7 @@ var chrome = (function () {
             }
             const result = [];
             const bundleIndex = {};
-            let transpileMap;
+            let templateMap;
             if (assetMap) {
                 for (const item of assetMap.values()) {
                     if (!item.selector) {
@@ -573,7 +574,7 @@ var chrome = (function () {
                                     const { module, identifier } = template;
                                     let value = template.value;
                                     if (module && identifier && value && (value = value.trim()) && value.startsWith('function')) {
-                                        ((_b = (transpileMap || (transpileMap = { html: {}, js: {}, css: {} }))[item.type])[module] || (_b[module] = {}))[identifier] = value;
+                                        ((_b = (templateMap || (templateMap = { html: {}, js: {}, css: {} }))[item.type])[module] || (_b[module] = {}))[identifier] = value;
                                     }
                                     break;
                                 }
@@ -603,7 +604,7 @@ var chrome = (function () {
                             case 'html':
                             case 'js':
                             case 'css':
-                                ((_a = (transpileMap || (transpileMap = { html: {}, js: {}, css: {} }))[category])[module] || (_a[module] = {}))[identifier] = element.textContent.trim();
+                                ((_a = (templateMap || (templateMap = { html: {}, js: {}, css: {} }))[category])[module] || (_a[module] = {}))[identifier] = element.textContent.trim();
                                 break;
                         }
                     }
@@ -614,7 +615,7 @@ var chrome = (function () {
                 }
             });
             setBundleIndex(bundleIndex);
-            return [result, transpileMap];
+            return [result, templateMap];
         }
         getLinkAssets(options) {
             var _a;
@@ -694,24 +695,21 @@ var chrome = (function () {
                 if (base64) {
                     if (saveAsBase64) {
                         let commands;
-                        if (mimeType && mimeType.startsWith('image/')) {
-                            commands = saveAsBase64.commands;
-                            if (commands) {
-                                for (let i = 0; i < commands.length; ++i) {
-                                    const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)([\S\s]*)$/.exec(commands[i]);
-                                    if (match) {
-                                        commands[i] = match[1] + '@' + match[2].trim();
-                                    }
-                                    else {
-                                        commands.splice(i--, 1);
-                                    }
+                        if (mimeType && mimeType.startsWith('image/') && (commands = saveAsBase64.commands)) {
+                            for (let i = 0; i < commands.length; ++i) {
+                                const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)([\S\s]*)$/.exec(commands[i]);
+                                if (match) {
+                                    commands[i] = match[1] + '@' + match[2].trim();
+                                }
+                                else {
+                                    commands.splice(i--, 1);
                                 }
                             }
                         }
                         const data = this.processImageUri(result, null, resolvePath(getFilePath(appendSeparator(saveAsBase64.pathname, filename))[1] + '/' + filename, location.href), saveAsImage, preserveCrossOrigin);
                         if (data) {
                             data.base64 = base64;
-                            if (commands === null || commands === void 0 ? void 0 : commands.length) {
+                            if (commands && commands.length) {
                                 data.commands || (data.commands = commands);
                             }
                             data.cloudStorage = saveAsBase64.cloudStorage;
@@ -757,7 +755,7 @@ var chrome = (function () {
         finalizeRequestBody(data, options) {
             data.database = options.database;
             data.unusedStyles = options.unusedStyles;
-            data.transpileMap = options.transpileMap;
+            data.templateMap = options.templateMap;
         }
         getCopyQueryParameters(options) {
             return this.getArchiveQueryParameters(options) + (options.watch ? '&watch=1' : '');
@@ -850,20 +848,20 @@ var chrome = (function () {
                     const item = assets[i];
                     switch (item.mimeType) {
                         case 'text/html':
-                            item.baseUrl = location.origin + (item.rootDir || location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1));
                         case 'text/css':
                             item.mimeType = '@' + item.mimeType;
                             break;
                     }
                 }
             }
-            const [scriptAssets, transpileMap] = this.getScriptAssets(options);
+            const [scriptAssets, templateMap] = this.getScriptAssets(options);
             assets.push(...scriptAssets, ...this.getImageAssets(options), ...this.getVideoAssets(options), ...this.getAudioAssets(options), ...this.getRawAssets('object', options), ...this.getRawAssets('embed', options), ...this.getRawAssets('iframe', options), ...this.getFontAssets(options));
             options.assets = assets;
-            delete options.assetMap;
-            if (transpileMap) {
-                options.transpileMap = transpileMap;
+            options.baseUrl = location.href;
+            if (templateMap) {
+                options.templateMap = templateMap;
             }
+            delete options.assetMap;
             return options;
         }
         createBundle(assets, bundleIndex, element, src, mimeType, preserveCrossOrigin, assetMap, saveAsOptions, saveAsCondtion = true) {
@@ -900,8 +898,7 @@ var chrome = (function () {
                 filename = saveAsOptions.filename;
                 ({ preserve, inline, process, compress, tasks, watch, cloudStorage, attributes } = saveAsOptions);
                 if (src) {
-                    file = filename && getCustomPath(src, saveAsOptions.pathname, filename);
-                    if (file) {
+                    if (file = filename && getCustomPath(src, saveAsOptions.pathname, filename)) {
                         filename = '';
                     }
                 }
@@ -936,8 +933,7 @@ var chrome = (function () {
                         ({ file, format } = command);
                     }
                 }
-                data = createBundleAsset(assets, element, file, format, preserve, inline);
-                if (data) {
+                if (data = createBundleAsset(assets, element, file, format, preserve, inline)) {
                     data.bundleIndex = -1;
                 }
             }
@@ -991,11 +987,8 @@ var chrome = (function () {
                             if (fileAs) {
                                 [saveAs, saveTo] = checkSaveAs(uri, fileAs.file);
                             }
-                            else {
-                                fileAs = parseFileAs('saveAs', file);
-                                if (fileAs) {
-                                    saveAs = fileAs.file;
-                                }
+                            else if (fileAs = parseFileAs('saveAs', file)) {
+                                saveAs = fileAs.file;
                             }
                         }
                         const { chromeCommands, chromeOptions, chromeWatch } = element.dataset;

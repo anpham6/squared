@@ -1,4 +1,4 @@
-/* squared.svg 2.2.7
+/* squared.svg 2.3.0
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -7,7 +7,7 @@ this.squared.svg = (function (exports) {
 
     var Pattern = squared.lib.base.Pattern;
     const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
-    const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
+    const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, getStyle, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
     const { getNamedItem } = squared.lib.dom;
     const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
     const { getElementCache } = squared.lib.session;
@@ -683,7 +683,7 @@ this.squared.svg = (function (exports) {
         return '';
     }
     function getAttribute(element, attr, computed) {
-        return getDataValue(element, attr) || getNamedItem(element, attr) || (computed || Array.from(element.style).includes(attr)) && getComputedStyle(element).getPropertyValue(attr) || '';
+        return getDataValue(element, attr) || getNamedItem(element, attr) || (computed || Array.from(element.style).includes(attr)) && getStyle(element).getPropertyValue(attr) || '';
     }
     function getParentAttribute(element, attr, computed) {
         let current = element, value;
@@ -765,7 +765,7 @@ this.squared.svg = (function (exports) {
                 const viewBox = current.viewBox;
                 if (viewBox) {
                     const baseVal = viewBox.baseVal;
-                    return baseVal && baseVal.width > 0 && baseVal.height > 0 ? baseVal : getDOMRect(current);
+                    return baseVal && baseVal.width && baseVal.height ? baseVal : getDOMRect(current);
                 }
             }
             current = current.parentElement;
@@ -1162,8 +1162,7 @@ this.squared.svg = (function (exports) {
                         if (index !== -1) {
                             const endPoint = keyPoints[index + 1];
                             if (endPoint) {
-                                rotating = rotatingPoints[index + 1];
-                                if (rotating) {
+                                if (rotating = rotatingPoints[index + 1]) {
                                     center = SvgBuild.centerOf(keyPoints[index], endPoint);
                                     rotateFixed = 0;
                                 }
@@ -1868,8 +1867,7 @@ this.squared.svg = (function (exports) {
                 }
                 return Math.round(time);
             }
-            match = REGGXP_TIMEDELIMITED.exec(value);
-            if (match) {
+            if (match = REGGXP_TIMEDELIMITED.exec(value)) {
                 const ms = match[5];
                 let time = +match[4] * (match[1] ? -1 : 1);
                 if (match[1]) {
@@ -4299,8 +4297,7 @@ this.squared.svg = (function (exports) {
                                         let startTime = maxTime + 1, maxThreadTime = Math.min(nextDelayTime, item.end || Infinity), setterInterrupt;
                                         if (item.animationElement && setterData.length) {
                                             const interruptTime = Math.min(nextDelayTime, totalDuration, maxThreadTime);
-                                            setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime);
-                                            if (setterInterrupt) {
+                                            if (setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime)) {
                                                 switch (setterInterrupt.delay) {
                                                     case actualMaxTime:
                                                         baseValue = setterInterrupt.to;
@@ -6938,8 +6935,7 @@ this.squared.svg = (function (exports) {
                     }
                     let current = this.useParent || this.parent;
                     while (current) {
-                        value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr);
-                        if (value) {
+                        if (value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr)) {
                             break;
                         }
                         current = current.parent;
@@ -7079,8 +7075,7 @@ this.squared.svg = (function (exports) {
                 do {
                     if (SvgBuild.asSvg(container) || SvgBuild.isUse(container)) {
                         const { x: offsetX, y: offsetY } = container;
-                        container = container.parent;
-                        if (container) {
+                        if (container = container.parent) {
                             if (offsetX !== 0) {
                                 x += container.refitX(offsetX);
                             }
@@ -7347,8 +7342,8 @@ this.squared.svg = (function (exports) {
             const element = this.element;
             const parent = this.parent;
             const patternParent = this.patternParent;
-            const requireRefit = parent ? parent.requireRefit : false;
-            const patternRefit = patternParent ? patternParent.patternContentUnits === 2 /* OBJECT_BOUNDING_BOX */ : false;
+            const requireRefit = parent && parent.requireRefit;
+            const patternRefit = patternParent && patternParent.patternContentUnits === 2 /* OBJECT_BOUNDING_BOX */;
             this.transformed = null;
             let d;
             if (SVG.path(element)) {

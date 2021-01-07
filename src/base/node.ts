@@ -365,12 +365,12 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                     }
                     break;
                 case ':disabled':
-                    if (!this.inputElement || !(element as HTMLInputElement).disabled) {
+                    if (!this.inputElement && this.tagName !== 'OPTION' || !(element as HTMLInputElement).disabled) {
                         return false;
                     }
                     break;
                 case ':enabled':
-                    if (!this.inputElement || (element as HTMLInputElement).disabled) {
+                    if (!this.inputElement && this.tagName !== 'OPTION' || (element as HTMLInputElement).disabled) {
                         return false;
                     }
                     break;
@@ -385,12 +385,12 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                     }
                     break;
                 case ':required':
-                    if (!this.inputElement || !(element as HTMLInputElement).required) {
+                    if (!this.inputElement || this.tagName === 'BUTTON' || !(element as HTMLInputElement).required) {
                         return false;
                     }
                     break;
                 case ':optional':
-                    if (!this.inputElement || (element as HTMLInputElement).required) {
+                    if (!this.inputElement || this.tagName === 'BUTTON' || (element as HTMLInputElement).required) {
                         return false;
                     }
                     break;
@@ -526,39 +526,48 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                     }
                                     else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
                                         const modifier = parseInt(match[3]);
-                                        if (match[2] && !match[1]) {
+                                        if (match[2]) {
                                             const increment = +match[2];
                                             if (!isNaN(modifier)) {
                                                 if (increment !== 0) {
                                                     if (index !== modifier) {
-                                                        for (let j = increment; ; j += increment) {
-                                                            const total = j + modifier;
-                                                            if (total === index) {
+                                                        const reverse = match[1];
+                                                        let j = modifier + increment * (reverse ? -1 : 1);
+                                                        do {
+                                                            if (j === index) {
                                                                 break;
                                                             }
-                                                            else if (total > index) {
-                                                                return false;
+                                                            if (reverse) {
+                                                                j -= increment;
+                                                                if (j < 0) {
+                                                                    return false;
+                                                                }
+                                                            }
+                                                            else {
+                                                                j += increment;
+                                                                if (j > index) {
+                                                                    return false;
+                                                                }
                                                             }
                                                         }
+                                                        while (true);
                                                     }
                                                 }
                                                 else if (index !== modifier) {
                                                     return false;
                                                 }
                                             }
-                                            else if (index % increment !== 0) {
+                                            else if (match[1] || index % increment !== 0) {
                                                 return false;
                                             }
                                         }
                                         else if (match[3] && modifier > 0) {
-                                            if (match[1]) {
-                                                if (index > modifier) {
-                                                    return false;
-                                                }
-                                            }
-                                            else if (index < modifier) {
+                                            if (index < modifier) {
                                                 return false;
                                             }
+                                        }
+                                        else if (match[1]) {
+                                            return false;
                                         }
                                     }
                                     else {
