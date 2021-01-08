@@ -1,4 +1,4 @@
-/* squared 2.3.2
+/* squared 2.3.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {

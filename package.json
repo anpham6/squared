@@ -1,6 +1,6 @@
 {
   "name": "squared",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "Virtual DOM and CSS framework for parsing usable browser data.",
   "main": "dist/squared.umd.js",
   "types": "types/index.d.ts",
@@ -76,7 +76,7 @@
   "license": "MIT",
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "@squared-functions/file-manager": "^0.10.1",
+    "@squared-functions/file-manager": "^0.11.0",
     "archiver": "^5.2.0",
     "chalk": "^4.1.0",
     "cors": "^2.8.5",
@@ -90,7 +90,7 @@
   },
   "devDependencies": {
     "@azure/cosmos": "^3.9.3",
-    "@azure/storage-blob": "^12.3.2",
+    "@azure/storage-blob": "^12.3.0",
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
     "@cloudant/cloudant": "^4.3.0",
@@ -115,7 +115,7 @@
     "glob": "^7.1.6",
     "gulp": "^4.0.2",
     "ibm-cos-sdk": "^1.9.0",
-    "md5": "^2.3.2",
+    "md5": "^2.3.0",
     "oracledb": "^5.1.0",
     "postcss": "^8.2.3",
     "posthtml": "^0.15.1",

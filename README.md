@@ -1,4 +1,4 @@
-## squared 2.2
+## squared 2.3
 
 ### Installation (global js variable: squared)
 

@@ -1,4 +1,4 @@
-/* chrome-framework 2.3.2
+/* chrome-framework 2.3.3
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -753,6 +753,7 @@ var chrome = (function () {
             return result;
         }
         finalizeRequestBody(data, options) {
+            data.baseUrl = options.baseUrl;
             data.database = options.database;
             data.unusedStyles = options.unusedStyles;
             data.templateMap = options.templateMap;
