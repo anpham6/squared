@@ -1,6 +1,6 @@
 {
   "name": "vdom-lite-framework",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Virtual DOM framework module for use with squared.",
   "repository": {
     "type": "git",

@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.3.0
+/* vdom-lite-framework 2.3.1
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -2678,12 +2678,12 @@ var vdom = (function () {
             return getMinMax(this, false, attr, options);
         }
         querySelector(value) {
-            return this.querySelectorAll(value, undefined, 1)[0] || null;
+            return this.querySelectorAll(value)[0] || null;
         }
-        querySelectorAll(value, customMap, resultCount = -1) {
+        querySelectorAll(value, customMap) {
             const queryMap = customMap || this.queryMap;
             const result = [];
-            if (queryMap && resultCount !== 0) {
+            if (queryMap) {
                 const queries = [];
                 let notIndex;
                 const addNot = (part) => {
@@ -2905,17 +2905,13 @@ var vdom = (function () {
                         }
                         const q = selectors.length;
                         if (q) {
-                            let currentCount = result.length;
-                            const all = currentCount === 0;
+                            const all = result.length === 0;
                             for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                                 const items = queryMap[j];
                                 for (let k = 0, s = items.length; k < s; ++k) {
                                     const node = items[k];
                                     if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
                                         result.push(node);
-                                        if (++currentCount === resultCount) {
-                                            return result.sort(sortById);
-                                        }
                                     }
                                 }
                             }

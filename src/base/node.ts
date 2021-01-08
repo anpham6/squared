@@ -1768,13 +1768,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public querySelector(value: string) {
-        return this.querySelectorAll(value, undefined, 1)[0] || null;
+        return this.querySelectorAll(value)[0] || null;
     }
 
-    public querySelectorAll(value: string, customMap?: T[][], resultCount = -1) {
+    public querySelectorAll(value: string, customMap?: T[][]) {
         const queryMap = customMap || this.queryMap;
         const result: T[] = [];
-        if (queryMap && resultCount !== 0) {
+        if (queryMap) {
             const queries: string[] = [];
             let notIndex: Undef<string[]>;
             const addNot = (part: string) => {
@@ -2005,17 +2005,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     const q = selectors.length;
                     if (q) {
-                        let currentCount = result.length;
-                        const all = currentCount === 0;
+                        const all = result.length === 0;
                         for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                             const items = queryMap[j];
                             for (let k = 0, s = items.length; k < s; ++k) {
                                 const node = items[k];
                                 if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
                                     result.push(node);
-                                    if (++currentCount === resultCount) {
-                                        return result.sort(sortById);
-                                    }
                                 }
                             }
                         }
