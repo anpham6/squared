@@ -1,4 +1,4 @@
-/* squared.base 2.3.1
+/* squared.base 2.3.2
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -1950,7 +1950,7 @@ this.squared.base = (function (exports) {
     const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
     const REGEXP_NOTINDEX = /:not-(x+)/;
     const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
-    const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+    const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
         let current = style[attr];
@@ -2414,10 +2414,6 @@ this.squared.base = (function (exports) {
                                             return false;
                                         }
                                         break;
-                                    case 'n':
-                                        break;
-                                    case '-n':
-                                        return false;
                                     default:
                                         if (isNumber(placement)) {
                                             if (placement !== index.toString()) {
@@ -2425,47 +2421,37 @@ this.squared.base = (function (exports) {
                                             }
                                         }
                                         else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
-                                            const modifier = parseInt(match[3]);
-                                            if (match[2]) {
-                                                const increment = +match[2];
-                                                if (!isNaN(modifier)) {
-                                                    if (increment !== 0) {
-                                                        if (index !== modifier) {
-                                                            const reverse = match[1];
-                                                            let j = modifier + increment * (reverse ? -1 : 1);
-                                                            do {
-                                                                if (j === index) {
-                                                                    break;
+                                            const reverse = match[1] === '-';
+                                            const increment = match[2] ? +match[2] : 1;
+                                            if (match[4]) {
+                                                const modifier = +match[4] * (match[3] === '-' ? -1 : 1);
+                                                if (increment !== 0) {
+                                                    if (index !== modifier) {
+                                                        let j = modifier;
+                                                        do {
+                                                            if (reverse) {
+                                                                j -= increment;
+                                                                if (j < 0) {
+                                                                    return false;
                                                                 }
-                                                                if (reverse) {
-                                                                    j -= increment;
-                                                                    if (j < 0) {
-                                                                        return false;
-                                                                    }
+                                                            }
+                                                            else {
+                                                                j += increment;
+                                                                if (j > index) {
+                                                                    return false;
                                                                 }
-                                                                else {
-                                                                    j += increment;
-                                                                    if (j > index) {
-                                                                        return false;
-                                                                    }
-                                                                }
-                                                            } while (true);
-                                                        }
-                                                    }
-                                                    else if (index !== modifier) {
-                                                        return false;
+                                                            }
+                                                            if (j === index) {
+                                                                break;
+                                                            }
+                                                        } while (true);
                                                     }
                                                 }
-                                                else if (match[1] || index % increment !== 0) {
+                                                else if (index !== modifier) {
                                                     return false;
                                                 }
                                             }
-                                            else if (match[3] && modifier > 0) {
-                                                if (index < modifier) {
-                                                    return false;
-                                                }
-                                            }
-                                            else if (match[1]) {
+                                            else if (reverse || index % increment !== 0) {
                                                 return false;
                                             }
                                         }

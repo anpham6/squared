@@ -1,4 +1,4 @@
-/* vdom-framework 2.3.1
+/* vdom-framework 2.3.2
    https://github.com/anpham6/squared */
 
 var vdom = (function () {

@@ -40,7 +40,7 @@ const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
 const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
 const REGEXP_NOTINDEX = /:not-(x+)/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
-const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
 function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
@@ -514,10 +514,6 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                         return false;
                                     }
                                     break;
-                                case 'n':
-                                    break;
-                                case '-n':
-                                    return false;
                                 default:
                                     if (isNumber(placement)) {
                                         if (placement !== index.toString()) {
@@ -525,48 +521,38 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                         }
                                     }
                                     else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
-                                        const modifier = parseInt(match[3]);
-                                        if (match[2]) {
-                                            const increment = +match[2];
-                                            if (!isNaN(modifier)) {
-                                                if (increment !== 0) {
-                                                    if (index !== modifier) {
-                                                        const reverse = match[1];
-                                                        let j = modifier + increment * (reverse ? -1 : 1);
-                                                        do {
-                                                            if (j === index) {
-                                                                break;
-                                                            }
-                                                            if (reverse) {
-                                                                j -= increment;
-                                                                if (j < 0) {
-                                                                    return false;
-                                                                }
-                                                            }
-                                                            else {
-                                                                j += increment;
-                                                                if (j > index) {
-                                                                    return false;
-                                                                }
+                                        const reverse = match[1] === '-';
+                                        const increment = match[2] ? +match[2] : 1;
+                                        if (match[4]) {
+                                            const modifier = +match[4] * (match[3] === '-' ? -1 : 1);
+                                            if (increment !== 0) {
+                                                if (index !== modifier) {
+                                                    let j = modifier;
+                                                    do {
+                                                        if (reverse) {
+                                                            j -= increment;
+                                                            if (j < 0) {
+                                                                return false;
                                                             }
                                                         }
-                                                        while (true);
+                                                        else {
+                                                            j += increment;
+                                                            if (j > index) {
+                                                                return false;
+                                                            }
+                                                        }
+                                                        if (j === index) {
+                                                            break;
+                                                        }
                                                     }
-                                                }
-                                                else if (index !== modifier) {
-                                                    return false;
+                                                    while (true);
                                                 }
                                             }
-                                            else if (match[1] || index % increment !== 0) {
+                                            else if (index !== modifier) {
                                                 return false;
                                             }
                                         }
-                                        else if (match[3] && modifier > 0) {
-                                            if (index < modifier) {
-                                                return false;
-                                            }
-                                        }
-                                        else if (match[1]) {
+                                        else if (reverse || index % increment !== 0) {
                                             return false;
                                         }
                                     }
