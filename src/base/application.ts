@@ -32,6 +32,35 @@ const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
+function parseImageUrl(resource: Null<Resource<Node>>, styleSheetHref: string, baseMap: StringMap, attrs: CssStyleAttr[]) {
+    for (let i = 0, length = attrs.length; i < length; ++i) {
+        const value = baseMap[attrs[i]]!;
+        let result: Undef<string>,
+            match: Null<RegExpExecArray>;
+        while (match = REGEXP_DATAURI.exec(value)) {
+            if (match[2]) {
+                if (resource) {
+                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
+                    resource.addRawData(match[1], match[3], { mimeType, encoding });
+                }
+            }
+            else {
+                const uri = resolvePath(match[3], styleSheetHref);
+                if (uri) {
+                    if (resource) {
+                        resource.addImageData(uri);
+                    }
+                    result = (result || value).replace(match[0], `url("${uri}")`);
+                }
+            }
+        }
+        if (result) {
+            baseMap[attrs[i]] = result;
+        }
+        REGEXP_DATAURI.lastIndex = 0;
+    }
+}
+
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.base.application';
 
@@ -612,42 +641,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const baseMap: CssStyleMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
-                const parseImageUrl = (attr: CssStyleAttr) => {
-                    const value = baseMap[attr];
-                    if (value && value !== 'initial') {
-                        let result: Undef<string>,
-                            match: Null<RegExpExecArray>;
-                        while (match = REGEXP_DATAURI.exec(value)) {
-                            if (match[2]) {
-                                if (resource) {
-                                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                    resource.addRawData(match[1], match[3], { mimeType, encoding });
-                                }
-                            }
-                            else {
-                                const uri = resolvePath(match[3], styleSheetHref);
-                                if (uri) {
-                                    if (resource) {
-                                        resource.addImageData(uri);
-                                    }
-                                    result = (result || value).replace(match[0], `url("${uri}")`);
-                                }
-                            }
-                        }
-                        if (result) {
-                            baseMap[attr] = result;
-                        }
-                        REGEXP_DATAURI.lastIndex = 0;
-                    }
-                };
-                const hasExactValue = (attr: CssStyleAttr, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                const hasPartialValue = (attr: CssStyleAttr, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
+                const hasExactValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
+                const hasPartialValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
+                let images: Undef<CssStyleAttr[]>;
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
-                    const attr = cssStyle[i] as CssStyleAttr;
+                    const attr = cssStyle[i];
                     if (attr[0] === '-') {
                         continue;
                     }
-                    const baseAttr = convertCamelCase(attr);
+                    const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                     let value: string = cssStyle[attr];
                     switch (value) {
                         case 'initial':
@@ -664,7 +666,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
-                                            if (hasExactValue(css.name as CssStyleAttr, 'none|initial') || value === 'initial' && hasPartialValue(css.name as CssStyleAttr, 'initial') || css.valueOfNone && hasExactValue(css.name as CssStyleAttr, css.valueOfNone)) {
+                                            if (hasExactValue(css.name!, 'none|initial') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
                                                 break required;
                                             }
                                             break;
@@ -672,6 +674,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     }
                                     continue;
                                 }
+                            }
+                            break;
+                    }
+                    switch (baseAttr) {
+                        case 'backgroundImage':
+                        case 'listStyleImage':
+                        case 'content':
+                            if (value !== 'initial') {
+                                (images ||= []).push(baseAttr);
                             }
                             break;
                     }
@@ -691,9 +702,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 REGEXP_IMPORTANT.lastIndex = 0;
-                parseImageUrl('backgroundImage');
-                parseImageUrl('listStyleImage');
-                parseImageUrl('content');
+                if (images) {
+                    parseImageUrl(resource, styleSheetHref, baseMap, images);
+                }
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
@@ -805,7 +816,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 break;
             case CSSRule.SUPPORTS_RULE:
-                this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules, sessionId, documentRoot);
+                this.applyCssRules(((item as unknown) as CSSSupportsRule).cssRules, sessionId, documentRoot);
                 break;
         }
     }
@@ -817,7 +828,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
                 for (let i = 0, length = cssRules.length; i < length; ++i) {
                     const rule = cssRules[i];
-                    switch (rule.type) {
+                    const type = rule.type;
+                    switch (type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
                             this.applyStyleRule(rule as CSSStyleRule, sessionId, documentRoot, queryRoot);
@@ -832,12 +844,18 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
-                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
+                                this.applyCssRules((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
+                            }
+                            else {
+                                this.parseStyleRules((rule as CSSConditionRule).cssRules);
                             }
                             break;
                         case CSSRule.SUPPORTS_RULE:
                             if (CSS.supports((rule as CSSConditionRule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
+                                this.applyCssRules((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
+                            }
+                            else {
+                                this.parseStyleRules((rule as CSSConditionRule).cssRules);
                             }
                             break;
                         case CSSRule.KEYFRAMES_RULE: {
@@ -863,9 +881,45 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private applyCSSRuleList(rules: CSSRuleList, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
+    private applyCssRules(rules: CSSRuleList, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
         for (let i = 0, length = rules.length; i < length; ++i) {
             this.applyStyleRule(rules[i] as CSSStyleRule, sessionId, documentRoot, queryRoot);
+        }
+    }
+
+    private parseStyleRules(rules: CSSRuleList) {
+        const resource = this.resourceHandler;
+        if (resource) {
+            for (let i = 0, length = rules.length; i < length; ++i) {
+                const item = rules[i] as CSSStyleRule;
+                switch (item.type) {
+                    case CSSRule.STYLE_RULE: {
+                        const baseMap: CssStyleMap = {};
+                        const cssStyle = item.style;
+                        for (let j = 0, q = cssStyle.length; j < q; ++j) {
+                            const attr = cssStyle[j];
+                            switch (attr) {
+                                case 'background-image':
+                                case 'list-style-image':
+                                case 'content': {
+                                    const value: string = cssStyle[attr];
+                                    if (value !== 'initial') {
+                                        baseMap[convertCamelCase(attr)] = value;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        const keys = Object.keys(baseMap) as CssStyleAttr[];
+                        if (keys.length) {
+                            parseImageUrl(resource, item.parentStyleSheet?.href || location.href, baseMap, keys);
+                        }
+                    }
+                    case CSSRule.FONT_FACE_RULE:
+                        this.applyStyleRule(item, '', document);
+                        break;
+                }
+            }
         }
     }
 
