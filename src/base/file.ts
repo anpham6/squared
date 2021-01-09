@@ -188,7 +188,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             }
         }
         else {
-            (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
+            (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED); // eslint-disable-line no-console
         }
         return Promise.resolve();
     }
@@ -251,7 +251,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             }
         }
         else {
-            (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
+            (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED); // eslint-disable-line no-console
         }
         return Promise.resolve();
     }
@@ -262,7 +262,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public writeErrorMesssage(error: ResponseError) {
         const { hint, message } = error;
-        (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
+        (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {

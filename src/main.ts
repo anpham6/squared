@@ -73,7 +73,7 @@ function loadExtensions() {
         if (addQueue.length) {
             for (const item of addQueue) {
                 if (!extensionManager.add(item)) {
-                    console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
+                    console.log('FAIL: ' + (typeof item === 'string' ? item : item.name)); // eslint-disable-line no-console
                     extensionCheck = true;
                 }
             }
@@ -99,7 +99,7 @@ function loadExtensions() {
         if (extensionCheck) {
             const errors = extensionManager.checkDependencies();
             if (errors) {
-                console.log('FAIL: ' + errors.join(', '));
+                console.log('FAIL: ' + errors.join(', ')); // eslint-disable-line no-console
             }
             extensionCheck = false;
         }

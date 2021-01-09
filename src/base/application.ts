@@ -382,7 +382,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 if (errors) {
-                    (this.userSettings.showErrorMessages ? alert : console.log)(errors.length === 1 ? 'FAIL: ' + errors[0] : errors.map(value => '- FAIL: ' + value).join('\n'));
+                    (this.userSettings.showErrorMessages ? alert : console.log)(errors.length === 1 ? 'FAIL: ' + errors[0] : errors.map(value => '- FAIL: ' + value).join('\n')); // eslint-disable-line no-console
                 }
                 return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
             })
@@ -428,7 +428,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         if (errors) {
-            (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + errors.join('\n\n'));
+            (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + errors.join('\n\n')); // eslint-disable-line no-console
         }
     }
 
