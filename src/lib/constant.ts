@@ -1,3 +1,5 @@
+/* eslint no-shadow: "off" */
+
 export const enum PLATFORM {
     WINDOWS = 1,
     MAC = 1 << 1,

@@ -1,3 +1,5 @@
+/* eslint no-shadow: "off" */
+
 import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;

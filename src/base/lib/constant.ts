@@ -1,3 +1,5 @@
+/* eslint no-shadow: "off" */
+
 export const enum APP_FRAMEWORK {
     UNIVERSAL = 0,
     VDOM = 1,

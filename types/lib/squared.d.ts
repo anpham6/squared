@@ -1,3 +1,5 @@
+/* eslint no-shadow: "off" */
+
 declare module "lib" {
     namespace base {
         class Container<T = any> implements Iterable<T> {

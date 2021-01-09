@@ -1,3 +1,5 @@
+/* eslint no-shadow: "off" */
+
 declare module "svg" {
     type SvgGroup = Svg | SvgG | SvgUseG | SvgUseSymbol | SvgPattern | SvgShapePattern | SvgUseShapePattern;
 

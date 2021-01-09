@@ -41,7 +41,8 @@ function getFileAssets(pathname: string, items: string[]) {
             result[j++] = {
                 pathname: pathname + items[i + 1],
                 filename: items[i + 2],
-                content: items[i]
+                content: items[i],
+                document: ['android']
             };
         }
         return result;
@@ -100,6 +101,7 @@ function getImageAssets(pathname: string, items: string[], convertImages: string
                 commands,
                 compress,
                 uri: items[i],
+                document: ['android'],
                 tasks: task ? task.split('+') : undefined
             };
         }
@@ -119,6 +121,7 @@ function getRawAssets(pathname: string, items: string[]) {
                 filename: items[i + 2].toLowerCase(),
                 mimeType: items[i + 1],
                 uri: items[i],
+                document: ['android'],
                 tasks: task ? task.split('+') : undefined
             };
         }
@@ -137,16 +140,16 @@ const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUni
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
 
-    public copyTo(directory: string, options?: FileCopyingOptions) {
-        return this.copying({ ...options, assets: this.combineAssets(options && options.assets), directory });
+    public copyTo(directory: string, options: FileCopyingOptions) {
+        return this.copying({ ...options, assets: this.combineAssets(options.assets!), directory });
     }
 
-    public appendTo(pathname: string, options?: FileArchivingOptions) {
-        return this.archiving({ ...options, assets: this.combineAssets(options && options.assets), appendTo: pathname });
+    public appendTo(pathname: string, options: FileArchivingOptions) {
+        return this.archiving({ ...options, assets: this.combineAssets(options.assets!), appendTo: pathname });
     }
 
-    public saveAs(filename: string, options?: FileArchivingOptions) {
-        return this.archiving({ ...options, assets: this.combineAssets(options && options.assets), filename });
+    public saveAs(filename: string, options: FileArchivingOptions) {
+        return this.archiving({ ...options, assets: this.combineAssets(options.assets!), filename });
     }
 
     public resourceAllToXml(options?: FileUniversalOptions) {
@@ -512,24 +515,23 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return '&android=1';
     }
 
-    protected combineAssets(assets?: FileAsset[]) {
+    protected combineAssets(assets: FileAsset[]) {
         const userSettings = this.userSettings;
         const result: FileAsset[] = [];
-        if (assets) {
-            for (let i = 0, length = assets.length, first = true; i < length; ++i) {
-                const item = assets[i];
-                if (!item.uri) {
-                    if (first) {
-                        item.filename = userSettings.outputMainFileName;
-                        first = false;
-                    }
-                    else if (!item.filename.endsWith('.xml')) {
-                        item.filename += '.xml';
-                    }
+        for (let i = 0, length = assets.length, first = true; i < length; ++i) {
+            const item = assets[i];
+            if (item.content && !item.uri) {
+                if (first) {
+                    item.filename = userSettings.outputMainFileName;
+                    first = false;
                 }
+                else if (!item.filename.endsWith('.xml')) {
+                    item.filename += '.xml';
+                }
+                (item.document ||= []).push('android');
             }
-            result.push(...assets);
         }
+        result.push(...assets);
         const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
         result.push(
             ...getFileAssets(outputDirectory, this.resourceStringToXml()),

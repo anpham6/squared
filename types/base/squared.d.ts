@@ -1,3 +1,5 @@
+/* eslint no-shadow: "off" */
+
 type FileActionResult = Promise<Void<ResponseData>>;
 
 declare module "base" {

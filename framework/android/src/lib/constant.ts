@@ -1,3 +1,5 @@
+/* eslint no-shadow: "off" */
+
 import NODE = android.lib.constant.CONTAINER_NODE;
 
 export const enum BUILD_VERSION {

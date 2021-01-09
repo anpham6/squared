@@ -117,7 +117,7 @@
     "ibm-cos-sdk": "^1.9.0",
     "md5": "^2.3.0",
     "oracledb": "^5.1.0",
-    "postcss": "^8.2.3",
+    "postcss": "^8.2.4",
     "posthtml": "^0.15.1",
     "prettier": "^2.2.1",
     "puppeteer": "^5.5.0",
