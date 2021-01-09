@@ -1,8 +1,5 @@
 interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
-    baseUrl?: string;
     assetMap?: Map<Element, AssetCommand>;
-    templateMap?: TemplateMap;
-    database?: CloudDatabase[];
 }
 
 interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileActionOptions {}

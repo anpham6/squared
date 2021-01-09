@@ -8,8 +8,7 @@ export interface FrameworkOptions {
     cache?: boolean;
 }
 
-export interface FileActionOptions {
-    assets?: FileAsset[];
+export interface FileActionOptions extends RequestData {
     exclusions?: Exclusions;
     callback?: (result: unknown) => void;
     configUri?: string;

@@ -708,9 +708,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {
-        data.baseUrl = options.baseUrl;
+    public finalizeRequestBody(data: RequestData, options: FileActionOptions) {
         data.database = options.database;
+        data.baseUrl = options.baseUrl;
         data.unusedStyles = options.unusedStyles;
         data.templateMap = options.templateMap;
     }
@@ -720,7 +720,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getArchiveQueryParameters(options: FileArchivingOptions) {
-        return '&chrome=1' + (options.productionRelease ? '&release=1' : '');
+        return options.productionRelease ? '&release=1' : '';
     }
 
     protected getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {

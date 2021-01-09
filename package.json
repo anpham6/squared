@@ -76,7 +76,7 @@
   "license": "MIT",
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "@squared-functions/file-manager": "^0.11.0",
+    "@squared-functions/file-manager": "^0.12.0",
     "archiver": "^5.2.0",
     "chalk": "^4.1.0",
     "cors": "^2.8.5",

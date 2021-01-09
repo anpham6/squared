@@ -29,3 +29,9 @@ interface AssetCommand extends SaveAsOptions {
         value?: string;
     };
 }
+
+interface RequestData {
+    baseUrl?: string;
+    templateMap?: TemplateMap;
+    unusedStyles?: string[];
+}

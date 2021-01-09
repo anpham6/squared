@@ -508,11 +508,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
-        return this.getArchiveQueryParameters(options) + (options.watch ? '&watch=1' : '');
-    }
-
-    public getArchiveQueryParameters(options: FileArchivingOptions) {
-        return '&android=1';
+        return options.watch ? '&watch=1' : '';
     }
 
     protected combineAssets(assets: FileAsset[]) {
