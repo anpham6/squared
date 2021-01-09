@@ -98,7 +98,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public finalizeRequestBody(data: PlainObject, options: FileCopyingOptions & FileArchivingOptions) {}
+    public finalizeRequestBody(data: RequestData, options: FileCopyingOptions & FileArchivingOptions) {}
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
@@ -275,6 +275,13 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     return;
                 }
             }
+            const documentName = new Set(options.document);
+            for (let i = 0, length = assets.length; i < length; ++i) {
+                const document = assets[i].document;
+                if (document) {
+                    document.forEach(value => documentName.add(value));
+                }
+            }
             const { outputTasks, outputWatch } = this.userSettings;
             for (let i = 0; i < 2; ++i) {
                 const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
@@ -310,7 +317,10 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     }
                 }
             }
-            const data: PlainObject = { assets };
+            const data: RequestData = { assets };
+            if (documentName.size) {
+                data.document = Array.from(documentName);
+            }
             this.finalizeRequestBody(data, options);
             return data;
         }

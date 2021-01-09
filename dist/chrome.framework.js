@@ -1,4 +1,4 @@
-/* chrome-framework 2.3.3
+/* chrome-framework 2.3.4
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -688,7 +688,9 @@ var chrome = (function () {
                 }
             });
             for (const uri of ASSETS.image.keys()) {
-                this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
+                if (!result.find(item => item.uri === uri)) {
+                    this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
+                }
             }
             for (const rawData of ASSETS.rawData.values()) {
                 const { base64, filename, mimeType } = rawData;
@@ -709,6 +711,9 @@ var chrome = (function () {
                         const data = this.processImageUri(result, null, resolvePath(getFilePath(appendSeparator(saveAsBase64.pathname, filename))[1] + '/' + filename, location.href), saveAsImage, preserveCrossOrigin);
                         if (data) {
                             data.base64 = base64;
+                            if (!data.mimeType && data.filename.endsWith('.unknown')) {
+                                data.mimeType = 'image/unknown';
+                            }
                             if (commands && commands.length) {
                                 data.commands || (data.commands = commands);
                             }

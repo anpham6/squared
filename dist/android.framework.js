@@ -1,4 +1,4 @@
-/* android-framework 2.3.3
+/* android-framework 2.3.4
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -8518,7 +8518,8 @@ var android = (function () {
                 result[j++] = {
                     pathname: pathname + items[i + 1],
                     filename: items[i + 2],
-                    content: items[i]
+                    content: items[i],
+                    document: ['android']
                 };
             }
             return result;
@@ -8574,6 +8575,7 @@ var android = (function () {
                     commands,
                     compress,
                     uri: items[i],
+                    document: ['android'],
                     tasks: task ? task.split('+') : undefined
                 };
             }
@@ -8592,6 +8594,7 @@ var android = (function () {
                     filename: items[i + 2].toLowerCase(),
                     mimeType: items[i + 1],
                     uri: items[i],
+                    document: ['android'],
                     tasks: task ? task.split('+') : undefined
                 };
             }
@@ -8606,13 +8609,13 @@ var android = (function () {
     const hasFileAction = (options) => !!(options && (options.directory || options.filename));
     class File extends squared.base.File {
         copyTo(directory, options) {
-            return this.copying(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options && options.assets), directory }));
+            return this.copying(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options.assets), directory }));
         }
         appendTo(pathname, options) {
-            return this.archiving(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options && options.assets), appendTo: pathname }));
+            return this.archiving(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options.assets), appendTo: pathname }));
         }
         saveAs(filename, options) {
-            return this.archiving(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options && options.assets), filename }));
+            return this.archiving(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options.assets), filename }));
         }
         resourceAllToXml(options) {
             const result = {
@@ -8943,21 +8946,20 @@ var android = (function () {
         combineAssets(assets) {
             const userSettings = this.userSettings;
             const result = [];
-            if (assets) {
-                for (let i = 0, length = assets.length, first = true; i < length; ++i) {
-                    const item = assets[i];
-                    if (!item.uri) {
-                        if (first) {
-                            item.filename = userSettings.outputMainFileName;
-                            first = false;
-                        }
-                        else if (!item.filename.endsWith('.xml')) {
-                            item.filename += '.xml';
-                        }
+            for (let i = 0, length = assets.length, first = true; i < length; ++i) {
+                const item = assets[i];
+                if (item.content && !item.uri) {
+                    if (first) {
+                        item.filename = userSettings.outputMainFileName;
+                        first = false;
                     }
+                    else if (!item.filename.endsWith('.xml')) {
+                        item.filename += '.xml';
+                    }
+                    (item.document || (item.document = [])).push('android');
                 }
-                result.push(...assets);
             }
+            result.push(...assets);
             const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
             result.push(...getFileAssets(outputDirectory, this.resourceStringToXml()), ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()), ...getFileAssets(outputDirectory, this.resourceFontToXml()), ...getFileAssets(outputDirectory, this.resourceColorToXml()), ...getFileAssets(outputDirectory, this.resourceDimenToXml()), ...getFileAssets(outputDirectory, this.resourceStyleToXml()), ...getFileAssets(outputDirectory, this.resourceDrawableToXml()), ...getImageAssets(outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages), ...getFileAssets(outputDirectory, this.resourceAnimToXml()), ...getRawAssets(outputDirectory + this.directory.video, this.resourceRawVideoToString()), ...getRawAssets(outputDirectory + this.directory.audio, this.resourceRawAudioToString()));
             return result;
@@ -10401,7 +10403,7 @@ var android = (function () {
                                 if (value) {
                                     k = j;
                                     const { unit: unitOpposing, gap: gapOpposing } = horizontal ? row : column;
-                                    const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i]], 0);
+                                    const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i] || ''], 0);
                                     l = value === Infinity ? unit.length : 1;
                                     if (horizontal) {
                                         createSpacer(i, unitOpposing, gapOpposing, dimensions[1], dimensions[3], i < length - 1 ? gap : 0);

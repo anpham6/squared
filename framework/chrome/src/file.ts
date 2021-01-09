@@ -707,7 +707,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(data: PlainObject, options: FileActionOptions) {
+    public finalizeRequestBody(data: RequestData, options: FileActionOptions) {
         data.baseUrl = options.baseUrl;
         data.database = options.database;
         data.unusedStyles = options.unusedStyles;

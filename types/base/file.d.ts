@@ -116,6 +116,12 @@ interface CompressFormat {
     options?: PlainObject;
 }
 
+interface RequestData extends PlainObject {
+    assets?: FileAsset[];
+    database?: CloudDatabase[];
+    document?: string[];
+}
+
 interface ResponseData {
     success: boolean;
     data?: unknown;

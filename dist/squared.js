@@ -1,4 +1,4 @@
-/* squared 2.3.3
+/* squared 2.3.4
    https://github.com/anpham6/squared */
 
 var squared = (function (exports) {
@@ -5543,10 +5543,12 @@ var squared = (function (exports) {
         return !digits ? value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
     }
     function isPx(value) {
-        const length = value.length;
-        if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
-            const n = value.charCodeAt(length - 3);
-            return n >= 48 && n <= 57;
+        if (value) {
+            const length = value.length;
+            if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
+                const n = value.charCodeAt(length - 3);
+                return n >= 48 && n <= 57;
+            }
         }
         return false;
     }

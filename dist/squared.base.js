@@ -1,4 +1,4 @@
-/* squared.base 2.3.3
+/* squared.base 2.3.4
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -1867,6 +1867,13 @@ this.squared.base = (function (exports) {
                         return;
                     }
                 }
+                const documentName = new Set(options.document);
+                for (let i = 0, length = assets.length; i < length; ++i) {
+                    const document = assets[i].document;
+                    if (document) {
+                        document.forEach(value => documentName.add(value));
+                    }
+                }
                 const { outputTasks, outputWatch } = this.userSettings;
                 for (let i = 0; i < 2; ++i) {
                     const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
@@ -1903,6 +1910,9 @@ this.squared.base = (function (exports) {
                     }
                 }
                 const data = { assets };
+                if (documentName.size) {
+                    data.document = Array.from(documentName);
+                }
                 this.finalizeRequestBody(data, options);
                 return data;
             }
