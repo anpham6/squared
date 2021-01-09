@@ -12,6 +12,7 @@ import NodeList from './nodelist';
 type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 type SessionThreadData<T extends Node> = [Set<HTMLElement>, squared.base.AppProcessing<T>, Set<HTMLElement | ShadowRoot>, Undef<string[]>];
+type PromiseAll<T> = (values: readonly (T | PromiseLike<T>)[]) => Promise<T[]>;
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
@@ -31,6 +32,7 @@ const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*for
 const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
+const PROMISE_ALLSETTLED = typeof Promise.allSettled === 'function' ? Promise.allSettled.bind(Promise) as PromiseAll<unknown> : null;
 
 function parseImageUrl(resource: Null<Resource<Node>>, styleSheetHref: string, baseMap: StringMap, attrs: CssStyleAttr[]) {
     for (let i = 0, length = attrs.length; i < length; ++i) {
@@ -59,6 +61,22 @@ function parseImageUrl(resource: Null<Resource<Node>>, styleSheetHref: string, b
         }
         REGEXP_DATAURI.lastIndex = 0;
     }
+}
+
+function parseError(error: unknown) {
+    if (typeof error === 'string') {
+        return error;
+    }
+    if (error instanceof Error) {
+        return error.message;
+    }
+    if (error instanceof Event) {
+        error = error.target as HTMLImageElement;
+    }
+    if (error instanceof HTMLImageElement) {
+        return error.src;
+    }
+    return '';
 }
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
@@ -313,7 +331,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (preloadItems.length) {
             processing.initializing = true;
-            return Promise.all(preloadItems.map(item => {
+            return (PROMISE_ALLSETTLED || Promise.all)(preloadItems.map(item => {
                 return new Promise((success, error) => {
                     if (typeof item === 'string') {
                         fetch(item)
@@ -329,41 +347,47 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), data: await result.arrayBuffer() } as RawDataOptions);
                                 }
                             })
-                            .catch(() => error(item));
+                            .catch(err => error(err));
                     }
                     else {
                         item.addEventListener('load', () => success(item));
-                        item.addEventListener('error', () => error(item));
+                        item.addEventListener('error', err => error(err));
                     }
                 });
             }))
-            .then((result: (Null<HTMLImageElement | RawDataOptions>)[]) => {
+            .then((result: (Null<HTMLImageElement | RawDataOptions | PromiseSettledResult<unknown>>)[]) => {
+                let errors: Undef<string[]>;
                 for (let i = 0, length = result.length; i < length; ++i) {
-                    if (result[i]) {
-                        const item = preloadItems[i];
-                        if (typeof item === 'string') {
-                            resource!.addRawData(item, '', result[i] as RawDataOptions);
+                    let item = result[i];
+                    if (item) {
+                        if (PROMISE_ALLSETTLED) {
+                            if ((item as PromiseSettledResult<unknown>).status === 'rejected') {
+                                const message = parseError((item as PromiseRejectedResult).reason);
+                                if (message) {
+                                    (errors ||= []).push(message);
+                                }
+                                continue;
+                            }
+                            else {
+                                item = (item as PromiseFulfilledResult<HTMLImageElement | RawDataOptions>).value;
+                            }
+                        }
+                        const data = preloadItems[i];
+                        if (typeof data === 'string') {
+                            resource!.addRawData(data, '', item as RawDataOptions);
                         }
                         else {
-                            resource!.addImage(item);
+                            resource!.addImage(data);
                         }
                     }
+                }
+                if (errors) {
+                    (this.userSettings.showErrorMessages ? alert : console.log)(errors.length === 1 ? 'FAIL: ' + errors[0] : errors.map(value => '- FAIL: ' + value).join('\n'));
                 }
                 return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
             })
-            .catch((error: Error | Event | HTMLImageElement) => {
-                let message: Undef<string>;
-                if (error instanceof Error) {
-                    message = error.message;
-                }
-                else {
-                    if (error instanceof Event) {
-                        error = error.target as HTMLImageElement;
-                    }
-                    if (error instanceof HTMLImageElement) {
-                        message = error.src;
-                    }
-                }
+            .catch(err => {
+                const message = parseError(err);
                 return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded) : Promise.reject(new Error(message));
             });
         }
