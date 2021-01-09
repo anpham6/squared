@@ -628,7 +628,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         });
         for (const uri of ASSETS.image.keys()) {
-            this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
+            if (!result.find(item => item.uri === uri)) {
+                this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
+            }
         }
         for (const rawData of ASSETS.rawData.values()) {
             const { base64, filename, mimeType } = rawData;
@@ -655,6 +657,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     );
                     if (data) {
                         data.base64 = base64;
+                        if (!data.mimeType && data.filename.endsWith('.unknown')) {
+                            data.mimeType = 'image/unknown';
+                        }
                         if (commands && commands.length) {
                             data.commands ||= commands;
                         }

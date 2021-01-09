@@ -3925,10 +3925,12 @@ export function isPercent(value: string, digits?: boolean) {
 }
 
 export function isPx(value: string) {
-    const length = value.length;
-    if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
-        const n = value.charCodeAt(length - 3);
-        return n >= 48 && n <= 57;
+    if (value) {
+        const length = value.length;
+        if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
+            const n = value.charCodeAt(length - 3);
+            return n >= 48 && n <= 57;
+        }
     }
     return false;
 }
