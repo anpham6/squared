@@ -1044,7 +1044,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                             if (value) {
                                 k = j;
                                 const { unit: unitOpposing, gap: gapOpposing } = horizontal ? row : column;
-                                const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i]], 0);
+                                const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i] || ''], 0);
                                 l = value === Infinity ? unit.length : 1;
                                 if (horizontal) {
                                     createSpacer(

@@ -229,36 +229,29 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     const depth = seg.depth + (seg === node ? 1 : 0);
                     const fontFamily = seg.textStyle.fontFamily!;
                     const styleMap: CssStyleMap = { ...seg.unsafe<CssStyleMap>('styleMap') };
-                    if ('lineHeight' in styleMap) {
-                        delete styleMap.lineHeight;
-                    }
-                    const initialData: InitialData<T> = Object.freeze({ styleMap });
+                    delete styleMap.lineHeight;
+                    const initial: InitialData<T> = Object.freeze({ styleMap });
                     const cssData: CssStyleMap = {
                         position: 'static',
                         display: partition ? seg.display : 'inline',
                         verticalAlign: 'baseline',
                         ...seg.textStyle
                     };
-                    const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
-                    const boxRect: Partial<BoxRectDimension> = {
-                        top: bounds.top,
-                        right: bounds.right,
-                        bottom: bounds.bottom,
-                        left: bounds.left,
-                        height: Math.floor(seg.bounds.height / (bounds.numberOfLines || 1))
-                    };
+                    const boxRect: Partial<BoxRectDimension> = { ...!seg.hasPX('width') && seg.textBounds || seg.bounds };
+                    boxRect.height = Math.floor(seg.bounds.height / (boxRect.numberOfLines || 1));
+                    boxRect.numberOfLines = 1;
                     const createContainer = (tagName: string, value: string) => {
                         const container = application.createNode(sessionId, { parent: parentContainer });
+                        const metrics = getTextMetrics(value, fontSize, fontFamily);
+                        const bounds = { ...boxRect, width: (metrics ? metrics.width : 0) + (value.length * adjustment) } as BoxRectDimension;
                         container.init(parentContainer, depth);
                         container.inlineText = true;
                         container.renderExclude = false;
                         container.contentAltered = true;
                         container.textContent = value;
                         container.actualParent = parentContainer;
-                        container.unsafe('element', element);
-                        container.unsafe('initial', initialData);
-                        container.unsafe('elementData', elementData);
-                        container.unsafe('preferInitial', false);
+                        container.textBounds = bounds;
+                        container.unsafe({ element, initial, elementData, preferInitial: false, bounds });
                         container.setCacheState('naturalChild', false);
                         container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
                         container.setCacheState('htmlElement', naturalElement);
@@ -267,10 +260,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         container.setCacheValue('fontSize', fontSize);
                         container.setCacheValue('lineHeight', lineHeight);
                         container.cssApply(cssData);
-                        const metrics = getTextMetrics(value, fontSize, fontFamily);
-                        const textBounds = { ...boxRect, width: (metrics ? metrics.width : 0) + (value.length * adjustment) } as BoxRectDimension;
-                        container.textBounds = textBounds;
-                        container.unsafe('bounds', textBounds);
                         container.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.TEXT);
                         container.exclude({ resource: NODE_RESOURCE.BOX_STYLE, section: APP_SECTION.DOM_TRAVERSE | APP_SECTION.EXTENSION });
                         return container;

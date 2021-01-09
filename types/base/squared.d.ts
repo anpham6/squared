@@ -562,11 +562,12 @@ declare module "base" {
         get checked(): boolean;
         get boundingClientRect(): Null<DOMRect>;
         get preserveWhiteSpace(): boolean;
+        get style(): CSSStyleDeclaration;
         get cssStyle(): CssStyleMap;
         get textStyle(): CssStyleMap;
         get elementData(): Null<ElementData>;
         get center(): Point;
-        get style(): CSSStyleDeclaration;
+        get initial(): Null<InitialData<Node>>;
         constructor(id: number, sessionId?: string, element?: Element, children?: Node[]);
     }
 
@@ -606,15 +607,15 @@ declare module "base" {
         alignParent(position: AnchorPositionAttr): boolean;
         alignSibling(position: AnchorPositionAttr, documentId?: string): string;
         localizeString(value: string): string;
-        inherit(node: Node, ...modules: string[]): Undef<StandardMap>;
-        inheritApply(module: string, data: StandardMap): void;
+        inherit(node: Node, ...modules: string[]): Null<PlainObject>;
+        inheritApply(module: string, data: PlainObject): void;
         clone(id: number): void;
         cloneBase(node: NodeUI): void;
         is(containerType: number): boolean;
         of(containerType: number, ...alignmentType: number[]): boolean;
         namespace(name: string): StringMap;
         namespaces(): [string, StringMap][];
-        unsafe<T = unknown>(name: string, value?: any): Undef<T>;
+        unsafe<T = unknown>(name: string | PlainObject, value?: any): Undef<T>;
         delete(name: string, ...attrs: string[]): void;
         apply(options: PlainObject): void;
         lockAttr(name: string, attr: string): void;

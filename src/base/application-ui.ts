@@ -1272,15 +1272,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const inlineAbove: T[] = [];
         const leftAbove: T[] = [];
         const rightAbove: T[] = [];
-        let leftBelow: Undef<T[]>,
+        let boxStyle: Null<StandardMap> = null,
+            leftBelow: Undef<T[]>,
             rightBelow: Undef<T[]>,
             leftSub: Undef<T[] | T[][]>,
             rightSub: Undef<T[] | T[][]>,
             inlineBelow: Undef<T[]>,
             inheritStyle: Undef<boolean>,
             clearing: Undef<boolean>,
-            clearedFloat: Undef<boolean>,
-            boxStyle: Undef<StandardMap>;
+            clearedFloat: Undef<boolean>;
         layout.each((node, index) => {
             const float = node.float;
             if (clearing && float === 'left') {

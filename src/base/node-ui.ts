@@ -537,8 +537,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return Object.entries(this._namespaces);
     }
 
-    public unsafe<U = unknown>(name: string, value?: any): Undef<U> {
-        return (arguments.length === 1 ? this['_' + name] : this['_' + name] = value) as Undef<U>;
+    public unsafe<U = unknown>(name: string | PlainObject, value?: any): Undef<U> {
+        if (arguments.length === 1) {
+            if (typeof name === 'string') {
+                return this['_' + name] as Undef<U>;
+            }
+            for (const attr in name) {
+                this['_' + attr] = name[attr];
+            }
+        }
+        else {
+            return this['_' + name] = value as Undef<U>;
+        }
     }
 
     public lockAttr(name: string, attr: string) {
@@ -598,7 +608,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public inherit(node: T, ...modules: string[]) {
-        let result: Undef<StandardMap>;
+        let result: Null<PlainObject> = null;
         for (const module of modules) {
             switch (module) {
                 case 'base': {
@@ -617,7 +627,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'initial':
-                    if (result = node.unsafe<InitialData<T>>('initial')) {
+                    if (result = node.initial) {
                         this.inheritApply('initial', result);
                     }
                     break;
@@ -724,7 +734,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    public inheritApply(module: string, data: StandardMap) {
+    public inheritApply(module: string, data: PlainObject) {
         switch (module) {
             case 'initial':
                 this._initial = this._initial ? cloneObject<InitialData<T>>(data, { target: this._initial }) : { ...data };

@@ -938,6 +938,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         if (keys.length) {
                             parseImageUrl(resource, item.parentStyleSheet?.href || location.href, baseMap, keys);
                         }
+                        break;
                     }
                     case CSSRule.FONT_FACE_RULE:
                         this.applyStyleRule(item, '', document);

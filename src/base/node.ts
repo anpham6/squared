@@ -3234,4 +3234,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             y: (bounds.top + bounds.bottom) / 2
         };
     }
+
+    get initial() {
+        return this._initial;
+    }
 }
