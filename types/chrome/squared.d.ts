@@ -3,9 +3,14 @@ import * as squared from '../squared';
 type Node = squared.base.Node;
 
 declare namespace base {
+    interface AppSession<T extends Node> extends squared.base.AppSession<T> {
+        unusedStyles: Set<string>;
+    }
+
     class Application<T extends Node> extends squared.base.Application<T> {
         userSettings: UserResourceSettings;
         builtInExtensions: Map<string, Extension<T>>;
+        readonly session: AppSession<T>;
         readonly extensions: Extension<T>[];
         createNode(sessionId: string, options: CreateNodeOptions): T;
     }

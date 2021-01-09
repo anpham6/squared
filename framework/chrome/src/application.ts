@@ -6,6 +6,7 @@ const { isPlainObject } = squared.lib.util;
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public userSettings!: UserResourceSettings;
     public builtInExtensions!: Map<string, Extension<T>>;
+    public readonly session!: chrome.base.AppSession<T>;
     public readonly extensions: Extension<T>[] = [];
     public readonly systemName = 'chrome';
 
@@ -14,7 +15,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     }
 
     public reset() {
-        this.session.unusedStyles!.clear();
+        this.session.unusedStyles.clear();
         super.reset();
     }
 
@@ -48,11 +49,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         options = !isPlainObject(options) ? {} : { ...options };
         options.saveAsWebPage = true;
         const fileHandler = this.fileHandler!;
-        if (options.removeUnusedStyles) {
-            const unusedStyles = Array.from(this.session.unusedStyles!);
-            if (unusedStyles.length) {
-                options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
-            }
+        if (options.removeUnusedStyles && this.session.unusedStyles.size) {
+            const unusedStyles = Array.from(this.session.unusedStyles);
+            options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
         }
         if (options.configUri) {
             const assetMap = new Map<Element, StandardMap>();
@@ -62,7 +61,6 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             const config = await fileHandler.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
-                    const data = config.data as AssetCommand[];
                     const paramMap = new Map<string, [RegExp, string]>();
                     if (location.href.includes('?')) {
                         new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value]));
@@ -94,7 +92,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                         }
                         return param;
                     };
-                    for (const item of data) {
+                    for (const item of config.data as AssetCommand[]) {
                         if (item.selector) {
                             const cloudDatabase = item.cloudDatabase;
                             if (cloudDatabase && paramMap.size) {
