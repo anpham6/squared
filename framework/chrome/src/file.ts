@@ -28,7 +28,7 @@ const { FILE } = squared.lib.regex;
 
 const ASSETS = squared.base.Resource.ASSETS;
 
-const { convertWord, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, splitPair, splitPairStart, trimEnd } = squared.lib.util;
+const { convertWord, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, trimEnd } = squared.lib.util;
 
 const { appendSeparator, parseWatchInterval } = squared.base.lib.util;
 
@@ -96,7 +96,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
 }
 
 function assignFilename(value: string, ext?: string) {
-    ext ||= getFileExt(value);
+    ext ||= value && getFileExt(value);
     return DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : 'unknown');
 }
 
@@ -292,7 +292,7 @@ function getPageFilename() {
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getTasks = (element: HTMLElement) => element.dataset.chromeTasks?.trim().split(/\s*\+\s*/);
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
-const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').trim().toLowerCase() : '';
+const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
 const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
 const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
@@ -350,7 +350,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 rootDir: Undef<string>,
                 moveTo: Undef<string>;
             if (file && saveTo) {
-                [moveTo, pathname, filename] = getFilePath(appendSeparator(file, DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : '')));
+                [moveTo, pathname, filename] = getFilePath(file, true, ext);
             }
             else if (!local) {
                 pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
@@ -633,13 +633,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         for (const rawData of ASSETS.rawData.values()) {
-            const { base64, filename, mimeType } = rawData;
+            const { base64, mimeType } = rawData;
+            const filename = assignFilename(rawData.filename);
             if (base64) {
                 if (saveAsBase64) {
                     let commands: Undef<string[]>;
                     if (mimeType && mimeType.startsWith('image/') && (commands = saveAsBase64.commands)) {
                         for (let i = 0; i < commands.length; ++i) {
-                            const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)([\S\s]*)$/.exec(commands[i]);
+                            const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
                             if (match) {
                                 commands[i] = match[1] + '@' + match[2].trim();
                             }
@@ -651,12 +652,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     const data = this.processImageUri(
                         result,
                         null,
-                        resolvePath(getFilePath(appendSeparator(saveAsBase64.pathname, filename))[1] + '/' + filename, location.href),
+                        resolvePath(saveAsBase64.pathname ? appendSeparator(saveAsBase64.pathname, filename) : filename, location.href),
                         saveAsImage,
                         preserveCrossOrigin
                     );
                     if (data) {
                         data.base64 = base64;
+                        if (!data.mimeType && data.filename.endsWith('.unknown')) {
+                            data.mimeType = 'image/unknown';
+                        }
                         if (commands && commands.length) {
                             data.commands ||= commands;
                         }
