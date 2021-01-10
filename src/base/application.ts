@@ -12,7 +12,6 @@ import NodeList from './nodelist';
 type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
 type SessionThreadData<T extends Node> = [Set<HTMLElement>, squared.base.AppProcessing<T>, Set<HTMLElement | ShadowRoot>, Undef<string[]>];
-type PromiseAll<T> = (values: readonly (T | PromiseLike<T>)[]) => Promise<T[]>;
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
@@ -20,7 +19,7 @@ const { FILE, STRING } = squared.lib.regex;
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
@@ -32,7 +31,6 @@ const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*for
 const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
-const PROMISE_ALLSETTLED = typeof Promise.allSettled === 'function' ? Promise.allSettled.bind(Promise) as PromiseAll<unknown> : null;
 
 function parseImageUrl(resource: Null<Resource<Node>>, styleSheetHref: string, baseMap: StringMap, attrs: CssStyleAttr[]) {
     for (let i = 0, length = attrs.length; i < length; ++i) {
@@ -331,7 +329,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (preloadItems.length) {
             processing.initializing = true;
-            return (PROMISE_ALLSETTLED || Promise.all)(preloadItems.map(item => {
+            return (Promise.allSettled || allSettled)(preloadItems.map(item => {
                 return new Promise((success, error) => {
                     if (typeof item === 'string') {
                         fetch(item)
@@ -355,40 +353,29 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 });
             }))
-            .then((result: (Null<HTMLImageElement | RawDataOptions | PromiseSettledResult<unknown>>)[]) => {
+            .then((result: PromiseSettledResult<HTMLImageElement | RawDataOptions>[]) => {
                 let errors: Undef<string[]>;
                 for (let i = 0, length = result.length; i < length; ++i) {
-                    let item = result[i];
-                    if (item) {
-                        if (PROMISE_ALLSETTLED) {
-                            if ((item as PromiseSettledResult<unknown>).status === 'rejected') {
-                                const message = parseError((item as PromiseRejectedResult).reason);
-                                if (message) {
-                                    (errors ||= []).push(message);
-                                }
-                                continue;
-                            }
-                            else {
-                                item = (item as PromiseFulfilledResult<HTMLImageElement | RawDataOptions>).value;
-                            }
+                    const item = result[i];
+                    if (item.status === 'rejected') {
+                        const message = parseError(item.reason);
+                        if (message) {
+                            (errors ||= []).push('FAIL: ' + message);
                         }
-                        const data = preloadItems[i];
-                        if (typeof data === 'string') {
-                            resource!.addRawData(data, '', item as RawDataOptions);
-                        }
-                        else {
-                            resource!.addImage(data);
-                        }
+                        continue;
+                    }
+                    const data = preloadItems[i];
+                    if (typeof data === 'string') {
+                        resource!.addRawData(data, '', (item as PromiseFulfilledResult<unknown>).value as RawDataOptions);
+                    }
+                    else {
+                        resource!.addImage(data);
                     }
                 }
                 if (errors) {
-                    (this.userSettings.showErrorMessages ? alert : console.log)(errors.length === 1 ? 'FAIL: ' + errors[0] : errors.map(value => '- FAIL: ' + value).join('\n')); // eslint-disable-line no-console
+                    (this.userSettings.showErrorMessages ? alert : console.log)(errors.length === 1 ? errors[0] : errors.map(value => '- ' + value).join('\n')); // eslint-disable-line no-console
                 }
                 return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
-            })
-            .catch(err => {
-                const message = parseError(err);
-                return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded) : Promise.reject(new Error(message));
             });
         }
         return Promise.resolve(this.resumeSessionThread(rootElements, processing, elements.length));

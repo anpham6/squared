@@ -134,10 +134,6 @@ const EXT_DATA = {
     zip: 'application/zip'
 };
 
-export function parseMimeType(value: string) {
-    return EXT_DATA[splitPairEnd(splitPairStart(value, '?'), '.', true, true) || value] as string || '';
-}
-
 export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
         return new Promise((resolve, reject) => {
@@ -149,6 +145,14 @@ export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
             }
         });
     };
+}
+
+export function allSettled<T>(values: readonly (T | PromiseLike<T>)[]) {
+    return Promise.all(values.map((promise: Promise<T>) => promise.then(value => ({ status: 'fulfilled', value })).catch(reason => ({ status: 'rejected', reason })) as Promise<PromiseSettledResult<T>>));
+}
+
+export function parseMimeType(value: string) {
+    return EXT_DATA[splitPairEnd(splitPairStart(value, '?'), '.', true, true) || value] as string || '';
 }
 
 export function hasKeys(obj: PlainObject) {

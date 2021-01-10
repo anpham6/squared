@@ -226,11 +226,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const item = items[i];
             itemArray[j++] = { name: item[0], innerText: item[1] };
         }
-        return this.checkFileAssets([
-            replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true),
-            this.directory.string,
-            'strings.xml'
-        ], options);
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'strings.xml'], options);
     }
 
     public resourceStringArrayToXml(options?: FileUniversalOptions): string[] {
@@ -242,11 +238,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const item = items[i];
                 itemArray[i] = { name: item[0], item: plainMap(item[1], innerText => ({ innerText })) };
             }
-            return this.checkFileAssets([
-                replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true),
-                this.directory.string,
-                'string_arrays.xml'
-            ], options);
+            return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'string_arrays.xml'], options);
         }
         return [];
     }
@@ -294,7 +286,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
                 result[j++] = targetAPI < BUILD_VERSION.OREO ? output.replace(/\s+android:/g, ' app:') : output;
                 result[j++] = pathname;
-                result[j++] = `${name}.xml`;
+                result[j++] = name + '.xml';
             }
             return this.checkFileAssets(result, options);
         }
@@ -310,11 +302,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const item = items[i];
                 itemArray[i] = { name: item[1], innerText: item[0] };
             }
-            return this.checkFileAssets([
-                replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces),
-                this.directory.string,
-                'colors.xml'
-            ], options);
+            return this.checkFileAssets([replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'colors.xml'], options);
         }
         return [];
     }
@@ -330,15 +318,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     item: plainMap(style.items.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
                 });
             }
-            result.push(
-                replaceTab(applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]), this.userSettings.insertSpaces),
-                this.directory.string,
-                'styles.xml'
-            );
+            result.push(replaceTab(applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'styles.xml');
         }
         if (STORED.themes.size) {
             const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
-            const dpUnit = convertPixels === 'dp';
             const appTheme: ObjectMap<boolean> = {};
             for (const data of STORED.themes) {
                 const filename = data[0];
@@ -360,11 +343,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                     if (itemArray.length) {
                         const value = applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]);
-                        result.push(
-                            replaceTab(dpUnit ? value.replace(/>(-?[\d.]+)px</g, (...capture: string[]) => `>${capture[1]}dp<`) : value, insertSpaces),
-                            match[1],
-                            match[2]
-                        );
+                        result.push(replaceTab(convertPixels === 'dp' ? value.replace(/>(-?[\d.]+)px</g, (...capture: string[]) => `>${capture[1]}dp<`) : value, insertSpaces), match[1], match[2]);
                     }
                 }
             }
@@ -394,16 +373,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceDrawableToXml(options?: FileUniversalOptions): string[] {
         const length = STORED.drawables.size;
         if (length) {
-            const userSettings = this.userSettings;
-            const insertSpaces = userSettings.insertSpaces;
-            const convertPixels = userSettings.convertPixels === 'dp';
+            const { insertSpaces, convertPixels } = this.userSettings;
             const directory = this.directory.image;
             const result: string[] = new Array(length * 3);
             let i = 0;
             for (const data of STORED.drawables) {
-                result[i++] = replaceTab(convertPixels ? data[1].replace(/"(-?[\d.]+)px"/g, (...match: string[]) => `"${match[1]}dp"`) : data[1], insertSpaces);
+                result[i++] = replaceTab(convertPixels === 'dp' ? data[1].replace(/"(-?[\d.]+)px"/g, (...match: string[]) => `"${match[1]}dp"`) : data[1], insertSpaces);
                 result[i++] = directory;
-                result[i++] = `${data[0]}.xml`;
+                result[i++] = data[0] + '.xml';
             }
             return this.checkFileAssets(result, options);
         }
@@ -419,7 +396,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const data of STORED.animators) {
                 result[i++] = replaceTab(data[1], insertSpaces);
                 result[i++] = 'res/anim';
-                result[i++] = `${data[0]}.xml`;
+                result[i++] = data[0] + '.xml';
             }
             return this.checkFileAssets(result, options);
         }
@@ -486,7 +463,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const { content, filename, pathname } = layouts[i];
             result[filename] = [content];
             if (hasFileAction(options)) {
-                assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : `${filename}.xml`, content } as FileAsset);
+                assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : filename + '.xml', content } as FileAsset);
             }
         }
         if (hasFileAction(options)) {
@@ -521,7 +498,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 else if (!item.filename.endsWith('.xml')) {
                     item.filename += '.xml';
                 }
-                item.document ||= 'android';
+                item.document ||= userSettings.outputDocumentHandler;
             }
         }
         result.push(...assets);
