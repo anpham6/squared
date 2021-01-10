@@ -316,13 +316,11 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
             const pseudo = pseudoList[i];
             switch (pseudo) {
                 case ':first-child':
-                case ':nth-child(1)':
                     if (this !== parent!.firstElementChild) {
                         return false;
                     }
                     break;
                 case ':last-child':
-                case ':nth-last-child(1)':
                     if (this !== parent!.lastElementChild) {
                         return false;
                     }

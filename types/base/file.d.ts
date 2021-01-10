@@ -34,6 +34,7 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
 interface TaskAction {
     handler: string;
     task: string;
+    preceding?: boolean;
 }
 
 interface OutputAction {

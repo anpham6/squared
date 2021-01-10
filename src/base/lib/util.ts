@@ -454,9 +454,10 @@ export function parseTask(value: Undef<string>) {
     if (value) {
         const result: TaskAction[] = [];
         for (const item of value.split('+')) {
-            const [handler, task] = splitPair(item, ':', true);
-            if (handler && task) {
-                result.push({ handler, task });
+            const [handler, command] = splitPair(item, ':', true);
+            if (handler && command) {
+                const [task, preceding] = splitPair(command, ':', true);
+                result.push({ handler, task, preceding: preceding === 'true' });
             }
         }
         return result;

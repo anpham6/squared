@@ -6,6 +6,7 @@
     - beautify
   tasks:
     - { handler: "gulp", task: "minify" }
+    - { handler: "gulp", task: "beautify", preceding: true }
   compress:
     - format: gz
     - format: br
