@@ -276,10 +276,19 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 }
             }
             const documentName = new Set(options.document);
+            const taskName = new Set<string>();
             for (let i = 0, length = assets.length; i < length; ++i) {
-                const document = assets[i].document;
+                const { document, tasks } = assets[i];
                 if (document) {
-                    document.forEach(value => documentName.add(value));
+                    if (Array.isArray(document)) {
+                        document.forEach(value => documentName.add(value));
+                    }
+                    else {
+                        documentName.add(document);
+                    }
+                }
+                if (tasks) {
+                    tasks.forEach(item => taskName.add(item.handler));
                 }
             }
             const { outputTasks, outputWatch } = this.userSettings;
@@ -294,20 +303,27 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         for (let j = 0; j < length; ++j) {
                             const item = unassigned[j];
                             if (glob.test(appendSeparator(item.pathname, item.filename))) {
-                                const value = output[module];
                                 if (i === 0) {
+                                    const value = output[module] as TaskAction | TaskAction[];
                                     item.tasks ||= [];
-                                    if (typeof value === 'string') {
-                                        item.tasks.push(value);
+                                    if (Array.isArray(value)) {
+                                        for (const task of value) {
+                                            item.tasks.push(task);
+                                            taskName.add(task.handler);
+                                        }
                                     }
-                                    else if (Array.isArray(value)) {
-                                        item.tasks.push(...value);
+                                    else if (isPlainObject(value)) {
+                                        item.tasks.push(value);
+                                        taskName.add(value.handler);
                                     }
                                 }
-                                else if (value === true || isPlainObject<WatchInterval>(value) && (value.interval || value.expires)) {
-                                    item.watch = value;
-                                    unassigned.splice(j--, 1);
-                                    --length;
+                                else {
+                                    const value = output[module] as WatchInterval | boolean;
+                                    if (value === true || isPlainObject<WatchInterval>(value) && (value.interval || value.expires)) {
+                                        item.watch = value;
+                                        unassigned.splice(j--, 1);
+                                        --length;
+                                    }
                                 }
                             }
                         }
@@ -320,6 +336,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
             const data: RequestData = { assets };
             if (documentName.size) {
                 data.document = Array.from(documentName);
+            }
+            if (taskName.size) {
+                data.task = Array.from(taskName);
             }
             this.finalizeRequestBody(data, options);
             return data;

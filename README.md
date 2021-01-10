@@ -197,11 +197,12 @@ squared.settings = {
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputMainFileName: 'activity_main.xml',
     outputDirectory: 'app/src/main',
+    outputDocumentHandler: 'android',
     outputEmptyCopyDirectory: false,
-    outputTasks: {} // { "**/drawable/*.xml": ["minify"] }
-    outputWatch: {} // { "**/drawable/*.png": true, **/drawable/*.jpg": { interval: 1000, expires: '2h' } } (NOTE: Only applicabale to raw assets)
+    outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify"} }
+    outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (NOTE: Only applicabale to raw assets)
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip' // zip | tar | gz/tgz
+    outputArchiveFormat: 'zip' // zip | 7z | gz | tar
 };
 ```
 
@@ -218,11 +219,12 @@ squared.settings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
     showErrorMessages: false,
+    outputDocumentHandler: 'chrome',
     outputEmptyCopyDirectory: false,
-    outputTasks: {} // { "*.js": "minify" }
+    outputTasks: {} // { "*.js": [{ handler: "gulp", task: "minify" }, { handler: "gulp", task: "beautify" }] }
     outputWatch: {} // { "*": true }
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip' // zip | tar | gz/tgz
+    outputArchiveFormat: 'zip'
 };
 ```
 

@@ -17,5 +17,6 @@ interface UriOptions {
     format?: string;
     inline?: boolean;
     preserveCrossOrigin?: boolean;
+    document?: string | string[];
     fromConfig?: boolean;
 }

@@ -127,7 +127,7 @@ declare namespace base {
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
         get watch(): Undef<WatchInterval>;
-        get tasks(): Undef<string[]>;
+        get tasks(): Undef<TaskAction[]>;
         get target(): Null<HTMLElement>;
         get support(): SupportUI;
     }

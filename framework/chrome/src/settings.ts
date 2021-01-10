@@ -8,6 +8,7 @@ const settings: UserResourceSettings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
     showErrorMessages: false,
+    outputDocumentHandler: 'chrome',
     outputEmptyCopyDirectory: false,
     outputTasks: {},
     outputWatch: {},

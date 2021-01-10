@@ -13,6 +13,7 @@ interface UserResourceSettings extends UserSettings {
     outputTasks: ObjectMap<string | string[]>;
     outputWatch: ObjectMap<boolean | WatchInterval>;
     outputEmptyCopyDirectory: boolean;
+    outputDocumentHandler: string | string[];
     outputArchiveFormat: string;
     outputArchiveName: string;
 }

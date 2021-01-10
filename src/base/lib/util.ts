@@ -1,3 +1,5 @@
+const { splitPair } = squared.lib.util;
+
 interface XMLTagData {
     tag: string;
     tagName: string;
@@ -446,6 +448,19 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
             }
         }) + '$';
     return new GlobExp(source, flags, value[0] === '!') as IGlobExp;
+}
+
+export function parseTask(value: Undef<string>) {
+    if (value) {
+        const result: TaskAction[] = [];
+        for (const item of value.split('+')) {
+            const [handler, task] = splitPair(item, ':', true);
+            if (handler && task) {
+                result.push({ handler, task });
+            }
+        }
+        return result;
+    }
 }
 
 export function parseWatchInterval(value: Undef<string>) {

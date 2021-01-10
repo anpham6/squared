@@ -5,7 +5,7 @@
     - transform
     - beautify
   tasks:
-    - minify
+    - { handler: "gulp", task: "minify" }
   compress:
     - format: gz
     - format: br

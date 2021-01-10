@@ -55,6 +55,7 @@ const settings: UserResourceSettingsUI = {
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputMainFileName: 'activity_main.xml',
     outputDirectory: 'app/src/main',
+    outputDocumentHandler: 'android',
     outputEmptyCopyDirectory: false,
     outputTasks: {},
     outputWatch: {},

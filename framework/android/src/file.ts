@@ -33,7 +33,7 @@ const { fromMimeType } = squared.base.lib.util;
 
 const STORED = Resource.STORED;
 
-function getFileAssets(pathname: string, items: string[]) {
+function getFileAssets(pathname: string, items: string[], document: string | string[] = 'android') {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
@@ -42,7 +42,7 @@ function getFileAssets(pathname: string, items: string[]) {
                 pathname: pathname + items[i + 1],
                 filename: items[i + 2],
                 content: items[i],
-                document: ['android']
+                document: copyDocument(document)
             };
         }
         return result;
@@ -50,13 +50,13 @@ function getFileAssets(pathname: string, items: string[]) {
     return items as [];
 }
 
-function getImageAssets(pathname: string, items: string[], convertImages: string, compressing: boolean) {
+function getImageAssets(this: Resource<View>, pathname: string, items: string[], convertImages: string, compressing: boolean, document: string | string[] = 'android') {
     const length = items.length;
     if (length) {
-        const result: FileAsset[] = new Array(length / 4);
-        for (let i = 0, j = 0; i < length; i += 4) {
+        const result: FileAsset[] = new Array(length / 3);
+        for (let i = 0, j = 0; i < length; i += 3) {
+            const uri = items[i];
             const filename = items[i + 2];
-            const task = items[i + 3];
             let mimeType: Undef<string>,
                 commands: Undef<string[]>,
                 compress: Undef<CompressFormat[]>;
@@ -94,15 +94,16 @@ function getImageAssets(pathname: string, items: string[], convertImages: string
                         break;
                 }
             }
+            const image = this.getImage(uri);
             result[j++] = {
                 pathname: pathname + items[i + 1],
                 filename,
                 mimeType,
                 commands,
                 compress,
-                uri: items[i],
-                document: ['android'],
-                tasks: task ? task.split('+') : undefined
+                uri,
+                document: copyDocument(document),
+                tasks: image && image.tasks
             };
         }
         return result;
@@ -110,19 +111,20 @@ function getImageAssets(pathname: string, items: string[], convertImages: string
     return items as [];
 }
 
-function getRawAssets(pathname: string, items: string[]) {
+function getRawAssets(this: Resource<View>, name: "video" | "audio", pathname: string, items: string[], document: string | string[] = 'android') {
     const length = items.length;
     if (length) {
-        const result: FileAsset[] = new Array(length / 4);
-        for (let i = 0, j = 0; i < length; i += 4) {
-            const task = items[i + 3];
+        const result: FileAsset[] = new Array(length / 3);
+        for (let i = 0, j = 0; i < length; i += 3) {
+            const uri = items[i];
+            const rawData = name === 'video' ? this.getVideo(uri) : this.getAudio(uri);
             result[j++] = {
                 pathname,
                 filename: items[i + 2].toLowerCase(),
                 mimeType: items[i + 1],
-                uri: items[i],
-                document: ['android'],
-                tasks: task ? task.split('+') : undefined
+                uri,
+                document: copyDocument(document),
+                tasks: rawData && rawData.tasks
             };
         }
         return result;
@@ -135,6 +137,7 @@ function getOutputDirectory(value: string) {
     return value + (!value.endsWith('/') ? '/' : '');
 }
 
+const copyDocument = (value: string | string[]) => Array.isArray(value) ? value.slice(0) : value;
 const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
@@ -174,16 +177,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (hasFileAction(options)) {
             const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
             const assets: FileAsset[] = [];
+            const resource = this.resource;
             for (const name in result) {
                 switch (name) {
                     case 'drawableImage':
-                        assets.push(...getImageAssets(outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
+                        assets.push(...getImageAssets.call(resource, outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
                         break;
                     case 'rawVideo':
-                        assets.push(...getRawAssets(outputDirectory + this.directory.video, result[name]));
+                        assets.push(...getRawAssets.call(resource, 'video', outputDirectory + this.directory.video, result[name]));
                         break;
                     case 'rawAudio':
-                        assets.push(...getRawAssets(outputDirectory + this.directory.audio, result[name]));
+                        assets.push(...getRawAssets.call(resource, 'audio', outputDirectory + this.directory.audio, result[name]));
                         break;
                     default:
                         assets.push(...getFileAssets(outputDirectory, result[name]));
@@ -424,13 +428,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public resourceDrawableImageToString(options?: FileUniversalOptions): string[] {
         if (STORED.images.size) {
-            const resource = this.resource;
             const imageDirectory = this.directory.image;
             const result: string[] = [];
-            const getTask = (src: string) => {
-                const image = resource.getImage(src);
-                return image && image.tasks ? image.tasks.join('+') : '';
-            };
             for (const data of STORED.images) {
                 const images = data[1];
                 if (Object.keys(images).length > 1) {
@@ -439,8 +438,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         result.push(
                             value,
                             imageDirectory + '-' + dpi,
-                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown'),
-                            getTask(value)
+                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }
@@ -450,14 +448,13 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         result.push(
                             value,
                             imageDirectory,
-                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown'),
-                            getTask(value)
+                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }
             }
             if (hasFileAction(options)) {
-                const assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
+                const assets = getImageAssets.call(this.resource, getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
                 if (options.assets) {
                     assets.push(...options.assets);
                 }
@@ -512,7 +509,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     protected combineAssets(assets: FileAsset[]) {
-        const userSettings = this.userSettings;
+        const { userSettings, resource } = this;
         const result: FileAsset[] = [];
         for (let i = 0, length = assets.length, first = true; i < length; ++i) {
             const item = assets[i];
@@ -524,7 +521,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 else if (!item.filename.endsWith('.xml')) {
                     item.filename += '.xml';
                 }
-                (item.document ||= []).push('android');
+                item.document ||= 'android';
             }
         }
         result.push(...assets);
@@ -537,10 +534,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             ...getFileAssets(outputDirectory, this.resourceDimenToXml()),
             ...getFileAssets(outputDirectory, this.resourceStyleToXml()),
             ...getFileAssets(outputDirectory, this.resourceDrawableToXml()),
-            ...getImageAssets(outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
+            ...getImageAssets.call(resource, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
             ...getFileAssets(outputDirectory, this.resourceAnimToXml()),
-            ...getRawAssets(outputDirectory + this.directory.video, this.resourceRawVideoToString()),
-            ...getRawAssets(outputDirectory + this.directory.audio, this.resourceRawAudioToString())
+            ...getRawAssets.call(resource, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString()),
+            ...getRawAssets.call(resource, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString())
         );
         return result;
     }
@@ -565,22 +562,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
     private resourceRawToString(name: "video" | "audio", options?: FileUniversalOptions) {
         const length = Resource.ASSETS[name].size;
         if (length) {
-            const resource = this.resource;
-            const getTask = (src: string) => {
-                const asset = name === 'video' ? resource.getVideo(src) : resource.getAudio(src);
-                return asset && asset.tasks ? asset.tasks.join('+') : '';
-            };
-            const result: string[] = new Array(length * 4);
+            const result: string[] = new Array(length * 3);
             let i = 0;
             for (const item of Resource.ASSETS[name].values()) {
                 const uri = item.uri!;
                 result[i++] = uri;
                 result[i++] = item.mimeType || '';
                 result[i++] = fromLastIndexOf(uri, '/', '\\');
-                result[i++] = getTask(uri);
             }
             if (hasFileAction(options)) {
-                const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
+                const assets = getRawAssets.call(this.resource, name, getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
                 if (options.assets) {
                     assets.push(...options.assets);
                 }

@@ -1,6 +1,6 @@
 interface ElementScope {
     watch?: boolean | WatchInterval;
-    tasks?: string[];
+    tasks?: TaskAction[];
 }
 
 interface Asset extends ElementScope {
@@ -31,11 +31,16 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
+interface TaskAction {
+    handler: string;
+    task: string;
+}
+
 interface OutputAction {
     moveTo?: string;
     commands?: string[];
     compress?: CompressFormat[];
-    document?: string[];
+    document?: string | string[];
     cloudStorage?: CloudStorage[];
 }
 
@@ -120,6 +125,7 @@ interface RequestData extends PlainObject {
     assets?: FileAsset[];
     database?: CloudDatabase[];
     document?: string[];
+    task?: string[];
 }
 
 interface ResponseData {

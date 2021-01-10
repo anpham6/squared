@@ -8,7 +8,7 @@
       "beautify"
     ],
     "tasks": [
-      "minify"
+      { "handler": "gulp", "task": "minify" }
     ],
     "compress": [
       {
