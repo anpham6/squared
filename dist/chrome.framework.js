@@ -1,4 +1,4 @@
-/* chrome-framework 2.3.4
+/* chrome-framework 2.3.5
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -862,7 +862,7 @@ var chrome = (function () {
             }
             const [scriptAssets, templateMap] = this.getScriptAssets(options);
             assets.push(...scriptAssets, ...this.getImageAssets(options), ...this.getVideoAssets(options), ...this.getAudioAssets(options), ...this.getRawAssets('object', options), ...this.getRawAssets('embed', options), ...this.getRawAssets('iframe', options), ...this.getFontAssets(options));
-            options.assets = assets;
+            options.assets = options.assets ? assets.concat(options.assets) : assets;
             options.baseUrl = location.href;
             if (templateMap) {
                 options.templateMap = templateMap;

@@ -834,7 +834,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ...this.getRawAssets('iframe', options),
             ...this.getFontAssets(options)
         );
-        options.assets = assets;
+        options.assets = options.assets ? assets.concat(options.assets) : assets;
         options.baseUrl = location.href;
         if (templateMap) {
             options.templateMap = templateMap;
