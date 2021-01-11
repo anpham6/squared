@@ -215,6 +215,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const documentRoot: HTMLElement = rootElements.values().next().value;
         const preloadItems: PreloadItem[] = [];
+        const preloadMap = new Set<string>();
         let preloaded: Undef<HTMLImageElement[]>;
         const parseSrcSet = (value: string) => {
             if (value) {
@@ -225,7 +226,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         };
         if (resource) {
             for (const element of shadowElements) {
-                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
+                element.querySelectorAll('img, picture > source').forEach((source: HTMLImageElement | HTMLSourceElement) => parseSrcSet(source.srcset));
                 element.querySelectorAll('video').forEach((source: HTMLVideoElement) => resource.addImageData(source.poster));
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => resource.addImageData(image.src, image.width, image.height));
                 element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
@@ -250,19 +251,23 @@ export default abstract class Application<T extends Node> implements squared.bas
             const { image, rawData } = resource!.mapOfAssets;
             for (const item of image.values()) {
                 const uri = item.uri!;
-                if (FILE.SVG.test(uri)) {
-                    preloadItems.push(uri);
-                }
-                else if (item.width === 0 || item.height === 0) {
-                    const element = document.createElement('img');
-                    element.src = uri;
-                    if (element.naturalWidth && element.naturalHeight) {
-                        item.width = element.naturalWidth;
-                        item.height = element.naturalHeight;
+                if (!preloadMap.has(uri)) {
+                    if (FILE.SVG.test(uri)) {
+                        preloadItems.push(uri);
+                        preloadMap.add(uri);
                     }
-                    else {
-                        documentRoot.appendChild(element);
-                        preloaded.push(element);
+                    else if (item.width === 0 || item.height === 0) {
+                        const element = document.createElement('img');
+                        element.src = uri;
+                        preloadMap.add(uri);
+                        if (element.naturalWidth && element.naturalHeight) {
+                            item.width = element.naturalWidth;
+                            item.height = element.naturalHeight;
+                        }
+                        else {
+                            documentRoot.appendChild(element);
+                            preloaded.push(element);
+                        }
                     }
                 }
             }
@@ -280,17 +285,20 @@ export default abstract class Application<T extends Node> implements squared.bas
                     else {
                         continue;
                     }
-                    const element = document.createElement('img');
-                    element.src = src;
-                    const { naturalWidth: width, naturalHeight: height } = element;
-                    if (width && height) {
-                        item.width = width;
-                        item.height = height;
-                        image.set(data[0], { width, height, uri: item.filename });
-                    }
-                    else {
-                        document.body.appendChild(element);
-                        preloaded.push(element);
+                    if (!preloadMap.has(src)) {
+                        const element = document.createElement('img');
+                        element.src = src;
+                        const { naturalWidth: width, naturalHeight: height } = element;
+                        if (width && height) {
+                            item.width = width;
+                            item.height = height;
+                            image.set(data[0], { width, height, uri: item.filename });
+                        }
+                        else {
+                            document.body.appendChild(element);
+                            preloaded.push(element);
+                        }
+                        preloadMap.add(src);
                     }
                 }
             }
@@ -299,8 +307,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (const item of resource!.mapOfAssets.fonts.values()) {
                 for (const font of item) {
                     const srcUrl = font.srcUrl;
-                    if (srcUrl && !preloadItems.includes(srcUrl)) {
+                    if (srcUrl && !preloadMap.has(srcUrl)) {
                         preloadItems.push(srcUrl);
+                        preloadMap.add(srcUrl);
                     }
                 }
             }
@@ -308,18 +317,23 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (resource) {
             for (const element of shadowElements) {
                 element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                    parseSrcSet(image.srcset);
                     if (!preloadImages) {
                         resource.addImage(image);
                     }
-                    else if (FILE.SVG.test(image.src)) {
-                        preloadItems.push(image.src);
-                    }
-                    else if (image.complete) {
-                        resource.addImage(image);
-                    }
                     else {
-                        preloadItems.push(image);
+                        const src = image.src;
+                        if (!preloadMap.has(src)) {
+                            if (FILE.SVG.test(src)) {
+                                preloadItems.push(src);
+                            }
+                            else if (image.complete) {
+                                resource.addImage(image);
+                            }
+                            else {
+                                preloadItems.push(image);
+                            }
+                            preloadMap.add(src);
+                        }
                     }
                 });
             }
@@ -329,7 +343,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (preloadItems.length) {
             processing.initializing = true;
-            return (Promise.allSettled || allSettled)(preloadItems.map(item => {
+            return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
                 return new Promise((success, error) => {
                     if (typeof item === 'string') {
                         fetch(item)

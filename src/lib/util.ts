@@ -236,27 +236,31 @@ export function convertBase64(value: ArrayBuffer) {
     return window.btoa(result);
 }
 
-export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
-    const { value, not, remove, sort } = options;
-    const length = appending.length;
-    if (length === 1 && !value) {
-        return appending[0];
+export function delimitString(value: DelimitStringOptions | string, ...appending: string[]) {
+    let delimiter = ', ',
+        trim: Undef<boolean>,
+        remove: Undef<boolean>,
+        sort: Undef<FunctionSort<string> | boolean>,
+        not: Undef<string[]>;
+    if (typeof value === 'object') {
+        ({ delimiter = ', ', trim, remove, not, sort } = value);
+        value = value.value;
     }
-    const delimiter = options.delimiter || ', ';
     const values = value ? value.split(delimiter) : [];
-    for (let i = 0; i < length; ++i) {
-        const append = appending[i];
-        if (append) {
-            if (not && values.includes(not[i])) {
-                continue;
-            }
-            const index = values.findIndex(item => item === append);
-            if (index === -1) {
-                values.push(append);
-            }
-            else if (remove) {
-                values.splice(index, 1);
-            }
+    for (let i = 0, length = appending.length; i < length; ++i) {
+        let append = appending[i];
+        if (trim) {
+            append = append.trim();
+        }
+        if (!append || not && values.includes(append)) {
+            continue;
+        }
+        const index = values.findIndex(item => item === append);
+        if (index === -1) {
+            values.push(append);
+        }
+        else if (remove) {
+            values.splice(index, 1);
         }
     }
     if (sort) {

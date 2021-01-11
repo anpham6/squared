@@ -65,6 +65,7 @@ interface TransformOptions {
 interface DelimitStringOptions {
     value: string;
     delimiter?: string;
+    trim?: boolean;
     remove?: boolean;
     sort?: FunctionSort<string> | boolean;
     not?: string[];

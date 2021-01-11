@@ -163,134 +163,146 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         break;
                                 }
                                 if (percent.endsWith('%')) {
-                                    fontVariation = delimitString({ value: fontVariation }, `'wdth' ${parseFloat(percent)}`);
+                                    fontVariation = delimitString(fontVariation, `'wdth' ${parseFloat(percent)}`);
                                 }
                             }
                             if (node.has('fontVariantCaps')) {
-                                for (const variant of node.cssValue('fontVariantCaps').split(' ')) {
-                                    switch (variant) {
+                                fontFeature = node.cssValue('fontVariantCaps').split(' ').reduce((a, b) => {
+                                    switch (b) {
                                         case 'small-caps':
-                                            fontFeature = delimitString({ value: fontFeature }, "'smcp'");
+                                            b = "'smcp'";
                                             break;
                                         case 'all-small-caps':
-                                            fontFeature = delimitString({ value: fontFeature }, "'c2sc'", "'smcp'");
+                                            b = "'c2sc', 'smcp'";
                                             break;
                                         case 'petite-caps':
-                                            fontFeature = delimitString({ value: fontFeature }, "'pcap'");
+                                            b = "'pcap'";
                                             break;
                                         case 'all-petite-caps':
-                                            fontFeature = delimitString({ value: fontFeature }, "'c2pc'", "'pcap'");
+                                            b = "'c2pc', 'pcap'";
                                             break;
                                         case 'unicase':
-                                            fontFeature = delimitString({ value: fontFeature }, "'unic'");
+                                            b = "'unic'";
                                             break;
                                         case 'titling-caps':
-                                            fontFeature = delimitString({ value: fontFeature }, "'titl'");
+                                            b = "'titl'";
                                             break;
+                                        default:
+                                            return a;
                                     }
-                                }
+                                    return a + (a ? ', ' : '') + b;
+                                }, fontFeature);
                             }
                             if (node.has('fontVariantNumeric')) {
-                                for (const variant of node.cssValue('fontVariantNumeric').split(' ')) {
-                                    switch (variant) {
+                                fontFeature = node.cssValue('fontVariantNumeric').split(' ').reduce((a, b) => {
+                                    switch (b) {
                                         case 'ordinal':
-                                            fontFeature = delimitString({ value: fontFeature }, "'ordn'");
+                                            b = "'ordn'";
                                             break;
                                         case 'slashed-zero':
-                                            fontFeature = delimitString({ value: fontFeature }, "'zero'");
+                                            b = "'zero'";
                                             break;
                                         case 'lining-nums':
-                                            fontFeature = delimitString({ value: fontFeature }, "'lnum'");
+                                            b = "'lnum'";
                                             break;
                                         case 'oldstyle-nums':
-                                            fontFeature = delimitString({ value: fontFeature }, "'onum'");
+                                            b = "'onum'";
                                             break;
                                         case 'proportional-nums':
-                                            fontFeature = delimitString({ value: fontFeature }, "'pnum'");
+                                            b = "'pnum'";
                                             break;
                                         case 'tabular-nums':
-                                            fontFeature = delimitString({ value: fontFeature }, "'tnum'");
+                                            b = "'tnum'";
                                             break;
                                         case 'diagonal-fractions':
-                                            fontFeature = delimitString({ value: fontFeature }, "'frac'");
+                                            b = "'frac'";
                                             break;
                                         case 'stacked-fractions':
-                                            fontFeature = delimitString({ value: fontFeature }, "'afrc'");
+                                            b = "'afrc'";
                                             break;
+                                        default:
+                                            return a;
                                     }
-                                }
+                                    return a + (a ? ', ' : '') + b;
+                                }, fontFeature);
                             }
                             if (node.has('fontVariantLigatures')) {
-                                for (const variant of node.cssValue('fontVariantLigatures').split(' ')) {
-                                    switch (variant) {
+                                fontFeature = node.cssValue('fontVariantLigatures').split(' ').reduce((a, b) => {
+                                    switch (b) {
                                         case 'common-ligatures':
-                                            fontFeature = delimitString({ value: fontFeature }, "'liga'");
+                                            b = "'liga'";
                                             break;
                                         case 'no-common-ligatures':
-                                            fontFeature = delimitString({ value: fontFeature }, "'liga' 0");
+                                            b = "'liga' 0";
                                             break;
                                         case 'discretionary-ligatures':
-                                            fontFeature = delimitString({ value: fontFeature }, "'dlig'");
+                                            b = "'dlig'";
                                             break;
                                         case 'no-discretionary-ligatures':
-                                            fontFeature = delimitString({ value: fontFeature }, "'dlig' 0");
+                                            b = "'dlig' 0";
                                             break;
                                         case 'historical-ligatures':
-                                            fontFeature = delimitString({ value: fontFeature }, "'hlig'");
+                                            b = "'hlig'";
                                             break;
                                         case 'no-historical-ligatures':
-                                            fontFeature = delimitString({ value: fontFeature }, "'hlig' 0");
+                                            b = "'hlig' 0";
                                             break;
                                         case 'contextual':
-                                            fontFeature = delimitString({ value: fontFeature }, "'calt'");
+                                            b = "'calt'";
                                             break;
                                         case 'no-contextual':
-                                            fontFeature = delimitString({ value: fontFeature }, "'calt' 0");
+                                            b = "'calt' 0";
                                             break;
+                                        default:
+                                            return a;
                                     }
-                                }
+                                    return a + (a ? ', ' : '') + b;
+                                }, fontFeature);
                             }
                             if (node.has('fontVariantEastAsian')) {
-                                for (const variant of node.cssValue('fontVariantEastAsian').split(' ')) {
-                                    switch (variant) {
+                                fontFeature = node.cssValue('fontVariantEastAsian').split(' ').reduce((a, b) => {
+                                    switch (b) {
                                         case 'ruby':
-                                            fontFeature = delimitString({ value: fontFeature }, "'ruby'");
+                                            b = "'ruby'";
                                             break;
                                         case 'jis78':
-                                            fontFeature = delimitString({ value: fontFeature }, "'jp78'");
+                                            b = "'jp78'";
                                             break;
                                         case 'jis83':
-                                            fontFeature = delimitString({ value: fontFeature }, "'jp83'");
+                                            b = "'jp83'";
                                             break;
                                         case 'jis90':
-                                            fontFeature = delimitString({ value: fontFeature }, "'jp90'");
+                                            b = "'jp90'";
                                             break;
                                         case 'jis04':
-                                            fontFeature = delimitString({ value: fontFeature }, "'jp04'");
+                                            b = "'jp04'";
                                             break;
                                         case 'simplified':
-                                            fontFeature = delimitString({ value: fontFeature }, "'smpl'");
+                                            b = "'smpl'";
                                             break;
                                         case 'traditional':
-                                            fontFeature = delimitString({ value: fontFeature }, "'trad'");
+                                            b = "'trad'";
                                             break;
                                         case 'proportional-width':
-                                            fontFeature = delimitString({ value: fontFeature }, "'pwid'");
+                                            b = "'pwid'";
                                             break;
                                         case 'full-width':
-                                            fontFeature = delimitString({ value: fontFeature }, "'fwid'");
+                                            b = "'fwid'";
                                             break;
+                                        default:
+                                            return a;
                                     }
-                                }
+                                    return a + (a ? ', ' : '') + b;
+                                }, fontFeature);
                             }
                             if (node.has('fontVariationSettings' as CssStyleAttr)) {
                                 for (const variant of node.cssValue('fontVariationSettings' as CssStyleAttr).replace(/"/g, "'").split(',')) {
-                                    fontVariation = delimitString({ value: fontVariation }, variant.trim());
+                                    fontVariation = delimitString(fontVariation, variant);
                                 }
                             }
                             if (node.has('fontFeatureSettings')) {
                                 for (const feature of node.cssValue('fontFeatureSettings').replace(/"/g, "'").split(',')) {
-                                    fontFeature = delimitString({ value: fontFeature }, feature.trim());
+                                    fontFeature = delimitString(fontFeature, feature);
                                 }
                             }
                             if (fontVariation) {
@@ -299,11 +311,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (fontFeature) {
                                 node.android('fontFeatureSettings', fontFeature);
                             }
-                            setTextValue(
-                                node,
-                                'text',
-                                Resource.addString(valueString, '', numberAsResource)
-                            );
+                            setTextValue(node, 'text', Resource.addString(valueString, '', numberAsResource));
                         }
                     }
                 }

@@ -139,15 +139,11 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     set childIndex(value) {
-        super.childIndex = value;
+        this._childIndex = value;
     }
     get childIndex() {
-        let result = super.childIndex;
-        if (result === Infinity) {
-            this.each(node => result = Math.min(node.childIndex, result));
-            super.childIndex = result;
-        }
-        return result;
+        const result = super.childIndex;
+        return result === Infinity ? super.childIndex = this.min('childIndex', { self: true }).childIndex : result;
     }
 
     get centerAligned() {

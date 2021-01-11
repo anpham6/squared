@@ -495,8 +495,8 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                     scoped.push(pseudo);
                     break;
                 default: {
-                    let match: Null<RegExpExecArray>;
-                    if (match = REGEXP_QUERYNTH.exec(pseudo)) {
+                    let match = REGEXP_QUERYNTH.exec(pseudo);
+                    if (match) {
                         const children = match[1] ? parent!.naturalElements.slice(0).reverse() : parent!.naturalElements;
                         const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(this) + 1;
                         if (index) {
