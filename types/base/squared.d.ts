@@ -25,6 +25,10 @@ declare module "base" {
         appendFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
     }
 
+    interface ErrorAction {
+        writeError(message: string, hint?: string): void;
+    }
+
     interface LayoutRoot<T extends NodeUI> {
         node: T;
         layoutName: string;
@@ -80,7 +84,7 @@ declare module "base" {
         clearMap: Map<T, string>;
     }
 
-    class Application<T extends Node> implements FileActionAsync {
+    class Application<T extends Node> implements FileActionAsync, ErrorAction {
         static readonly KEY_NAME: string;
         static prioritizeExtensions<U extends Node>(value: string, extensions: Extension<U>[]): Extension<U>[];
         userSettings: UserSettings;
@@ -115,6 +119,7 @@ declare module "base" {
         saveFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         appendFiles(uri: string, options: FileArchivingOptions): FileActionResult;
         copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
+        writeError(message: string, hint?: string): void;
         toString(): string;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
@@ -327,7 +332,7 @@ declare module "base" {
         get extensions(): Extension<T>[];
     }
 
-    class File<T extends Node> implements FileActionAsync {
+    class File<T extends Node> implements FileActionAsync, ErrorAction {
         static downloadFile(data: Blob | string, filename?: string, mimeType?: string): void;
         resource: Resource<T>;
         assets: FileAsset[];
@@ -346,7 +351,7 @@ declare module "base" {
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
         setEndpoint(name: string, value: string): void;
-        writeErrorMesssage(error: ResponseError): void;
+        writeError(message: string, hint?: string): void;
         get userSettings(): UserResourceSettings;
         set hostname(value);
         get hostname(): string;

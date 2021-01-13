@@ -56,11 +56,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (options.configUri) {
             const assetMap = new Map<Element, StandardMap>();
             options.assetMap = assetMap;
-            options.database ||= [];
-            const database = options.database;
             const config = await fileHandler.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
+                    const database = options.database ||= [];
                     const paramMap = new Map<string, [RegExp, string]>();
                     if (location.href.includes('?')) {
                         new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value]));
@@ -117,12 +116,15 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                             });
                         }
                     }
+                    if (database.length === 0) {
+                        delete options.database;
+                    }
                 }
-                else if (config.error) {
-                    fileHandler.writeErrorMesssage(config.error);
-                }
-                if (database.length === 0) {
-                    delete options.database;
+                else {
+                    const error = config.error;
+                    if (error) {
+                        this.writeError(error.message, error.hint);
+                    }
                 }
             }
         }

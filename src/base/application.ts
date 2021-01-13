@@ -77,6 +77,8 @@ function parseError(error: unknown) {
     return '';
 }
 
+const getErrorMessage = (errors: string[]) => errors.map(value => '- ' + value).join('\n');
+
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.base.application';
 
@@ -374,7 +376,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (item.status === 'rejected') {
                         const message = parseError(item.reason);
                         if (message) {
-                            (errors ||= []).push('FAIL: ' + message);
+                            (errors ||= []).push(message);
                         }
                         continue;
                     }
@@ -387,7 +389,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 if (errors) {
-                    (this.userSettings.showErrorMessages ? alert : console.log)(errors.length === 1 ? errors[0] : errors.map(value => '- ' + value).join('\n')); // eslint-disable-line no-console
+                    const length = errors.length;
+                    if (length === 1) {
+                        this.writeError('FAIL: ' + errors[0]);
+                    }
+                    else {
+                        this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
+                    }
                 }
                 return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
             });
@@ -429,7 +437,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         if (errors) {
-            (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + errors.join('\n\n')); // eslint-disable-line no-console
+            this.writeError(getErrorMessage(errors), CSS_CANNOT_BE_PARSED);
         }
     }
 
@@ -491,6 +499,10 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public setDatasetName(attr: string, element: DocumentElement, value: string) {
         element.dataset[attr + capitalize(this.systemName)] = value;
+    }
+
+    public writeError(message: string, hint?: string) {
+        (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
     }
 
     public toString() {
