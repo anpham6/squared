@@ -202,7 +202,8 @@ squared.settings = {
     outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify"} }
     outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (NOTE: Only applicabale to raw assets)
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip' // zip | 7z | gz | tar
+    outputArchiveFormat: 'zip' // zip | 7z | gz | tar,
+    outputArchiveCache: false // Downloadable URL in ResponseData<downloadUrl>
 };
 ```
 
@@ -224,7 +225,8 @@ squared.settings = {
     outputTasks: {} // { "*.js": [{ handler: "gulp", task: "minify" }, { handler: "gulp", task: "beautify" }] }
     outputWatch: {} // { "*": true }
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip'
+    outputArchiveFormat: 'zip',
+    outputArchiveCache: false
 };
 ```
 

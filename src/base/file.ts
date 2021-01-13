@@ -237,16 +237,21 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     if (typeof options.callback === 'function') {
                         options.callback(result);
                     }
-                    const { downloadKey, zipname, error } = result;
+                    const { downloadKey, filename: zipname, error } = result;
                     if (downloadKey && zipname) {
-                        const download = await this.loadData(downloadKey, { type: 'blob', cache: false }) as Null<Blob>;
+                        const cache = this.userSettings.outputArchiveCache;
+                        const download = await this.loadData(downloadKey, { type: 'blob', cache }) as Null<Blob>;
                         if (download) {
                             File.downloadFile(download, zipname);
+                        }
+                        if (cache) {
+                            result.downloadUrl = getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + '/blob?key=' + downloadKey;
                         }
                     }
                     if (error) {
                         this.writeError(error.message, error.hint);
                     }
+                    delete result.downloadKey;
                     return result;
                 });
             }

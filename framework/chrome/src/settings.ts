@@ -13,7 +13,8 @@ const settings: UserResourceSettings = {
     outputTasks: {},
     outputWatch: {},
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip'
+    outputArchiveFormat: 'zip',
+    outputArchiveCache: false
 };
 
 export default settings;

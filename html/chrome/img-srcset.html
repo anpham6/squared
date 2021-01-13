@@ -20,7 +20,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             squared.setFramework(chrome);
-            squared.parseDocument('squared_ui').then(function() {
+            squared.settings.outputArchiveCache = true;
+            squared.parseDocument('squared_ui').then(async function() {
                 chrome.system.saveHtmlPage();
                 chrome.system.saveImageAssets();
                 chrome.system.saveScriptAssets();
@@ -63,11 +64,11 @@
                         }
                     ]
                 };
-                squared.saveFiles('chrome.7z', options);
-                squared.appendFiles('http://localhost:3000/common/base_project.7z', options);
-                squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options);
-                squared.copyFiles('C:/Users/An/Downloads/chrome_data', options);
-                squared.save();
+                console.log(await squared.saveFiles('chrome.7z', options));
+                console.log(await squared.appendFiles('http://localhost:3000/common/base_project.7z', options));
+                console.log(await squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options));
+                console.log(await squared.copyFiles('C:/Users/An/Downloads/chrome_data', options));
+                console.log(await squared.save());
             });
         });
     </script>

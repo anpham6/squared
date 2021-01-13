@@ -132,8 +132,9 @@ interface RequestData extends PlainObject {
 interface ResponseData {
     success: boolean;
     data?: unknown;
-    zipname?: string;
+    filename?: string;
     downloadKey?: string;
+    downloadUrl?: string;
     bytes?: number;
     files?: string[];
     error?: ResponseError;

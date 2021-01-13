@@ -48,7 +48,6 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         }
         options = !isPlainObject(options) ? {} : { ...options };
         options.saveAsWebPage = true;
-        const fileHandler = this.fileHandler!;
         if (options.removeUnusedStyles && this.session.unusedStyles.size) {
             const unusedStyles = Array.from(this.session.unusedStyles);
             options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
@@ -56,7 +55,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (options.configUri) {
             const assetMap = new Map<Element, StandardMap>();
             options.assetMap = assetMap;
-            const config = await fileHandler.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
+            const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     const database = options.database ||= [];
@@ -128,7 +127,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 }
             }
         }
-        return fileHandler[module](pathname, options);
+        return this.fileHandler![module](pathname, options);
     }
 
     get initializing() {

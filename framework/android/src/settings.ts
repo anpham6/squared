@@ -60,7 +60,8 @@ const settings: UserResourceSettingsUI = {
     outputTasks: {},
     outputWatch: {},
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip'
+    outputArchiveFormat: 'zip',
+    outputArchiveCache: false
 };
 
 export default settings;

@@ -16,6 +16,7 @@ interface UserResourceSettings extends UserSettings {
     outputDocumentHandler: string | string[];
     outputArchiveFormat: string;
     outputArchiveName: string;
+    outputArchiveCache: boolean;
 }
 
 interface UserResourceSettingsUI extends UserResourceSettings {
