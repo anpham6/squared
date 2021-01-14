@@ -878,7 +878,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         else {
                             if (beforeReplace) {
-                                beforeReplace(this, undefined);
+                                beforeReplace(this);
                             }
                             renderChildren.splice(index, 1);
                             this.renderParent = null;

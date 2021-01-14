@@ -1895,7 +1895,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             let attrList: Undef<QueryAttribute[]>,
                                 subMatch: Null<RegExpExecArray>;
                             while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
-                                let key = subMatch[1].replace('\\:', ':').toLowerCase(),
+                                let key = subMatch[1].replace(/\\:/, ':').toLowerCase(),
                                     endsWith: Undef<boolean>;
                                 switch (key.indexOf('|')) {
                                     case -1:

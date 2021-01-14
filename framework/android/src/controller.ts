@@ -206,7 +206,7 @@ function constraintAlignTop(node: View, boxTop: number) {
 function setObjectContainer(layout: ContentUI<View>) {
     const node = layout.node;
     const element = node.element as HTMLEmbedElement & HTMLObjectElement;
-    const src = (element.tagName === 'OBJECT' ? element.data : element.src).trim();
+    const src = element.tagName === 'OBJECT' ? element.data : element.src;
     const type = element.type || parseMimeType(src);
     if (type.startsWith('image/')) {
         node.setCacheValue('tagName', 'IMG');
@@ -641,7 +641,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public finalize(layouts: FileAsset[]) {
         const insertSpaces = this.userSettings.insertSpaces;
         for (const layout of layouts) {
-            layout.content = replaceTab(layout.content!.replace('{#0}', getRootNs(layout.content!)), insertSpaces);
+            layout.content = replaceTab(layout.content!.replace(/\{#0\}/, getRootNs(layout.content!)), insertSpaces);
         }
     }
 
@@ -1627,7 +1627,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'VIDEO': {
                 const validMimeType = this.localSettings.mimeType[tagName === 'VIDEO' ? 'video' : 'audio'];
                 const element = node.element as HTMLVideoElement;
-                let src = element.src.trim(),
+                let src = element.src,
                     mimeType: Undef<string>;
                 if (Resource.hasMimeType(validMimeType, src)) {
                     mimeType = parseMimeType(src);
@@ -1637,7 +1637,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     iterateArray(element.children, (source: HTMLSourceElement) => {
                         if (source.tagName === 'SOURCE') {
                             if (Resource.hasMimeType(validMimeType, source.src)) {
-                                src = source.src.trim();
+                                src = source.src;
                                 mimeType = parseMimeType(src);
                                 return true;
                             }

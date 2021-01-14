@@ -169,10 +169,7 @@ export function setHostname(value: string) {
     if (main) {
         const fileHandler = main.fileHandler;
         if (fileHandler) {
-            const match = regex.FILE.PROTOCOL.exec(value);
-            if (match && match[1].startsWith('http')) {
-                fileHandler.hostname = match[1] + match[2] + (match[3] || '');
-            }
+            fileHandler.hostname = value;
         }
     }
 }

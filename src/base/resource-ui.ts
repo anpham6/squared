@@ -287,7 +287,7 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
 function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], dimension?: Dimension) {
     for (let i = 0, length = children.length; i < length; ++i) {
         const item = children[i];
-        const timestamp = performance.now().toString().replace('.', '');
+        const timestamp = performance.now().toString().replace(/\./, '');
         const tagName = item.tagName;
         let start = true;
         switch (tagName) {

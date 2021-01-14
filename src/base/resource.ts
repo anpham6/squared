@@ -26,7 +26,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public static getExtension(value: string) {
-        const match = /\.(\w+)\s*$/.exec(value);
+        const match = /\.([^./]+)\s*$/.exec(value);
         return match ? match[1] : '';
     }
 
@@ -50,7 +50,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     public addImage(element: HTMLImageElement) {
         if (element.complete) {
-            const uri = element.src.trim();
+            const uri = element.src;
             if (uri.startsWith('data:image/')) {
                 const match = REGEXP_DATAURI.exec(uri);
                 if (match) {
@@ -127,12 +127,13 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         if (!content && !base64 && !buffer) {
             return null;
         }
+        const url = uri.split('?')[0];
         if (!filename) {
             const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
-            filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/', '\\') : this.randomUUID + ext;
+            filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
         }
         const result = {
-            pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
+            pathname: url.startsWith(location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
             filename,
             content,
             base64,

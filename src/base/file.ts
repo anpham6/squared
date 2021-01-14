@@ -355,8 +355,12 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     set hostname(value) {
-        const url = new URL(value);
-        this._hostname = url.origin.startsWith('http') ? url.origin : '';
+        try {
+            const url = new URL(value);
+            this._hostname = url.origin.startsWith('http') ? url.origin : '';
+        }
+        catch {
+        }
     }
     get hostname() {
         return this._hostname || location.origin;

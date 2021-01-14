@@ -217,7 +217,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const documentRoot: HTMLElement = rootElements.values().next().value;
         const preloadItems: PreloadItem[] = [];
-        const preloadMap = new Set<string>();
         let preloaded: Undef<HTMLImageElement[]>;
         const parseSrcSet = (value: string) => {
             if (value) {
@@ -253,23 +252,19 @@ export default abstract class Application<T extends Node> implements squared.bas
             const { image, rawData } = resource!.mapOfAssets;
             for (const item of image.values()) {
                 const uri = item.uri!;
-                if (!preloadMap.has(uri)) {
-                    if (FILE.SVG.test(uri)) {
-                        preloadItems.push(uri);
-                        preloadMap.add(uri);
+                if (FILE.SVG.test(uri)) {
+                    preloadItems.push(uri);
+                }
+                else if (item.width === 0 || item.height === 0) {
+                    const element = document.createElement('img');
+                    element.src = uri;
+                    if (element.naturalWidth && element.naturalHeight) {
+                        item.width = element.naturalWidth;
+                        item.height = element.naturalHeight;
                     }
-                    else if (item.width === 0 || item.height === 0) {
-                        const element = document.createElement('img');
-                        element.src = uri;
-                        preloadMap.add(uri);
-                        if (element.naturalWidth && element.naturalHeight) {
-                            item.width = element.naturalWidth;
-                            item.height = element.naturalHeight;
-                        }
-                        else {
-                            documentRoot.appendChild(element);
-                            preloaded.push(element);
-                        }
+                    else {
+                        documentRoot.appendChild(element);
+                        preloaded.push(element);
                     }
                 }
             }
@@ -287,20 +282,17 @@ export default abstract class Application<T extends Node> implements squared.bas
                     else {
                         continue;
                     }
-                    if (!preloadMap.has(src)) {
-                        const element = document.createElement('img');
-                        element.src = src;
-                        const { naturalWidth: width, naturalHeight: height } = element;
-                        if (width && height) {
-                            item.width = width;
-                            item.height = height;
-                            image.set(data[0], { width, height, uri: item.filename });
-                        }
-                        else {
-                            document.body.appendChild(element);
-                            preloaded.push(element);
-                        }
-                        preloadMap.add(src);
+                    const element = document.createElement('img');
+                    element.src = src;
+                    const { naturalWidth: width, naturalHeight: height } = element;
+                    if (width && height) {
+                        item.width = width;
+                        item.height = height;
+                        image.set(data[0], { width, height, uri: item.filename });
+                    }
+                    else {
+                        document.body.appendChild(element);
+                        preloaded.push(element);
                     }
                 }
             }
@@ -309,14 +301,14 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (const item of resource!.mapOfAssets.fonts.values()) {
                 for (const font of item) {
                     const srcUrl = font.srcUrl;
-                    if (srcUrl && !preloadMap.has(srcUrl)) {
+                    if (srcUrl) {
                         preloadItems.push(srcUrl);
-                        preloadMap.add(srcUrl);
                     }
                 }
             }
         }
         if (resource) {
+            const preloadMap = new Set<string>();
             for (const element of shadowElements) {
                 element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                     if (!preloadImages) {

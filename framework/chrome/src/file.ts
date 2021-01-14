@@ -24,8 +24,6 @@ interface OptionsData {
 
 type AttributeMap = ObjectMap<UndefNull<string>>;
 
-const { FILE } = squared.lib.regex;
-
 const ASSETS = squared.base.Resource.ASSETS;
 
 const { convertWord, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, trimEnd } = squared.lib.util;
@@ -285,7 +283,7 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: st
 }
 
 function getPageFilename() {
-    const filename = location.href.split('/').pop()!.split('?')[0];
+    const filename = location.href.split('?')[0].split('/').pop()!;
     return /\.html?$/.exec(filename) ? filename : 'index.html';
 }
 
@@ -293,7 +291,7 @@ const copyDocument = (value: string | string[]) => Array.isArray(value) ? value.
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
-const getDirectory = (path: string, start: number) => path.substring(start, path.lastIndexOf('/'));
+const getDirectory = (path: string, start: number) => path.split('?')[0].substring(start, path.lastIndexOf('/'));
 const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
@@ -311,7 +309,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         let value = trimEnd(uri, '/'),
             file: Undef<string>;
-        const local = value.startsWith(trimEnd(location.origin, '/'));
+        const local = value.startsWith(location.origin);
         if (saveAs) {
             saveAs = trimEnd(normalizePath(saveAs), '/');
             if (saveTo || fromConfig) {
@@ -339,11 +337,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (!local && !file && options && options.preserveCrossOrigin) {
             return null;
         }
-        const match = FILE.PROTOCOL.exec(value);
-        if (match) {
-            const host = match[2];
-            const port = match[3];
-            const path = match[4] || '';
+        try {
+            const { host, port, pathname: path } = new URL(value);
             const ext = getFileExt(uri);
             let pathname = '',
                 filename = '',
@@ -378,7 +373,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     [moveTo, pathname, filename] = getFilePath(file);
                 }
                 else if (path && path !== '/') {
-                    filename = fromLastIndexOf(path, '/', '\\');
+                    filename = fromLastIndexOf(path, '/');
                     if (local) {
                         if (path.startsWith(prefix)) {
                             pathname = getDirectory(path, prefix.length);
@@ -406,6 +401,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 inlineContent: inline && element ? getContentType(element) : undefined,
                 document: copyDocument(document || 'chrome')
             };
+        }
+        catch {
         }
         return null;
     }
@@ -540,7 +537,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
             else {
-                const src = element.src.trim();
+                const src = element.src;
                 this.createBundle(result, bundleIndex, element, src, getMimeType(element, src, 'text/javascript'), preserveCrossOrigin, assetMap, saveAsScript);
             }
         });
@@ -617,7 +614,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         });
         document.querySelectorAll('img, input[type=image]').forEach((element: HTMLImageElement) => {
-            const src = element.src.trim();
+            const src = element.src;
             if (!src.startsWith('data:image/')) {
                 this.processImageUri(result, element, resolvePath(src), saveAsImage, preserveCrossOrigin, assetMap);
             }
@@ -748,7 +745,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     const iframe = element.tagName === 'IFRAME';
                     const file = element.dataset.chromeFile;
                     if (!iframe || file && file.startsWith('saveTo')) {
-                        const src = (element instanceof HTMLObjectElement ? element.data : element.src).trim();
+                        const src = element instanceof HTMLObjectElement ? element.data : element.src;
                         if (type.startsWith('image/') || parseMimeType(src).startsWith('image/')) {
                             this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap);
                             return;

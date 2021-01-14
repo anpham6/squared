@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, fromLastIndexOf, parseMimeType, plainMap, splitPairStart } = squared.lib.util;
+const { convertBase64, fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
 
 const { fromMimeType } = squared.base.lib.util;
 
@@ -277,7 +277,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         }
                         this.addAsset({
                             pathname: directory + pathname,
-                            filename: fontName + '.' + (ext || Resource.getExtension(splitPairStart(url, '?')).toLowerCase() || 'ttf'),
+                            filename: fontName + '.' + (ext || Resource.getExtension(url.split('?')[0]).toLowerCase() || 'ttf'),
                             uri: !base64 ? url : undefined,
                             base64
                         });
@@ -545,7 +545,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const uri = item.uri!;
                 result[i++] = uri;
                 result[i++] = item.mimeType || '';
-                result[i++] = fromLastIndexOf(uri, '/', '\\');
+                result[i++] = fromLastIndexOf(uri.split('?')[0], '/');
             }
             if (hasFileAction(options)) {
                 const assets = getRawAssets.call(this.resource, name, getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
