@@ -7,7 +7,7 @@ type FileActionResult = Promise<Void<ResponseData>>;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
-const { SERVER_REQUIRED } = squared.lib.error;
+const { DIRECTORY_NOT_PROVIDED, SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
 const { fromLastIndexOf, hasValue, isPlainObject, splitPair, trimEnd } = squared.lib.util;
@@ -92,7 +92,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         LOADER_DATA: '/api/v1/loader/data'
     };
 
-    public abstract copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
+    public abstract copyTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
     public abstract appendTo(uri: string, options?: FileArchivingOptions): FileActionResult;
     public abstract saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
 
@@ -106,12 +106,12 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return this.archiving({ ...options, filename });
     }
 
-    public appendFiles(uri: string, options: FileArchivingOptions) {
-        return this.archiving({ ...options, appendTo: uri });
+    public appendFiles(target: string, options: FileArchivingOptions) {
+        return this.archiving({ ...options, appendTo: target });
     }
 
-    public copyFiles(directory: string, options: FileCopyingOptions) {
-        return this.copying({ ...options, directory });
+    public copyFiles(pathname: string, options: FileCopyingOptions) {
+        return this.copying({ ...options, pathname });
     }
 
     public addAsset(asset: RawAsset) {
@@ -159,33 +159,38 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public copying(options: FileCopyingOptions) {
         if (this.hasHttpProtocol()) {
-            const body = this.createRequestBody(options.assets, options);
-            let directory = options.directory;
-            if (body && directory && (directory = directory.trim())) {
-                if (!hasValue(options.emptyDir)) {
-                    options.emptyDir = this.userSettings.outputEmptyCopyDirectory;
+            let pathname = options.pathname;
+            if (pathname && (pathname = pathname.trim())) {
+                const body = this.createRequestBody(options.assets, options);
+                if (body) {
+                    if (!hasValue(options.emptyDir)) {
+                        options.emptyDir = this.userSettings.outputEmptyCopyDirectory;
+                    }
+                    return fetch(
+                        getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
+                        '?to=' + encodeURIComponent(pathname) +
+                        '&empty=' + (options.emptyDir ? '1' : '0') +
+                        this.getCopyQueryParameters(options), {
+                            method: 'POST',
+                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(body)
+                        }
+                    )
+                    .then(async response => {
+                        const result: ResponseData = await response.json();
+                        if (typeof options.callback === 'function') {
+                            options.callback(result);
+                        }
+                        const error = result.error;
+                        if (error) {
+                            this.writeError(error.message, error.hint);
+                        }
+                        return result;
+                    });
                 }
-                return fetch(
-                    getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
-                    '?to=' + encodeURIComponent(directory) +
-                    '&empty=' + (options.emptyDir ? '1' : '0') +
-                    this.getCopyQueryParameters(options), {
-                        method: 'POST',
-                        headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
-                        body: JSON.stringify(body)
-                    }
-                )
-                .then(async response => {
-                    const result: ResponseData = await response.json();
-                    if (typeof options.callback === 'function') {
-                        options.callback(result);
-                    }
-                    const error = result.error;
-                    if (error) {
-                        this.writeError(error.message, error.hint);
-                    }
-                    return result;
-                });
+            }
+            else {
+                this.writeError(DIRECTORY_NOT_PROVIDED);
             }
         }
         else {

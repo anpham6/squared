@@ -143,8 +143,8 @@ const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUni
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
 
-    public copyTo(directory: string, options: FileCopyingOptions) {
-        return this.copying({ ...options, assets: this.combineAssets(options.assets!), directory });
+    public copyTo(pathname: string, options: FileCopyingOptions) {
+        return this.copying({ ...options, assets: this.combineAssets(options.assets!), pathname });
     }
 
     public appendTo(pathname: string, options: FileArchivingOptions) {

@@ -102,69 +102,69 @@ const appBase: android.AppFramework<View> = {
         util
     },
     system: {
-        copyLayoutAllXml(directory: string, options?: FileCopyingOptions) {
+        copyLayoutAllXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.layoutAllToXml(application!.layouts, { ...options, directory });
+                file!.layoutAllToXml(application!.layouts, { ...options, pathname });
             }
         },
-        copyResourceAllXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceAllXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceAllToXml({ ...options, directory });
+                file!.resourceAllToXml({ ...options, pathname });
             }
         },
-        copyResourceStringXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceStringXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceStringToXml({ ...options, directory });
+                file!.resourceStringToXml({ ...options, pathname });
             }
         },
-        copyResourceArrayXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceArrayXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceStringArrayToXml({ ...options, directory });
+                file!.resourceStringArrayToXml({ ...options, pathname });
             }
         },
-        copyResourceFontXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceFontXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceFontToXml({ ...options, directory });
+                file!.resourceFontToXml({ ...options, pathname });
             }
         },
-        copyResourceColorXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceColorXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceColorToXml({ ...options, directory });
+                file!.resourceColorToXml({ ...options, pathname });
             }
         },
-        copyResourceStyleXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceStyleXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceStyleToXml({ ...options, directory });
+                file!.resourceStyleToXml({ ...options, pathname });
             }
         },
-        copyResourceDimenXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceDimenXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceDimenToXml({ ...options, directory });
+                file!.resourceDimenToXml({ ...options, pathname });
             }
         },
-        copyResourceDrawableXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceDrawableXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceDrawableToXml({ ...options, directory });
+                file!.resourceDrawableToXml({ ...options, pathname });
             }
         },
-        copyResourceAnimXml(directory: string, options?: FileCopyingOptions) {
+        copyResourceAnimXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceAnimToXml({ ...options, directory });
+                file!.resourceAnimToXml({ ...options, pathname });
             }
         },
-        copyResourceDrawableImage(directory: string, options?: FileCopyingOptions) {
+        copyResourceDrawableImage(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceDrawableImageToString({ ...options, directory });
+                file!.resourceDrawableImageToString({ ...options, pathname });
             }
         },
-        copyResourceRawVideo(directory: string, options?: FileCopyingOptions) {
+        copyResourceRawVideo(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceRawVideoToString({ ...options, directory });
+                file!.resourceRawVideoToString({ ...options, pathname });
             }
         },
-        copyResourceRawAudio(directory: string, options?: FileCopyingOptions) {
+        copyResourceRawAudio(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-                file!.resourceRawAudioToString({ ...options, directory });
+                file!.resourceRawAudioToString({ ...options, pathname });
             }
         },
         saveLayoutAllXml(filename?: string, options?: FileArchivingOptions) {

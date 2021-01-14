@@ -166,8 +166,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public copyTo(directory: string, options?: FileActionOptions) {
-        return this.fileHandler?.copyTo(directory, options) || reject(OPERATION_NOT_SUPPORTED);
+    public copyTo(pathname: string, options?: FileActionOptions) {
+        return this.fileHandler?.copyTo(pathname, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public appendTo(pathname: string, options?: FileActionOptions) {
@@ -186,8 +186,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.fileHandler?.appendFiles(filename, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
-    public copyFiles(directory: string, options: FileActionOptions) {
-        return this.fileHandler?.copyFiles(directory, options) || reject(OPERATION_NOT_SUPPORTED);
+    public copyFiles(pathname: string, options: FileActionOptions) {
+        return this.fileHandler?.copyFiles(pathname, options) || reject(OPERATION_NOT_SUPPORTED);
     }
 
     public reset() {

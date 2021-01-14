@@ -33,12 +33,12 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         return this.processAssets('saveAs', filename, options);
     }
 
-    public copyTo(directory: string, options?: FileCopyingOptions) {
-        return this.processAssets('copyTo', directory, options);
+    public copyTo(pathname: string, options?: FileCopyingOptions) {
+        return this.processAssets('copyTo', pathname, options);
     }
 
-    public appendTo(uri: string, options?: FileArchivingOptions) {
-        return this.processAssets('appendTo', uri, options);
+    public appendTo(target: string, options?: FileArchivingOptions) {
+        return this.processAssets('appendTo', target, options);
     }
 
     private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: FileArchivingOptions) {
@@ -48,9 +48,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         }
         options = !isPlainObject(options) ? {} : { ...options };
         options.saveAsWebPage = true;
-        if (options.removeUnusedStyles && this.session.unusedStyles.size) {
+        if (options.removeUnusedStyles) {
             const unusedStyles = Array.from(this.session.unusedStyles);
-            options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
+            if (unusedStyles.length) {
+                options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
+            }
         }
         if (options.configUri) {
             const assetMap = new Map<Element, StandardMap>();

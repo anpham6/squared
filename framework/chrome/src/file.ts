@@ -407,8 +407,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return null;
     }
 
-    public copyTo(directory: string, options: FileCopyingOptions = {}) {
-        options.directory = directory;
+    public copyTo(pathname: string, options: FileCopyingOptions = {}) {
+        options.pathname = pathname;
         return this.copying(this.processAssets(options));
     }
 

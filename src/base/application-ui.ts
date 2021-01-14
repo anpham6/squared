@@ -276,8 +276,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.closed = true;
     }
 
-    public copyTo(directory: string, options?: FileActionOptions) {
-        return super.copyTo(directory, this.createAssetOptions(options));
+    public copyTo(pathname: string, options?: FileActionOptions) {
+        return super.copyTo(pathname, this.createAssetOptions(options));
     }
 
     public appendTo(pathname: string, options?: FileActionOptions) {

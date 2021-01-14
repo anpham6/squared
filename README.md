@@ -322,13 +322,13 @@ saveFiles(filename: string, options: {}) // create new archive from FileAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 
-appendTo(pathname: string, options?: {}) // create new archive from a preexisting archive and current session
-appendFiles(pathname: string, options: {}) // create new archive from a preexisting archive and FileAsset[]
+appendTo(target: string, options?: {}) // create new archive from a preexisting archive and current session
+appendFiles(target: string, options: {}) // create new archive from a preexisting archive and FileAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
 
-copyTo(directory: string, options?: {}) // copy current session to local directory
-copyFiles(directory: string, options: {}) // copy FileAsset[] to local directory
+copyTo(pathname: string, options?: {}) // copy current session to local 
+copyFiles(pathname: string, options: {}) // copy FileAsset[] to local 
 ```
 
 ### ALL: Extending Node object

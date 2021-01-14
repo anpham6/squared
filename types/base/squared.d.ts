@@ -4,7 +4,7 @@ type FileActionResult = Promise<Void<ResponseData>>;
 
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
-        directory?: string;
+        pathname?: string;
         watch?: boolean;
         emptyDir?: boolean;
     }
@@ -19,8 +19,8 @@ declare module "base" {
     interface FileActionAsync {
         saveAs(filename: string, options?: squared.FileActionOptions): FileActionResult;
         saveFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
-        copyTo(directory: string, options?: squared.FileActionOptions): FileActionResult;
-        copyFiles(directory: string, options: squared.FileActionOptions): FileActionResult;
+        copyTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
+        copyFiles(pathname: string, options: squared.FileActionOptions): FileActionResult;
         appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
         appendFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
     }
@@ -113,12 +113,12 @@ declare module "base" {
         getProcessingCache(sessionId: string): NodeList<T>;
         getDatasetName(attr: string, element: DocumentElement): Undef<string>;
         setDatasetName(attr: string, element: DocumentElement, value: string): void;
-        copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
-        appendTo(uri: string, options?: FileArchivingOptions): FileActionResult;
+        copyTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        appendTo(target: string, options?: FileArchivingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
         saveFiles(filename: string, options: FileArchivingOptions): FileActionResult;
-        appendFiles(uri: string, options: FileArchivingOptions): FileActionResult;
-        copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
+        appendFiles(target: string, options: FileArchivingOptions): FileActionResult;
+        copyFiles(pathname: string, options: FileCopyingOptions): FileActionResult;
         writeError(message: string, hint?: string): void;
         toString(): string;
         get mainElement(): Element;
@@ -343,8 +343,8 @@ declare module "base" {
         archiving(options: FileArchivingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
         saveFiles(filename: string, options: FileArchivingOptions): FileActionResult;
-        copyTo(directory: string, options?: FileCopyingOptions): FileActionResult;
-        copyFiles(directory: string, options: FileCopyingOptions): FileActionResult;
+        copyTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        copyFiles(pathname: string, options: FileCopyingOptions): FileActionResult;
         appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
         appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         finalizeRequestBody(data: RequestData, options: FileCopyingOptions & FileArchivingOptions): void;
