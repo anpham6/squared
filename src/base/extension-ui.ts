@@ -7,7 +7,7 @@ import Extension from './extension';
 
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static includes(source: Undef<string>, value: string) {
-        return !!source && source.trim().split(/\s*,\s*/).includes(value);
+        return source ? source.trim().split(/\s*,\s*/).includes(value) : false;
     }
 
     public static findNestedElement(node: NodeUI, name: string) {

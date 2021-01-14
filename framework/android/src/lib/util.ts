@@ -1,7 +1,7 @@
 import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
 const { parseColor: __parseColor } = squared.lib.color;
-const { capitalize, joinArray, isPlainObject } = squared.lib.util;
+const { capitalize, joinArray, isPlainObject, startsWith } = squared.lib.util;
 
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
@@ -139,7 +139,7 @@ export function isVerticalAlign(value: string) {
 export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
     let result: Undef<StringMap>;
     for (const attr in dataset) {
-        if (attr.startsWith(prefix)) {
+        if (startsWith(attr, prefix)) {
             (result ||= {})[capitalize(attr.substring(prefix.length), false)] = dataset[attr]!;
         }
     }

@@ -10,7 +10,7 @@ import type NodeList from './nodelist';
 import Controller from './controller';
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
@@ -779,7 +779,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
             if (match) {
                 const value = match[1];
-                if (value.endsWith('%')) {
+                if (isPercent(value)) {
                     styleMap[attr] = value;
                 }
                 else if (isLength(value)) {
@@ -800,7 +800,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const value = styleMap[opposing];
                     if (value && isLength(value)) {
                         const attrMax = 'max' + capitalize(attr);
-                        if (!styleMap[attrMax] || !attrMax.endsWith('%')) {
+                        if (!styleMap[attrMax] || !isPercent(attrMax)) {
                             styleMap[attr] = formatPX(image[attr] * parseUnit(value, { fontSize: parseFloat(getStyle(element).fontSize) }) / image[opposing]);
                         }
                     }

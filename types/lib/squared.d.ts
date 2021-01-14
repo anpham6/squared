@@ -342,6 +342,8 @@ declare module "lib" {
         function trimStart(value: string, pattern: string): string;
         function trimEnd(value: string, pattern: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
+        function startsWith(value: Optional<string>, leading: string): boolean;
+        function endsWith(value: Optional<string>, trailing: string): boolean;
         function searchObject(obj: StringMap, value: string): Generator<string, void>;
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;

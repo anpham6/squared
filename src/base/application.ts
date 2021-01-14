@@ -19,7 +19,7 @@ const { FILE, STRING } = squared.lib.regex;
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, endsWith, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
@@ -232,7 +232,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => resource.addImageData(image.src, image.width, image.height));
                 element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
                     const src = source.data || source.src;
-                    if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
+                    if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
                         resource.addImageData(src.trim());
                     }
                 });
@@ -271,8 +271,8 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (const data of rawData) {
                 const item = data[1];
                 const mimeType = item.mimeType;
-                if (mimeType && mimeType.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
-                    let src = `data:${mimeType};`;
+                if (startsWith(mimeType, 'image/') && !endsWith(mimeType, 'svg+xml')) {
+                    let src = `data:${mimeType!};`;
                     if (item.base64) {
                         src += 'base64,' + item.base64;
                     }
@@ -343,10 +343,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                         fetch(item)
                             .then(async result => {
                                 const mimeType = result.headers.get('content-type') || '';
-                                if (mimeType.startsWith('text/css') || styleSheets && styleSheets.includes(item)) {
+                                if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
                                     success({ mimeType: 'text/css', encoding: 'utf8', data: await result.text() } as RawDataOptions);
                                 }
-                                else if (mimeType.startsWith('image/svg+xml') || FILE.SVG.test(item)) {
+                                else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
                                     success({ mimeType: 'image/svg+xml', encoding: 'utf8', data: await result.text() } as RawDataOptions);
                                 }
                                 else {
@@ -464,7 +464,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             else {
                 const namespace = namespaces[i] + '.';
                 for (const data of builtInExtensions) {
-                    if (data[0].startsWith(namespace)) {
+                    if (startsWith(data[0], namespace)) {
                         ext = data[1];
                         if (!extensions.includes(ext)) {
                             ext.application = this;
@@ -590,7 +590,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const use = this.getDatasetName('use', element);
                         (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
-                    let shadowRoot: UndefNull<ShadowRoot>;
+                    let shadowRoot: Optional<ShadowRoot>;
                     if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                         this.setStyleMap(sessionId, shadowRoot);
                     }
@@ -682,7 +682,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     let value: string = cssStyle[attr];
                     switch (value) {
                         case 'initial':
-                            if (isUserAgent(USER_AGENT.SAFARI) && baseAttr.startsWith('background')) {
+                            if (isUserAgent(USER_AGENT.SAFARI) && startsWith(baseAttr, 'background')) {
                                 break;
                             }
                             if (CSS_PROPERTIES[baseAttr]?.value === 'auto') {
@@ -739,7 +739,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const [selector, target] = splitPair(selectorText, '::');
                     const targetElt = target ? '::' + target : '';
                     let elements: ArrayLike<Element>;
-                    if (selector.startsWith(':host')) {
+                    if (startsWith(selector, ':host')) {
                         if (!hostElement) {
                             continue;
                         }

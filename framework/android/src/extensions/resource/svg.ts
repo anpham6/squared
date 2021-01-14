@@ -139,7 +139,7 @@ const { FILE } = squared.lib.regex;
 
 const { extractURL, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap } = squared.lib.util;
+const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap, startsWith } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
@@ -801,7 +801,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public createSvgElement(node: T, src: string): [Undef<HTMLElement>, Undef<SVGSVGElement>] | [] {
         src = extractURL(src) || src;
-        if (FILE.SVG.test(src) || src.startsWith('data:image/svg+xml')) {
+        if (FILE.SVG.test(src) || startsWith(src, 'data:image/svg+xml')) {
             const fileAsset = this.resource!.getRawData(src);
             if (fileAsset) {
                 const parentElement = (node.actualParent || node.documentParent).element as HTMLElement;
@@ -960,7 +960,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         togetherTargets.push(togetherData);
                     }
                     for (const [keyName, item] of sequentialMap) {
-                        if (keyName.startsWith('sequentially_companion')) {
+                        if (startsWith(keyName, 'sequentially_companion')) {
                             togetherTargets.push(item);
                         }
                         else {
@@ -1486,7 +1486,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         const pathArray: PathData[] = [];
                         if (+itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this._animateData.get(item.name);
-                            if (!animateData || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
+                            if (!animateData || animateData.animate.every(animate => startsWith(animate.attributeName, 'stroke-dash'))) {
                                 const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecision);
                                 if (strokeDash) {
                                     if (animateData) {

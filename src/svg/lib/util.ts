@@ -9,7 +9,7 @@ const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calcula
 const { getNamedItem } = squared.lib.dom;
 const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
-const { convertCamelCase, convertPercent, resolvePath, splitPair } = squared.lib.util;
+const { convertCamelCase, convertPercent, endsWith, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 
@@ -394,16 +394,16 @@ export const TRANSFORM = {
             RE_PARSE.matcher(value);
             while (RE_PARSE.find()) {
                 const [transform, method] = RE_PARSE.groups();
-                if (method.startsWith('matrix')) {
+                if (startsWith(method, 'matrix')) {
                     const matrix = TRANSFORM.matrix(element, transform);
                     if (matrix) {
                         result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix));
                     }
                 }
-                else if (!method.endsWith('3d')) {
-                    const isX = method.endsWith('X');
-                    const isY = !isX && method.endsWith('Y');
-                    if (method.startsWith('translate')) {
+                else if (!endsWith(method, '3d')) {
+                    const isX = endsWith(method, 'X');
+                    const isY = !isX && endsWith(method, 'Y');
+                    if (startsWith(method, 'translate')) {
                         const translate = REGEXP_TRANSFORM.TRANSLATE.exec(transform);
                         if (translate) {
                             const arg1 = parseUnit(translate[2], createParseUnitOptions(element, translate[2]));
@@ -413,7 +413,7 @@ export const TRANSFORM = {
                             result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, MATRIX.translate(x, y), 0));
                         }
                     }
-                    else if (method.startsWith('rotate')) {
+                    else if (startsWith(method, 'rotate')) {
                         const rotate = REGEXP_TRANSFORM.ROTATE.exec(transform);
                         if (rotate) {
                             const angle = convertAngle(rotate[5], rotate[6]);
@@ -433,7 +433,7 @@ export const TRANSFORM = {
                             }
                         }
                     }
-                    else if (method.startsWith('scale')) {
+                    else if (startsWith(method, 'scale')) {
                         const scale = REGEXP_TRANSFORM.SCALE.exec(transform);
                         if (scale) {
                             const x = isY ? 1 : +scale[2];
@@ -441,7 +441,7 @@ export const TRANSFORM = {
                             result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, y), 0, !isY, !isX));
                         }
                     }
-                    else if (method.startsWith('skew')) {
+                    else if (startsWith(method, 'skew')) {
                         const skew = REGEXP_TRANSFORM.SKEW.exec(transform);
                         if (skew) {
                             const angle = convertAngle(skew[2], skew[3], 0);

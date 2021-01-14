@@ -13,7 +13,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { createViewAttribute } from '../lib/util';
 
-const { formatPX } = squared.lib.css;
+const { formatPX, isPercent } = squared.lib.css;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public readonly options: ExtensionListOptions = {
@@ -152,7 +152,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 if (node.isEmpty() && !node.outerWrapper) {
                     container = controller.createNodeWrapper(node, parent, { alignmentType: parent.layoutGrid ? NODE_ALIGNMENT.VERTICAL : 0 });
-                    containerType = node.baselineElement && node.percentWidth === 0 && !node.cssInitial('maxWidth').endsWith('%') ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT;
+                    containerType = node.baselineElement && node.percentWidth === 0 && !isPercent(node.cssInitial('maxWidth')) ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT;
                 }
                 else {
                     container = node.outerMostWrapper as T;

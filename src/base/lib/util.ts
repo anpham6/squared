@@ -1,4 +1,4 @@
-const { splitPair } = squared.lib.util;
+const { endsWith, splitPair, startsWith } = squared.lib.util;
 
 interface XMLTagData {
     tag: string;
@@ -255,7 +255,7 @@ export function appendSeparator(preceding = '', value = '', separator = '/') {
             value &&= value.replace(/\\+/g, '/');
             break;
     }
-    return preceding + (preceding && value && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
+    return preceding + (preceding && value && !endsWith(preceding, separator) && !startsWith(value, separator) ? separator : '') + value;
 }
 
 export function randomUUID(separator = '-') {
@@ -307,7 +307,7 @@ export function formatXml(value: string, options: FormatXmlOptions = {}) {
             tag,
             closing,
             tagName: caseSensitive ? match[3].toUpperCase() : match[3],
-            didClose: !closing && tag.endsWith('/>'),
+            didClose: !closing && endsWith(tag, '/>'),
             leadingSpace: match[5],
             content: content[1],
             trailingSpace: content[2]
@@ -401,7 +401,7 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
         }
         fromEnd = options.fromEnd;
     }
-    const trimCurrent = (cwd: string) => fromEnd && cwd.startsWith('./') ? cwd.substring(2) : cwd;
+    const trimCurrent = (cwd: string) => fromEnd && startsWith(cwd, './') ? cwd.substring(2) : cwd;
     const source = ((!fromEnd ? '^' : '') + trimCurrent(value))
         .replace(/\\\\([^\\])/g, (...match: string[]) => ':' + match[1].charCodeAt(0))
         .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')

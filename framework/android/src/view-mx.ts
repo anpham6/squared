@@ -21,7 +21,7 @@ const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { capitalize, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair } = squared.lib.util;
+const { capitalize, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair, startsWith } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.util;
 
@@ -406,7 +406,7 @@ function transferLayoutAlignment(node: T, target: T) {
                 case 'layout_height':
                     break;
                 default:
-                    if (attr.startsWith('layout_') && !attr.includes('margin')) {
+                    if (startsWith(attr, 'layout_') && !attr.includes('margin')) {
                         target.attr(name, attr, item[attr], true);
                     }
                     break;
@@ -513,12 +513,8 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
 
 export function ascendFlexibleHeight(node: T, container?: boolean) {
     let current = container ? node : node.actualParent as Null<T>;
-    if (current && hasFlexibleHeight(current)) {
+    if (current && hasFlexibleHeight(current) || container && node.flexElement && node.flexdata.column && (current = node.actualParent as Null<T>) && hasFlexibleHeight(current)) {
         return true;
-    }
-    if (container && node.flexElement && node.flexdata.column) {
-        current = node.actualParent as Null<T>;
-        return !!current && hasFlexibleHeight(current);
     }
     return false;
 }
@@ -1137,7 +1133,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.pageFlow && !this.floating) {
                             this.mergeGravity('layout_gravity', parentAlign, false);
                         }
-                        if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || this.display.startsWith('table-')) {
+                        if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || startsWith(this.display, 'table-')) {
                             this.mergeGravity('gravity', parentAlign, false);
                         }
                     }

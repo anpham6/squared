@@ -18,15 +18,15 @@ interface PercentData {
     marginVertical?: boolean;
 }
 
-const { formatPX } = squared.lib.css;
+const { formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertPercent } = squared.lib.util;
+const { convertPercent, startsWith } = squared.lib.util;
 
-const checkPercent = (value: string) => value.endsWith('%') && parseFloat(value) > 0;
+const checkPercent = (value: string) => isPercent(value) && parseFloat(value) > 0;
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.actualParent!.layoutElement && !node.display.startsWith('table');
+        return !node.actualParent!.layoutElement && !startsWith(node.display, 'table');
     }
 
     public condition(node: T, parent: T) {

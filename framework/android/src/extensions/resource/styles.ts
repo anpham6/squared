@@ -2,7 +2,7 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
-const { capitalize } = squared.lib.util;
+const { capitalize, startsWith } = squared.lib.util;
 
 const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
 
@@ -25,7 +25,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         let found: Undef<boolean>;
                         for (let k = 0, r = combined.length; k < r; ++k) {
                             const value = combined[k];
-                            if (!found && value.startsWith('style=')) {
+                            if (!found && startsWith(value, 'style=')) {
                                 if (j === 0) {
                                     style = value;
                                 }

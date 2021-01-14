@@ -18,7 +18,7 @@ interface AttributeData extends NumberValue {
 
 const { hasCalc, isAngle, isCustomProperty, isPercent, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd } = squared.lib.util;
+const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd, startsWith } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -46,7 +46,7 @@ function parseAttribute(element: SVGElement, attr: string) {
 }
 
 function convertRotate(value: string) {
-    if (value.startsWith('reverse')) {
+    if (startsWith(value, 'reverse')) {
         const angle = splitPairEnd(value, ' ', true);
         return `auto ${angle ? isAngle(angle) ? 180 + parseAngle(angle, 0) : '0' : '180'}deg`;
     }
@@ -301,8 +301,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 previous.value = previousValue;
                                 item.value = itemValue;
                                 if (previousValue.split(' ').pop() !== itemValue.split(' ').pop()) {
-                                    const previousAuto = previousValue.startsWith('auto');
-                                    const auto = itemValue.startsWith('auto');
+                                    const previousAuto = startsWith(previousValue, 'auto');
+                                    const auto = startsWith(itemValue, 'auto');
                                     if (previousAuto && !auto || !previousAuto && auto) {
                                         const key = (previous.key + item.key) / 2;
                                         offsetRotate.splice(j++, 0, { key, value: previousValue });
@@ -319,12 +319,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 addAnimation(animate, delay, keyframeIndex);
                                 for (let j = 0, q = offsetRotate.length; j < q; ++j) {
                                     const item = offsetRotate[j];
-                                    const value = item.value;
-                                    let angle = parseAngle(value.split(' ').pop()!, 0);
-                                    if (value.startsWith('auto')) {
-                                        angle += 90;
-                                    }
-                                    item.value = angle + ' 0 0';
+                                    item.value = (parseAngle(item.value.split(' ').pop()!, 0) + (startsWith(item.value, 'auto') ? 90 : 0)) + ' 0 0';
                                 }
                                 attrData['rotate'] = offsetRotate;
                                 delete attrData['offset-rotate'];
@@ -405,7 +400,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const value = values[j];
                                     if (j < r - 1) {
                                         const keySpline = keySplines[j];
-                                        if (value && keySpline.startsWith('step')) {
+                                        if (value && startsWith(keySpline, 'step')) {
                                             const stepData = SvgAnimate.fromStepTimingFunction(element, name, keySpline, keyTimes, values, j);
                                             if (stepData) {
                                                 const [stepTime, stepValue] = stepData;
@@ -449,7 +444,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
                         animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                         animate.reverse = direction.endsWith('reverse');
-                        animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
+                        animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && startsWith(direction, 'alternate');
                         groupName.push(animate);
                     }
                 }

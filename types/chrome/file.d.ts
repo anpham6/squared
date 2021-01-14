@@ -5,7 +5,7 @@ interface ChromeAsset extends FileAsset, BundleAction {
     rootDir?: string;
     outerHTML?: string;
     inlineContent?: string;
-    attributes?: ObjectMap<UndefNull<string>>;
+    attributes?: ObjectMap<Optional<string>>;
 }
 
 interface OutputModifiers extends ElementScope {

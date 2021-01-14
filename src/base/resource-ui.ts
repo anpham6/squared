@@ -18,7 +18,7 @@ const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, getSty
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { convertBase64, convertCamelCase, convertPercent, hasValue, isEqual, isNumber, isString, iterateArray, splitPair } = squared.lib.util;
+const { convertBase64, convertCamelCase, convertPercent, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, startsWith } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -207,7 +207,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
     if (width > 0) {
         const style = node.css(border[1] as CssStyleAttr) || 'solid';
         let color: Null<string | ColorData> = node.css(border[2] as CssStyleAttr) || 'rgb(0, 0, 0)';
-        if (color.startsWith('current')) {
+        if (startsWith(color, 'current')) {
             color = node.css('color');
         }
         if (width === 2 && (style === 'inset' || style === 'outset')) {
@@ -385,9 +385,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     public static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
         if (value && value !== 'left top' && value !== '0% 0%') {
             let fontSize: Undef<number>,
-                imageDimension: UndefNull<Dimension>,
+                imageDimension: Optional<Dimension>,
                 imageSize: Undef<string>,
-                screenDimension: UndefNull<Dimension>;
+                screenDimension: Optional<Dimension>;
             if (options) {
                 ({ fontSize, imageDimension, imageSize, screenDimension } = options);
             }
@@ -672,7 +672,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public static isBackgroundVisible(object: Undef<BoxStyle>) {
-        return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
+        return object ? 'backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object : false;
     }
 
     public static generateId(section: string, name: string, start = 1) {
@@ -782,7 +782,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             match: Null<RegExpExecArray>;
         while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
             const value = match[0];
-            if (value.startsWith('url(') || value === 'initial') {
+            if (startsWith(value, 'url(') || value === 'initial') {
                 images.push(value);
             }
             else {
@@ -870,24 +870,22 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             radiusExtent = 0;
                         if (position) {
                             const name = position[1]?.trim();
-                            if (name) {
-                                if (name.startsWith('circle')) {
-                                    shape = 'circle';
+                            if (startsWith(name, 'circle')) {
+                                shape = 'circle';
+                            }
+                            else if (name) {
+                                const [radiusX, radiusY] = splitPair(name, ' ', true);
+                                let minRadius = Infinity;
+                                if (radiusX) {
+                                    minRadius = node.parseWidth(radiusX, false);
                                 }
-                                else {
-                                    const [radiusX, radiusY] = splitPair(name, ' ', true);
-                                    let minRadius = Infinity;
-                                    if (radiusX) {
-                                        minRadius = node.parseWidth(radiusX, false);
-                                    }
-                                    if (radiusY) {
-                                        minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
-                                    }
-                                    radius = minRadius;
-                                    radiusExtent = minRadius;
-                                    if (length === 1 || radiusX === radiusY) {
-                                        shape = 'circle';
-                                    }
+                                if (radiusY) {
+                                    minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
+                                }
+                                radius = minRadius;
+                                radiusExtent = minRadius;
+                                if (length === 1 || radiusX === radiusY) {
+                                    shape = 'circle';
                                 }
                             }
                         }
@@ -1015,7 +1013,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (node.plainText) {
             const parent = node.actualParent!;
             if (parent.preserveWhiteSpace && parent.ancestors('pre', { startSelf: true }).length) {
-                let nextSibling = node.nextSibling as UndefNull<NodeUI>;
+                let nextSibling = node.nextSibling as Optional<NodeUI>;
                 if (nextSibling && nextSibling.naturalElement) {
                     const textContent = node.textContent;
                     if (isString(textContent)) {
@@ -1059,7 +1057,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 base64 = convertBase64(data);
             }
             else if (typeof data === 'string' && options.encoding === 'base64') {
-                base64 = data.startsWith('data:image/') ? splitPair(data, ',')[1] : data;
+                base64 = startsWith(data, 'data:image/') ? splitPair(data, ',')[1] : data;
             }
             else {
                 return null;
@@ -1367,7 +1365,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         if (!node.horizontalRowStart) {
                             const element = node.element;
                             const previousSibling = element && element.previousSibling;
-                            if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && element!.textContent!.trim().startsWith(value.trim())) {
+                            if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && startsWith(element!.textContent!.trim(), value.trim())) {
                                 value = value.replace(CHAR_LEADINGSPACE, ResourceUI.STRING_SPACE);
                                 break;
                             }

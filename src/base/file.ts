@@ -10,7 +10,7 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 const { DIRECTORY_NOT_PROVIDED, SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
-const { fromLastIndexOf, hasValue, isPlainObject, splitPair, trimEnd } = squared.lib.util;
+const { fromLastIndexOf, hasValue, isPlainObject, splitPair, startsWith, trimEnd } = squared.lib.util;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
@@ -62,7 +62,7 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
     return true;
 }
 
-const getEndpoint = (hostname: string, endpoint: string) => endpoint.startsWith('http') ? endpoint : hostname + endpoint;
+const getEndpoint = (hostname: string, endpoint: string) => startsWith(endpoint, 'http') ? endpoint : hostname + endpoint;
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob | string, filename?: string, mimeType?: string) {
@@ -356,13 +356,13 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     private hasHttpProtocol() {
-        return (this._hostname || location.protocol).startsWith('http');
+        return startsWith(this._hostname || location.protocol, 'http');
     }
 
     set hostname(value) {
         try {
             const url = new URL(value);
-            this._hostname = url.origin.startsWith('http') ? url.origin : '';
+            this._hostname = startsWith(url.origin, 'http') ? url.origin : '';
         }
         catch {
         }

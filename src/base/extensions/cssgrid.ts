@@ -29,7 +29,7 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
-const { convertPercent, isNumber, splitPairEnd, trimString, withinRange } = squared.lib.util;
+const { convertPercent, endsWith, isNumber, splitPairEnd, startsWith, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
@@ -107,7 +107,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (isPx(value)) {
             filled += parseFloat(value);
         }
-        else if (value.endsWith('fr')) {
+        else if (endsWith(value, 'fr')) {
             fractional += parseFloat(value);
         }
         else if (isPercent(value)) {
@@ -119,7 +119,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (ratio > 0) {
             for (let i = 0; i < length; ++i) {
                 const value = unit[i];
-                if (value.endsWith('fr')) {
+                if (endsWith(value, 'fr')) {
                     unit[i] = formatPX(parseFloat(value) * ratio);
                 }
             }
@@ -221,7 +221,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
         if (isPercent(value)) {
             percent -= convertPercent(value);
         }
-        else if (value.endsWith('fr')) {
+        else if (endsWith(value, 'fr')) {
             fr += parseFloat(value);
         }
         else if (value === 'auto') {
@@ -234,9 +234,8 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
     if (percent < 1) {
         if (fr) {
             for (let i = 0; i < length; ++i) {
-                const value = unit[i];
-                if (value.endsWith('fr')) {
-                    unit[i] = percent * (parseFloat(value) / fr) + 'fr';
+                if (endsWith(unit[i], 'fr')) {
+                    unit[i] = percent * (parseFloat(unit[i]) / fr) + 'fr';
                 }
             }
         }
@@ -353,7 +352,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     (name[attr] ||= []).push(i);
                                 }
                             }
-                            else if (command.startsWith('repeat')) {
+                            else if (startsWith(command, 'repeat')) {
                                 let iterations = 1;
                                 switch (match[2]) {
                                     case 'auto-fit':
@@ -408,13 +407,13 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     REGEXP_REPEAT.lastIndex = 0;
                                 }
                             }
-                            else if (command.startsWith('minmax')) {
+                            else if (startsWith(command, 'minmax')) {
                                 unit.push(convertLength(node, match[6], index));
                                 unitMin.push(convertLength(node, match[5], index));
                                 repeat.push(false);
                                 ++i;
                             }
-                            else if (command.startsWith('fit-content')) {
+                            else if (startsWith(command, 'fit-content')) {
                                 unit.push(convertLength(node, match[7], index));
                                 unitMin.push('0px');
                                 repeat.push(false);
@@ -503,13 +502,13 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const [gridRowEnd, gridColumnEnd] = item.cssAsTuple('gridRowEnd', 'gridColumnEnd');
                 let rowSpan = 1,
                     columnSpan = 1;
-                if (gridRowEnd.startsWith('span')) {
+                if (startsWith(gridRowEnd, 'span')) {
                     rowSpan = +splitPairEnd(gridRowEnd, ' ');
                 }
                 else if (isNumber(gridRowEnd)) {
                     rowSpan = +gridRowEnd - rowIndex;
                 }
-                if (gridColumnEnd.startsWith('span')) {
+                if (startsWith(gridColumnEnd, 'span')) {
                     columnSpan = +splitPairEnd(gridColumnEnd, ' ');
                 }
                 else if (isNumber(gridColumnEnd)) {
@@ -661,7 +660,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 return true;
                             }
                         }
-                        else if (value.startsWith('span')) {
+                        else if (startsWith(value, 'span')) {
                             const span = +splitPairEnd(value, ' ');
                             if (span === length && previousPlacement) {
                                 if (horizontal) {

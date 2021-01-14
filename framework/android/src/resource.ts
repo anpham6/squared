@@ -8,7 +8,7 @@ import { concatString, parseColor } from './lib/util';
 const { FILE } = squared.lib.regex;
 
 const { extractURL, getSrcSet } = squared.lib.css;
-const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPairStart, trimString } = squared.lib.util;
+const { endsWith, fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPairStart, startsWith, trimString } = squared.lib.util;
 
 const REGEXP_STRINGNAME = /(?:\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
@@ -23,7 +23,7 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
         if (isString(value)) {
             switch (attr) {
                 case 'text':
-                    if (!value.startsWith('@string/')) {
+                    if (!startsWith(value, '@string/')) {
                         obj[attr] = Resource.addString(value, '', numberAlias);
                     }
                     break;
@@ -60,7 +60,7 @@ function isLeadingDigit(value: string) {
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
     public static canCompressImage(filename: string, mimeType?: string) {
-        return /\.(png|jpg|jpeg)$/i.test(filename) || !!mimeType && (mimeType.endsWith('png') || mimeType.endsWith('jpeg'));
+        return /\.(png|jpg|jpeg)$/i.test(filename) || endsWith(mimeType, 'png') || endsWith(mimeType, 'jpeg');
     }
 
     public static formatOptions(options: ViewAttribute, numberAlias?: boolean) {
@@ -248,7 +248,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         let mdpi: Undef<string>;
         if (typeof element === 'string') {
             mdpi = extractURL(element);
-            if (mdpi && !mdpi.startsWith('data:image/')) {
+            if (mdpi && !startsWith(mdpi, 'data:image/')) {
                 return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
             }
         }

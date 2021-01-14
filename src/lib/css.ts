@@ -5,7 +5,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertCamelCase, convertHyphenated, convertPercent, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, trimBoth } from './util';
+import { convertCamelCase, convertHyphenated, convertPercent, endsWith, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, startsWith, trimBoth } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -138,7 +138,7 @@ function calculateColor(element: StyleElement, value: string) {
                     const component = trimEnclosing(seg).split(CHAR_SEPARATOR);
                     const q = component.length;
                     if (q >= 3) {
-                        const hsl = name.startsWith('hsl');
+                        const hsl = startsWith(name, 'hsl');
                         for (let j = 0; j < q; ++j) {
                             const rgb = component[j];
                             if (isCalc(rgb)) {
@@ -238,7 +238,7 @@ function calculateSpecificity(value: string) {
                     continue;
             }
         }
-        else if (segment.startsWith('*|')) {
+        else if (startsWith(segment, '*|')) {
             if (segment === '*|*') {
                 continue;
             }
@@ -1822,7 +1822,7 @@ export function getSpecificity(value: string) {
     let result = 0;
     for (const seg of splitEnclosing(value, REGEXP_SELECTORGROUP)) {
         if (seg[0] === ':') {
-            if (seg.startsWith(':where(')) {
+            if (startsWith(seg, ':where(')) {
                 continue;
             }
             else {
@@ -2404,7 +2404,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         const prefix = timingFunction[i - 1].trim();
                         seg = trimEnclosing(seg);
                         let calc: Undef<string>;
-                        if (prefix.endsWith('cubic-bezier')) {
+                        if (endsWith(prefix, 'cubic-bezier')) {
                             const cubic = seg.split(CHAR_SEPARATOR);
                             const q = cubic.length;
                             if (q === 4) {
@@ -2422,7 +2422,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                 }
                             }
                         }
-                        else if (prefix.endsWith('steps')) {
+                        else if (endsWith(prefix, 'steps')) {
                             calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.INTEGER, min: 1 });
                         }
                         if (!calc) {
@@ -2651,7 +2651,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'gridTemplate':
             return getStyle(element)[attr];
         default: {
-            if (attr.endsWith('Color') || (CSS_PROPERTIES[attr]?.trait & CSS_TRAITS.COLOR)) {
+            if (endsWith(attr, 'Color') || (CSS_PROPERTIES[attr]?.trait & CSS_TRAITS.COLOR)) {
                 return calculateColor(element, value.trim());
             }
             const alias = checkWritingMode(attr, getStyle(element).writingMode);
@@ -2843,10 +2843,10 @@ export function checkMediaRule(value: string, fontSize?: number) {
                     const attr = condition[1];
                     let operation = condition[2];
                     const rule = condition[3];
-                    if (attr.startsWith('min')) {
+                    if (startsWith(attr, 'min')) {
                         operation = '>=';
                     }
-                    else if (attr.startsWith('max')) {
+                    else if (startsWith(attr, 'max')) {
                         operation = '<=';
                     }
                     switch (attr) {
@@ -2867,7 +2867,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
                         case 'height':
                         case 'min-height':
                         case 'max-height':
-                            valid = compareRange(operation, attr.endsWith('width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
+                            valid = compareRange(operation, endsWith(attr, 'width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
                             break;
                         case 'orientation':
                             valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -3572,7 +3572,7 @@ export function convertUnit(value: NumString, unit: string, options?: ConvertUni
 export function parseTransform(value: string, options?: TransformOptions) {
     let accumulate: Undef<boolean>,
         fontSize: Undef<number>,
-        boundingBox: UndefNull<Dimension>;
+        boundingBox: Optional<Dimension>;
     if (options) {
         ({ accumulate, fontSize, boundingBox } = options);
     }
@@ -3580,7 +3580,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
     let match: Null<RegExpExecArray>;
     while (match = REGEXP_TRANSFORM.exec(value)) {
         const method = match[1];
-        if (method.startsWith('translate')) {
+        if (startsWith(method, 'translate')) {
             const translate = TRANSFORM.TRANSLATE.exec(match[0]);
             if (translate) {
                 const tX = translate[2];
@@ -3658,7 +3658,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 result.push({ group, method, values: [x, y, z] });
             }
         }
-        else if (method.startsWith('rotate')) {
+        else if (startsWith(method, 'rotate')) {
             const rotate = TRANSFORM.ROTATE.exec(match[0]);
             if (rotate) {
                 const angle = convertAngle(rotate[5], rotate[6]);
@@ -3708,7 +3708,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 }
             }
         }
-        else if (method.startsWith('scale')) {
+        else if (startsWith(method, 'scale')) {
             const scale = TRANSFORM.SCALE.exec(match[0]);
             if (scale) {
                 let x = 1,
@@ -3752,7 +3752,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 result.push({ group, method, values: [x, y, z] });
             }
         }
-        else if (method.startsWith('skew')) {
+        else if (startsWith(method, 'skew')) {
             const skew = TRANSFORM.SKEW.exec(match[0]);
             if (skew) {
                 const angle = convertAngle(skew[2], skew[3]);
@@ -3785,7 +3785,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 }
             }
         }
-        else if (method.startsWith('matrix')) {
+        else if (startsWith(method, 'matrix')) {
             const matrix = TRANSFORM.MATRIX.exec(match[0]);
             if (matrix) {
                 let length: number;

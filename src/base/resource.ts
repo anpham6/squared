@@ -7,7 +7,7 @@ import { fromMimeType, randomUUID } from './lib/util';
 const { STRING } = squared.lib.regex;
 
 const { extractURL, resolveURL } = squared.lib.css;
-const { convertBase64, fromLastIndexOf, parseMimeType } = squared.lib.util;
+const { convertBase64, fromLastIndexOf, parseMimeType, startsWith } = squared.lib.util;
 
 const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
@@ -51,7 +51,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public addImage(element: HTMLImageElement) {
         if (element.complete) {
             const uri = element.src;
-            if (uri.startsWith('data:image/')) {
+            if (startsWith(uri, 'data:image/')) {
                 const match = REGEXP_DATAURI.exec(uri);
                 if (match) {
                     const [mimeType, encoding] = match[1].split(/\s*;\s*/);
@@ -133,7 +133,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
         }
         const result = {
-            pathname: url.startsWith(location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
+            pathname: startsWith(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
             filename,
             content,
             base64,
@@ -162,12 +162,12 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
         if (font) {
             const mimeType = this.mimeTypeMap.font;
-            return font.find(item => fontStyle.startsWith(item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (Resource.hasMimeType(mimeType, item.srcFormat) || item.srcUrl && Resource.hasMimeType(mimeType, item.srcUrl)));
+            return font.find(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (Resource.hasMimeType(mimeType, item.srcFormat) || item.srcUrl && Resource.hasMimeType(mimeType, item.srcUrl)));
         }
     }
 
     public getRawData(uri: string) {
-        if (uri.startsWith('url(')) {
+        if (startsWith(uri, 'url(')) {
             uri = extractURL(uri)!;
             if (!uri) {
                 return;

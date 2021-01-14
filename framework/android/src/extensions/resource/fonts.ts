@@ -16,7 +16,7 @@ interface IStyleAttribute<T> extends StyleAttribute {
 }
 
 const { truncate } = squared.lib.math;
-const { capitalize, convertWord, hasKeys, joinArray, spliceArray, trimBoth } = squared.lib.util;
+const { capitalize, convertWord, hasKeys, joinArray, spliceArray, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
@@ -169,7 +169,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             createFont = true;
                         }
                         else {
-                            const font = fontStyle.startsWith('oblique') ? resource.getFont(value, 'italic') || resource.getFont(value, 'normal') : resource.getFont(value, fontStyle);
+                            const font = startsWith(fontStyle, 'oblique') ? resource.getFont(value, 'italic') || resource.getFont(value, 'normal') : resource.getFont(value, fontStyle);
                             if (font) {
                                 actualFontWeight = fontWeight;
                                 fontWeight = font.fontWeight.toString();
@@ -193,7 +193,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     else {
                         return false;
                     }
-                    if (fontStyle === 'normal' || fontStyle.startsWith('oblique')) {
+                    if (fontStyle === 'normal' || startsWith(fontStyle, 'oblique')) {
                         fontStyle = '';
                     }
                     if (actualFontWeight) {

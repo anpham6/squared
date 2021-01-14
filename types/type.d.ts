@@ -1,7 +1,7 @@
 type Undef<T> = T | undefined;
 type Null<T> = T | null;
-type UndefNull<T> = Undef<T> | Null<T>;
 type Void<T> = T | void;
+type Optional<T> = Undef<T> | Null<T>;
 type Nullable<T> = { [P in keyof T]: T[P] | null; };
 type KeyOfType<T, U = any, V = any> = { [K in keyof T]: K extends U ? T[K] extends V ? K : never : never }[keyof T];
 type MapOfType<T, U = any, V = any> = { [K in KeyOfType<T, U, V>]: K extends U ? T[K] extends V ? T[K] : never : never };

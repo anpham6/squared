@@ -459,7 +459,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string) {
-    return !!value && !isNaN(+value);
+    return value ? !isNaN(+value) : false;
 }
 
 export function isString(value: any): value is string {
@@ -575,7 +575,7 @@ export function resolvePath(value: string, href?: string) {
         if (value[0] === '/') {
             return location.origin + value;
         }
-        else if (value.startsWith('../')) {
+        else if (startsWith(value, '../')) {
             const trailing: string[] = [];
             for (const dir of value.split('/')) {
                 if (dir === '..') {
@@ -592,7 +592,7 @@ export function resolvePath(value: string, href?: string) {
             }
             value = trailing.join('/');
         }
-        else if (value.startsWith('./')) {
+        else if (startsWith(value, './')) {
             value = value.substring(2);
         }
         return location.origin + pathname.join('/') + '/' + value;
@@ -658,6 +658,14 @@ export function fromLastIndexOf(value: string, ...char: string[]) {
     return value;
 }
 
+export function startsWith(value: Optional<string>, leading: string) {
+    return value ? value.substring(0, leading.length) === leading : false;
+}
+
+export function endsWith(value: Optional<string>, trailing: string) {
+    return value ? value.substring(value.length - trailing.length) === trailing : false;
+}
+
 export function* searchObject(obj: StringMap, value: string) {
     const start = value[0] === '*';
     const end = lastItemOf(value) === '*';
@@ -665,9 +673,9 @@ export function* searchObject(obj: StringMap, value: string) {
         start && end
             ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
         : start
-            ? (a: string) => a.endsWith(value.replace(/^\*/, ''))
+            ? (a: string) => endsWith(a, value.replace(/^\*/, ''))
         : end
-            ? (a: string) => a.startsWith(value.replace(/\*$/, ''))
+            ? (a: string) => startsWith(a, value.replace(/\*$/, ''))
             : (a: string) => a === value;
     for (const attr in obj) {
         if (search(attr)) {

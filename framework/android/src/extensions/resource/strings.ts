@@ -8,7 +8,7 @@ import Resource from '../../resource';
 
 import { replaceCharacterData, sanitizeString } from '../../lib/util';
 
-const { parseAngle } = squared.lib.css;
+const { isPercent, parseAngle } = squared.lib.css;
 const { getTextMetrics } = squared.lib.dom;
 const { clamp } = squared.lib.math;
 const { delimitString } = squared.lib.util;
@@ -162,7 +162,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         percent = '200%';
                                         break;
                                 }
-                                if (percent.endsWith('%')) {
+                                if (isPercent(percent)) {
                                     fontVariation = delimitString(fontVariation, `'wdth' ${parseFloat(percent)}`);
                                 }
                             }

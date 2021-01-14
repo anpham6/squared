@@ -7,7 +7,7 @@ import Pattern = squared.lib.base.Pattern;
 type GroupData = ObjectMap<View[]>;
 
 const { isPx } = squared.lib.css;
-const { convertHyphenated, fromLastIndexOf } = squared.lib.util;
+const { convertHyphenated, fromLastIndexOf, startsWith } = squared.lib.util;
 
 const CACHE_UNDERSCORE: StringMap = {};
 
@@ -18,7 +18,7 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
         return name;
     }
     for (const data of map) {
-        if (value === data[1] && data[0].startsWith(name)) {
+        if (value === data[1] && startsWith(data[0], name)) {
             return data[0];
         }
     }

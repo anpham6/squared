@@ -348,7 +348,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_VERSION.LATEST
     return result;
 }
 
-function createLayerList(boxStyle: BoxStyle, images: UndefNull<BackgroundImageData[]>, borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
+function createLayerList(boxStyle: BoxStyle, images: Optional<BackgroundImageData[]>, borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
@@ -590,7 +590,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         });
     }
 
-    public getDrawableBorder(data: BoxStyle, images: UndefNull<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Null<StandardMap[]>, Null<LayerList[]>] {
+    public getDrawableBorder(data: BoxStyle, images: Optional<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Null<StandardMap[]>, Null<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
         const indentOffset = indentWidth ? formatPX(indentWidth) : '';
         let shapeData: Null<StandardMap[]> = null,

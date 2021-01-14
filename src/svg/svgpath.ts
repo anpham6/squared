@@ -17,7 +17,7 @@ type SvgContainer = squared.svg.SvgContainer;
 
 const { getNamedItem } = squared.lib.dom;
 const { equal, lessEqual, multipleOf, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = squared.lib.math;
-const { cloneObject, convertInt, convertFloat } = squared.lib.util;
+const { cloneObject, convertInt, convertFloat, startsWith } = squared.lib.util;
 
 interface DashGroup {
     items: SvgStrokeDash[];
@@ -664,7 +664,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 result = createDashGroup(valueArray, valueOffset, 0);
                 if (animations) {
                     const sorted = animations.slice(0).sort((a, b) => {
-                        if (a.attributeName.startsWith('stroke-dash') && b.attributeName.startsWith('stroke-dash')) {
+                        if (startsWith(a.attributeName, 'stroke-dash') && startsWith(b.attributeName, 'stroke-dash')) {
                             if (a.delay !== b.delay) {
                                 return a.delay - b.delay;
                             }

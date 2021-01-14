@@ -23,7 +23,7 @@ interface ICssGridData<T> extends CssGridData<T> {
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertPercent, flatArray } = squared.lib.util;
+const { convertPercent, endsWith, flatArray, startsWith } = squared.lib.util;
 
 const REGEXP_ALIGNSELF = /start|end|center|baseline/;
 const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
@@ -115,7 +115,7 @@ function setContentSpacing(mainData: ICssGridData<View>, data: CssGridDirectionD
         MARGIN_START = BOX_STANDARD.MARGIN_TOP;
         MARGIN_END = BOX_STANDARD.MARGIN_BOTTOM;
     }
-    if (alignment.startsWith('space')) {
+    if (startsWith(alignment, 'space')) {
         const offset = getRemainingSize(mainData, data, node, dimension, maxScreenWidth, maxScreenHeight);
         if (offset > 0) {
             const rowData = getRowData(mainData, horizontal);
@@ -240,7 +240,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
             height = dimension;
         }
     }
-    else if (section.every(value => value.endsWith('fr'))) {
+    else if (section.every(value => endsWith(value, 'fr'))) {
         const fr = section.reduce((a, b) => a + parseFloat(b), 0);
         const weight = truncate(fr, node.localSettings.floatPrecision);
         if (horizontal) {
@@ -289,7 +289,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
         else if (isPercent(value)) {
             percent += convertPercent(value);
         }
-        else if (value.endsWith('fr')) {
+        else if (endsWith(value, 'fr')) {
             return 0;
         }
     }
@@ -374,7 +374,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
                 break;
             }
         }
-        else if (value.endsWith('fr')) {
+        else if (endsWith(value, 'fr')) {
             if (horizontal || parent.hasHeight) {
                 if (sizeWeight === -1) {
                     sizeWeight = 0;
@@ -595,7 +595,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 rowCount: row.length,
                 columnCount: column.length
             });
-            if (mainData.rowSpanMultiple.length === 0 && unit.length === column.length && unit.every(value => value.endsWith('fr')) && !node.hasWidth && !node.rootElement && node.ascend({ condition: (item: T) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
+            if (mainData.rowSpanMultiple.length === 0 && unit.length === column.length && unit.every(value => endsWith(value, 'fr')) && !node.hasWidth && !node.rootElement && node.ascend({ condition: (item: T) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
                 const constraintData: T[][] = new Array(rowCount);
@@ -619,7 +619,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
                 if (valid) {
                     column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
-                    row.frTotal = row.unit.reduce((a, b) => a + (b.endsWith('fr') ? parseFloat(b) : 0), 0);
+                    row.frTotal = row.unit.reduce((a, b) => a + (endsWith(b, 'fr') ? parseFloat(b) : 0), 0);
                     node.setLayoutWidth('match_parent');
                     node.lockAttr('android', 'layout_width');
                     mainData.constraintData = constraintData;
@@ -735,7 +735,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.box.height), true);
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent.startsWith('space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && startsWith(mainData.alignContent, 'space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
             return {
@@ -777,7 +777,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         break;
                 }
                 if (wrapped) {
-                    if (column.unit.some(value => value.endsWith('fr'))) {
+                    if (column.unit.some(value => endsWith(value, 'fr'))) {
                         node.setLayoutWidth('match_parent');
                     }
                 }
@@ -1113,14 +1113,14 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     if (value === 'auto') {
                         return false;
                     }
-                    else if (value.endsWith('fr') || isPercent(value)) {
+                    else if (endsWith(value, 'fr') || isPercent(value)) {
                         valid = true;
                     }
                 }
                 return valid;
             }
         }
-        return !!node.hasFlex('row') && node.flexbox.grow > 0;
+        return node.hasFlex('row') ? node.flexbox.grow > 0 : false;
     }
 
     private checkRowSpan(mainData: CssGridData<T>, node: T, rowSpan: number, rowStart: number) {

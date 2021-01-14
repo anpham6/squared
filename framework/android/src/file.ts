@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
 
 const { fromMimeType } = squared.base.lib.util;
 
@@ -60,7 +60,7 @@ function getImageAssets(this: Resource<View>, pathname: string, items: string[],
             let mimeType: Undef<string>,
                 commands: Undef<string[]>,
                 compress: Undef<CompressFormat[]>;
-            if (filename.endsWith('.unknown')) {
+            if (endsWith(filename, '.unknown')) {
                 mimeType = 'image/unknown';
                 if (compressing) {
                     compress = [{ format: 'png' }];
@@ -134,7 +134,7 @@ function getRawAssets(this: Resource<View>, name: "video" | "audio", pathname: s
 
 function getOutputDirectory(value: string) {
     value = value.replace(/\\/g, '/');
-    return value + (!value.endsWith('/') ? '/' : '');
+    return value + (!endsWith(value, '/') ? '/' : '');
 }
 
 const copyDocument = (value: string | string[]) => Array.isArray(value) ? value.slice(0) : value;
@@ -495,7 +495,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     item.filename = userSettings.outputMainFileName;
                     first = false;
                 }
-                else if (!item.filename.endsWith('.xml')) {
+                else if (!endsWith(item.filename, '.xml')) {
                     item.filename += '.xml';
                 }
                 item.document ||= userSettings.outputDocumentHandler;

@@ -28,7 +28,7 @@ const { formatPX, getSrcSet, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, startsWith, withinRange } = squared.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
 
@@ -208,18 +208,18 @@ function setObjectContainer(layout: ContentUI<View>) {
     const element = node.element as HTMLEmbedElement & HTMLObjectElement;
     const src = element.tagName === 'OBJECT' ? element.data : element.src;
     const type = element.type || parseMimeType(src);
-    if (type.startsWith('image/')) {
+    if (startsWith(type, 'image/')) {
         node.setCacheValue('tagName', 'IMG');
         node.setCacheValue('imageElement', true);
         element.src = src;
         layout.containerType = CONTAINER_NODE.IMAGE;
     }
-    else if (type.startsWith('video/')) {
+    else if (startsWith(type, 'video/')) {
         node.setCacheValue('tagName', 'VIDEO');
         element.src = src;
         layout.containerType = CONTAINER_NODE.VIDEOVIEW;
     }
-    else if (type.startsWith('audio/')) {
+    else if (startsWith(type, 'audio/')) {
         node.setCacheValue('tagName', 'AUDIO');
         element.src = src;
         layout.containerType = CONTAINER_NODE.VIDEOVIEW;
@@ -350,7 +350,7 @@ function causesLineBreak(element: Element) {
                 case 'grid':
                     return style.float === 'none' || hasWidth();
                 default:
-                    return (display.startsWith('inline-') || display === 'table') && hasWidth();
+                    return (startsWith(display, 'inline-') || display === 'table') && hasWidth();
             }
         }
     }
@@ -2062,7 +2062,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.documentParent.gridElement) {
             const android = node.namespace('android');
             for (const attr in android) {
-                if (attr.startsWith('layout_')) {
+                if (startsWith(attr, 'layout_')) {
                     container.android(attr, android[attr]);
                     delete android[attr];
                 }
@@ -2471,14 +2471,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         if (r > 1) {
                             const bottomAligned = getTextBottom(items);
-                            let textBottom = bottomAligned[0] as UndefNull<T>,
+                            let textBottom = bottomAligned[0] as Optional<T>,
                                 offsetTop = 0,
                                 offsetBottom = 0,
                                 maxCenter: Null<T> = null,
                                 maxCenterHeight = 0,
                                 checkBottom: Undef<boolean>,
                                 previousFloatRight: Undef<T>,
-                                textBaseline: UndefNull<T>;
+                                textBaseline: Optional<T>;
                             baseline = NodeUI.baseline(textBottom ? items.filter(item => !bottomAligned.includes(item)) : items);
                             if (baseline && textBottom) {
                                 if (baseline !== textBottom && baseline.bounds.height < textBottom.bounds.height) {
@@ -2920,9 +2920,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             baselineCount = 0,
             tallest: Undef<T>,
             previous: Undef<T>,
-            bottom: UndefNull<T>,
-            textBaseline: UndefNull<T>,
-            textBottom: UndefNull<T>;
+            bottom: Optional<T>,
+            textBaseline: Optional<T>,
+            textBottom: Optional<T>;
         if (!reverse) {
             switch (node.cssAscend('textAlign', { startSelf: true })) {
                 case 'center':

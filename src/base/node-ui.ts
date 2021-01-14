@@ -14,7 +14,7 @@ const { CSS_PROPERTIES, isPx } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { cloneObject, hasKeys, isArray, isEmptyString, searchObject, withinRange } = squared.lib.util;
+const { cloneObject, hasKeys, isArray, isEmptyString, searchObject, startsWith, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.MARGIN_TOP, 0],
@@ -951,7 +951,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (floating && !horizontal && previous.blockStatic) {
                         return NODE_TRAVERSE.HORIZONTAL;
                     }
-                    else if (!this.display.startsWith('inline-')) {
+                    else if (!startsWith(this.display, 'inline-')) {
                         let { top, bottom } = this.bounds;
                         if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
                             return NODE_TRAVERSE.FLOAT_INTERSECT;
@@ -1611,7 +1611,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             if (this.naturalElement || this.pseudoElement) {
                 const value = this.display;
-                result = (value.startsWith('inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
+                result = (startsWith(value, 'inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
             }
             else {
                 result = false;
@@ -1623,7 +1623,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get inlineDimension() {
         const result = this._cache.inlineDimension;
-        return result === undefined ? this._cache.inlineDimension = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating) : result;
+        return result === undefined ? this._cache.inlineDimension = (this.naturalElement || this.pseudoElement) && (startsWith(this.display, 'inline-') || this.floating) : result;
     }
 
     get inlineFlow() {

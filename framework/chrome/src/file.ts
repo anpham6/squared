@@ -22,11 +22,11 @@ interface OptionsData {
     compress?: CompressFormat[];
 }
 
-type AttributeMap = ObjectMap<UndefNull<string>>;
+type AttributeMap = ObjectMap<Optional<string>>;
 
 const ASSETS = squared.base.Resource.ASSETS;
 
-const { convertWord, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, trimEnd } = squared.lib.util;
+const { convertWord, endsWith, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
 const { appendSeparator, parseTask, parseWatchInterval } = squared.base.lib.util;
 
@@ -64,7 +64,7 @@ function parseOptions(value: Undef<string>): OptionsData {
 
 function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<string>, string, string] {
     value = normalizePath(value);
-    if (value.startsWith('./')) {
+    if (startsWith(value, './')) {
         value = value.substring(2);
     }
     if (!value.includes('/')) {
@@ -74,7 +74,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
     if (value[0] === '/') {
         moveTo = DIR_FUNCTIONS.SERVERROOT;
     }
-    else if (value.startsWith('../')) {
+    else if (startsWith(value, '../')) {
         moveTo = DIR_FUNCTIONS.SERVERROOT;
         const pathname = location.pathname.split('/');
         if (--pathname.length) {
@@ -288,7 +288,7 @@ function getPageFilename() {
 }
 
 const copyDocument = (value: string | string[]) => Array.isArray(value) ? value.slice(0) : value;
-const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
+const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
 const getDirectory = (path: string, start: number) => path.split('?')[0].substring(start, path.lastIndexOf('/'));
@@ -309,7 +309,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         let value = trimEnd(uri, '/'),
             file: Undef<string>;
-        const local = value.startsWith(location.origin);
+        const local = startsWith(value, location.origin);
         if (saveAs) {
             saveAs = trimEnd(normalizePath(saveAs), '/');
             if (saveTo || fromConfig) {
@@ -375,7 +375,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 else if (path && path !== '/') {
                     filename = fromLastIndexOf(path, '/');
                     if (local) {
-                        if (path.startsWith(prefix)) {
+                        if (startsWith(path, prefix)) {
                             pathname = getDirectory(path, prefix.length);
                         }
                         else {
@@ -499,7 +499,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             case 'css': {
                                 const { module, identifier } = template;
                                 let value = template.value;
-                                if (module && identifier && value && (value = value.trim()) && value.startsWith('function')) {
+                                if (module && identifier && value && (value = value.trim()) && startsWith(value, 'function')) {
                                     ((templateMap ||= { html: {}, js: {}, css: {} })[item.type][module] ||= {})[identifier] = value;
                                 }
                                 break;
@@ -615,7 +615,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         });
         document.querySelectorAll('img, input[type=image]').forEach((element: HTMLImageElement) => {
             const src = element.src;
-            if (!src.startsWith('data:image/')) {
+            if (!startsWith(src, 'data:image/')) {
                 this.processImageUri(result, element, resolvePath(src), saveAsImage, preserveCrossOrigin, assetMap);
             }
         });
@@ -636,7 +636,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (base64) {
                 if (saveAsBase64) {
                     let commands: Undef<string[]>;
-                    if (mimeType && mimeType.startsWith('image/') && (commands = saveAsBase64.commands)) {
+                    if (mimeType && startsWith(mimeType, 'image/') && (commands = saveAsBase64.commands)) {
                         for (let i = 0; i < commands.length; ++i) {
                             const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
                             if (match) {
@@ -656,7 +656,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     );
                     if (data) {
                         data.base64 = base64;
-                        if (!data.mimeType && data.filename.endsWith('.unknown')) {
+                        if (!data.mimeType && endsWith(data.filename, '.unknown')) {
                             data.mimeType = 'image/unknown';
                         }
                         if (commands && commands.length) {
@@ -744,9 +744,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 case 'IFRAME': {
                     const iframe = element.tagName === 'IFRAME';
                     const file = element.dataset.chromeFile;
-                    if (!iframe || file && file.startsWith('saveTo')) {
+                    if (!iframe || startsWith(file, 'saveTo')) {
                         const src = element instanceof HTMLObjectElement ? element.data : element.src;
-                        if (type.startsWith('image/') || parseMimeType(src).startsWith('image/')) {
+                        if (startsWith(type, 'image/') || startsWith(parseMimeType(src), 'image/')) {
                             this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap);
                             return;
                         }

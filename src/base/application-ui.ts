@@ -27,7 +27,7 @@ const { FILE } = squared.lib.regex;
 const { formatPX, getStyle, hasCoords, isCalc, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, trimBoth, trimString } = squared.lib.util;
+const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, startsWith, trimBoth, trimString } = squared.lib.util;
 
 const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
 const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
@@ -72,7 +72,7 @@ function checkPseudoDimension(styleMap: CssStyleMap, after: boolean, absolute: b
             if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
                 for (const attr in styleMap) {
                     const value = styleMap[attr]!;
-                    if (/(padding|Width|Height)/.test(attr) && parseFloat(value) || !absolute && attr.startsWith('margin') && parseFloat(value)) {
+                    if (/(padding|Width|Height)/.test(attr) && parseFloat(value) || !absolute && startsWith(attr, 'margin') && parseFloat(value)) {
                         return true;
                     }
                 }
@@ -537,7 +537,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 for (let i = 0; i < length; ++i) {
                     const data = pseudoMap[i];
                     const item = data[0];
-                    if (data[1].startsWith('__squared_')) {
+                    if (startsWith(data[1], '__squared_')) {
                         item.parentElement!.id = '';
                     }
                     if (data[2]) {
@@ -601,7 +601,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public useElement(element: HTMLElement) {
         const use = this.getDatasetName('use', element);
-        return !!use && use.split(',').some(value => this.extensionManager.get(value.trim()));
+        return use ? use.split(',').some(value => this.extensionManager.get(value.trim())) : false;
     }
 
     public toString() {
@@ -683,7 +683,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (use ? ApplicationUI.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
                     if (!rootElements.has(element)) {
-                        let shadowRoot: UndefNull<ShadowRoot>;
+                        let shadowRoot: Optional<ShadowRoot>;
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                             this.replaceShadowRootSlots(shadowRoot);
                             this.setStyleMap(sessionId, shadowRoot);
