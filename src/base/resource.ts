@@ -32,7 +32,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     public static resetDataMap(data: ResourceMap) {
         for (const name in data) {
-            const map = data[name];
+            const map = data[name]!;
             if (map.size) {
                 map.clear();
             }

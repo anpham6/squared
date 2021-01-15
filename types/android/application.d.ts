@@ -20,11 +20,11 @@ interface ControllerSettingsDeviationsUI {
 }
 
 interface ResourceStoredMap {
-    styles: Map<string, StyleAttribute>;
-    themes: Map<string, Map<string, ThemeAttribute>>;
-    dimens: Map<string, string>;
-    drawables: Map<string, string>;
-    animators: Map<string, string>;
+    styles?: Map<string, StyleAttribute>;
+    themes?: Map<string, Map<string, ThemeAttribute>>;
+    dimens?: Map<string, string>;
+    drawables?: Map<string, string>;
+    animators?: Map<string, string>;
 }
 
 interface RenderSpaceAttribute extends ViewAttribute, Partial<Dimension<string>> {

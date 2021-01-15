@@ -98,7 +98,10 @@
             squared.setFramework(chrome);
             const time = performance.now();
             squared
-                .copyTo('C:/Users/An/Downloads/chrome', { configUri: 'http://localhost:3000/chrome/bundle.yml', watch: true })
+                .copyTo('C:/Users/An/Downloads/chrome', {
+                    configUri: 'http://localhost:3000/chrome/bundle.yml',
+                    watch: true
+                })
                 .then(result => {
                     console.log(((performance.now() - time) / 1000).toPrecision(4));
                     console.log(result);
@@ -106,14 +109,18 @@
         });
     </script>
     <script type="text/template">
-        function (context, value, config, inputData) {
-            const options = { presets: ['@babel/preset-env'], sourceMaps: true };
+        function (context, value, output, resolve) {
+            const sourceMap = output.sourceMap;
+            const options = { presets: ['@babel/preset-env'], sourceMaps: true, inputSourceMap: sourceMap.map };
             const result = context.transformSync(value, options);
             if (result) {
-                if (result.map) {
-                    inputData.nextMap('babel', result.map, result.code);
+                if (sourceMap && result.map) {
+                    sourceMap.nextMap('babel', result.map, result.code);
                 }
-                return result.code;
+                resolve(result.code);
+            }
+            else {
+                resolve();
             }
         }
     </script>

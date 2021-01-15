@@ -243,7 +243,7 @@ declare module "base" {
         static STRING_SPACE: string;
         static STRING_NEWLINE: string;
         static STRING_WBR: string;
-        static readonly STORED: ResourceStoredMap;
+        static readonly STORED: Required<ResourceStoredMap>;
         static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         static generateId(section: string, name: string, start?: number): string;
         static insertStoredAsset(asset: string, name: string, value: any): string;
@@ -262,7 +262,6 @@ declare module "base" {
         preFormatString(value: string): string
         removeExcludedText(node: T, element: Element): string;
         get controllerSettings(): ControllerSettingsUI;
-        get mapOfStored(): ResourceStoredMap;
     }
 
     class Extension<T extends Node> {

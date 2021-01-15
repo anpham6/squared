@@ -698,7 +698,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public static insertStoredAsset(asset: string, name: string, value: any) {
-        const stored: Map<string, unknown> = ResourceUI.STORED[asset];
+        const stored = ResourceUI.STORED[asset];
         if (stored && hasValue(value)) {
             let result = '';
             if (stored) {
@@ -1504,9 +1504,5 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
 
     get controllerSettings() {
         return (this.application.controllerHandler as ControllerUI<T>).localSettings;
-    }
-
-    get mapOfStored() {
-        return ResourceUI.STORED;
     }
 }
