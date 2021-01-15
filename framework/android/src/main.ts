@@ -1,6 +1,6 @@
 import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
 import EXT_NAME = squared.base.lib.internal.EXT_NAME;
-import EXT_ANDROID = android.internal.EXT_ANDROID;
+import EXT_ANDROID = internal.android.EXT_ANDROID;
 
 import Application from './application';
 import Controller from './controller';

@@ -5,8 +5,8 @@ import NODE_PROCEDURE = squared.base.lib.constant.NODE_PROCEDURE;
 import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import LAYOUT_CSSGRID = squared.lib.internal.LAYOUT_CSSGRID;
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
-import LAYOUT_STRING = android.internal.LAYOUT_STRING;
 import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
+import LAYOUT_STRING = internal.android.LAYOUT_STRING;
 
 import { CONTAINER_TAGNAME } from '../lib/constant';
 

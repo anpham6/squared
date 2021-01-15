@@ -4,7 +4,7 @@ import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import EXT_NAME = squared.base.lib.internal.EXT_NAME;
 import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
-import LAYOUT_STRING = android.internal.LAYOUT_STRING;
+import LAYOUT_STRING = internal.android.LAYOUT_STRING;
 
 import { BUILD_VERSION, CONTAINER_ELEMENT, CONTAINER_NODE as CONTAINER_NODE_ENUM, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, LAYOUT_MAP, RESERVED_JAVA } from './lib/constant';
 import { API_VERSION, DEPRECATED_ATTRIBUTE } from './lib/customization';

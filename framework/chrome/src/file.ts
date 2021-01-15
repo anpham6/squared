@@ -1,4 +1,4 @@
-import DIR_FUNCTIONS = chrome.internal.DIR_FUNCTIONS
+import DIR_FUNCTIONS = internal.chrome.DIR_FUNCTIONS
 
 import type Application from './application';
 

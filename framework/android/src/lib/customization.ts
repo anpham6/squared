@@ -1,4 +1,4 @@
-import LAYOUT_STRING = android.internal.LAYOUT_STRING;
+import LAYOUT_STRING = internal.android.LAYOUT_STRING;
 
 import { BUILD_VERSION } from './constant';
 
