@@ -5,7 +5,7 @@
       "name": "Launch Chrome",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:3000/demos/index.html",
+      "url": "http://localhost:3000/demos/index_debug.html",
       "webRoot": "${workspaceFolder}"
     },
     {

@@ -13,6 +13,7 @@
     "watch-android": "tsc -w -p ./config/tsconfig.android.dev.json",
     "watch-chrome": "tsc -w -p ./config/tsconfig.chrome.dev.json",
     "watch-vdom": "tsc -w -p ./config/tsconfig.vdom.dev.json",
+    "watch-all": "npm run watch && npm run watch-android && npm run watch-chrome",
     "bundles": "node bundle.js -f base -o ./dist/bundles/squared.base.bundle.js && node bundle.js -f base -m svg -o ./dist/bundles/squared+svg.base.bundle.js && node bundle.js -f android -o ./dist/bundles/squared.android.bundle.js && node bundle.js -f android -m svg -o ./dist/bundles/squared+svg.android.bundle.js &&node bundle.js -f chrome -o ./dist/bundles/squared.chrome.bundle.js && node bundle.js -f chrome -m svg -o ./dist/bundles/squared+svg.chrome.bundle.js && node bundle.js -f vdom -o ./dist/bundles/squared.vdom.bundle.js && node bundle.js -f vdom -m svg -o ./dist/bundles/squared+svg.vdom.bundle.js && node bundle.js -f vdom-lite -o ./dist/bundles/squared.vdom-lite.bundle.js",
     "md5-check": "npm run md5-chromium && npm run md5-chromium-diff",
     "md5-chromium": "rimraf tmp/chromium/* && node md5sum.js -h http://localhost:3000 -d ./md5/data.csv -b chromium -o ./tmp/chromium -f 1",
