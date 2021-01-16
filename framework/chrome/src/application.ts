@@ -41,7 +41,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         return this.processAssets('appendTo', target, options);
     }
 
-    private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: FileArchivingOptions) {
+    private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: FileArchivingOptions | FileCopyingOptions) {
         this.reset();
         if (!this.parseDocumentSync()) {
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
@@ -55,16 +55,12 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             }
         }
         if (options.configUri) {
-            const assetMap = new Map<Element, StandardMap>();
-            options.assetMap = assetMap;
             const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     const database = options.database ||= [];
+                    const assetMap = options.assetMap ||= new Map<Element, StandardMap>();
                     const paramMap = new Map<string, [RegExp, string]>();
-                    if (location.href.includes('?')) {
-                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value]));
-                    }
                     const replaceParams = (param: Undef<any>): unknown => {
                         if (param) {
                             if (typeof param !== 'number' && typeof param !== 'boolean') {
@@ -92,6 +88,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                         }
                         return param;
                     };
+                    if (location.href.includes('?')) {
+                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value]));
+                    }
                     for (const item of config.data as AssetCommand[]) {
                         if (item.selector) {
                             const cloudDatabase = item.cloudDatabase;
@@ -117,6 +116,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                             });
                         }
                     }
+                    if (assetMap.size === 0) {
+                        delete options.assetMap;
+                    }
                     if (database.length === 0) {
                         delete options.database;
                     }
@@ -129,7 +131,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 }
             }
         }
-        return this.fileHandler![module](pathname, options);
+        return (this.fileHandler as chrome.base.File<T>)[module](pathname, options);
     }
 
     get initializing() {

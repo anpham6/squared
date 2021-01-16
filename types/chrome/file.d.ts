@@ -1,11 +1,10 @@
-interface ChromeAsset extends FileAsset, BundleAction {
+interface ChromeAsset extends FileAsset, BundleAction, AttributeAction {
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
     rootDir?: string;
     outerHTML?: string;
     inlineContent?: string;
-    attributes?: ObjectMap<Optional<string>>;
 }
 
 interface OutputModifiers extends ElementScope {
@@ -28,6 +27,10 @@ interface AssetCommand extends SaveAsOptions {
         identifier?: string;
         value?: string;
     };
+}
+
+interface AttributeAction {
+    attributes?: AttributeMap;
 }
 
 interface RequestData {

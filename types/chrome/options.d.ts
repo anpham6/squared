@@ -1,14 +1,12 @@
 interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
-    assetMap?: Map<Element, AssetCommand>;
+    assetMap?: ElementAssetMap;
 }
 
 interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileActionOptions {}
 
 interface FileArchivingOptions extends squared.base.FileArchivingOptions, FileActionOptions {}
 
-interface SaveAsOptions extends Partial<LocationUri>, OutputAction, OutputModifiers {
-    attributes?: ObjectMap<Null<string>>;
-}
+interface SaveAsOptions extends Partial<LocationUri>, AttributeAction, OutputAction, OutputModifiers {}
 
 interface UriOptions {
     element?: HTMLElement;

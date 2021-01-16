@@ -23,6 +23,9 @@ declare namespace base {
 
     class File<T extends Node> extends squared.base.File<T> {
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;
+        copyTo(pathname: string, options: FileCopyingOptions): FileActionResult;
+        appendTo(pathname: string, options: FileArchivingOptions): FileActionResult;
+        saveAs(filename: string, options: FileArchivingOptions): FileActionResult;
         getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
         getScriptAssets(options?: FileActionAttribute): [ChromeAsset[], Undef<TemplateMap>];
         getLinkAssets(options?: FileActionAttribute): ChromeAsset[];

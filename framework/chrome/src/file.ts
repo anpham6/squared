@@ -6,23 +6,16 @@ import Pattern = squared.lib.base.Pattern;
 
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
-interface FileAsData {
-    file: string;
-    preserve: boolean;
-    base64: boolean;
-    inline: boolean;
-    format?: string;
-    compress?: CompressFormat[];
-}
-
 interface OptionsData {
     preserve?: boolean;
-    base64?: boolean;
     inline?: boolean;
     compress?: CompressFormat[];
 }
 
-type AttributeMap = ObjectMap<Optional<string>>;
+interface FileAsData extends OptionsData {
+    file: string;
+    format?: string;
+}
 
 const ASSETS = squared.base.Resource.ASSETS;
 
@@ -47,17 +40,13 @@ function parseFileAs(attr: string, value: Undef<string>) {
 
 function parseOptions(value: Undef<string>): OptionsData {
     if (value) {
-        let compress: Undef<CompressFormat[]>;
         const pattern = /\bcompress\[\s*([a-z\d]+)\s*\]/g;
-        let match: Null<RegExpExecArray>;
+        let compress: Undef<CompressFormat[]>,
+            match: Null<RegExpExecArray>;
         while (match = pattern.exec(value)) {
             (compress ||= []).push({ format: match[1] });
         }
-        return {
-            preserve: value.includes('preserve'),
-            inline: value.includes('inline'),
-            compress
-        };
+        return { preserve: value.includes('preserve'), inline: value.includes('inline'), compress };
     }
     return {};
 }
@@ -407,17 +396,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return null;
     }
 
-    public copyTo(pathname: string, options: FileCopyingOptions = {}) {
+    public copyTo(pathname: string, options: FileCopyingOptions) {
         options.pathname = pathname;
         return this.copying(this.processAssets(options));
     }
 
-    public appendTo(pathname: string, options: FileArchivingOptions = {}) {
+    public appendTo(pathname: string, options: FileArchivingOptions) {
         options.appendTo = pathname;
         return this.archiving(this.processAssets(options));
     }
 
-    public saveAs(filename: string, options: FileArchivingOptions = {}) {
+    public saveAs(filename: string, options: FileArchivingOptions) {
         options.filename = filename;
         return this.archiving(this.processAssets(options));
     }
@@ -428,11 +417,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (file === 'ignore') {
             return [];
         }
-        let assetMap: Undef<Map<Element, AssetCommand>>,
+        let assetMap: Undef<ElementAssetMap>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsHtml: Undef<SaveAsOptions>;
         if (options) {
-            ({ preserveCrossOrigin, assetMap } = options);
+            ({ assetMap, preserveCrossOrigin } = options);
             saveAsHtml = options.saveAs?.html;
         }
         let filename: Undef<string>,
@@ -468,7 +457,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (this.processExtensions(data)) {
             setOutputModifiers(data, compress, tasks, cloudStorage, attributes);
             if (attributes) {
-                data.outerHTML = /^\s*<[\S\s]*html[^>]+>\s*/i.exec(element.outerHTML)?.[0].replace(/(\s?[\w-]+="")+>/g, '');
+                const match = /^\s*<[\S\s]*?html[^>]+>/i.exec(element.outerHTML);
+                if (match) {
+                    data.outerHTML = match[0].replace(/(\s?[\w-]+="")+>/, '>');
+                }
             }
             data.filename ||= filename || getPageFilename();
             data.mimeType = 'text/html';
@@ -478,7 +470,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getScriptAssets(options?: FileActionOptions): [ChromeAsset[], Undef<TemplateMap>] {
-        let assetMap: Undef<Map<Element, AssetCommand>>,
+        let assetMap: Undef<ElementAssetMap>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsScript: Undef<SaveAsOptions>;
         if (options) {
@@ -546,9 +538,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getLinkAssets(options?: FileActionOptions) {
-        let assetMap: Undef<Map<Element, AssetCommand>>,
-            saveAsLink: Undef<SaveAsOptions>,
-            preserveCrossOrigin: Undef<boolean>;
+        let assetMap: Undef<ElementAssetMap>,
+            preserveCrossOrigin: Undef<boolean>,
+            saveAsLink: Undef<SaveAsOptions>;
         if (options) {
             ({ assetMap, preserveCrossOrigin } = options);
             saveAsLink = options.saveAs?.link;
@@ -596,7 +588,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getImageAssets(options?: FileActionOptions) {
-        let assetMap: Undef<Map<Element, AssetCommand>>,
+        let assetMap: Undef<ElementAssetMap>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>,
             saveAsBase64: Undef<SaveAsOptions>;
@@ -722,7 +714,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     protected getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {
-        let assetMap: Undef<Map<Element, AssetCommand>>,
+        let assetMap: Undef<ElementAssetMap>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>;
         if (options) {
@@ -747,7 +739,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (!iframe || startsWith(file, 'saveTo')) {
                         const src = element instanceof HTMLObjectElement ? element.data : element.src;
                         if (startsWith(type, 'image/') || startsWith(parseMimeType(src), 'image/')) {
-                            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap);
+                            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin);
                             return;
                         }
                     }
