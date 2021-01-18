@@ -8,11 +8,9 @@ type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgView = squared.svg.SvgView;
 
-const { STRING } = squared.lib.regex;
-
 const { cloneObject, iterateArray } = squared.lib.util;
 
-const REGEXP_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);
+const REGEXP_LENGTHPERCENTAGE = new RegExp(squared.lib.regex.STRING.LENGTH_PERCENTAGE);
 
 function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, viewBox?: DOMRect, element?: SvgViewBoxElement) {
     if (parent) {

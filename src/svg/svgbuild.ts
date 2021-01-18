@@ -25,14 +25,12 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgUse = squared.svg.SvgUse;
 type SvgView = squared.svg.SvgView;
 
-const { STRING } = squared.lib.regex;
-
 const { isAngle, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction } = squared.lib.math;
 const { hasBit, isArray, plainMap, splitPair } = squared.lib.util;
 
-const RE_DECIMAL = new Pattern(STRING.DECIMAL);
+const RE_DECIMAL = new Pattern(squared.lib.regex.STRING.DECIMAL);
 const RE_PATHCOMMAND = new Pattern(/([A-Za-z])([^A-Za-z]+)?/g);
 
 export default class SvgBuild implements squared.svg.SvgBuild {

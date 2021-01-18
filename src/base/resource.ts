@@ -4,12 +4,10 @@ import type Node from './node';
 
 import { fromMimeType, randomUUID } from './lib/util';
 
-const { STRING } = squared.lib.regex;
-
 const { extractURL, resolveURL } = squared.lib.css;
 const { convertBase64, fromLastIndexOf, parseMimeType, startsWith } = squared.lib.util;
 
-const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
+const REGEXP_DATAURI = new RegExp(`^${squared.lib.regex.STRING.DATAURI}$`);
 
 export default class Resource<T extends Node> implements squared.base.Resource<T> {
     public static readonly KEY_NAME = 'squared.base.resource';
@@ -39,6 +37,37 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
+    public static parseDataURI(value: string, mimeType?: string, encoding?: string) {
+        const match = REGEXP_DATAURI.exec(value);
+        if (match && match[1]) {
+            const leading = match[2];
+            const trailing = match[3];
+            const data = match[4];
+            if (trailing) {
+                mimeType = leading.trim();
+                encoding = trailing.trim();
+            }
+            else if (leading) {
+                if (leading.includes('/')) {
+                    mimeType = leading;
+                    if (!encoding) {
+                        try {
+                            if (btoa(atob(data)) === data) {
+                                encoding = 'base64';
+                            }
+                        }
+                        catch {
+                        }
+                    }
+                }
+                else {
+                    encoding = leading;
+                }
+            }
+            return { mimeType, encoding, data } as RawDataOptions;
+        }
+    }
+
     private _fileHandler: Null<File<T>> = null;
 
     constructor(public readonly application: Application<T>) {}
@@ -51,12 +80,11 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public addImage(element: HTMLImageElement) {
         if (element.complete) {
             const uri = element.src;
-            if (startsWith(uri, 'data:image/')) {
-                const match = REGEXP_DATAURI.exec(uri);
-                if (match) {
-                    const [mimeType, encoding] = match[1].split(/\s*;\s*/);
-                    this.addRawData(uri, match[2], { encoding: encoding || 'base64', mimeType, width: element.naturalWidth, height: element.naturalHeight });
-                }
+            const image = Resource.parseDataURI(uri, 'image/unknown', 'base64');
+            if (image) {
+                image.width = element.naturalWidth;
+                image.height = element.naturalHeight;
+                this.addRawData(uri, image.data as string, image);
             }
             if (uri) {
                 Resource.ASSETS.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
@@ -107,6 +135,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 }
                 else {
                     base64 = content;
+                    content = undefined;
                 }
             }
             else if (data) {

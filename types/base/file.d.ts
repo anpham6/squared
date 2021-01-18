@@ -39,6 +39,7 @@ interface TaskAction {
 
 interface OutputAction {
     moveTo?: string;
+    process?: string[];
     commands?: string[];
     compress?: CompressFormat[];
     document?: string | string[];

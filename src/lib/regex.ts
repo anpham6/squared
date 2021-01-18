@@ -12,7 +12,7 @@ export const STRING = {
     LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
     UNIT_LENGTH,
-    DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
+    DATAURI: '\\s*(data:\\s*([^;,\\s]+)?\\s*;?\\s*([^,\\s]+)?\\s*,)?\\s*(.+?)\\s*',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
     CSS_RESOLUTION: `(${DECIMAL_UN})(dpi|dpcm|dppx)`

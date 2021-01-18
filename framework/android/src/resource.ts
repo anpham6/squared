@@ -5,7 +5,7 @@ import type View from './view';
 
 import { concatString, parseColor } from './lib/util';
 
-const { FILE } = squared.lib.regex;
+const { PROTOCOL } = squared.lib.regex.FILE;
 
 const { extractURL, getSrcSet } = squared.lib.css;
 const { endsWith, fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPairStart, startsWith, trimString } = squared.lib.util;
@@ -29,7 +29,7 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
                     break;
                 case 'src':
                 case 'srcCompat':
-                    if (FILE.PROTOCOL.test(value)) {
+                    if (PROTOCOL.test(value)) {
                         const src = Resource.addImage({ mdpi: value });
                         if (src) {
                             obj[attr] = `@drawable/${src}`;

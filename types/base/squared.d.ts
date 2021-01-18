@@ -216,6 +216,7 @@ declare module "base" {
         static hasMimeType(formats: MIMEOrAll, value: string): boolean;
         static getExtension(value: string): string;
         static resetDataMap(data: ResourceMap): void;
+        static parseDataURI(value: string, mimeType?: string, encoding?: string): RawDataOptions;
         readonly application: Application<T>;
         reset(): void;
         addImage(element: HTMLImageElement): void;

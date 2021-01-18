@@ -23,7 +23,7 @@
             squared.settings.outputArchiveCache = true;
             squared.parseDocument('squared_ui').then(async function() {
                 chrome.system.saveHtmlPage();
-                chrome.system.saveImageAssets();
+                chrome.system.saveImageAssets('image', { saveAs: { base64: { commands: ['png(100x100){315}'] } }});
                 chrome.system.saveScriptAssets();
                 chrome.system.saveLinkAssets();
                 // chrome.system.saveAudioAssets();
@@ -34,13 +34,13 @@
                             pathname: 'images',
                             filename: 'android.png',
                             uri: 'http://localhost:3000/common/images/android.png',
-                            compress: [{ format: 'png', options: { apiKey: '' } }]
+                            compress: [{ format: 'png' }]
                         },
                         {
                             pathname: 'images',
                             filename: 'android-ldpi.png',
                             uri: 'http://localhost:3000/common/images/android-ldpi.png',
-                            compress: [{ format: 'png', options: { apiKey: '' } }]
+                            compress: [{ format: 'png' }]
                         },
                         {
                             pathname: 'images',
@@ -68,7 +68,7 @@
                 console.log(await squared.appendFiles('http://localhost:3000/common/base_project.7z', options));
                 console.log(await squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options));
                 console.log(await squared.copyFiles('C:/Users/An/Downloads/chrome_data', options));
-                console.log(await squared.save());
+                console.log(await squared.saveAs('image-binary', { saveAs: { image: { binary: true } } }));
             });
         });
     </script>

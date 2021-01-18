@@ -27,7 +27,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileActionOptions,
     return Object.assign(options, { assets, pathname, filename });
 }
 
-const checkFileName = (value: Undef<string>) => value || application!.userSettings.outputArchiveName;
+const checkFileName = (value: Undef<string>, type: string) => value || `${application!.userSettings.outputArchiveName}-${type}`;
 
 const appBase: squared.base.AppFramework<Node> = {
     base: {
@@ -81,25 +81,25 @@ const appBase: squared.base.AppFramework<Node> = {
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         saveHtmlPage(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, checkFileName(filename) + '-html')) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, checkFileName(filename, 'html'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveScriptAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getScriptAssets(options)[0], options, undefined, checkFileName(filename) + '-script')) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving(createAssetsOptions(file.getScriptAssets(options)[0], options, undefined, checkFileName(filename, 'script'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveLinkAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, checkFileName(filename) + '-link')) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, checkFileName(filename, 'link'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveImageAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, checkFileName(filename) + '-image')) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, checkFileName(filename, 'image'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveVideoAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, checkFileName(filename) + '-video')) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, checkFileName(filename, 'video'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveAudioAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, checkFileName(filename) + '-audio')) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, checkFileName(filename, 'audio'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveFontAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, checkFileName(filename) + '-font')) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, checkFileName(filename, 'font'))) : reject(FRAMEWORK_NOT_INSTALLED);
         }
     },
     create() {

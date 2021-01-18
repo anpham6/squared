@@ -8,8 +8,8 @@ interface ChromeAsset extends FileAsset, BundleAction, AttributeAction {
 }
 
 interface OutputModifiers extends ElementScope {
-    process?: string[];
     inline?: boolean;
+    blob?: boolean;
     preserve?: boolean;
     ignore?: boolean;
     exclude?: boolean;

@@ -21,14 +21,14 @@ const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, ge
 const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, endsWith, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
-const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
-const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
-const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
-const REGEXP_FONTFAMILY = /\s*font-family:\s*([^;]+);/;
-const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
-const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?/;
-const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
+const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
+const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
+const REGEXP_FONTSRC = /\s?src:\s*([^;]+);/;
+const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
+const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
+const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
+const REGEXP_FONTURL = /\s?(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?/;
+const REGEXP_DATAURI = new RegExp(`\\s?url\\("?(${STRING.DATAURI})"?\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
@@ -40,12 +40,14 @@ function parseImageUrl(resource: Null<Resource<Node>>, styleSheetHref: string, b
         while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
                 if (resource) {
-                    const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                    resource.addRawData(match[1], match[3], { mimeType, encoding });
+                    const leading = match[3];
+                    const mimeType = leading && leading.includes('/') ? leading : 'image/unknown';
+                    const encoding = match[4] || (leading && mimeType !== leading ? leading : 'base64');
+                    resource.addRawData(match[1], match[5], { mimeType, encoding });
                 }
             }
             else {
-                const uri = resolvePath(match[3], styleSheetHref);
+                const uri = resolvePath(match[5], styleSheetHref);
                 if (uri) {
                     if (resource) {
                         resource.addImageData(uri);
