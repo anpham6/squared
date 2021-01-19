@@ -1,9 +1,8 @@
-interface ChromeAsset extends FileAsset, BundleAction, AttributeAction {
+interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction {
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
     rootDir?: string;
-    outerHTML?: string;
     inlineContent?: string;
 }
 
@@ -15,7 +14,7 @@ interface OutputModifiers extends ElementScope {
     exclude?: boolean;
 }
 
-interface AssetCommand extends SaveAsOptions {
+interface AssetCommand extends SaveAsOptions, ElementAction {
     selector?: string;
     type?: string;
     saveAs?: string;

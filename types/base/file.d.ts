@@ -31,12 +31,6 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
-interface TaskAction {
-    handler: string;
-    task: string;
-    preceding?: boolean;
-}
-
 interface OutputAction {
     moveTo?: string;
     process?: string[];
@@ -46,6 +40,12 @@ interface OutputAction {
     cloudStorage?: CloudStorage[];
 }
 
+interface TaskAction {
+    handler: string;
+    task: string;
+    preceding?: boolean;
+}
+
 interface BundleAction {
     bundleId?: number;
     bundleIndex?: number;
@@ -53,12 +53,23 @@ interface BundleAction {
     trailingContent?: string[];
 }
 
+interface ElementAction {
+    element?: ElementIndex;
+}
+
+interface ElementIndex {
+    tagName: string;
+    tagIndex: number;
+    outerHTML: string;
+    outerIndex: number;
+}
+
 interface CloudService extends ObjectMap<unknown> {
     service: string;
     credential: string | PlainObject;
 }
 
-interface CloudDatabase<T = string | PlainObject | any[]> extends CloudService {
+interface CloudDatabase<T = string | PlainObject | any[]> extends CloudService, ElementAction {
     value: string | ObjectMap<string | string[]>;
     table?: string;
     name?: string;
@@ -67,9 +78,7 @@ interface CloudDatabase<T = string | PlainObject | any[]> extends CloudService {
     limit?: number;
     params?: unknown[];
     options?: PlainObject;
-    element?: {
-        outerHTML?: string;
-    };
+    document?: string | string[];
 }
 
 interface CloudStorage extends CloudService {

@@ -114,7 +114,7 @@
             const options = { presets: ['@babel/preset-env'], sourceMaps: true, inputSourceMap: sourceMap.map };
             const result = context.transformSync(value, options);
             if (result) {
-                if (sourceMap && result.map) {
+                if (result.map) {
                     sourceMap.nextMap('babel', result.map, result.code);
                 }
                 resolve(result.code);
@@ -144,7 +144,7 @@
                 </header>
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour" />
                 <div class="body">
-                    <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
+                    <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
                 </div>
             </div>
             <div class="card">
@@ -153,7 +153,7 @@
                 </header>
                 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/coloured-balloon.jpg" alt="Coloured balloon" />
                 <div class="body">
-                    <p>I like the nice standard balloons. Stripy. Solid looking basket.</p>
+                    <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
                 </div>
             </div>
             <div class="card">
@@ -162,7 +162,7 @@
                 </header>
                 <object data="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/champagne-balloons.jpg" width="500"></object>
                 <div class="body">
-                    <p>This one uses the correct Pantone colour for Fortnum and Mason.</p>
+                    <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
                 </div>
             </div>
             <div class="card">
@@ -171,7 +171,7 @@
                 </header>
                 <embed src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/funfair-balloons.jpg" width="200" />
                 <div class="body">
-                    <p>Here we have balloons getting tangled up with a funfair.</p>
+                    <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
                 </div>
             </div>
         </div>

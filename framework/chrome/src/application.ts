@@ -1,5 +1,7 @@
 import type Extension from './extension';
 
+import File from './file';
+
 const { UNABLE_TO_FINALIZE_DOCUMENT, reject } = squared.lib.error;
 const { isPlainObject } = squared.lib.util;
 
@@ -58,8 +60,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
-                    const database = options.database ||= [];
-                    const assetMap = options.assetMap ||= new Map<Element, StandardMap>();
+                    const documentHandler = this.userSettings.outputDocumentHandler;
+                    const assetMap = options.assetMap ||= new Map<Element, AssetCommand>();
+                    const database: [Element, CloudDatabase][] = [];
                     const paramMap = new Map<string, [RegExp, string]>();
                     const replaceParams = (param: Undef<any>): unknown => {
                         if (param) {
@@ -106,7 +109,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     case 'text':
                                     case 'attribute':
                                         if (cloudDatabase) {
-                                            database.push({ ...cloudDatabase, element: { outerHTML: element.outerHTML } });
+                                            database.push([element, { document: documentHandler, ...cloudDatabase }]);
                                         }
                                         break;
                                     default:
@@ -119,8 +122,23 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     if (assetMap.size === 0) {
                         delete options.assetMap;
                     }
-                    if (database.length === 0) {
-                        delete options.database;
+                    else {
+                        for (const [element, data] of assetMap) {
+                            File.setElementData(element, data);
+                        }
+                    }
+                    if (database.length) {
+                        for (let i = 0, length = database.length; i < length; ++i) {
+                            const [element, data] = database[i];
+                            File.setElementData(element, data);
+                        }
+                        const items = database.map(item => item[1]);
+                        if (options.database) {
+                            options.database.push(...items);
+                        }
+                        else {
+                            options.database = items;
+                        }
                     }
                 }
                 else {
