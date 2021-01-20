@@ -119,18 +119,19 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                             });
                         }
                     }
+                    const cache: SelectorCache = {};
                     if (assetMap.size === 0) {
                         delete options.assetMap;
                     }
                     else {
                         for (const [element, data] of assetMap) {
-                            File.setElementData(element, data);
+                            File.setElementData(element, data, cache);
                         }
                     }
                     if (database.length) {
                         for (let i = 0, length = database.length; i < length; ++i) {
                             const [element, data] = database[i];
-                            File.setElementData(element, data);
+                            File.setElementData(element, data, cache);
                         }
                         const items = database.map(item => item[1]);
                         if (options.database) {

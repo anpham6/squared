@@ -236,7 +236,7 @@ function checkSaveAs(uri: Undef<string>, pathname: Undef<string>, filename?: str
     return ['', false];
 }
 
-function setOutputModifiers(data: ChromeAsset, compress: Undef<CompressFormat[]>, tasks: Undef<TaskAction[]>, cloudStorage: Undef<CloudStorage[]>, attributes?: AttributeMap, element?: Null<Element>, elementIndex?: ElementIndex) {
+function setOutputModifiers(data: ChromeAsset, compress: Undef<CompressFormat[]>, tasks: Undef<TaskAction[]>, cloudStorage: Undef<CloudStorage[]>, attributes?: AttributeMap, element?: Null<Element>, elementIndex?: ElementIndex, selectorCache?: SelectorCache) {
     if (compress) {
         (data.compress ||= []).push(...compress);
     }
@@ -253,7 +253,7 @@ function setOutputModifiers(data: ChromeAsset, compress: Undef<CompressFormat[]>
         data.element = elementIndex;
     }
     else if (element) {
-        File.setElementData(element, data);
+        File.setElementData(element, data, selectorCache);
     }
 }
 
@@ -290,7 +290,7 @@ const getDirectory = (path: string, start: number) => path.split('?')[0].substri
 const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
-    public static setElementData(element: Element, data: ElementAction) {
+    public static setElementData(element: Element, data: ElementAction, cache?: SelectorCache) {
         const tagName = element.tagName;
         let outerHTML = element.outerHTML.trim(),
             tagIndex = 0,
@@ -302,9 +302,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         else {
-            const elements = document.querySelectorAll(tagName);
+            const elements = cache && cache[tagName] || document.querySelectorAll(tagName);
             const length = elements.length;
-            if (length > 1)  {
+            if (length > 1) {
                 for (let i = 0, j = 0; i < length; ++i) {
                     if (elements[i] === element) {
                         tagIndex = i;
@@ -316,7 +316,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         }
-        data.element = { tagName, tagIndex, outerHTML, outerIndex }
+        data.element = { tagName, tagIndex, outerHTML, outerIndex };
         return data;
     }
 
@@ -627,6 +627,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         const result: ChromeAsset[] = [];
+        const selectorCache: SelectorCache = {};
         document.querySelectorAll('img, input[type=image], picture > source[src]').forEach((element: HTMLImageElement | HTMLSourceElement | HTMLVideoElement) => {
             let src = element instanceof HTMLVideoElement ? element.poster : element.src,
                 base64: Undef<string>;
@@ -643,12 +644,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else {
                 src = resolvePath(src);
             }
-            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, base64);
+            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, selectorCache, base64);
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
             RE_SRCSET.matcher(element.srcset.trim());
             while (RE_SRCSET.find()) {
-                this.processImageUri(result, element, resolvePath(RE_SRCSET.group(1)!), saveAsImage, preserveCrossOrigin, assetMap);
+                this.processImageUri(result, element, resolvePath(RE_SRCSET.group(1)!), saveAsImage, preserveCrossOrigin, assetMap, selectorCache);
             }
         });
         for (const uri of ASSETS.image.keys()) {
@@ -975,7 +976,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
     }
 
-    private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>, base64?: string) {
+    private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>, selectorCache?: SelectorCache, base64?: string) {
         if (uri) {
             let saveAs: Undef<string>,
                 saveTo: Undef<boolean>,
@@ -1040,7 +1041,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, document: this.userSettings.outputDocumentHandler, fromConfig });
             if (this.processExtensions(data)) {
-                setOutputModifiers(data, compress, tasks, cloudStorage, attributes, element, elementIndex);
+                setOutputModifiers(data, compress, tasks, cloudStorage, attributes, element, elementIndex, selectorCache);
                 if (filename) {
                     data.filename = filename;
                 }

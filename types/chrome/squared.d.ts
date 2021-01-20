@@ -22,7 +22,7 @@ declare namespace base {
     class Resource<T extends Node> extends squared.base.Resource<T> {}
 
     class File<T extends Node> extends squared.base.File<T> {
-        static setElementData(element: Element, data: ElementAction): ElementAction;
+        static setElementData(element: Element, data: ElementAction, cache?: ObjectMap<NodeListOf<Element>>): ElementAction;
         static parseUri(uri: string, options?: UriOptions): Null<ChromeAsset>;
         copyTo(pathname: string, options: FileCopyingOptions): FileActionResult;
         appendTo(pathname: string, options: FileArchivingOptions): FileActionResult;

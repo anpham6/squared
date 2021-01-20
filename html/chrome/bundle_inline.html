@@ -106,14 +106,18 @@
         });
     </script>
     <script type="text/template" data-chrome-template="js::@babel/core::es5-script">
-        function (context, value, config, input) {
-            const options = { presets: ['@babel/preset-env'], sourceMaps: true };
+        function (context, value, output, resolve) {
+            const sourceMap = output.sourceMap;
+            const options = { presets: ['@babel/preset-env'], sourceMaps: true, inputSourceMap: sourceMap.map };
             const result = context.transformSync(value, options);
             if (result) {
                 if (result.map) {
-                    input.nextMap('babel', result.map, result.code);
+                    sourceMap.nextMap('babel', result.map, result.code);
                 }
-                return result.code;
+                resolve(result.code);
+            }
+            else {
+                resolve();
             }
         }
     </script>

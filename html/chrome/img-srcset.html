@@ -68,7 +68,7 @@
                 console.log(await squared.appendFiles('http://localhost:3000/common/base_project.7z', options));
                 console.log(await squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options));
                 console.log(await squared.copyFiles('C:/Users/An/Downloads/chrome_data', options));
-                console.log(await squared.saveAs('image-binary', { saveAs: { image: { binary: true } } }));
+                console.log(await squared.saveAs('image-binary', { saveAs: { image: { blob: true } } }));
             });
         });
     </script>
@@ -94,12 +94,12 @@
                                                                    ( (orientation: landscape) or (min-width: 1000px) ) 533px,
                                                                    200px" />
         <br /><br />
-        <img id="pencil" src="/common/images/pencil.png" srcset="/common/images/pencil-ldpi.png 0.75x,
-                                                                 /common/images/pencil.png,
-                                                                 /common/images/pencil-hdpi.png 1.5x,
-                                                                 /common/images/pencil-xhdpi.png 2x,
-                                                                 /common/images/pencil-xxhdpi.png 3x,
-                                                                 /common/images/pencil-xxxhdpi.png 4x" />
+        <img id="pencil" src="../common/images/pencil.png" srcset="../common/images/pencil-ldpi.png 0.75x,
+                                                                 ../common/images/pencil.png,
+                                                                 ../common/images/pencil-hdpi.png 1.5x,
+                                                                 ../common/images/pencil-xhdpi.png 2x,
+                                                                 ../common/images/pencil-xxhdpi.png 3x,
+                                                                 ../common/images/pencil-xxxhdpi.png 4x" />
         <br /><br />
         <!--<audio controls>
             <source
