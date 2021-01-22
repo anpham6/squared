@@ -60,8 +60,10 @@ interface ElementAction {
 interface ElementIndex {
     tagName: string;
     tagIndex: number;
+    tagCount: number;
     outerHTML: string;
     outerIndex: number;
+    outerCount: number;
     srcSet?: boolean;
 }
 

@@ -283,6 +283,41 @@ function getPageFilename(value: Undef<string>) {
     return value;
 }
 
+function isSpace(ch: string) {
+    const n = ch.charCodeAt(0);
+    return n === 32 || n < 14 && n > 8;
+}
+
+function findOpeningTag(outerHTML: string) {
+    const length = outerHTML.length;
+    for (let i = 0, quote = ''; i < length; ++i) {
+        const ch = outerHTML[i];
+        if (ch === '=') {
+            if (!quote) {
+                while (isSpace(outerHTML[++i])) {}
+                switch (outerHTML[i]) {
+                    case '"':
+                        quote = '"';
+                        break;
+                    case "'":
+                        quote = "'";
+                        break;
+                    case '>':
+                        --i;
+                        break;
+                }
+            }
+        }
+        else if (ch === quote) {
+            quote = '';
+        }
+        else if (ch === '>' && !quote) {
+            return outerHTML.substring(0, i + 1);
+        }
+    }
+    return '';
+}
+
 const copyDocument = (value: string | string[]) => Array.isArray(value) ? value.slice(0) : value;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
@@ -294,30 +329,35 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     public static setElementData(element: Element, data: ElementAction, cache?: SelectorCache) {
         const tagName = element.tagName;
         let outerHTML = element.outerHTML.trim(),
+            tagCount = 0,
             tagIndex = 0,
-            outerIndex = 0;
+            outerIndex = 0,
+            outerCount = 0;
         if (tagName === 'HTML') {
-            const match = /<[^Hh]*html[^>]+>/i.exec(outerHTML);
-            if (match) {
-                outerHTML = match[0].replace(/(\s?[\w-]+="")+>/, '>');
+            outerHTML = findOpeningTag(outerHTML).replace(/ style="">$/, '>');
+            if (!outerHTML) {
+                return data;
             }
+            tagCount = 1;
+            outerCount = 1;
         }
         else {
-            const elements = cache && cache[tagName] || document.querySelectorAll(tagName);
-            const length = elements.length;
-            if (length > 1) {
-                for (let i = 0, j = 0; i < length; ++i) {
-                    if (elements[i] === element) {
-                        tagIndex = i;
-                        outerIndex = j++;
-                    }
-                    else if (elements[i].outerHTML.trim() === outerHTML) {
-                        ++j;
-                    }
+            if (cache) {
+                cache[tagName];
+            }
+            const elements = cache ? cache[tagName] ||= document.querySelectorAll(tagName) : document.querySelectorAll(tagName);
+            tagCount = elements.length;
+            for (let i = 0; i < tagCount; ++i) {
+                if (elements[i] === element) {
+                    tagIndex = i;
+                    outerIndex = outerCount++;
+                }
+                else if (elements[i].outerHTML.trim() === outerHTML) {
+                    ++outerCount;
                 }
             }
         }
-        data.element = { tagName, tagIndex, outerHTML, outerIndex };
+        data.element = { tagName, tagIndex, tagCount, outerHTML, outerIndex, outerCount };
         return data;
     }
 

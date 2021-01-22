@@ -104,7 +104,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     }
                                 }
                             }
-                            document.querySelectorAll(item.selector).forEach(element => {
+                            document.querySelectorAll(item.selector).forEach((element, index) => {
                                 switch (item.type) {
                                     case 'text':
                                     case 'attribute':
@@ -113,7 +113,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                         }
                                         break;
                                     default:
-                                        assetMap.set(element, item);
+                                        assetMap.set(element, index > 0 ? { ...item } : item);
                                         break;
                                 }
                             });

@@ -23,7 +23,7 @@
             squared.settings.outputArchiveCache = true;
             squared.parseDocument('squared_ui').then(async function() {
                 chrome.system.saveHtmlPage();
-                chrome.system.saveImageAssets('image', { saveAs: { base64: { commands: ['png(100x100){315}'] } }});
+                chrome.system.saveImageAssets('image', { saveAs: { base64: { commands: ['png(100x100){315}'] } } });
                 chrome.system.saveScriptAssets();
                 chrome.system.saveLinkAssets();
                 // chrome.system.saveAudioAssets();
