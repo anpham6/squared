@@ -5,6 +5,7 @@ import type Application from './application';
 import Resource = squared.base.Resource;
 import Pattern = squared.lib.base.Pattern;
 
+type CloudStorage = unknown;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 interface OptionsData {
@@ -644,12 +645,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else {
                 src = resolvePath(src);
             }
-            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, selectorCache, base64);
+            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, false, assetMap, selectorCache, base64);
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
             RE_SRCSET.matcher(element.srcset.trim());
             while (RE_SRCSET.find()) {
-                this.processImageUri(result, element, resolvePath(RE_SRCSET.group(1)!), saveAsImage, preserveCrossOrigin, assetMap, selectorCache);
+                this.processImageUri(result, element, resolvePath(RE_SRCSET.group(1)!), saveAsImage, preserveCrossOrigin, true, assetMap, selectorCache);
             }
         });
         for (const uri of ASSETS.image.keys()) {
@@ -778,7 +779,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (!iframe || startsWith(file, 'saveTo')) {
                         const src = element instanceof HTMLObjectElement ? element.data : element.src;
                         if (startsWith(type, 'image/') || startsWith(parseMimeType(src), 'image/')) {
-                            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap);
+                            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, false, assetMap);
                             return;
                         }
                     }
@@ -976,7 +977,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
     }
 
-    private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, assetMap?: Map<Element, AssetCommand>, selectorCache?: SelectorCache, base64?: string) {
+    private processImageUri(assets: ChromeAsset[], element: Null<HTMLElement>, uri: string, saveAsImage: Undef<SaveAsOptions>, preserveCrossOrigin: Undef<boolean>, srcSet = false, assetMap?: Map<Element, AssetCommand>, selectorCache?: SelectorCache, base64?: string) {
         if (uri) {
             let saveAs: Undef<string>,
                 saveTo: Undef<boolean>,
@@ -1042,6 +1043,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, document: this.userSettings.outputDocumentHandler, fromConfig });
             if (this.processExtensions(data)) {
                 setOutputModifiers(data, compress, tasks, cloudStorage, attributes, element, elementIndex, selectorCache);
+                if (srcSet && data.element) {
+                    data.element.srcSet = true;
+                }
                 if (filename) {
                     data.filename = filename;
                 }

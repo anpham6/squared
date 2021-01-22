@@ -62,7 +62,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 if (config.success && Array.isArray(config.data)) {
                     const documentHandler = this.userSettings.outputDocumentHandler;
                     const assetMap = options.assetMap ||= new Map<Element, AssetCommand>();
-                    const database: [Element, CloudDatabase][] = [];
+                    const database: [Element, PlainObject][] = [];
                     const paramMap = new Map<string, [RegExp, string]>();
                     const replaceParams = (param: Undef<any>): unknown => {
                         if (param) {
@@ -96,7 +96,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     }
                     for (const item of config.data as AssetCommand[]) {
                         if (item.selector) {
-                            const cloudDatabase = item.cloudDatabase;
+                            const cloudDatabase = isPlainObject(item.cloudDatabase) && item.cloudDatabase;
                             if (cloudDatabase && paramMap.size) {
                                 for (const attr in cloudDatabase) {
                                     if (attr !== 'value') {

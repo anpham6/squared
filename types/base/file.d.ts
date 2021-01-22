@@ -23,7 +23,7 @@ interface LayoutAsset extends TextAsset {
     index?: number;
 }
 
-interface FileAsset extends TextAsset, OutputAction {
+interface FileAsset<T = unknown> extends TextAsset, OutputAction<T> {
     base64?: string;
 }
 
@@ -31,13 +31,13 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
-interface OutputAction {
+interface OutputAction<T = unknown> {
     moveTo?: string;
     process?: string[];
     commands?: string[];
     compress?: CompressFormat[];
     document?: string | string[];
-    cloudStorage?: CloudStorage[];
+    cloudStorage?: T[];
 }
 
 interface TaskAction {
@@ -62,53 +62,7 @@ interface ElementIndex {
     tagIndex: number;
     outerHTML: string;
     outerIndex: number;
-}
-
-interface CloudService extends ObjectMap<unknown> {
-    service: string;
-    credential: string | PlainObject;
-}
-
-interface CloudDatabase<T = string | PlainObject | any[]> extends CloudService, ElementAction {
-    value: string | ObjectMap<string | string[]>;
-    table?: string;
-    name?: string;
-    id?: string;
-    query?: T;
-    limit?: number;
-    params?: unknown[];
-    options?: PlainObject;
-    document?: string | string[];
-}
-
-interface CloudStorage extends CloudService {
-    bucket?: string;
-    admin?: CloudStorageAdmin;
-    upload?: CloudStorageUpload;
-    download?: CloudStorageDownload;
-}
-
-interface CloudStorageAdmin {
-    publicRead?: boolean;
-    emptyBucket?: boolean;
-    preservePath?: boolean;
-}
-
-interface CloudStorageAction extends Partial<LocationUri> {
-    active?: boolean;
-    overwrite?: boolean;
-}
-
-interface CloudStorageUpload extends CloudStorageAction {
-    localStorage?: boolean;
-    endpoint?: string;
-    all?: boolean;
-    publicRead?: boolean;
-}
-
-interface CloudStorageDownload extends CloudStorageAction {
-    versionId?: string;
-    deleteObject?: string;
+    srcSet?: boolean;
 }
 
 interface WatchInterval {
@@ -132,9 +86,9 @@ interface CompressFormat {
     options?: PlainObject;
 }
 
-interface RequestData extends PlainObject {
+interface RequestData<T = unknown> extends PlainObject {
     assets?: FileAsset[];
-    database?: CloudDatabase[];
+    database?: T[];
     document?: string[];
     task?: string[];
 }
