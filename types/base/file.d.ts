@@ -64,7 +64,6 @@ interface ElementIndex {
     outerHTML: string;
     outerIndex: number;
     outerCount: number;
-    srcSet?: boolean;
 }
 
 interface WatchInterval {

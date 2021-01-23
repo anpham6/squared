@@ -283,41 +283,6 @@ function getPageFilename(value: Undef<string>) {
     return value;
 }
 
-function isSpace(ch: string) {
-    const n = ch.charCodeAt(0);
-    return n === 32 || n < 14 && n > 8;
-}
-
-function findOpeningTag(outerHTML: string) {
-    const length = outerHTML.length;
-    for (let i = 0, quote = ''; i < length; ++i) {
-        const ch = outerHTML[i];
-        if (ch === '=') {
-            if (!quote) {
-                while (isSpace(outerHTML[++i])) {}
-                switch (outerHTML[i]) {
-                    case '"':
-                        quote = '"';
-                        break;
-                    case "'":
-                        quote = "'";
-                        break;
-                    case '>':
-                        --i;
-                        break;
-                }
-            }
-        }
-        else if (ch === quote) {
-            quote = '';
-        }
-        else if (ch === '>' && !quote) {
-            return outerHTML.substring(0, i + 1);
-        }
-    }
-    return '';
-}
-
 const copyDocument = (value: string | string[]) => Array.isArray(value) ? value.slice(0) : value;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
@@ -328,17 +293,17 @@ const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static setElementData(element: Element, data: ElementAction, cache?: SelectorCache) {
         const tagName = element.tagName;
-        let outerHTML = element.outerHTML.trim(),
+        let outerHTML = '',
             tagCount = 0,
             tagIndex = 0,
             outerIndex = 0,
             outerCount = 0;
         if (tagName === 'HTML') {
-            outerHTML = findOpeningTag(outerHTML).replace(/ style="">$/, '>');
             tagCount = 1;
             outerCount = 1;
         }
         else {
+            outerHTML = element.outerHTML.trim();
             const elements = cache ? cache[tagName] ||= document.querySelectorAll(tagName) : document.querySelectorAll(tagName);
             tagCount = elements.length;
             for (let i = 0; i < tagCount; ++i) {
@@ -1080,9 +1045,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo, document: this.userSettings.outputDocumentHandler, fromConfig });
             if (this.processExtensions(data)) {
                 setOutputModifiers(data, compress, tasks, cloudStorage, attributes, element, elementIndex, selectorCache);
-                if (srcSet && data.element) {
-                    data.element.srcSet = true;
-                }
                 if (filename) {
                     data.filename = filename;
                 }
