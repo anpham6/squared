@@ -30,7 +30,9 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions | strin
 export function extend(functionMap: PlainObject, framework?: number): void;
 export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;
-export function latest(value?: number): string | string[];
+export function latest(value: 1 | -1): string;
+export function latest(value: number): string[];
+export function latest(value?: Undef<number>): string;
 export function close(): boolean;
 export function save(): PromiseResult;
 export function reset(): void;
@@ -40,10 +42,14 @@ export function copyTo(value: string, options?: FileActionOptions): PromiseResul
 export function saveFiles(value: string, options: FileActionOptions): PromiseResult;
 export function appendFiles(value: string, options: FileActionOptions): PromiseResult;
 export function copyFiles(value: string, options: FileActionOptions): PromiseResult;
-export function getElementById(value: string, cache?: boolean): Promise<Null<Node>> | Null<Node>;
-export function querySelector(value: string, cache?: boolean): Promise<Null<Node>> | Null<Node>;
-export function querySelectorAll(value: string, cache?: boolean): Promise<Node[]> | Node[];
-export function fromElement(element: HTMLElement, cache?: boolean): Promise<Null<Node>> | Null<Node>;
+export function getElementById(value: string, sync: true, cache?: boolean): Null<Node>;
+export function getElementById(value: string, sync?: Undef<false>, cache?: boolean): Promise<Null<Node>>;
+export function querySelector(value: string, sync: true, cache?: boolean): Null<Node>;
+export function querySelector(value: string, sync?: Undef<false>, cache?: boolean): Promise<Null<Node>>;
+export function querySelectorAll(value: string, sync: true, cache?: boolean): Node[];
+export function querySelectorAll(value: string, sync?: Undef<false>, cache?: boolean): Promise<Null<Node[]>>;
+export function fromElement(element: HTMLElement, sync: true, cache?: boolean): Null<Node>;
+export function fromElement(element: HTMLElement, sync?: Undef<false>, cache?: boolean): Promise<Null<Node>>;
 export function clearCache(): void;
 export function toString(): string;
 

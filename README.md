@@ -385,6 +385,8 @@ android.addXmlNs('tools', 'http://schemas.android.com/tools');
 View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the default view model for the entire project.
 
 ```javascript
+// NOTE: latest(1 | -1 | undefined): string
+
 await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
     const sessions = squared.latest(2);
     android.setViewModel(

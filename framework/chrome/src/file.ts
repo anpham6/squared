@@ -335,16 +335,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             outerCount = 0;
         if (tagName === 'HTML') {
             outerHTML = findOpeningTag(outerHTML).replace(/ style="">$/, '>');
-            if (!outerHTML) {
-                return data;
-            }
             tagCount = 1;
             outerCount = 1;
         }
         else {
-            if (cache) {
-                cache[tagName];
-            }
             const elements = cache ? cache[tagName] ||= document.querySelectorAll(tagName) : document.querySelectorAll(tagName);
             tagCount = elements.length;
             for (let i = 0; i < tagCount; ++i) {
@@ -690,7 +684,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
             RE_SRCSET.matcher(element.srcset.trim());
             while (RE_SRCSET.find()) {
-                this.processImageUri(result, element, resolvePath(RE_SRCSET.group(1)!), saveAsImage, preserveCrossOrigin, true, assetMap, selectorCache);
+                const src = resolvePath(RE_SRCSET.group(1)!);
+                if (src !== resolvePath(element.src)) {
+                    this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, true, assetMap, selectorCache);
+                }
             }
         });
         for (const uri of ASSETS.image.keys()) {

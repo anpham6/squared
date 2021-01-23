@@ -68,7 +68,7 @@
                 console.log(await squared.appendFiles('http://localhost:3000/common/base_project.7z', options));
                 console.log(await squared.appendFiles('C:/Users/An/git/squared/html/common/base_project.zip', options));
                 console.log(await squared.copyFiles('C:/Users/An/Downloads/chrome_data', options));
-                console.log(await squared.saveAs('image-binary', { saveAs: { image: { blob: true } } }));
+                console.log(await squared.saveAs('image-blob', { saveAs: { image: { blob: true } } }));
             });
         });
     </script>

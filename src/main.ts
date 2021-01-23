@@ -432,14 +432,22 @@ export function extend(functionMap: PlainObject, value = 0) {
 }
 
 export function latest(value = 1) {
-    if (main && value) {
-        const active = main.session.active;
-        if (active.size) {
-            const items = Array.from(active.keys());
-            return Math.abs(value) === 1 ? items[0] : items.length === 1 ? items : value < 0 ? items.slice(0, Math.abs(value)) : items.slice(Math.max(0, active.size - value)).reverse();
+    if (main) {
+        const items = Array.from(main.session.active.keys());
+        if (value < 0) {
+            items.reverse();
+            value *= -1;
+        }
+        switch (value) {
+            case 0:
+                return items;
+            case 1:
+                return items[0] || '';
+            default:
+                return items.slice(0, Math.abs(value));
         }
     }
-    return '';
+    return Math.abs(value) === 1 ? '' : [];
 }
 
 export function close() {
