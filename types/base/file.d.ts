@@ -36,7 +36,7 @@ interface OutputAction<T = unknown> {
     process?: string[];
     commands?: string[];
     compress?: CompressFormat[];
-    document?: string | string[];
+    document?: StringOfArray;
     cloudStorage?: T[];
 }
 
@@ -64,6 +64,9 @@ interface ElementIndex {
     outerHTML: string;
     outerIndex: number;
     outerCount: number;
+    startIndex?: number;
+    endIndex?: number;
+    attributes?: ObjectMap<unknown>;
 }
 
 interface WatchInterval {

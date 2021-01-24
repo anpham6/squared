@@ -33,7 +33,7 @@ const { fromMimeType } = squared.base.lib.util;
 
 const STORED = Resource.STORED;
 
-function getFileAssets(pathname: string, items: string[], document: string | string[] = 'android') {
+function getFileAssets(pathname: string, items: string[], document: StringOfArray = 'android') {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
@@ -50,7 +50,7 @@ function getFileAssets(pathname: string, items: string[], document: string | str
     return items as [];
 }
 
-function getImageAssets(this: Resource<View>, pathname: string, items: string[], convertImages: string, compressing: boolean, document: string | string[] = 'android') {
+function getImageAssets(this: Resource<View>, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray = 'android') {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
@@ -111,7 +111,7 @@ function getImageAssets(this: Resource<View>, pathname: string, items: string[],
     return items as [];
 }
 
-function getRawAssets(this: Resource<View>, name: "video" | "audio", pathname: string, items: string[], document: string | string[] = 'android') {
+function getRawAssets(this: Resource<View>, name: "video" | "audio", pathname: string, items: string[], document: StringOfArray = 'android') {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
@@ -137,7 +137,7 @@ function getOutputDirectory(value: string) {
     return value + (!endsWith(value, '/') ? '/' : '');
 }
 
-const copyDocument = (value: string | string[]) => Array.isArray(value) ? value.slice(0) : value;
+const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;
 const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {

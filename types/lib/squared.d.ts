@@ -170,7 +170,7 @@ declare module "lib" {
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
-        function checkWritingMode(attr: string, value?: string): string | string[];
+        function checkWritingMode(attr: string, value?: string): StringOfArray;
         function checkStyleValue(element: StyleElement, attr: string, value: string): string;
         function checkFontSizeValue(value: string, fixedWidth?: boolean): string;
         function checkMediaRule(value: string, fontSize?: number): boolean;

@@ -1624,7 +1624,7 @@ export const PROXY_INLINESTYLE = Object.freeze(
     ) as CSSStyleDeclaration,
     {
         get: (target, attr: CssStyleAttr) => {
-            let value: Undef<string | string[]> = target[attr];
+            let value: Undef<StringOfArray> = target[attr];
             if (value) {
                 return value;
             }

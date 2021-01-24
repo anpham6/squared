@@ -16,6 +16,7 @@ type FunctionSelf<T, U = void> = (this: T, ...args: unknown[]) => U;
 type FunctionSort<T = unknown> = (a: T, b: T) => number;
 
 type NumString = number | string;
+type StringOfArray = string | string[];
 
 type StandardMap = Record<string, any>;
 type PlainObject = Record<string | number | symbol, unknown>;

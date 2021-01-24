@@ -105,7 +105,7 @@ interface CssAnyOptions extends CssInitialOptions, CssAscendOptions {
 }
 
 interface HasOptions extends CssInitialOptions {
-    not?: string | string[];
+    not?: StringOfArray;
     type?: number;
     ignoreDefault?: boolean;
 }

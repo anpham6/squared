@@ -1673,7 +1673,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         if (value) {
             let type: Undef<number>,
-                not: Undef<string | string[]>,
+                not: Undef<StringOfArray>,
                 ignoreDefault: Undef<boolean>;
             if (options) {
                 ({ not, type, ignoreDefault } = options);

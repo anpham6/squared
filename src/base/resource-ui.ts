@@ -31,7 +31,6 @@ const PATTERN_COLORSTOP = `\\s*${PATTERN_COLOR}(?:\\s*(${STRING.LENGTH_PERCENTAG
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');
 const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
-const CHAR_EMPTYSTRING = /^\s+$/;
 const CHAR_LEADINGSPACE = /^\s+/;
 const CHAR_TRAILINGSPACE = /\s+$/;
 
@@ -1417,7 +1416,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             value += ResourceUI.STRING_SPACE;
                         }
                     }
-                    else if (!CHAR_EMPTYSTRING.test(value)) {
+                    else if (value.trim()) {
                         value =
                             value.replace(CHAR_LEADINGSPACE, previousSibling && (
                                 previousSibling.block ||
@@ -1496,7 +1495,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (!styled) {
             return value;
         }
-        else if (!preserveWhiteSpace && CHAR_EMPTYSTRING.test(value)) {
+        else if (!preserveWhiteSpace && !value.trim()) {
             return node.blockStatic ? ResourceUI.STRING_SPACE : '';
         }
         return value;

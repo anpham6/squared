@@ -9,12 +9,9 @@ interface FileArchivingOptions extends squared.base.FileArchivingOptions, FileAc
 interface SaveAsOptions extends Partial<LocationUri>, AttributeAction, OutputAction, OutputModifiers {}
 
 interface UriOptions {
-    element?: HTMLElement;
     saveAs?: string;
     saveTo?: boolean;
     format?: string;
-    inline?: boolean;
     preserveCrossOrigin?: boolean;
-    document?: string | string[];
     fromConfig?: boolean;
 }
