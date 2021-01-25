@@ -31,12 +31,11 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
-interface OutputAction<T = unknown> {
+interface OutputAction<T = unknown> extends DocumentAction {
     moveTo?: string;
     process?: string[];
     commands?: string[];
     compress?: CompressFormat[];
-    document?: StringOfArray;
     cloudStorage?: T[];
 }
 
@@ -53,21 +52,27 @@ interface BundleAction {
     trailingContent?: string[];
 }
 
-interface ElementAction {
-    element?: ElementIndex;
+interface DocumentAction {
+    document?: StringOfArray;
 }
 
-interface ElementIndex {
+interface ElementAction {
+    element?: ElementIndex | Element;
+}
+
+interface TagIndex {
     tagName: string;
     tagIndex: number;
     tagCount: number;
+}
+
+interface ElementIndex extends TagIndex {
+    id: StringMap;
+    domIndex: number;
     outerHTML: string;
-    outerIndex: number;
-    outerCount: number;
-    startIndex?: number;
     innerHTML?: string;
+    startIndex?: number;
     endIndex?: number;
-    attributes?: ObjectMap<unknown>;
 }
 
 interface WatchInterval {

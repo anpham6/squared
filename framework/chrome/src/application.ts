@@ -56,13 +56,16 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
             }
         }
+        const database: [HTMLElement, ElementAction & DocumentAction & PlainObject][] = [];
+        const assetMap = new Map<HTMLElement, AssetCommand>();
+        const indexMap = new Map<ElementIndex, HTMLElement>();
+        options.assetMap = assetMap;
+        options.indexMap = indexMap;
         if (options.configUri) {
             const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     const documentHandler = this.userSettings.outputDocumentHandler;
-                    const assetMap = options.assetMap ||= new Map<Element, AssetCommand>();
-                    const database: [Element, PlainObject][] = [];
                     const paramMap = new Map<string, [RegExp, string]>();
                     const replaceParams = (param: Undef<any>): unknown => {
                         if (param) {
@@ -104,7 +107,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     }
                                 }
                             }
-                            document.querySelectorAll(item.selector).forEach((element, index) => {
+                            document.querySelectorAll(item.selector).forEach((element: HTMLElement, index) => {
                                 switch (item.type) {
                                     case 'text':
                                     case 'attribute':
@@ -119,28 +122,6 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                             });
                         }
                     }
-                    const cache: SelectorCache = {};
-                    if (assetMap.size === 0) {
-                        delete options.assetMap;
-                    }
-                    else {
-                        for (const [element, data] of assetMap) {
-                            File.setElementData(element, data, cache);
-                        }
-                    }
-                    if (database.length) {
-                        for (let i = 0, length = database.length; i < length; ++i) {
-                            const [element, data] = database[i];
-                            File.setElementData(element, data, cache);
-                        }
-                        const items = database.map(item => item[1]);
-                        if (options.database) {
-                            options.database.push(...items);
-                        }
-                        else {
-                            options.database = items;
-                        }
-                    }
                 }
                 else {
                     const error = config.error;
@@ -148,6 +129,21 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                         this.writeError(error.message, error.hint);
                     }
                 }
+            }
+        }
+        if (assetMap.size === 0) {
+            delete options.assetMap;
+        }
+        if (database.length) {
+            const domAll = document.querySelectorAll('*');
+            const cache: SelectorCache = {};
+            const items = options.database ||= [];
+            for (let i = 0, length = database.length; i < length; ++i) {
+                const [element, data] = database[i];
+                const index = File.setElementData(element, data, domAll, cache);
+                File.setDocumentId(element, index, data.document);
+                indexMap.set(index, element);
+                items.push(data);
             }
         }
         return (this.fileHandler as chrome.base.File<T>)[module](pathname, options);

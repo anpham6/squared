@@ -1,5 +1,6 @@
 interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
     assetMap?: ElementAssetMap;
+    indexMap?: Map<ElementIndex, HTMLElement>;
 }
 
 interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileActionOptions {}
