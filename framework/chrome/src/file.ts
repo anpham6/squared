@@ -296,19 +296,16 @@ const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static setElementData(element: Element, data: ElementAction, cache?: SelectorCache) {
         const tagName = element.tagName;
-        let outerHTML = '',
-            tagCount = 0,
-            tagIndex = 0,
-            outerIndex = 0,
-            outerCount = 0;
         if (tagName === 'HTML') {
-            tagCount = 1;
-            outerCount = 1;
+            data.element = { tagName, tagIndex: 0, tagCount: 1, outerHTML: '', outerIndex: 0, outerCount: 1, innerHTML: element.innerHTML };
         }
         else {
-            outerHTML = element.outerHTML.trim();
             const elements = cache ? cache[tagName] ||= document.querySelectorAll(tagName) : document.querySelectorAll(tagName);
-            tagCount = elements.length;
+            let outerHTML = element.outerHTML.trim(),
+                tagCount = elements.length,
+                tagIndex = 0,
+                outerIndex = 0,
+                outerCount = 0;
             for (let i = 0; i < tagCount; ++i) {
                 if (elements[i] === element) {
                     tagIndex = i;
@@ -318,8 +315,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     ++outerCount;
                 }
             }
+            data.element = { tagName, tagIndex, tagCount, outerHTML, outerIndex, outerCount };
         }
-        data.element = { tagName, tagIndex, tagCount, outerHTML, outerIndex, outerCount };
         return data;
     }
 
@@ -488,9 +485,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             setOutputModifiers(data, documentData, compress, tasks, cloudStorage, attributes);
             data.filename ||= getPageFilename(filename);
             data.mimeType = 'text/html';
-            if (attributes) {
-                File.setElementData(element, data);
-            }
+            File.setElementData(element, data);
             return [data];
         }
         return [];

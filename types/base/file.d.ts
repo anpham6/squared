@@ -65,6 +65,7 @@ interface ElementIndex {
     outerIndex: number;
     outerCount: number;
     startIndex?: number;
+    innerHTML?: string;
     endIndex?: number;
     attributes?: ObjectMap<unknown>;
 }
