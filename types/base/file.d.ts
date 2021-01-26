@@ -57,7 +57,11 @@ interface DocumentAction {
 }
 
 interface ElementAction {
-    element?: ElementIndex | Element;
+    element?: ElementIndex | HTMLElement;
+}
+
+interface AttributeAction {
+    attributes?: AttributeMap;
 }
 
 interface TagIndex {
@@ -66,13 +70,15 @@ interface TagIndex {
     tagCount: number;
 }
 
-interface ElementIndex extends TagIndex {
+interface ElementIndex extends TagIndex, AttributeAction {
     id: StringMap;
     domIndex: number;
     outerHTML: string;
     innerHTML?: string;
     startIndex?: number;
     endIndex?: number;
+    appendOrder?: number;
+    siblingElement?: HTMLElement;
 }
 
 interface WatchInterval {

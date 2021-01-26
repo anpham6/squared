@@ -59,8 +59,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const database: [HTMLElement, ElementAction & DocumentAction & PlainObject][] = [];
         const assetMap = new Map<HTMLElement, AssetCommand>();
         const indexMap = new Map<ElementIndex, HTMLElement>();
+        const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options.assetMap = assetMap;
         options.indexMap = indexMap;
+        options.appendMap = appendMap;
         if (options.configUri) {
             const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {
@@ -107,7 +109,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     }
                                 }
                             }
-                            document.querySelectorAll(item.selector).forEach((element: HTMLElement, index) => {
+                            document.querySelectorAll(item.selector).forEach((element: HTMLElement) => {
                                 switch (item.type) {
                                     case 'text':
                                     case 'attribute':
@@ -115,8 +117,15 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                             database.push([element, { document: documentHandler, ...cloudDatabase }]);
                                         }
                                         break;
+                                    case 'append/js':
+                                    case 'append/css': {
+                                        const items = appendMap.get(element) || [];
+                                        items.push({ ...item });
+                                        appendMap.set(element, items);
+                                        break;
+                                    }
                                     default:
-                                        assetMap.set(element, index > 0 ? { ...item } : item);
+                                        assetMap.set(element, { ...item });
                                         break;
                                 }
                             });
@@ -134,13 +143,17 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (assetMap.size === 0) {
             delete options.assetMap;
         }
+        if (appendMap.size === 0) {
+            delete options.appendMap;
+        }
         if (database.length) {
             const domAll = document.querySelectorAll('*');
             const cache: SelectorCache = {};
             const items = options.database ||= [];
             for (let i = 0, length = database.length; i < length; ++i) {
                 const [element, data] = database[i];
-                const index = File.setElementData(element, data, domAll, cache);
+                const index = File.getElementIndex(element, domAll, cache);
+                data.element = index;
                 File.setDocumentId(element, index, data.document);
                 indexMap.set(index, element);
                 items.push(data);

@@ -28,10 +28,6 @@ interface AssetCommand extends SaveAsOptions, ElementAction {
     };
 }
 
-interface AttributeAction {
-    attributes?: AttributeMap;
-}
-
 interface RequestData {
     baseUrl?: string;
     templateMap?: TemplateMap;

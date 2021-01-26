@@ -5,3 +5,4 @@ type AnchorPositionAttr = PositionAttr | "baseline" | "leftRight" | "rightLeft" 
 type ResourceAssetType = "image" | "video" | "audio" | "fonts" | "rawData";
 type ResourceAssetTagName = "video" | "audio" | "object" | "embed" | "iframe";
 type KeyframesMap = Map<string, KeyframeData>;
+type AttributeMap = ObjectMap<Optional<string>>;
