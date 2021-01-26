@@ -1004,6 +1004,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         const controller = this.controllerHandler;
+        const resource = this.resourceHandler;
         const sessionId = controller.generateSessionId;
         const extensions = this.extensionsAll;
         const processing: squared.base.AppProcessing<T> = {
@@ -1029,6 +1030,14 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         else {
             this.setStyleMap(sessionId);
+        }
+        if (resource) {
+            (queryRoot || document).querySelectorAll('[style]').forEach((element: HTMLElement) => {
+                const { backgroundImage, listStyleImage } = element.style;
+                if (backgroundImage || listStyleImage) {
+                    parseImageUrl(resource, location.href, { backgroundImage, listStyleImage }, ['backgroundImage', 'listStyleImage']);
+                }
+            });
         }
         return [rootElements, processing, shadowElements || rootElements, styleSheets];
     }

@@ -2,7 +2,6 @@ interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeA
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
-    rootDir?: string;
     inlineContent?: string;
 }
 
