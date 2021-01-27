@@ -20,6 +20,7 @@ interface AssetCommand extends SaveAsOptions, ElementAction {
     exportAs?: string;
     saveTo?: string;
     cloudDatabase?: unknown;
+    textContent?: string;
     template?: {
         module: string;
         identifier?: string;

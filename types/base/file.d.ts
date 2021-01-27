@@ -66,20 +66,21 @@ interface AttributeAction {
 
 interface TagIndex {
     tagName: string;
-    tagIndex: number;
     tagCount: number;
+    tagIndex?: number;
 }
 
-interface ElementIndex extends TagIndex, AttributeAction {
-    id: StringMap;
+interface TagAppend extends TagIndex {
+    textContent?: string;
+    order: number;
+}
+
+interface ElementIndex extends Required<TagIndex>, AttributeAction {
     domIndex: number;
-    outerHTML: string;
+    id?: StringMap;
+    outerHTML?: string;
     innerHTML?: string;
-    startIndex?: number;
-    endIndex?: number;
-    appendName?: string;
-    appendOrder?: number;
-    siblingElement?: HTMLElement;
+    append?: TagAppend;
 }
 
 interface WatchInterval {

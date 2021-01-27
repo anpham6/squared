@@ -110,22 +110,23 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                 }
                             }
                             document.querySelectorAll(item.selector).forEach((element: HTMLElement) => {
-                                switch (item.type) {
+                                const type = item.type;
+                                switch (type) {
                                     case 'text':
                                     case 'attribute':
                                         if (cloudDatabase) {
                                             database.push([element, { document: documentHandler, ...cloudDatabase }]);
                                         }
                                         break;
-                                    case 'append/js':
-                                    case 'append/css': {
-                                        const items = appendMap.get(element) || [];
-                                        items.push({ ...item });
-                                        appendMap.set(element, items);
-                                        break;
-                                    }
                                     default:
-                                        assetMap.set(element, { ...item });
+                                        if (type && type.startsWith('append/')) {
+                                            const items = appendMap.get(element) || [];
+                                            items.push({ ...item });
+                                            appendMap.set(element, items);
+                                        }
+                                        else {
+                                            assetMap.set(element, { ...item });
+                                        }
                                         break;
                                 }
                             });

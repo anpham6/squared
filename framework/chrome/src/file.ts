@@ -288,7 +288,7 @@ function getPageFilename(value: Undef<string>) {
 
 function setUUID(element: HTMLElement, index: ElementIndex, name: string) {
     const documentId = element.dataset[name + 'Id'] ||= randomUUID();
-    index.id[name] = documentId;
+    index.id![name] = documentId;
 }
 
 const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;
@@ -368,12 +368,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         try {
             const { host, port, pathname: path } = new URL(value);
             const [pathsub, filesub] = splitPair(path, '/', false, true);
-            const ext = getFileExt(uri);
             let pathname = '',
                 filename = '',
                 moveTo: Undef<string>;
             if (file) {
-                [moveTo, pathname, filename] = getFilePath(file, saveTo, ext);
+                [moveTo, pathname, filename] = getFilePath(file, saveTo, getFileExt(uri));
             }
             else if (!local) {
                 pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + pathsub;
@@ -382,26 +381,24 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (local && !pathname) {
                     let pathbase = location.pathname;
                     if (!pathbase.endsWith('/')) {
-                        pathbase = splitPairStart(pathbase, '/', false, true) + '/';
+                        pathbase = splitPairStart(pathbase, '/', false, true);
                     }
                     if (pathsub.startsWith(pathbase)) {
-                        pathname = pathsub.substring(pathbase.length);
+                        pathname = pathsub.substring(pathbase.length + 1);
                     }
                     else {
                         moveTo = DIR_FUNCTIONS.SERVERROOT;
                         pathname = pathsub;
                     }
                 }
-                if (!filename) {
-                    filename = filesub;
-                }
+                filename ||= filesub;
             }
             return {
                 uri,
                 moveTo,
                 pathname: normalizePath(decodeURIComponent(pathname)),
                 filename: decodeURIComponent(filename),
-                mimeType: mimeType || ext && parseMimeType(ext),
+                mimeType: mimeType || parseMimeType(uri),
                 format
             };
         }
@@ -531,6 +528,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         case 'js':
                         case 'css':
                             ((templateMap ||= { html: {}, js: {}, css: {} })[category][module] ||= {})[identifier] = element.textContent!.trim();
+                            element.dataset.chromeFile = 'exclude';
                             break;
                     }
                 }
@@ -644,12 +642,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         for (const rawData of ASSETS.rawData.values()) {
-            const { base64, mimeType } = rawData;
-            const filename = assignFilename(rawData.filename);
+            const { base64, filename, mimeType = parseMimeType(filename) } = rawData;
             if (base64) {
                 if (saveAsBase64 && !result.find(item => item.base64 === base64)) {
                     let commands: Undef<string[]>;
-                    if (mimeType && startsWith(mimeType, 'image/') && (commands = saveAsBase64.commands)) {
+                    if (startsWith(mimeType, 'image/') && (commands = saveAsBase64.commands)) {
                         for (let i = 0; i < commands.length; ++i) {
                             const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
                             if (match) {
@@ -660,13 +657,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             }
                         }
                     }
-                    const data = this.processImageUri(
-                        result,
-                        null,
-                        resolvePath(saveAsBase64.pathname ? appendSeparator(saveAsBase64.pathname, filename) : filename, location.href),
-                        saveAsImage,
-                        preserveCrossOrigin
-                    );
+                    const pathname = saveAsBase64.pathname;
+                    const data = this.processImageUri(result, null, resolvePath(pathname? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin);
                     if (data) {
                         data.base64 = base64;
                         if (!data.mimeType && endsWith(data.filename, '.unknown')) {
@@ -676,13 +668,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             data.commands ||= commands;
                         }
                         data.cloudStorage = saveAsBase64.cloudStorage;
+                        if (!pathname) {
+                            delete data.uri;
+                        }
                     }
                 }
             }
             else if (mimeType && rawData.content) {
                 const data = {
                     pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
-                    filename,
+                    filename: assignFilename(filename),
                     content: rawData.content,
                     mimeType
                 };
@@ -858,31 +853,51 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ...this.getFontAssets(options)
         );
         if (appendMap) {
+            const tagCount: ObjectMap<number> = {};
+            const getAppendData = (tagName: string, order: number, textContent?: string) => {
+                if (!(tagName in tagCount)) {
+                    tagCount[tagName] = document.querySelectorAll(tagName).length;
+                }
+                return { tagName, tagCount: tagCount[tagName], textContent, order };
+            };
             for (const [element, siblings] of appendMap) {
                 const index = File.getElementIndex(element, domAll, cache);
-                for (let i = 0, j = 0; i < siblings.length; ++i) {
-                    const command = siblings[i];
-                    const attributes = command.attributes;
-                    if (attributes) {
+                const command = options.assetMap?.get(element);
+                const documentData = command && command.document || this.userSettings.outputDocumentHandler;
+                File.setDocumentId(element, index, documentData);
+                let i = 0;
+                for (const sibling of siblings) {
+                    const { type, attributes, preserve = preserveCrossOrigin } = sibling;
+                    if (type) {
                         let js: Undef<boolean>,
                             url: Optional<string>;
-                        switch (command.type) {
+                        switch (type) {
                             case 'append/js':
-                                url = attributes.src;
-                                attributes.type ||= 'text/javascript';
-                                js = true;
+                                if (attributes) {
+                                    url = attributes.src;
+                                    attributes.type ||= 'text/javascript';
+                                    js = true;
+                                }
                                 break;
                             case 'append/css':
-                                url = attributes.href;
-                                attributes.type ||= 'text/css';
+                                if (attributes) {
+                                    url = attributes.href;
+                                    attributes.type ||= 'text/css';
+                                }
                                 break;
                             default:
+                                if (type.startsWith('append/')) {
+                                    assets.push({ pathname: '', filename: '', document: documentData, element: { ...index, append: getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent), attributes } });
+                                }
                                 continue;
                         }
-                        if (url) {
-                            const data = this.createBundle(assets, element, url, attributes.type, preserveCrossOrigin, undefined, undefined, command);
+                        if (url && attributes) {
+                            const data = this.createBundle(assets, element, url, attributes.type!, undefined, undefined, undefined, sibling);
                             if (data) {
-                                data.element = { ...index, appendName: js ? 'SCRIPT' : 'LINK', appendOrder: ++j, attributes };
+                                if (preserve) {
+                                    delete data.uri;
+                                }
+                                data.element = { ...index, append: getAppendData(js ? 'script' : 'link', ++i), attributes };
                             }
                         }
                     }
@@ -916,6 +931,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         delete options.assetMap;
         delete options.indexMap;
+        delete options.appendMap;
         return options;
     }
 
@@ -1122,6 +1138,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         data.format = 'blob';
                         data.base64 = base64;
                         delete data.watch;
+                    }
+                    else {
+                        return;
                     }
                 }
                 else if (inline) {

@@ -1648,7 +1648,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                 }
                             }
-                            if (previousComplete && previousComplete.fillReplace && infiniteMap[attr] === undefined) {
+                            if (previousComplete && previousComplete.fillReplace && !(attr in infiniteMap)) {
                                 let key = 0,
                                     value: Undef<AnimateValue>;
                                 if (forwardMap[attr]) {
