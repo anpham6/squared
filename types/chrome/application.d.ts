@@ -14,7 +14,6 @@ interface FileActionAttribute extends PlainObject {
         script?: SaveAsOptions;
         link?: SaveAsOptions;
         image?: SaveAsOptions;
-        base64?: SaveAsOptions;
     };
     preserveCrossOrigin?: boolean;
 }
