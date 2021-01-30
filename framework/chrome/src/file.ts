@@ -69,7 +69,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
     }
     else if (startsWith(value, '../')) {
         moveTo = DIR_FUNCTIONS.SERVERROOT;
-        const pathname = location.pathname.split('/');
+        let pathname: StringOfArray = location.pathname.split('/');
         if (--pathname.length) {
             for (let i = 0, length = value.length; i < length; i += 3) {
                 if (value.substring(i, i + 3) !== '../' || --pathname.length === 0) {
@@ -77,8 +77,9 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
                 }
             }
         }
-        const basename = pathname.join('/').replace(/^\//, '');
-        value = (basename ? basename + '/' : '') + value.split('../').pop();
+        pathname.shift();
+        pathname = pathname.join('/');
+        value = (pathname ? pathname + '/' : '') + value.split('../').pop();
     }
     const result = splitPair(value, '/', false, true);
     if (saveTo) {
@@ -640,7 +641,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         for (const rawData of ASSETS.rawData.values()) {
-            const { base64, filename, mimeType = parseMimeType(filename) } = rawData;
+            const { base64, content, filename, mimeType = parseMimeType(filename) } = rawData;
             if (base64) {
                 if (saveAsImage?.blob && !result.find(item => item.base64 === base64)) {
                     let commands: Undef<string[]>;
@@ -671,11 +672,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                 }
             }
-            else if (mimeType && rawData.content) {
+            else if (content && mimeType) {
                 const data = {
                     pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
                     filename: assignFilename(filename),
-                    content: rawData.content,
+                    content,
                     mimeType
                 };
                 if (this.processExtensions(data)) {
@@ -851,7 +852,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         );
         if (appendMap) {
             const tagCount: ObjectMap<number> = {};
-            const getAppendData = (tagName: string, order: number, textContent?: string) => {
+            const getAppendData = (tagName: string, order: number, textContent?: string): TagAppend => {
                 if (!(tagName in tagCount)) {
                     tagCount[tagName] = document.querySelectorAll(tagName).length;
                 }
@@ -861,14 +862,18 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const index = File.getElementIndex(element, domAll, cache);
                 const command = options.assetMap?.get(element);
                 const documentData = command && command.document || this.userSettings.outputDocumentHandler;
+                const getElementIndex = (attributes: Undef<AttributeMap>, append?: TagAppend, prepend?: TagAppend): ElementIndex => ({ ...index, attributes, prepend, append });
                 File.setDocumentId(element, index, documentData);
                 let i = 0;
                 for (const sibling of siblings) {
                     const { type, attributes, preserve = preserveCrossOrigin } = sibling;
                     if (type) {
-                        let js: Undef<boolean>,
+                        let prepend: Undef<boolean>,
+                            js: Undef<boolean>,
                             url: Optional<string>;
                         switch (type) {
+                            case 'prepend/js':
+                                prepend = true;
                             case 'append/js':
                                 if (attributes) {
                                     url = attributes.src;
@@ -876,17 +881,24 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                     js = true;
                                 }
                                 break;
+                            case 'prepend/css':
+                                prepend = true;
                             case 'append/css':
                                 if (attributes) {
                                     url = attributes.href;
                                     attributes.type ||= 'text/css';
                                 }
                                 break;
-                            default:
+                            default: {
+                                const data = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent);
                                 if (type.startsWith('append/')) {
-                                    assets.push({ pathname: '', filename: '', document: documentData, element: { ...index, append: getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent), attributes } });
+                                    assets.push({ pathname: '', filename: '', document: documentData, element: getElementIndex(attributes, data) });
+                                }
+                                else if (type.startsWith('prepend/')) {
+                                    assets.push({ pathname: '', filename: '', document: documentData, element: getElementIndex(attributes, undefined, data) });
                                 }
                                 continue;
+                            }
                         }
                         if (url && attributes) {
                             const data = this.createBundle(assets, element, url, attributes.type!, undefined, undefined, undefined, sibling);
@@ -894,7 +906,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 if (preserve) {
                                     delete data.uri;
                                 }
-                                data.element = { ...index, append: getAppendData(js ? 'script' : 'link', ++i), attributes };
+                                data.element = getElementIndex(attributes);
+                                data.element[prepend ? 'prepend' : 'append'] = getAppendData(js ? 'script' : 'link', ++i);
                             }
                         }
                     }

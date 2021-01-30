@@ -81,6 +81,7 @@ interface ElementIndex extends Required<TagIndex>, AttributeAction {
     outerHTML?: string;
     innerHTML?: string;
     append?: TagAppend;
+    prepend?: TagAppend;
 }
 
 interface WatchInterval {
