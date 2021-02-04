@@ -285,11 +285,12 @@ function getPageFilename(value: Undef<string>) {
     return value;
 }
 
-function setUUID(element: HTMLElement, index: ElementIndex, name: string) {
+function setUUID(element: HTMLElement, node: XmlNode, name: string) {
     const documentId = element.dataset[name + 'Id'] ||= randomUUID();
-    index.id![name] = documentId;
+    node.id![name] = documentId;
 }
 
+const getXmlNode = (node: XmlNodeTag, attributes: Undef<AttributeMap>, append?: TagAppend, prepend?: TagAppend): XmlNodeTag => ({ ...node, attributes, prepend, append });
 const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
 const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
@@ -298,15 +299,15 @@ const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLow
 const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
-    public static getElementIndex(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): ElementIndex {
+    public static createXmlNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlNodeTag {
         const tagName = element.tagName;
         const elements = cache[tagName] ||= document.querySelectorAll(tagName);
         const tagCount = elements.length;
-        let domIndex = -1,
+        let index = -1,
             tagIndex = -1;
         for (let i = 0, length = domAll.length; i < length; ++i) {
             if (domAll[i] === element) {
-                domIndex = i;
+                index = i;
             }
         }
         for (let i = 0; i < tagCount; ++i) {
@@ -315,17 +316,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 break;
             }
         }
-        return { domIndex, tagName, tagIndex, tagCount, outerHTML: '', id: {} };
+        return { index, tagName, tagIndex, tagCount, id: {} };
     }
 
-    public static setDocumentId(element: HTMLElement, index: ElementIndex, document: Undef<StringOfArray>) {
+    public static setDocumentId(element: HTMLElement, node: XmlNode, document?: StringOfArray) {
         if (Array.isArray(document)) {
             for (const name of document) {
-                setUUID(element, index, name);
+                setUUID(element, node, name);
             }
         }
         else if (document) {
-            setUUID(element, index, document);
+            setUUID(element, node, document);
         }
     }
 
@@ -611,7 +612,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (image.encoding === 'base64') {
                     mimeType = image.mimeType;
                     base64 = image.data as string;
-                    src = resolvePath(randomUUID() + '.' + ((mimeType && fromMimeType(mimeType), '/') || 'unknown'), location.href);
+                    src = resolvePath(randomUUID() + '.' + (mimeType && fromMimeType(mimeType) || 'unknown'), location.href);
                 }
                 else {
                     return;
@@ -824,7 +825,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     private processAssets(options: FileActionOptions) {
         const { appendMap, preserveCrossOrigin } = options;
-        const indexMap = options.indexMap ||= new Map<ElementIndex, HTMLElement>();
+        const nodeMap = options.nodeMap ||= new Map<XmlNode, HTMLElement>();
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
@@ -859,18 +860,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 return { tagName, tagCount: tagCount[tagName], textContent, order };
             };
             for (const [element, siblings] of appendMap) {
-                const index = File.getElementIndex(element, domAll, cache);
+                const node = File.createXmlNode(element, domAll, cache);
                 const command = options.assetMap?.get(element);
                 const documentData = command && command.document || this.userSettings.outputDocumentHandler;
-                const getElementIndex = (attributes: Undef<AttributeMap>, append?: TagAppend, prepend?: TagAppend): ElementIndex => ({ ...index, attributes, prepend, append });
-                File.setDocumentId(element, index, documentData);
+                File.setDocumentId(element, node, documentData);
                 let i = 0;
                 for (const sibling of siblings) {
                     const { type, attributes, preserve = preserveCrossOrigin } = sibling;
                     if (type) {
-                        let prepend: Undef<boolean>,
-                            js: Undef<boolean>,
-                            url: Optional<string>;
+                        let js: Undef<boolean>,
+                            url: Optional<string>,
+                            prepend: Undef<boolean>;
                         switch (type) {
                             case 'prepend/js':
                                 prepend = true;
@@ -891,11 +891,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 break;
                             default: {
                                 const data = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent);
+                                let elementData: Undef<XmlNodeTag>;
                                 if (type.startsWith('append/')) {
-                                    assets.push({ pathname: '', filename: '', document: documentData, element: getElementIndex(attributes, data) });
+                                    elementData = getXmlNode(node, attributes, data);
                                 }
                                 else if (type.startsWith('prepend/')) {
-                                    assets.push({ pathname: '', filename: '', document: documentData, element: getElementIndex(attributes, undefined, data) });
+                                    elementData = getXmlNode(node, attributes, undefined, data);
+                                }
+                                if (elementData) {
+                                    assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
                                 }
                                 continue;
                             }
@@ -906,7 +910,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 if (preserve) {
                                     delete data.uri;
                                 }
-                                data.element = getElementIndex(attributes);
+                                data.element = getXmlNode(node, attributes);
                                 data.element[prepend ? 'prepend' : 'append'] = getAppendData(js ? 'script' : 'link', ++i);
                             }
                         }
@@ -920,18 +924,18 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         for (const asset of assets) {
             const element = asset.element;
             if (element instanceof Element) {
-                const index = File.getElementIndex(element, domAll, cache);
-                asset.element = index;
-                File.setDocumentId(element, index, asset.document);
-                indexMap.set(index, element);
+                const node = File.createXmlNode(element, domAll, cache);
+                asset.element = node;
+                File.setDocumentId(element, node, asset.document);
+                nodeMap.set(node, element);
             }
         }
-        for (const [index, element] of indexMap) {
+        for (const [index, element] of nodeMap) {
             if (element.tagName === 'HTML') {
-                index.innerHTML = element.innerHTML;
+                index.innerXml = element.innerHTML;
             }
             else {
-                index.outerHTML = element.outerHTML.trim();
+                index.outerXml = element.outerHTML.trim();
             }
         }
         options.assets = assets;

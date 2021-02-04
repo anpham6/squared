@@ -57,7 +57,7 @@ interface DocumentAction {
 }
 
 interface ElementAction {
-    element?: ElementIndex | HTMLElement;
+    element?: XmlNodeTag | HTMLElement;
 }
 
 interface AttributeAction {
@@ -75,11 +75,14 @@ interface TagAppend extends TagIndex {
     order: number;
 }
 
-interface ElementIndex extends Required<TagIndex>, AttributeAction {
-    domIndex: number;
+interface XmlNode extends AttributeAction {
+    index: number;
     id?: StringMap;
-    outerHTML?: string;
-    innerHTML?: string;
+    outerXml?: string;
+    innerXml?: string;
+}
+
+interface XmlNodeTag extends XmlNode, Required<TagIndex> {
     append?: TagAppend;
     prepend?: TagAppend;
 }

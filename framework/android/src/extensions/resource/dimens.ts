@@ -9,9 +9,9 @@ type GroupData = ObjectMap<View[]>;
 const { isPx } = squared.lib.css;
 const { convertHyphenated, fromLastIndexOf, startsWith } = squared.lib.util;
 
-const CACHE_UNDERSCORE: StringMap = {};
-
 const RE_DIMENS = new Pattern(/:(\w+)="(-?[\d.]+px)"/g);
+
+const CACHE_UNDERSCORE: StringMap = {};
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     if (map.get(name) === value) {

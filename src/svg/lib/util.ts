@@ -11,10 +11,10 @@ const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = sq
 const { getElementCache } = squared.lib.session;
 const { convertCamelCase, convertPercent, endsWith, resolvePath, splitPair, startsWith } = squared.lib.util;
 
-const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
-
 const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
 const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:\s*,?\s+(-?[\d.]+))?(?:\s*,?\s+(-?[\d.]+))?\)/g);
+
+const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
     if (isLength(value)) {

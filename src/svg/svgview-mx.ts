@@ -20,6 +20,8 @@ const { hasCalc, isAngle, isCustomProperty, isPercent, getKeyframesRules, parseA
 const { getNamedItem } = squared.lib.dom;
 const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd, startsWith } = squared.lib.util;
 
+const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
+
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
     'animation-duration': '0s',
@@ -29,8 +31,6 @@ const ANIMATION_DEFAULT = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
-
-const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);

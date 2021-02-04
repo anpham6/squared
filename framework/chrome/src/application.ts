@@ -58,10 +58,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         }
         const database: [HTMLElement, ElementAction & DocumentAction & PlainObject][] = [];
         const assetMap = new Map<HTMLElement, AssetCommand>();
-        const indexMap = new Map<ElementIndex, HTMLElement>();
+        const nodeMap = new Map<XmlNode, HTMLElement>();
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options.assetMap = assetMap;
-        options.indexMap = indexMap;
+        options.nodeMap = nodeMap;
         options.appendMap = appendMap;
         if (options.configUri) {
             const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
@@ -153,10 +153,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             const items = options.database ||= [];
             for (let i = 0, length = database.length; i < length; ++i) {
                 const [element, data] = database[i];
-                const index = File.getElementIndex(element, domAll, cache);
-                data.element = index;
-                File.setDocumentId(element, index, data.document);
-                indexMap.set(index, element);
+                const node = File.createXmlNode(element, domAll, cache);
+                data.element = node;
+                File.setDocumentId(element, node, data.document);
+                nodeMap.set(node, element);
                 items.push(data);
             }
         }
