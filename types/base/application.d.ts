@@ -52,6 +52,7 @@ interface ControllerSettingsLayoutUI {
     pathName: string;
     fileExtension: string;
     baseTemplate: string;
+    innerXmlTags: Set<string>;
 }
 
 interface ControllerSettingsDirectoryUI {

@@ -751,13 +751,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         this.getBeforeOutsideTemplate(node, previous) + indent +
                         `<${controlName + (depth === 0 ? '{#0}' : '')}` +
                             (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
-                            (renderTemplates || beforeInside || afterInside
+                            (renderTemplates || beforeInside || afterInside || this.localSettings.layout.innerXmlTags.has(controlName)
                                 ? '>\n' +
                                     beforeInside +
                                     (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
                                     afterInside +
-                                    indent + `</${controlName}>\n`
-                                : ' />\n') +
+                                    indent + `</${controlName}>`
+                                : ' />') + '\n' +
                         this.getAfterOutsideTemplate(node, previous);
                     break;
                 }
@@ -769,8 +769,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return output;
     }
 
-    public getEnclosingXmlTag(controlName: string, attributes = '', content?: string) {
-        return '<' + controlName + attributes + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
+    public getEnclosingXmlTag(controlName: string, attributes = '', content = '') {
+        return '<' + controlName + attributes + (content || this.localSettings.layout.innerXmlTags.has(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
     private setElementDimension(element: Element, styleMap: CssStyleMap, attr: CssStyleAttr, opposing: string) {

@@ -9,7 +9,7 @@ import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { BUILD_VERSION, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X } from './lib/constant';
+import { BUILD_VERSION, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } from './lib/constant';
 
 import type Application from './application';
 
@@ -500,7 +500,28 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml',
-            baseTemplate: '<?xml version="1.0" encoding="utf-8"?>\n'
+            baseTemplate: '<?xml version="1.0" encoding="utf-8"?>\n',
+            innerXmlTags: new Set<string>([
+                CONTAINER_TAGNAME.FRAME,
+                CONTAINER_TAGNAME.LINEAR,
+                CONTAINER_TAGNAME.GRID,
+                CONTAINER_TAGNAME.RELATIVE,
+                CONTAINER_TAGNAME.HORIZONTAL_SCROLL,
+                CONTAINER_TAGNAME.VERTICAL_SCROLL,
+                CONTAINER_TAGNAME.CONSTRAINT,
+                CONTAINER_TAGNAME_X.VERTICAL_SCROLL,
+                CONTAINER_TAGNAME_X.CONSTRAINT,
+                SUPPORT_TAGNAME.DRAWER,
+                SUPPORT_TAGNAME.COORDINATOR,
+                SUPPORT_TAGNAME.APPBAR,
+                SUPPORT_TAGNAME.COLLAPSING_TOOLBAR,
+                SUPPORT_TAGNAME.TOOLBAR,
+                SUPPORT_TAGNAME_X.DRAWER,
+                SUPPORT_TAGNAME_X.COORDINATOR,
+                SUPPORT_TAGNAME_X.APPBAR,
+                SUPPORT_TAGNAME_X.COLLAPSING_TOOLBAR,
+                SUPPORT_TAGNAME_X.TOOLBAR
+            ])
         },
         directory: {
             string: 'res/values',

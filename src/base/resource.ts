@@ -139,7 +139,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 }
             }
             else if (data) {
-                base64 = data instanceof ArrayBuffer ? convertBase64(data) : data;
+                base64 = data instanceof ArrayBuffer ? convertBase64(data) : data.trim();
             }
         }
         else {
