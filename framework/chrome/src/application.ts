@@ -155,7 +155,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 const [element, data] = database[i];
                 const node = File.createXmlNode(element, domAll, cache);
                 data.element = node;
-                File.setDocumentId(element, node, data.document);
+                File.setDocumentId(element, data.document);
                 nodeMap.set(node, element);
                 items.push(data);
             }

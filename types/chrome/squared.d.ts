@@ -23,7 +23,7 @@ declare namespace base {
 
     class File<T extends Node> extends squared.base.File<T> {
         static createXmlNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlNodeTag;
-        static setDocumentId(element: HTMLElement, node: XmlNode, document?: StringOfArray): void;
+        static setDocumentId(element: HTMLElement, document?: StringOfArray): void;
         static parseUri(uri: string, preserveCrossOrigin?: boolean, options?: UriOptions): Null<ChromeAsset>;
         copyTo(pathname: string, options: FileCopyingOptions): FileActionResult;
         appendTo(pathname: string, options: FileArchivingOptions): FileActionResult;

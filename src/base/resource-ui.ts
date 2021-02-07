@@ -369,9 +369,6 @@ const parsePercent = (value: string, dimension: number, options?: ParseUnitOptio
 const checkPreviousSibling = (node: Undef<NodeUI>) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
-    public static STRING_SPACE = '&#160;';
-    public static STRING_NEWLINE = '&#10;';
-    public static STRING_WBR = '&#8203;';
     public static readonly STORED: ResourceStoredMap = {
         ids: new Map(),
         strings: new Map(),
@@ -1307,7 +1304,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         inlined = true;
                     }
                     else if (node.inlineText) {
-                        value = node.textEmpty ? ResourceUI.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedText(node, element);
+                        value = node.textEmpty ? this.STRING_SPACE : node.tagName === 'BUTTON' ? node.textContent : this.removeExcludedText(node, element);
                     }
                     break;
             }
@@ -1338,14 +1335,14 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
                 case 'break-spaces':
                     value = value
-                        .replace(/\n/g, ResourceUI.STRING_NEWLINE)
-                        .replace(/\t/g, ResourceUI.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
-                        .replace(/\s/g, ResourceUI.STRING_SPACE);
+                        .replace(/\n/g, this.STRING_NEWLINE)
+                        .replace(/\t/g, this.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
+                        .replace(/\s/g, this.STRING_SPACE);
                     trimming = false;
                     break;
                 case 'pre-line':
                     value = value
-                        .replace(/\n/g, ResourceUI.STRING_NEWLINE)
+                        .replace(/\n/g, this.STRING_NEWLINE)
                         .replace(/\s{2,}/g, ' ');
                     trimming = false;
                     break;
@@ -1365,7 +1362,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             const element = node.element;
                             const previousSibling = element && element.previousSibling;
                             if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && startsWith(element!.textContent!.trim(), value.trim())) {
-                                value = value.replace(CHAR_LEADINGSPACE, ResourceUI.STRING_SPACE);
+                                value = value.replace(CHAR_LEADINGSPACE, this.STRING_SPACE);
                                 break;
                             }
                         }
@@ -1390,7 +1387,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (value) {
             if (trimming) {
                 if (!node.naturalChild) {
-                    value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : ResourceUI.STRING_SPACE);
+                    value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : this.STRING_SPACE);
                 }
                 else if (node.pageFlow) {
                     const previousSibling = node.siblingsLeading[0];
@@ -1407,13 +1404,13 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     if (inlined) {
                         const trailingSpace = !node.lineBreakTrailing && CHAR_TRAILINGSPACE.test(value);
                         if (CHAR_LEADINGSPACE.test(value) && previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
-                            value = ResourceUI.STRING_SPACE + value.trim();
+                            value = this.STRING_SPACE + value.trim();
                         }
                         else {
                             value = value.trim();
                         }
                         if (trailingSpace && nextSibling && !nextSibling.blockStatic && !nextSibling.floating) {
-                            value += ResourceUI.STRING_SPACE;
+                            value += this.STRING_SPACE;
                         }
                     }
                     else if (value.trim()) {
@@ -1424,9 +1421,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                 previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                                 node.multiline && ResourceUI.hasLineBreak(node))
                                 ? ''
-                                : ResourceUI.STRING_SPACE
+                                : this.STRING_SPACE
                             );
-                        value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling && nextSibling.floating ? '' : ResourceUI.STRING_SPACE);
+                        value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling && nextSibling.floating ? '' : this.STRING_SPACE);
                     }
                     else if (!node.inlineText) {
                         return;
@@ -1443,7 +1440,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public preFormatString(value: string) {
-        return value.replace(/\u00A0/g, ResourceUI.STRING_SPACE);
+        return value.replace(/\u00A0/g, this.STRING_SPACE);
     }
 
     public removeExcludedText(node: T, element: Element) {
@@ -1458,7 +1455,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     if (styled && child.htmlElement) {
                         if (child.lineBreak) {
                             const previousSibling = child.previousSibling;
-                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : ResourceUI.STRING_NEWLINE);
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
                         }
                         else if (child.positioned) {
                             value = value.replace(item.outerHTML, '');
@@ -1467,7 +1464,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             value = value.replace(item.outerHTML, child.textContent);
                         }
                         else if (!preserveWhiteSpace) {
-                            value = value.replace(item.outerHTML, child.pageFlow && isString(child.textContent) ? ResourceUI.STRING_SPACE : '');
+                            value = value.replace(item.outerHTML, child.pageFlow && isString(child.textContent) ? this.STRING_SPACE : '');
                         }
                         return;
                     }
@@ -1480,7 +1477,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 }
                 else if (item.nodeName[0] !== '#') {
-                    value = value.replace(item.outerHTML, item.tagName === 'WBR' ? ResourceUI.STRING_WBR : !hasCoords(getComputedStyle(item).position) && isString(item.textContent!) ? ResourceUI.STRING_SPACE : '');
+                    value = value.replace(item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getComputedStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '');
                 }
                 if (!preserveWhiteSpace) {
                     if (index === 0) {
@@ -1492,16 +1489,20 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
             }
         });
-        if (!styled) {
-            return value;
-        }
-        else if (!preserveWhiteSpace && !value.trim()) {
-            return node.blockStatic ? ResourceUI.STRING_SPACE : '';
-        }
-        return value;
+        return !styled && !preserveWhiteSpace && !value.trim() ? node.blockStatic ? this.STRING_SPACE : '' : value;
     }
 
     get controllerSettings() {
         return (this.application.controllerHandler as ControllerUI<T>).localSettings;
+    }
+
+    get STRING_SPACE() {
+        return '&#160;';
+    }
+    get STRING_NEWLINE() {
+        return '&#10;';
+    }
+    get STRING_WBR() {
+        return '&#8203;';
     }
 }

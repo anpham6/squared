@@ -3,6 +3,7 @@ import type Node from './node';
 import type NodeList from './nodelist';
 
 export default class Controller<T extends Node> implements squared.base.Controller<T> {
+    public static readonly KEY_NAME = 'squared.base.controller';
     public readonly localSettings: ControllerSettings = {
         mimeType: {
             font: '*',

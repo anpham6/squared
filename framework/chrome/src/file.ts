@@ -285,11 +285,7 @@ function getPageFilename(value: Undef<string>) {
     return value;
 }
 
-function setUUID(element: HTMLElement, node: XmlNode, name: string) {
-    const documentId = element.dataset[name + 'Id'] ||= randomUUID();
-    node.id![name] = documentId;
-}
-
+const setUUID = (element: HTMLElement, name: string) => element.dataset[name + 'Id'] ||= randomUUID();
 const getXmlNode = (node: XmlNodeTag, attributes: Undef<AttributeMap>, append?: TagAppend, prepend?: TagAppend): XmlNodeTag => ({ ...node, attributes, prepend, append });
 const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
 const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;
@@ -300,7 +296,7 @@ const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static createXmlNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlNodeTag {
-        const tagName = element.tagName;
+        const tagName = element.tagName.toLowerCase();
         const elements = cache[tagName] ||= document.querySelectorAll(tagName);
         const tagCount = elements.length;
         let index = -1,
@@ -316,17 +312,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 break;
             }
         }
-        return { index, tagName, tagIndex, tagCount, id: {} };
+        return { index, tagName, tagIndex, tagCount, lowerCase: true };
     }
 
-    public static setDocumentId(element: HTMLElement, node: XmlNode, document?: StringOfArray) {
+    public static setDocumentId(element: HTMLElement, document: Undef<StringOfArray>) {
         if (Array.isArray(document)) {
             for (const name of document) {
-                setUUID(element, node, name);
+                setUUID(element, name);
             }
         }
         else if (document) {
-            setUUID(element, node, document);
+            setUUID(element, document);
         }
     }
 
@@ -863,7 +859,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const node = File.createXmlNode(element, domAll, cache);
                 const command = options.assetMap?.get(element);
                 const documentData = command && command.document || this.userSettings.outputDocumentHandler;
-                File.setDocumentId(element, node, documentData);
+                File.setDocumentId(element, documentData);
+                node.outerXml = element.outerHTML.trim();
                 let i = 0;
                 for (const sibling of siblings) {
                     const { type, attributes, preserve = preserveCrossOrigin } = sibling;
@@ -925,17 +922,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const element = asset.element;
             if (element instanceof Element) {
                 const node = File.createXmlNode(element, domAll, cache);
+                File.setDocumentId(element, asset.document);
                 asset.element = node;
-                File.setDocumentId(element, node, asset.document);
                 nodeMap.set(node, element);
             }
         }
-        for (const [index, element] of nodeMap) {
+        for (const [node, element] of nodeMap) {
             if (element.tagName === 'HTML') {
-                index.innerXml = element.innerHTML;
+                node.innerXml = element.innerHTML;
             }
             else {
-                index.outerXml = element.outerHTML.trim();
+                node.outerXml = element.outerHTML.trim();
             }
         }
         options.assets = assets;
@@ -945,6 +942,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         delete options.assetMap;
         delete options.indexMap;
+        delete options.nodeMap;
         delete options.appendMap;
         return options;
     }
@@ -988,30 +986,31 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             fromConfig = true;
         }
-        else if (saveAsCondtion && saveAsOptions) {
-            ({ preserve, inline, process, compress, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsOptions);
-            if (excludeAsset(assets, saveAsOptions, element, documentData || this.userSettings.outputDocumentHandler)) {
-                return;
-            }
-            filename = saveAsOptions.filename;
-            if (src) {
-                if (file = filename && getCustomPath(src, saveAsOptions.pathname, filename)) {
-                    filename = '';
-                }
-            }
-            else {
-                if (!filename) {
+        else {
+            if (saveAsCondtion && saveAsOptions) {
+                ({ preserve, inline, process, compress, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsOptions);
+                if (excludeAsset(assets, saveAsOptions, element, documentData || this.userSettings.outputDocumentHandler)) {
                     return;
                 }
-                file = './' + filename;
-                filename = '';
+                filename = saveAsOptions.filename;
+                if (src) {
+                    if (file = filename && getCustomPath(src, saveAsOptions.pathname, filename)) {
+                        filename = '';
+                    }
+                }
+                else if (filename) {
+                        file = './' + filename;
+                        filename = '';
+                        fromSaveAs = true;
+                    }
             }
-            fromSaveAs = true;
-        }
-        else {
-            ({ preserve, inline, compress } = parseOptions(element.dataset.chromeOptions));
-            tasks = parseTask(element.dataset.chromeTasks);
-            watch = parseWatchInterval(element.dataset.chromeWatch);
+            const { chromeOptions, chromeTasks, chromeWatch } = element.dataset;
+            const options = parseOptions(chromeOptions);
+            inline ??= options.inline;
+            compress ??= options.compress;
+            preserve ??= options.preserve;
+            tasks ||= parseTask(chromeTasks);
+            watch ||= parseWatchInterval(chromeWatch);
         }
         if (process) {
             format = process.join('+');
@@ -1105,15 +1104,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                     fromConfig = true;
                 }
-                else if (saveAsImage) {
-                    ({ pathname, commands, inline, blob, compress, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsImage);
-                    if (excludeAsset(assets, saveAsImage, element, documentData || this.userSettings.outputDocumentHandler)) {
-                        return;
-                    }
-                    [saveAs, saveTo] = checkSaveAs(uri, pathname, getFilename(uri));
-                }
                 else {
-                    if (file) {
+                    if (saveAsImage) {
+                        ({ pathname, commands, inline, blob, compress, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsImage);
+                        if (excludeAsset(assets, saveAsImage, element, documentData || this.userSettings.outputDocumentHandler)) {
+                            return;
+                        }
+                        [saveAs, saveTo] = checkSaveAs(uri, pathname, getFilename(uri));
+                    }
+                    if (file && !pathname) {
                         let fileAs = parseFileAs('saveTo', file);
                         if (fileAs) {
                             [saveAs, saveTo] = checkSaveAs(uri, fileAs.file, getFilename(uri));
@@ -1123,12 +1122,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         }
                     }
                     const { chromeCommands, chromeOptions, chromeTasks, chromeWatch } = element.dataset;
-                    if (chromeCommands) {
+                    if (!commands && chromeCommands) {
                         commands = replaceMap(chromeCommands.split('::'), value => value.trim());
                     }
-                    ({ inline, blob, compress } = parseOptions(chromeOptions));
-                    tasks = parseTask(chromeTasks);
-                    watch = parseWatchInterval(chromeWatch);
+                    const options = parseOptions(chromeOptions);
+                    inline ??= options.inline;
+                    compress ??= options.compress;
+                    blob ??= options.blob;
+                    tasks ||= parseTask(chromeTasks);
+                    watch ||= parseWatchInterval(chromeWatch);
                 }
             }
             else if (saveAsImage) {
