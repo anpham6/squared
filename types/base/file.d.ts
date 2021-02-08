@@ -57,23 +57,24 @@ interface DocumentAction {
 }
 
 interface ElementAction {
-    element?: XmlNodeTag | HTMLElement;
+    element?: XmlTagNode | HTMLElement;
 }
 
 interface AttributeAction {
     attributes?: AttributeMap;
 }
 
-interface TagIndex {
+interface TagData {
     tagName: string;
-    tagCount: number;
+    tagCount?: number;
     tagIndex?: number;
 }
 
-interface TagAppend extends TagIndex {
+interface TagAppend extends TagData {
     order: number;
     id?: string;
     textContent?: string;
+    prepend?: boolean;
 }
 
 interface XmlNode extends AttributeAction {
@@ -83,9 +84,9 @@ interface XmlNode extends AttributeAction {
     lowerCase?: boolean;
 }
 
-interface XmlNodeTag extends XmlNode, Required<TagIndex> {
+interface XmlTagNode extends XmlNode, TagData {
+    id?: StringMap;
     append?: TagAppend;
-    prepend?: TagAppend;
 }
 
 interface WatchInterval {

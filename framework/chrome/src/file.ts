@@ -285,8 +285,12 @@ function getPageFilename(value: Undef<string>) {
     return value;
 }
 
-const setUUID = (element: HTMLElement, name: string) => element.dataset[name + 'Id'] ||= randomUUID();
-const getXmlNode = (node: XmlNodeTag, attributes: Undef<AttributeMap>, append?: TagAppend, prepend?: TagAppend): XmlNodeTag => ({ ...node, attributes, prepend, append });
+function setUUID(node: XmlTagNode, element: HTMLElement, name: string) {
+    const id = element.dataset[name + 'Id'] ||= randomUUID();
+    (node.id ||= {})[name] = id;
+}
+
+const getTagNode = (node: XmlTagNode, attributes: Undef<AttributeMap>, append?: TagAppend): XmlTagNode => ({ ...node, attributes, append });
 const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
 const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
@@ -295,7 +299,7 @@ const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLow
 const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
-    public static createXmlNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlNodeTag {
+    public static createTagNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlTagNode {
         const tagName = element.tagName.toLowerCase();
         const elements = cache[tagName] ||= document.querySelectorAll(tagName);
         const tagCount = elements.length;
@@ -315,14 +319,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return { index, tagName, tagIndex, tagCount, lowerCase: true };
     }
 
-    public static setDocumentId(element: HTMLElement, document: Undef<StringOfArray>) {
+    public static setDocumentId(node: XmlTagNode, element: HTMLElement, document: Undef<StringOfArray>) {
         if (Array.isArray(document)) {
             for (const name of document) {
-                setUUID(element, name);
+                setUUID(node, element, name);
             }
         }
         else if (document) {
-            setUUID(element, document);
+            setUUID(node, element, document);
         }
     }
 
@@ -849,17 +853,17 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         );
         if (appendMap) {
             const tagCount: ObjectMap<number> = {};
-            const getAppendData = (tagName: string, order: number, textContent?: string): TagAppend => {
+            const getAppendData = (tagName: string, order: number, textContent?: string, prepend?: boolean): TagAppend => {
                 if (!(tagName in tagCount)) {
                     tagCount[tagName] = document.querySelectorAll(tagName).length;
                 }
-                return { tagName, tagCount: tagCount[tagName], textContent, order };
+                return { tagName, tagCount: tagCount[tagName], textContent, order, prepend };
             };
             for (const [element, siblings] of appendMap) {
-                const node = File.createXmlNode(element, domAll, cache);
+                const node = File.createTagNode(element, domAll, cache);
                 const command = options.assetMap?.get(element);
                 const documentData = command && command.document || this.userSettings.outputDocumentHandler;
-                File.setDocumentId(element, documentData);
+                File.setDocumentId(node, element, documentData);
                 node.outerXml = element.outerHTML.trim();
                 let i = 0;
                 for (const sibling of siblings) {
@@ -888,12 +892,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 break;
                             default: {
                                 const data = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent);
-                                let elementData: Undef<XmlNodeTag>;
+                                let elementData: Undef<XmlTagNode>;
                                 if (type.startsWith('append/')) {
-                                    elementData = getXmlNode(node, attributes, data);
+                                    elementData = getTagNode(node, attributes, data);
                                 }
                                 else if (type.startsWith('prepend/')) {
-                                    elementData = getXmlNode(node, attributes, undefined, data);
+                                    data.prepend = true;
+                                    elementData = getTagNode(node, attributes, data);
                                 }
                                 if (elementData) {
                                     assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
@@ -907,8 +912,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 if (preserve) {
                                     delete data.uri;
                                 }
-                                data.element = getXmlNode(node, attributes);
-                                data.element[prepend ? 'prepend' : 'append'] = getAppendData(js ? 'script' : 'link', ++i);
+                                data.element = getTagNode(node, attributes, getAppendData(js ? 'script' : 'link', ++i, undefined, prepend));
                             }
                         }
                     }
@@ -921,8 +925,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         for (const asset of assets) {
             const element = asset.element;
             if (element instanceof Element) {
-                const node = File.createXmlNode(element, domAll, cache);
-                File.setDocumentId(element, asset.document);
+                const node = File.createTagNode(element, domAll, cache);
+                File.setDocumentId(node, element, asset.document);
                 asset.element = node;
                 nodeMap.set(node, element);
             }
