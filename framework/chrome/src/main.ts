@@ -15,7 +15,7 @@ const { isString, isPlainObject } = squared.lib.util;
 let application: Null<Application<Node>> = null;
 let file: Null<File<Node>> = null;
 
-function createAssetsOptions(assets: ChromeAsset[], options?: FileActionOptions, pathname?: string, filename?: string): FileActionOptions {
+function createAssetsOptions(assets: ChromeAsset[], options?: FileActionOptions, filename?: string): FileActionOptions {
     if (isPlainObject<FileActionOptions>(options)) {
         if (options.assets) {
             assets.push(...options.assets);
@@ -24,7 +24,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileActionOptions,
     else {
         options = {};
     }
-    return Object.assign(options, { assets, pathname, filename });
+    return Object.assign(options, { assets, filename });
 }
 
 const checkFileName = (value: Undef<string>, type: string) => value || `${application!.userSettings.outputArchiveName}-${type}`;
@@ -40,66 +40,66 @@ const appBase: squared.base.AppFramework<Node> = {
     system: {
         copyHtmlPage(pathname: string, options?: FileCopyingOptions) {
             if (isString(pathname)) {
-                return file ? file.copying(createAssetsOptions(file.getHtmlPage(options), options, pathname)) : reject(FRAMEWORK_NOT_INSTALLED);
+                return file ? file.copying(pathname, createAssetsOptions(file.getHtmlPage(options), options)) : reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         copyScriptAssets(pathname: string, options?: FileCopyingOptions) {
             if (isString(pathname)) {
-                return file ? file.copying(createAssetsOptions(file.getScriptAssets(options)[0], options, pathname)) : reject(FRAMEWORK_NOT_INSTALLED);
+                return file ? file.copying(pathname, createAssetsOptions(file.getScriptAssets(options)[0], options)) : reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         copyLinkAssets(pathname: string, options?: FileCopyingOptions) {
             if (isString(pathname)) {
-                return file ? file.copying(createAssetsOptions(file.getLinkAssets(options), options, pathname)) : reject(FRAMEWORK_NOT_INSTALLED);
+                return file ? file.copying(pathname, createAssetsOptions(file.getLinkAssets(options), options)) : reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         copyImageAssets(pathname: string, options?: FileCopyingOptions) {
             if (isString(pathname)) {
-                return file ? file.copying(createAssetsOptions(file.getImageAssets(options), options, pathname)) : reject(FRAMEWORK_NOT_INSTALLED);
+                return file ? file.copying(pathname, createAssetsOptions(file.getImageAssets(options), options)) : reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         copyVideoAssets(pathname: string, options?: FileCopyingOptions) {
             if (isString(pathname)) {
-                return file ? file.copying(createAssetsOptions(file.getVideoAssets(options), options, pathname)) : reject(FRAMEWORK_NOT_INSTALLED);
+                return file ? file.copying(pathname, createAssetsOptions(file.getVideoAssets(options), options)) : reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         copyAudioAssets(pathname: string, options?: FileCopyingOptions) {
             if (isString(pathname)) {
-                return file ? file.copying(createAssetsOptions(file.getAudioAssets(options), options, pathname)) : reject(FRAMEWORK_NOT_INSTALLED);
+                return file ? file.copying(pathname, createAssetsOptions(file.getAudioAssets(options), options)) : reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         copyFontAssets(pathname: string, options?: FileCopyingOptions) {
             if (isString(pathname)) {
-                return file ? file.copying(createAssetsOptions(file.getFontAssets(options), options, pathname)) : reject(FRAMEWORK_NOT_INSTALLED);
+                return file ? file.copying(pathname, createAssetsOptions(file.getFontAssets(options), options)) : reject(FRAMEWORK_NOT_INSTALLED);
             }
             return reject(DIRECTORY_NOT_PROVIDED);
         },
         saveHtmlPage(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, checkFileName(filename, 'html'))) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving('', createAssetsOptions(file.getHtmlPage(options), options, checkFileName(filename, 'html'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveScriptAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getScriptAssets(options)[0], options, undefined, checkFileName(filename, 'script'))) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving('', createAssetsOptions(file.getScriptAssets(options)[0], options, checkFileName(filename, 'script'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveLinkAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, checkFileName(filename, 'link'))) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving('', createAssetsOptions(file.getLinkAssets(options), options, checkFileName(filename, 'link'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveImageAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, checkFileName(filename, 'image'))) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving('', createAssetsOptions(file.getImageAssets(options), options, checkFileName(filename, 'image'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveVideoAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, checkFileName(filename, 'video'))) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving('', createAssetsOptions(file.getVideoAssets(options), options, checkFileName(filename, 'video'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveAudioAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, checkFileName(filename, 'audio'))) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving('', createAssetsOptions(file.getAudioAssets(options), options, checkFileName(filename, 'audio'))) : reject(FRAMEWORK_NOT_INSTALLED);
         },
         saveFontAssets(filename?: string, options?: FileArchivingOptions) {
-            return file ? file.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, checkFileName(filename, 'font'))) : reject(FRAMEWORK_NOT_INSTALLED);
+            return file ? file.archiving('', createAssetsOptions(file.getFontAssets(options), options, checkFileName(filename, 'font'))) : reject(FRAMEWORK_NOT_INSTALLED);
         }
     },
     create() {

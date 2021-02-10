@@ -180,7 +180,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _controllerSettings!: ControllerSettingsUI;
     private _layoutFileExtension!: RegExp;
     private _excludedElements!: Set<string>;
-    private _resourceId = 0;
+    private _resourceId = -1;
     private _layouts: LayoutAsset[] = [];
 
     private _applyDefaultStyles!: ApplyDefaultStylesMethod<T>;
@@ -194,15 +194,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public init() {
         const controller = this.controllerHandler;
+        const localSettings = controller.localSettings;
         this._visibleElement = controller.visibleElement.bind(controller);
         this._applyDefaultStyles = controller.applyDefaultStyles.bind(controller);
         this._renderNode = controller.renderNode.bind(controller);
         this._renderNodeGroup = controller.renderNodeGroup.bind(controller);
-        const localSettings = controller.localSettings;
         this._controllerSettings = localSettings;
-        this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`);
+        this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`, 'i');
         this._excludedElements = localSettings.unsupported.excluded;
-        super.init();
+        this.setResourceId();
     }
 
     public finalize() {
@@ -306,7 +306,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         session.active.clear();
         session.extensionMap.clear();
         session.clearMap.clear();
-        ResourceUI.ASSETS[this._resourceId = ResourceUI.ASSETS.length] = null;
+        this.setResourceId();
         this._nextId = 0;
         this._layouts = [];
         super.reset();
@@ -1969,6 +1969,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected createAssetOptions(options?: FileActionOptions) {
         return options ? { ...options, assets: options.assets ? this.layouts.concat(options.assets) : this.layouts } : { assets: this.layouts };
+    }
+
+    private setResourceId() {
+        ResourceUI.ASSETS[this._resourceId = ResourceUI.ASSETS.length] = null;
     }
 
     get mainElement() {

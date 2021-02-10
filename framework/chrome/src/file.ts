@@ -407,18 +407,18 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public copyTo(pathname: string, options: FileCopyingOptions) {
-        options.pathname = pathname;
-        return this.copying(this.processAssets(options));
+        return this.copying(pathname, this.processAssets(options));
     }
 
-    public appendTo(pathname: string, options: FileArchivingOptions) {
-        options.appendTo = pathname;
-        return this.archiving(this.processAssets(options));
+    public appendTo(target: string, options: FileArchivingOptions) {
+        return this.archiving(target, this.processAssets(options));
     }
 
     public saveAs(filename: string, options: FileArchivingOptions) {
-        options.filename = filename;
-        return this.archiving(this.processAssets(options));
+        if (filename) {
+            options.filename = filename;
+        }
+        return this.archiving('', this.processAssets(options));
     }
 
     public getHtmlPage(options?: FileActionOptions) {

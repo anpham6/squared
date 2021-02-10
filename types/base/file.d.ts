@@ -102,9 +102,14 @@ interface Exclusions {
     pattern?: (string | RegExp)[];
 }
 
-interface CompressFormat {
-    format: string;
+interface CompressLevel {
     level?: number;
+    chunkSize?: number;
+    mimeType?: string;
+}
+
+interface CompressFormat extends CompressLevel {
+    format: string;
     condition?: string;
     plugin?: string;
     options?: PlainObject;

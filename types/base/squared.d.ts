@@ -4,7 +4,6 @@ type FileActionResult = Promise<Void<ResponseData>>;
 
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
-        pathname?: string;
         watch?: boolean;
         emptyDir?: boolean;
     }
@@ -13,7 +12,6 @@ declare module "base" {
         filename?: string;
         format?: string;
         copyTo?: string;
-        appendTo?: string;
     }
 
     interface FileActionAsync {
@@ -21,7 +19,7 @@ declare module "base" {
         saveFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
         copyTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
         copyFiles(pathname: string, options: squared.FileActionOptions): FileActionResult;
-        appendTo(pathname: string, options?: squared.FileActionOptions): FileActionResult;
+        appendTo(target: string, options?: squared.FileActionOptions): FileActionResult;
         appendFiles(filename: string, options: squared.FileActionOptions): FileActionResult;
     }
 
@@ -343,13 +341,13 @@ declare module "base" {
         resource: Resource<T>;
         readonly archiveFormats: Set<string>;
         loadData(value: string, options: LoadDataOptions): Promise<unknown>;
-        copying(options: FileCopyingOptions): FileActionResult;
-        archiving(options: FileArchivingOptions): FileActionResult;
+        copying(pathname: string, options: FileCopyingOptions): FileActionResult;
+        archiving(target: string, options: FileArchivingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;
         saveFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         copyTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
         copyFiles(pathname: string, options: FileCopyingOptions): FileActionResult;
-        appendTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
+        appendTo(target: string, options?: FileCopyingOptions): FileActionResult;
         appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
         finalizeRequestBody(data: RequestData, options: FileCopyingOptions & FileArchivingOptions): void;
         getCopyQueryParameters(options: FileCopyingOptions): string;

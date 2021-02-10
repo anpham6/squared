@@ -142,15 +142,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resource!: Resource<T>;
 
     public copyTo(pathname: string, options: FileCopyingOptions) {
-        return this.copying({ ...options, assets: this.combineAssets(options.assets!), pathname });
+        return this.copying(pathname, { ...options, assets: this.combineAssets(options.assets!) });
     }
 
     public appendTo(pathname: string, options: FileArchivingOptions) {
-        return this.archiving({ ...options, assets: this.combineAssets(options.assets!), appendTo: pathname });
+        return this.archiving(pathname, { ...options, assets: this.combineAssets(options.assets!) });
     }
 
     public saveAs(filename: string, options: FileArchivingOptions) {
-        return this.archiving({ ...options, assets: this.combineAssets(options.assets!), filename });
+        return this.archiving('', { ...options, assets: this.combineAssets(options.assets!), filename });
     }
 
     public resourceAllToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions) {
@@ -199,11 +199,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     rawAssets.push(...options.assets);
                 }
                 options.assets = rawAssets;
-                if (options.directory) {
-                    this.copying(options);
+                if (options.pathname) {
+                    this.copying(options.pathname, options);
                 }
                 if (options.filename) {
-                    this.archiving(options);
+                    this.archiving('', options);
                 }
             }
             return result;
@@ -442,11 +442,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     assets.push(...options.assets);
                 }
                 options.assets = assets;
-                if (options.directory) {
-                    this.copying(options);
+                if (options.pathname) {
+                    this.copying(options.pathname, options);
                 }
                 if (options.filename) {
-                    this.archiving(options);
+                    this.archiving('', options);
                 }
             }
             return result;
@@ -477,11 +477,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 assets.push(...options.assets);
             }
             options.assets = assets;
-            if (options.directory) {
-                this.copying(options);
+            if (options.pathname) {
+                this.copying(options.pathname, options);
             }
             if (options.filename) {
-                this.archiving(options);
+                this.archiving('', options);
             }
         }
         return result;
@@ -538,11 +538,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 assets.push(...options.assets);
             }
             options.assets = assets;
-            if (options.directory) {
-                this.copying(options);
+            if (options.pathname) {
+                this.copying(options.pathname, options);
             }
             if (options.filename) {
-                this.archiving(options);
+                this.archiving('', options);
             }
         }
         return content;
@@ -567,11 +567,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 rawAssets.push(...options.assets);
             }
             options.assets = rawAssets;
-            if (options.directory) {
-                this.copying(options);
+            if (options.pathname) {
+                this.copying(options.pathname, options);
             }
             if (options.filename) {
-                this.archiving(options);
+                this.archiving('', options);
             }
         }
         return result;

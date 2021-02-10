@@ -102,15 +102,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
     public saveFiles(filename: string, options: FileArchivingOptions) {
-        return this.archiving({ ...options, filename });
+        return this.archiving('', { ...options, filename });
     }
 
     public appendFiles(target: string, options: FileArchivingOptions) {
-        return this.archiving({ ...options, appendTo: target });
+        return this.archiving(target, { ...options });
     }
 
     public copyFiles(pathname: string, options: FileCopyingOptions) {
-        return this.copying({ ...options, pathname });
+        return this.copying(pathname, { ...options });
     }
 
     public loadData(value: string, options: LoadDataOptions): Promise<unknown> {
@@ -139,10 +139,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return Promise.resolve(null);
     }
 
-    public copying(options: FileCopyingOptions) {
+    public copying(pathname = '', options: FileCopyingOptions) {
         if (this.hasHttpProtocol()) {
-            let pathname = options.pathname;
-            if (pathname && (pathname = pathname.trim())) {
+            if (pathname = pathname.trim()) {
                 const body = this.createRequestBody(options.assets, options);
                 if (body) {
                     return fetch(
@@ -178,7 +177,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return Promise.resolve();
     }
 
-    public archiving(options: FileArchivingOptions) {
+    public archiving(target = '', options: FileArchivingOptions) {
         if (this.hasHttpProtocol()) {
             const body = this.createRequestBody(options.assets, options);
             if (body) {
@@ -192,7 +191,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         }
                     }
                 };
-                if (!options.appendTo) {
+                if (!target) {
                     if (!filename) {
                         filename = this.userSettings.outputArchiveName;
                     }
@@ -201,15 +200,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     }
                 }
                 else {
-                    filename ||= fromLastIndexOf(options.appendTo, '/', '\\');
+                    filename ||= fromLastIndexOf(target, '/', '\\');
                     setFilename();
                 }
                 return fetch(
                     getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
                     '?format=' + (format || this.userSettings.outputArchiveFormat) +
-                    '&filename=' + encodeURIComponent(filename || '') +
+                    '&filename=' + encodeURIComponent(filename) +
                     '&to=' + encodeURIComponent(options.copyTo || '') +
-                    '&append_to=' + encodeURIComponent(options.appendTo || '') +
+                    '&append_to=' + encodeURIComponent(target || '') +
                     this.getArchiveQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),

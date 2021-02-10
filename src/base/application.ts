@@ -1114,10 +1114,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.extensions.filter(item => item.enabled);
     }
 
-    get resourceId() {
-        return this.resourceHandler ? this.resourceHandler.mapOfAssets.length : -1;
-    }
-
     get sessionAll(): [Extension<T>[], T[]] {
         const active = this.session.active;
         if (active.size === 1) {
@@ -1131,6 +1127,15 @@ export default abstract class Application<T extends Node> implements squared.bas
             children.push(...processing.cache.children);
         }
         return [Array.from(new Set(extensions)), children];
+    }
+
+    get resourceId() {
+        let result = -1;
+        if (this.resourceHandler) {
+            const ASSETS = this.resourceHandler.mapOfAssets;
+            ASSETS[result = ASSETS.length] = null;
+        }
+        return result;
     }
 
     get nextId() {
