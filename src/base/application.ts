@@ -11,14 +11,14 @@ import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;
 type PreloadItem = HTMLImageElement | string;
-type SessionThreadData<T extends Node> = [Set<HTMLElement>, squared.base.AppProcessing<T>, Set<HTMLElement | ShadowRoot>, Undef<string[]>];
+type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, Set<HTMLElement>, Set<HTMLElement | ShadowRoot>, Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
+const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, endsWith, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
@@ -32,7 +32,7 @@ const REGEXP_DATAURI = new RegExp(`\\s?url\\("?(${STRING.DATAURI})"?\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
-function parseImageUrl(resource: Null<Resource<Node>>, styleSheetHref: string, baseMap: StringMap, attrs: CssStyleAttr[]) {
+function parseImageUrl(styleSheetHref: string, baseMap: StringMap, attrs: CssStyleAttr[], resource: Null<Resource<Node>>, resourceId: number) {
     for (let i = 0, length = attrs.length; i < length; ++i) {
         const value = baseMap[attrs[i]]!;
         let result: Undef<string>,
@@ -43,14 +43,14 @@ function parseImageUrl(resource: Null<Resource<Node>>, styleSheetHref: string, b
                     const leading = match[3];
                     const mimeType = leading && leading.includes('/') ? leading : 'image/unknown';
                     const encoding = match[4] || (leading && mimeType !== leading ? leading : 'base64');
-                    resource.addRawData(match[1], match[5], { mimeType, encoding });
+                    resource.addRawData(resourceId, match[1], match[5], { mimeType, encoding });
                 }
             }
             else {
                 const uri = resolvePath(match[5], styleSheetHref);
                 if (uri) {
                     if (resource) {
-                        resource.addImageData(uri);
+                        resource.addImageData(resourceId, uri);
                     }
                     result = (result || value).replace(match[0], `url("${uri}")`);
                 }
@@ -104,19 +104,20 @@ export default abstract class Application<T extends Node> implements squared.bas
     public extensions: Extension<T>[] = [];
     public closed = false;
     public builtInExtensions!: Map<string, Extension<T>>;
-    public elementMap = new WeakMap<Element, T>();
+    public elementMap: Null<WeakMap<Element, T>> = null;
     public readonly Node: Constructor<T>;
     public readonly session: squared.base.AppSession<T> = {
         active: new Map<string, squared.base.AppProcessing<T>>()
     };
+
     public abstract userSettings: UserSettings;
     public abstract readonly systemName: string;
 
+    protected _nextId = 0;
     protected readonly _afterInsertNode: BindGeneric<T, void>;
     protected readonly _includeElement: (element: HTMLElement) => boolean;
     protected readonly _preventNodeCascade: (node: T) => boolean;
 
-    private _nextId = 0;
     private readonly _controllerHandler: Controller<T>;
     private readonly _resourceHandler: Null<Resource<T>> = null;
     private readonly _extensionManager: Null<ExtensionManager<T>> = null;
@@ -143,17 +144,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.init();
     }
 
-    public abstract init(): void;
     public abstract insertNode(processing: squared.base.AppProcessing<T>, element: Element): Undef<T>;
 
+    public init() {}
     public finalize() { return true; }
-
-    public afterCreateCache(node: T) {
-        if (this.userSettings.createElementMap) {
-            const elementMap = this.elementMap;
-            this.getProcessingCache(node.sessionId).each(item => elementMap.set(item.element as Element, item));
-        }
-    }
 
     public createNode(sessionId: string, options: CreateNodeOptions) {
         return this.createNodeStatic(this.getProcessing(sessionId)!, options.element);
@@ -166,6 +160,13 @@ export default abstract class Application<T extends Node> implements squared.bas
             processing.afterInsertNode.some(item => item.afterInsertNode!(node));
         }
         return node;
+    }
+
+    public afterCreateCache(processing: squared.base.AppProcessing<T>, node: T) {
+        if (this.userSettings.createElementMap) {
+            const elementMap = this.elementMap ||= new WeakMap();
+            processing.cache.each(item => elementMap.set(item.element as Element, item));
+        }
     }
 
     public copyTo(pathname: string, options?: FileActionOptions) {
@@ -193,10 +194,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public reset() {
-        this._nextId = 0;
-        this.elementMap = new WeakMap();
-        resetSessionAll();
-        this.session.active.clear();
         this.controllerHandler.reset();
         this.resourceHandler?.reset();
         for (const ext of this.extensions) {
@@ -213,29 +210,32 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (resource) {
             ({ preloadImages, preloadFonts, preloadCustomElements } = resource.userSettings);
         }
-        const [rootElements, processing, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
+        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
         if (rootElements.size === 0) {
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
+        const resourceId = processing.resourceId;
         const documentRoot: HTMLElement = rootElements.values().next().value;
         const preloadItems: PreloadItem[] = [];
-        let preloaded: Undef<HTMLImageElement[]>;
+        let preloaded: Undef<HTMLImageElement[]>,
+            storedAssets: Undef<ResourceAssetMap>;
         const parseSrcSet = (value: string) => {
             if (value) {
                 for (const uri of value.split(',')) {
-                    resource!.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
+                    resource!.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
                 }
             }
         };
         if (resource) {
+            storedAssets = resource.mapOfAssets[resourceId]!;
             for (const element of shadowElements) {
                 element.querySelectorAll('img, picture > source').forEach((source: HTMLImageElement | HTMLSourceElement) => parseSrcSet(source.srcset));
-                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => resource.addImageData(source.poster));
-                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => resource.addImageData(image.src, image.width, image.height));
+                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => resource.addImageData(resourceId, source.poster));
+                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => resource.addImageData(resourceId, image.src, image.width, image.height));
                 element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
                     const src = source.data || source.src;
                     if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
-                        resource.addImageData(src.trim());
+                        resource.addImageData(resourceId, src.trim());
                     }
                 });
                 element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
@@ -243,7 +243,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (href && href.indexOf('#') > 0) {
                         const src = resolvePath(splitPairStart(href, '#'));
                         if (FILE.SVG.test(src)) {
-                            resource.addImageData(src);
+                            resource.addImageData(resourceId, src);
                         }
                     }
                 });
@@ -251,7 +251,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (preloadImages) {
             preloaded = [];
-            const { image, rawData } = resource!.mapOfAssets;
+            const { image, rawData } = storedAssets!;
             for (const item of image.values()) {
                 const uri = item.uri!;
                 if (FILE.SVG.test(uri)) {
@@ -300,7 +300,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         if (preloadFonts) {
-            for (const item of resource!.mapOfAssets.fonts.values()) {
+            for (const item of storedAssets!.fonts.values()) {
                 for (const font of item) {
                     const srcUrl = font.srcUrl;
                     if (srcUrl) {
@@ -314,7 +314,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             for (const element of shadowElements) {
                 element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                     if (!preloadImages) {
-                        resource.addImage(image);
+                        resource.addImage(resourceId, image);
                     }
                     else {
                         const src = image.src;
@@ -323,7 +323,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 preloadItems.push(src);
                             }
                             else if (image.complete) {
-                                resource.addImage(image);
+                                resource.addImage(resourceId, image);
                             }
                             else {
                                 preloadItems.push(image);
@@ -376,10 +376,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     const data = preloadItems[i];
                     if (typeof data === 'string') {
-                        resource!.addRawData(data, '', (item as PromiseFulfilledResult<unknown>).value as RawDataOptions);
+                        resource!.addRawData(resourceId, data, '', (item as PromiseFulfilledResult<unknown>).value as RawDataOptions);
                     }
                     else {
-                        resource!.addImage(data);
+                        resource!.addImage(resourceId, data);
                     }
                 }
                 if (errors) {
@@ -391,10 +391,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                         this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
                     }
                 }
-                return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
+                return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
             });
         }
-        return Promise.resolve(this.resumeSessionThread(rootElements, processing, elements.length));
+        return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
     }
 
     public parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]> {
@@ -402,15 +402,15 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
     }
 
-    public createCache(documentRoot: HTMLElement, sessionId: string) {
-        const node = this.createRootNode(documentRoot, sessionId);
+    public createCache(processing: squared.base.AppProcessing<T>, documentRoot: HTMLElement) {
+        const node = this.createRootNode(processing, documentRoot);
         if (node) {
-            this.controllerHandler.sortInitialCache(this.getProcessingCache(sessionId));
+            this.controllerHandler.sortInitialCache(processing.cache);
         }
         return node;
     }
 
-    public setStyleMap(sessionId: string, documentRoot: DocumentRoot = document, queryRoot?: DocumentQueryRoot) {
+    public setStyleMap(sessionId: string, resourceId: number, documentRoot: DocumentRoot = document, queryRoot?: DocumentQueryRoot) {
         const styleSheets = documentRoot.styleSheets;
         let errors: Undef<string[]>;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
@@ -423,7 +423,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             if (!mediaText || checkMediaRule(mediaText)) {
                 try {
-                    this.applyStyleSheet(styleSheet, sessionId, documentRoot, queryRoot);
+                    this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                 }
                 catch (err) {
                     (errors ||= []).push((err as Error).message);
@@ -503,10 +503,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.systemName;
     }
 
-    protected createRootNode(rootElement: HTMLElement, sessionId: string) {
-        const processing = this.getProcessing(sessionId)!;
+    protected createRootNode(processing: squared.base.AppProcessing<T>, rootElement: HTMLElement) {
+        const { sessionId, resourceId } = processing;
         const extensions = processing.extensions.filter(item => !!item.beforeInsertNode) as Extension<T>[];
-        const node = this.cascadeParentNode(processing, rootElement, sessionId, 0, extensions.length ? extensions : null);
+        const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, extensions.length ? extensions : null);
         if (node) {
             node.documentRoot = true;
             processing.node = node;
@@ -556,7 +556,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
         const node = this.insertNode(processing, parentElement);
         if (node) {
             const cache = processing.cache;
@@ -594,9 +594,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     let shadowRoot: Optional<ShadowRoot>;
                     if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
-                        this.setStyleMap(sessionId, shadowRoot);
+                        this.setStyleMap(sessionId, resourceId, shadowRoot);
                     }
-                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
+                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                         elements.push(child);
                         inlineText = false;
                     }
@@ -661,14 +661,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         return result;
     }
 
-    private applyStyleRule(item: CSSStyleRule, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
+    private applyStyleRule(sessionId: string, resourceId: number, item: CSSStyleRule, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
         const resource = this.resourceHandler;
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
-                const unusedStyles = !hostElement && this.session.unusedStyles;
                 const baseMap: CssStyleMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
@@ -734,7 +733,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 REGEXP_IMPORTANT.lastIndex = 0;
                 if (images) {
-                    parseImageUrl(resource, styleSheetHref, baseMap, images);
+                    parseImageUrl(styleSheetHref, baseMap, images, resource, resourceId);
                 }
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
@@ -778,8 +777,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     const length = elements.length;
                     if (length === 0) {
-                        if (unusedStyles) {
-                            unusedStyles.add(selectorText);
+                        if (!hostElement) {
+                            (this.getProcessing(sessionId)!.unusedStyles ||= new Set()).add(selectorText);
                         }
                         continue;
                     }
@@ -839,7 +838,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     else {
                                         data.srcLocal = url;
                                     }
-                                    resource.addFont(data);
+                                    resource.addFont(resourceId, data);
                                 }
                             }
                         }
@@ -847,12 +846,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 break;
             case CSSRule.SUPPORTS_RULE:
-                this.applyCssRules(((item as unknown) as CSSSupportsRule).cssRules, sessionId, documentRoot);
+                this.applyCssRules(sessionId, resourceId, ((item as unknown) as CSSSupportsRule).cssRules, documentRoot);
                 break;
         }
     }
 
-    private applyStyleSheet(item: CSSStyleSheet, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
+    private applyStyleSheet(sessionId: string, resourceId: number, item: CSSStyleSheet, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -863,30 +862,30 @@ export default abstract class Application<T extends Node> implements squared.bas
                     switch (type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
-                            this.applyStyleRule(rule as CSSStyleRule, sessionId, documentRoot, queryRoot);
+                            this.applyStyleRule(sessionId, resourceId, rule as CSSStyleRule, documentRoot, queryRoot);
                             break;
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri) {
-                                this.resourceHandler?.addRawData(uri, '', { mimeType: 'text/css', encoding: 'utf8' });
+                                this.resourceHandler?.addRawData(resourceId, uri, '', { mimeType: 'text/css', encoding: 'utf8' });
                             }
-                            this.applyStyleSheet((rule as CSSImportRule).styleSheet, sessionId, documentRoot, queryRoot);
+                            this.applyStyleSheet(sessionId, resourceId, (rule as CSSImportRule).styleSheet, documentRoot, queryRoot);
                             break;
                         }
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
-                                this.applyCssRules((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
+                                this.applyCssRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules, documentRoot, queryRoot);
                             }
                             else {
-                                this.parseStyleRules((rule as CSSConditionRule).cssRules);
+                                this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
                             }
                             break;
                         case CSSRule.SUPPORTS_RULE:
                             if (CSS.supports((rule as CSSConditionRule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCssRules((rule as CSSConditionRule).cssRules, sessionId, documentRoot, queryRoot);
+                                this.applyCssRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules, documentRoot, queryRoot);
                             }
                             else {
-                                this.parseStyleRules((rule as CSSConditionRule).cssRules);
+                                this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
                             }
                             break;
                         case CSSRule.KEYFRAMES_RULE: {
@@ -912,13 +911,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private applyCssRules(rules: CSSRuleList, sessionId: string, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
+    private applyCssRules(sessionId: string, resourceId: number, rules: CSSRuleList, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
         for (let i = 0, length = rules.length; i < length; ++i) {
-            this.applyStyleRule(rules[i] as CSSStyleRule, sessionId, documentRoot, queryRoot);
+            this.applyStyleRule(sessionId, resourceId, rules[i] as CSSStyleRule, documentRoot, queryRoot);
         }
     }
 
-    private parseStyleRules(rules: CSSRuleList) {
+    private parseStyleRules(sessionId: string, resourceId: number, rules: CSSRuleList) {
         const resource = this.resourceHandler;
         if (resource) {
             for (let i = 0, length = rules.length; i < length; ++i) {
@@ -943,12 +942,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                         const keys = Object.keys(baseMap) as CssStyleAttr[];
                         if (keys.length) {
-                            parseImageUrl(resource, item.parentStyleSheet?.href || location.href, baseMap, keys);
+                            parseImageUrl(item.parentStyleSheet?.href || location.href, baseMap, keys, resource, resourceId);
                         }
                         break;
                     }
                     case CSSRule.FONT_FACE_RULE:
-                        this.applyStyleRule(item, '', document);
+                        this.applyStyleRule(sessionId, resourceId, item, document);
                         break;
                 }
             }
@@ -1006,9 +1005,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         const controller = this.controllerHandler;
         const resource = this.resourceHandler;
         const sessionId = controller.generateSessionId;
+        const resourceId = this.resourceId;
         const extensions = this.extensionsAll;
         const processing: squared.base.AppProcessing<T> = {
             sessionId,
+            resourceId,
             initializing: false,
             cache: new NodeList<T>(undefined, sessionId),
             excluded: new NodeList<T>(undefined, sessionId),
@@ -1023,26 +1024,29 @@ export default abstract class Application<T extends Node> implements squared.bas
             processing.afterInsertNode = afterInsertNode;
         }
         this.session.active.set(sessionId, processing);
-        controller.init();
+        if (resource) {
+            resource.init(resourceId);
+        }
+        controller.init(resourceId);
         const queryRoot = rootElements.size === 1 && (rootElements.values().next().value as HTMLElement).parentElement;
         if (queryRoot && queryRoot !== document.documentElement) {
-            this.setStyleMap(sessionId, document, queryRoot);
+            this.setStyleMap(sessionId, resourceId, document, queryRoot);
         }
         else {
-            this.setStyleMap(sessionId);
+            this.setStyleMap(sessionId, resourceId);
         }
         if (resource) {
             (queryRoot || document).querySelectorAll('[style]').forEach((element: HTMLElement) => {
                 const { backgroundImage, listStyleImage } = element.style;
                 if (backgroundImage || listStyleImage) {
-                    parseImageUrl(resource, location.href, { backgroundImage, listStyleImage }, ['backgroundImage', 'listStyleImage']);
+                    parseImageUrl(location.href, { backgroundImage, listStyleImage }, ['backgroundImage', 'listStyleImage'], resource, resourceId);
                 }
             });
         }
-        return [rootElements, processing, shadowElements || rootElements, styleSheets];
+        return [processing, rootElements, shadowElements || rootElements, styleSheets];
     }
 
-    private resumeSessionThread(rootElements: Set<HTMLElement>, processing: squared.base.AppProcessing<T>, multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
+    private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: Set<HTMLElement>, multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
         const { sessionId, extensions } = processing;
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
@@ -1060,9 +1064,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const success: T[] = [];
         for (const element of rootElements) {
-            const node = this.createCache(element, sessionId);
+            const node = this.createCache(processing, element);
             if (node) {
-                this.afterCreateCache(node);
+                this.afterCreateCache(processing, node);
                 success.push(node);
             }
         }
@@ -1110,14 +1114,18 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.extensions.filter(item => item.enabled);
     }
 
+    get resourceId() {
+        return this.resourceHandler ? this.resourceHandler.mapOfAssets.length : -1;
+    }
+
     get sessionAll(): [Extension<T>[], T[]] {
         const active = this.session.active;
         if (active.size === 1) {
             const processing: squared.base.AppProcessing<T> = active.values().next().value;
             return [processing.extensions as Extension<T>[], processing.cache.children];
         }
-        const extensions: Extension<T>[] = [],
-            children: T[] = [];
+        const extensions: Extension<T>[] = [];
+        const children: T[] = [];
         for (const processing of active.values()) {
             extensions.push(...processing.extensions as Extension<T>[]);
             children.push(...processing.cache.children);

@@ -20,8 +20,6 @@ interface FileAsData extends OptionsData {
     format?: string;
 }
 
-const ASSETS = squared.base.Resource.ASSETS;
-
 const { convertWord, endsWith, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
 const { appendSeparator, fromMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
@@ -544,11 +542,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getLinkAssets(options?: FileActionOptions) {
-        let assetMap: Undef<ElementAssetMap>,
+        let resourceId: Undef<number>,
+            assetMap: Undef<ElementAssetMap>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsLink: Undef<SaveAsOptions>;
         if (options) {
-            ({ assetMap, preserveCrossOrigin } = options);
+            ({ resourceId, assetMap, preserveCrossOrigin } = options);
             saveAsLink = options.saveAs?.link;
         }
         const result: ChromeAsset[] = [];
@@ -577,16 +576,21 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (saveAsLink) {
             ({ process, compress, preserve, tasks, cloudStorage, document: documentData } = saveAsLink);
         }
-        for (const [uri, item] of ASSETS.rawData) {
-            if (item.mimeType === 'text/css') {
-                const data = File.parseUri(resolvePath(uri), preserveCrossOrigin, { format: process ? process.join('+'): undefined });
-                if (this.processExtensions(data)) {
-                    setOutputModifiers(data, documentData, compress, tasks, cloudStorage);
-                    if (preserve) {
-                        data.preserve = true;
+        if (resourceId) {
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                for (const [uri, item] of assets.rawData) {
+                    if (item.mimeType === 'text/css') {
+                        const data = File.parseUri(resolvePath(uri), preserveCrossOrigin, { format: process ? process.join('+'): undefined });
+                        if (this.processExtensions(data)) {
+                            setOutputModifiers(data, documentData, compress, tasks, cloudStorage);
+                            if (preserve) {
+                                data.preserve = true;
+                            }
+                            data.mimeType = item.mimeType;
+                            result.push(data);
+                        }
                     }
-                    data.mimeType = item.mimeType;
-                    result.push(data);
                 }
             }
         }
@@ -595,11 +599,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getImageAssets(options?: FileActionOptions) {
-        let assetMap: Undef<ElementAssetMap>,
+        let resourceId: Undef<number>,
+            assetMap: Undef<ElementAssetMap>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>;
         if (options) {
-            ({ assetMap, preserveCrossOrigin } = options);
+            ({ resourceId, assetMap, preserveCrossOrigin } = options);
             saveAsImage = options.saveAs?.image;
         }
         const result: ChromeAsset[] = [];
@@ -632,56 +637,61 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         });
-        for (const uri of ASSETS.image.keys()) {
-            const image = Resource.parseDataURI(uri, 'image/unknown', 'base64');
-            if (image) {
-                this.resource.addRawData(uri, image.data as string, image);
-            }
-            else if (!result.find(item => item.uri === uri)) {
-                this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
-            }
-        }
-        for (const rawData of ASSETS.rawData.values()) {
-            const { base64, content, filename, mimeType = parseMimeType(filename) } = rawData;
-            if (base64) {
-                if (saveAsImage?.blob && !result.find(item => item.base64 === base64)) {
-                    let commands: Undef<string[]>;
-                    if (startsWith(mimeType, 'image/') && (commands = saveAsImage.commands)) {
-                        for (let i = 0; i < commands.length; ++i) {
-                            const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
-                            if (match) {
-                                commands[i] = match[1] + '@' + match[2].trim();
-                            }
-                            else {
-                                commands.splice(i--, 1);
-                            }
-                        }
+        if (resourceId) {
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                for (const uri of assets.image.keys()) {
+                    const image = Resource.parseDataURI(uri, 'image/unknown', 'base64');
+                    if (image) {
+                        this.resource.addRawData(resourceId, uri, image.data as string, image);
                     }
-                    const pathname = saveAsImage.pathname;
-                    const data = this.processImageUri(result, null, resolvePath(pathname? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
-                    if (data) {
-                        if (endsWith(data.filename, '.unknown')) {
-                            data.mimeType = 'image/unknown';
-                        }
-                        if (commands && commands.length) {
-                            data.commands ||= commands;
-                        }
-                        data.cloudStorage = saveAsImage.cloudStorage;
-                        if (!pathname) {
-                            delete data.uri;
-                        }
+                    else if (!result.find(item => item.uri === uri)) {
+                        this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
                     }
                 }
-            }
-            else if (content && mimeType) {
-                const data = {
-                    pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
-                    filename: assignFilename(filename),
-                    content,
-                    mimeType
-                };
-                if (this.processExtensions(data)) {
-                    result.push(data);
+                for (const rawData of assets.rawData.values()) {
+                    const { base64, content, filename, mimeType = parseMimeType(filename) } = rawData;
+                    if (base64) {
+                        if (saveAsImage?.blob && !result.find(item => item.base64 === base64)) {
+                            let commands: Undef<string[]>;
+                            if (startsWith(mimeType, 'image/') && (commands = saveAsImage.commands)) {
+                                for (let i = 0; i < commands.length; ++i) {
+                                    const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
+                                    if (match) {
+                                        commands[i] = match[1] + '@' + match[2].trim();
+                                    }
+                                    else {
+                                        commands.splice(i--, 1);
+                                    }
+                                }
+                            }
+                            const pathname = saveAsImage.pathname;
+                            const data = this.processImageUri(result, null, resolvePath(pathname? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
+                            if (data) {
+                                if (endsWith(data.filename, '.unknown')) {
+                                    data.mimeType = 'image/unknown';
+                                }
+                                if (commands && commands.length) {
+                                    data.commands ||= commands;
+                                }
+                                data.cloudStorage = saveAsImage.cloudStorage;
+                                if (!pathname) {
+                                    delete data.uri;
+                                }
+                            }
+                        }
+                    }
+                    else if (content && mimeType) {
+                        const data = {
+                            pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
+                            filename: assignFilename(filename),
+                            content,
+                            mimeType
+                        };
+                        if (this.processExtensions(data)) {
+                            result.push(data);
+                        }
+                    }
                 }
             }
         }
@@ -697,15 +707,24 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getFontAssets(options?: FileActionOptions) {
-        const preserveCrossOrigin = options && options.preserveCrossOrigin;
+        let resourceId: Undef<number>,
+            preserveCrossOrigin: Undef<boolean>;
+        if (options) {
+            ({ resourceId, preserveCrossOrigin } = options);
+        }
         const result: ChromeAsset[] = [];
-        for (const fonts of ASSETS.fonts.values()) {
-            for (let i = 0, length = fonts.length; i < length; ++i) {
-                const url = fonts[i].srcUrl;
-                if (url) {
-                    const data = File.parseUri(url, preserveCrossOrigin);
-                    if (this.processExtensions(data)) {
-                        result.push(data);
+        if (resourceId) {
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                for (const fonts of assets.fonts.values()) {
+                    for (let i = 0, length = fonts.length; i < length; ++i) {
+                        const url = fonts[i].srcUrl;
+                        if (url) {
+                            const data = File.parseUri(url, preserveCrossOrigin);
+                            if (this.processExtensions(data)) {
+                                result.push(data);
+                            }
+                        }
                     }
                 }
             }

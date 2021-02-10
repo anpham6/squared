@@ -82,7 +82,6 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public resource!: Resource<T>;
-    public assets: RawAsset[] = [];
     public readonly archiveFormats = new Set(['zip', '7z', 'tar', 'gz', 'tgz']);
 
     private _hostname = '';
@@ -112,23 +111,6 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public copyFiles(pathname: string, options: FileCopyingOptions) {
         return this.copying({ ...options, pathname });
-    }
-
-    public addAsset(asset: RawAsset) {
-        if (asset.content || asset.uri || asset.base64) {
-            const { pathname, filename } = asset;
-            const append = this.assets.find(item => item.pathname === pathname && item.filename === filename);
-            if (append) {
-                Object.assign(append, asset);
-            }
-            else {
-                this.assets.push(asset);
-            }
-        }
-    }
-
-    public reset() {
-        this.assets = [];
     }
 
     public loadData(value: string, options: LoadDataOptions): Promise<unknown> {
@@ -276,8 +258,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
-        assets = assets ? assets.concat(this.assets) : this.assets;
-        if (assets.length) {
+        if (assets && assets.length) {
             const exclusions = options.exclusions;
             if (exclusions) {
                 assets = assets.filter(item => validateAsset(item, exclusions));

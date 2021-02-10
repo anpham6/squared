@@ -17,20 +17,20 @@ let CACHE_IMAGE: StringMap = {};
 let COUNTER_UUID = 0;
 let COUNTER_SYMBOL = 0;
 
-function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: boolean) {
+function formatObject(resourceId: number, obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: boolean) {
     for (const attr in obj) {
         const value = obj[attr];
         if (isString(value)) {
             switch (attr) {
                 case 'text':
                     if (!startsWith(value, '@string/')) {
-                        obj[attr] = Resource.addString(value, '', numberAlias);
+                        obj[attr] = Resource.addString(resourceId, value, '', numberAlias);
                     }
                     break;
                 case 'src':
                 case 'srcCompat':
                     if (PROTOCOL.test(value)) {
-                        const src = Resource.addImage({ mdpi: value });
+                        const src = Resource.addImage(resourceId, { mdpi: value });
                         if (src) {
                             obj[attr] = `@drawable/${src}`;
                         }
@@ -39,7 +39,7 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
                 default: {
                     const colorData = parseColor(value);
                     if (colorData) {
-                        const colorName = Resource.addColor(colorData);
+                        const colorName = Resource.addColor(resourceId, colorData);
                         if (colorName) {
                             obj[attr] = `@color/${colorName}`;
                         }
@@ -48,7 +48,7 @@ function formatObject(obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: b
             }
         }
         else if (isPlainObject(value)) {
-            formatObject(obj, numberAlias);
+            formatObject(resourceId, obj, numberAlias);
         }
     }
 }
@@ -59,25 +59,23 @@ function isLeadingDigit(value: string) {
 }
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
-    public static canCompressImage(filename: string, mimeType?: string) {
-        return /\.(png|jpg|jpeg)$/i.test(filename) || endsWith(mimeType, 'png') || endsWith(mimeType, 'jpeg');
-    }
+    public static STORED: ResourceSessionStored<Required<ResourceStoredMap>>;
 
-    public static formatOptions(options: ViewAttribute, numberAlias?: boolean) {
+    public static formatOptions(resourceId: number, options: ViewAttribute, numberAlias?: boolean) {
         for (const namespace in options) {
             const obj: StandardMap = options[namespace];
             if (isPlainObject<StandardMap>(obj)) {
-                formatObject(obj, numberAlias);
+                formatObject(resourceId, obj, numberAlias);
             }
         }
         return options;
     }
 
-    public static formatName(value: string) {
-        return (isLeadingDigit(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
-    }
-
-    public static addTheme(theme: ThemeAttribute) {
+    public static addTheme(resourceId: number, theme: ThemeAttribute) {
+        const stored = this.STORED[resourceId];
+        if (!stored) {
+            return false;
+        }
         const { items, output } = theme;
         let pathname = 'res/values',
             filename = 'themes.xml',
@@ -91,7 +89,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 filename = output.filename;
             }
         }
-        const themes = Resource.STORED.themes;
+        const themes = stored.themes;
         const filepath = pathname + '/' + filename;
         const storedFile = themes.get(filepath) || new Map<string, ThemeAttribute>();
         if (!name || name[0] === '.') {
@@ -114,7 +112,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         name = appTheme + (name[0] === '.' ? name : '');
         theme.name = name;
-        Resource.formatOptions(items as ViewAttribute);
+        Resource.formatOptions(resourceId, items as ViewAttribute);
         const storedTheme = storedFile.get(name);
         if (storedTheme) {
             const storedItems = storedTheme.items;
@@ -129,12 +127,12 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return true;
     }
 
-    public static addString(value: string, name?: string, numberAlias?: boolean) {
-        if (value) {
+    public static addString(resourceId: number, value: string, name?: string, numberAlias?: boolean) {
+        const stored = this.STORED[resourceId];
+        if (stored && value) {
             const numeric = isNumber(value);
             if (!numeric || numberAlias) {
-                const strings = Resource.STORED.strings;
-                for (const data of strings) {
+                for (const data of stored.strings) {
                     if (data[1] === value) {
                         return `@string/${data[0]}`;
                     }
@@ -160,13 +158,13 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                         name = '__' + name;
                     }
                 }
-                return `@string/${Resource.insertStoredAsset('strings', name, value)}`;
+                return `@string/${Resource.insertStoredAsset(resourceId, 'strings', name, value)}`;
             }
         }
         return value;
     }
 
-    public static addImage(images: StringMap, prefix = '', imageFormat?: MIMEOrAll) {
+    public static addImage(resourceId: number, images: StringMap, prefix = '', imageFormat?: MIMEOrAll) {
         const mdpi = images.mdpi;
         if (mdpi) {
             if (Object.keys(images).length === 1) {
@@ -180,7 +178,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const length = ext.length;
             if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                 const name = Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase();
-                const asset = Resource.insertStoredAsset('images', (RESERVED_JAVA.has(name) ? '_' : '') + name, images);
+                const asset = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.has(name) ? '_' : '') + name, images);
                 CACHE_IMAGE[mdpi] = asset;
                 return asset;
             }
@@ -188,7 +186,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public static addColor(color: ColorData | string, transparency?: boolean) {
+    public static addColor(resourceId: number, color: ColorData | string, transparency?: boolean) {
         if (typeof color === 'string') {
             const result = parseColor(color, 1, transparency);
             if (result) {
@@ -200,19 +198,33 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         if (!color.transparent || transparency) {
             const keyName = color.opacity < 1 ? color.valueAsARGB : color.value;
-            let colorName = Resource.STORED.colors.get(keyName);
-            if (colorName) {
-                return colorName;
+            const stored = this.STORED[resourceId];
+            let colorName: Undef<string>;
+            if (stored) {
+                colorName = stored.colors.get(keyName);
+                if (colorName) {
+                    return colorName;
+                }
+                if (color.key) {
+                    stored.colors.set(keyName, color.key);
+                    return color.key;
+                }
             }
-            if (color.key) {
-                Resource.STORED.colors.set(keyName, color.key);
-                return color.key;
+            colorName = Resource.generateId(resourceId, 'color', color.nearest.key);
+            if (stored) {
+                stored.colors.set(keyName, colorName);
             }
-            colorName = Resource.generateId('color', color.nearest.key);
-            Resource.STORED.colors.set(keyName, colorName);
             return colorName;
         }
         return '';
+    }
+
+    public static canCompressImage(filename: string, mimeType?: string) {
+        return /\.(png|jpg|jpeg)$/i.test(filename) || endsWith(mimeType, 'png') || endsWith(mimeType, 'jpeg');
+    }
+
+    public static formatName(value: string) {
+        return (isLeadingDigit(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
     }
 
     private readonly _imageFormat?: MIMEOrAll;
@@ -222,18 +234,22 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         public cache: squared.base.NodeList<T>)
     {
         super();
-        const STORED = Resource.STORED;
-        STORED.styles = new Map();
-        STORED.themes = new Map();
-        STORED.dimens = new Map();
-        STORED.drawables = new Map();
-        STORED.animators = new Map();
         const mimeType = this.controllerSettings.mimeType.image;
         if (mimeType !== '*') {
             const imageFormat = new Set(mimeType);
             imageFormat.delete('image/svg+xml');
             this._imageFormat = imageFormat;
         }
+    }
+
+    public init(resourceId: number) {
+        const data = Resource.STORED[resourceId] ||= {} as Required<ResourceStoredMap>;
+        data.styles = new Map();
+        data.themes = new Map();
+        data.dimens = new Map();
+        data.drawables = new Map();
+        data.animators = new Map();
+        super.init(resourceId);
     }
 
     public reset() {
@@ -243,13 +259,13 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         super.reset();
     }
 
-    public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
+    public addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
         const result: StringMap = {};
         let mdpi: Undef<string>;
         if (typeof element === 'string') {
             mdpi = extractURL(element);
             if (mdpi && !startsWith(mdpi, 'data:image/')) {
-                return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
+                return this.addImageSet(resourceId, { mdpi: resolvePath(mdpi) }, prefix);
             }
         }
         else {
@@ -288,12 +304,12 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             mdpi ||= element.src;
         }
         if (mdpi) {
-            const image = this.getRawData(mdpi);
+            const image = this.getRawData(resourceId, mdpi);
             if (image) {
                 const data = image.base64;
                 if (data) {
                     const filename = image.filename;
-                    this.writeRawImage({
+                    this.writeRawImage(resourceId, {
                         mimeType: image.mimeType,
                         filename: prefix + filename,
                         data,
@@ -305,15 +321,15 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
             result.mdpi = mdpi;
         }
-        return this.addImageSet(result, prefix);
+        return this.addImageSet(resourceId, result, prefix);
     }
 
-    public addImageSet(images: StringMap, prefix?: string) {
-        return Resource.addImage(images, prefix, this._imageFormat);
+    public addImageSet(resourceId: number, images: StringMap, prefix?: string) {
+        return Resource.addImage(resourceId, images, prefix, this._imageFormat);
     }
 
-    public writeRawImage(options: RawDataOptions) {
-        const asset = super.writeRawImage(options);
+    public writeRawImage(resourceId: number, options: RawDataOptions) {
+        const asset = super.writeRawImage(resourceId, options);
         if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', options.mimeType)) {
             (asset.compress ||= []).unshift({ format: 'png' });
         }

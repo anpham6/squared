@@ -1,4 +1,5 @@
 interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
+    resourceId?: number;
     assetMap?: ElementAssetMap;
     appendMap?: AppendAssetMap;
     nodeMap?: Map<XmlNode, HTMLElement>;

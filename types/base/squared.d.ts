@@ -35,7 +35,8 @@ declare module "base" {
         renderTemplates: NodeTemplate<T>[];
     }
 
-    interface DocumentWriteDataExtensionUI<T extends NodeUI> {
+    interface FinalizeDataExtensionUI<T extends NodeUI> {
+        resourceId: number;
         rendered: T[];
         documentRoot: LayoutRoot<T>[];
     }
@@ -62,11 +63,11 @@ declare module "base" {
 
     interface AppSession<T extends Node> {
         active: Map<string, AppProcessing<T>>;
-        unusedStyles?: Set<string>;
     }
 
     interface AppProcessing<T extends Node> {
         sessionId: string;
+        resourceId: number;
         initializing: boolean;
         cache: NodeList<T>;
         excluded: NodeList<T>;
@@ -76,6 +77,7 @@ declare module "base" {
         node: Null<T>;
         documentElement: Null<T>;
         afterInsertNode?: Extension<T>[];
+        unusedStyles?: Set<string>;
         keyframesMap?: KeyframesMap;
     }
 
@@ -90,7 +92,7 @@ declare module "base" {
         userSettings: UserSettings;
         builtInExtensions: Map<string, Extension<T>>;
         closed: boolean;
-        elementMap: WeakMap<Element, T>;
+        elementMap: Null<WeakMap<Element, T>>;
         readonly systemName: string;
         readonly framework: number;
         readonly session: AppSession<T>;
@@ -102,13 +104,13 @@ declare module "base" {
         setExtensions(namespaces?: string[]): void;
         parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
-        createCache(documentRoot: HTMLElement, sessionId: string): Undef<T>;
-        setStyleMap(sessionId: string, documentRoot?: DocumentRoot, queryRoot?: DocumentQueryRoot): void;
+        createCache(processing: AppProcessing<T>, documentRoot: HTMLElement): Undef<T>;
+        setStyleMap(sessionId: string, resourceId: number, documentRoot?: DocumentRoot, queryRoot?: DocumentQueryRoot): void;
         replaceShadowRootSlots(shadowRoot: ShadowRoot): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
         createNodeStatic(processing: AppProcessing<T>, element?: Element): T;
         insertNode(processing: AppProcessing<T>, element: Element): Undef<T>;
-        afterCreateCache(node: T): void;
+        afterCreateCache(processing: AppProcessing<T>, node: T): void;
         getProcessing(sessionId: string): Undef<AppProcessing<T>>;
         getProcessingCache(sessionId: string): NodeList<T>;
         getDatasetName(attr: string, element: DocumentElement): Undef<string>;
@@ -128,6 +130,7 @@ declare module "base" {
         get extensionManager(): Null<ExtensionManager<T>>;
         get extensionsAll(): Extension<T>[];
         get sessionAll(): [Extension<T>[], T[]];
+        get resourceId(): number;
         get nextId(): number;
         get initializing(): boolean;
         get length(): number;
@@ -164,10 +167,10 @@ declare module "base" {
         static readonly KEY_NAME: string;
         readonly application: Application<T>;
         readonly localSettings: ControllerSettings;
-        init(): void;
+        init(resourceId: number): void;
         reset(): void;
         includeElement(element: HTMLElement): boolean;
-        applyDefaultStyles(element: Element, sessionId: string, pseudoElt?: PseudoElt): void;
+        applyDefaultStyles(processing: AppProcessing<T>, element: Element, pseudoElt?: PseudoElt): void;
         preventNodeCascade(node: T): boolean;
         sortInitialCache(cache: NodeList<T>): void;
         get afterInsertNode(): BindGeneric<T, void>;
@@ -213,39 +216,41 @@ declare module "base" {
 
     class Resource<T extends Node> implements Resource<T>, AppHandler<T> {
         static readonly KEY_NAME: string;
-        static readonly ASSETS: ResourceAssetMap;
+        static readonly ASSETS: ResourceSessionAsset;
         static hasMimeType(formats: MIMEOrAll, value: string): boolean;
         static getExtension(value: string): string;
-        static resetDataMap(data: ResourceMap): void;
         static parseDataURI(value: string, mimeType?: string, encoding?: string): RawDataOptions;
         readonly application: Application<T>;
+        clear(): void;
         reset(): void;
-        addImage(element: HTMLImageElement): void;
-        getImage(uri: string): Undef<ImageAsset>;
-        addFont(data: FontFaceData): void;
-        getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
-        addVideo(uri: string, options?: AudioVideoOptions): void;
-        getVideo(uri: string): Undef<Asset>;
-        addAudio(uri: string, options?: AudioVideoOptions): void;
-        getAudio(uri: string): Undef<Asset>;
-        addRawData(uri: string, content: Undef<string>, options?: RawDataOptions): Null<RawAsset>;
-        getRawData(uri: string): Undef<RawAsset>;
-        addImageData(uri: string, width?: number, height?: number): void;
-        fromImageUrl(value: string): ImageAsset[];
+        init(resourceId: number): void;
+        addAsset(resourceId: number, asset: RawAsset): void;
+        addImage(resourceId: number, element: HTMLImageElement): void;
+        getImage(resourceId: number, uri: string): Undef<ImageAsset>;
+        addFont(resourceId: number, data: FontFaceData): void;
+        getFont(resourceId: number, fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
+        addVideo(resourceId: number, uri: string, options?: AudioVideoOptions): void;
+        getVideo(resourceId: number, uri: string): Undef<Asset>;
+        addAudio(resourceId: number, uri: string, options?: AudioVideoOptions): void;
+        getAudio(resourceId: number, uri: string): Undef<Asset>;
+        addRawData(resourceId: number, uri: string, content: Undef<string>, options?: RawDataOptions): Null<RawAsset>;
+        getRawData(resourceId: number, uri: string): Undef<RawAsset>;
+        addImageData(resourceId: number, uri: string, width?: number, height?: number): void;
+        fromImageUrl(resourceId: number, value: string): ImageAsset[];
         set fileHandler(value);
         get fileHandler(): Null<File<T>>;
         get controllerSettings(): ControllerSettings;
         get userSettings(): UserResourceSettings;
         get mimeTypeMap(): ObjectMap<MIMEOrAll>;
         get randomUUID(): string;
-        get mapOfAssets(): ResourceAssetMap;
+        get mapOfAssets(): ResourceSessionAsset;
     }
 
     class ResourceUI<T extends NodeUI> extends Resource<T> {
-        static readonly STORED: Required<ResourceStoredMap>;
+        static readonly STORED: ResourceSessionStored;
+        static generateId(resourceId: number, section: string, name: string, start?: number): string;
+        static insertStoredAsset(resourceId: number, type: string, name: string, value: any): string;
         static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
-        static generateId(section: string, name: string, start?: number): string;
-        static insertStoredAsset(asset: string, name: string, value: any): string;
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
         static parseBackgroundImage(node: NodeUI, value: string): Undef<string | Gradient>[];
@@ -253,8 +258,8 @@ declare module "base" {
         static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         setData(rendering: NodeList<T>): void;
-        writeRawImage(options: RawDataOptions): Null<RawAsset>;
-        writeRawSvg(element: SVGSVGElement, dimension?: Dimension): string;
+        writeRawImage(resourceId: number, options: RawDataOptions): Null<RawAsset>;
+        writeRawSvg(resourceId: number, element: SVGSVGElement, dimension?: Dimension): string;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
@@ -304,10 +309,10 @@ declare module "base" {
         addDescendant(node: T): void;
         afterBaseLayout(sessionId: string): void;
         afterConstraints(sessionId: string): void;
-        afterResources(sessionId: string): void;
+        afterResources(sessionId: string, resourceId: number): void;
         beforeBaseLayout(sessionId: string): void;
-        beforeDocumentWrite(data: DocumentWriteDataExtensionUI<T>): void;
-        afterFinalize(): void;
+        beforeFinalize(data: FinalizeDataExtensionUI<T>): void;
+        afterFinalize(data: FinalizeDataExtensionUI<T>): void;
         postBaseLayout?(node: T): void;
         postConstraints?(node: T): void;
         postResources?(node: T): void;
@@ -336,9 +341,7 @@ declare module "base" {
     class File<T extends Node> implements FileActionAsync, ErrorAction {
         static downloadFile(data: Blob | string, filename?: string, mimeType?: string): void;
         resource: Resource<T>;
-        assets: FileAsset[];
         readonly archiveFormats: Set<string>;
-        addAsset(asset: RawAsset): void;
         loadData(value: string, options: LoadDataOptions): Promise<unknown>;
         copying(options: FileCopyingOptions): FileActionResult;
         archiving(options: FileArchivingOptions): FileActionResult;

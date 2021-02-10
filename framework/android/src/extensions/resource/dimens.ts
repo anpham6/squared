@@ -13,7 +13,7 @@ const RE_DIMENS = new Pattern(/:(\w+)="(-?[\d.]+px)"/g);
 
 const CACHE_UNDERSCORE: StringMap = {};
 
-function getResourceName(map: Map<string, string>, name: string, value: string) {
+function getResourceName(resourceId: number, map: Map<string, string>, name: string, value: string) {
     if (map.get(name) === value) {
         return name;
     }
@@ -22,7 +22,7 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
             return data[0];
         }
     }
-    return Resource.generateId('dimen', name, 0);
+    return Resource.generateId(resourceId, 'dimen', name, 0);
 }
 
 function createNamespaceData(namespace: string, node: View, group: GroupData) {
@@ -41,8 +41,9 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(data: squared.base.DocumentWriteDataExtensionUI<T>) {
-        const dimens = Resource.STORED.dimens;
+    public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
+        const resourceId = data.resourceId;
+        const dimens = Resource.STORED[resourceId]!.dimens;
         const rendered = data.rendered;
         const groups: ObjectMapNested<T[]> = {};
         for (let i = 0, length = rendered.length; i < length; ++i) {
@@ -59,7 +60,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
                 CACHE_UNDERSCORE[attr] ||= convertHyphenated(attr, '_');
-                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + CACHE_UNDERSCORE[attr], value);
+                const key = getResourceName(resourceId, dimens, fromLastIndexOf(containerName, '.') + '_' + CACHE_UNDERSCORE[attr], value);
                 const items = group[name];
                 for (let i = 0, length = items.length; i < length; ++i) {
                     items[i].attr(namespace, attr, `@dimen/${key}`);
@@ -69,9 +70,10 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         }
     }
 
-    public afterFinalize() {
+    public afterFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
         if (this.controller.hasAppendProcessing()) {
-            const dimens = Resource.STORED.dimens;
+            const resourceId = data.resourceId;
+            const dimens = Resource.STORED[resourceId]!.dimens;
             for (const layout of this.application.layouts) {
                 let content = layout.content!;
                 RE_DIMENS.matcher(content);
@@ -79,7 +81,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     const [original, name, value] = RE_DIMENS.groups();
                     if (name !== 'text') {
                         CACHE_UNDERSCORE[name] ||= convertHyphenated(name, '_');
-                        const key = getResourceName(dimens, 'custom_' + CACHE_UNDERSCORE[name], value);
+                        const key = getResourceName(resourceId, dimens, 'custom_' + CACHE_UNDERSCORE[name], value);
                         content = content.replace(original, original.replace(value, `@dimen/${key}`));
                         dimens.set(key, value);
                     }

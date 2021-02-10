@@ -41,7 +41,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     };
     public readonly eventOnly = true;
 
-    public afterResources(sessionId: string) {
+    public afterResources(sessionId: string, resourceId: number) {
         const numberAsResource = this.options.numberAsResource;
         const resource = this.resource!;
         this.application.getProcessingCache(sessionId).each(node => {
@@ -52,14 +52,14 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'tooltipText',
-                            Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(title))), `${node.controlId.toLowerCase()}_title`, numberAsResource)
+                            Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(title))), `${node.controlId.toLowerCase()}_title`, numberAsResource)
                         );
                     }
                 }
                 if (node.controlName === CONTAINER_TAGNAME.EDIT_LIST) {
                     const list = (node.element as HTMLInputElement).list;
                     if (list) {
-                        this.createOptionArray(list as HTMLSelectElement, node.controlId);
+                        this.createOptionArray(resourceId, list as HTMLSelectElement, node.controlId);
                     }
                 }
                 const hintString = node.data<string>(Resource.KEY_NAME, 'hintString');
@@ -67,13 +67,13 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     setTextValue(
                         node,
                         'hint',
-                        Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(hintString))), `${node.controlId.toLowerCase()}_hint`, numberAsResource)
+                        Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(hintString))), `${node.controlId.toLowerCase()}_hint`, numberAsResource)
                     );
                 }
                 const tagName = node.tagName;
                 switch (tagName) {
                     case 'SELECT': {
-                        const name = this.createOptionArray(node.element as HTMLSelectElement, node.controlId);
+                        const name = this.createOptionArray(resourceId, node.element as HTMLSelectElement, node.controlId);
                         if (name) {
                             node.android('entries', `@array/${name}`);
                         }
@@ -82,7 +82,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     case 'IFRAME': {
                         const valueString = node.data<string>(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
-                            Resource.addString(replaceCharacterData(resource.preFormatString(valueString)), `${node.controlId.toLowerCase()}_iframe_src`);
+                            Resource.addString(resourceId, replaceCharacterData(resource.preFormatString(valueString)), `${node.controlId.toLowerCase()}_iframe_src`);
                         }
                         break;
                     }
@@ -311,7 +311,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (fontFeature) {
                                 node.android('fontFeatureSettings', fontFeature);
                             }
-                            setTextValue(node, 'text', Resource.addString(valueString, '', numberAsResource));
+                            setTextValue(node, 'text', Resource.addString(resourceId, valueString, '', numberAsResource));
                         }
                     }
                 }
@@ -319,7 +319,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         });
     }
 
-    public createOptionArray(element: HTMLSelectElement, controlId: string) {
+    public createOptionArray(resourceId: number, element: HTMLSelectElement, controlId: string) {
         const [stringArray, numberArray] = Resource.getOptionArray(element);
         const numberAsResource = this.options.numberAsResource;
         let result: Undef<string[]>;
@@ -332,13 +332,13 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 const resource = this.resource!;
                 result = [];
                 for (let i = 0, length = resourceArray.length; i < length; ++i) {
-                    const value = Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(resourceArray[i]))), '', numberAsResource);
+                    const value = Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(resourceArray[i]))), '', numberAsResource);
                     if (value) {
                         result.push(value);
                     }
                 }
             }
         }
-        return result && result.length ? Resource.insertStoredAsset('arrays', `${controlId.toLowerCase()}_array`, result) : '';
+        return result && result.length ? Resource.insertStoredAsset(resourceId, 'arrays', `${controlId.toLowerCase()}_array`, result) : '';
     }
 }

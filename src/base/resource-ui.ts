@@ -369,14 +369,66 @@ const parsePercent = (value: string, dimension: number, options?: ParseUnitOptio
 const checkPreviousSibling = (node: Undef<NodeUI>) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
-    public static readonly STORED: ResourceStoredMap = {
-        ids: new Map(),
-        strings: new Map(),
-        arrays: new Map(),
-        fonts: new Map(),
-        colors: new Map(),
-        images: new Map()
-    };
+    public static readonly STORED: ResourceSessionStored = [];
+
+    public static generateId(resourceId: number, section: string, name: string, start = 1) {
+        const stored = this.STORED[resourceId];
+        if (stored) {
+            const data = stored.ids.get(section);
+            let result = name + (start >= 1 ? '_' + start : '');
+            if (data) {
+                do {
+                    if (!data.includes(result)) {
+                        data.push(result);
+                        break;
+                    }
+                    else {
+                        result = name + '_' + ++start;
+                    }
+                }
+                while (true);
+            }
+            else {
+                stored.ids.set(section, [result]);
+            }
+            return result;
+        }
+        return '';
+    }
+
+    public static insertStoredAsset(resourceId: number, type: string, name: string, value: any) {
+        const stored = this.STORED[resourceId];
+        if (stored && hasValue(value)) {
+            const data = stored[type];
+            if (data instanceof Map) {
+                let result = '';
+                if (stored) {
+                    for (const item of data) {
+                        if (isEqual(value, item[1])) {
+                            result = item[0];
+                            break;
+                        }
+                    }
+                }
+                if (!result) {
+                    if (isNumber(name)) {
+                        name = '__' + name;
+                    }
+                    let i = 0;
+                    do {
+                        result = i === 0 ? name : name + '_' + i;
+                        if (!data.has(result)) {
+                            data.set(result, value);
+                            break;
+                        }
+                    }
+                    while (++i);
+                }
+                return result;
+            }
+        }
+        return '';
+    }
 
     public static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
         if (value && value !== 'left top' && value !== '0% 0%') {
@@ -669,59 +721,6 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
 
     public static isBackgroundVisible(object: Undef<BoxStyle>) {
         return object ? 'backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object : false;
-    }
-
-    public static generateId(section: string, name: string, start = 1) {
-        const ids = this.STORED.ids;
-        const stored = ids.get(section);
-        let result = name + (start >= 1 ? '_' + start : '');
-        if (stored) {
-            do {
-                if (!stored.includes(result)) {
-                    stored.push(result);
-                    break;
-                }
-                else {
-                    result = name + '_' + ++start;
-                }
-            }
-            while (true);
-        }
-        else {
-            ids.set(section, [result]);
-        }
-        return result;
-    }
-
-    public static insertStoredAsset(asset: string, name: string, value: any) {
-        const stored = ResourceUI.STORED[asset];
-        if (stored && hasValue(value)) {
-            let result = '';
-            if (stored) {
-                for (const data of stored) {
-                    if (isEqual(value, data[1])) {
-                        result = data[0];
-                        break;
-                    }
-                }
-            }
-            if (!result) {
-                if (isNumber(name)) {
-                    name = '__' + name;
-                }
-                let i = 0;
-                do {
-                    result = i === 0 ? name : name + '_' + i;
-                    if (!stored.has(result)) {
-                        stored.set(result, value);
-                        break;
-                    }
-                }
-                while (++i);
-            }
-            return result;
-        }
-        return '';
     }
 
     public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean) {
@@ -1028,9 +1027,20 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
     }
 
-    public reset() {
-        super.reset();
-        ResourceUI.resetDataMap(ResourceUI.STORED);
+    public init(resourceId: number) {
+        const data = ResourceUI.STORED[resourceId] ||= {} as ResourceStoredMap;
+        data.ids = new Map();
+        data.strings = new Map();
+        data.arrays = new Map();
+        data.fonts = new Map();
+        data.colors = new Map();
+        data.images = new Map();
+        super.init(resourceId);
+    }
+
+    public clear() {
+        ResourceUI.STORED.length = 0;
+        super.clear();
     }
 
     public setData(rendering: NodeList<T>) {
@@ -1045,7 +1055,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         });
     }
 
-    public writeRawImage(options: RawDataOptions) {
+    public writeRawImage(resourceId: number, options: RawDataOptions) {
         const { filename, data } = options;
         if (filename && data) {
             let base64: string;
@@ -1067,17 +1077,17 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 height: options.height,
                 tasks: options.tasks
             } as RawAsset;
-            this.fileHandler?.addAsset(result);
+            this.addAsset(resourceId, result);
             return result;
         }
         return null;
     }
 
-    public writeRawSvg(element: SVGSVGElement, dimension?: Dimension) {
+    public writeRawSvg(resourceId: number, element: SVGSVGElement, dimension?: Dimension) {
         let src = element.outerHTML.trim().replace(/\s+/g, ' ');
         src = replaceSvgValues(src, [element], dimension).replace(/"/g, '\\"').replace(/<@@\d+/g, '<');
         const uri = 'data:image/svg+xml,' + src;
-        this.addRawData(uri, src, { mimeType: 'image/svg+xml' });
+        this.addRawData(resourceId, uri, src, { mimeType: 'image/svg+xml' });
         return uri;
     }
 
@@ -1489,7 +1499,13 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 }
             }
         });
-        return !styled && !preserveWhiteSpace && !value.trim() ? node.blockStatic ? this.STRING_SPACE : '' : value;
+        if (!styled) {
+            return value;
+        }
+        else if (!preserveWhiteSpace && !value.trim()) {
+            return node.blockStatic ? this.STRING_SPACE : '';
+        }
+        return value;
     }
 
     get controllerSettings() {

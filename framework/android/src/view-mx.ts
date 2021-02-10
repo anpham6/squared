@@ -2962,7 +2962,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             name = value === 'parent' || RESERVED_JAVA.has(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
                         }
                     }
-                    return this._controlId = convertWord(Resource.generateId('android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));
+                    return this._controlId = convertWord(Resource.generateId(this.localSettings.resourceId, 'android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));
                 }
                 else if (this.id <= 0) {
                     return this._controlId = 'baseroot' + (this.id === 0 ? '' : '_' + Math.abs(this.id));

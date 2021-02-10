@@ -942,6 +942,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 const { emptyRows, rowDirection: horizontal } = mainData;
                 const { flags, gap, unit } = horizontal ? column : row;
                 const unitSpan = unit.length;
+                const resourceId = node.localSettings.resourceId;
                 let k = -1, l = 0;
                 const createSpacer = (i: number, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
                     if (k !== -1) {
@@ -1004,8 +1005,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 rowSpan,
                                 columnSpan,
                                 android: {
-                                    [horizontal ? node.localizeString(LAYOUT_STRING.MARGIN_RIGHT) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}` : '',
-                                    [horizontal ? 'bottom' : node.localizeString(LAYOUT_STRING.MARGIN_RIGHT)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}` : '',
+                                    [horizontal ? node.localizeString(LAYOUT_STRING.MARGIN_RIGHT) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset(resourceId, 'dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))}` : '',
+                                    [horizontal ? 'bottom' : node.localizeString(LAYOUT_STRING.MARGIN_RIGHT)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset(resourceId, 'dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))}` : '',
                                     layout_row,
                                     layout_column,
                                     layout_rowWeight,

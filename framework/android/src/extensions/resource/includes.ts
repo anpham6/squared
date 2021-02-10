@@ -16,7 +16,7 @@ interface NodeIndex {
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeDocumentWrite(data: squared.base.DocumentWriteDataExtensionUI<T>) {
+    public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
         const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
             const node = rendered[i];

@@ -27,6 +27,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public readonly eventOnly?: boolean;
     public readonly cascadeAll?: boolean;
     public readonly documentBase?: boolean;
+
     public abstract controller: ControllerUI<T>;
     public abstract resource: Null<ResourceUI<T>>;
 
@@ -74,9 +75,9 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
 
     public afterBaseLayout(sessionId: string) {}
     public afterConstraints(sessionId: string) {}
-    public afterResources(sessionId: string) {}
-    public afterFinalize() {}
+    public afterResources(sessionId: string, resourceId: number) {}
+    public afterFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {}
 
     public beforeBaseLayout(sessionId: string) {}
-    public beforeDocumentWrite(data: squared.base.DocumentWriteDataExtensionUI<T>) {}
+    public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {}
 }

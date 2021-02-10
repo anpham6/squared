@@ -8,7 +8,7 @@ export function newSessionInit(value: string) {
     return elementMap;
 }
 
-export function resetSessionAll() {
+export function clearSessionAll() {
     SESSION_MAP = { '0': SESSION_MAP['0'] };
 }
 

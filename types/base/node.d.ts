@@ -96,6 +96,7 @@ interface CacheStateUI<T> extends CacheState<T> {
 }
 
 interface LocalSettingsUI {
+    resourceId: number;
     systemName: string;
     screenDimension: Dimension;
 }

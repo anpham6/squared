@@ -115,16 +115,17 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public readonly eventOnly = true;
 
     public afterParseDocument(sessionId: string) {
+        const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const resource = this.resource as android.base.Resource<T>;
         const userSettings = resource.userSettings;
-        const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const api = userSettings.targetAPI;
         const convertPixels = userSettings.convertPixels === 'dp';
-        const { fonts, styles } = Resource.STORED;
+        const { resourceId, cache } = this.application.getProcessing(sessionId)!;
+        const { fonts, styles } = Resource.STORED[resourceId]!;
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList<T>[]> = {};
-        const cache: T[] = [];
-        this.application.getProcessingCache(sessionId).each(node => {
+        const fontItems: T[] = [];
+        cache.each(node => {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
                 const containerName = node.containerName;
                 (nameMap[containerName] ||= []).push(node);
@@ -132,7 +133,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         });
         for (const tag in nameMap) {
             const data = nameMap[tag];
-            const sorted: StyleList<T>[] = [{}, {}, {}];
+            const sorted: StyleList<T>[] = [{}, {}];
             const addFontItem = (node: T, index: number, attr: string, value: string) => {
                 if (value) {
                     const items = sorted[index] ||= {};
@@ -140,7 +141,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     (items[name] ||= []).push(node);
                 }
             };
-            cache.push(...data);
+            fontItems.push(...data);
             for (let i = 0, length = data.length; i < length; ++i) {
                 const node = data[i];
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
@@ -165,11 +166,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     else if (fontStyle && fontWeight) {
                         let createFont: Undef<boolean>;
-                        if (resource.getFont(value, fontStyle, fontWeight)) {
+                        if (resource.getFont(resourceId, value, fontStyle, fontWeight)) {
                             createFont = true;
                         }
                         else {
-                            const font = startsWith(fontStyle, 'oblique') ? resource.getFont(value, 'italic') || resource.getFont(value, 'normal') : resource.getFont(value, fontStyle);
+                            const font = startsWith(fontStyle, 'oblique') ? resource.getFont(resourceId, value, 'italic') || resource.getFont(resourceId, value, 'normal') : resource.getFont(resourceId, value, fontStyle);
                             if (font) {
                                 actualFontWeight = fontWeight;
                                 fontWeight = font.fontWeight.toString();
@@ -210,12 +211,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 addFontItem(node, 0, 'fontFamily', fontFamily);
                 addFontItem(node, 1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));
                 if (stored.color) {
-                    addFontItem(node, 2, 'color', Resource.addColor(stored.color));
+                    addFontItem(node, 2, 'color', Resource.addColor(resourceId, stored.color));
                 }
                 addFontItem(node, 3, 'fontWeight', fontWeight);
                 addFontItem(node, 4, 'fontStyle', fontStyle);
                 if (backgroundColor) {
-                    addFontItem(node, 5, 'backgroundColor', Resource.addColor(backgroundColor, node.inputElement));
+                    addFontItem(node, 5, 'backgroundColor', Resource.addColor(resourceId, backgroundColor, node.inputElement));
                 }
             }
             groupMap[tag] = sorted;
@@ -412,8 +413,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
             }
         }
-        for (let i = 0, length = cache.length; i < length; ++i) {
-            const node = cache[i];
+        for (let i = 0, length = fontItems.length; i < length; ++i) {
+            const node = fontItems[i];
             const styleData = nodeMap.get(node);
             if (styleData) {
                 if (styleData.length > 1) {

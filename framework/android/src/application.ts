@@ -8,10 +8,6 @@ export default class Application<T extends View> extends squared.base.Applicatio
 
     private _viewModel = new Map<string, AppViewModel>();
 
-    public init() {
-        super.init();
-    }
-
     public reset() {
         this._viewModel.clear();
         super.reset();

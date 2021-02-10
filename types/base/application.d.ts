@@ -129,7 +129,8 @@ interface LayoutType {
     alignmentType: number;
 }
 
-interface ResourceMap extends ObjectMap<Undef<Map<string, unknown>>> {}
+
+interface ResourceMap extends ObjectMap<Undef<Map<string, unknown>> | unknown[]> {}
 
 interface ResourceAssetMap extends ResourceMap {
     fonts: Map<string, FontFaceData[]>;
@@ -137,6 +138,7 @@ interface ResourceAssetMap extends ResourceMap {
     video: Map<string, Asset>;
     audio: Map<string, Asset>;
     rawData: Map<string, RawAsset>;
+    other: RawAsset[];
 }
 
 interface ResourceStoredMap extends ResourceMap {

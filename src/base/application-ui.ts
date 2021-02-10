@@ -21,6 +21,9 @@ import { convertListStyle } from './extensions/list';
 import { appendSeparator } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
+type VisibleElementMethod = (element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) => boolean;
+type ApplyDefaultStylesMethod<T extends NodeUI> = (processing: squared.base.AppProcessing<T>, element: Element, pseudoElt?: PseudoElt) => void;
+type RenderNodeMethod<T extends NodeUI> = (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
 
 const { FILE } = squared.lib.regex;
 
@@ -166,21 +169,24 @@ function setElementState(node: NodeUI, styleElement: boolean, naturalElement: bo
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly session: squared.base.AppSessionUI<T> = {
-        active: new Map<string, squared.base.AppProcessing<T>>(),
-        extensionMap: new Map<T, ExtensionUI<T>[]>(),
-        clearMap: new Map<T, string>()
+        active: new Map(),
+        extensionMap: new Map(),
+        clearMap: new Map()
     };
     public readonly extensions: ExtensionUI<T>[] = [];
+
     public abstract userSettings: UserResourceSettingsUI;
 
     private _controllerSettings!: ControllerSettingsUI;
     private _layoutFileExtension!: RegExp;
     private _excludedElements!: Set<string>;
-    private _visibleElement!: (element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) => boolean;
-    private _applyDefaultStyles!: (element: Element, sessionId: string, pseudoElt?: PseudoElt) => void;
-    private _renderNode!: (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
-    private _renderNodeGroup!: (layout: LayoutUI<T>) => Undef<NodeTemplate<T>>;
+    private _resourceId = 0;
     private _layouts: LayoutAsset[] = [];
+
+    private _applyDefaultStyles!: ApplyDefaultStylesMethod<T>;
+    private _visibleElement!: VisibleElementMethod;
+    private _renderNode!: RenderNodeMethod<T>;
+    private _renderNodeGroup!: RenderNodeMethod<T>;
 
     public abstract get controllerHandler(): ControllerUI<T>;
     public abstract get resourceHandler(): ResourceUI<T>;
@@ -196,6 +202,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this._controllerSettings = localSettings;
         this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`);
         this._excludedElements = localSettings.unsupported.excluded;
+        super.init();
     }
 
     public finalize() {
@@ -234,7 +241,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         const documentRoot: squared.base.LayoutRoot<T>[] = [];
-        const documentWriteData: squared.base.DocumentWriteDataExtensionUI<T> = { rendered, documentRoot };
+        const finalizeData: squared.base.FinalizeDataExtensionUI<T> = { resourceId: this.resourceId, rendered, documentRoot };
         itemCount = rendered.length;
         for (let i = 0; i < itemCount; ++i) {
             const node = rendered[i];
@@ -257,7 +264,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     postBoxSpacing.call(ext, node, rendered);
                 }
             }
-            ext.beforeDocumentWrite(documentWriteData);
+            ext.beforeFinalize(finalizeData);
         }
         for (let i = 0, q = documentRoot.length; i < q; ++i) {
             const { node, layoutName, renderTemplates } = documentRoot[i];
@@ -270,7 +277,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         controller.finalize(this._layouts);
         for (let i = 0; i < length; ++i) {
-            extensions[i].afterFinalize();
+            extensions[i].afterFinalize(finalizeData);
         }
         removeElementsByClassName('__squared-pseudo');
         return this.closed = true;
@@ -296,8 +303,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 delete element.dataset[iterationName];
             }
         }
+        session.active.clear();
         session.extensionMap.clear();
         session.clearMap.clear();
+        ResourceUI.ASSETS[this._resourceId = ResourceUI.ASSETS.length] = null;
+        this._nextId = 0;
         this._layouts = [];
         super.reset();
     }
@@ -326,17 +336,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         return false;
-    }
-
-    public insertNode(processing: squared.base.AppProcessing<T>, element: Element, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
-        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, processing.sessionId, cascadeAll, pseudoElt)) {
-            this._applyDefaultStyles(element, processing.sessionId, pseudoElt);
-            return this.createNodeStatic(processing, element);
-        }
-        const node = this.createNodeStatic(processing, element);
-        node.visible = false;
-        node.excluded = true;
-        return node;
     }
 
     public saveDocument(filename: string, content: string, pathname?: string, index = -1) {
@@ -429,10 +428,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    public createCache(documentRoot: HTMLElement, sessionId: string) {
-        const node = this.createRootNode(documentRoot, sessionId);
+    public insertNode(processing: squared.base.AppProcessing<T>, element: Element, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
+        if (element.nodeName === '#text' || this.conditionElement(element as HTMLElement, processing.sessionId, cascadeAll, pseudoElt)) {
+            this._applyDefaultStyles(processing, element, pseudoElt);
+            return this.createNodeStatic(processing, element);
+        }
+        const node = this.createNodeStatic(processing, element);
+        node.visible = false;
+        node.excluded = true;
+        return node;
+    }
+
+    public createCache(processing: squared.base.AppProcessing<T>, documentRoot: HTMLElement) {
+        const node = this.createRootNode(processing, documentRoot);
         if (node) {
-            const { cache, excluded } = this.getProcessing(sessionId)!;
+            const { cache, excluded } = processing;
             const parent = node.parent as T;
             if (parent) {
                 parent.visible = false;
@@ -581,8 +591,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return node;
     }
 
-    public afterCreateCache(node: T) {
-        super.afterCreateCache(node);
+    public afterCreateCache(processing: squared.base.AppProcessing<T>, node: T) {
+        super.afterCreateCache(processing, node);
         const systemName = capitalize(this.systemName);
         const dataset = node.dataset;
         const filename = dataset['filename' + systemName] || dataset.filename;
@@ -593,7 +603,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         dataset['iteration' + systemName] = suffix.toString();
         dataset['layoutName' + systemName] = layoutName;
         node.data(Application.KEY_NAME, 'layoutName', layoutName);
-        const processing = this.getProcessing(node.sessionId)!;
         this.setBaseLayout(processing);
         this.setConstraints(processing);
         this.setResources(processing);
@@ -608,7 +617,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, parentElement: HTMLElement, sessionId: string, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
         const node = this.insertNode(processing, parentElement, cascadeAll);
         if (parentElement.tagName === 'svg') {
             setElementState(node, true, true, false, true);
@@ -624,8 +633,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     break;
                 }
             }
-            beforeElement = this.createPseduoElement(parentElement, '::before', sessionId);
-            afterElement = this.createPseduoElement(parentElement, '::after', sessionId);
+            beforeElement = this.createPseduoElement(sessionId, resourceId, parentElement, '::before');
+            afterElement = this.createPseduoElement(sessionId, resourceId, parentElement, '::after');
         }
         const display = node.display;
         if (display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as ExtensionUI<T>)?.documentBase)) {
@@ -686,13 +695,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let shadowRoot: Optional<ShadowRoot>;
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                             this.replaceShadowRootSlots(shadowRoot);
-                            this.setStyleMap(sessionId, shadowRoot);
+                            this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
                         const hostElementChild = shadowRoot || element;
-                        const beforeElementChild = this.createPseduoElement(element, '::before', sessionId, hostElementChild);
-                        const afterElementChild = this.createPseduoElement(element, '::after', sessionId, hostElementChild);
+                        const beforeElementChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostElementChild);
+                        const afterElementChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostElementChild);
                         if (hostElementChild.childNodes.length) {
-                            child = this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent, beforeElementChild, afterElementChild, cascadeAll);
+                            child = this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent, beforeElementChild, afterElementChild, cascadeAll);
                             if (child.display === 'contents' && !child.excluded && !shadowRoot) {
                                 for (const item of child.naturalChildren as T[]) {
                                     if (item.naturalElement) {
@@ -1248,7 +1257,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setResources(processing: squared.base.AppProcessing<T>) {
-        const { sessionId, cache, extensions } = processing;
+        const { sessionId, resourceId, cache, extensions } = processing;
         this.resourceHandler.setData(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
@@ -1260,7 +1269,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
-            ext.afterResources(sessionId);
+            ext.afterResources(sessionId, resourceId);
         }
     }
 
@@ -1604,7 +1613,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return layout;
     }
 
-    protected createPseduoElement(element: HTMLElement, pseudoElt: PseudoElt, sessionId: string, elementRoot: HTMLElement | ShadowRoot = element.shadowRoot || element) {
+    protected createPseduoElement(sessionId: string, resourceId: number, element: HTMLElement, pseudoElt: PseudoElt, elementRoot: HTMLElement | ShadowRoot = element.shadowRoot || element) {
         let styleMap = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!styleMap) {
@@ -1832,7 +1841,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (content) {
                         if (tagName === 'img') {
                             (pseudoElement as HTMLImageElement).src = content;
-                            const image = this.resourceHandler.getImage(content);
+                            const image = this.resourceHandler.getImage(resourceId, content);
                             if (image) {
                                 if (image.width) {
                                     styleMap.width ||= image.width + 'px';
@@ -1964,6 +1973,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get mainElement() {
         return document.body;
+    }
+
+    get resourceId() {
+        return this._resourceId;
     }
 
     get layouts() {

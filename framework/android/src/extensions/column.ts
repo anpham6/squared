@@ -257,22 +257,20 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
     }
 
     private createColumnRule(node: T, columnGap: number, columnRule: ColumnRuleData) {
-        const application = this.application;
-        const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
-        const rule = application.createNode(node.sessionId, { parent: node });
+        const rule = this.application.createNode(node.sessionId, { parent: node });
         rule.containerName = node.containerName + '_COLUMNRULE';
         rule.inherit(node, 'base');
         rule.setControlType(CONTAINER_TAGNAME.LINE, CONTAINER_NODE.LINE);
         rule.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.ALL });
         let width: string;
-        if (borderLeftWidth) {
-            width = formatPX(borderLeftWidth);
+        if (columnRule.borderLeftWidth) {
+            width = formatPX(columnRule.borderLeftWidth);
             rule.cssApply({
                 width,
                 paddingLeft: width,
-                borderLeftStyle,
+                borderLeftStyle: columnRule.borderLeftStyle,
                 borderLeftWidth: width,
-                borderLeftColor,
+                borderLeftColor: columnRule.borderLeftColor,
                 lineHeight: 'inherit',
                 boxSizing: 'border-box',
                 display: 'inline-block'
@@ -288,7 +286,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
         rule.render(node);
         rule.positioned = true;
         rule.renderExclude = false;
-        application.addLayoutTemplate(
+        this.application.addLayoutTemplate(
             node,
             rule,
             {

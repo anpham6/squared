@@ -13,17 +13,19 @@ export default class Controller<T extends Node> implements squared.base.Controll
         }
     };
 
+    private _sessionId = 0;
+
     constructor(public readonly application: Application<T>) {}
 
-    public init() {}
+    public init(resourceId: number) {}
     public sortInitialCache(cache: NodeList<T>) {}
-    public applyDefaultStyles(element: Element, sessionId: string, pseudoElt?: PseudoElt) {}
+    public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element, pseudoElt?: PseudoElt) {}
     public reset() {}
     public includeElement(element: HTMLElement) { return true; }
     public preventNodeCascade(node: T) { return false; }
 
     get generateSessionId() {
-        return Date.now() + '#' + this.application.session.active.size;
+        return (++this._sessionId).toString().padStart(5, '0');
     }
 
     get afterInsertNode(): BindGeneric<T, void> {

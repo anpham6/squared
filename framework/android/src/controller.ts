@@ -602,7 +602,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     private _targetAPI!: number;
     private _viewSettings!: LocalSettingsUI;
 
-    public init() {
+    public init(resourceId: number) {
         const userSettings = this.userSettings;
         const dpiRatio = 160 / userSettings.resolutionDPI;
         this._targetAPI = userSettings.targetAPI || BUILD_VERSION.LATEST;
@@ -611,13 +611,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             height: userSettings.resolutionScreenHeight! * dpiRatio
         };
         this._viewSettings = {
+            resourceId,
             systemName: capitalize(this.application.systemName),
             screenDimension: this._screenDimension,
             supportRTL: userSettings.supportRTL,
             lineHeightAdjust: userSettings.lineHeightAdjust,
             floatPrecision: this.localSettings.floatPrecision
         };
-        super.init();
+        super.init(resourceId);
     }
 
     public optimize(rendered: T[]) {
@@ -1309,6 +1310,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public renderNode(layout: ContentUI<T>): NodeXmlTemplate<T> {
         const node = layout.node;
         const tagName = node.tagName;
+        const resourceId = node.localSettings.resourceId;
         let { parent, containerType } = layout,
             controlName = View.getControlName(containerType, node.api);
         const setReadOnly = () => {
@@ -1339,10 +1341,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         };
                         const image = imageSet[0];
                         if (image.actualWidth) {
-                            setImageDimension(image.actualWidth, resource.getImage(element.src));
+                            setImageDimension(image.actualWidth, resource.getImage(resourceId, element.src));
                         }
                         else {
-                            const stored = resource.getImage(image.src);
+                            const stored = resource.getImage(resourceId, image.src);
                             if (stored) {
                                 setImageDimension(stored.width, stored);
                             }
@@ -1391,18 +1393,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (data) {
                             node.setControlType(controlName, containerType);
                             src = 'canvas_' + convertWord(node.controlId, true).toLowerCase();
-                            resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64', watch, tasks });
+                            resource.writeRawImage(resourceId, { mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64', watch, tasks });
                         }
                     }
                     else {
-                        src = resource.addImageSrc(element, '', imageSet);
+                        src = resource.addImageSrc(resourceId, element, '', imageSet);
                         if (watch || tasks) {
                             const images = [element.src];
                             if (imageSet) {
                                 images.push(...plainMap(imageSet, item => item.src));
                             }
                             for (const uri of images) {
-                                const image = resource.getImage(uri);
+                                const image = resource.getImage(resourceId, uri);
                                 if (image) {
                                     image.watch = watch;
                                     image.tasks = tasks;
@@ -1614,8 +1616,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.hasHeight) {
                     setBoundsHeight();
                 }
-                node.android('progressTint', `@color/${Resource.addColor(foregroundColor!)}`);
-                node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor!)}`);
+                node.android('progressTint', `@color/${Resource.addColor(resourceId, foregroundColor!)}`);
+                node.android('progressBackgroundTint', `@color/${Resource.addColor(resourceId, backgroundColor!)}`);
                 const animations = node.cssInitial('animationName').split(/\s*,\s*/);
                 let circular = false;
                 if (animations.length) {
@@ -1680,11 +1682,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setInlineBlock(node);
                 }
                 if (src) {
-                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, { mimeType, tasks: node.tasks, watch: node.watch });
+                    this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](resourceId, src, { mimeType, tasks: node.tasks, watch: node.watch });
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
                     if (element.poster) {
-                        Resource.addImage({ mdpi: element.poster.trim() });
+                        Resource.addImage(resourceId, { mdpi: element.poster.trim() });
                     }
                 }
                 else if (element.poster) {
@@ -1728,7 +1730,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (match) {
                         const colorData = parseColor(match[1] || node.css('color'));
                         if (colorData) {
-                            const colorName = Resource.addColor(colorData);
+                            const colorName = Resource.addColor(resourceId, colorData);
                             if (colorName) {
                                 const precision = node.localSettings.floatPrecision;
                                 node.android('shadowColor', `@color/${colorName}`);
@@ -3753,7 +3755,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 orientation: horizontal ? 'vertical' : 'horizontal'
             },
             app: {
-                [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
+                [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset(node.localSettings.resourceId, 'dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
             }
         };
         this.addAfterOutsideTemplate(node, this.renderNodeStatic({ controlName: node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
@@ -3803,7 +3805,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     private hasClippedBackground(node: T) {
         if (node.css('backgroundSize').includes('cover')) {
-            for (const image of this.application.resourceHandler.fromImageUrl(node.backgroundImage)) {
+            for (const image of this.application.resourceHandler.fromImageUrl(node.localSettings.resourceId, node.backgroundImage)) {
                 if (image.height > node.bounds.height) {
                     return true;
                 }

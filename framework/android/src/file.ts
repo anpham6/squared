@@ -31,8 +31,6 @@ const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, plainMap } = sq
 
 const { fromMimeType } = squared.base.lib.util;
 
-const STORED = Resource.STORED;
-
 function getFileAssets(pathname: string, items: string[], document: StringOfArray = 'android') {
     const length = items.length;
     if (length) {
@@ -50,7 +48,7 @@ function getFileAssets(pathname: string, items: string[], document: StringOfArra
     return items as [];
 }
 
-function getImageAssets(this: Resource<View>, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray = 'android') {
+function getImageAssets(this: Resource<View>, resourceId: number, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray = 'android') {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
@@ -94,7 +92,7 @@ function getImageAssets(this: Resource<View>, pathname: string, items: string[],
                         break;
                 }
             }
-            const image = this.getImage(uri);
+            const image = this.getImage(resourceId, uri);
             result[j++] = {
                 pathname: pathname + items[i + 1],
                 filename,
@@ -111,13 +109,13 @@ function getImageAssets(this: Resource<View>, pathname: string, items: string[],
     return items as [];
 }
 
-function getRawAssets(this: Resource<View>, name: "video" | "audio", pathname: string, items: string[], document: StringOfArray = 'android') {
+function getRawAssets(this: Resource<View>, resourceId: number, name: "video" | "audio", pathname: string, items: string[], document: StringOfArray = 'android') {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
             const uri = items[i];
-            const rawData = name === 'video' ? this.getVideo(uri) : this.getAudio(uri);
+            const rawData = name === 'video' ? this.getVideo(resourceId, uri) : this.getAudio(resourceId, uri);
             result[j++] = {
                 pathname,
                 filename: items[i + 2].toLowerCase(),
@@ -155,65 +153,73 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return this.archiving({ ...options, assets: this.combineAssets(options.assets!), filename });
     }
 
-    public resourceAllToXml(options?: FileUniversalOptions) {
-        const result: ObjectMap<string[]> = {
-            string: this.resourceStringToXml(),
-            stringArray: this.resourceStringArrayToXml(),
-            font: this.resourceFontToXml(),
-            color: this.resourceColorToXml(),
-            style: this.resourceStyleToXml(),
-            dimen: this.resourceDimenToXml(),
-            drawable: this.resourceDrawableToXml(),
-            anim: this.resourceAnimToXml(),
-            drawableImage: this.resourceDrawableImageToString(),
-            rawVideo: this.resourceRawVideoToString(),
-            rawAudio: this.resourceRawAudioToString()
-        };
-        for (const name in result) {
-            if (result[name].length === 0) {
-                delete result[name];
-            }
-        }
-        if (hasFileAction(options)) {
-            const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
-            const assets: FileAsset[] = [];
-            const resource = this.resource;
+    public resourceAllToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions) {
+        if (stored) {
+            const assets = Resource.ASSETS[this.resourceId];
+            const result: ObjectMap<string[]> = {
+                string: this.resourceStringToXml(stored),
+                stringArray: this.resourceStringArrayToXml(stored),
+                font: this.resourceFontToXml(stored),
+                color: this.resourceColorToXml(stored),
+                style: this.resourceStyleToXml(stored),
+                dimen: this.resourceDimenToXml(stored),
+                drawable: this.resourceDrawableToXml(stored),
+                anim: this.resourceAnimToXml(stored),
+                drawableImage: this.resourceDrawableImageToString(stored),
+                rawVideo: this.resourceRawVideoToString(assets),
+                rawAudio: this.resourceRawAudioToString(assets)
+            };
             for (const name in result) {
-                switch (name) {
-                    case 'drawableImage':
-                        assets.push(...getImageAssets.call(resource, outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
-                        break;
-                    case 'rawVideo':
-                        assets.push(...getRawAssets.call(resource, 'video', outputDirectory + this.directory.video, result[name]));
-                        break;
-                    case 'rawAudio':
-                        assets.push(...getRawAssets.call(resource, 'audio', outputDirectory + this.directory.audio, result[name]));
-                        break;
-                    default:
-                        assets.push(...getFileAssets(outputDirectory, result[name]));
-                        break;
+                if (result[name].length === 0) {
+                    delete result[name];
                 }
             }
-            if (options.assets) {
-                assets.push(...options.assets);
+            if (hasFileAction(options)) {
+                const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
+                const rawAssets: FileAsset[] = [];
+                const resource = this.resource;
+                const resourceId = this.resourceId;
+                for (const name in result) {
+                    switch (name) {
+                        case 'drawableImage':
+                            rawAssets.push(...getImageAssets.call(resource, resourceId, outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
+                            break;
+                        case 'rawVideo':
+                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name]));
+                            break;
+                        case 'rawAudio':
+                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name]));
+                            break;
+                        default:
+                            rawAssets.push(...getFileAssets(outputDirectory, result[name]));
+                            break;
+                    }
+                }
+                if (options.assets) {
+                    rawAssets.push(...options.assets);
+                }
+                options.assets = rawAssets;
+                if (options.directory) {
+                    this.copying(options);
+                }
+                if (options.filename) {
+                    this.archiving(options);
+                }
             }
-            options.assets = assets;
-            if (options.directory) {
-                this.copying(options);
-            }
-            if (options.filename) {
-                this.archiving(options);
-            }
+            return result;
         }
-        return result;
+        return {};
     }
 
-    public resourceStringToXml(options?: FileUniversalOptions): string[] {
-        const items = Array.from(STORED.strings).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
-        const length = items.length;
+    public resourceStringToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        let length: number;
+        if (!stored || !(length = stored.strings.size)) {
+            return [];
+        }
+        const items = Array.from(stored.strings).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
         let j: number,
             itemArray: ItemValue[];
-        if (STORED.strings.has('app_name')) {
+        if (stored.strings.has('app_name')) {
             j = 0;
             itemArray = new Array(length);
         }
@@ -229,89 +235,93 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return this.checkFileAssets([replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'strings.xml'], options);
     }
 
-    public resourceStringArrayToXml(options?: FileUniversalOptions): string[] {
-        const length = STORED.arrays.size;
-        if (length) {
-            const items = Array.from(STORED.arrays).sort();
-            const itemArray: { name: string; item: { innerText: string }[] }[] = new Array(length);
-            for (let i = 0; i < length; ++i) {
-                const item = items[i];
-                itemArray[i] = { name: item[0], item: plainMap(item[1], innerText => ({ innerText })) };
-            }
-            return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'string_arrays.xml'], options);
+    public resourceStringArrayToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        let length: number;
+        if (!stored || !(length = stored.arrays.size)) {
+            return [];
         }
-        return [];
+        const items = Array.from(stored.arrays).sort();
+        const itemArray: { name: string; item: { innerText: string }[] }[] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const item = items[i];
+            itemArray[i] = { name: item[0], item: plainMap(item[1], innerText => ({ innerText })) };
+        }
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'string_arrays.xml'], options);
     }
 
-    public resourceFontToXml(options?: FileUniversalOptions): string[] {
-        const length = STORED.fonts.size;
-        if (length) {
-            const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
-            const resource = this.resource;
-            const xmlns = XML_NAMESPACE[targetAPI < BUILD_VERSION.OREO ? 'app' : 'android'];
-            const directory = getOutputDirectory(outputDirectory);
-            const pathname = this.directory.font;
-            const items = Array.from(STORED.fonts).sort();
-            const result: string[] = new Array(length * 3);
-            for (let i = 0, j = 0; i < length; ++i) {
-                const [name, font] = items[i];
-                const itemArray: { font: string; fontStyle: string; fontWeight: string }[] = [];
-                for (const attr in font) {
-                    const [fontFamily, fontStyle, fontWeight] = attr.split('|');
-                    const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
-                    itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
-                    const url = resource.getFont(fontFamily, fontStyle, fontWeight)?.srcUrl;
-                    if (url) {
-                        const data = this.resource.getRawData(url);
-                        let base64: Undef<string>,
-                            ext: Undef<string>;
-                        if (data) {
-                            base64 = data.base64;
-                            if (!base64 && data.buffer) {
-                                base64 = convertBase64(data.buffer);
-                                data.base64 = base64;
-                            }
-                            if (data.mimeType) {
-                                ext = fromMimeType(data.mimeType);
-                            }
+    public resourceFontToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        let length: number;
+        if (!stored || !(length = stored.fonts.size)) {
+            return [];
+        }
+        const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
+        const resource = this.resource;
+        const resourceId = this.resourceId;
+        const xmlns = XML_NAMESPACE[targetAPI < BUILD_VERSION.OREO ? 'app' : 'android'];
+        const directory = getOutputDirectory(outputDirectory);
+        const pathname = this.directory.font;
+        const items = Array.from(stored.fonts).sort();
+        const result: string[] = new Array(length * 3);
+        for (let i = 0, j = 0; i < length; ++i) {
+            const [name, font] = items[i];
+            const itemArray: { font: string; fontStyle: string; fontWeight: string }[] = [];
+            for (const attr in font) {
+                const [fontFamily, fontStyle, fontWeight] = attr.split('|');
+                const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
+                itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
+                const url = resource.getFont(resourceId, fontFamily, fontStyle, fontWeight)?.srcUrl;
+                if (url) {
+                    const data = this.resource.getRawData(resourceId, url);
+                    let base64: Undef<string>,
+                        ext: Undef<string>;
+                    if (data) {
+                        base64 = data.base64;
+                        if (!base64 && data.buffer) {
+                            base64 = convertBase64(data.buffer);
+                            data.base64 = base64;
                         }
-                        this.addAsset({
-                            pathname: directory + pathname,
-                            filename: fontName + '.' + (ext || Resource.getExtension(url.split('?')[0]).toLowerCase() || 'ttf'),
-                            uri: !base64 ? url : undefined,
-                            base64
-                        });
+                        if (data.mimeType) {
+                            ext = fromMimeType(data.mimeType);
+                        }
                     }
+                    this.resource.addAsset(resourceId, {
+                        pathname: directory + pathname,
+                        filename: fontName + '.' + (ext || Resource.getExtension(url.split('?')[0]).toLowerCase() || 'ttf'),
+                        uri: !base64 ? url : undefined,
+                        base64
+                    });
                 }
-                const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
-                result[j++] = targetAPI < BUILD_VERSION.OREO ? output.replace(/\s+android:/g, ' app:') : output;
-                result[j++] = pathname;
-                result[j++] = name + '.xml';
             }
-            return this.checkFileAssets(result, options);
+            const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
+            result[j++] = targetAPI < BUILD_VERSION.OREO ? output.replace(/\s+android:/g, ' app:') : output;
+            result[j++] = pathname;
+            result[j++] = name + '.xml';
         }
-        return [];
+        return this.checkFileAssets(result, options);
     }
 
-    public resourceColorToXml(options?: FileUniversalOptions): string[] {
-        const length = STORED.colors.size;
-        if (length) {
-            const items = Array.from(STORED.colors).sort();
-            const itemArray: ItemValue[] = new Array(length);
-            for (let i = 0; i < length; ++i) {
-                const item = items[i];
-                itemArray[i] = { name: item[1], innerText: item[0] };
-            }
-            return this.checkFileAssets([replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'colors.xml'], options);
+    public resourceColorToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        let length: number;
+        if (!stored || !(length = stored.colors.size)) {
+            return [];
         }
-        return [];
+        const items = Array.from(stored.colors).sort();
+        const itemArray: ItemValue[] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const item = items[i];
+            itemArray[i] = { name: item[1], innerText: item[0] };
+        }
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'colors.xml'], options);
     }
 
-    public resourceStyleToXml(options?: FileUniversalOptions): string[] {
+    public resourceStyleToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        if (!stored) {
+            return [];
+        }
         const result: string[] = [];
-        if (STORED.styles.size) {
+        if (stored.styles.size) {
             const itemArray: ItemData[] = [];
-            for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
+            for (const style of Array.from(stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                 itemArray.push({
                     name: style.name,
                     parent: style.parent,
@@ -320,10 +330,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
             result.push(replaceTab(applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'styles.xml');
         }
-        if (STORED.themes.size) {
+        if (stored.themes.size) {
             const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
-            for (const data of STORED.themes) {
+            for (const data of stored.themes) {
                 const filename = data[0];
                 const match = /^(.+)\/(.+?\.\w+)$/.exec(filename);
                 if (match) {
@@ -351,63 +361,59 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return this.checkFileAssets(result, options);
     }
 
-    public resourceDimenToXml(options?: FileUniversalOptions): string[] {
-        const length = STORED.dimens.size;
-        if (length) {
-            const convertPixels = this.userSettings.convertPixels === 'dp';
-            const items = Array.from(STORED.dimens).sort();
-            const itemArray: ItemValue[] = new Array(length);
-            for (let i = 0; i < length; ++i) {
-                const item = items[i];
-                itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
-            }
-            return this.checkFileAssets([
-                replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])),
-                this.directory.string,
-                'dimens.xml'
-            ], options);
+    public resourceDimenToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        let length: number;
+        if (!stored || !(length = stored.dimens.size)) {
+            return [];
         }
-        return [];
+        const convertPixels = this.userSettings.convertPixels === 'dp';
+        const items = Array.from(stored.dimens).sort();
+        const itemArray: ItemValue[] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const item = items[i];
+            itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
+        }
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])), this.directory.string, 'dimens.xml'], options);
     }
 
-    public resourceDrawableToXml(options?: FileUniversalOptions): string[] {
-        const length = STORED.drawables.size;
-        if (length) {
-            const { insertSpaces, convertPixels } = this.userSettings;
-            const directory = this.directory.image;
-            const result: string[] = new Array(length * 3);
-            let i = 0;
-            for (const data of STORED.drawables) {
-                result[i++] = replaceTab(convertPixels === 'dp' ? data[1].replace(/"(-?[\d.]+)px"/g, (...match: string[]) => `"${match[1]}dp"`) : data[1], insertSpaces);
-                result[i++] = directory;
-                result[i++] = data[0] + '.xml';
-            }
-            return this.checkFileAssets(result, options);
+    public resourceDrawableToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        let length: number;
+        if (!stored || !(length = stored.drawables.size)) {
+            return [];
         }
-        return [];
+        const { insertSpaces, convertPixels } = this.userSettings;
+        const directory = this.directory.image;
+        const result: string[] = new Array(length * 3);
+        let i = 0;
+        for (const data of stored.drawables) {
+            result[i++] = replaceTab(convertPixels === 'dp' ? data[1].replace(/"(-?[\d.]+)px"/g, (...match: string[]) => `"${match[1]}dp"`) : data[1], insertSpaces);
+            result[i++] = directory;
+            result[i++] = data[0] + '.xml';
+        }
+        return this.checkFileAssets(result, options);
     }
 
-    public resourceAnimToXml(options?: FileUniversalOptions): string[] {
-        const length = STORED.animators.size;
-        if (length) {
-            const insertSpaces = this.userSettings.insertSpaces;
-            const result: string[] = new Array(length * 3);
-            let i = 0;
-            for (const data of STORED.animators) {
-                result[i++] = replaceTab(data[1], insertSpaces);
-                result[i++] = 'res/anim';
-                result[i++] = data[0] + '.xml';
-            }
-            return this.checkFileAssets(result, options);
+    public resourceAnimToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        let length: number;
+        if (!stored || !(length = stored.animators.size)) {
+            return [];
         }
-        return [];
+        const insertSpaces = this.userSettings.insertSpaces;
+        const result: string[] = new Array(length * 3);
+        let i = 0;
+        for (const data of stored.animators) {
+            result[i++] = replaceTab(data[1], insertSpaces);
+            result[i++] = 'res/anim';
+            result[i++] = data[0] + '.xml';
+        }
+        return this.checkFileAssets(result, options);
     }
 
-    public resourceDrawableImageToString(options?: FileUniversalOptions): string[] {
-        if (STORED.images.size) {
+    public resourceDrawableImageToString(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
+        if (stored && stored.images.size) {
             const imageDirectory = this.directory.image;
             const result: string[] = [];
-            for (const data of STORED.images) {
+            for (const data of stored.images) {
                 const images = data[1];
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
@@ -431,7 +437,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
             if (hasFileAction(options)) {
-                const assets = getImageAssets.call(this.resource, getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
+                const assets = getImageAssets.call(this.resource, this.resourceId, getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
                 if (options.assets) {
                     assets.push(...options.assets);
                 }
@@ -448,12 +454,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return [];
     }
 
-    public resourceRawVideoToString(options?: FileUniversalOptions): string[] {
-        return this.resourceRawToString('video', options);
+    public resourceRawVideoToString(assets = Resource.ASSETS[this.resourceId], options?: FileUniversalOptions): string[] {
+        return this.resourceRawToString(assets, 'video', options);
     }
 
-    public resourceRawAudioToString(options?: FileUniversalOptions): string[] {
-        return this.resourceRawToString('audio', options);
+    public resourceRawAudioToString(assets = Resource.ASSETS[this.resourceId], options?: FileUniversalOptions): string[] {
+        return this.resourceRawToString(assets, 'audio', options);
     }
 
     public layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions) {
@@ -486,7 +492,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     protected combineAssets(assets: FileAsset[]) {
-        const { userSettings, resource } = this;
+        const { userSettings, resource, resourceId } = this;
         const result: FileAsset[] = [];
         for (let i = 0, length = assets.length, first = true; i < length; ++i) {
             const item = assets[i];
@@ -502,20 +508,26 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
         }
         result.push(...assets);
-        const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
-        result.push(
-            ...getFileAssets(outputDirectory, this.resourceStringToXml()),
-            ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()),
-            ...getFileAssets(outputDirectory, this.resourceFontToXml()),
-            ...getFileAssets(outputDirectory, this.resourceColorToXml()),
-            ...getFileAssets(outputDirectory, this.resourceDimenToXml()),
-            ...getFileAssets(outputDirectory, this.resourceStyleToXml()),
-            ...getFileAssets(outputDirectory, this.resourceDrawableToXml()),
-            ...getImageAssets.call(resource, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
-            ...getFileAssets(outputDirectory, this.resourceAnimToXml()),
-            ...getRawAssets.call(resource, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString()),
-            ...getRawAssets.call(resource, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString())
-        );
+        const data = Resource.ASSETS[resourceId];
+        if (data) {
+            const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
+            result.push(
+                ...getFileAssets(outputDirectory, this.resourceStringToXml()),
+                ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()),
+                ...getFileAssets(outputDirectory, this.resourceFontToXml()),
+                ...getFileAssets(outputDirectory, this.resourceColorToXml()),
+                ...getFileAssets(outputDirectory, this.resourceDimenToXml()),
+                ...getFileAssets(outputDirectory, this.resourceStyleToXml()),
+                ...getFileAssets(outputDirectory, this.resourceDrawableToXml()),
+                ...getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
+                ...getFileAssets(outputDirectory, this.resourceAnimToXml()),
+                ...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString()),
+                ...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString())
+            );
+            if (data.other.length) {
+                result.push(...data.other);
+            }
+        }
         return result;
     }
 
@@ -536,33 +548,33 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return content;
     }
 
-    private resourceRawToString(name: "video" | "audio", options?: FileUniversalOptions) {
-        const length = Resource.ASSETS[name].size;
-        if (length) {
-            const result: string[] = new Array(length * 3);
-            let i = 0;
-            for (const item of Resource.ASSETS[name].values()) {
-                const uri = item.uri!;
-                result[i++] = uri;
-                result[i++] = item.mimeType || '';
-                result[i++] = fromLastIndexOf(uri.split('?')[0], '/');
-            }
-            if (hasFileAction(options)) {
-                const assets = getRawAssets.call(this.resource, name, getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
-                if (options.assets) {
-                    assets.push(...options.assets);
-                }
-                options.assets = assets;
-                if (options.directory) {
-                    this.copying(options);
-                }
-                if (options.filename) {
-                    this.archiving(options);
-                }
-            }
-            return result;
+    private resourceRawToString(assets = Resource.ASSETS[this.resourceId], name: "video" | "audio", options?: FileUniversalOptions) {
+        let length: number;
+        if (!assets || !(length = assets[name].size)) {
+            return [];
         }
-        return [];
+        const result: string[] = new Array(length * 3);
+        let i = 0;
+        for (const item of assets[name].values()) {
+            const uri = item.uri!;
+            result[i++] = uri;
+            result[i++] = item.mimeType || '';
+            result[i++] = fromLastIndexOf(uri.split('?')[0], '/');
+        }
+        if (hasFileAction(options)) {
+            const rawAssets = getRawAssets.call(this.resource, this.resourceId, name, getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
+            if (options.assets) {
+                rawAssets.push(...options.assets);
+            }
+            options.assets = rawAssets;
+            if (options.directory) {
+                this.copying(options);
+            }
+            if (options.filename) {
+                this.archiving(options);
+            }
+        }
+        return result;
     }
 
     get userSettings() {
@@ -571,5 +583,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     get directory() {
         return this.resource.controllerSettings.directory;
+    }
+
+    get resourceId() {
+        return this.resource.application.resourceId;
     }
 }

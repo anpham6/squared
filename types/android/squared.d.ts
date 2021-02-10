@@ -40,34 +40,34 @@ declare namespace base {
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
-        static STORED: Required<ResourceStoredMap>;
+        static STORED: ResourceSessionStored<Required<ResourceStoredMap>>;
+        static formatOptions(resourceId: number, options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
+        static addTheme(resourceId: number, theme: ThemeAttribute): boolean;
+        static addString(resourceId: number, value: string, name?: string, numberAlias?: boolean): string;
+        static addImage(resourceId: number, images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
+        static addColor(resourceId: number, value: ColorData | string, transparency?: boolean): string;
         static canCompressImage(filename: string, mimeType?: string): boolean;
-        static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         static formatName(value: string): string;
-        static addTheme(theme: ThemeAttribute): boolean;
-        static addString(value: string, name?: string, numberAlias?: boolean): string;
-        static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
-        static addColor(value: ColorData | string, transparency?: boolean): string;
         readonly application: Application<T>;
-        addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
-        addImageSet(images: StringMap, prefix?: string): string;
+        addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
+        addImageSet(resourceId: number, images: StringMap, prefix?: string): string;
         get userSettings(): UserResourceSettingsUI;
     }
 
     class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
-        resourceAllToXml(options?: FileUniversalOptions): PlainObject;
-        resourceStringToXml(options?: FileUniversalOptions): string[];
-        resourceStringArrayToXml(options?: FileUniversalOptions): string[];
-        resourceFontToXml(options?: FileUniversalOptions): string[];
-        resourceColorToXml(options?: FileUniversalOptions): string[];
-        resourceStyleToXml(options?: FileUniversalOptions): string[];
-        resourceDimenToXml(options?: FileUniversalOptions): string[];
-        resourceDrawableToXml(options?: FileUniversalOptions): string[];
-        resourceAnimToXml(options?: FileUniversalOptions): string[];
-        resourceDrawableImageToString(options?: FileUniversalOptions): string[];
-        resourceRawVideoToString(options?: FileUniversalOptions): string[];
-        resourceRawAudioToString(options?: FileUniversalOptions): string[];
+        resourceAllToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): PlainObject;
+        resourceStringToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceStringArrayToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceFontToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceColorToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceStyleToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceDimenToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceDrawableToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceAnimToXml(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceDrawableImageToString(stored?: Required<ResourceStoredMap>, options?: FileUniversalOptions): string[];
+        resourceRawVideoToString(assets?: ResourceAssetMap, options?: FileUniversalOptions): string[];
+        resourceRawAudioToString(assets?: ResourceAssetMap, options?: FileUniversalOptions): string[];
         layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions): PlainObject;
         get userSettings(): UserResourceSettingsUI;
         get directory(): { string: string; image: string; video: string; audio: string; font: string };

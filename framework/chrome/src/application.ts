@@ -12,21 +12,12 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly extensions: Extension<T>[] = [];
     public readonly systemName = 'chrome';
 
-    public init() {
-        this.session.unusedStyles = new Set<string>();
-    }
-
-    public reset() {
-        this.session.unusedStyles.clear();
-        super.reset();
-    }
-
     public insertNode(processing: squared.base.AppProcessing<T>, element: Element) {
         if (element.nodeName[0] === '#') {
             if (this.userSettings.excludePlainText) {
                 return;
             }
-            this.controllerHandler.applyDefaultStyles(element, processing.sessionId);
+            this.controllerHandler.applyDefaultStyles(processing, element);
         }
         return this.createNodeStatic(processing, element);
     }
@@ -44,18 +35,17 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     }
 
     private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: FileArchivingOptions | FileCopyingOptions) {
-        this.reset();
-        if (!this.parseDocumentSync()) {
+        const result = this.parseDocumentSync() as Undef<T>;
+        if (!result) {
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
         options = !isPlainObject(options) ? {} : { ...options };
-        options.saveAsWebPage = true;
-        if (options.removeUnusedStyles) {
-            const unusedStyles = Array.from(this.session.unusedStyles);
-            if (unusedStyles.length) {
-                options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(unusedStyles))) : unusedStyles;
-            }
+        const { resourceId, unusedStyles } = this.getProcessing(result.sessionId)!;
+        options.resourceId = resourceId;
+        if (options.removeUnusedStyles && unusedStyles) {
+            options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(Array.from(unusedStyles)))) : Array.from(unusedStyles);
         }
+        options.saveAsWebPage = true;
         const database: [HTMLElement, ElementAction & DocumentAction & PlainObject][] = [];
         const assetMap = new Map<HTMLElement, AssetCommand>();
         const nodeMap = new Map<XmlNode, HTMLElement>();

@@ -108,7 +108,7 @@ function loadExtensions() {
 
 function findElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
     if (cache) {
-        const result = main!.elementMap.get(element);
+        const result = main!.elementMap?.get(element);
         if (result) {
             return sync ? result : Promise.resolve(result);
         }
@@ -117,12 +117,12 @@ function findElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
 }
 
 function findElementAll(query: NodeListOf<Element>, length: number) {
-    let incomplete: Undef<boolean>;
     const elementMap = main!.elementMap;
     const result: Node[] = new Array(length);
+    let incomplete: Undef<boolean>;
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
-        const item = elementMap.get(element) || main!.parseDocumentSync(element) as Node;
+        const item = elementMap && elementMap.get(element) || main!.parseDocumentSync(element) as Node;
         if (item) {
             result[i] = item;
         }
@@ -135,7 +135,7 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
 
 async function findElementAsync(element: HTMLElement, cache?: boolean) {
     if (cache) {
-        const result = main!.elementMap.get(element);
+        const result = main!.elementMap?.get(element);
         if (result) {
             return Promise.resolve([result]);
         }
@@ -149,7 +149,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
     const result: Node[] = new Array(length);
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
-        const item = elementMap.get(element) || await main!.parseDocument(element) as Node;
+        const item = elementMap && elementMap.get(element) || await main!.parseDocument(element) as Node;
         if (item) {
             result[i] = item;
         }
@@ -442,7 +442,7 @@ export function latest(value = 1) {
             case 0:
                 return items;
             case 1:
-                return items[0] || '';
+                return items.pop() || '';
             default:
                 return items.slice(0, Math.abs(value));
         }
@@ -561,7 +561,10 @@ export function fromElement(element: HTMLElement, sync?: boolean, cache?: boolea
 
 export function clearCache() {
     if (main) {
-        main.elementMap = new WeakMap();
+        main.elementMap = null;
+        main.session.active.clear();
+        main.resourceHandler?.clear();
+        session.clearSessionAll();
     }
 }
 

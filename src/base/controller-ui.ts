@@ -127,7 +127,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         this._requireFormat = false;
     }
 
-    public applyDefaultStyles(element: Element, sessionId: string) {
+    public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element) {
+        const sessionId = processing.sessionId;
         if (element.nodeName.charAt(0) === '#') {
             setElementCache(element, 'styleMap', {
                 position: 'static',
@@ -278,8 +279,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'VIDEO':
                 case 'OBJECT':
                 case 'EMBED':
-                    this.setElementDimension(element, styleMap, 'width', 'height');
-                    this.setElementDimension(element, styleMap, 'height', 'width');
+                    this.setElementDimension(processing, element, styleMap, 'width', 'height');
+                    this.setElementDimension(processing, element, styleMap, 'height', 'width');
                     break;
             }
         }
@@ -773,7 +774,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return '<' + controlName + attributes + (content || this.localSettings.layout.innerXmlTags.has(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
-    private setElementDimension(element: Element, styleMap: CssStyleMap, attr: CssStyleAttr, opposing: string) {
+    private setElementDimension(processing: squared.base.AppProcessing<T>, element: Element, styleMap: CssStyleMap, attr: CssStyleAttr, opposing: string) {
         const dimension = styleMap[attr];
         if (!dimension || dimension === 'auto') {
             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
@@ -795,7 +796,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             }
             else {
-                const image = this.application.resourceHandler?.getImage((element as HTMLImageElement).src);
+                const image = this.application.resourceHandler?.getImage(processing.resourceId, (element as HTMLImageElement).src);
                 if (image && image.width && image.height) {
                     const value = styleMap[opposing];
                     if (value && isLength(value)) {

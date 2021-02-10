@@ -126,7 +126,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         }
     }
 
-    public beforeDocumentWrite() {
+    public beforeFinalize() {
         for (const node of this.subscribers) {
             const mainData = this.data.get(node) as NegativeXData;
             if (mainData) {

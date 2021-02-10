@@ -55,6 +55,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
     public postOptimize(node: T) {
         node.apply(
             Resource.formatOptions(
+                node.localSettings.resourceId,
                 createViewAttribute(this.options[node.elementId]),
                 this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')
             )

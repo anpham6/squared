@@ -311,7 +311,7 @@ querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
 fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // default: sync - false | cache - false
 
-clearCache() // clear element data map
+clearCache() // clear all data stored in memory
 ```
 
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.

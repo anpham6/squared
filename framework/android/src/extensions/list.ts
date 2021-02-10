@@ -105,7 +105,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     image: Undef<string>;
                 if (imageSrc) {
                     const resource = this.resource as android.base.Resource<T>;
-                    const imageData = resource.getImage(imageSrc);
+                    const resourceId = node.localSettings.resourceId;
+                    const imageData = resource.getImage(resourceId, imageSrc);
                     if (imagePosition) {
                         ({ top, left } = Resource.getBackgroundPosition(imagePosition, node.actualDimension, {
                             fontSize: node.fontSize,
@@ -130,7 +131,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         node.setBox(BOX_STANDARD.PADDING_LEFT, { reset: 1 });
                         gravity = '';
                     }
-                    image = resource.addImageSrc(imageSrc);
+                    image = resource.addImageSrc(resourceId, imageSrc);
                     if (imageData) {
                         imageData.watch = node.watch;
                         imageData.tasks = node.tasks;

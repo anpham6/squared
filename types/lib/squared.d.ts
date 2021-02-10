@@ -298,7 +298,7 @@ declare module "lib" {
 
     namespace session {
         function newSessionInit(value: string): Map<Element, ElementData>;
-        function resetSessionAll(): void;
+        function clearSessionAll(): void;
         function setElementCache(element: Element, attr: string, data: any, sessionId?: string): void;
         function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string): Undef<T>;
         function getElementData(element: Element, sessionId?: string): Undef<ElementData>;
