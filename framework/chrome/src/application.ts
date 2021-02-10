@@ -39,20 +39,20 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (!result) {
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
-        options = !isPlainObject(options) ? {} : { ...options };
         const { resourceId, unusedStyles } = this.getProcessing(result.sessionId)!;
-        options.resourceId = resourceId;
-        if (options.removeUnusedStyles && unusedStyles) {
-            options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(Array.from(unusedStyles)))) : Array.from(unusedStyles);
-        }
-        options.saveAsWebPage = true;
         const database: [HTMLElement, ElementAction & DocumentAction & PlainObject][] = [];
         const assetMap = new Map<HTMLElement, AssetCommand>();
         const nodeMap = new Map<XmlNode, HTMLElement>();
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
+        options = !isPlainObject(options) ? {} : { ...options };
+        options.saveAsWebPage = true;
+        options.resourceId = resourceId;
         options.assetMap = assetMap;
         options.nodeMap = nodeMap;
         options.appendMap = appendMap;
+        if (options.removeUnusedStyles && unusedStyles) {
+            options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(Array.from(unusedStyles)))) : Array.from(unusedStyles);
+        }
         if (options.configUri) {
             const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
             if (config) {

@@ -10,7 +10,7 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 const { DIRECTORY_NOT_PROVIDED, SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
-const { fromLastIndexOf, hasValue, isPlainObject, splitPair, startsWith, trimEnd } = squared.lib.util;
+const { fromLastIndexOf, isPlainObject, splitPair, startsWith, trimEnd } = squared.lib.util;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
@@ -145,13 +145,10 @@ export default abstract class File<T extends Node> implements squared.base.File<
             if (pathname && (pathname = pathname.trim())) {
                 const body = this.createRequestBody(options.assets, options);
                 if (body) {
-                    if (!hasValue(options.emptyDir)) {
-                        options.emptyDir = this.userSettings.outputEmptyCopyDirectory;
-                    }
                     return fetch(
                         getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
                         '?to=' + encodeURIComponent(pathname) +
-                        '&empty=' + (options.emptyDir ? '1' : '0') +
+                        '&empty=' + (options.emptyDir ? '2' : this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
                         this.getCopyQueryParameters(options), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
