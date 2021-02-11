@@ -6,7 +6,7 @@ const settings: UserResourceSettings = {
     excludePlainText: true,
     createElementMap: true,
     createQuerySelectorMap: true,
-    pierceShadowRoot: false,
+    pierceShadowRoot: true,
     showErrorMessages: false,
     outputDocumentHandler: 'chrome',
     outputEmptyCopyDirectory: false,

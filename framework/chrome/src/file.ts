@@ -663,7 +663,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             }
                         }
                         const pathname = saveAsImage.pathname;
-                        const data = this.processImageUri(result, null, resolvePath(pathname? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
+                        const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
                         if (data) {
                             if (endsWith(data.filename, '.unknown')) {
                                 data.mimeType = 'image/unknown';
@@ -704,21 +704,40 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     public getFontAssets(options?: FileActionOptions) {
         let resourceId: Undef<number>,
-            preserveCrossOrigin: Undef<boolean>;
+            preserveCrossOrigin: Undef<boolean>,
+            pathname: Undef<string>,
+            inline: Undef<boolean>,
+            blob: Undef<boolean>;
         if (options) {
             ({ resourceId, preserveCrossOrigin } = options);
+            const font = options.saveAs?.font;
+            if (font) {
+                ({ pathname, inline, blob } = font);
+            }
         }
         const result: ChromeAsset[] = [];
         const assets = this.getResourceAssets(resourceId);
         if (assets) {
             for (const fonts of assets.fonts.values()) {
-                for (let i = 0, length = fonts.length; i < length; ++i) {
-                    const url = fonts[i].srcUrl;
-                    if (url) {
-                        const data = File.parseUri(url, preserveCrossOrigin);
-                        if (this.processExtensions(data)) {
-                            result.push(data);
+                for (const { srcUrl, srcBase64, mimeType } of fonts) {
+                    let data: Null<ChromeAsset> = null;
+                    if (srcUrl) {
+                        data = File.parseUri(srcUrl, preserveCrossOrigin);
+                        if (data && inline) {
+                            data.format = 'base64';
                         }
+                    }
+                    else if (srcBase64 && blob) {
+                        const filename = assignFilename('', fromMimeType(mimeType));
+                        data = File.parseUri(resolvePath(pathname ? appendSeparator(pathname, filename) : filename, location.href));
+                        if (data) {
+                            data.format = 'blob';
+                            data.base64 = srcBase64;
+                            delete data.watch;
+                        }
+                    }
+                    if (this.processExtensions(data)) {
+                        result.push(data);
                     }
                 }
             }
@@ -843,8 +862,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
-            for (let i = 0, length = assets.length; i < length; ++i) {
-                const item = assets[i];
+            for (const item of assets) {
                 switch (item.mimeType) {
                     case 'text/html':
                     case 'text/css':
