@@ -366,7 +366,6 @@ declare module "base" {
         node: T;
         containerType: number;
         alignmentType: number;
-        renderType?: number;
         renderIndex?: number;
         next?: boolean;
         set itemCount(value);
@@ -380,7 +379,6 @@ declare module "base" {
         node: T;
         containerType: number;
         alignmentType: number;
-        renderType?: number;
         renderIndex?: number;
         next?: boolean;
         rowCount?: number;
@@ -389,7 +387,6 @@ declare module "base" {
         setContainerType(containerType: number, alignmentType: number): void;
         addAlign(value: number): number;
         hasAlign(value: number): boolean;
-        addRender(value: number): number;
         set itemCount(value);
         get itemCount(): number;
         get linearX(): boolean;
@@ -826,7 +823,8 @@ declare module "base" {
                 SINGLE = 1 << 11,
                 EXTENDABLE = 1 << 12,
                 WRAPPER = 1 << 13,
-                PERCENT = 1 << 14
+                PERCENT = 1 << 14,
+                FLOAT_LAYOUT = 1 << 15
             }
             const enum BOX_STANDARD {
                 MARGIN_TOP = 1,

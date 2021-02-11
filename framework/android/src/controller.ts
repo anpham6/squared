@@ -811,7 +811,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (layout.linearX || layout.singleRowAligned) {
             if (this.checkFrameHorizontal(layout)) {
-                layout.addRender(NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL);
+                layout.addAlign(NODE_ALIGNMENT.FLOAT_LAYOUT | NODE_ALIGNMENT.HORIZONTAL);
             }
             else if (this.checkConstraintHorizontal(layout) || node.tagName === 'BUTTON' || this.hasClippedBackground(node)) {
                 layout.containerType = CONTAINER_NODE.CONSTRAINT;
@@ -832,8 +832,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (layout.every(item => item.inlineFlow)) {
             if (this.checkFrameHorizontal(layout)) {
-                layout.addRender(NODE_ALIGNMENT.FLOAT);
-                layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
+                layout.addAlign(NODE_ALIGNMENT.FLOAT_LAYOUT | NODE_ALIGNMENT.HORIZONTAL);
             }
             else {
                 layout.setContainerType(this.getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
@@ -923,8 +922,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (this.checkFrameHorizontal(layout)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
-            layout.addRender(NODE_ALIGNMENT.FLOAT);
-            layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
+            layout.addAlign(NODE_ALIGNMENT.FLOAT_LAYOUT | NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.size() !== siblings.length || parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
@@ -950,13 +948,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else if (hasCleared(layout, this.application.clearMap)) {
                 layout.node = this.createLayoutGroup(layout);
-                layout.addRender(NODE_ALIGNMENT.FLOAT);
-                layout.addRender(NODE_ALIGNMENT.VERTICAL);
+                layout.addAlign(NODE_ALIGNMENT.FLOAT_LAYOUT | NODE_ALIGNMENT.VERTICAL);
             }
             else if (layout.item(0)!.floating) {
                 layout.node = this.createLayoutGroup(layout);
-                layout.addRender(NODE_ALIGNMENT.FLOAT);
-                layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
+                layout.addAlign(NODE_ALIGNMENT.FLOAT_LAYOUT | NODE_ALIGNMENT.HORIZONTAL);
             }
             else {
                 layoutType = 0;

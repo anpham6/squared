@@ -1,15 +1,5 @@
 const { endsWith, splitPair, startsWith } = squared.lib.util;
 
-interface XMLTagData {
-    tag: string;
-    tagName: string;
-    closing: boolean;
-    didClose: boolean;
-    leadingSpace: string;
-    content: string;
-    trailingSpace: string;
-}
-
 class GlobExp extends RegExp implements IGlobExp {
     constructor(source: string, flags: string, public negate: boolean) {
         super(source, flags);

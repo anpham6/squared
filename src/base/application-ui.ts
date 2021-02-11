@@ -358,14 +358,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public addLayout(layout: ContentUI<T>) {
-        const renderType = layout.renderType || 0;
-        if (renderType & NODE_ALIGNMENT.FLOAT) {
-            if (renderType & NODE_ALIGNMENT.HORIZONTAL) {
-                layout = this.processFloatHorizontal(layout as LayoutUI<T>);
-            }
-            else if (renderType & NODE_ALIGNMENT.VERTICAL) {
-                layout = this.processFloatVertical(layout as LayoutUI<T>);
-            }
+        if (layout.alignmentType & NODE_ALIGNMENT.FLOAT_LAYOUT) {
+            layout = layout.alignmentType & NODE_ALIGNMENT.VERTICAL ? this.processFloatVertical(layout as LayoutUI<T>) : this.processFloatHorizontal(layout as LayoutUI<T>);
         }
         if (layout.containerType) {
             const template = this.renderNode(layout);
@@ -443,7 +437,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const node = this.createRootNode(processing, documentRoot);
         if (node) {
             const { cache, excluded } = processing;
-            const parent = node.parent as T;
+            const parent = node.parent as Null<T>;
             if (parent) {
                 parent.visible = false;
                 node.documentParent = parent;

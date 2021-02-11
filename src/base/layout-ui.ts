@@ -18,7 +18,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     public rowCount?: number;
     public columnCount?: number;
-    public renderType?: number;
     public renderIndex?: number;
     public next?: boolean;
 
@@ -70,10 +69,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     public hasAlign(value: number) {
         return (this.alignmentType & value) > 0;
-    }
-
-    public addRender(value: number) {
-        return !this.renderType ? this.renderType = value : this.renderType |= value;
     }
 
     public retainAs(list: T[]) {
