@@ -226,7 +226,7 @@ declare module "base" {
         addImage(resourceId: number, element: HTMLImageElement): void;
         getImage(resourceId: number, uri: string): Undef<ImageAsset>;
         addFont(resourceId: number, data: FontFaceData): void;
-        getFont(resourceId: number, fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
+        getFonts(resourceId: number, fontFamily: string, fontStyle?: string, fontWeight?: string): FontFaceData[];
         addVideo(resourceId: number, uri: string, options?: AudioVideoOptions): void;
         getVideo(resourceId: number, uri: string): Undef<Asset>;
         addAudio(resourceId: number, uri: string, options?: AudioVideoOptions): void;

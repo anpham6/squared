@@ -152,7 +152,7 @@ export function allSettled<T>(values: readonly (T | PromiseLike<T>)[]) {
 }
 
 export function parseMimeType(value: string) {
-    return EXT_DATA[splitPairEnd(splitPairStart(value, '?'), '.', true, true) || value] as string || '';
+    return EXT_DATA[splitPairEnd(splitPairStart(value = value.toLowerCase(), '?'), '.', true, true) || value] as string || '';
 }
 
 export function hasKeys(obj: PlainObject) {

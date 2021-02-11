@@ -576,20 +576,18 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (saveAsLink) {
             ({ process, compress, preserve, tasks, cloudStorage, document: documentData } = saveAsLink);
         }
-        if (resourceId) {
-            const assets = Resource.ASSETS[resourceId];
-            if (assets) {
-                for (const [uri, item] of assets.rawData) {
-                    if (item.mimeType === 'text/css') {
-                        const data = File.parseUri(resolvePath(uri), preserveCrossOrigin, { format: process ? process.join('+'): undefined });
-                        if (this.processExtensions(data)) {
-                            setOutputModifiers(data, documentData, compress, tasks, cloudStorage);
-                            if (preserve) {
-                                data.preserve = true;
-                            }
-                            data.mimeType = item.mimeType;
-                            result.push(data);
+        const assets = this.getResourceAssets(resourceId);
+        if (assets) {
+            for (const [uri, item] of assets.rawData) {
+                if (item.mimeType === 'text/css') {
+                    const data = File.parseUri(resolvePath(uri), preserveCrossOrigin, { format: process ? process.join('+'): undefined });
+                    if (this.processExtensions(data)) {
+                        setOutputModifiers(data, documentData, compress, tasks, cloudStorage);
+                        if (preserve) {
+                            data.preserve = true;
                         }
+                        data.mimeType = item.mimeType;
+                        result.push(data);
                     }
                 }
             }
@@ -637,60 +635,58 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         });
-        if (resourceId) {
-            const assets = Resource.ASSETS[resourceId];
-            if (assets) {
-                for (const uri of assets.image.keys()) {
-                    const image = Resource.parseDataURI(uri, 'image/unknown', 'base64');
-                    if (image) {
-                        this.resource.addRawData(resourceId, uri, image.data as string, image);
-                    }
-                    else if (!result.find(item => item.uri === uri)) {
-                        this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
+        const assets = this.getResourceAssets(resourceId);
+        if (assets) {
+            for (const uri of assets.image.keys()) {
+                const image = Resource.parseDataURI(uri, 'image/unknown', 'base64');
+                if (image) {
+                    this.resource.addRawData(resourceId!, uri, image.data as string, image);
+                }
+                else if (!result.find(item => item.uri === uri)) {
+                    this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
+                }
+            }
+            for (const rawData of assets.rawData.values()) {
+                const { base64, content, filename, mimeType = parseMimeType(filename) } = rawData;
+                if (base64) {
+                    if (saveAsImage?.blob && !result.find(item => item.base64 === base64)) {
+                        let commands: Undef<string[]>;
+                        if (startsWith(mimeType, 'image/') && (commands = saveAsImage.commands)) {
+                            for (let i = 0; i < commands.length; ++i) {
+                                const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
+                                if (match) {
+                                    commands[i] = match[1] + '@' + match[2].trim();
+                                }
+                                else {
+                                    commands.splice(i--, 1);
+                                }
+                            }
+                        }
+                        const pathname = saveAsImage.pathname;
+                        const data = this.processImageUri(result, null, resolvePath(pathname? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
+                        if (data) {
+                            if (endsWith(data.filename, '.unknown')) {
+                                data.mimeType = 'image/unknown';
+                            }
+                            if (commands && commands.length) {
+                                data.commands ||= commands;
+                            }
+                            data.cloudStorage = saveAsImage.cloudStorage;
+                            if (!pathname) {
+                                delete data.uri;
+                            }
+                        }
                     }
                 }
-                for (const rawData of assets.rawData.values()) {
-                    const { base64, content, filename, mimeType = parseMimeType(filename) } = rawData;
-                    if (base64) {
-                        if (saveAsImage?.blob && !result.find(item => item.base64 === base64)) {
-                            let commands: Undef<string[]>;
-                            if (startsWith(mimeType, 'image/') && (commands = saveAsImage.commands)) {
-                                for (let i = 0; i < commands.length; ++i) {
-                                    const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
-                                    if (match) {
-                                        commands[i] = match[1] + '@' + match[2].trim();
-                                    }
-                                    else {
-                                        commands.splice(i--, 1);
-                                    }
-                                }
-                            }
-                            const pathname = saveAsImage.pathname;
-                            const data = this.processImageUri(result, null, resolvePath(pathname? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
-                            if (data) {
-                                if (endsWith(data.filename, '.unknown')) {
-                                    data.mimeType = 'image/unknown';
-                                }
-                                if (commands && commands.length) {
-                                    data.commands ||= commands;
-                                }
-                                data.cloudStorage = saveAsImage.cloudStorage;
-                                if (!pathname) {
-                                    delete data.uri;
-                                }
-                            }
-                        }
-                    }
-                    else if (content && mimeType) {
-                        const data = {
-                            pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
-                            filename: assignFilename(filename),
-                            content,
-                            mimeType
-                        };
-                        if (this.processExtensions(data)) {
-                            result.push(data);
-                        }
+                else if (content && mimeType) {
+                    const data = {
+                        pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
+                        filename: assignFilename(filename),
+                        content,
+                        mimeType
+                    };
+                    if (this.processExtensions(data)) {
+                        result.push(data);
                     }
                 }
             }
@@ -713,17 +709,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             ({ resourceId, preserveCrossOrigin } = options);
         }
         const result: ChromeAsset[] = [];
-        if (resourceId) {
-            const assets = Resource.ASSETS[resourceId];
-            if (assets) {
-                for (const fonts of assets.fonts.values()) {
-                    for (let i = 0, length = fonts.length; i < length; ++i) {
-                        const url = fonts[i].srcUrl;
-                        if (url) {
-                            const data = File.parseUri(url, preserveCrossOrigin);
-                            if (this.processExtensions(data)) {
-                                result.push(data);
-                            }
+        const assets = this.getResourceAssets(resourceId);
+        if (assets) {
+            for (const fonts of assets.fonts.values()) {
+                for (let i = 0, length = fonts.length; i < length; ++i) {
+                    const url = fonts[i].srcUrl;
+                    if (url) {
+                        const data = File.parseUri(url, preserveCrossOrigin);
+                        if (this.processExtensions(data)) {
+                            result.push(data);
                         }
                     }
                 }
@@ -1191,6 +1185,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 assets.push(data);
                 return data;
             }
+        }
+    }
+
+    private getResourceAssets(resourceId: Undef<number>) {
+        if (resourceId !== undefined && resourceId !== -1) {
+            return Resource.ASSETS[resourceId];
         }
     }
 

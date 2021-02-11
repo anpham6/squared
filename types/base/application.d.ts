@@ -129,7 +129,6 @@ interface LayoutType {
     alignmentType: number;
 }
 
-
 interface ResourceMap extends ObjectMap<Undef<Map<string, unknown>> | unknown[]> {}
 
 interface ResourceAssetMap extends ResourceMap {
@@ -148,4 +147,15 @@ interface ResourceStoredMap extends ResourceMap {
     fonts: Map<string, StringMap>;
     colors: Map<string, string>;
     images: Map<string, StringMap>;
+}
+
+interface FontFaceData {
+    fontFamily: string;
+    fontWeight: number;
+    fontStyle: string;
+    mimeType: string;
+    srcFormat: string;
+    srcUrl?: string;
+    srcLocal?: string;
+    srcBase64?: string;
 }

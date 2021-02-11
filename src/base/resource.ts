@@ -204,12 +204,13 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         return Resource.ASSETS[resourceId]?.audio.get(uri);
     }
 
-    public getFont(resourceId: number, fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
+    public getFonts(resourceId: number, fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
         const font = Resource.ASSETS[resourceId]?.fonts.get(fontFamily.trim().toLowerCase());
         if (font) {
             const mimeType = this.mimeTypeMap.font;
-            return font.find(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (Resource.hasMimeType(mimeType, item.srcFormat) || item.srcUrl && Resource.hasMimeType(mimeType, item.srcUrl)));
+            return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.has(item.mimeType)));
         }
+        return [];
     }
 
     public getRawData(resourceId: number, uri: string) {

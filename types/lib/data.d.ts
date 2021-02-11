@@ -12,15 +12,6 @@ interface CssPropertyData {
 
 interface KeyframeData extends ObjectMap<StringMap> {}
 
-interface FontFaceData {
-    fontFamily: string;
-    fontWeight: number;
-    fontStyle: string;
-    srcFormat: string;
-    srcUrl?: string;
-    srcLocal?: string;
-}
-
 interface TransformData {
     group: string;
     method: string;

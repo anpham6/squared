@@ -166,14 +166,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     else if (fontStyle && fontWeight) {
                         let createFont: Undef<boolean>;
-                        if (resource.getFont(resourceId, value, fontStyle, fontWeight)) {
+                        if (resource.getFonts(resourceId, value, fontStyle, fontWeight).length) {
                             createFont = true;
                         }
                         else {
-                            const font = startsWith(fontStyle, 'oblique') ? resource.getFont(resourceId, value, 'italic') || resource.getFont(resourceId, value, 'normal') : resource.getFont(resourceId, value, fontStyle);
-                            if (font) {
+                            const font = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
+                            if (font.length) {
                                 actualFontWeight = fontWeight;
-                                fontWeight = font.fontWeight.toString();
+                                fontWeight = font[0].fontWeight.toString();
                                 createFont = true;
                             }
                             else if (index < array.length - 1) {

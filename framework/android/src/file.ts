@@ -212,11 +212,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceStringToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
-        let length: number;
-        if (!stored || !(length = stored.strings.size)) {
+        if (!stored) {
             return [];
         }
         const items = Array.from(stored.strings).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
+        const length = items.length;
         let j: number,
             itemArray: ItemValue[];
         if (stored.strings.has('app_name')) {
@@ -269,25 +269,41 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                 const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
                 itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
-                const url = resource.getFont(resourceId, fontFamily, fontStyle, fontWeight)?.srcUrl;
-                if (url) {
-                    const data = this.resource.getRawData(resourceId, url);
-                    let base64: Undef<string>,
+                const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
+                if (fonts.length) {
+                    let uri: Undef<string>,
+                        base64: Undef<string>,
                         ext: Undef<string>;
+                    let data = fonts.find(item => item.srcUrl);
                     if (data) {
-                        base64 = data.base64;
-                        if (!base64 && data.buffer) {
-                            base64 = convertBase64(data.buffer);
-                            data.base64 = base64;
+                        uri = data.srcUrl!;
+                        const rawData = this.resource.getRawData(resourceId, uri);
+                        if (rawData) {
+                            base64 = rawData.base64;
+                            if (!base64 && rawData.buffer) {
+                                base64 = convertBase64(rawData.buffer);
+                                rawData.base64 = base64;
+                            }
+                            if (rawData.mimeType) {
+                                ext = fromMimeType(rawData.mimeType);
+                            }
                         }
-                        if (data.mimeType) {
+                        ext ||= fromMimeType(data.mimeType) || Resource.getExtension(uri.split('?')[0]).toLowerCase();
+                    }
+                    else {
+                        data = fonts.find(item => item.srcBase64);
+                        if (data) {
+                            base64 = data.srcBase64;
                             ext = fromMimeType(data.mimeType);
+                        }
+                        else {
+                            continue;
                         }
                     }
                     this.resource.addAsset(resourceId, {
                         pathname: directory + pathname,
-                        filename: fontName + '.' + (ext || Resource.getExtension(url.split('?')[0]).toLowerCase() || 'ttf'),
-                        uri: !base64 ? url : undefined,
+                        filename: fontName + '.' + (ext || 'ttf'),
+                        uri: !base64 ? uri : undefined,
                         base64
                     });
                 }
