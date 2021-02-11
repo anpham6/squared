@@ -35,7 +35,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     }
 
     private async processAssets(module: "saveAs" | "copyTo" | "appendTo", pathname: string, options?: FileArchivingOptions | FileCopyingOptions) {
-        const result = this.parseDocumentSync() as Undef<T>;
+        const result = await this.parseDocument() as Undef<T>;
         if (!result) {
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }

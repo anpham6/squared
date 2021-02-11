@@ -69,7 +69,7 @@ declare module "base" {
         initializing: boolean;
         cache: NodeList<T>;
         excluded: NodeList<T>;
-        rootElements: Set<HTMLElement>;
+        rootElements: HTMLElement[];
         extensions: Extension<T>[];
         elementMap: Map<Element, ElementData>;
         node: Null<T>;
@@ -222,6 +222,8 @@ declare module "base" {
         clear(): void;
         reset(): void;
         init(resourceId: number): void;
+        preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: (HTMLElement | ShadowRoot)[]): [(HTMLImageElement | string)[], HTMLImageElement[]];
+        parseFontFace(resourceId: number, cssText: string, styleSheetHref: string): void;
         addAsset(resourceId: number, asset: RawAsset): void;
         addImage(resourceId: number, element: HTMLImageElement): void;
         getImage(resourceId: number, uri: string): Undef<ImageAsset>;

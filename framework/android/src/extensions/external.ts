@@ -6,7 +6,10 @@ export default class <T extends View> extends squared.base.ExtensionUI<T> {
 
     public beforeInsertNode(element: HTMLElement, sessionId: string) {
         if (this.included(element)) {
-            this.application.getProcessing(sessionId)!.rootElements.add(element);
+            const rootElements = this.application.getProcessing(sessionId)!.rootElements;
+            if (!rootElements.includes(element)) {
+                rootElements.push(element);
+            }
         }
         return false;
     }

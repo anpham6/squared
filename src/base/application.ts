@@ -10,8 +10,7 @@ import type Node from './node';
 import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;
-type PreloadItem = HTMLImageElement | string;
-type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, Set<HTMLElement>, Set<HTMLElement | ShadowRoot>, Undef<string[]>];
+type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], (HTMLElement | ShadowRoot)[], Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
@@ -19,14 +18,9 @@ const { FILE, STRING } = squared.lib.regex;
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, endsWith, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, startsWith, trimBoth } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
-const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
-const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
-const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
-const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
-const REGEXP_FONTURL = /\s?(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
 const REGEXP_DATAURI = new RegExp(`\\s?url\\("?(${STRING.DATAURI})"?\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
@@ -203,136 +197,13 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public parseDocument(...elements: (string | HTMLElement)[]) {
         const resource = this.resourceHandler;
-        let preloadImages: Undef<boolean>,
-            preloadFonts: Undef<boolean>,
-            preloadCustomElements = true;
-        if (resource) {
-            ({ preloadImages, preloadFonts, preloadCustomElements } = resource.userSettings);
-        }
-        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
-        if (rootElements.size === 0) {
+        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && resource ? resource.userSettings.preloadCustomElements : false);
+        if (rootElements.length === 0) {
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
         const resourceId = processing.resourceId;
-        const documentRoot: HTMLElement = rootElements.values().next().value;
-        const preloadItems: PreloadItem[] = [];
-        let preloaded: Undef<HTMLImageElement[]>,
-            storedAssets: Undef<ResourceAssetMap>;
-        const parseSrcSet = (value: string) => {
-            if (value) {
-                for (const uri of value.split(',')) {
-                    resource!.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
-                }
-            }
-        };
-        if (resource) {
-            storedAssets = resource.mapOfAssets[resourceId]!;
-            for (const element of shadowElements) {
-                element.querySelectorAll('img, picture > source').forEach((source: HTMLImageElement | HTMLSourceElement) => parseSrcSet(source.srcset));
-                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => resource.addImageData(resourceId, source.poster));
-                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => resource.addImageData(resourceId, image.src, image.width, image.height));
-                element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
-                    const src = source.data || source.src;
-                    if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
-                        resource.addImageData(resourceId, src.trim());
-                    }
-                });
-                element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
-                    const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
-                    if (href && href.indexOf('#') > 0) {
-                        const src = resolvePath(splitPairStart(href, '#'));
-                        if (FILE.SVG.test(src)) {
-                            resource.addImageData(resourceId, src);
-                        }
-                    }
-                });
-            }
-        }
-        if (preloadImages) {
-            preloaded = [];
-            const { image, rawData } = storedAssets!;
-            for (const item of image.values()) {
-                const uri = item.uri!;
-                if (FILE.SVG.test(uri)) {
-                    preloadItems.push(uri);
-                }
-                else if (item.width === 0 || item.height === 0) {
-                    const element = document.createElement('img');
-                    element.src = uri;
-                    if (element.naturalWidth && element.naturalHeight) {
-                        item.width = element.naturalWidth;
-                        item.height = element.naturalHeight;
-                    }
-                    else {
-                        documentRoot.appendChild(element);
-                        preloaded.push(element);
-                    }
-                }
-            }
-            for (const data of rawData) {
-                const item = data[1];
-                const mimeType = item.mimeType;
-                if (startsWith(mimeType, 'image/') && !endsWith(mimeType, 'svg+xml')) {
-                    let src = `data:${mimeType!};`;
-                    if (item.base64) {
-                        src += 'base64,' + item.base64;
-                    }
-                    else if (item.content) {
-                        src += item.content;
-                    }
-                    else {
-                        continue;
-                    }
-                    const element = document.createElement('img');
-                    element.src = src;
-                    const { naturalWidth: width, naturalHeight: height } = element;
-                    if (width && height) {
-                        item.width = width;
-                        item.height = height;
-                        image.set(data[0], { width, height, uri: item.filename });
-                    }
-                    else {
-                        document.body.appendChild(element);
-                        preloaded.push(element);
-                    }
-                }
-            }
-        }
-        if (preloadFonts) {
-            for (const item of storedAssets!.fonts.values()) {
-                for (const font of item) {
-                    const srcUrl = font.srcUrl;
-                    if (srcUrl) {
-                        preloadItems.push(srcUrl);
-                    }
-                }
-            }
-        }
-        if (resource) {
-            const preloadMap = new Set<string>();
-            for (const element of shadowElements) {
-                element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                    if (!preloadImages) {
-                        resource.addImage(resourceId, image);
-                    }
-                    else {
-                        const src = image.src;
-                        if (!preloadMap.has(src)) {
-                            if (FILE.SVG.test(src)) {
-                                preloadItems.push(src);
-                            }
-                            else if (image.complete) {
-                                resource.addImage(resourceId, image);
-                            }
-                            else {
-                                preloadItems.push(image);
-                            }
-                            preloadMap.add(src);
-                        }
-                    }
-                });
-            }
-        }
+        const documentRoot: HTMLElement = rootElements[0];
+        const [preloadItems, preloaded] = resource ? resource.preloadAssets(resourceId, documentRoot, shadowElements) : [[], []];
         if (styleSheets) {
             preloadItems.push(...styleSheets);
         }
@@ -813,99 +684,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             case CSSRule.FONT_FACE_RULE:
                 if (resource) {
-                    const attr = REGEXP_FONTFACE.exec(cssText)?.[1];
-                    if (attr) {
-                        let fontFamily = REGEXP_FONTFAMILY.exec(attr)?.[1].trim();
-                        if (fontFamily) {
-                            const fontStyle = REGEXP_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
-                            const fontWeight = +(REGEXP_FONTWEIGHT.exec(attr)?.[1] || '400');
-                            fontFamily = trimBoth(fontFamily, '"');
-                            let match: Null<RegExpExecArray>;
-                            while (match = REGEXP_FONTURL.exec(attr)) {
-                                const url = (match[2] || match[3] || match[4]).trim();
-                                let srcFormat = match[5] ? match[5].toLowerCase() : '',
-                                    mimeType = '',
-                                    srcLocal: Undef<string>,
-                                    srcUrl: Undef<string>,
-                                    srcBase64: Undef<string>;
-                                const setMimeType = () => {
-                                    switch (srcFormat) {
-                                        case 'truetype':
-                                            mimeType = 'font/ttf';
-                                            break;
-                                        case 'opentype':
-                                            mimeType = 'font/otf';
-                                            break;
-                                        case 'woff2':
-                                            mimeType = 'font/woff2';
-                                            break;
-                                        case 'woff':
-                                            mimeType = 'font/woff';
-                                            break;
-                                        case 'svg':
-                                            mimeType = 'image/svg+xml';
-                                            break;
-                                        case 'embedded-opentype':
-                                            mimeType = 'application/vnd.ms-fontobject';
-                                            break;
-                                        default:
-                                            srcFormat = '';
-                                            break;
-                                    }
-                                };
-                                setMimeType();
-                                if (match[1] === 'local') {
-                                    srcLocal = url;
-                                }
-                                else {
-                                    if (startsWith(url, 'data:')) {
-                                        const [mime, base64] = url.split(',');
-                                        srcBase64 = base64.trim();
-                                        mimeType ||= mime.toLowerCase();
-                                    }
-                                    else {
-                                        srcUrl = resolvePath(url, styleSheetHref);
-                                        mimeType ||= parseMimeType(srcUrl);
-                                    }
-                                    if (!srcFormat) {
-                                        if (mimeType.includes('/ttf')) {
-                                            srcFormat = 'truetype';
-                                        }
-                                        else if (mimeType.includes('/otf')) {
-                                            srcFormat = 'opentype';
-                                        }
-                                        else if (mimeType.includes('/woff2')) {
-                                            srcFormat = 'woff2';
-                                        }
-                                        else if (mimeType.includes('/woff')) {
-                                            srcFormat = 'woff';
-                                        }
-                                        else if (mimeType.includes('/svg+xml')) {
-                                            srcFormat = 'svg';
-                                        }
-                                        else if (mimeType.includes('/vnd.ms-fontobject')) {
-                                            srcFormat = 'embedded-opentype';
-                                        }
-                                        else {
-                                            continue;
-                                        }
-                                        setMimeType();
-                                    }
-                                }
-                                resource.addFont(resourceId, {
-                                    fontFamily,
-                                    fontWeight,
-                                    fontStyle,
-                                    mimeType,
-                                    srcFormat,
-                                    srcUrl,
-                                    srcLocal,
-                                    srcBase64
-                                } as FontFaceData);
-                            }
-                            REGEXP_FONTURL.lastIndex = 0;
-                        }
-                    }
+                    resource.parseFontFace(resourceId, cssText, styleSheetHref);
                 }
                 break;
             case CSSRule.SUPPORTS_RULE:
@@ -1018,10 +797,10 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     private createSessionThread(elements: (string | HTMLElement)[], pierceShadowRoot: boolean): SessionThreadData<T> {
-        const rootElements = new Set<HTMLElement>();
+        const rootElements: HTMLElement[] = [];
         const length = elements.length;
         if (length === 0) {
-            rootElements.add(this.mainElement);
+            rootElements.push(this.mainElement);
         }
         else {
             for (let i = 0; i < length; ++i) {
@@ -1029,40 +808,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (typeof element === 'string') {
                     element = document.getElementById(element);
                 }
-                if (element) {
-                    rootElements.add(element);
+                if (element && !rootElements.includes(element)) {
+                    rootElements.push(element);
                 }
             }
-            if (rootElements.size === 0) {
+            if (rootElements.length === 0) {
                 return ([rootElements] as unknown) as SessionThreadData<T>;
-            }
-        }
-        let shadowElements: Undef<Set<HTMLElement | ShadowRoot>>,
-            styleSheets: Undef<string[]>;
-        if (pierceShadowRoot) {
-            let shadowRootItems: Undef<Set<ShadowRoot>>;
-            for (const element of rootElements) {
-                element.querySelectorAll('*').forEach(child => {
-                    const shadowRoot = child.shadowRoot;
-                    if (shadowRoot) {
-                        (shadowRootItems ||= new Set<ShadowRoot>()).add(shadowRoot);
-                    }
-                });
-            }
-            if (shadowRootItems) {
-                shadowElements = new Set(rootElements);
-                for (const shadowRoot of shadowRootItems) {
-                    shadowElements.add(shadowRoot);
-                    shadowRoot.querySelectorAll('link').forEach(element => {
-                        const href = element.href.trim();
-                        if (href) {
-                            const mimeType = element.rel.trim() === 'stylesheet' ? 'text/css' : element.type.trim() || parseMimeType(href);
-                            if (mimeType === 'text/css') {
-                                (styleSheets ||= []).push(href);
-                            }
-                        }
-                    });
-                }
             }
         }
         const controller = this.controllerHandler;
@@ -1091,12 +842,37 @@ export default abstract class Application<T extends Node> implements squared.bas
             resource.init(resourceId);
         }
         controller.init(resourceId);
-        const queryRoot = rootElements.size === 1 && (rootElements.values().next().value as HTMLElement).parentElement;
+        const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
         if (queryRoot && queryRoot !== document.documentElement) {
             this.setStyleMap(sessionId, resourceId, document, queryRoot);
         }
         else {
             this.setStyleMap(sessionId, resourceId);
+        }
+        let shadowElements: Undef<ShadowRoot[]>,
+            styleSheets: Undef<string[]>;
+        if (pierceShadowRoot) {
+            for (const element of rootElements) {
+                element.querySelectorAll('*').forEach(child => {
+                    const shadowRoot = child.shadowRoot;
+                    if (shadowRoot) {
+                        (shadowElements ||= []).push(shadowRoot);
+                    }
+                });
+            }
+            if (shadowElements) {
+                for (const shadowRoot of shadowElements) {
+                    shadowRoot.querySelectorAll('link').forEach(element => {
+                        const href = element.href.trim();
+                        if (href) {
+                            const mimeType = element.rel.trim() === 'stylesheet' ? 'text/css' : element.type.trim() || parseMimeType(href);
+                            if (mimeType === 'text/css') {
+                                (styleSheets ||= []).push(href);
+                            }
+                        }
+                    });
+                }
+            }
         }
         if (resource) {
             (queryRoot || document).querySelectorAll('[style]').forEach((element: HTMLElement) => {
@@ -1106,10 +882,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             });
         }
-        return [processing, rootElements, shadowElements || rootElements, styleSheets];
+        return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
     }
 
-    private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: Set<HTMLElement>, multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
+    private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: HTMLElement[], multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
         const { sessionId, extensions } = processing;
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');

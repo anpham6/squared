@@ -691,7 +691,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const use = this.getDatasetName('use', element);
                         (use ? ApplicationUI.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode!(element, sessionId));
                     }
-                    if (!rootElements.has(element)) {
+                    if (!rootElements.includes(element)) {
                         let shadowRoot: Optional<ShadowRoot>;
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                             this.replaceShadowRootSlots(shadowRoot);
