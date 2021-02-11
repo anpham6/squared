@@ -891,7 +891,6 @@ declare module "base" {
             function randomUUID(separator?: string): string;
             function upperCaseString(value: string): string;
             function lowerCaseString(value: string): string;
-            function formatXml(value: string, options?: FormatXmlOptions): string;
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
             function parseTask(value: Undef<string>): Undef<TaskAction[]>;
             function parseWatchInterval(value: Undef<string>): Undef<WatchInterval>;
