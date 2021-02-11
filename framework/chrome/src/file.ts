@@ -53,7 +53,6 @@ function parseOptions(value: Undef<string>): OptionsData {
 }
 
 function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<string>, string, string] {
-    value = normalizePath(value);
     if (startsWith(value, './')) {
         value = value.substring(2);
     }
@@ -264,7 +263,7 @@ const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slic
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
-const normalizePath = (value: string) => !value.startsWith('\\\\') ? value.replace(/\\+/g, '/') : value;
+const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static createTagNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlTagNode {
@@ -365,7 +364,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             return {
                 uri,
                 moveTo,
-                pathname: normalizePath(decodeURIComponent(pathname)),
+                pathname: decodeURIComponent(pathname),
                 filename: decodeURIComponent(filename),
                 mimeType: mimeType || parseMimeType(uri),
                 format

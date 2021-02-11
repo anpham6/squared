@@ -321,6 +321,7 @@ declare module "lib" {
         function convertPercent(value: string, fallback?: number): number;
         function convertBase64(value: ArrayBuffer): string;
         function delimitString(value: DelimitStringOptions | string, ...appending: string[]): string;
+        function padStart(value: string, length: number, char: string): string;
         function spliceString(value: string, index: number, length: number): string;
         function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string];
         function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean): string;

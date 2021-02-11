@@ -8,7 +8,7 @@ import { concatString, parseColor } from './lib/util';
 const { PROTOCOL } = squared.lib.regex.FILE;
 
 const { extractURL, getSrcSet } = squared.lib.css;
-const { endsWith, fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, splitPairStart, startsWith, trimString } = squared.lib.util;
+const { endsWith, fromLastIndexOf, isNumber, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith, trimString } = squared.lib.util;
 
 const REGEXP_STRINGNAME = /(?:\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;)/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
@@ -339,6 +339,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     get randomUUID() {
-        return '__' + (++COUNTER_UUID).toString().padStart(5, '0');
+        return '__' + padStart((++COUNTER_UUID).toString(), 5, '0');
     }
 }

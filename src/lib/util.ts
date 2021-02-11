@@ -269,6 +269,11 @@ export function delimitString(value: DelimitStringOptions | string, ...appending
     return values.join(delimiter);
 }
 
+export function padStart(value: string, length: number, char: string) {
+    length -= value.length;
+    return length > 0 ? char.repeat(length) + value : value;
+}
+
 export function spliceString(value: string, index: number, length: number) {
     return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
 }

@@ -2,6 +2,8 @@ import type Application from './application';
 import type Node from './node';
 import type NodeList from './nodelist';
 
+const { padStart } = squared.lib.util;
+
 export default class Controller<T extends Node> implements squared.base.Controller<T> {
     public static readonly KEY_NAME = 'squared.base.controller';
     public readonly localSettings: ControllerSettings = {
@@ -25,7 +27,7 @@ export default class Controller<T extends Node> implements squared.base.Controll
     public preventNodeCascade(node: T) { return false; }
 
     get generateSessionId() {
-        return (++this._sessionId).toString().padStart(5, '0');
+        return padStart((++this._sessionId).toString(), 5, '0');
     }
 
     get afterInsertNode(): BindGeneric<T, void> {

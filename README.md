@@ -116,7 +116,7 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
 There are ES2017 minified versions (*.min.js) and also ES2017 non-minified versions.
 
 ES2015 - ES6 classes + Fetch (95%)  
-ES2017 - Async/Await (93%)  
+ES2017 - Async/Await (93%) - Chrome 55
 
 Browsers without ES2017 are not being supported to fully take advantage of async/await.
 
