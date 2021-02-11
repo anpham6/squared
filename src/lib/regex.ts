@@ -5,6 +5,7 @@ const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:
 const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
 const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
 const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
+const TAG_ATTR = `=\\s*(?:"[^"]*"|'[^']*'|[^\\s>]+)`;
 
 export const STRING = {
     DECIMAL,
@@ -13,6 +14,8 @@ export const STRING = {
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
     UNIT_LENGTH,
     DATAURI: '\\s*(data:\\s*([^;,\\s]+)?\\s*;?\\s*([^,\\s]+)?\\s*,)?\\s*(.+?)\\s*',
+    TAG_ATTR,
+    TAG_OPEN: `(?:[^=>]|${TAG_ATTR}|=)`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
     CSS_RESOLUTION: `(${DECIMAL_UN})(dpi|dpcm|dppx)`
@@ -25,7 +28,7 @@ export const FILE = {
 };
 
 export const CSS = {
-    URL: /^\s*url\((.+)\)\s*$/,
+    URL: /^\s*url\((?:["'](.+)["']|(.+))\)\s*$/i,
     HEX: /^#?[\dA-Fa-f]{3,8}$/,
     RGBA: /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/,
     HSLA: /hsla?\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+%?)\s*)?\)/,

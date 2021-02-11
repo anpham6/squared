@@ -5,7 +5,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertCamelCase, convertHyphenated, convertPercent, endsWith, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, startsWith, trimBoth } from './util';
+import { convertCamelCase, convertHyphenated, convertPercent, endsWith, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -3244,7 +3244,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
 export function extractURL(value: string) {
     const match = CSS.URL.exec(value);
     if (match) {
-        return trimBoth(match[1], '"');
+        return match[1] || match[2];
     }
 }
 

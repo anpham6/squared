@@ -6,7 +6,7 @@ import { fromMimeType, randomUUID } from './lib/util';
 
 type PreloadItem = HTMLImageElement | string;
 
-const { FILE } = squared.lib.regex;
+const { FILE, STRING } = squared.lib.regex;
 
 const { extractURL, resolveURL } = squared.lib.css;
 const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
@@ -16,7 +16,7 @@ const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
 const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
 const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
 const REGEXP_FONTURL = /\s?(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
-const REGEXP_DATAURI = new RegExp(`^${squared.lib.regex.STRING.DATAURI}$`);
+const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
 export default class Resource<T extends Node> implements squared.base.Resource<T> {
     public static readonly KEY_NAME = 'squared.base.resource';
@@ -82,7 +82,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     public reset() {}
 
-    public preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: (HTMLElement | ShadowRoot)[]): [PreloadItem[], HTMLImageElement[]] {
+    public preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[]): [PreloadItem[], HTMLImageElement[]] {
         const { preloadImages, preloadFonts } = this.userSettings;
         const assets = Resource.ASSETS[resourceId]!;
         const result: PreloadItem[] = [];
@@ -390,26 +390,25 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 }
                 content &&= content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
             }
-            if (!content && !base64 && !buffer) {
-                return null;
+            if (content || base64 || buffer) {
+                const url = uri.split('?')[0];
+                if (!filename) {
+                    const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
+                    filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
+                }
+                const result = {
+                    pathname: startsWith(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
+                    filename,
+                    content,
+                    base64,
+                    mimeType,
+                    buffer,
+                    width,
+                    height
+                } as RawAsset;
+                assets.rawData.set(uri, result);
+                return result;
             }
-            const url = uri.split('?')[0];
-            if (!filename) {
-                const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
-                filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
-            }
-            const result = {
-                pathname: startsWith(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
-                filename,
-                content,
-                base64,
-                mimeType,
-                buffer,
-                width,
-                height
-            } as RawAsset;
-            assets.rawData.set(uri, result);
-            return result;
         }
         return null;
     }

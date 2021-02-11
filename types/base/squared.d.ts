@@ -103,7 +103,7 @@ declare module "base" {
         parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
         createCache(processing: AppProcessing<T>, documentRoot: HTMLElement): Undef<T>;
-        setStyleMap(sessionId: string, resourceId: number, documentRoot?: DocumentRoot, queryRoot?: DocumentQueryRoot): void;
+        setStyleMap(sessionId: string, resourceId: number, documentRoot?: DocumentRoot, queryRoot?: QuerySelectorElement): void;
         replaceShadowRootSlots(shadowRoot: ShadowRoot): void;
         createNode(sessionId: string, options: CreateNodeOptions): T;
         createNodeStatic(processing: AppProcessing<T>, element?: Element): T;
@@ -222,7 +222,7 @@ declare module "base" {
         clear(): void;
         reset(): void;
         init(resourceId: number): void;
-        preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: (HTMLElement | ShadowRoot)[]): [(HTMLImageElement | string)[], HTMLImageElement[]];
+        preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[]): [(HTMLImageElement | string)[], HTMLImageElement[]];
         parseFontFace(resourceId: number, cssText: string, styleSheetHref: string): void;
         addAsset(resourceId: number, asset: RawAsset): void;
         addImage(resourceId: number, element: HTMLImageElement): void;

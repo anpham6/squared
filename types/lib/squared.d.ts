@@ -264,6 +264,8 @@ declare module "lib" {
             LENGTH_PERCENTAGE: string;
             UNIT_LENGTH: string;
             DATAURI: string;
+            TAG_ATTR: string;
+            TAG_OPEN: string;
             CSS_ANGLE: string;
             CSS_TIME: string;
             CSS_RESOLUTION: string;

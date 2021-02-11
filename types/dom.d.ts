@@ -1,7 +1,7 @@
-type StyleElement = HTMLElement | SVGElement;
-type DocumentElement = HTMLElement | SVGSVGElement;
 type DocumentRoot = Document | ShadowRoot;
-type DocumentQueryRoot = DocumentRoot | HTMLElement;
+type DocumentElement = HTMLElement | SVGSVGElement;
+type QuerySelectorElement = DocumentRoot | DocumentElement;
+type StyleElement = HTMLElement | SVGElement;
 type PositionAttr = "top" | "right" | "bottom" | "left";
 type PositionDirectionAttr = "start" | "end";
 type PositionAllAttr = PositionAttr | PositionDirectionAttr;

@@ -10,7 +10,7 @@ import type Node from './node';
 import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;
-type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], (HTMLElement | ShadowRoot)[], Undef<string[]>];
+type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
@@ -21,39 +21,33 @@ const { getElementCache, newSessionInit, setElementCache } = squared.lib.session
 const { allSettled, capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
-const REGEXP_DATAURI = new RegExp(`\\s?url\\("?(${STRING.DATAURI})"?\\)`, 'g');
+const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
-function parseImageUrl(styleSheetHref: string, baseMap: StringMap, attrs: CssStyleAttr[], resource: Null<Resource<Node>>, resourceId: number) {
-    for (let i = 0, length = attrs.length; i < length; ++i) {
-        const value = baseMap[attrs[i]]!;
-        let result: Undef<string>,
-            match: Null<RegExpExecArray>;
-        while (match = REGEXP_DATAURI.exec(value)) {
-            if (match[2]) {
+function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Resource<Node>>, resourceId: number) {
+    let result: Undef<string>,
+        match: Null<RegExpExecArray>;
+    while (match = REGEXP_DATAURI.exec(value)) {
+        if (match[2]) {
+            if (resource) {
+                const leading = match[3];
+                const mimeType = leading && leading.includes('/') ? leading : 'image/unknown';
+                resource.addRawData(resourceId, match[1], match[5], { mimeType, encoding: match[4] || (leading && mimeType !== leading ? leading : 'base64') });
+            }
+        }
+        else {
+            const uri = resolvePath(match[5], styleSheetHref);
+            if (uri) {
                 if (resource) {
-                    const leading = match[3];
-                    const mimeType = leading && leading.includes('/') ? leading : 'image/unknown';
-                    const encoding = match[4] || (leading && mimeType !== leading ? leading : 'base64');
-                    resource.addRawData(resourceId, match[1], match[5], { mimeType, encoding });
+                    resource.addImageData(resourceId, uri);
                 }
-            }
-            else {
-                const uri = resolvePath(match[5], styleSheetHref);
-                if (uri) {
-                    if (resource) {
-                        resource.addImageData(resourceId, uri);
-                    }
-                    result = (result || value).replace(match[0], `url("${uri}")`);
-                }
+                result = (result || value).replace(match[0], `url("${uri}")`);
             }
         }
-        if (result) {
-            baseMap[attrs[i]] = result;
-        }
-        REGEXP_DATAURI.lastIndex = 0;
     }
+    REGEXP_DATAURI.lastIndex = 0;
+    return result || value;
 }
 
 function parseError(error: unknown) {
@@ -280,7 +274,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public setStyleMap(sessionId: string, resourceId: number, documentRoot: DocumentRoot = document, queryRoot?: DocumentQueryRoot) {
+    public setStyleMap(sessionId: string, resourceId: number, documentRoot: DocumentRoot = document, queryRoot?: QuerySelectorElement) {
         const styleSheets = documentRoot.styleSheets;
         let errors: Undef<string[]>;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
@@ -531,7 +525,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return result;
     }
 
-    private applyStyleRule(sessionId: string, resourceId: number, item: CSSStyleRule, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
+    private applyStyleRule(sessionId: string, resourceId: number, item: CSSStyleRule, documentRoot: DocumentRoot, queryRoot?: QuerySelectorElement) {
         const resource = this.resourceHandler;
         const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
@@ -543,7 +537,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const cssStyle = item.style;
                 const hasExactValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
-                let images: Undef<CssStyleAttr[]>;
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     if (attr[0] === '-') {
@@ -582,7 +575,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case 'listStyleImage':
                         case 'content':
                             if (value !== 'initial') {
-                                (images ||= []).push(baseAttr);
+                                value = parseImageUrl(value, styleSheetHref, resource, resourceId);
                             }
                             break;
                     }
@@ -602,9 +595,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 REGEXP_IMPORTANT.lastIndex = 0;
-                if (images) {
-                    parseImageUrl(styleSheetHref, baseMap, images, resource, resourceId);
-                }
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
@@ -693,7 +683,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private applyStyleSheet(sessionId: string, resourceId: number, item: CSSStyleSheet, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
+    private applyStyleSheet(sessionId: string, resourceId: number, item: CSSStyleSheet, documentRoot: DocumentRoot, queryRoot?: QuerySelectorElement) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -753,7 +743,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private applyCssRules(sessionId: string, resourceId: number, rules: CSSRuleList, documentRoot: DocumentRoot, queryRoot?: DocumentQueryRoot) {
+    private applyCssRules(sessionId: string, resourceId: number, rules: CSSRuleList, documentRoot: DocumentRoot, queryRoot?: QuerySelectorElement) {
         for (let i = 0, length = rules.length; i < length; ++i) {
             this.applyStyleRule(sessionId, resourceId, rules[i] as CSSStyleRule, documentRoot, queryRoot);
         }
@@ -766,7 +756,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const item = rules[i] as CSSStyleRule;
                 switch (item.type) {
                     case CSSRule.STYLE_RULE: {
-                        const baseMap: CssStyleMap = {};
                         const cssStyle = item.style;
                         for (let j = 0, q = cssStyle.length; j < q; ++j) {
                             const attr = cssStyle[j];
@@ -776,15 +765,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 case 'content': {
                                     const value: string = cssStyle[attr];
                                     if (value !== 'initial') {
-                                        baseMap[convertCamelCase(attr)] = value;
+                                        parseImageUrl(value, item.parentStyleSheet?.href || location.href, resource, resourceId);
                                     }
                                     break;
                                 }
                             }
-                        }
-                        const keys = Object.keys(baseMap) as CssStyleAttr[];
-                        if (keys.length) {
-                            parseImageUrl(item.parentStyleSheet?.href || location.href, baseMap, keys, resource, resourceId);
                         }
                         break;
                     }
@@ -861,11 +846,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 });
             }
             if (shadowElements) {
-                for (const shadowRoot of shadowElements) {
-                    shadowRoot.querySelectorAll('link').forEach(element => {
-                        const href = element.href.trim();
+                for (const element of shadowElements) {
+                    element.querySelectorAll('link').forEach(child => {
+                        const href = child.href.trim();
                         if (href) {
-                            const mimeType = element.rel.trim() === 'stylesheet' ? 'text/css' : element.type.trim() || parseMimeType(href);
+                            const mimeType = child.rel.trim() === 'stylesheet' ? 'text/css' : child.type.trim() || parseMimeType(href);
                             if (mimeType === 'text/css') {
                                 (styleSheets ||= []).push(href);
                             }
@@ -875,12 +860,21 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         if (resource) {
-            (queryRoot || document).querySelectorAll('[style]').forEach((element: HTMLElement) => {
-                const { backgroundImage, listStyleImage } = element.style;
-                if (backgroundImage || listStyleImage) {
-                    parseImageUrl(location.href, { backgroundImage, listStyleImage }, ['backgroundImage', 'listStyleImage'], resource, resourceId);
-                }
-            });
+            const queryElements: QuerySelectorElement[] = [queryRoot || document];
+            if (shadowElements) {
+                queryElements.push(...shadowElements);
+            }
+            for (const element of queryElements) {
+                element.querySelectorAll('[style]').forEach((child: HTMLElement) => {
+                    const { backgroundImage, listStyleImage } = child.style;
+                    if (backgroundImage) {
+                        parseImageUrl(backgroundImage, location.href, resource, resourceId);
+                    }
+                    if (listStyleImage) {
+                        parseImageUrl(listStyleImage, location.href, resource, resourceId);
+                    }
+                });
+            }
         }
         return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
     }

@@ -277,7 +277,7 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
         const attr = attrs[i++];
         tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
         const style = ' ' + attr + `="${attrs[i++]}"`;
-        const match = new RegExp(`<${tagName}(.+?)\\s+${attr}\\s*=\\s*["']?[^"']+["']?([^>]*>)`, 'i').exec(src);
+        const match = new RegExp(`<${tagName}(${STRING.TAG_OPEN}+?)${attr}\\s*${STRING.TAG_ATTR}(${STRING.TAG_OPEN}*>)`, 'i').exec(src);
         src = match ? src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[3]) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
     }
     return src;
