@@ -210,7 +210,7 @@ export const XML_NAMESPACE = {
     aapt: 'http://schemas.android.com/aapt'
 };
 
-export const RESERVED_JAVA = new Set([
+export const RESERVED_JAVA = [
     'abstract',
     'assert',
     'boolean',
@@ -264,4 +264,4 @@ export const RESERVED_JAVA = new Set([
     'void',
     'volatile',
     'while'
-]);
+];

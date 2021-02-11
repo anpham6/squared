@@ -2959,7 +2959,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.styleElement) {
                         const value = this.elementId || getNamedItem(this.element as HTMLElement, 'name');
                         if (value) {
-                            name = value === 'parent' || RESERVED_JAVA.has(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
+                            name = value === 'parent' || RESERVED_JAVA.includes(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
                         }
                     }
                     return this._controlId = convertWord(Resource.generateId(this.localSettings.resourceId, 'android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));

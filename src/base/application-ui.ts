@@ -179,7 +179,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     private _controllerSettings!: ControllerSettingsUI;
     private _layoutFileExtension!: RegExp;
-    private _excludedElements!: Set<string>;
+    private _excludedElements!: string[];
     private _resourceId = -1;
     private _layouts: LayoutAsset[] = [];
 
@@ -313,7 +313,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public conditionElement(element: HTMLElement, sessionId: string, cascadeAll?: boolean, pseudoElt?: PseudoElt) {
-        if (!this._excludedElements.has(element.tagName)) {
+        if (!this._excludedElements.includes(element.tagName)) {
             if (this._visibleElement(element, sessionId, pseudoElt) || cascadeAll) {
                 return true;
             }

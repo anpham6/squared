@@ -8,7 +8,6 @@ const { isPlainObject } = squared.lib.util;
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public userSettings!: UserResourceSettings;
     public builtInExtensions!: Map<string, Extension<T>>;
-    public readonly session!: chrome.base.AppSession<T>;
     public readonly extensions: Extension<T>[] = [];
     public readonly systemName = 'chrome';
 
@@ -44,12 +43,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const assetMap = new Map<HTMLElement, AssetCommand>();
         const nodeMap = new Map<XmlNode, HTMLElement>();
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
-        options = !isPlainObject(options) ? {} : { ...options };
-        options.saveAsWebPage = true;
-        options.resourceId = resourceId;
-        options.assetMap = assetMap;
-        options.nodeMap = nodeMap;
-        options.appendMap = appendMap;
+        options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
         if (options.removeUnusedStyles && unusedStyles) {
             options.unusedStyles = options.unusedStyles ? Array.from(new Set(options.unusedStyles.concat(Array.from(unusedStyles)))) : Array.from(unusedStyles);
         }
@@ -105,7 +99,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     case 'text':
                                     case 'attribute':
                                         if (cloudDatabase) {
-                                            database.push([element, { document: documentHandler, ...cloudDatabase }]);
+                                            database.push([element, { document: item.document || documentHandler, ...cloudDatabase }]);
                                         }
                                         break;
                                     default:

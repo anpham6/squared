@@ -341,7 +341,7 @@ declare module "base" {
     class File<T extends Node> implements FileActionAsync, ErrorAction {
         static downloadFile(data: Blob | string, filename?: string, mimeType?: string): void;
         resource: Resource<T>;
-        readonly archiveFormats: Set<string>;
+        readonly archiveFormats: string[];
         loadData(value: string, options: LoadDataOptions): Promise<unknown>;
         copying(pathname: string, options: FileCopyingOptions): FileActionResult;
         archiving(target: string, options: FileArchivingOptions): FileActionResult;

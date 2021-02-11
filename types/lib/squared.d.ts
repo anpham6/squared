@@ -164,7 +164,7 @@ declare module "lib" {
     namespace css {
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;
-        const ELEMENT_BLOCK: Set<string>;
+        const ELEMENT_BLOCK: string[];
         function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
         function getStyle(element: Element, pseudoElt?: PseudoElt): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;

@@ -23,7 +23,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public static readonly ASSETS: ResourceSessionAsset = [];
 
     public static hasMimeType(formats: MIMEOrAll, value: string) {
-        return formats === '*' || formats.has(parseMimeType(value));
+        return formats === '*' || formats.includes(parseMimeType(value));
     }
 
     public static getExtension(value: string) {
@@ -87,7 +87,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const assets = Resource.ASSETS[resourceId]!;
         const result: PreloadItem[] = [];
         const images: HTMLImageElement[] = [];
-        const preloadMap = new Set<string>();
+        const preloadMap: string[] = [];
         const parseSrcSet = (value: string) => {
             if (value) {
                 for (const uri of value.split(',')) {
@@ -181,7 +181,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 }
                 else {
                     const src = image.src;
-                    if (!preloadMap.has(src)) {
+                    if (!preloadMap.includes(src)) {
                         if (FILE.SVG.test(src)) {
                             result.push(src);
                         }
@@ -191,7 +191,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                         else {
                             result.push(image);
                         }
-                        preloadMap.add(src);
+                        preloadMap.push(src);
                     }
                 }
             });
@@ -430,7 +430,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const font = Resource.ASSETS[resourceId]?.fonts.get(fontFamily.trim().toLowerCase());
         if (font) {
             const mimeType = this.mimeTypeMap.font;
-            return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.has(item.mimeType)));
+            return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
         }
         return [];
     }

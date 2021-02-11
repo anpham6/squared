@@ -1,2 +1,2 @@
-type MIMEOrAll = Set<string> | "*";
+type MIMEOrAll = string[] | "*";
 type PatternGroupPredicate = (group: RegExpExecArray, value: string) => string;

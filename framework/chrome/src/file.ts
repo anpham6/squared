@@ -704,10 +704,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     public getFontAssets(options?: FileActionOptions) {
         let resourceId: Undef<number>,
-            preserveCrossOrigin: Undef<boolean>,
             pathname: Undef<string>,
             inline: Undef<boolean>,
-            blob: Undef<boolean>;
+            blob: Undef<boolean>,
+            preserveCrossOrigin: Undef<boolean>;
         if (options) {
             ({ resourceId, preserveCrossOrigin } = options);
             const font = options.saveAs?.font;
@@ -1172,6 +1172,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 ({ pathname, commands, inline, blob, compress, tasks, cloudStorage } = saveAsImage);
                 [saveAs, saveTo] = checkSaveAs(uri, pathname, getFilename(uri));
             }
+            if (base64 && !blob) {
+                return;
+            }
             const data = File.parseUri(uri, preserveCrossOrigin, { saveAs, saveTo, mimeType, fromConfig });
             if (this.processExtensions(data)) {
                 setOutputModifiers(data, documentData, compress, tasks, cloudStorage, attributes, element);
@@ -1185,14 +1188,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     data.watch = watch;
                 }
                 if (base64) {
-                    if (blob) {
-                        data.format = 'blob';
-                        data.base64 = base64;
-                        delete data.watch;
-                    }
-                    else {
-                        return;
-                    }
+                    data.format = 'blob';
+                    data.base64 = base64;
+                    delete data.watch;
                 }
                 else if (srcSet) {
                     data.format = 'srcset';

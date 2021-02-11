@@ -79,8 +79,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _afterInside = new WeakMap<T, string[]>();
     private _afterOutside = new WeakMap<T, string[]>();
     private _requireFormat = false;
-    private _unsupportedCascade!: Set<string>;
-    private _unsupportedTagName!: Set<string>;
+    private _unsupportedCascade!: string[];
+    private _unsupportedTagName!: string[];
+    private _innerXmlTags!: string[];
     private _settingsStyle!: ControllerSettingsStyleUI;
 
     public abstract processUnknownParent(layout: LayoutUI<T>): void;
@@ -108,11 +109,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         const unsupported = this.localSettings.unsupported;
         this._unsupportedCascade = unsupported.cascade;
         this._unsupportedTagName = unsupported.tagName;
+        this._innerXmlTags = this.localSettings.layout.innerXmlTags;
         this._settingsStyle = this.localSettings.style;
     }
 
     public preventNodeCascade(node: T) {
-        return this._unsupportedCascade.has(node.tagName);
+        return this._unsupportedCascade.includes(node.tagName);
     }
 
     public includeElement(element: HTMLElement) {
@@ -120,7 +122,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         if (tagName === 'INPUT') {
             tagName += ':' + (element as HTMLInputElement).type;
         }
-        return !this._unsupportedTagName.has(tagName) || element.contentEditable === 'true';
+        return !this._unsupportedTagName.includes(tagName) || element.contentEditable === 'true';
     }
 
     public reset() {
@@ -752,7 +754,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         this.getBeforeOutsideTemplate(node, previous) + indent +
                         `<${controlName + (depth === 0 ? '{#0}' : '')}` +
                             (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
-                            (renderTemplates || beforeInside || afterInside || this.localSettings.layout.innerXmlTags.has(controlName)
+                            (renderTemplates || beforeInside || afterInside || this._innerXmlTags.includes(controlName)
                                 ? '>\n' +
                                     beforeInside +
                                     (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
@@ -771,7 +773,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public getEnclosingXmlTag(controlName: string, attributes = '', content = '') {
-        return '<' + controlName + attributes + (content || this.localSettings.layout.innerXmlTags.has(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
+        return '<' + controlName + attributes + (content || this._innerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
     private setElementDimension(processing: squared.base.AppProcessing<T>, element: Element, styleMap: CssStyleMap, attr: CssStyleAttr, opposing: string) {

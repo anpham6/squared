@@ -52,7 +52,7 @@ interface ControllerSettingsLayoutUI {
     pathName: string;
     fileExtension: string;
     baseTemplate: string;
-    innerXmlTags: Set<string>;
+    innerXmlTags: string[];
 }
 
 interface ControllerSettingsDirectoryUI {
@@ -76,9 +76,9 @@ interface ControllerSettingsStyleUI {
 }
 
 interface ControllerSettingsUnsupportedUI {
-    cascade: Set<string>;
-    excluded: Set<string>;
-    tagName: Set<string>;
+    cascade: string[];
+    excluded: string[];
+    tagName: string[];
 }
 
 interface ControllerSettingsUseUI {

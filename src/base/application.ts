@@ -122,6 +122,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>,
         ResourceConstructor?: Constructor<Resource<T>>)
     {
+        this.Node = nodeConstructor;
         const controller = new ControllerConstructor(this);
         this._controllerHandler = controller;
         if (ExtensionManagerConstructor) {
@@ -133,7 +134,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         this._afterInsertNode = controller.afterInsertNode.bind(controller);
         this._includeElement = controller.includeElement.bind(controller);
         this._preventNodeCascade = controller.preventNodeCascade.bind(controller);
-        this.Node = nodeConstructor;
         this.init();
     }
 

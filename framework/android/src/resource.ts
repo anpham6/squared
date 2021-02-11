@@ -154,7 +154,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 }
                 else {
                     name = name.toLowerCase();
-                    if (numeric || isLeadingDigit(name) || RESERVED_JAVA.has(name)) {
+                    if (numeric || isLeadingDigit(name) || RESERVED_JAVA.includes(name)) {
                         name = '__' + name;
                     }
                 }
@@ -178,7 +178,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const length = ext.length;
             if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                 const name = Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase();
-                const asset = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.has(name) ? '_' : '') + name, images);
+                const asset = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
                 CACHE_IMAGE[mdpi] = asset;
                 return asset;
             }
@@ -236,9 +236,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         super();
         const mimeType = this.controllerSettings.mimeType.image;
         if (mimeType !== '*') {
-            const imageFormat = new Set(mimeType);
-            imageFormat.delete('image/svg+xml');
-            this._imageFormat = imageFormat;
+            this._imageFormat = mimeType.filter(value => value !== 'image/svg+xml');
         }
     }
 

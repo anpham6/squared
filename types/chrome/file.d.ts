@@ -13,7 +13,7 @@ interface OutputModifiers extends ElementScope {
     exclude?: boolean;
 }
 
-interface AssetCommand extends SaveAsOptions, ElementAction {
+interface AssetCommand extends SaveAsOptions, ElementAction, DocumentAction {
     selector?: string;
     type?: string;
     saveAs?: string;

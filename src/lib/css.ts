@@ -1635,7 +1635,7 @@ export const PROXY_INLINESTYLE = Object.freeze(
     })
 );
 
-export const ELEMENT_BLOCK = new Set([
+export const ELEMENT_BLOCK = [
     'ADDRESS',
     'ARTICLE',
     'ASIDE',
@@ -1669,7 +1669,7 @@ export const ELEMENT_BLOCK = new Set([
     'SECTION',
     'TABLE',
     'UL'
-]);
+];
 
 export function getPropertiesAsTraits(value: number) {
     const result: ObjectMap<CssPropertyData> = {};
@@ -2676,7 +2676,7 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                 case 'position':
                     return 'static';
                 case 'display':
-                    return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
+                    return ELEMENT_BLOCK.includes(element.tagName) ? 'block' : 'inline';
                 case 'fontSize':
                     return 'inherit';
                 case 'verticalAlign':
@@ -3119,7 +3119,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.has(item.type.trim().toLowerCase()))) {
+            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
                 ({ srcset, sizes } = item);
                 return true;
             }

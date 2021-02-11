@@ -82,7 +82,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public resource!: Resource<T>;
-    public readonly archiveFormats = new Set(['zip', '7z', 'tar', 'gz', 'tgz']);
+    public readonly archiveFormats = ['zip', '7z', 'tar', 'gz', 'tgz'];
 
     private _hostname = '';
     private _endpoints = {
@@ -183,9 +183,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
             if (body) {
                 let { filename, format } = options;
                 const setFilename = () => {
-                    if (!format || !this.archiveFormats.has(format = format.toLowerCase())) {
+                    if (!format || !this.archiveFormats.includes(format = format.toLowerCase())) {
                         [filename, format] = splitPair(filename!, '.', true, true);
-                        if (format && !this.archiveFormats.has(format)) {
+                        if (format && !this.archiveFormats.includes(format)) {
                             filename += '.' + format;
                             format = '';
                         }

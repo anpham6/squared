@@ -371,7 +371,7 @@ declare namespace lib {
             app: string;
             aapt: string;
         };
-        const RESERVED_JAVA: Set<string>;
+        const RESERVED_JAVA: string[];
     }
 
     namespace customizations {

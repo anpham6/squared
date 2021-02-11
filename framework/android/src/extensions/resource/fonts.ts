@@ -308,7 +308,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         if (hasKeys(filtered)) {
                             const combined: ObjectMap<Set<string>> = {};
-                            const deleteKeys = new Set<string>();
+                            const deleteKeys: string[] = [];
                             const joinedMap: ObjectMap<T[]> = {};
                             const joinedIndex: StringMap = {};
                             for (const attr in filtered) {
@@ -328,12 +328,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                         for (const value of attrB.split(';')) {
                                             data.add(value);
                                         }
-                                        deleteKeys.add(attrA).add(attrB);
+                                        deleteKeys.push(attrA, attrB);
                                     }
                                 }
                             }
                             for (const attr in filtered) {
-                                if (deleteKeys.has(attr)) {
+                                if (deleteKeys.includes(attr)) {
                                     continue;
                                 }
                                 deleteStyleAttribute(sorted, attr.split(';'), filtered[attr]);

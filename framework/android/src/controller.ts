@@ -501,7 +501,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             pathName: 'res/layout',
             fileExtension: 'xml',
             baseTemplate: '<?xml version="1.0" encoding="utf-8"?>\n',
-            innerXmlTags: new Set<string>([
+            innerXmlTags: [
                 CONTAINER_TAGNAME.FRAME,
                 CONTAINER_TAGNAME.LINEAR,
                 CONTAINER_TAGNAME.GRID,
@@ -521,7 +521,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 SUPPORT_TAGNAME_X.APPBAR,
                 SUPPORT_TAGNAME_X.COLLAPSING_TOOLBAR,
                 SUPPORT_TAGNAME_X.TOOLBAR
-            ])
+            ]
         },
         directory: {
             string: 'res/values',
@@ -545,13 +545,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             progressBackgroundColor: 'rgb(237, 237, 237)'
         },
         mimeType: {
-            font: new Set(['font/ttf', 'font/otf']),
-            image: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/webp', 'image/bmp', 'image/heic', 'image/heif', 'image/x-icon']),
-            audio: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wave', 'audio/ogg']),
-            video: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm'])
+            font: ['font/ttf', 'font/otf'],
+            image: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/webp', 'image/bmp', 'image/heic', 'image/heif', 'image/x-icon'],
+            audio: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wave', 'audio/ogg'],
+            video: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm']
         },
         unsupported: {
-            cascade: new Set([
+            cascade: [
                 'IMG',
                 'INPUT',
                 'SELECT',
@@ -565,8 +565,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'AUDIO',
                 'OBJECT',
                 'svg'
-            ]),
-            tagName: new Set([
+            ],
+            tagName: [
                 'HEAD',
                 'TITLE',
                 'META',
@@ -585,8 +585,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'PARAM',
                 'TRACK',
                 'WBR'
-            ]),
-            excluded: new Set(['BR'])
+            ],
+            excluded: ['BR']
         },
         deviations: {
             textMarginBoundarySize: 8,
@@ -1648,24 +1648,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             case 'AUDIO':
             case 'VIDEO': {
-                const validMimeType = this.localSettings.mimeType[tagName === 'VIDEO' ? 'video' : 'audio'];
+                const mimeTypes = this.localSettings.mimeType[tagName === 'VIDEO' ? 'video' : 'audio'];
                 const element = node.element as HTMLVideoElement;
                 let src = element.src,
                     mimeType: Undef<string>;
-                if (Resource.hasMimeType(validMimeType, src)) {
+                if (Resource.hasMimeType(mimeTypes, src)) {
                     mimeType = parseMimeType(src);
                 }
                 else {
                     src = '';
                     iterateArray(element.children, (source: HTMLSourceElement) => {
                         if (source.tagName === 'SOURCE') {
-                            if (Resource.hasMimeType(validMimeType, source.src)) {
+                            if (Resource.hasMimeType(mimeTypes, source.src)) {
                                 src = source.src;
                                 mimeType = parseMimeType(src);
                                 return true;
                             }
                             mimeType = source.type.trim().toLowerCase();
-                            if (validMimeType === '*' || validMimeType.has(mimeType)) {
+                            if (mimeTypes === '*' || mimeTypes.includes(mimeType)) {
                                 src = source.src;
                                 return true;
                             }
