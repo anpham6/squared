@@ -576,11 +576,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             let src = element instanceof HTMLVideoElement ? element.poster : element.src,
                 mimeType: Undef<string>,
                 base64: Undef<string>;
-            const image = Resource.parseDataURI(src, 'image/unknown', 'base64');
+            const image = Resource.parseDataURI(src);
             if (image) {
-                if (image.encoding === 'base64') {
+                base64 = image.base64;
+                if (base64) {
                     mimeType = image.mimeType;
-                    base64 = image.data as string;
                     src = resolvePath(randomUUID() + '.' + (mimeType && fromMimeType(mimeType) || 'unknown'), location.href);
                 }
                 else {
@@ -604,9 +604,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const assets = this.getResourceAssets(resourceId);
         if (assets) {
             for (const uri of assets.image.keys()) {
-                const image = Resource.parseDataURI(uri, 'image/unknown', 'base64');
+                const image = Resource.parseDataURI(uri);
                 if (image) {
-                    this.resource.addRawData(resourceId!, uri, image.data as string, image);
+                    if (image.base64) {
+                        this.resource.addRawData(resourceId!, uri, image);
+                    }
                 }
                 else if (!result.find(item => item.uri === uri)) {
                     this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);

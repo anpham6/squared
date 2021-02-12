@@ -42,7 +42,9 @@ interface AudioVideoOptions extends ElementScope {
 
 interface RawDataOptions extends Partial<Dimension>, ElementScope {
     mimeType?: string;
-    data?: string | ArrayBuffer;
+    content?: string;
+    buffer?: ArrayBuffer;
+    base64?: string;
     encoding?: string;
     filename?: string;
 }

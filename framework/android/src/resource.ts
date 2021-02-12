@@ -10,7 +10,7 @@ const { PROTOCOL } = squared.lib.regex.FILE;
 const { extractURL, getSrcSet } = squared.lib.css;
 const { endsWith, fromLastIndexOf, isNumber, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith, trimString } = squared.lib.util;
 
-const REGEXP_STRINGNAME = /(?:\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;)/g;
+const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
 
 let CACHE_IMAGE: StringMap = {};
@@ -302,18 +302,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             mdpi ||= element.src;
         }
         if (mdpi) {
-            const image = this.getRawData(resourceId, mdpi);
+            let image = this.getRawData(resourceId, mdpi);
             if (image) {
-                const data = image.base64;
-                if (data) {
-                    const filename = image.filename;
-                    this.writeRawImage(resourceId, {
-                        mimeType: image.mimeType,
-                        filename: prefix + filename,
-                        data,
-                        encoding: 'base64'
-                    });
-                    return splitPairStart(filename, '.', false, true);
+                if (image.base64 && image.mimeType !== 'image/svg+xml' && (image = this.writeRawImage(resourceId, prefix + image.filename, image))) {
+                    return splitPairStart(image.filename, '.', false, true);
                 }
                 return '';
             }
@@ -324,14 +316,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
 
     public addImageSet(resourceId: number, images: StringMap, prefix?: string) {
         return Resource.addImage(resourceId, images, prefix, this._imageFormat);
-    }
-
-    public writeRawImage(resourceId: number, options: RawDataOptions) {
-        const asset = super.writeRawImage(resourceId, options);
-        if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', options.mimeType)) {
-            (asset.compress ||= []).unshift({ format: 'png' });
-        }
-        return asset;
     }
 
     get userSettings() {

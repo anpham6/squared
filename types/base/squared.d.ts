@@ -233,7 +233,7 @@ declare module "base" {
         getVideo(resourceId: number, uri: string): Undef<Asset>;
         addAudio(resourceId: number, uri: string, options?: AudioVideoOptions): void;
         getAudio(resourceId: number, uri: string): Undef<Asset>;
-        addRawData(resourceId: number, uri: string, content: Undef<string>, options?: RawDataOptions): Null<RawAsset>;
+        addRawData(resourceId: number, uri: string, options: RawDataOptions): void;
         getRawData(resourceId: number, uri: string): Undef<RawAsset>;
         addImageData(resourceId: number, uri: string, width?: number, height?: number): void;
         fromImageUrl(resourceId: number, value: string): ImageAsset[];
@@ -258,7 +258,7 @@ declare module "base" {
         static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         setData(rendering: NodeList<T>): void;
-        writeRawImage(resourceId: number, options: RawDataOptions): Null<RawAsset>;
+        writeRawImage(resourceId: number, filename: string, options: RawDataOptions): Undef<RawAsset>;
         writeRawSvg(resourceId: number, element: SVGSVGElement, dimension?: Dimension): string;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;

@@ -807,12 +807,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             if (base64 && filename) {
                                                 images[length] = splitPairStart(filename, '.', false, true);
                                                 imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : null;
-                                                resource.writeRawImage(resourceId, {
-                                                    mimeType: rawData.mimeType,
-                                                    filename,
-                                                    data: base64,
-                                                    encoding: 'base64'
-                                                });
+                                                resource.writeRawImage(resourceId, filename, rawData);
                                                 valid = true;
                                             }
                                         }

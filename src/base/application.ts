@@ -18,7 +18,7 @@ const { FILE, STRING } = squared.lib.regex;
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
 const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
@@ -32,8 +32,16 @@ function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Res
         if (match[2]) {
             if (resource) {
                 const leading = match[3];
-                const mimeType = leading && leading.includes('/') ? leading : 'image/unknown';
-                resource.addRawData(resourceId, match[1], match[5], { mimeType, encoding: match[4] || (leading && mimeType !== leading ? leading : 'base64') });
+                const encoding = match[4] || (/<svg/i.test(match[5]) ? 'utf8' : 'base64');
+                let content: Undef<string>,
+                    base64: Undef<string>;
+                if (encoding === 'base64') {
+                    base64 = match[5];
+                }
+                else {
+                    content = match[5];
+                }
+                resource.addRawData(resourceId, match[1], { mimeType: leading && leading.includes('/') ? leading : 'image/unknown', encoding, content, base64 });
             }
         }
         else {
@@ -210,13 +218,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                             .then(async result => {
                                 const mimeType = result.headers.get('content-type') || '';
                                 if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
-                                    success({ mimeType: 'text/css', encoding: 'utf8', data: await result.text() } as RawDataOptions);
+                                    success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() } as RawDataOptions);
                                 }
                                 else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
-                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', data: await result.text() } as RawDataOptions);
+                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() } as RawDataOptions);
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), data: await result.arrayBuffer() } as RawDataOptions);
+                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
                                 }
                             })
                             .catch(err => error(err));
@@ -240,7 +248,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     const data = preloadItems[i];
                     if (typeof data === 'string') {
-                        resource!.addRawData(resourceId, data, '', (item as PromiseFulfilledResult<unknown>).value as RawDataOptions);
+                        resource!.addRawData(resourceId, data, (item as PromiseFulfilledResult<unknown>).value as RawDataOptions);
                     }
                     else {
                         resource!.addImage(resourceId, data);
@@ -699,7 +707,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.IMPORT_RULE: {
                             const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri) {
-                                this.resourceHandler?.addRawData(resourceId, uri, '', { mimeType: 'text/css', encoding: 'utf8' });
+                                this.resourceHandler?.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
                             }
                             this.applyStyleSheet(sessionId, resourceId, (rule as CSSImportRule).styleSheet, documentRoot, queryRoot);
                             break;
@@ -847,15 +855,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             if (shadowElements) {
                 for (const element of shadowElements) {
-                    element.querySelectorAll('link').forEach(child => {
-                        const href = child.href.trim();
-                        if (href) {
-                            const mimeType = child.rel.trim() === 'stylesheet' ? 'text/css' : child.type.trim() || parseMimeType(href);
-                            if (mimeType === 'text/css') {
-                                (styleSheets ||= []).push(href);
-                            }
-                        }
-                    });
+                    element.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child: HTMLLinkElement) => (styleSheets ||= []).push(child.href));
                 }
             }
         }

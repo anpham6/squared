@@ -15,7 +15,7 @@ type MultilineData<T> = [number, T][];
 
 const { getTextMetrics } = squared.lib.dom;
 
-const REGEXP_WORD = /(?:[^\w\s]+\s+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b))/g;
+const REGEXP_WORD = /[^\w\s]+\s+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b)/g;
 
 function getFontMeasureAdjust(node: View) {
     const value = node.dataset.androidFontMeasureAdjust;

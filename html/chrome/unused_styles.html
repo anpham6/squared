@@ -32,17 +32,7 @@
     <script src="/dist/bundles/squared.chrome.bundle.js"></script>
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {
-            squared.saveAs('index.zip', { removeUnusedStyles: true });
-            /*  squared.settings.preloadImages = false;
-                squared.settings.compressImages = false;
-                squared.parseDocument('squared_ui').then(function() {
-                    chrome.system.saveHtmlPage();
-                    chrome.system.saveImageAssets();
-                    chrome.system.saveScriptAssets();
-                    chrome.system.saveLinkAssets();
-                    chrome.system.saveAudioAssets();
-                    chrome.system.saveVideoAssets();
-                }); */
+            squared.saveAs('index.zip', { removeUnusedStyles: true, saveAs: { image: { pathname: 'images', blob: true } } });
         });
     </script>
 </head>

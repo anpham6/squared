@@ -27,11 +27,10 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public static getExtension(value: string) {
-        const match = /\.([^./]+)\s*$/.exec(value);
-        return match ? match[1] : '';
+        return /\.([^./]+)\s*$/.exec(value)?.[1] || '';
     }
 
-    public static parseDataURI(value: string, mimeType?: string, encoding?: string) {
+    public static parseDataURI(value: string, mimeType = 'image/unknown', encoding = 'base64') {
         const match = REGEXP_DATAURI.exec(value);
         if (match && match[1]) {
             const leading = match[2];
@@ -58,7 +57,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     encoding = leading;
                 }
             }
-            return { mimeType, encoding, data } as RawDataOptions;
+            const result = { mimeType, encoding } as RawDataOptions;
+            result[encoding === 'base64' ? 'base64' : 'content'] = data;
+            return result;
         }
     }
 
@@ -313,11 +314,11 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const assets = Resource.ASSETS[resourceId];
         if (assets && element.complete) {
             const uri = element.src;
-            const image = Resource.parseDataURI(uri, 'image/unknown', 'base64');
+            const image = Resource.parseDataURI(uri);
             if (image) {
                 image.width = element.naturalWidth;
                 image.height = element.naturalHeight;
-                this.addRawData(resourceId, uri, image.data as string, image);
+                this.addRawData(resourceId, uri, image);
             }
             if (uri) {
                 assets.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
@@ -348,47 +349,46 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
-    public addRawData(resourceId: number, uri: string, content: Undef<string>, options?: RawDataOptions) {
+    public addRawData(resourceId: number, uri: string, options?: RawDataOptions) {
         const assets = Resource.ASSETS[resourceId];
         if (assets) {
             let filename: Undef<string>,
                 mimeType: Undef<string>,
                 encoding: Undef<string>,
-                data: Undef<string | ArrayBuffer>,
+                content: Undef<string>,
+                base64: Undef<string>,
+                buffer: Undef<ArrayBuffer>,
                 width: Undef<number>,
                 height: Undef<number>;
             if (options) {
-                ({ filename, mimeType, encoding, data, width, height } = options);
+                ({ filename, mimeType, encoding, content, base64, buffer, width, height } = options);
                 mimeType &&= mimeType.toLowerCase();
                 encoding &&= encoding.toLowerCase();
+                content &&= content.trim();
             }
-            content &&= content.trim();
-            let base64: Undef<string>,
-                buffer: Undef<ArrayBuffer>;
-            if (encoding === 'base64') {
-                if (content) {
-                    if (mimeType === 'image/svg+xml') {
-                        content = window.atob(content);
-                    }
-                    else {
-                        base64 = content;
+            if (base64 || encoding === 'base64') {
+                if (!base64) {
+                    if (content) {
+                        base64 = startsWith(content, 'data:') ? content.split(',')[1].trim() : content;
                         content = undefined;
                     }
+                    else if (buffer) {
+                        base64 = convertBase64(buffer);
+                    }
+                    else {
+                        return;
+                    }
+                    buffer = undefined;
                 }
-                else if (data) {
-                    base64 = data instanceof ArrayBuffer ? convertBase64(data) : data.trim();
+                if (mimeType === 'image/svg+xml') {
+                    content = window.atob(base64);
                 }
             }
-            else {
-                if (data) {
-                    if (data instanceof ArrayBuffer) {
-                        buffer = data;
-                    }
-                    else if (!content) {
-                        content = data;
-                    }
-                }
-                content &&= content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
+            else if (buffer) {
+                content = undefined;
+            }
+            if (content) {
+                content = content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
             }
             if (content || base64 || buffer) {
                 const url = uri.split('?')[0];
@@ -396,21 +396,18 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
                     filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
                 }
-                const result = {
+                assets.rawData.set(uri, {
                     pathname: startsWith(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
                     filename,
+                    mimeType,
                     content,
                     base64,
-                    mimeType,
                     buffer,
                     width,
                     height
-                } as RawAsset;
-                assets.rawData.set(uri, result);
-                return result;
+                } as RawAsset);
             }
         }
-        return null;
     }
 
     public getImage(resourceId: number, uri: string) {

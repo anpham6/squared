@@ -28,7 +28,7 @@ const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\s*\\d+\\s*,\\s*\\d+%?\\s*,\\s*\\d+%?\\s*(?:,\\s*[\\d.]+\\s*)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
 const PATTERN_COLORSTOP = `\\s*${PATTERN_COLOR}(?:\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|calc\\((.+)\\)(?=\\s*,)|calc\\((.+)\\))\\s*,?)*\\s*,?`;
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\))`, 'g');
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\)`, 'g');
 const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 const CHAR_LEADINGSPACE = /^\s+/;
@@ -295,12 +295,11 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
             case 'rect':
             case 'pattern':
                 try {
-                    src = replaceSvgAttribute(
-                        src,
+                    src = replaceSvgAttribute(src,
                         tagName,
                         [
-                            'height', dimension && dimension.height || (item as SVGSVGElement).height.baseVal.value,
-                            'width', dimension && dimension.width || (item as SVGSVGElement).width.baseVal.value
+                            'width', dimension && dimension.width || (item as SVGSVGElement).width.baseVal.value,
+                            'height', dimension && dimension.height || (item as SVGSVGElement).height.baseVal.value
                         ],
                         timestamp,
                         true
@@ -1055,39 +1054,65 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         });
     }
 
-    public writeRawImage(resourceId: number, options: RawDataOptions) {
-        const { filename, data } = options;
-        if (filename && data) {
-            let base64: string;
-            if (data instanceof ArrayBuffer) {
-                base64 = convertBase64(data);
+    public writeRawImage(resourceId: number, filename: string, options: RawDataOptions) {
+        let base64 = options.base64,
+            content = options.content;
+        if (base64 || content || options.buffer) {
+            if (!base64) {
+                if (options.buffer) {
+                    base64 = convertBase64(options.buffer);
+                }
+                else if (content && options.encoding === 'base64') {
+                    base64 = startsWith(content, 'data:') ? splitPair(content, ',', true)[1] : content;
+                }
+                else {
+                    return;
+                }
             }
-            else if (typeof data === 'string' && options.encoding === 'base64') {
-                base64 = startsWith(data, 'data:image/') ? splitPair(data, ',')[1] : data;
+            if (options.mimeType === 'image/svg+xml') {
+                content = window.atob(base64);
+                base64 = undefined;
             }
-            else {
-                return null;
+            else if (base64) {
+                content = undefined;
             }
-            const result = {
-                pathname: appendSeparator((this.userSettings as UserResourceSettingsUI).outputDirectory, this.controllerSettings.directory.image),
+            const otherAssets = ResourceUI.ASSETS[resourceId]!.other;
+            const pathname = appendSeparator((this.userSettings as UserResourceSettingsUI).outputDirectory, this.controllerSettings.directory.image);
+            let result = otherAssets.find(item => item.pathname === pathname && item.filename === filename);
+            if (result) {
+                if (content && result.content === content || base64 && result.base64 === base64) {
+                    return result;
+                }
+                const ext = ResourceUI.getExtension(filename);
+                const basename = filename.substring(0, filename.length - ext.length);
+                let i = 1;
+                do {
+                    filename = `${basename}_${i}.${ext}`;
+                }
+                while (otherAssets.find(item => item.pathname === pathname && item.filename === filename) && ++i);
+            }
+            result = {
+                pathname,
                 filename,
-                mimeType: options.mimeType,
+                content,
                 base64,
+                mimeType: options.mimeType,
                 width: options.width,
                 height: options.height,
-                tasks: options.tasks
+                tasks: options.tasks,
+                watch: options.watch
             } as RawAsset;
             this.addAsset(resourceId, result);
             return result;
         }
-        return null;
     }
 
     public writeRawSvg(resourceId: number, element: SVGSVGElement, dimension?: Dimension) {
-        let src = element.outerHTML.trim().replace(/\s+/g, ' ');
-        src = replaceSvgValues(src, [element], dimension).replace(/"/g, '\\"').replace(/<@@\d+/g, '<');
-        const uri = 'data:image/svg+xml,' + src;
-        this.addRawData(resourceId, uri, src, { mimeType: 'image/svg+xml' });
+        const content = replaceSvgValues(element.outerHTML.trim().replace(/\s+/g, ' '), [element], dimension)
+            .replace(/["']/g, (...capture) => '\\' + capture[0])
+            .replace(/<@@\d+/g, '<');
+        const uri = 'data:image/svg+xml,' + content;
+        this.addRawData(resourceId, uri, { mimeType: 'image/svg+xml', content });
         return uri;
     }
 
@@ -1424,16 +1449,16 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         }
                     }
                     else if (value.trim()) {
-                        value =
-                            value.replace(CHAR_LEADINGSPACE, previousSibling && (
+                        value = value
+                            .replace(CHAR_LEADINGSPACE, previousSibling && (
                                 previousSibling.block ||
                                 previousSibling.lineBreak ||
                                 previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                                 node.multiline && ResourceUI.hasLineBreak(node))
                                 ? ''
                                 : this.STRING_SPACE
-                            );
-                        value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling && nextSibling.floating ? '' : this.STRING_SPACE);
+                            )
+                            .replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling && nextSibling.floating ? '' : this.STRING_SPACE);
                     }
                     else if (!node.inlineText) {
                         return;

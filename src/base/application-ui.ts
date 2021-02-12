@@ -180,7 +180,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _controllerSettings!: ControllerSettingsUI;
     private _layoutFileExtension!: RegExp;
     private _excludedElements!: string[];
-    private _resourceId = -1;
+    private _resourceId!: number;
     private _layouts: LayoutAsset[] = [];
 
     private _applyDefaultStyles!: ApplyDefaultStylesMethod<T>;
