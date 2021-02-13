@@ -483,6 +483,10 @@ export function isPlainObject<T = PlainObject>(value: any): value is T {
     return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
 }
 
+export function isBase64(value: string) {
+    return value.length % 4 === 0 && FILE.BASE64.test(value);
+}
+
 export function isEmptyString(value: string) {
     for (let i = 0, length = value.length; i < length; ++i) {
         const n = value.charCodeAt(i);

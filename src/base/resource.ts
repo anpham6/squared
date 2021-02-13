@@ -9,7 +9,7 @@ type PreloadItem = HTMLImageElement | string;
 const { FILE, STRING } = squared.lib.regex;
 
 const { extractURL, resolveURL } = squared.lib.css;
-const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isBase64, parseMimeType, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
 const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
@@ -43,14 +43,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             else if (leading) {
                 if (leading.includes('/')) {
                     mimeType = leading;
-                    if (!encoding) {
-                        try {
-                            if (btoa(atob(data)) === data) {
-                                encoding = 'base64';
-                            }
-                        }
-                        catch {
-                        }
+                    if (!encoding && isBase64(data)) {
+                        encoding = 'base64';
                     }
                 }
                 else {
@@ -249,6 +243,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                         if (startsWith(url, 'data:')) {
                             const [mime, base64] = url.split(',');
                             srcBase64 = base64.trim();
+                            if (!mime.includes('base64') && !isBase64(srcBase64)) {
+                                continue;
+                            }
                             mimeType ||= mime.toLowerCase();
                         }
                         else {

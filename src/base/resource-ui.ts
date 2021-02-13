@@ -1073,7 +1073,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 content = window.atob(base64);
                 base64 = undefined;
             }
-            else if (base64) {
+            else {
                 content = undefined;
             }
             const otherAssets = ResourceUI.ASSETS[resourceId]!.other;

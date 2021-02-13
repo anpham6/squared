@@ -18,7 +18,7 @@ const { FILE, STRING } = squared.lib.regex;
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
 const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
@@ -32,7 +32,7 @@ function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Res
         if (match[2]) {
             if (resource) {
                 const leading = match[3];
-                const encoding = match[4] || match[5][0] === '<' ? 'utf8' : 'base64';
+                const encoding = match[4] || (isBase64(match[5]) ? 'base64' : 'utf8');
                 let content: Undef<string>,
                     base64: Undef<string>;
                 if (encoding === 'base64') {

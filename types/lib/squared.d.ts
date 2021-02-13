@@ -273,6 +273,7 @@ declare module "lib" {
         const FILE: {
             NAME: RegExp;
             PROTOCOL: RegExp;
+            BASE64: RegExp;
             SVG: RegExp;
         };
         const CSS: {
@@ -335,6 +336,7 @@ declare module "lib" {
         function isArray<T>(value: any): value is Array<T>;
         function isObject<T = PlainObject>(value: any): value is T;
         function isPlainObject<T = PlainObject>(value: any): value is T;
+        function isBase64(value: string): boolean;
         function isEmptyString(value: string): boolean;
         function isEqual(source: any, other: any): boolean;
         function cloneInstance<T>(value: T): T;
