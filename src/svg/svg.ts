@@ -64,9 +64,9 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     public keyframesMap?: KeyframesMap;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG;
     public readonly definitions: SvgDefinitions = {
-        clipPath: new Map<string, SVGClipPathElement>(),
-        pattern: new Map<string, SVGPatternElement>(),
-        gradient: new Map<string, SvgGradient>(),
+        clipPath: new Map(),
+        pattern: new Map(),
+        gradient: new Map(),
         contentMap: null
     };
 

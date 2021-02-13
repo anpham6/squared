@@ -1,4 +1,4 @@
-/* android-framework 2.3.0
+/* android-framework 2.4.0
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -9,9 +9,6 @@ var android = (function () {
             super(...arguments);
             this.systemName = 'android';
             this._viewModel = new Map();
-        }
-        init() {
-            super.init();
         }
         reset() {
             this._viewModel.clear();
@@ -48,6 +45,7 @@ var android = (function () {
         }
     }
 
+    /* eslint no-shadow: "off" */
     var BUILD_VERSION;
     (function (BUILD_VERSION) {
         BUILD_VERSION[BUILD_VERSION["R"] = 30] = "R";
@@ -247,7 +245,7 @@ var android = (function () {
         app: 'http://schemas.android.com/apk/res-auto',
         aapt: 'http://schemas.android.com/aapt'
     };
-    const RESERVED_JAVA = new Set([
+    const RESERVED_JAVA = [
         'abstract',
         'assert',
         'boolean',
@@ -301,7 +299,7 @@ var android = (function () {
         'void',
         'volatile',
         'while'
-    ]);
+    ];
 
     var constant = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -320,7 +318,7 @@ var android = (function () {
     });
 
     const { parseColor: __parseColor } = squared.lib.color;
-    const { capitalize, joinArray, isPlainObject } = squared.lib.util;
+    const { capitalize, joinArray, isPlainObject, startsWith } = squared.lib.util;
     const CACHE_COLORDATA = {};
     const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
     function parseColor(value, opacity = 1, transparency) {
@@ -449,7 +447,7 @@ var android = (function () {
     function getDataSet(dataset, prefix) {
         let result;
         for (const attr in dataset) {
-            if (attr.startsWith(prefix)) {
+            if (startsWith(attr, prefix)) {
                 (result || (result = {}))[capitalize(attr.substring(prefix.length), false)] = dataset[attr];
             }
         }
@@ -631,28 +629,28 @@ var android = (function () {
         getRootNs: getRootNs
     });
 
-    const { FILE } = squared.lib.regex;
+    const { PROTOCOL } = squared.lib.regex.FILE;
     const { extractURL, getSrcSet } = squared.lib.css;
-    const { fromLastIndexOf, isNumber, isPlainObject: isPlainObject$1, isString, resolvePath, splitPairStart, trimString } = squared.lib.util;
-    const REGEXP_STRINGNAME = /(?:\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;)/g;
+    const { endsWith, fromLastIndexOf, isNumber, isPlainObject: isPlainObject$1, isString, padStart, resolvePath, splitPairStart, startsWith: startsWith$1, trimString } = squared.lib.util;
+    const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
     const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
     let CACHE_IMAGE = {};
     let COUNTER_UUID = 0;
     let COUNTER_SYMBOL = 0;
-    function formatObject(obj, numberAlias) {
+    function formatObject(resourceId, obj, numberAlias) {
         for (const attr in obj) {
             const value = obj[attr];
             if (isString(value)) {
                 switch (attr) {
                     case 'text':
-                        if (!value.startsWith('@string/')) {
-                            obj[attr] = Resource.addString(value, '', numberAlias);
+                        if (!startsWith$1(value, '@string/')) {
+                            obj[attr] = Resource.addString(resourceId, value, '', numberAlias);
                         }
                         break;
                     case 'src':
                     case 'srcCompat':
-                        if (FILE.PROTOCOL.test(value)) {
-                            const src = Resource.addImage({ mdpi: value });
+                        if (PROTOCOL.test(value)) {
+                            const src = Resource.addImage(resourceId, { mdpi: value });
                             if (src) {
                                 obj[attr] = `@drawable/${src}`;
                             }
@@ -661,7 +659,7 @@ var android = (function () {
                     default: {
                         const colorData = parseColor(value);
                         if (colorData) {
-                            const colorName = Resource.addColor(colorData);
+                            const colorName = Resource.addColor(resourceId, colorData);
                             if (colorName) {
                                 obj[attr] = `@color/${colorName}`;
                             }
@@ -670,7 +668,7 @@ var android = (function () {
                 }
             }
             else if (isPlainObject$1(value)) {
-                formatObject(obj, numberAlias);
+                formatObject(resourceId, obj, numberAlias);
             }
         }
     }
@@ -683,35 +681,25 @@ var android = (function () {
             super();
             this.application = application;
             this.cache = cache;
-            const STORED = Resource.STORED;
-            STORED.styles = new Map();
-            STORED.themes = new Map();
-            STORED.dimens = new Map();
-            STORED.drawables = new Map();
-            STORED.animators = new Map();
             const mimeType = this.controllerSettings.mimeType.image;
             if (mimeType !== '*') {
-                const imageFormat = new Set(mimeType);
-                imageFormat.delete('image/svg+xml');
-                this._imageFormat = imageFormat;
+                this._imageFormat = mimeType.filter(value => value !== 'image/svg+xml');
             }
         }
-        static canCompressImage(filename, mimeType) {
-            return /\.(png|jpg|jpeg)$/i.test(filename) || !!mimeType && (mimeType.endsWith('png') || mimeType.endsWith('jpeg'));
-        }
-        static formatOptions(options, numberAlias) {
+        static formatOptions(resourceId, options, numberAlias) {
             for (const namespace in options) {
                 const obj = options[namespace];
                 if (isPlainObject$1(obj)) {
-                    formatObject(obj, numberAlias);
+                    formatObject(resourceId, obj, numberAlias);
                 }
             }
             return options;
         }
-        static formatName(value) {
-            return (isLeadingDigit(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
-        }
-        static addTheme(theme) {
+        static addTheme(resourceId, theme) {
+            const stored = this.STORED[resourceId];
+            if (!stored) {
+                return false;
+            }
             const { items, output } = theme;
             let pathname = 'res/values', filename = 'themes.xml', name = theme.name, appTheme = '';
             if (output) {
@@ -722,7 +710,7 @@ var android = (function () {
                     filename = output.filename;
                 }
             }
-            const themes = Resource.STORED.themes;
+            const themes = stored.themes;
             const filepath = pathname + '/' + filename;
             const storedFile = themes.get(filepath) || new Map();
             if (!name || name[0] === '.') {
@@ -745,7 +733,7 @@ var android = (function () {
             }
             name = appTheme + (name[0] === '.' ? name : '');
             theme.name = name;
-            Resource.formatOptions(items);
+            Resource.formatOptions(resourceId, items);
             const storedTheme = storedFile.get(name);
             if (storedTheme) {
                 const storedItems = storedTheme.items;
@@ -759,12 +747,12 @@ var android = (function () {
             themes.set(filepath, storedFile);
             return true;
         }
-        static addString(value, name, numberAlias) {
-            if (value) {
+        static addString(resourceId, value, name, numberAlias) {
+            const stored = this.STORED[resourceId];
+            if (stored && value) {
                 const numeric = isNumber(value);
                 if (!numeric || numberAlias) {
-                    const strings = Resource.STORED.strings;
-                    for (const data of strings) {
+                    for (const data of stored.strings) {
                         if (data[1] === value) {
                             return `@string/${data[0]}`;
                         }
@@ -786,16 +774,16 @@ var android = (function () {
                     }
                     else {
                         name = name.toLowerCase();
-                        if (numeric || isLeadingDigit(name) || RESERVED_JAVA.has(name)) {
+                        if (numeric || isLeadingDigit(name) || RESERVED_JAVA.includes(name)) {
                             name = '__' + name;
                         }
                     }
-                    return `@string/${Resource.insertStoredAsset('strings', name, value)}`;
+                    return `@string/${Resource.insertStoredAsset(resourceId, 'strings', name, value)}`;
                 }
             }
             return value;
         }
-        static addImage(images, prefix = '', imageFormat) {
+        static addImage(resourceId, images, prefix = '', imageFormat) {
             const mdpi = images.mdpi;
             if (mdpi) {
                 if (Object.keys(images).length === 1) {
@@ -804,19 +792,19 @@ var android = (function () {
                         return asset;
                     }
                 }
-                const src = fromLastIndexOf(mdpi, '/');
+                const src = fromLastIndexOf(mdpi.split('?')[0], '/');
                 const ext = this.getExtension(src);
                 const length = ext.length;
                 if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                     const name = Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase();
-                    const asset = Resource.insertStoredAsset('images', (RESERVED_JAVA.has(name) ? '_' : '') + name, images);
+                    const asset = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
                     CACHE_IMAGE[mdpi] = asset;
                     return asset;
                 }
             }
             return '';
         }
-        static addColor(color, transparency) {
+        static addColor(resourceId, color, transparency) {
             if (typeof color === 'string') {
                 const result = parseColor(color, 1, transparency);
                 if (result) {
@@ -828,19 +816,41 @@ var android = (function () {
             }
             if (!color.transparent || transparency) {
                 const keyName = color.opacity < 1 ? color.valueAsARGB : color.value;
-                let colorName = Resource.STORED.colors.get(keyName);
-                if (colorName) {
-                    return colorName;
+                const stored = this.STORED[resourceId];
+                let colorName;
+                if (stored) {
+                    colorName = stored.colors.get(keyName);
+                    if (colorName) {
+                        return colorName;
+                    }
+                    if (color.key) {
+                        stored.colors.set(keyName, color.key);
+                        return color.key;
+                    }
                 }
-                if (color.key) {
-                    Resource.STORED.colors.set(keyName, color.key);
-                    return color.key;
+                colorName = Resource.generateId(resourceId, 'color', color.nearest.key);
+                if (stored) {
+                    stored.colors.set(keyName, colorName);
                 }
-                colorName = Resource.generateId('color', color.nearest.key);
-                Resource.STORED.colors.set(keyName, colorName);
                 return colorName;
             }
             return '';
+        }
+        static canCompressImage(filename, mimeType) {
+            return /\.(png|jpg|jpeg)$/i.test(filename) || endsWith(mimeType, 'png') || endsWith(mimeType, 'jpeg');
+        }
+        static formatName(value) {
+            return (isLeadingDigit(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
+        }
+        init(resourceId) {
+            var _a;
+            const data = (_a = Resource.STORED)[resourceId] || (_a[resourceId] = {});
+            data.styles = new Map();
+            data.themes = new Map();
+            data.dimens = new Map();
+            data.drawables = new Map();
+            data.animators = new Map();
+            super.init(resourceId);
         }
         reset() {
             CACHE_IMAGE = {};
@@ -848,13 +858,13 @@ var android = (function () {
             COUNTER_SYMBOL = 0;
             super.reset();
         }
-        addImageSrc(element, prefix = '', imageSet) {
+        addImageSrc(resourceId, element, prefix = '', imageSet) {
             const result = {};
             let mdpi;
             if (typeof element === 'string') {
                 mdpi = extractURL(element);
-                if (mdpi && !mdpi.startsWith('data:image/')) {
-                    return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
+                if (mdpi && !startsWith$1(mdpi, 'data:image/')) {
+                    return this.addImageSet(resourceId, { mdpi: resolvePath(mdpi) }, prefix);
                 }
             }
             else {
@@ -893,40 +903,25 @@ var android = (function () {
                 mdpi || (mdpi = element.src);
             }
             if (mdpi) {
-                const image = this.getRawData(mdpi);
+                let image = this.getRawData(resourceId, mdpi);
                 if (image) {
-                    const data = image.base64;
-                    if (data) {
-                        const filename = image.filename;
-                        this.writeRawImage({
-                            mimeType: image.mimeType,
-                            filename: prefix + filename,
-                            data,
-                            encoding: 'base64'
-                        });
-                        return splitPairStart(filename, '.', false, true);
+                    if (image.base64 && image.mimeType !== 'image/svg+xml' && (image = this.writeRawImage(resourceId, prefix + image.filename, image))) {
+                        return splitPairStart(image.filename, '.', false, true);
                     }
                     return '';
                 }
                 result.mdpi = mdpi;
             }
-            return this.addImageSet(result, prefix);
+            return this.addImageSet(resourceId, result, prefix);
         }
-        addImageSet(images, prefix) {
-            return Resource.addImage(images, prefix, this._imageFormat);
-        }
-        writeRawImage(options) {
-            const asset = super.writeRawImage(options);
-            if (asset && this.userSettings.compressImages && Resource.canCompressImage(options.filename || '', options.mimeType)) {
-                (asset.compress || (asset.compress = [])).unshift({ format: 'png' });
-            }
-            return asset;
+        addImageSet(resourceId, images, prefix) {
+            return Resource.addImage(resourceId, images, prefix, this._imageFormat);
         }
         get userSettings() {
             return this.application.userSettings;
         }
         get randomUUID() {
-            return '__' + (++COUNTER_UUID).toString().padStart(5, '0');
+            return '__' + padStart((++COUNTER_UUID).toString(), 5, '0');
         }
     }
 
@@ -1643,8 +1638,8 @@ var android = (function () {
     const { CSS_PROPERTIES, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
     const { getNamedItem, getRangeClientRect } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
-    const { capitalize: capitalize$1, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf: fromLastIndexOf$1, hasKeys, isString: isString$1, replaceMap, splitPair } = squared.lib.util;
-    const { parseWatchInterval } = squared.base.lib.util;
+    const { capitalize: capitalize$1, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf: fromLastIndexOf$1, hasKeys, isString: isString$1, replaceMap, splitPair, startsWith: startsWith$2 } = squared.lib.util;
+    const { parseTask, parseWatchInterval } = squared.base.lib.util;
     const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
     const BOX_MARGIN = CSS_PROPERTIES.margin.value;
     const BOX_PADDING = CSS_PROPERTIES.padding.value;
@@ -2009,7 +2004,7 @@ var android = (function () {
                     case 'layout_height':
                         break;
                     default:
-                        if (attr.startsWith('layout_') && !attr.includes('margin')) {
+                        if (startsWith$2(attr, 'layout_') && !attr.includes('margin')) {
                             target.attr(name, attr, item[attr], true);
                         }
                         break;
@@ -2109,12 +2104,8 @@ var android = (function () {
     }
     function ascendFlexibleHeight(node, container) {
         let current = container ? node : node.actualParent;
-        if (current && hasFlexibleHeight(current)) {
+        if (current && hasFlexibleHeight(current) || container && node.flexElement && node.flexdata.column && (current = node.actualParent) && hasFlexibleHeight(current)) {
             return true;
-        }
-        if (container && node.flexElement && node.flexdata.column) {
-            current = node.actualParent;
-            return !!current && hasFlexibleHeight(current);
         }
         return false;
     }
@@ -2709,7 +2700,7 @@ var android = (function () {
                             if (this.pageFlow && !this.floating) {
                                 this.mergeGravity('layout_gravity', parentAlign, false);
                             }
-                            if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || this.display.startsWith('table-')) {
+                            if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || startsWith$2(this.display, 'table-')) {
                                 this.mergeGravity('gravity', parentAlign, false);
                             }
                         }
@@ -4464,10 +4455,10 @@ var android = (function () {
                         if (this.styleElement) {
                             const value = this.elementId || getNamedItem(this.element, 'name');
                             if (value) {
-                                name = value === 'parent' || RESERVED_JAVA.has(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
+                                name = value === 'parent' || RESERVED_JAVA.includes(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
                             }
                         }
-                        return this._controlId = convertWord(Resource.generateId('android', name || fromLastIndexOf$1(controlName, '.').toLowerCase(), name ? 0 : 1));
+                        return this._controlId = convertWord(Resource.generateId(this.localSettings.resourceId, 'android', name || fromLastIndexOf$1(controlName, '.').toLowerCase(), name ? 0 : 1));
                     }
                     else if (this.id <= 0) {
                         return this._controlId = 'baseroot' + (this.id === 0 ? '' : '_' + Math.abs(this.id));
@@ -4693,10 +4684,7 @@ var android = (function () {
             }
             get tasks() {
                 if (this.naturalElement) {
-                    const tasks = this.element.dataset.androidTasks;
-                    if (tasks) {
-                        return tasks.trim().split(/\s*\+\s*/);
-                    }
+                    return parseTask(this.element.dataset.androidTasks);
                 }
             }
             get target() {
@@ -4745,7 +4733,7 @@ var android = (function () {
     const { getElementsBetweenSiblings, getRangeClientRect: getRangeClientRect$1 } = squared.lib.dom;
     const { truncate: truncate$1 } = squared.lib.math;
     const { getElementAsNode } = squared.lib.session;
-    const { assignEmptyValue, capitalize: capitalize$2, convertPercent: convertPercent$1, convertWord: convertWord$1, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, withinRange } = squared.lib.util;
+    const { assignEmptyValue, capitalize: capitalize$2, convertPercent: convertPercent$1, convertWord: convertWord$1, iterateArray, lastItemOf, minMaxOf, parseMimeType, partitionArray, plainMap, startsWith: startsWith$3, withinRange } = squared.lib.util;
     const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
     function sortHorizontalFloat(list) {
         list.sort((a, b) => {
@@ -4914,20 +4902,20 @@ var android = (function () {
     function setObjectContainer(layout) {
         const node = layout.node;
         const element = node.element;
-        const src = (element.tagName === 'OBJECT' ? element.data : element.src).trim();
+        const src = element.tagName === 'OBJECT' ? element.data : element.src;
         const type = element.type || parseMimeType(src);
-        if (type.startsWith('image/')) {
+        if (startsWith$3(type, 'image/')) {
             node.setCacheValue('tagName', 'IMG');
             node.setCacheValue('imageElement', true);
             element.src = src;
             layout.containerType = 5 /* IMAGE */;
         }
-        else if (type.startsWith('video/')) {
+        else if (startsWith$3(type, 'video/')) {
             node.setCacheValue('tagName', 'VIDEO');
             element.src = src;
             layout.containerType = 21 /* VIDEOVIEW */;
         }
-        else if (type.startsWith('audio/')) {
+        else if (startsWith$3(type, 'audio/')) {
             node.setCacheValue('tagName', 'AUDIO');
             element.src = src;
             layout.containerType = 21 /* VIDEOVIEW */;
@@ -5050,7 +5038,7 @@ var android = (function () {
                     case 'grid':
                         return style.float === 'none' || hasWidth();
                     default:
-                        return (display.startsWith('inline-') || display === 'table') && hasWidth();
+                        return (startsWith$3(display, 'inline-') || display === 'table') && hasWidth();
                 }
             }
         }
@@ -5195,7 +5183,28 @@ var android = (function () {
                 layout: {
                     pathName: 'res/layout',
                     fileExtension: 'xml',
-                    baseTemplate: '<?xml version="1.0" encoding="utf-8"?>\n'
+                    baseTemplate: '<?xml version="1.0" encoding="utf-8"?>\n',
+                    innerXmlTags: [
+                        CONTAINER_TAGNAME.FRAME,
+                        CONTAINER_TAGNAME.LINEAR,
+                        CONTAINER_TAGNAME.GRID,
+                        CONTAINER_TAGNAME.RELATIVE,
+                        CONTAINER_TAGNAME.HORIZONTAL_SCROLL,
+                        CONTAINER_TAGNAME.VERTICAL_SCROLL,
+                        CONTAINER_TAGNAME.CONSTRAINT,
+                        CONTAINER_TAGNAME_X.VERTICAL_SCROLL,
+                        CONTAINER_TAGNAME_X.CONSTRAINT,
+                        SUPPORT_TAGNAME.DRAWER,
+                        SUPPORT_TAGNAME.COORDINATOR,
+                        SUPPORT_TAGNAME.APPBAR,
+                        SUPPORT_TAGNAME.COLLAPSING_TOOLBAR,
+                        SUPPORT_TAGNAME.TOOLBAR,
+                        SUPPORT_TAGNAME_X.DRAWER,
+                        SUPPORT_TAGNAME_X.COORDINATOR,
+                        SUPPORT_TAGNAME_X.APPBAR,
+                        SUPPORT_TAGNAME_X.COLLAPSING_TOOLBAR,
+                        SUPPORT_TAGNAME_X.TOOLBAR
+                    ]
                 },
                 directory: {
                     string: 'res/values',
@@ -5219,13 +5228,13 @@ var android = (function () {
                     progressBackgroundColor: 'rgb(237, 237, 237)'
                 },
                 mimeType: {
-                    font: new Set(['font/ttf', 'font/otf']),
-                    image: new Set(['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/webp', 'image/bmp', 'image/heic', 'image/heif', 'image/x-icon']),
-                    audio: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wave', 'audio/ogg']),
-                    video: new Set(['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm'])
+                    font: ['font/ttf', 'font/otf'],
+                    image: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml', 'image/webp', 'image/bmp', 'image/heic', 'image/heif', 'image/x-icon'],
+                    audio: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wave', 'audio/ogg'],
+                    video: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm']
                 },
                 unsupported: {
-                    cascade: new Set([
+                    cascade: [
                         'IMG',
                         'INPUT',
                         'SELECT',
@@ -5239,8 +5248,8 @@ var android = (function () {
                         'AUDIO',
                         'OBJECT',
                         'svg'
-                    ]),
-                    tagName: new Set([
+                    ],
+                    tagName: [
                         'HEAD',
                         'TITLE',
                         'META',
@@ -5259,8 +5268,8 @@ var android = (function () {
                         'PARAM',
                         'TRACK',
                         'WBR'
-                    ]),
-                    excluded: new Set(['BR'])
+                    ],
+                    excluded: ['BR']
                 },
                 deviations: {
                     textMarginBoundarySize: 8,
@@ -5269,7 +5278,7 @@ var android = (function () {
                 floatPrecision: 3
             };
         }
-        init() {
+        init(resourceId) {
             const userSettings = this.userSettings;
             const dpiRatio = 160 / userSettings.resolutionDPI;
             this._targetAPI = userSettings.targetAPI || 30 /* LATEST */;
@@ -5278,13 +5287,14 @@ var android = (function () {
                 height: userSettings.resolutionScreenHeight * dpiRatio
             };
             this._viewSettings = {
+                resourceId,
                 systemName: capitalize$2(this.application.systemName),
                 screenDimension: this._screenDimension,
                 supportRTL: userSettings.supportRTL,
                 lineHeightAdjust: userSettings.lineHeightAdjust,
                 floatPrecision: this.localSettings.floatPrecision
             };
-            super.init();
+            super.init(resourceId);
         }
         optimize(rendered) {
             for (let i = 0, length = rendered.length; i < length; ++i) {
@@ -5327,7 +5337,7 @@ var android = (function () {
         finalize(layouts) {
             const insertSpaces = this.userSettings.insertSpaces;
             for (const layout of layouts) {
-                layout.content = replaceTab(layout.content.replace('{#0}', getRootNs(layout.content)), insertSpaces);
+                layout.content = replaceTab(layout.content.replace(/\{#0\}/, getRootNs(layout.content)), insertSpaces);
             }
         }
         processUnknownParent(layout) {
@@ -5470,7 +5480,7 @@ var android = (function () {
             }
             else if (layout.linearX || layout.singleRowAligned) {
                 if (this.checkFrameHorizontal(layout)) {
-                    layout.addRender(256 /* FLOAT */ | 4 /* HORIZONTAL */);
+                    layout.addAlign(32768 /* FLOAT_LAYOUT */ | 4 /* HORIZONTAL */);
                 }
                 else if (this.checkConstraintHorizontal(layout) || node.tagName === 'BUTTON' || this.hasClippedBackground(node)) {
                     layout.containerType = 19 /* CONSTRAINT */;
@@ -5491,8 +5501,7 @@ var android = (function () {
             }
             else if (layout.every(item => item.inlineFlow)) {
                 if (this.checkFrameHorizontal(layout)) {
-                    layout.addRender(256 /* FLOAT */);
-                    layout.addRender(4 /* HORIZONTAL */);
+                    layout.addAlign(32768 /* FLOAT_LAYOUT */ | 4 /* HORIZONTAL */);
                 }
                 else {
                     layout.setContainerType(this.getVerticalLayout(layout), 8 /* VERTICAL */ | 1 /* UNKNOWN */);
@@ -5578,8 +5587,7 @@ var android = (function () {
             }
             else if (this.checkFrameHorizontal(layout)) {
                 layout.node = this.createNodeGroup(layout.node, layout.children, parent);
-                layout.addRender(256 /* FLOAT */);
-                layout.addRender(4 /* HORIZONTAL */);
+                layout.addAlign(32768 /* FLOAT_LAYOUT */ | 4 /* HORIZONTAL */);
             }
             else if (layout.size() !== siblings.length || parent.hasAlign(8 /* VERTICAL */)) {
                 layout.node = this.createNodeGroup(layout.node, layout.children, parent);
@@ -5604,13 +5612,11 @@ var android = (function () {
                 }
                 else if (hasCleared(layout, this.application.clearMap)) {
                     layout.node = this.createLayoutGroup(layout);
-                    layout.addRender(256 /* FLOAT */);
-                    layout.addRender(8 /* VERTICAL */);
+                    layout.addAlign(32768 /* FLOAT_LAYOUT */ | 8 /* VERTICAL */);
                 }
                 else if (layout.item(0).floating) {
                     layout.node = this.createLayoutGroup(layout);
-                    layout.addRender(256 /* FLOAT */);
-                    layout.addRender(4 /* HORIZONTAL */);
+                    layout.addAlign(32768 /* FLOAT_LAYOUT */ | 4 /* HORIZONTAL */);
                 }
                 else {
                     layoutType = 0;
@@ -5954,6 +5960,7 @@ var android = (function () {
             var _a, _b, _c;
             const node = layout.node;
             const tagName = node.tagName;
+            const resourceId = node.localSettings.resourceId;
             let { parent, containerType } = layout, controlName = View.getControlName(containerType, node.api);
             const setReadOnly = () => {
                 const element = node.element;
@@ -5983,10 +5990,10 @@ var android = (function () {
                             };
                             const image = imageSet[0];
                             if (image.actualWidth) {
-                                setImageDimension(image.actualWidth, resource.getImage(element.src));
+                                setImageDimension(image.actualWidth, resource.getImage(resourceId, element.src));
                             }
                             else {
-                                const stored = resource.getImage(image.src);
+                                const stored = resource.getImage(resourceId, image.src);
                                 if (stored) {
                                     setImageDimension(stored.width, stored);
                                 }
@@ -6031,22 +6038,22 @@ var android = (function () {
                         const { watch, tasks } = node;
                         let src;
                         if (tagName === 'CANVAS') {
-                            const data = element.toDataURL();
-                            if (data) {
+                            const content = element.toDataURL();
+                            if (content) {
                                 node.setControlType(controlName, containerType);
                                 src = 'canvas_' + convertWord$1(node.controlId, true).toLowerCase();
-                                resource.writeRawImage({ mimeType: 'image/png', filename: src + '.png', data, encoding: 'base64', watch, tasks });
+                                resource.writeRawImage(resourceId, src + '.png', { mimeType: 'image/png', encoding: 'base64', content, watch, tasks });
                             }
                         }
                         else {
-                            src = resource.addImageSrc(element, '', imageSet);
+                            src = resource.addImageSrc(resourceId, element, '', imageSet);
                             if (watch || tasks) {
                                 const images = [element.src];
                                 if (imageSet) {
                                     images.push(...plainMap(imageSet, item => item.src));
                                 }
                                 for (const uri of images) {
-                                    const image = resource.getImage(uri);
+                                    const image = resource.getImage(resourceId, uri);
                                     if (image) {
                                         image.watch = watch;
                                         image.tasks = tasks;
@@ -6253,8 +6260,8 @@ var android = (function () {
                     if (!node.hasHeight) {
                         setBoundsHeight();
                     }
-                    node.android('progressTint', `@color/${Resource.addColor(foregroundColor)}`);
-                    node.android('progressBackgroundTint', `@color/${Resource.addColor(backgroundColor)}`);
+                    node.android('progressTint', `@color/${Resource.addColor(resourceId, foregroundColor)}`);
+                    node.android('progressBackgroundTint', `@color/${Resource.addColor(resourceId, backgroundColor)}`);
                     const animations = node.cssInitial('animationName').split(/\s*,\s*/);
                     let circular = false;
                     if (animations.length) {
@@ -6285,23 +6292,23 @@ var android = (function () {
                 }
                 case 'AUDIO':
                 case 'VIDEO': {
-                    const validMimeType = this.localSettings.mimeType[tagName === 'VIDEO' ? 'video' : 'audio'];
+                    const mimeTypes = this.localSettings.mimeType[tagName === 'VIDEO' ? 'video' : 'audio'];
                     const element = node.element;
-                    let src = element.src.trim(), mimeType;
-                    if (Resource.hasMimeType(validMimeType, src)) {
+                    let src = element.src, mimeType;
+                    if (Resource.hasMimeType(mimeTypes, src)) {
                         mimeType = parseMimeType(src);
                     }
                     else {
                         src = '';
                         iterateArray(element.children, (source) => {
                             if (source.tagName === 'SOURCE') {
-                                if (Resource.hasMimeType(validMimeType, source.src)) {
-                                    src = source.src.trim();
+                                if (Resource.hasMimeType(mimeTypes, source.src)) {
+                                    src = source.src;
                                     mimeType = parseMimeType(src);
                                     return true;
                                 }
                                 mimeType = source.type.trim().toLowerCase();
-                                if (validMimeType === '*' || validMimeType.has(mimeType)) {
+                                if (mimeTypes === '*' || mimeTypes.includes(mimeType)) {
                                     src = source.src;
                                     return true;
                                 }
@@ -6318,11 +6325,11 @@ var android = (function () {
                         setInlineBlock(node);
                     }
                     if (src) {
-                        this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](src, { mimeType, tasks: node.tasks, watch: node.watch });
+                        this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](resourceId, src, { mimeType, tasks: node.tasks, watch: node.watch });
                         node.inlineText = false;
                         node.exclude({ resource: 4 /* FONT_STYLE */ });
                         if (element.poster) {
-                            Resource.addImage({ mdpi: element.poster.trim() });
+                            Resource.addImage(resourceId, { mdpi: element.poster.trim() });
                         }
                     }
                     else if (element.poster) {
@@ -6366,7 +6373,7 @@ var android = (function () {
                         if (match) {
                             const colorData = parseColor(match[1] || node.css('color'));
                             if (colorData) {
-                                const colorName = Resource.addColor(colorData);
+                                const colorName = Resource.addColor(resourceId, colorData);
                                 if (colorName) {
                                     const precision = node.localSettings.floatPrecision;
                                     node.android('shadowColor', `@color/${colorName}`);
@@ -6715,7 +6722,7 @@ var android = (function () {
             if (node.documentParent.gridElement) {
                 const android = node.namespace('android');
                 for (const attr in android) {
-                    if (attr.startsWith('layout_')) {
+                    if (startsWith$3(attr, 'layout_')) {
                         container.android(attr, android[attr]);
                         delete android[attr];
                     }
@@ -8325,7 +8332,7 @@ var android = (function () {
                     orientation: horizontal ? 'vertical' : 'horizontal'
                 },
                 app: {
-                    [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX$1(location))}`
+                    [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset(node.localSettings.resourceId, 'dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX$1(location))}`
                 }
             };
             this.addAfterOutsideTemplate(node, this.renderNodeStatic({ controlName: node.api < 29 /* Q */ ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
@@ -8372,7 +8379,7 @@ var android = (function () {
         }
         hasClippedBackground(node) {
             if (node.css('backgroundSize').includes('cover')) {
-                for (const image of this.application.resourceHandler.fromImageUrl(node.backgroundImage)) {
+                for (const image of this.application.resourceHandler.fromImageUrl(node.localSettings.resourceId, node.backgroundImage)) {
                     if (image.height > node.bounds.height) {
                         return true;
                     }
@@ -8507,10 +8514,9 @@ var android = (function () {
         }
     };
 
-    const { convertBase64, fromLastIndexOf: fromLastIndexOf$2, parseMimeType: parseMimeType$1, plainMap: plainMap$1, splitPairStart: splitPairStart$1 } = squared.lib.util;
+    const { convertBase64, endsWith: endsWith$1, fromLastIndexOf: fromLastIndexOf$2, parseMimeType: parseMimeType$1, plainMap: plainMap$1 } = squared.lib.util;
     const { fromMimeType } = squared.base.lib.util;
-    const STORED = Resource.STORED;
-    function getFileAssets(pathname, items) {
+    function getFileAssets(pathname, items, document = 'android') {
         const length = items.length;
         if (length) {
             const result = new Array(length / 3);
@@ -8518,22 +8524,23 @@ var android = (function () {
                 result[j++] = {
                     pathname: pathname + items[i + 1],
                     filename: items[i + 2],
-                    content: items[i]
+                    content: items[i],
+                    document: copyDocument(document)
                 };
             }
             return result;
         }
         return items;
     }
-    function getImageAssets(pathname, items, convertImages, compressing) {
+    function getImageAssets(resourceId, pathname, items, convertImages, compressing, document = 'android') {
         const length = items.length;
         if (length) {
-            const result = new Array(length / 4);
-            for (let i = 0, j = 0; i < length; i += 4) {
+            const result = new Array(length / 3);
+            for (let i = 0, j = 0; i < length; i += 3) {
+                const uri = items[i];
                 const filename = items[i + 2];
-                const task = items[i + 3];
                 let mimeType, commands, compress;
-                if (filename.endsWith('.unknown')) {
+                if (endsWith$1(filename, '.unknown')) {
                     mimeType = 'image/unknown';
                     if (compressing) {
                         compress = [{ format: 'png' }];
@@ -8567,32 +8574,36 @@ var android = (function () {
                             break;
                     }
                 }
+                const image = this.getImage(resourceId, uri);
                 result[j++] = {
                     pathname: pathname + items[i + 1],
                     filename,
                     mimeType,
                     commands,
                     compress,
-                    uri: items[i],
-                    tasks: task ? task.split('+') : undefined
+                    uri,
+                    document: copyDocument(document),
+                    tasks: image && image.tasks
                 };
             }
             return result;
         }
         return items;
     }
-    function getRawAssets(pathname, items) {
+    function getRawAssets(resourceId, name, pathname, items, document = 'android') {
         const length = items.length;
         if (length) {
-            const result = new Array(length / 4);
-            for (let i = 0, j = 0; i < length; i += 4) {
-                const task = items[i + 3];
+            const result = new Array(length / 3);
+            for (let i = 0, j = 0; i < length; i += 3) {
+                const uri = items[i];
+                const rawData = name === 'video' ? this.getVideo(resourceId, uri) : this.getAudio(resourceId, uri);
                 result[j++] = {
                     pathname,
                     filename: items[i + 2].toLowerCase(),
                     mimeType: items[i + 1],
-                    uri: items[i],
-                    tasks: task ? task.split('+') : undefined
+                    uri,
+                    document: copyDocument(document),
+                    tasks: rawData && rawData.tasks
                 };
             }
             return result;
@@ -8601,75 +8612,85 @@ var android = (function () {
     }
     function getOutputDirectory(value) {
         value = value.replace(/\\/g, '/');
-        return value + (!value.endsWith('/') ? '/' : '');
+        return value + (!endsWith$1(value, '/') ? '/' : '');
     }
+    const copyDocument = (value) => Array.isArray(value) ? value.slice(0) : value;
     const hasFileAction = (options) => !!(options && (options.directory || options.filename));
     class File extends squared.base.File {
-        copyTo(directory, options) {
-            return this.copying(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options && options.assets), directory }));
+        copyTo(pathname, options) {
+            return this.copying(pathname, Object.assign(Object.assign({}, options), { assets: this.combineAssets(options.assets) }));
         }
         appendTo(pathname, options) {
-            return this.archiving(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options && options.assets), appendTo: pathname }));
+            return this.archiving(pathname, Object.assign(Object.assign({}, options), { assets: this.combineAssets(options.assets) }));
         }
         saveAs(filename, options) {
-            return this.archiving(Object.assign(Object.assign({}, options), { assets: this.combineAssets(options && options.assets), filename }));
+            return this.archiving('', Object.assign(Object.assign({}, options), { assets: this.combineAssets(options.assets), filename }));
         }
-        resourceAllToXml(options) {
-            const result = {
-                string: this.resourceStringToXml(),
-                stringArray: this.resourceStringArrayToXml(),
-                font: this.resourceFontToXml(),
-                color: this.resourceColorToXml(),
-                style: this.resourceStyleToXml(),
-                dimen: this.resourceDimenToXml(),
-                drawable: this.resourceDrawableToXml(),
-                anim: this.resourceAnimToXml(),
-                drawableImage: this.resourceDrawableImageToString(),
-                rawVideo: this.resourceRawVideoToString(),
-                rawAudio: this.resourceRawAudioToString()
-            };
-            for (const name in result) {
-                if (result[name].length === 0) {
-                    delete result[name];
-                }
-            }
-            if (hasFileAction(options)) {
-                const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
-                const assets = [];
+        resourceAllToXml(stored = Resource.STORED[this.resourceId], options) {
+            if (stored) {
+                const assets = Resource.ASSETS[this.resourceId];
+                const result = {
+                    string: this.resourceStringToXml(stored),
+                    stringArray: this.resourceStringArrayToXml(stored),
+                    font: this.resourceFontToXml(stored),
+                    color: this.resourceColorToXml(stored),
+                    style: this.resourceStyleToXml(stored),
+                    dimen: this.resourceDimenToXml(stored),
+                    drawable: this.resourceDrawableToXml(stored),
+                    anim: this.resourceAnimToXml(stored),
+                    drawableImage: this.resourceDrawableImageToString(stored),
+                    rawVideo: this.resourceRawVideoToString(assets),
+                    rawAudio: this.resourceRawAudioToString(assets)
+                };
                 for (const name in result) {
-                    switch (name) {
-                        case 'drawableImage':
-                            assets.push(...getImageAssets(outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
-                            break;
-                        case 'rawVideo':
-                            assets.push(...getRawAssets(outputDirectory + this.directory.video, result[name]));
-                            break;
-                        case 'rawAudio':
-                            assets.push(...getRawAssets(outputDirectory + this.directory.audio, result[name]));
-                            break;
-                        default:
-                            assets.push(...getFileAssets(outputDirectory, result[name]));
-                            break;
+                    if (result[name].length === 0) {
+                        delete result[name];
                     }
                 }
-                if (options.assets) {
-                    assets.push(...options.assets);
+                if (hasFileAction(options)) {
+                    const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
+                    const rawAssets = [];
+                    const resource = this.resource;
+                    const resourceId = this.resourceId;
+                    for (const name in result) {
+                        switch (name) {
+                            case 'drawableImage':
+                                rawAssets.push(...getImageAssets.call(resource, resourceId, outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
+                                break;
+                            case 'rawVideo':
+                                rawAssets.push(...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name]));
+                                break;
+                            case 'rawAudio':
+                                rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name]));
+                                break;
+                            default:
+                                rawAssets.push(...getFileAssets(outputDirectory, result[name]));
+                                break;
+                        }
+                    }
+                    if (options.assets) {
+                        rawAssets.push(...options.assets);
+                    }
+                    options.assets = rawAssets;
+                    if (options.pathname) {
+                        this.copying(options.pathname, options);
+                    }
+                    if (options.filename) {
+                        this.archiving('', options);
+                    }
                 }
-                options.assets = assets;
-                if (options.directory) {
-                    this.copying(options);
-                }
-                if (options.filename) {
-                    this.archiving(options);
-                }
+                return result;
             }
-            return result;
+            return {};
         }
-        resourceStringToXml(options) {
-            const items = Array.from(STORED.strings).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
+        resourceStringToXml(stored = Resource.STORED[this.resourceId], options) {
+            if (!stored) {
+                return [];
+            }
+            const items = Array.from(stored.strings).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
             const length = items.length;
             let j, itemArray;
-            if (STORED.strings.has('app_name')) {
+            if (stored.strings.has('app_name')) {
                 j = 0;
                 itemArray = new Array(length);
             }
@@ -8682,100 +8703,106 @@ var android = (function () {
                 const item = items[i];
                 itemArray[j++] = { name: item[0], innerText: item[1] };
             }
-            return this.checkFileAssets([
-                replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true),
-                this.directory.string,
-                'strings.xml'
-            ], options);
+            return this.checkFileAssets([replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'strings.xml'], options);
         }
-        resourceStringArrayToXml(options) {
-            const length = STORED.arrays.size;
-            if (length) {
-                const items = Array.from(STORED.arrays).sort();
-                const itemArray = new Array(length);
-                for (let i = 0; i < length; ++i) {
-                    const item = items[i];
-                    itemArray[i] = { name: item[0], item: plainMap$1(item[1], innerText => ({ innerText })) };
-                }
-                return this.checkFileAssets([
-                    replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true),
-                    this.directory.string,
-                    'string_arrays.xml'
-                ], options);
+        resourceStringArrayToXml(stored = Resource.STORED[this.resourceId], options) {
+            let length;
+            if (!stored || !(length = stored.arrays.size)) {
+                return [];
             }
-            return [];
+            const items = Array.from(stored.arrays).sort();
+            const itemArray = new Array(length);
+            for (let i = 0; i < length; ++i) {
+                const item = items[i];
+                itemArray[i] = { name: item[0], item: plainMap$1(item[1], innerText => ({ innerText })) };
+            }
+            return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'string_arrays.xml'], options);
         }
-        resourceFontToXml(options) {
-            var _a;
-            const length = STORED.fonts.size;
-            if (length) {
-                const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
-                const resource = this.resource;
-                const xmlns = XML_NAMESPACE[targetAPI < 26 /* OREO */ ? 'app' : 'android'];
-                const directory = getOutputDirectory(outputDirectory);
-                const pathname = this.directory.font;
-                const items = Array.from(STORED.fonts).sort();
-                const result = new Array(length * 3);
-                for (let i = 0, j = 0; i < length; ++i) {
-                    const [name, font] = items[i];
-                    const itemArray = [];
-                    for (const attr in font) {
-                        const [fontFamily, fontStyle, fontWeight] = attr.split('|');
-                        const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
-                        itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
-                        const url = (_a = resource.getFont(fontFamily, fontStyle, fontWeight)) === null || _a === void 0 ? void 0 : _a.srcUrl;
-                        if (url) {
-                            const data = this.resource.getRawData(url);
-                            let base64, ext;
-                            if (data) {
-                                base64 = data.base64;
-                                if (!base64 && data.buffer) {
-                                    base64 = convertBase64(data.buffer);
-                                    data.base64 = base64;
+        resourceFontToXml(stored = Resource.STORED[this.resourceId], options) {
+            let length;
+            if (!stored || !(length = stored.fonts.size)) {
+                return [];
+            }
+            const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
+            const resource = this.resource;
+            const resourceId = this.resourceId;
+            const xmlns = XML_NAMESPACE[targetAPI < 26 /* OREO */ ? 'app' : 'android'];
+            const directory = getOutputDirectory(outputDirectory);
+            const pathname = this.directory.font;
+            const items = Array.from(stored.fonts).sort();
+            const result = new Array(length * 3);
+            for (let i = 0, j = 0; i < length; ++i) {
+                const [name, font] = items[i];
+                const itemArray = [];
+                for (const attr in font) {
+                    const [fontFamily, fontStyle, fontWeight] = attr.split('|');
+                    const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
+                    itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
+                    const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
+                    if (fonts.length) {
+                        let uri, base64, ext;
+                        let data = fonts.find(item => item.srcUrl);
+                        if (data) {
+                            uri = data.srcUrl;
+                            const rawData = this.resource.getRawData(resourceId, uri);
+                            if (rawData) {
+                                base64 = rawData.base64;
+                                if (!base64 && rawData.buffer) {
+                                    base64 = convertBase64(rawData.buffer);
+                                    rawData.base64 = base64;
                                 }
-                                if (data.mimeType) {
-                                    ext = fromMimeType(data.mimeType);
+                                if (rawData.mimeType) {
+                                    ext = fromMimeType(rawData.mimeType);
                                 }
                             }
-                            this.addAsset({
-                                pathname: directory + pathname,
-                                filename: fontName + '.' + (ext || Resource.getExtension(splitPairStart$1(url, '?')).toLowerCase() || 'ttf'),
-                                uri: !base64 ? url : undefined,
-                                base64
-                            });
+                            ext || (ext = fromMimeType(data.mimeType) || Resource.getExtension(uri.split('?')[0]).toLowerCase());
                         }
+                        else {
+                            data = fonts.find(item => item.srcBase64);
+                            if (data) {
+                                base64 = data.srcBase64;
+                                ext = fromMimeType(data.mimeType);
+                            }
+                            else {
+                                continue;
+                            }
+                        }
+                        this.resource.addAsset(resourceId, {
+                            pathname: directory + pathname,
+                            filename: fontName + '.' + (ext || 'ttf'),
+                            uri: !base64 ? uri : undefined,
+                            base64
+                        });
                     }
-                    const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
-                    result[j++] = targetAPI < 26 /* OREO */ ? output.replace(/\s+android:/g, ' app:') : output;
-                    result[j++] = pathname;
-                    result[j++] = `${name}.xml`;
                 }
-                return this.checkFileAssets(result, options);
+                const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
+                result[j++] = targetAPI < 26 /* OREO */ ? output.replace(/\s+android:/g, ' app:') : output;
+                result[j++] = pathname;
+                result[j++] = name + '.xml';
             }
-            return [];
+            return this.checkFileAssets(result, options);
         }
-        resourceColorToXml(options) {
-            const length = STORED.colors.size;
-            if (length) {
-                const items = Array.from(STORED.colors).sort();
-                const itemArray = new Array(length);
-                for (let i = 0; i < length; ++i) {
-                    const item = items[i];
-                    itemArray[i] = { name: item[1], innerText: item[0] };
-                }
-                return this.checkFileAssets([
-                    replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces),
-                    this.directory.string,
-                    'colors.xml'
-                ], options);
+        resourceColorToXml(stored = Resource.STORED[this.resourceId], options) {
+            let length;
+            if (!stored || !(length = stored.colors.size)) {
+                return [];
             }
-            return [];
+            const items = Array.from(stored.colors).sort();
+            const itemArray = new Array(length);
+            for (let i = 0; i < length; ++i) {
+                const item = items[i];
+                itemArray[i] = { name: item[1], innerText: item[0] };
+            }
+            return this.checkFileAssets([replaceTab(applyTemplate('resources', COLOR_TMPL, [{ color: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'colors.xml'], options);
         }
-        resourceStyleToXml(options) {
+        resourceStyleToXml(stored = Resource.STORED[this.resourceId], options) {
+            if (!stored) {
+                return [];
+            }
             const result = [];
-            if (STORED.styles.size) {
+            if (stored.styles.size) {
                 const itemArray = [];
-                for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
+                for (const style of Array.from(stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                     itemArray.push({
                         name: style.name,
                         parent: style.parent,
@@ -8784,11 +8811,10 @@ var android = (function () {
                 }
                 result.push(replaceTab(applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'styles.xml');
             }
-            if (STORED.themes.size) {
+            if (stored.themes.size) {
                 const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
-                const dpUnit = convertPixels === 'dp';
                 const appTheme = {};
-                for (const data of STORED.themes) {
+                for (const data of stored.themes) {
                     const filename = data[0];
                     const match = /^(.+)\/(.+?\.\w+)$/.exec(filename);
                     if (match) {
@@ -8808,110 +8834,99 @@ var android = (function () {
                         }
                         if (itemArray.length) {
                             const value = applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]);
-                            result.push(replaceTab(dpUnit ? value.replace(/>(-?[\d.]+)px</g, (...capture) => `>${capture[1]}dp<`) : value, insertSpaces), match[1], match[2]);
+                            result.push(replaceTab(convertPixels === 'dp' ? value.replace(/>(-?[\d.]+)px</g, (...capture) => `>${capture[1]}dp<`) : value, insertSpaces), match[1], match[2]);
                         }
                     }
                 }
             }
             return this.checkFileAssets(result, options);
         }
-        resourceDimenToXml(options) {
-            const length = STORED.dimens.size;
-            if (length) {
-                const convertPixels = this.userSettings.convertPixels === 'dp';
-                const items = Array.from(STORED.dimens).sort();
-                const itemArray = new Array(length);
-                for (let i = 0; i < length; ++i) {
-                    const item = items[i];
-                    itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
-                }
-                return this.checkFileAssets([
-                    replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])),
-                    this.directory.string,
-                    'dimens.xml'
-                ], options);
+        resourceDimenToXml(stored = Resource.STORED[this.resourceId], options) {
+            let length;
+            if (!stored || !(length = stored.dimens.size)) {
+                return [];
             }
-            return [];
-        }
-        resourceDrawableToXml(options) {
-            const length = STORED.drawables.size;
-            if (length) {
-                const userSettings = this.userSettings;
-                const insertSpaces = userSettings.insertSpaces;
-                const convertPixels = userSettings.convertPixels === 'dp';
-                const directory = this.directory.image;
-                const result = new Array(length * 3);
-                let i = 0;
-                for (const data of STORED.drawables) {
-                    result[i++] = replaceTab(convertPixels ? data[1].replace(/"(-?[\d.]+)px"/g, (...match) => `"${match[1]}dp"`) : data[1], insertSpaces);
-                    result[i++] = directory;
-                    result[i++] = `${data[0]}.xml`;
-                }
-                return this.checkFileAssets(result, options);
+            const convertPixels = this.userSettings.convertPixels === 'dp';
+            const items = Array.from(stored.dimens).sort();
+            const itemArray = new Array(length);
+            for (let i = 0; i < length; ++i) {
+                const item = items[i];
+                itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
             }
-            return [];
+            return this.checkFileAssets([replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])), this.directory.string, 'dimens.xml'], options);
         }
-        resourceAnimToXml(options) {
-            const length = STORED.animators.size;
-            if (length) {
-                const insertSpaces = this.userSettings.insertSpaces;
-                const result = new Array(length * 3);
-                let i = 0;
-                for (const data of STORED.animators) {
-                    result[i++] = replaceTab(data[1], insertSpaces);
-                    result[i++] = 'res/anim';
-                    result[i++] = `${data[0]}.xml`;
-                }
-                return this.checkFileAssets(result, options);
+        resourceDrawableToXml(stored = Resource.STORED[this.resourceId], options) {
+            let length;
+            if (!stored || !(length = stored.drawables.size)) {
+                return [];
             }
-            return [];
+            const { insertSpaces, convertPixels } = this.userSettings;
+            const directory = this.directory.image;
+            const result = new Array(length * 3);
+            let i = 0;
+            for (const data of stored.drawables) {
+                result[i++] = replaceTab(convertPixels === 'dp' ? data[1].replace(/"(-?[\d.]+)px"/g, (...match) => `"${match[1]}dp"`) : data[1], insertSpaces);
+                result[i++] = directory;
+                result[i++] = data[0] + '.xml';
+            }
+            return this.checkFileAssets(result, options);
         }
-        resourceDrawableImageToString(options) {
-            if (STORED.images.size) {
-                const resource = this.resource;
+        resourceAnimToXml(stored = Resource.STORED[this.resourceId], options) {
+            let length;
+            if (!stored || !(length = stored.animators.size)) {
+                return [];
+            }
+            const insertSpaces = this.userSettings.insertSpaces;
+            const result = new Array(length * 3);
+            let i = 0;
+            for (const data of stored.animators) {
+                result[i++] = replaceTab(data[1], insertSpaces);
+                result[i++] = 'res/anim';
+                result[i++] = data[0] + '.xml';
+            }
+            return this.checkFileAssets(result, options);
+        }
+        resourceDrawableImageToString(stored = Resource.STORED[this.resourceId], options) {
+            if (stored && stored.images.size) {
                 const imageDirectory = this.directory.image;
                 const result = [];
-                const getTask = (src) => {
-                    const image = resource.getImage(src);
-                    return image && image.tasks ? image.tasks.join('+') : '';
-                };
-                for (const data of STORED.images) {
+                for (const data of stored.images) {
                     const images = data[1];
                     if (Object.keys(images).length > 1) {
                         for (const dpi in images) {
                             const value = images[dpi];
-                            result.push(value, imageDirectory + '-' + dpi, data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown'), getTask(value));
+                            result.push(value, imageDirectory + '-' + dpi, data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown'));
                         }
                     }
                     else {
                         const value = images.mdpi;
                         if (value) {
-                            result.push(value, imageDirectory, data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown'), getTask(value));
+                            result.push(value, imageDirectory, data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown'));
                         }
                     }
                 }
                 if (hasFileAction(options)) {
-                    const assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
+                    const assets = getImageAssets.call(this.resource, this.resourceId, getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
                     if (options.assets) {
                         assets.push(...options.assets);
                     }
                     options.assets = assets;
-                    if (options.directory) {
-                        this.copying(options);
+                    if (options.pathname) {
+                        this.copying(options.pathname, options);
                     }
                     if (options.filename) {
-                        this.archiving(options);
+                        this.archiving('', options);
                     }
                 }
                 return result;
             }
             return [];
         }
-        resourceRawVideoToString(options) {
-            return this.resourceRawToString('video', options);
+        resourceRawVideoToString(assets = Resource.ASSETS[this.resourceId], options) {
+            return this.resourceRawToString(assets, 'video', options);
         }
-        resourceRawAudioToString(options) {
-            return this.resourceRawToString('audio', options);
+        resourceRawAudioToString(assets = Resource.ASSETS[this.resourceId], options) {
+            return this.resourceRawToString(assets, 'audio', options);
         }
         layoutAllToXml(layouts, options) {
             const result = {};
@@ -8920,7 +8935,7 @@ var android = (function () {
                 const { content, filename, pathname } = layouts[i];
                 result[filename] = [content];
                 if (hasFileAction(options)) {
-                    assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : `${filename}.xml`, content });
+                    assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : filename + '.xml', content });
                 }
             }
             if (hasFileAction(options)) {
@@ -8928,11 +8943,11 @@ var android = (function () {
                     assets.push(...options.assets);
                 }
                 options.assets = assets;
-                if (options.directory) {
-                    this.copying(options);
+                if (options.pathname) {
+                    this.copying(options.pathname, options);
                 }
                 if (options.filename) {
-                    this.archiving(options);
+                    this.archiving('', options);
                 }
             }
             return result;
@@ -8941,25 +8956,30 @@ var android = (function () {
             return options.watch ? '&watch=1' : '';
         }
         combineAssets(assets) {
-            const userSettings = this.userSettings;
+            const { userSettings, resource, resourceId } = this;
             const result = [];
-            if (assets) {
-                for (let i = 0, length = assets.length, first = true; i < length; ++i) {
-                    const item = assets[i];
-                    if (!item.uri) {
-                        if (first) {
-                            item.filename = userSettings.outputMainFileName;
-                            first = false;
-                        }
-                        else if (!item.filename.endsWith('.xml')) {
-                            item.filename += '.xml';
-                        }
+            for (let i = 0, length = assets.length, first = true; i < length; ++i) {
+                const item = assets[i];
+                if (item.content && !item.uri) {
+                    if (first) {
+                        item.filename = userSettings.outputMainFileName;
+                        first = false;
                     }
+                    else if (!endsWith$1(item.filename, '.xml')) {
+                        item.filename += '.xml';
+                    }
+                    item.document || (item.document = userSettings.outputDocumentHandler);
                 }
-                result.push(...assets);
             }
-            const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
-            result.push(...getFileAssets(outputDirectory, this.resourceStringToXml()), ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()), ...getFileAssets(outputDirectory, this.resourceFontToXml()), ...getFileAssets(outputDirectory, this.resourceColorToXml()), ...getFileAssets(outputDirectory, this.resourceDimenToXml()), ...getFileAssets(outputDirectory, this.resourceStyleToXml()), ...getFileAssets(outputDirectory, this.resourceDrawableToXml()), ...getImageAssets(outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages), ...getFileAssets(outputDirectory, this.resourceAnimToXml()), ...getRawAssets(outputDirectory + this.directory.video, this.resourceRawVideoToString()), ...getRawAssets(outputDirectory + this.directory.audio, this.resourceRawAudioToString()));
+            result.push(...assets);
+            const data = Resource.ASSETS[resourceId];
+            if (data) {
+                const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
+                result.push(...getFileAssets(outputDirectory, this.resourceStringToXml()), ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()), ...getFileAssets(outputDirectory, this.resourceFontToXml()), ...getFileAssets(outputDirectory, this.resourceColorToXml()), ...getFileAssets(outputDirectory, this.resourceDimenToXml()), ...getFileAssets(outputDirectory, this.resourceStyleToXml()), ...getFileAssets(outputDirectory, this.resourceDrawableToXml()), ...getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages), ...getFileAssets(outputDirectory, this.resourceAnimToXml()), ...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString()), ...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString()));
+                if (data.other.length) {
+                    result.push(...data.other);
+                }
+            }
             return result;
         }
         checkFileAssets(content, options) {
@@ -8969,54 +8989,51 @@ var android = (function () {
                     assets.push(...options.assets);
                 }
                 options.assets = assets;
-                if (options.directory) {
-                    this.copying(options);
+                if (options.pathname) {
+                    this.copying(options.pathname, options);
                 }
                 if (options.filename) {
-                    this.archiving(options);
+                    this.archiving('', options);
                 }
             }
             return content;
         }
-        resourceRawToString(name, options) {
-            const length = Resource.ASSETS[name].size;
-            if (length) {
-                const resource = this.resource;
-                const getTask = (src) => {
-                    const asset = name === 'video' ? resource.getVideo(src) : resource.getAudio(src);
-                    return asset && asset.tasks ? asset.tasks.join('+') : '';
-                };
-                const result = new Array(length * 4);
-                let i = 0;
-                for (const item of Resource.ASSETS[name].values()) {
-                    const uri = item.uri;
-                    result[i++] = uri;
-                    result[i++] = item.mimeType || '';
-                    result[i++] = fromLastIndexOf$2(uri, '/', '\\');
-                    result[i++] = getTask(uri);
-                }
-                if (hasFileAction(options)) {
-                    const assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
-                    if (options.assets) {
-                        assets.push(...options.assets);
-                    }
-                    options.assets = assets;
-                    if (options.directory) {
-                        this.copying(options);
-                    }
-                    if (options.filename) {
-                        this.archiving(options);
-                    }
-                }
-                return result;
+        resourceRawToString(assets = Resource.ASSETS[this.resourceId], name, options) {
+            let length;
+            if (!assets || !(length = assets[name].size)) {
+                return [];
             }
-            return [];
+            const result = new Array(length * 3);
+            let i = 0;
+            for (const item of assets[name].values()) {
+                const uri = item.uri;
+                result[i++] = uri;
+                result[i++] = item.mimeType || '';
+                result[i++] = fromLastIndexOf$2(uri.split('?')[0], '/');
+            }
+            if (hasFileAction(options)) {
+                const rawAssets = getRawAssets.call(this.resource, this.resourceId, name, getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
+                if (options.assets) {
+                    rawAssets.push(...options.assets);
+                }
+                options.assets = rawAssets;
+                if (options.pathname) {
+                    this.copying(options.pathname, options);
+                }
+                if (options.filename) {
+                    this.archiving('', options);
+                }
+            }
+            return result;
         }
         get userSettings() {
             return this.resource.userSettings;
         }
         get directory() {
             return this.resource.controllerSettings.directory;
+        }
+        get resourceId() {
+            return this.resource.application.resourceId;
         }
     }
 
@@ -9403,22 +9420,20 @@ var android = (function () {
             }
         }
         createColumnRule(node, columnGap, columnRule) {
-            const application = this.application;
-            const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
-            const rule = application.createNode(node.sessionId, { parent: node });
+            const rule = this.application.createNode(node.sessionId, { parent: node });
             rule.containerName = node.containerName + '_COLUMNRULE';
             rule.inherit(node, 'base');
             rule.setControlType(CONTAINER_TAGNAME.LINE, 12 /* LINE */);
             rule.exclude({ resource: 28 /* ASSET */, procedure: 63 /* ALL */ });
             let width;
-            if (borderLeftWidth) {
-                width = formatPX$2(borderLeftWidth);
+            if (columnRule.borderLeftWidth) {
+                width = formatPX$2(columnRule.borderLeftWidth);
                 rule.cssApply({
                     width,
                     paddingLeft: width,
-                    borderLeftStyle,
+                    borderLeftStyle: columnRule.borderLeftStyle,
                     borderLeftWidth: width,
-                    borderLeftColor,
+                    borderLeftColor: columnRule.borderLeftColor,
                     lineHeight: 'inherit',
                     boxSizing: 'border-box',
                     display: 'inline-block'
@@ -9434,7 +9449,7 @@ var android = (function () {
             rule.render(node);
             rule.positioned = true;
             rule.renderExclude = false;
-            application.addLayoutTemplate(node, rule, {
+            this.application.addLayoutTemplate(node, rule, {
                 type: 1 /* XML */,
                 node: rule,
                 controlName: rule.controlName
@@ -9446,7 +9461,7 @@ var android = (function () {
     var LayoutUI = squared.base.LayoutUI;
     const { formatPercent, formatPX: formatPX$3, isLength: isLength$1, isPercent: isPercent$1, isPx } = squared.lib.css;
     const { truncate: truncate$3 } = squared.lib.math;
-    const { convertPercent: convertPercent$2, flatArray } = squared.lib.util;
+    const { convertPercent: convertPercent$2, endsWith: endsWith$2, flatArray, startsWith: startsWith$4 } = squared.lib.util;
     const REGEXP_ALIGNSELF = /start|end|center|baseline/;
     const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
     function getRowData(mainData, horizontal) {
@@ -9529,7 +9544,7 @@ var android = (function () {
             MARGIN_START = 1 /* MARGIN_TOP */;
             MARGIN_END = 4 /* MARGIN_BOTTOM */;
         }
-        if (alignment.startsWith('space')) {
+        if (startsWith$4(alignment, 'space')) {
             const offset = getRemainingSize(mainData, data, node, dimension, maxScreenWidth, maxScreenHeight);
             if (offset > 0) {
                 const rowData = getRowData(mainData, horizontal);
@@ -9650,7 +9665,7 @@ var android = (function () {
                 height = dimension;
             }
         }
-        else if (section.every(value => value.endsWith('fr'))) {
+        else if (section.every(value => endsWith$2(value, 'fr'))) {
             const fr = section.reduce((a, b) => a + parseFloat(b), 0);
             const weight = truncate$3(fr, node.localSettings.floatPrecision);
             if (horizontal) {
@@ -9696,7 +9711,7 @@ var android = (function () {
             else if (isPercent$1(value)) {
                 percent += convertPercent$2(value);
             }
-            else if (value.endsWith('fr')) {
+            else if (endsWith$2(value, 'fr')) {
                 return 0;
             }
         }
@@ -9772,7 +9787,7 @@ var android = (function () {
                     break;
                 }
             }
-            else if (value.endsWith('fr')) {
+            else if (endsWith$2(value, 'fr')) {
                 if (horizontal || parent.hasHeight) {
                     if (sizeWeight === -1) {
                         sizeWeight = 0;
@@ -9981,7 +9996,7 @@ var android = (function () {
                     rowCount: row.length,
                     columnCount: column.length
                 });
-                if (mainData.rowSpanMultiple.length === 0 && unit.length === column.length && unit.every(value => value.endsWith('fr')) && !node.hasWidth && !node.rootElement && node.ascend({ condition: (item) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
+                if (mainData.rowSpanMultiple.length === 0 && unit.length === column.length && unit.every(value => endsWith$2(value, 'fr')) && !node.hasWidth && !node.rootElement && node.ascend({ condition: (item) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
                     const rowData = mainData.rowData;
                     const rowCount = rowData.length;
                     const constraintData = new Array(rowCount);
@@ -10005,7 +10020,7 @@ var android = (function () {
                     }
                     if (valid) {
                         column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
-                        row.frTotal = row.unit.reduce((a, b) => a + (b.endsWith('fr') ? parseFloat(b) : 0), 0);
+                        row.frTotal = row.unit.reduce((a, b) => a + (endsWith$2(b, 'fr') ? parseFloat(b) : 0), 0);
                         node.setLayoutWidth('match_parent');
                         node.lockAttr('android', 'layout_width');
                         mainData.constraintData = constraintData;
@@ -10112,7 +10127,7 @@ var android = (function () {
                 if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
                     target.css('minHeight', formatPX$3(node.box.height), true);
                 }
-                else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent.startsWith('space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
+                else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && startsWith$4(mainData.alignContent, 'space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
                     target.mergeGravity('layout_gravity', 'fill_vertical');
                 }
                 return {
@@ -10153,7 +10168,7 @@ var android = (function () {
                             break;
                     }
                     if (wrapped) {
-                        if (column.unit.some(value => value.endsWith('fr'))) {
+                        if (column.unit.some(value => endsWith$2(value, 'fr'))) {
                             node.setLayoutWidth('match_parent');
                         }
                     }
@@ -10310,6 +10325,7 @@ var android = (function () {
                     const { emptyRows, rowDirection: horizontal } = mainData;
                     const { flags, gap, unit } = horizontal ? column : row;
                     const unitSpan = unit.length;
+                    const resourceId = node.localSettings.resourceId;
                     let k = -1, l = 0;
                     const createSpacer = (i, unitData, gapSize, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
                         if (k !== -1) {
@@ -10363,8 +10379,8 @@ var android = (function () {
                                 rowSpan,
                                 columnSpan,
                                 android: {
-                                    [horizontal ? node.localizeString("layout_marginRight" /* MARGIN_RIGHT */) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX$3(gapSize))}` : '',
-                                    [horizontal ? 'bottom' : node.localizeString("layout_marginRight" /* MARGIN_RIGHT */)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset('dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX$3(opposingMargin))}` : '',
+                                    [horizontal ? node.localizeString("layout_marginRight" /* MARGIN_RIGHT */) : 'bottom']: gapSize && (k + l) < unitData.length ? `@dimen/${Resource.insertStoredAsset(resourceId, 'dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX$3(gapSize))}` : '',
+                                    [horizontal ? 'bottom' : node.localizeString("layout_marginRight" /* MARGIN_RIGHT */)]: opposingMargin ? `@dimen/${Resource.insertStoredAsset(resourceId, 'dimens', `${node.controlId.toLowerCase()}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX$3(opposingMargin))}` : '',
                                     layout_row,
                                     layout_column,
                                     layout_rowWeight,
@@ -10401,7 +10417,7 @@ var android = (function () {
                                 if (value) {
                                     k = j;
                                     const { unit: unitOpposing, gap: gapOpposing } = horizontal ? row : column;
-                                    const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i]], 0);
+                                    const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i] || ''], 0);
                                     l = value === Infinity ? unit.length : 1;
                                     if (horizontal) {
                                         createSpacer(i, unitOpposing, gapOpposing, dimensions[1], dimensions[3], i < length - 1 ? gap : 0);
@@ -10455,14 +10471,14 @@ var android = (function () {
                         if (value === 'auto') {
                             return false;
                         }
-                        else if (value.endsWith('fr') || isPercent$1(value)) {
+                        else if (endsWith$2(value, 'fr') || isPercent$1(value)) {
                             valid = true;
                         }
                     }
                     return valid;
                 }
             }
-            return !!node.hasFlex('row') && node.flexbox.grow > 0;
+            return node.hasFlex('row') ? node.flexbox.grow > 0 : false;
         }
         checkRowSpan(mainData, node, rowSpan, rowStart) {
             if (rowSpan === 1 && mainData.rowSpanMultiple[rowStart]) {
@@ -10487,7 +10503,10 @@ var android = (function () {
         }
         beforeInsertNode(element, sessionId) {
             if (this.included(element)) {
-                this.application.getProcessing(sessionId).rootElements.add(element);
+                const rootElements = this.application.getProcessing(sessionId).rootElements;
+                if (!rootElements.includes(element)) {
+                    rootElements.push(element);
+                }
             }
             return false;
         }
@@ -11370,7 +11389,7 @@ var android = (function () {
                                         const controller = this.controller;
                                         controller.addAfterOutsideTemplate(item, controller.renderSpace({
                                             width: 'match_parent',
-                                            height: `@dimen/${Resource.insertStoredAsset('dimens', node.controlId.toLowerCase() + '_grid_space', formatPX$4(heightBottom))}`,
+                                            height: `@dimen/${Resource.insertStoredAsset(node.localSettings.resourceId, 'dimens', node.controlId.toLowerCase() + '_grid_space', formatPX$4(heightBottom))}`,
                                             columnSpan: columnCount,
                                             android: {}
                                         }), false);
@@ -11402,7 +11421,7 @@ var android = (function () {
     }
 
     var LayoutUI$3 = squared.base.LayoutUI;
-    const { formatPX: formatPX$5 } = squared.lib.css;
+    const { formatPX: formatPX$5, isPercent: isPercent$2 } = squared.lib.css;
     class List extends squared.base.extensions.List {
         constructor() {
             super(...arguments);
@@ -11485,7 +11504,8 @@ var android = (function () {
                     let top = 0, left = 0, paddingRight = 0, gravity = 'right', image;
                     if (imageSrc) {
                         const resource = this.resource;
-                        const imageData = resource.getImage(imageSrc);
+                        const resourceId = node.localSettings.resourceId;
+                        const imageData = resource.getImage(resourceId, imageSrc);
                         if (imagePosition) {
                             ({ top, left } = Resource.getBackgroundPosition(imagePosition, node.actualDimension, {
                                 fontSize: node.fontSize,
@@ -11510,7 +11530,7 @@ var android = (function () {
                             node.setBox(128 /* PADDING_LEFT */, { reset: 1 });
                             gravity = '';
                         }
-                        image = resource.addImageSrc(imageSrc);
+                        image = resource.addImageSrc(resourceId, imageSrc);
                         if (imageData) {
                             imageData.watch = node.watch;
                             imageData.tasks = node.tasks;
@@ -11532,7 +11552,7 @@ var android = (function () {
                     }
                     if (node.isEmpty() && !node.outerWrapper) {
                         container = controller.createNodeWrapper(node, parent, { alignmentType: parent.layoutGrid ? 8 /* VERTICAL */ : 0 });
-                        containerType = node.baselineElement && node.percentWidth === 0 && !node.cssInitial('maxWidth').endsWith('%') ? 16 /* LINEAR */ : 19 /* CONSTRAINT */;
+                        containerType = node.baselineElement && node.percentWidth === 0 && !isPercent$2(node.cssInitial('maxWidth')) ? 16 /* LINEAR */ : 19 /* CONSTRAINT */;
                     }
                     else {
                         container = node.outerMostWrapper;
@@ -11687,7 +11707,7 @@ var android = (function () {
     const { formatPX: formatPX$6 } = squared.lib.css;
     class Sprite extends squared.base.extensions.Sprite {
         processNode(node, parent) {
-            const drawable = this.resource.addImageSrc(node.backgroundImage);
+            const drawable = this.resource.addImageSrc(node.localSettings.resourceId, node.backgroundImage);
             if (drawable) {
                 const { width, height, position } = this.data.get(node);
                 const container = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
@@ -11775,7 +11795,7 @@ var android = (function () {
             }
         }
         postOptimize(node) {
-            node.apply(Resource.formatOptions(createViewAttribute(this.options[node.elementId]), this.application.extensionManager.valueAsBoolean("android.resource.strings" /* RESOURCE_STRINGS */, 'numberAsResource')));
+            node.apply(Resource.formatOptions(node.localSettings.resourceId, createViewAttribute(this.options[node.elementId]), this.application.extensionManager.valueAsBoolean("android.resource.strings" /* RESOURCE_STRINGS */, 'numberAsResource')));
         }
     }
 
@@ -12107,7 +12127,7 @@ var android = (function () {
     }
 
     const { getTextMetrics } = squared.lib.dom;
-    const REGEXP_WORD = /(?:[^\w\s]+\s+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b))/g;
+    const REGEXP_WORD = /[^\w\s]+\s+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b)/g;
     function getFontMeasureAdjust(node) {
         const value = node.dataset.androidFontMeasureAdjust;
         return value === 'false' ? Infinity : value ? +value : NaN;
@@ -12307,31 +12327,24 @@ var android = (function () {
                         const depth = seg.depth + (seg === node ? 1 : 0);
                         const fontFamily = seg.textStyle.fontFamily;
                         const styleMap = Object.assign({}, seg.unsafe('styleMap'));
-                        if ('lineHeight' in styleMap) {
-                            delete styleMap.lineHeight;
-                        }
-                        const initialData = Object.freeze({ styleMap });
+                        delete styleMap.lineHeight;
+                        const initial = Object.freeze({ styleMap });
                         const cssData = Object.assign({ position: 'static', display: partition ? seg.display : 'inline', verticalAlign: 'baseline' }, seg.textStyle);
-                        const bounds = !seg.hasPX('width') && seg.textBounds || seg.bounds;
-                        const boxRect = {
-                            top: bounds.top,
-                            right: bounds.right,
-                            bottom: bounds.bottom,
-                            left: bounds.left,
-                            height: Math.floor(seg.bounds.height / (bounds.numberOfLines || 1))
-                        };
+                        const boxRect = Object.assign({}, !seg.hasPX('width') && seg.textBounds || seg.bounds);
+                        boxRect.height = Math.floor(seg.bounds.height / (boxRect.numberOfLines || 1));
+                        boxRect.numberOfLines = 1;
                         const createContainer = (tagName, value) => {
                             const container = application.createNode(sessionId, { parent: parentContainer });
+                            const metrics = getTextMetrics(value, fontSize, fontFamily);
+                            const bounds = Object.assign(Object.assign({}, boxRect), { width: (metrics ? metrics.width : 0) + (value.length * adjustment) });
                             container.init(parentContainer, depth);
                             container.inlineText = true;
                             container.renderExclude = false;
                             container.contentAltered = true;
                             container.textContent = value;
                             container.actualParent = parentContainer;
-                            container.unsafe('element', element);
-                            container.unsafe('initial', initialData);
-                            container.unsafe('elementData', elementData);
-                            container.unsafe('preferInitial', false);
+                            container.textBounds = bounds;
+                            container.unsafe({ element, initial, elementData, preferInitial: false, bounds });
                             container.setCacheState('naturalChild', false);
                             container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
                             container.setCacheState('htmlElement', naturalElement);
@@ -12340,10 +12353,6 @@ var android = (function () {
                             container.setCacheValue('fontSize', fontSize);
                             container.setCacheValue('lineHeight', lineHeight);
                             container.cssApply(cssData);
-                            const metrics = getTextMetrics(value, fontSize, fontFamily);
-                            const textBounds = Object.assign(Object.assign({}, boxRect), { width: (metrics ? metrics.width : 0) + (value.length * adjustment) });
-                            container.textBounds = textBounds;
-                            container.unsafe('bounds', textBounds);
                             container.setControlType(CONTAINER_TAGNAME.TEXT, 10 /* TEXT */);
                             container.exclude({ resource: 1 /* BOX_STYLE */, section: 1 /* DOM_TRAVERSE */ | 2 /* EXTENSION */ });
                             return container;
@@ -12575,7 +12584,7 @@ var android = (function () {
                 node.positioned = true;
             }
         }
-        beforeDocumentWrite() {
+        beforeFinalize() {
             for (const node of this.subscribers) {
                 const mainData = this.data.get(node);
                 if (mainData) {
@@ -12870,13 +12879,13 @@ var android = (function () {
     }
 
     var LayoutUI$a = squared.base.LayoutUI;
-    const { formatPX: formatPX$8 } = squared.lib.css;
+    const { formatPX: formatPX$8, isPercent: isPercent$3 } = squared.lib.css;
     const { truncate: truncate$5 } = squared.lib.math;
-    const { convertPercent: convertPercent$4 } = squared.lib.util;
-    const checkPercent = (value) => value.endsWith('%') && parseFloat(value) > 0;
+    const { convertPercent: convertPercent$4, startsWith: startsWith$5 } = squared.lib.util;
+    const checkPercent = (value) => isPercent$3(value) && parseFloat(value) > 0;
     class Percent extends squared.base.ExtensionUI {
         is(node) {
-            return !node.actualParent.layoutElement && !node.display.startsWith('table');
+            return !node.actualParent.layoutElement && !startsWith$5(node.display, 'table');
         }
         condition(node, parent) {
             const absoluteParent = node.absoluteParent || parent;
@@ -13543,11 +13552,11 @@ var android = (function () {
 
     const { extractURL: extractURL$1, formatPercent: formatPercent$1, formatPX: formatPX$a, isLength: isLength$3 } = squared.lib.css;
     const { truncate: truncate$6 } = squared.lib.math;
-    const { delimitString, isEqual, plainMap: plainMap$2, resolvePath: resolvePath$1, spliceArray, splitPair: splitPair$1, splitPairStart: splitPairStart$2 } = squared.lib.util;
+    const { delimitString, isEqual, plainMap: plainMap$2, resolvePath: resolvePath$1, spliceArray, splitPair: splitPair$1, splitPairStart: splitPairStart$1 } = squared.lib.util;
     const CHAR_SEPARATOR = /\s*,\s*/;
-    function getBorderStyle(border, direction = -1, halfSize = false) {
+    function getBorderStyle(resourceId, border, direction = -1, halfSize = false) {
         const { style, color } = border;
-        const createStrokeColor = (value) => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
+        const createStrokeColor = (value) => ({ color: getColorValue(resourceId, value), dashWidth: '', dashGap: '' });
         const result = createStrokeColor(color);
         if (style !== 'solid') {
             const width = roundFloat(border.width);
@@ -13642,15 +13651,15 @@ var android = (function () {
         }
         return result;
     }
-    function getBorderStroke(border, direction = -1, hasInset, isInset) {
+    function getBorderStroke(resourceId, border, direction = -1, hasInset, isInset) {
         let result;
         if (isAlternatingBorder(border.style)) {
             const width = parseFloat(border.width);
-            result = getBorderStyle(border, direction, isInset !== true);
+            result = getBorderStyle(resourceId, border, direction, isInset !== true);
             result.width = isInset ? (Math.ceil(width / 2) * 2) + 'px' : (hasInset ? Math.ceil(width / 2) : width) + 'px';
         }
         else {
-            result = getBorderStyle(border);
+            result = getBorderStyle(resourceId, border);
             result.width = roundFloat(border.width) + 'px';
         }
         return result;
@@ -13679,9 +13688,9 @@ var android = (function () {
             return result;
         }
     }
-    function getBackgroundColor(value) {
+    function getBackgroundColor(resourceId, value) {
         if (value) {
-            const color = getColorValue(value, false);
+            const color = getColorValue(resourceId, value, false);
             if (color) {
                 return { color };
             }
@@ -13698,7 +13707,7 @@ var android = (function () {
                 return false;
         }
     }
-    function insertDoubleBorder(items, border, top, right, bottom, left, indentWidth = 0, corners) {
+    function insertDoubleBorder(resourceId, items, border, top, right, bottom, left, indentWidth = 0, corners) {
         const width = roundFloat(border.width);
         const borderWidth = Math.max(1, Math.floor(width / 3));
         const indentOffset = indentWidth ? formatPX$a(indentWidth) : '';
@@ -13710,7 +13719,7 @@ var android = (function () {
             left: left ? indentOffset : hideOffset,
             shape: {
                 'android:shape': 'rectangle',
-                stroke: Object.assign({ width: formatPX$a(borderWidth) }, getBorderStyle(border)),
+                stroke: Object.assign({ width: formatPX$a(borderWidth) }, getBorderStyle(resourceId, border)),
                 corners
             }
         });
@@ -13724,12 +13733,12 @@ var android = (function () {
             left: left ? drawOffset : hideOffset,
             shape: {
                 'android:shape': 'rectangle',
-                stroke: Object.assign({ width: formatPX$a(borderWidth) }, getBorderStyle(border)),
+                stroke: Object.assign({ width: formatPX$a(borderWidth) }, getBorderStyle(resourceId, border)),
                 corners
             }
         });
     }
-    function createBackgroundGradient(gradient, api = 30 /* LATEST */, imageCount, borderRadius, precision) {
+    function createBackgroundGradient(resourceId, gradient, api = 30 /* LATEST */, imageCount, borderRadius, precision) {
         const { colorStops, type } = gradient;
         let positioning = api >= 21 /* LOLLIPOP */;
         const result = { type, positioning };
@@ -13799,21 +13808,21 @@ var android = (function () {
             }
         }
         if (positioning) {
-            result.item = convertColorStops(colorStops);
+            result.item = convertColorStops(resourceId, colorStops);
         }
         else {
-            result.startColor = getColorValue(colorStops[0].color);
-            result.endColor = getColorValue(colorStops[length - 1].color);
+            result.startColor = getColorValue(resourceId, colorStops[0].color);
+            result.endColor = getColorValue(resourceId, colorStops[length - 1].color);
             if (length > 2) {
-                result.centerColor = getColorValue(colorStops[Math.floor(length / 2)].color);
+                result.centerColor = getColorValue(resourceId, colorStops[Math.floor(length / 2)].color);
             }
         }
         return result;
     }
-    function createLayerList(boxStyle, images, borderOnly, stroke, corners, indentOffset) {
+    function createLayerList(resourceId, boxStyle, images, borderOnly, stroke, corners, indentOffset) {
         const item = [];
         const result = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
-        const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
+        const solid = !borderOnly && getBackgroundColor(resourceId, boxStyle.backgroundColor);
         if (solid && !(images && images.find(image => image.gradient))) {
             item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
         }
@@ -13838,16 +13847,16 @@ var android = (function () {
         }
         return result;
     }
-    function getColorValue(value, transparency = true) {
-        const color = Resource.addColor(value, transparency);
+    function getColorValue(resourceId, value, transparency = true) {
+        const color = Resource.addColor(resourceId, value, transparency);
         return color ? `@color/${color}` : '';
     }
-    function setBorderStyle(layerList, borders, index, corners, indentWidth, indentOffset) {
+    function setBorderStyle(resourceId, layerList, borders, index, corners, indentWidth, indentOffset) {
         const border = borders[index];
         if (border) {
             const width = roundFloat(border.width);
             if (border.style === 'double' && width > 1) {
-                insertDoubleBorder(layerList.item, border, index === 0, index === 1, index === 2, index === 3, indentWidth, corners);
+                insertDoubleBorder(resourceId, layerList.item, border, index === 0, index === 1, index === 2, index === 3, indentWidth, corners);
             }
             else {
                 const inset = width > 1 && border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
@@ -13860,7 +13869,7 @@ var android = (function () {
                         left: index === 3 ? '' : hideInsetOffset,
                         shape: {
                             'android:shape': 'rectangle',
-                            stroke: getBorderStroke(border, index, inset, true)
+                            stroke: getBorderStroke(resourceId, border, index, inset, true)
                         }
                     });
                 }
@@ -13873,7 +13882,7 @@ var android = (function () {
                     shape: {
                         'android:shape': 'rectangle',
                         corners,
-                        stroke: getBorderStroke(border, index, inset)
+                        stroke: getBorderStroke(resourceId, border, index, inset)
                     }
                 });
             }
@@ -13882,8 +13891,8 @@ var android = (function () {
     const getPixelUnit = (width, height) => `${width}px ${height}px`;
     const roundFloat = (value) => Math.round(parseFloat(value));
     const checkBackgroundPosition = (value, adjacent, fallback) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
-    function convertColorStops(list, precision) {
-        return plainMap$2(list, item => ({ color: getColorValue(item.color), offset: truncate$6(item.offset, precision) }));
+    function convertColorStops(resourceId, list, precision) {
+        return plainMap$2(list, item => ({ color: getColorValue(resourceId, item.color), offset: truncate$6(item.offset, precision) }));
     }
     function drawRect(width, height, x = 0, y = 0, precision) {
         if (precision) {
@@ -13910,7 +13919,7 @@ var android = (function () {
         beforeParseDocument() {
             this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get("android.resource.svg" /* RESOURCE_SVG */) : null;
         }
-        afterResources(sessionId) {
+        afterResources(sessionId, resourceId) {
             const settings = this.application.userSettings;
             const drawOutline = this.options.outlineAsInsetBorder;
             let themeBackground;
@@ -13930,7 +13939,7 @@ var android = (function () {
                 }
             };
             const setBodyBackground = (name, parent, value) => {
-                Resource.addTheme({
+                Resource.addTheme(resourceId, {
                     name,
                     parent,
                     items: {
@@ -13943,7 +13952,7 @@ var android = (function () {
             };
             const setDrawableBackground = (node, value) => {
                 if (value) {
-                    const drawable = `@drawable/${Resource.insertStoredAsset('drawables', (node.containerName + '_' + node.controlId).toLowerCase(), value)}`;
+                    const drawable = `@drawable/${Resource.insertStoredAsset(resourceId, 'drawables', (node.containerName + '_' + node.controlId).toLowerCase(), value)}`;
                     if (!themeBackground) {
                         if (node.tagName === 'HTML') {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
@@ -13974,7 +13983,7 @@ var android = (function () {
                             }
                         }
                     }
-                    const images = this.getDrawableImages(node, stored, boxImage);
+                    const images = this.getDrawableImages(resourceId, node, stored, boxImage);
                     if (node.controlName === CONTAINER_TAGNAME.BUTTON && ((_b = stored.borderRadius) === null || _b === void 0 ? void 0 : _b.length) === 1 && images && images.some(item => item.vectorGradient) && node.api >= 28 /* PIE */) {
                         node.android('buttonCornerRadius', stored.borderRadius[0]);
                         delete stored.borderRadius;
@@ -13985,10 +13994,10 @@ var android = (function () {
                         const width = roundFloat(outline.width);
                         indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                     }
-                    let [shapeData, layerList] = this.getDrawableBorder(stored, images, indentWidth);
+                    let [shapeData, layerList] = this.getDrawableBorder(resourceId, stored, images, indentWidth);
                     const emptyBackground = !shapeData && !layerList;
                     if (outline && (drawOutline || emptyBackground)) {
-                        const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(stored, emptyBackground ? images : null, 0, !emptyBackground, outline);
+                        const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(resourceId, stored, emptyBackground ? images : null, 0, !emptyBackground, outline);
                         if (outlineShapeData) {
                             shapeData || (shapeData = outlineShapeData);
                         }
@@ -14010,7 +14019,7 @@ var android = (function () {
                     else {
                         const backgroundColor = stored.backgroundColor;
                         if (backgroundColor) {
-                            const color = getColorValue(backgroundColor, node.inputElement);
+                            const color = getColorValue(resourceId, backgroundColor, node.inputElement);
                             if (color) {
                                 if (!themeBackground) {
                                     if (node.tagName === 'HTML') {
@@ -14037,7 +14046,7 @@ var android = (function () {
                 }
             });
         }
-        getDrawableBorder(data, images, indentWidth, borderOnly = false, outline) {
+        getDrawableBorder(resourceId, data, images, indentWidth, borderOnly = false, outline) {
             const borderVisible = new Array(4);
             const indentOffset = indentWidth ? formatPX$a(indentWidth) : '';
             let shapeData = null, layerList = null, borderStyle = true, borderAll = true, borders, border, corners, borderData;
@@ -14099,26 +14108,26 @@ var android = (function () {
                 border = borderData;
             }
             if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length)) {
-                const stroke = border && getBorderStroke(border);
+                const stroke = border && getBorderStroke(resourceId, border);
                 if (images && images.length || indentWidth || borderOnly) {
-                    layerList = createLayerList(data, images, borderOnly, stroke, corners, indentOffset);
+                    layerList = createLayerList(resourceId, data, images, borderOnly, stroke, corners, indentOffset);
                 }
                 else {
                     shapeData = [{
                             'xmlns:android': XML_NAMESPACE.android,
                             'android:shape': 'rectangle',
                             stroke,
-                            solid: !borderOnly && getBackgroundColor(data.backgroundColor),
+                            solid: !borderOnly && getBackgroundColor(resourceId, data.backgroundColor),
                             corners
                         }];
                 }
             }
             else if (borderData) {
-                layerList = createLayerList(data, images, borderOnly);
+                layerList = createLayerList(resourceId, data, images, borderOnly);
                 if (borderStyle && !isAlternatingBorder(borderData.style)) {
                     const width = roundFloat(borderData.width);
                     if (borderData.style === 'double' && width > 1) {
-                        insertDoubleBorder(layerList[0].item, borderData, borderVisible[0], borderVisible[1], borderVisible[2], borderVisible[3], indentWidth, corners);
+                        insertDoubleBorder(resourceId, layerList[0].item, borderData, borderVisible[0], borderVisible[1], borderVisible[2], borderVisible[3], indentWidth, corners);
                     }
                     else {
                         const hideOffset = '-' + formatPX$a(width + indentWidth + 1);
@@ -14130,22 +14139,22 @@ var android = (function () {
                             shape: {
                                 'android:shape': 'rectangle',
                                 corners,
-                                stroke: getBorderStroke(borderData)
+                                stroke: getBorderStroke(resourceId, borderData)
                             }
                         });
                     }
                 }
                 else {
                     const layerData = layerList[0];
-                    setBorderStyle(layerData, borders, 0, corners, indentWidth, indentOffset);
-                    setBorderStyle(layerData, borders, 3, corners, indentWidth, indentOffset);
-                    setBorderStyle(layerData, borders, 2, corners, indentWidth, indentOffset);
-                    setBorderStyle(layerData, borders, 1, corners, indentWidth, indentOffset);
+                    setBorderStyle(resourceId, layerData, borders, 0, corners, indentWidth, indentOffset);
+                    setBorderStyle(resourceId, layerData, borders, 3, corners, indentWidth, indentOffset);
+                    setBorderStyle(resourceId, layerData, borders, 2, corners, indentWidth, indentOffset);
+                    setBorderStyle(resourceId, layerData, borders, 1, corners, indentWidth, indentOffset);
                 }
             }
             return [shapeData, layerList];
         }
-        getDrawableImages(node, data, boxImage) {
+        getDrawableImages(resourceId, node, data, boxImage) {
             var _a;
             const backgroundImage = data.backgroundImage;
             if (backgroundImage || boxImage) {
@@ -14227,28 +14236,23 @@ var android = (function () {
                                     const uri = extractURL$1(value);
                                     if (uri) {
                                         if (uri.startsWith('data:image/')) {
-                                            const rawData = resource.getRawData(uri);
+                                            const rawData = resource.getRawData(resourceId, uri);
                                             if (rawData) {
                                                 const { base64, filename } = rawData;
                                                 if (base64 && filename) {
-                                                    images[length] = splitPairStart$2(filename, '.', false, true);
+                                                    images[length] = splitPairStart$1(filename, '.', false, true);
                                                     imageDimensions[length] = rawData.width && rawData.height ? rawData : null;
-                                                    resource.writeRawImage({
-                                                        mimeType: rawData.mimeType,
-                                                        filename,
-                                                        data: base64,
-                                                        encoding: 'base64'
-                                                    });
+                                                    resource.writeRawImage(resourceId, filename, rawData);
                                                     valid = true;
                                                 }
                                             }
                                         }
                                         else {
                                             value = resolvePath$1(uri);
-                                            const src = resource.addImageSet({ mdpi: value });
+                                            const src = resource.addImageSet(resourceId, { mdpi: value });
                                             if (src) {
                                                 images[length] = src;
-                                                imageDimensions[length] = resource.getImage(value);
+                                                imageDimensions[length] = resource.getImage(resourceId, value);
                                                 valid = true;
                                             }
                                         }
@@ -14257,7 +14261,7 @@ var android = (function () {
                             }
                         }
                         else if (value.colorStops.length > 1) {
-                            const gradient = createBackgroundGradient(value, node.api, q, data.borderRadius);
+                            const gradient = createBackgroundGradient(resourceId, value, node.api, q, data.borderRadius);
                             if (gradient) {
                                 images[length] = gradient;
                                 imageDimensions[length] = value.dimension;
@@ -14293,7 +14297,7 @@ var android = (function () {
                     }
                     for (const image of boxImage) {
                         const element = image.element;
-                        const src = resource.addImageSrc(element);
+                        const src = resource.addImageSrc(resourceId, element);
                         if (src) {
                             const imageDimension = image.bounds;
                             images[length] = src;
@@ -14304,7 +14308,7 @@ var android = (function () {
                                 imageDimension,
                                 screenDimension
                             });
-                            const stored = resource.getImage(element.src);
+                            const stored = resource.getImage(resourceId, element.src);
                             if (!node.hasPX('width')) {
                                 const offsetStart = ((stored === null || stored === void 0 ? void 0 : stored.width) || element.naturalWidth) + position.left - (node.paddingLeft + node.borderLeftWidth);
                                 if (offsetStart > 0) {
@@ -14919,7 +14923,7 @@ var android = (function () {
                         if (height === 0) {
                             height = dimension ? dimension.height : node.fitToScreen(node.actualDimension).height;
                         }
-                        const gradient = Resource.insertStoredAsset('drawables', `${node.controlId}_gradient_${i + 1}`, applyTemplate('vector', VECTOR_TMPL, [{
+                        const gradient = Resource.insertStoredAsset(resourceId, 'drawables', `${node.controlId}_gradient_${i + 1}`, applyTemplate('vector', VECTOR_TMPL, [{
                                 'xmlns:android': XML_NAMESPACE.android,
                                 'xmlns:aapt': XML_NAMESPACE.aapt,
                                 'android:width': formatPX$a(width),
@@ -15077,7 +15081,7 @@ var android = (function () {
             super(...arguments);
             this.eventOnly = true;
         }
-        beforeDocumentWrite(data) {
+        beforeFinalize(data) {
             const viewModel = this.application.viewModel;
             if (viewModel.size) {
                 const { rendered, documentRoot } = data;
@@ -15134,19 +15138,19 @@ var android = (function () {
 
     var Pattern = squared.lib.base.Pattern;
     const { isPx: isPx$1 } = squared.lib.css;
-    const { convertHyphenated, fromLastIndexOf: fromLastIndexOf$3 } = squared.lib.util;
-    const CACHE_UNDERSCORE = {};
+    const { convertHyphenated, fromLastIndexOf: fromLastIndexOf$3, startsWith: startsWith$6 } = squared.lib.util;
     const RE_DIMENS = new Pattern(/:(\w+)="(-?[\d.]+px)"/g);
-    function getResourceName(map, name, value) {
+    const CACHE_UNDERSCORE = {};
+    function getResourceName(resourceId, map, name, value) {
         if (map.get(name) === value) {
             return name;
         }
         for (const data of map) {
-            if (value === data[1] && data[0].startsWith(name)) {
+            if (value === data[1] && startsWith$6(data[0], name)) {
                 return data[0];
             }
         }
-        return Resource.generateId('dimen', name, 0);
+        return Resource.generateId(resourceId, 'dimen', name, 0);
     }
     function createNamespaceData(namespace, node, group) {
         const obj = node.namespace(namespace);
@@ -15165,8 +15169,9 @@ var android = (function () {
             super(...arguments);
             this.eventOnly = true;
         }
-        beforeDocumentWrite(data) {
-            const dimens = Resource.STORED.dimens;
+        beforeFinalize(data) {
+            const resourceId = data.resourceId;
+            const dimens = Resource.STORED[resourceId].dimens;
             const rendered = data.rendered;
             const groups = {};
             for (let i = 0, length = rendered.length; i < length; ++i) {
@@ -15183,7 +15188,7 @@ var android = (function () {
                 for (const name in group) {
                     const [namespace, attr, value] = name.split(',');
                     CACHE_UNDERSCORE[attr] || (CACHE_UNDERSCORE[attr] = convertHyphenated(attr, '_'));
-                    const key = getResourceName(dimens, fromLastIndexOf$3(containerName, '.') + '_' + CACHE_UNDERSCORE[attr], value);
+                    const key = getResourceName(resourceId, dimens, fromLastIndexOf$3(containerName, '.') + '_' + CACHE_UNDERSCORE[attr], value);
                     const items = group[name];
                     for (let i = 0, length = items.length; i < length; ++i) {
                         items[i].attr(namespace, attr, `@dimen/${key}`);
@@ -15192,9 +15197,10 @@ var android = (function () {
                 }
             }
         }
-        afterFinalize() {
+        afterFinalize(data) {
             if (this.controller.hasAppendProcessing()) {
-                const dimens = Resource.STORED.dimens;
+                const resourceId = data.resourceId;
+                const dimens = Resource.STORED[resourceId].dimens;
                 for (const layout of this.application.layouts) {
                     let content = layout.content;
                     RE_DIMENS.matcher(content);
@@ -15202,7 +15208,7 @@ var android = (function () {
                         const [original, name, value] = RE_DIMENS.groups();
                         if (name !== 'text') {
                             CACHE_UNDERSCORE[name] || (CACHE_UNDERSCORE[name] = convertHyphenated(name, '_'));
-                            const key = getResourceName(dimens, 'custom_' + CACHE_UNDERSCORE[name], value);
+                            const key = getResourceName(resourceId, dimens, 'custom_' + CACHE_UNDERSCORE[name], value);
                             content = content.replace(original, original.replace(value, `@dimen/${key}`));
                             dimens.set(key, value);
                         }
@@ -15216,7 +15222,7 @@ var android = (function () {
     }
 
     const { truncate: truncate$7 } = squared.lib.math;
-    const { capitalize: capitalize$5, convertWord: convertWord$2, hasKeys: hasKeys$1, joinArray: joinArray$1, spliceArray: spliceArray$1, trimBoth } = squared.lib.util;
+    const { capitalize: capitalize$5, convertWord: convertWord$2, hasKeys: hasKeys$1, joinArray: joinArray$1, spliceArray: spliceArray$1, startsWith: startsWith$7, trimBoth } = squared.lib.util;
     const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
     const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
     const FONT_NAME = {
@@ -15309,16 +15315,17 @@ var android = (function () {
             this.eventOnly = true;
         }
         afterParseDocument(sessionId) {
+            const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
             const resource = this.resource;
             const userSettings = resource.userSettings;
-            const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
             const api = userSettings.targetAPI;
             const convertPixels = userSettings.convertPixels === 'dp';
-            const { fonts, styles } = resource.mapOfStored;
+            const { resourceId, cache } = this.application.getProcessing(sessionId);
+            const { fonts, styles } = Resource.STORED[resourceId];
             const nameMap = {};
             const groupMap = {};
-            const cache = [];
-            this.application.getProcessingCache(sessionId).each(node => {
+            const fontItems = [];
+            cache.each(node => {
                 if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(4 /* FONT_STYLE */)) {
                     const containerName = node.containerName;
                     (nameMap[containerName] || (nameMap[containerName] = [])).push(node);
@@ -15326,7 +15333,7 @@ var android = (function () {
             });
             for (const tag in nameMap) {
                 const data = nameMap[tag];
-                const sorted = [{}, {}, {}];
+                const sorted = [{}, {}];
                 const addFontItem = (node, index, attr, value) => {
                     if (value) {
                         const items = sorted[index] || (sorted[index] = {});
@@ -15334,7 +15341,7 @@ var android = (function () {
                         (items[name] || (items[name] = [])).push(node);
                     }
                 };
-                cache.push(...data);
+                fontItems.push(...data);
                 for (let i = 0, length = data.length; i < length; ++i) {
                     const node = data[i];
                     const stored = node.data(Resource.KEY_NAME, 'fontStyle');
@@ -15358,14 +15365,14 @@ var android = (function () {
                         }
                         else if (fontStyle && fontWeight) {
                             let createFont;
-                            if (resource.getFont(value, fontStyle, fontWeight)) {
+                            if (resource.getFonts(resourceId, value, fontStyle, fontWeight).length) {
                                 createFont = true;
                             }
                             else {
-                                const font = fontStyle.startsWith('oblique') ? resource.getFont(value, 'italic') || resource.getFont(value, 'normal') : resource.getFont(value, fontStyle);
-                                if (font) {
+                                const font = startsWith$7(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
+                                if (font.length) {
                                     actualFontWeight = fontWeight;
-                                    fontWeight = font.fontWeight.toString();
+                                    fontWeight = font[0].fontWeight.toString();
                                     createFont = true;
                                 }
                                 else if (index < array.length - 1) {
@@ -15386,7 +15393,7 @@ var android = (function () {
                         else {
                             return false;
                         }
-                        if (fontStyle === 'normal' || fontStyle.startsWith('oblique')) {
+                        if (fontStyle === 'normal' || startsWith$7(fontStyle, 'oblique')) {
                             fontStyle = '';
                         }
                         if (actualFontWeight) {
@@ -15403,12 +15410,12 @@ var android = (function () {
                     addFontItem(node, 0, 'fontFamily', fontFamily);
                     addFontItem(node, 1, 'fontSize', truncate$7(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));
                     if (stored.color) {
-                        addFontItem(node, 2, 'color', Resource.addColor(stored.color));
+                        addFontItem(node, 2, 'color', Resource.addColor(resourceId, stored.color));
                     }
                     addFontItem(node, 3, 'fontWeight', fontWeight);
                     addFontItem(node, 4, 'fontStyle', fontStyle);
                     if (backgroundColor) {
-                        addFontItem(node, 5, 'backgroundColor', Resource.addColor(backgroundColor, node.inputElement));
+                        addFontItem(node, 5, 'backgroundColor', Resource.addColor(resourceId, backgroundColor, node.inputElement));
                     }
                 }
                 groupMap[tag] = sorted;
@@ -15497,7 +15504,7 @@ var android = (function () {
                             }
                             if (hasKeys$1(filtered)) {
                                 const combined = {};
-                                const deleteKeys = new Set();
+                                const deleteKeys = [];
                                 const joinedMap = {};
                                 const joinedIndex = {};
                                 for (const attr in filtered) {
@@ -15517,12 +15524,12 @@ var android = (function () {
                                             for (const value of attrB.split(';')) {
                                                 data.add(value);
                                             }
-                                            deleteKeys.add(attrA).add(attrB);
+                                            deleteKeys.push(attrA, attrB);
                                         }
                                     }
                                 }
                                 for (const attr in filtered) {
-                                    if (deleteKeys.has(attr)) {
+                                    if (deleteKeys.includes(attr)) {
                                         continue;
                                     }
                                     deleteStyleAttribute(sorted, attr.split(';'), filtered[attr]);
@@ -15600,8 +15607,8 @@ var android = (function () {
                     }
                 }
             }
-            for (let i = 0, length = cache.length; i < length; ++i) {
-                const node = cache[i];
+            for (let i = 0, length = fontItems.length; i < length; ++i) {
+                const node = fontItems[i];
                 const styleData = nodeMap.get(node);
                 if (styleData) {
                     if (styleData.length > 1) {
@@ -15674,7 +15681,7 @@ var android = (function () {
             super(...arguments);
             this.eventOnly = true;
         }
-        beforeDocumentWrite(data) {
+        beforeFinalize(data) {
             const rendered = data.rendered;
             for (let i = 0, length = rendered.length; i < length; ++i) {
                 const node = rendered[i];
@@ -15747,7 +15754,7 @@ var android = (function () {
         }
     }
 
-    const { parseAngle } = squared.lib.css;
+    const { isPercent: isPercent$4, parseAngle } = squared.lib.css;
     const { getTextMetrics: getTextMetrics$1 } = squared.lib.dom;
     const { clamp: clamp$1 } = squared.lib.math;
     const { delimitString: delimitString$1 } = squared.lib.util;
@@ -15777,7 +15784,7 @@ var android = (function () {
             };
             this.eventOnly = true;
         }
-        afterResources(sessionId) {
+        afterResources(sessionId, resourceId) {
             const numberAsResource = this.options.numberAsResource;
             const resource = this.resource;
             this.application.getProcessingCache(sessionId).each(node => {
@@ -15785,23 +15792,23 @@ var android = (function () {
                     if (node.styleElement) {
                         const title = node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                         if (title) {
-                            setTextValue(node, 'tooltipText', Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(title))), `${node.controlId.toLowerCase()}_title`, numberAsResource));
+                            setTextValue(node, 'tooltipText', Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(title))), `${node.controlId.toLowerCase()}_title`, numberAsResource));
                         }
                     }
                     if (node.controlName === CONTAINER_TAGNAME.EDIT_LIST) {
                         const list = node.element.list;
                         if (list) {
-                            this.createOptionArray(list, node.controlId);
+                            this.createOptionArray(resourceId, list, node.controlId);
                         }
                     }
                     const hintString = node.data(Resource.KEY_NAME, 'hintString');
                     if (hintString) {
-                        setTextValue(node, 'hint', Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(hintString))), `${node.controlId.toLowerCase()}_hint`, numberAsResource));
+                        setTextValue(node, 'hint', Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(hintString))), `${node.controlId.toLowerCase()}_hint`, numberAsResource));
                     }
                     const tagName = node.tagName;
                     switch (tagName) {
                         case 'SELECT': {
-                            const name = this.createOptionArray(node.element, node.controlId);
+                            const name = this.createOptionArray(resourceId, node.element, node.controlId);
                             if (name) {
                                 node.android('entries', `@array/${name}`);
                             }
@@ -15810,7 +15817,7 @@ var android = (function () {
                         case 'IFRAME': {
                             const valueString = node.data(Resource.KEY_NAME, 'valueString');
                             if (valueString) {
-                                Resource.addString(replaceCharacterData(resource.preFormatString(valueString)), `${node.controlId.toLowerCase()}_iframe_src`);
+                                Resource.addString(resourceId, replaceCharacterData(resource.preFormatString(valueString)), `${node.controlId.toLowerCase()}_iframe_src`);
                             }
                             break;
                         }
@@ -15854,7 +15861,7 @@ var android = (function () {
                                 if (textIndent > 0) {
                                     const metrics = getTextMetrics$1(' ', node.fontSize, node.css('fontFamily'));
                                     if (metrics) {
-                                        valueString = Resource.STRING_SPACE.repeat(Math.max(Math.floor(textIndent / metrics.width), 1)) + valueString;
+                                        valueString = resource.STRING_SPACE.repeat(Math.max(Math.floor(textIndent / metrics.width), 1)) + valueString;
                                     }
                                 }
                                 let fontVariation = getFontVariationStyle(node.css('fontStyle')), fontFeature = '';
@@ -15889,135 +15896,147 @@ var android = (function () {
                                             percent = '200%';
                                             break;
                                     }
-                                    if (percent.endsWith('%')) {
-                                        fontVariation = delimitString$1({ value: fontVariation }, `'wdth' ${parseFloat(percent)}`);
+                                    if (isPercent$4(percent)) {
+                                        fontVariation = delimitString$1(fontVariation, `'wdth' ${parseFloat(percent)}`);
                                     }
                                 }
                                 if (node.has('fontVariantCaps')) {
-                                    for (const variant of node.cssValue('fontVariantCaps').split(' ')) {
-                                        switch (variant) {
+                                    fontFeature = node.cssValue('fontVariantCaps').split(' ').reduce((a, b) => {
+                                        switch (b) {
                                             case 'small-caps':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'smcp'");
+                                                b = "'smcp'";
                                                 break;
                                             case 'all-small-caps':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'c2sc'", "'smcp'");
+                                                b = "'c2sc', 'smcp'";
                                                 break;
                                             case 'petite-caps':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'pcap'");
+                                                b = "'pcap'";
                                                 break;
                                             case 'all-petite-caps':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'c2pc'", "'pcap'");
+                                                b = "'c2pc', 'pcap'";
                                                 break;
                                             case 'unicase':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'unic'");
+                                                b = "'unic'";
                                                 break;
                                             case 'titling-caps':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'titl'");
+                                                b = "'titl'";
                                                 break;
+                                            default:
+                                                return a;
                                         }
-                                    }
+                                        return a + (a ? ', ' : '') + b;
+                                    }, fontFeature);
                                 }
                                 if (node.has('fontVariantNumeric')) {
-                                    for (const variant of node.cssValue('fontVariantNumeric').split(' ')) {
-                                        switch (variant) {
+                                    fontFeature = node.cssValue('fontVariantNumeric').split(' ').reduce((a, b) => {
+                                        switch (b) {
                                             case 'ordinal':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'ordn'");
+                                                b = "'ordn'";
                                                 break;
                                             case 'slashed-zero':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'zero'");
+                                                b = "'zero'";
                                                 break;
                                             case 'lining-nums':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'lnum'");
+                                                b = "'lnum'";
                                                 break;
                                             case 'oldstyle-nums':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'onum'");
+                                                b = "'onum'";
                                                 break;
                                             case 'proportional-nums':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'pnum'");
+                                                b = "'pnum'";
                                                 break;
                                             case 'tabular-nums':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'tnum'");
+                                                b = "'tnum'";
                                                 break;
                                             case 'diagonal-fractions':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'frac'");
+                                                b = "'frac'";
                                                 break;
                                             case 'stacked-fractions':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'afrc'");
+                                                b = "'afrc'";
                                                 break;
+                                            default:
+                                                return a;
                                         }
-                                    }
+                                        return a + (a ? ', ' : '') + b;
+                                    }, fontFeature);
                                 }
                                 if (node.has('fontVariantLigatures')) {
-                                    for (const variant of node.cssValue('fontVariantLigatures').split(' ')) {
-                                        switch (variant) {
+                                    fontFeature = node.cssValue('fontVariantLigatures').split(' ').reduce((a, b) => {
+                                        switch (b) {
                                             case 'common-ligatures':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'liga'");
+                                                b = "'liga'";
                                                 break;
                                             case 'no-common-ligatures':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'liga' 0");
+                                                b = "'liga' 0";
                                                 break;
                                             case 'discretionary-ligatures':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'dlig'");
+                                                b = "'dlig'";
                                                 break;
                                             case 'no-discretionary-ligatures':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'dlig' 0");
+                                                b = "'dlig' 0";
                                                 break;
                                             case 'historical-ligatures':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'hlig'");
+                                                b = "'hlig'";
                                                 break;
                                             case 'no-historical-ligatures':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'hlig' 0");
+                                                b = "'hlig' 0";
                                                 break;
                                             case 'contextual':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'calt'");
+                                                b = "'calt'";
                                                 break;
                                             case 'no-contextual':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'calt' 0");
+                                                b = "'calt' 0";
                                                 break;
+                                            default:
+                                                return a;
                                         }
-                                    }
+                                        return a + (a ? ', ' : '') + b;
+                                    }, fontFeature);
                                 }
                                 if (node.has('fontVariantEastAsian')) {
-                                    for (const variant of node.cssValue('fontVariantEastAsian').split(' ')) {
-                                        switch (variant) {
+                                    fontFeature = node.cssValue('fontVariantEastAsian').split(' ').reduce((a, b) => {
+                                        switch (b) {
                                             case 'ruby':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'ruby'");
+                                                b = "'ruby'";
                                                 break;
                                             case 'jis78':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'jp78'");
+                                                b = "'jp78'";
                                                 break;
                                             case 'jis83':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'jp83'");
+                                                b = "'jp83'";
                                                 break;
                                             case 'jis90':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'jp90'");
+                                                b = "'jp90'";
                                                 break;
                                             case 'jis04':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'jp04'");
+                                                b = "'jp04'";
                                                 break;
                                             case 'simplified':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'smpl'");
+                                                b = "'smpl'";
                                                 break;
                                             case 'traditional':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'trad'");
+                                                b = "'trad'";
                                                 break;
                                             case 'proportional-width':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'pwid'");
+                                                b = "'pwid'";
                                                 break;
                                             case 'full-width':
-                                                fontFeature = delimitString$1({ value: fontFeature }, "'fwid'");
+                                                b = "'fwid'";
                                                 break;
+                                            default:
+                                                return a;
                                         }
-                                    }
+                                        return a + (a ? ', ' : '') + b;
+                                    }, fontFeature);
                                 }
                                 if (node.has('fontVariationSettings')) {
                                     for (const variant of node.cssValue('fontVariationSettings').replace(/"/g, "'").split(',')) {
-                                        fontVariation = delimitString$1({ value: fontVariation }, variant.trim());
+                                        fontVariation = delimitString$1(fontVariation, variant);
                                     }
                                 }
                                 if (node.has('fontFeatureSettings')) {
                                     for (const feature of node.cssValue('fontFeatureSettings').replace(/"/g, "'").split(',')) {
-                                        fontFeature = delimitString$1({ value: fontFeature }, feature.trim());
+                                        fontFeature = delimitString$1(fontFeature, feature);
                                     }
                                 }
                                 if (fontVariation) {
@@ -16026,14 +16045,14 @@ var android = (function () {
                                 if (fontFeature) {
                                     node.android('fontFeatureSettings', fontFeature);
                                 }
-                                setTextValue(node, 'text', Resource.addString(valueString, '', numberAsResource));
+                                setTextValue(node, 'text', Resource.addString(resourceId, valueString, '', numberAsResource));
                             }
                         }
                     }
                 }
             });
         }
-        createOptionArray(element, controlId) {
+        createOptionArray(resourceId, element, controlId) {
             const [stringArray, numberArray] = Resource.getOptionArray(element);
             const numberAsResource = this.options.numberAsResource;
             let result;
@@ -16046,26 +16065,26 @@ var android = (function () {
                     const resource = this.resource;
                     result = [];
                     for (let i = 0, length = resourceArray.length; i < length; ++i) {
-                        const value = Resource.addString(replaceCharacterData(sanitizeString(resource.preFormatString(resourceArray[i]))), '', numberAsResource);
+                        const value = Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(resourceArray[i]))), '', numberAsResource);
                         if (value) {
                             result.push(value);
                         }
                     }
                 }
             }
-            return result && result.length ? Resource.insertStoredAsset('arrays', `${controlId.toLowerCase()}_array`, result) : '';
+            return result && result.length ? Resource.insertStoredAsset(resourceId, 'arrays', `${controlId.toLowerCase()}_array`, result) : '';
         }
     }
 
-    const { capitalize: capitalize$6 } = squared.lib.util;
+    const { capitalize: capitalize$6, startsWith: startsWith$8 } = squared.lib.util;
     const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
     class ResourceStyles extends squared.base.ExtensionUI {
         constructor() {
             super(...arguments);
             this.eventOnly = true;
         }
-        beforeDocumentWrite(data) {
-            const styles = Resource.STORED.styles;
+        beforeFinalize(data) {
+            const styles = Resource.STORED[data.resourceId].styles;
             const rendered = data.rendered;
             for (let i = 0, length = rendered.length; i < length; ++i) {
                 next: {
@@ -16080,7 +16099,7 @@ var android = (function () {
                             let found;
                             for (let k = 0, r = combined.length; k < r; ++k) {
                                 const value = combined[k];
-                                if (!found && value.startsWith('style=')) {
+                                if (!found && startsWith$8(value, 'style=')) {
                                     if (j === 0) {
                                         style = value;
                                     }
@@ -16197,10 +16216,10 @@ var android = (function () {
     var SvgPath = squared.svg.SvgPath;
     var SvgShape = squared.svg.SvgShape;
     const KEYSPLINE_NAME = SvgAnimate ? SvgAnimate.KEYSPLINE_NAME : null;
-    const { FILE: FILE$1 } = squared.lib.regex;
+    const { FILE } = squared.lib.regex;
     const { extractURL: extractURL$2, formatPX: formatPX$b } = squared.lib.css;
     const { truncate: truncate$8 } = squared.lib.math;
-    const { convertCamelCase: convertCamelCase$1, convertInt: convertInt$1, convertPercent: convertPercent$5, convertWord: convertWord$3, hasKeys: hasKeys$2, isArray, isNumber: isNumber$1, lastItemOf: lastItemOf$1, partitionArray: partitionArray$1, plainMap: plainMap$3, replaceMap: replaceMap$1 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertInt: convertInt$1, convertPercent: convertPercent$5, convertWord: convertWord$3, hasKeys: hasKeys$2, isArray, isNumber: isNumber$1, lastItemOf: lastItemOf$1, partitionArray: partitionArray$1, plainMap: plainMap$3, replaceMap: replaceMap$1, startsWith: startsWith$9 } = squared.lib.util;
     const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
     const INTERPOLATOR_NAME = {
         accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
@@ -16255,16 +16274,16 @@ var android = (function () {
         'd': ['pathData'],
         'clip-path': ['pathData']
     };
-    function getPathInterpolator(keySplines, index) {
+    function getPathInterpolator(resourceId, keySplines, index) {
         const name = keySplines && keySplines[index];
-        return name ? INTERPOLATOR_NAME[name] || createPathInterpolator(name) : '';
+        return name ? INTERPOLATOR_NAME[name] || createPathInterpolator(resourceId, name) : '';
     }
-    function createPathInterpolator(value) {
+    function createPathInterpolator(resourceId, value) {
         const interpolator = INTERPOLATOR_NAME[value];
         if (interpolator) {
             return interpolator;
         }
-        const animators = Resource.STORED.animators;
+        const animators = Resource.STORED[resourceId].animators;
         const name = 'path_interpolator_' + convertWord$3(value);
         if (!animators.has(name)) {
             animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(/\s+/)));
@@ -16502,8 +16521,8 @@ var android = (function () {
                 return '1';
         }
     }
-    function getColorValue$1(value, asArray) {
-        let colorName = Resource.addColor(value);
+    function getColorValue$1(resourceId, value, asArray) {
+        let colorName = Resource.addColor(resourceId, value);
         if (colorName) {
             colorName = `@color/${colorName}`;
             return (asArray ? [colorName] : colorName);
@@ -16521,11 +16540,11 @@ var android = (function () {
                 return '';
         }
     }
-    function createFillGradient(gradient, path, precision) {
+    function createFillGradient(resourceId, gradient, path, precision) {
         const { colorStops, type } = gradient;
         const result = {
             type,
-            item: convertColorStops(colorStops, precision),
+            item: convertColorStops(resourceId, colorStops, precision),
             positioning: false
         };
         switch (type) {
@@ -16604,7 +16623,7 @@ var android = (function () {
         const syncB = b.synchronized;
         return syncA && syncB ? syncA.key >= syncB.key ? 1 : -1 : 0;
     }
-    function insertTargetAnimation(data, name, targetSetTemplate, templateName, imageLength) {
+    function insertTargetAnimation(resourceId, data, name, targetSetTemplate, templateName, imageLength) {
         const templateSet = targetSetTemplate.set;
         const length = templateSet.length;
         if (length) {
@@ -16638,7 +16657,7 @@ var android = (function () {
             }
             const targetData = {
                 name,
-                animation: Resource.insertStoredAsset('animators', getTemplateFilename(templateName, imageLength, 'anim', name), applyTemplate('set', SET_TMPL, [targetSetTemplate]))
+                animation: Resource.insertStoredAsset(resourceId, 'animators', getTemplateFilename(templateName, imageLength, 'anim', name), applyTemplate('set', SET_TMPL, [targetSetTemplate]))
             };
             if (targetData.animation) {
                 targetData.animation = `@anim/${targetData.animation}`;
@@ -16663,7 +16682,7 @@ var android = (function () {
             animator.push(createPropertyValue(propertyName, valueType, valueTo, '0', precision));
         }
     }
-    function insertFillAfter(propertyName, valueType, item, synchronized, transforming, precision, afterAnimator, transformOrigin, propertyValues, startOffset) {
+    function insertFillAfter(resourceId, propertyName, valueType, item, synchronized, transforming, precision, afterAnimator, transformOrigin, propertyValues, startOffset) {
         if (!synchronized && item.fillReplace) {
             let valueTo = item.replaceValue;
             if (!valueTo) {
@@ -16704,7 +16723,7 @@ var android = (function () {
                     previousValue = lastValue.valueTo;
                 }
             }
-            if (valueTo && valueTo !== previousValue && (valueTo = convertValueType(item, valueTo))) {
+            if (valueTo && valueTo !== previousValue && (valueTo = convertValueType(resourceId, item, valueTo))) {
                 switch (propertyName) {
                     case 'trimPathStart':
                     case 'trimPathEnd':
@@ -16723,7 +16742,7 @@ var android = (function () {
             }
         }
     }
-    const convertValueType = (item, value) => isColorType(item.attributeName) ? getColorValue$1(value) : value.trim() || undefined;
+    const convertValueType = (resourceId, item, value) => isColorType(item.attributeName) ? getColorValue$1(resourceId, value) : value.trim() || undefined;
     const getTemplateFilename = (templateName, length, prefix, suffix) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
     const isColorType = (attr) => attr === 'fill' || attr === 'stroke';
     const getVectorName = (target, section, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
@@ -16756,10 +16775,10 @@ var android = (function () {
                 this.controller.localSettings.use.svg = true;
             }
         }
-        afterResources(sessionId) {
+        afterResources(sessionId, resourceId) {
             if (SvgBuild) {
                 const contentMap = {};
-                for (const data of Resource.ASSETS.rawData) {
+                for (const data of Resource.ASSETS[resourceId].rawData) {
                     const item = data[1];
                     if (item.mimeType === 'image/svg+xml' && item.content) {
                         contentMap[data[0]] = item.content;
@@ -16790,10 +16809,10 @@ var android = (function () {
                         const title = svg.getTitle();
                         const desc = svg.getDesc();
                         if (title) {
-                            node.android('tooltipText', Resource.addString(title, `svg_${node.controlId.toLowerCase()}_title`, true));
+                            node.android('tooltipText', Resource.addString(resourceId, title, `svg_${node.controlId.toLowerCase()}_title`, true));
                         }
                         if (desc) {
-                            node.android('contentDescription', Resource.addString(desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
+                            node.android('contentDescription', Resource.addString(resourceId, desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
                         }
                     }
                     if (parentElement) {
@@ -16820,8 +16839,8 @@ var android = (function () {
         }
         createSvgElement(node, src) {
             src = extractURL$2(src) || src;
-            if (FILE$1.SVG.test(src) || src.startsWith('data:image/svg+xml')) {
-                const fileAsset = this.resource.getRawData(src);
+            if (FILE.SVG.test(src) || startsWith$9(src, 'data:image/svg+xml')) {
+                const fileAsset = this.resource.getRawData(node.localSettings.resourceId, src);
                 if (fileAsset) {
                     const parentElement = (node.actualParent || node.documentParent).element;
                     parentElement.insertAdjacentHTML('beforeend', fileAsset.content);
@@ -16847,6 +16866,7 @@ var android = (function () {
                 svg.contentMap = contentMap;
             }
             this._imageData = [];
+            const resourceId = node.localSettings.resourceId;
             const supportedKeyframes = node.api >= 23 /* MARSHMALLOW */;
             const keyTimeMode = 1 /* FROMTO_ANIMATE */ | (supportedKeyframes ? 16 /* KEYTIME_TRANSFORM */ : 32 /* IGNORE_TRANSFORM */);
             const animateData = this._animateData;
@@ -16861,12 +16881,12 @@ var android = (function () {
             svg.build({ contentMap, keyframesMap, exclude, residualHandler, precision });
             svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
             this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
-            const vectorData = this.parseVectorData(svg);
+            const vectorData = this.parseVectorData(resourceId, svg);
             const imageLength = imageData.length;
             let vectorName;
             if (vectorData) {
                 const { width, height } = node.fitToScreen({ width: svg.width, height: svg.height });
-                vectorName = Resource.insertStoredAsset('drawables', getTemplateFilename(templateName, imageLength), applyTemplate('vector', VECTOR_TMPL, [{
+                vectorName = Resource.insertStoredAsset(resourceId, 'drawables', getTemplateFilename(templateName, imageLength), applyTemplate('vector', VECTOR_TMPL, [{
                         'xmlns:android': XML_NAMESPACE.android,
                         'xmlns:aapt': this._namespaceAapt ? XML_NAMESPACE.aapt : '',
                         'android:name': animateData.size ? svg.name : '',
@@ -16974,7 +16994,7 @@ var android = (function () {
                             togetherTargets.push(togetherData);
                         }
                         for (const [keyName, item] of sequentialMap) {
-                            if (keyName.startsWith('sequentially_companion')) {
+                            if (startsWith$9(keyName, 'sequentially_companion')) {
                                 togetherTargets.push(item);
                             }
                             else {
@@ -17050,7 +17070,7 @@ var android = (function () {
                                         if (item.setterType) {
                                             const propertyNames = getAttributePropertyName(item.attributeName);
                                             if (propertyNames) {
-                                                const values = isColorType(item.attributeName) ? getColorValue$1(item.to, true) : item.to.trim().split(/\s+/);
+                                                const values = isColorType(item.attributeName) ? getColorValue$1(resourceId, item.to, true) : item.to.trim().split(/\s+/);
                                                 if (values && values.length === propertyNames.length && !values.some(value => !value)) {
                                                     let companionBefore, companionAfter;
                                                     for (let k = 0, q = propertyNames.length; k < q; ++k) {
@@ -17060,13 +17080,13 @@ var android = (function () {
                                                         }
                                                         else if (requireBefore) {
                                                             if (item.baseValue) {
-                                                                valueFrom = convertValueType(item, item.baseValue.trim().split(/\s+/)[k]);
+                                                                valueFrom = convertValueType(resourceId, item, item.baseValue.trim().split(/\s+/)[k]);
                                                             }
                                                         }
                                                         const propertyValue = createPropertyValue(propertyNames[k], valueType, values[k], '1', precision, valueFrom, item.delay > 0 ? item.delay.toString() : '');
                                                         if (index > 1) {
                                                             customAnimator.push(propertyValue);
-                                                            insertFillAfter(propertyNames[k], valueType, item, synchronized, transforming, precision, afterAnimator, transformOrigin, undefined, index > 1 ? item.duration : 0);
+                                                            insertFillAfter(resourceId, propertyNames[k], valueType, item, synchronized, transforming, precision, afterAnimator, transformOrigin, undefined, index > 1 ? item.duration : 0);
                                                         }
                                                         else {
                                                             const companion = item.companion;
@@ -17170,11 +17190,11 @@ var android = (function () {
                                                         values = item.values.slice(0);
                                                         if (isColorType(item.attributeName)) {
                                                             if (requireBefore && item.baseValue) {
-                                                                beforeValues = getColorValue$1(item.baseValue, true);
+                                                                beforeValues = getColorValue$1(resourceId, item.baseValue, true);
                                                             }
                                                             for (let k = 0, r = values.length; k < r; ++k) {
                                                                 if (values[k]) {
-                                                                    values[k] = getColorValue$1(values[k]) || values[k - 1] || '';
+                                                                    values[k] = getColorValue$1(resourceId, values[k]) || values[k - 1] || '';
                                                                 }
                                                             }
                                                         }
@@ -17183,7 +17203,7 @@ var android = (function () {
                                             }
                                             if (!item.keySplines) {
                                                 const timingFunction = item.timingFunction;
-                                                options.interpolator = timingFunction ? createPathInterpolator(timingFunction) : this.options.animateInterpolator;
+                                                options.interpolator = timingFunction ? createPathInterpolator(resourceId, timingFunction) : this.options.animateInterpolator;
                                             }
                                             if (values && propertyNames) {
                                                 const { keyTimes, synchronized: syncData } = item;
@@ -17207,7 +17227,7 @@ var android = (function () {
                                                                     value = truncate$8(value, precision);
                                                                 }
                                                                 keyframe.push({
-                                                                    interpolator: l && value && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, l - 1) : '',
+                                                                    interpolator: l && value && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(resourceId, item.keySplines, l - 1) : '',
                                                                     fraction: keyTimes[l] === 0 && !value ? '' : truncate$8(keyTimes[l], floatPrecisionKeyTime),
                                                                     value
                                                                 });
@@ -17262,12 +17282,12 @@ var android = (function () {
                                                                         }
                                                                         if (direction) {
                                                                             const valueData = createPropertyValue(direction, 'floatType', truncate$8(translateTo, precision), duration.toString(), precision);
-                                                                            valueData.interpolator = createPathInterpolator(KEYSPLINE_NAME['step-start']);
+                                                                            valueData.interpolator = createPathInterpolator(resourceId, KEYSPLINE_NAME['step-start']);
                                                                             translateData.objectAnimator.push(valueData);
                                                                         }
                                                                     }
                                                                     if (l > 0) {
-                                                                        propertyOptions.interpolator = getPathInterpolator(item.keySplines, l - 1);
+                                                                        propertyOptions.interpolator = getPathInterpolator(resourceId, item.keySplines, l - 1);
                                                                     }
                                                                     propertyOptions.duration = duration.toString();
                                                                     propertyOptions.valueTo = valueTo;
@@ -17280,7 +17300,7 @@ var android = (function () {
                                                         }
                                                     }
                                                     else {
-                                                        const propertyOptions = Object.assign(Object.assign({}, options), { propertyName, interpolator: item.duration > 1 ? getPathInterpolator(item.keySplines, 0) : '', propertyValuesHolder: false });
+                                                        const propertyOptions = Object.assign(Object.assign({}, options), { propertyName, interpolator: item.duration > 1 ? getPathInterpolator(resourceId, item.keySplines, 0) : '', propertyValuesHolder: false });
                                                         const s = values.length;
                                                         let valueTo;
                                                         if (Array.isArray(values[0])) {
@@ -17307,7 +17327,7 @@ var android = (function () {
                                                                 propertyOptions.valueFrom = valueFrom || group.pathData || valueTo;
                                                             }
                                                             else if (valueFrom && valueFrom !== valueTo) {
-                                                                propertyOptions.valueFrom = convertValueType(item, valueFrom);
+                                                                propertyOptions.valueFrom = convertValueType(resourceId, item, valueFrom);
                                                             }
                                                             propertyOptions.valueTo = valueTo;
                                                         }
@@ -17319,7 +17339,7 @@ var android = (function () {
                                                         }
                                                     }
                                                     if (i === 0 && !synchronized && item.iterationCount !== -1) {
-                                                        insertFillAfter(propertyName, valueType, item, synchronized, transforming, precision, afterAnimator, transformOrigin, objectAnimator);
+                                                        insertFillAfter(resourceId, propertyName, valueType, item, synchronized, transforming, precision, afterAnimator, transformOrigin, objectAnimator);
                                                     }
                                                 }
                                                 if (requireBefore && transformOrigin && transformOrigin.length) {
@@ -17380,7 +17400,7 @@ var android = (function () {
                                 targetSetTemplate.set.push(setData);
                             }
                         }
-                        insertTargetAnimation(data, name, targetSetTemplate, templateName, imageLength);
+                        insertTargetAnimation(resourceId, data, name, targetSetTemplate, templateName, imageLength);
                     }
                     for (const [name, target] of this._animateTarget) {
                         const animate = target.animate;
@@ -17404,14 +17424,14 @@ var android = (function () {
                             }
                         }
                         if (objectAnimator.length) {
-                            insertTargetAnimation(data, name, {
+                            insertTargetAnimation(resourceId, data, name, {
                                 set: [{ set: [], objectAnimator }],
                                 objectAnimator: []
                             }, templateName, imageLength);
                         }
                     }
                     if (data[0].target) {
-                        vectorName = Resource.insertStoredAsset('drawables', getTemplateFilename(templateName, imageLength, 'anim'), applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data));
+                        vectorName = Resource.insertStoredAsset(resourceId, 'drawables', getTemplateFilename(templateName, imageLength, 'anim'), applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data));
                     }
                 }
             }
@@ -17436,7 +17456,7 @@ var android = (function () {
                         left: left !== 0 ? formatPX$b(left) : '',
                         top: top !== 0 ? formatPX$b(top) : ''
                     };
-                    const src = getDrawableSrc(resource.addImageSet({ mdpi: image.href }));
+                    const src = getDrawableSrc(resource.addImageSet(resourceId, { mdpi: image.href }));
                     if (image.rotateAngle) {
                         data.rotate = {
                             drawable: src,
@@ -17449,12 +17469,12 @@ var android = (function () {
                     }
                     item.push(data);
                 }
-                return Resource.insertStoredAsset('drawables', templateName, applyTemplate('layer-list', LAYERLIST_TMPL, layerData));
+                return Resource.insertStoredAsset(resourceId, 'drawables', templateName, applyTemplate('layer-list', LAYERLIST_TMPL, layerData));
             }
             node.data(Resource.KEY_NAME, 'svg', svg);
             return vectorName;
         }
-        parseVectorData(group, depth = 0) {
+        parseVectorData(resourceId, group, depth = 0) {
             const floatPrecision = this.options.floatPrecision;
             const result = this.createGroup(group);
             const length = result.length;
@@ -17465,11 +17485,11 @@ var android = (function () {
                     if (SvgBuild.isShape(item)) {
                         const itemPath = item.path;
                         if (itemPath && itemPath.value) {
-                            const [path, groupArray] = this.createPath(item, itemPath);
+                            const [path, groupArray] = this.createPath(resourceId, item, itemPath);
                             const pathArray = [];
                             if (+itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                                 const animateData = this._animateData.get(item.name);
-                                if (!animateData || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
+                                if (!animateData || animateData.animate.every(animate => startsWith$9(animate.attributeName, 'stroke-dash'))) {
                                     const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData === null || animateData === void 0 ? void 0 : animateData.animate, floatPrecision);
                                     if (strokeDash) {
                                         if (animateData) {
@@ -17519,7 +17539,7 @@ var android = (function () {
                     }
                     else if (SvgBuild.isContainer(item)) {
                         if (!item.isEmpty()) {
-                            output += this.parseVectorData(item, renderDepth);
+                            output += this.parseVectorData(resourceId, item, renderDepth);
                         }
                     }
                     else if (SvgBuild.asImage(item)) {
@@ -17580,7 +17600,7 @@ var android = (function () {
             }
             return result;
         }
-        createPath(target, path) {
+        createPath(resourceId, target, path) {
             var _a, _b;
             const result = { name: target.name };
             const renderData = [];
@@ -17629,7 +17649,7 @@ var android = (function () {
                         case 'fill':
                             attr = 'fillColor';
                             if (value !== 'none' && !result['aapt:attr']) {
-                                const colorName = Resource.addColor(value);
+                                const colorName = Resource.addColor(resourceId, value);
                                 if (colorName) {
                                     value = `@color/${colorName}`;
                                 }
@@ -17641,7 +17661,7 @@ var android = (function () {
                         case 'stroke':
                             attr = 'strokeColor';
                             if (value !== 'none') {
-                                const colorName = Resource.addColor(value);
+                                const colorName = Resource.addColor(resourceId, value);
                                 if (colorName) {
                                     value = `@color/${colorName}`;
                                 }
@@ -17663,7 +17683,7 @@ var android = (function () {
                                     case 'polyline':
                                     case 'circle':
                                     case 'ellipse': {
-                                        const gradient = createFillGradient(pattern, path, this.options.floatPrecision);
+                                        const gradient = createFillGradient(resourceId, pattern, path, this.options.floatPrecision);
                                         if (gradient) {
                                             result['aapt:attr'] = {
                                                 name: 'android:fillColor',
@@ -17960,11 +17980,13 @@ var android = (function () {
         manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
         outputMainFileName: 'activity_main.xml',
         outputDirectory: 'app/src/main',
+        outputDocumentHandler: 'android',
         outputEmptyCopyDirectory: false,
         outputTasks: {},
         outputWatch: {},
         outputArchiveName: 'android-xml',
-        outputArchiveFormat: 'zip'
+        outputArchiveFormat: 'zip',
+        outputArchiveCache: false
     };
 
     let application = null;
@@ -18018,69 +18040,69 @@ var android = (function () {
             util
         },
         system: {
-            copyLayoutAllXml(directory, options) {
+            copyLayoutAllXml(pathname, options) {
                 if (checkApplication()) {
-                    file.layoutAllToXml(application.layouts, Object.assign(Object.assign({}, options), { directory }));
+                    file.layoutAllToXml(application.layouts, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceAllXml(directory, options) {
+            copyResourceAllXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceAllToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceAllToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceStringXml(directory, options) {
+            copyResourceStringXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceStringToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceStringToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceArrayXml(directory, options) {
+            copyResourceArrayXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceStringArrayToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceStringArrayToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceFontXml(directory, options) {
+            copyResourceFontXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceFontToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceFontToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceColorXml(directory, options) {
+            copyResourceColorXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceColorToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceColorToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceStyleXml(directory, options) {
+            copyResourceStyleXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceStyleToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceStyleToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceDimenXml(directory, options) {
+            copyResourceDimenXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceDimenToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceDimenToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceDrawableXml(directory, options) {
+            copyResourceDrawableXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceDrawableToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceDrawableToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceAnimXml(directory, options) {
+            copyResourceAnimXml(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceAnimToXml(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceAnimToXml(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceDrawableImage(directory, options) {
+            copyResourceDrawableImage(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceDrawableImageToString(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceDrawableImageToString(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceRawVideo(directory, options) {
+            copyResourceRawVideo(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceRawVideoToString(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceRawVideoToString(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
-            copyResourceRawAudio(directory, options) {
+            copyResourceRawAudio(pathname, options) {
                 if (checkApplication()) {
-                    file.resourceRawAudioToString(Object.assign(Object.assign({}, options), { directory }));
+                    file.resourceRawAudioToString(undefined, Object.assign(Object.assign({}, options), { pathname }));
                 }
             },
             saveLayoutAllXml(filename, options) {
@@ -18090,102 +18112,102 @@ var android = (function () {
             },
             saveResourceAllXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceAllToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-resources' }));
+                    file.resourceAllToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-resources' }));
                 }
             },
             saveResourceStringXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceStringToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-string' }));
+                    file.resourceStringToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-string' }));
                 }
             },
             saveResourceArrayXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceStringArrayToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-array' }));
+                    file.resourceStringArrayToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-array' }));
                 }
             },
             saveResourceFontXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceFontToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-font' }));
+                    file.resourceFontToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-font' }));
                 }
             },
             saveResourceColorXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceColorToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-color' }));
+                    file.resourceColorToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-color' }));
                 }
             },
             saveResourceStyleXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceStyleToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-style' }));
+                    file.resourceStyleToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-style' }));
                 }
             },
             saveResourceDimenXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceDimenToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-dimen' }));
+                    file.resourceDimenToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-dimen' }));
                 }
             },
             saveResourceDrawableXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceDrawableToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-drawable' }));
+                    file.resourceDrawableToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-drawable' }));
                 }
             },
             saveResourceAnimXml(filename, options) {
                 if (checkApplication()) {
-                    file.resourceAnimToXml(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-anim' }));
+                    file.resourceAnimToXml(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-anim' }));
                 }
             },
             saveResourceDrawableImage(filename, options) {
                 if (checkApplication()) {
-                    file.resourceDrawableImageToString(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-drawable-image' }));
+                    file.resourceDrawableImageToString(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-drawable-image' }));
                 }
             },
             saveResourceRawVideo(filename, options) {
                 if (checkApplication()) {
-                    file.resourceRawVideoToString(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-raw-video' }));
+                    file.resourceRawVideoToString(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-raw-video' }));
                 }
             },
             saveResourceRawAudio(filename, options) {
                 if (checkApplication()) {
-                    file.resourceRawAudioToString(Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-raw-audio' }));
+                    file.resourceRawAudioToString(undefined, Object.assign(Object.assign({}, options), { filename: checkFileName(filename) + '-raw-audio' }));
                 }
             },
             writeLayoutAllXml(options) {
                 return checkApplication() ? file.layoutAllToXml(application.layouts, options) : {};
             },
             writeResourceAllXml(options) {
-                return checkApplication() ? file.resourceAllToXml(options) : {};
+                return checkApplication() ? file.resourceAllToXml(undefined, options) : {};
             },
             writeResourceStringXml(options) {
-                return checkApplication() ? file.resourceStringToXml(options) : [];
+                return checkApplication() ? file.resourceStringToXml(undefined, options) : [];
             },
             writeResourceArrayXml(options) {
-                return checkApplication() ? file.resourceStringArrayToXml(options) : [];
+                return checkApplication() ? file.resourceStringArrayToXml(undefined, options) : [];
             },
             writeResourceFontXml(options) {
-                return checkApplication() ? file.resourceFontToXml(options) : [];
+                return checkApplication() ? file.resourceFontToXml(undefined, options) : [];
             },
             writeResourceColorXml(options) {
-                return checkApplication() ? file.resourceColorToXml(options) : [];
+                return checkApplication() ? file.resourceColorToXml(undefined, options) : [];
             },
             writeResourceStyleXml(options) {
-                return checkApplication() ? file.resourceStyleToXml(options) : [];
+                return checkApplication() ? file.resourceStyleToXml(undefined, options) : [];
             },
             writeResourceDimenXml(options) {
-                return checkApplication() ? file.resourceDimenToXml(options) : [];
+                return checkApplication() ? file.resourceDimenToXml(undefined, options) : [];
             },
             writeResourceDrawableXml(options) {
-                return checkApplication() ? file.resourceDrawableToXml(options) : [];
+                return checkApplication() ? file.resourceDrawableToXml(undefined, options) : [];
             },
             writeResourceAnimXml(options) {
-                return checkApplication() ? file.resourceAnimToXml(options) : [];
+                return checkApplication() ? file.resourceAnimToXml(undefined, options) : [];
             },
             writeResourceDrawableImage(options) {
-                return checkApplication() ? file.resourceDrawableImageToString(options) : [];
+                return checkApplication() ? file.resourceDrawableImageToString(undefined, options) : [];
             },
             writeResourceRawVideo(options) {
-                return checkApplication() ? file.resourceRawVideoToString(options) : [];
+                return checkApplication() ? file.resourceRawVideoToString(undefined, options) : [];
             },
             writeResourceRawAudio(options) {
-                return checkApplication() ? file.resourceRawAudioToString(options) : [];
+                return checkApplication() ? file.resourceRawAudioToString(undefined, options) : [];
             }
         },
         create() {

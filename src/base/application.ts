@@ -101,9 +101,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public builtInExtensions!: Map<string, Extension<T>>;
     public elementMap: Null<WeakMap<Element, T>> = null;
     public readonly Node: Constructor<T>;
-    public readonly session: squared.base.AppSession<T> = {
-        active: new Map<string, squared.base.AppProcessing<T>>()
-    };
+    public readonly session: squared.base.AppSession<T> = { active: new Map() };
 
     public abstract userSettings: UserSettings;
     public abstract readonly systemName: string;

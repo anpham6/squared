@@ -170,7 +170,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly session: squared.base.AppSessionUI<T> = {
         active: new Map(),
-        extensionMap: new Map(),
+        extensionMap: new WeakMap(),
         clearMap: new Map()
     };
     public readonly extensions: ExtensionUI<T>[] = [];
@@ -304,7 +304,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         session.active.clear();
-        session.extensionMap.clear();
+        session.extensionMap = new WeakMap();
         session.clearMap.clear();
         this.setResourceId();
         this._nextId = 0;
@@ -371,17 +371,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number) {
+    public addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index = -1) {
         if (!node.renderExclude) {
             if (node.renderParent) {
                 const renderTemplates = parent.renderTemplates ||= [];
-                if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
-                    parent.renderChildren.push(node);
-                    renderTemplates.push(template);
-                }
-                else {
+                if (index >= 0 && index < parent.renderChildren.length) {
                     parent.renderChildren.splice(index, 0, node);
                     renderTemplates.splice(index, 0, template);
+                }
+                else {
+                    parent.renderChildren.push(node);
+                    renderTemplates.push(template);
                 }
                 node.renderedAs = template;
             }

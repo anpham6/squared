@@ -80,7 +80,7 @@ declare module "base" {
     }
 
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
-        extensionMap: Map<T, ExtensionUI<T>[]>;
+        extensionMap: WeakMap<T, ExtensionUI<T>[]>;
         clearMap: Map<T, string>;
     }
 

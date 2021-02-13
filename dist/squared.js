@@ -1,4 +1,4 @@
-/* squared 2.3.0
+/* squared 2.4.0
    https://github.com/anpham6/squared */
 
 var squared = (function (exports) {
@@ -234,13 +234,16 @@ var squared = (function (exports) {
     const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
     const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
     const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
+    const TAG_ATTR = `=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]*))`;
     const STRING = {
         DECIMAL,
         PERCENT: '-?\\d+(?:\\.\\d+)?%',
         LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
         UNIT_LENGTH,
-        DATAURI: '(?:data:([^,]+),)?\\s*(.+?)\\s*',
+        DATAURI: '\\s*(data:\\s*([^;,\\s]+)?\\s*;?\\s*([^,\\s]+)?\\s*,)?\\s*(.+?)\\s*',
+        TAG_ATTR,
+        TAG_OPEN: `(?:[^=>]|${TAG_ATTR})`,
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_TIME: `(${DECIMAL})(s|ms)`,
         CSS_RESOLUTION: `(${DECIMAL_UN})(dpi|dpcm|dppx)`
@@ -248,10 +251,11 @@ var squared = (function (exports) {
     const FILE = {
         NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
         PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/,
+        BASE64: /^[A-Za-z\d+/]+=*$/,
         SVG: /\.svg\s*$/i
     };
     const CSS = {
-        URL: /^\s*url\((.+)\)\s*$/,
+        URL: /^\s*url\((?:["'](.+)["']|(.+))\)\s*$/i,
         HEX: /^#?[\dA-Fa-f]{3,8}$/,
         RGBA: /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/,
         HSLA: /hsla?\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+%?)\s*)?\)/,
@@ -753,6 +757,7 @@ var squared = (function (exports) {
         isTransparent: isTransparent
     });
 
+    /* eslint no-shadow: "off" */
     var PLATFORM;
     (function (PLATFORM) {
         PLATFORM[PLATFORM["WINDOWS"] = 1] = "WINDOWS";
@@ -804,7 +809,7 @@ var squared = (function (exports) {
         SESSION_MAP[value] = elementMap;
         return elementMap;
     }
-    function resetSessionAll() {
+    function clearSessionAll() {
         SESSION_MAP = { '0': SESSION_MAP['0'] };
     }
     function setElementCache(element, attr, data, sessionId = '0') {
@@ -838,7 +843,7 @@ var squared = (function (exports) {
     var session = /*#__PURE__*/Object.freeze({
         __proto__: null,
         newSessionInit: newSessionInit,
-        resetSessionAll: resetSessionAll,
+        clearSessionAll: clearSessionAll,
         setElementCache: setElementCache,
         getElementCache: getElementCache,
         getElementData: getElementData,
@@ -977,9 +982,6 @@ var squared = (function (exports) {
         yml: 'text/yaml',
         zip: 'application/zip'
     };
-    function parseMimeType(value) {
-        return EXT_DATA[splitPairEnd(splitPairStart(value, '?'), '.', true, true) || value] || '';
-    }
     function promisify(fn) {
         return (...args) => {
             return new Promise((resolve, reject) => {
@@ -991,6 +993,12 @@ var squared = (function (exports) {
                 }
             });
         };
+    }
+    function allSettled(values) {
+        return Promise.all(values.map((promise) => promise.then(value => ({ status: 'fulfilled', value })).catch(reason => ({ status: 'rejected', reason }))));
+    }
+    function parseMimeType(value) {
+        return EXT_DATA[splitPairEnd(splitPairStart(value = value.toLowerCase(), '?'), '.', true, true) || value] || '';
     }
     function hasKeys(obj) {
         for (const attr in obj) {
@@ -1062,33 +1070,37 @@ var squared = (function (exports) {
         }
         return window.btoa(result);
     }
-    function delimitString(options, ...appending) {
-        const { value, not, remove, sort } = options;
-        const length = appending.length;
-        if (length === 1 && !value) {
-            return appending[0];
+    function delimitString(value, ...appending) {
+        let delimiter = ', ', trim, remove, sort, not;
+        if (typeof value === 'object') {
+            ({ delimiter = ', ', trim, remove, not, sort } = value);
+            value = value.value;
         }
-        const delimiter = options.delimiter || ', ';
         const values = value ? value.split(delimiter) : [];
-        for (let i = 0; i < length; ++i) {
-            const append = appending[i];
-            if (append) {
-                if (not && values.includes(not[i])) {
-                    continue;
-                }
-                const index = values.findIndex(item => item === append);
-                if (index === -1) {
-                    values.push(append);
-                }
-                else if (remove) {
-                    values.splice(index, 1);
-                }
+        for (let i = 0, length = appending.length; i < length; ++i) {
+            let append = appending[i];
+            if (trim) {
+                append = append.trim();
+            }
+            if (!append || not && values.includes(append)) {
+                continue;
+            }
+            const index = values.findIndex(item => item === append);
+            if (index === -1) {
+                values.push(append);
+            }
+            else if (remove) {
+                values.splice(index, 1);
             }
         }
         if (sort) {
             values.sort(typeof sort === 'function' ? sort : undefined);
         }
         return values.join(delimiter);
+    }
+    function padStart(value, length, char) {
+        length -= value.length;
+        return length > 0 ? char.repeat(length) + value : value;
     }
     function spliceString(value, index, length) {
         return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
@@ -1268,7 +1280,7 @@ var squared = (function (exports) {
         return (value & offset) === offset;
     }
     function isNumber(value) {
-        return !!value && !isNaN(+value);
+        return value ? !isNaN(+value) : false;
     }
     function isString(value) {
         return typeof value === 'string' && !isEmptyString(value);
@@ -1281,6 +1293,9 @@ var squared = (function (exports) {
     }
     function isPlainObject(value) {
         return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
+    }
+    function isBase64(value) {
+        return value.length % 4 === 0 && FILE.BASE64.test(value);
     }
     function isEmptyString(value) {
         for (let i = 0, length = value.length; i < length; ++i) {
@@ -1374,7 +1389,7 @@ var squared = (function (exports) {
             if (value[0] === '/') {
                 return location.origin + value;
             }
-            else if (value.startsWith('../')) {
+            else if (startsWith(value, '../')) {
                 const trailing = [];
                 for (const dir of value.split('/')) {
                     if (dir === '..') {
@@ -1391,7 +1406,7 @@ var squared = (function (exports) {
                 }
                 value = trailing.join('/');
             }
-            else if (value.startsWith('./')) {
+            else if (startsWith(value, './')) {
                 value = value.substring(2);
             }
             return location.origin + pathname.join('/') + '/' + value;
@@ -1451,15 +1466,21 @@ var squared = (function (exports) {
         }
         return value;
     }
+    function startsWith(value, leading) {
+        return value ? value.substring(0, leading.length) === leading : false;
+    }
+    function endsWith(value, trailing) {
+        return value ? value.substring(value.length - trailing.length) === trailing : false;
+    }
     function* searchObject(obj, value) {
         const start = value[0] === '*';
         const end = lastItemOf(value) === '*';
         const search = start && end
             ? (a) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
             : start
-                ? (a) => a.endsWith(value.replace(/^\*/, ''))
+                ? (a) => endsWith(a, value.replace(/^\*/, ''))
                 : end
-                    ? (a) => a.startsWith(value.replace(/\*$/, ''))
+                    ? (a) => startsWith(a, value.replace(/\*$/, ''))
                     : (a) => a === value;
         for (const attr in obj) {
             if (search(attr)) {
@@ -1675,8 +1696,9 @@ var squared = (function (exports) {
 
     var util = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        parseMimeType: parseMimeType,
         promisify: promisify,
+        allSettled: allSettled,
+        parseMimeType: parseMimeType,
         hasKeys: hasKeys,
         capitalize: capitalize,
         convertHyphenated: convertHyphenated,
@@ -1687,6 +1709,7 @@ var squared = (function (exports) {
         convertPercent: convertPercent,
         convertBase64: convertBase64,
         delimitString: delimitString,
+        padStart: padStart,
         spliceString: spliceString,
         splitPair: splitPair,
         splitPairStart: splitPairStart,
@@ -1700,6 +1723,7 @@ var squared = (function (exports) {
         isArray: isArray,
         isObject: isObject,
         isPlainObject: isPlainObject,
+        isBase64: isBase64,
         isEmptyString: isEmptyString,
         isEqual: isEqual,
         cloneInstance: cloneInstance,
@@ -1710,6 +1734,8 @@ var squared = (function (exports) {
         trimStart: trimStart,
         trimEnd: trimEnd,
         fromLastIndexOf: fromLastIndexOf,
+        startsWith: startsWith,
+        endsWith: endsWith,
         searchObject: searchObject,
         hasValue: hasValue,
         withinRange: withinRange,
@@ -1854,7 +1880,7 @@ var squared = (function (exports) {
                         const component = trimEnclosing(seg).split(CHAR_SEPARATOR);
                         const q = component.length;
                         if (q >= 3) {
-                            const hsl = name.startsWith('hsl');
+                            const hsl = startsWith(name, 'hsl');
                             for (let j = 0; j < q; ++j) {
                                 const rgb = component[j];
                                 if (isCalc(rgb)) {
@@ -1950,7 +1976,7 @@ var squared = (function (exports) {
                         continue;
                 }
             }
-            else if (segment.startsWith('*|')) {
+            else if (startsWith(segment, '*|')) {
                 if (segment === '*|*') {
                     continue;
                 }
@@ -3327,7 +3353,7 @@ var squared = (function (exports) {
             }
         }
     }));
-    const ELEMENT_BLOCK = new Set([
+    const ELEMENT_BLOCK = [
         'ADDRESS',
         'ARTICLE',
         'ASIDE',
@@ -3361,7 +3387,7 @@ var squared = (function (exports) {
         'SECTION',
         'TABLE',
         'UL'
-    ]);
+    ];
     function getPropertiesAsTraits(value) {
         const result = {};
         for (const attr in CSS_PROPERTIES) {
@@ -3501,7 +3527,7 @@ var squared = (function (exports) {
         let result = 0;
         for (const seg of splitEnclosing(value, REGEXP_SELECTORGROUP)) {
             if (seg[0] === ':') {
-                if (seg.startsWith(':where(')) {
+                if (startsWith(seg, ':where(')) {
                     continue;
                 }
                 else {
@@ -4082,7 +4108,7 @@ var squared = (function (exports) {
                             const prefix = timingFunction[i - 1].trim();
                             seg = trimEnclosing(seg);
                             let calc;
-                            if (prefix.endsWith('cubic-bezier')) {
+                            if (endsWith(prefix, 'cubic-bezier')) {
                                 const cubic = seg.split(CHAR_SEPARATOR);
                                 const q = cubic.length;
                                 if (q === 4) {
@@ -4100,7 +4126,7 @@ var squared = (function (exports) {
                                     }
                                 }
                             }
-                            else if (prefix.endsWith('steps')) {
+                            else if (endsWith(prefix, 'steps')) {
                                 calc = calculateVarAsString(element, seg, { unitType: 16 /* INTEGER */, min: 1 });
                             }
                             if (!calc) {
@@ -4327,7 +4353,7 @@ var squared = (function (exports) {
             case 'gridTemplate':
                 return getStyle(element)[attr];
             default: {
-                if (attr.endsWith('Color') || (((_a = CSS_PROPERTIES[attr]) === null || _a === void 0 ? void 0 : _a.trait) & 16 /* COLOR */)) {
+                if (endsWith(attr, 'Color') || (((_a = CSS_PROPERTIES[attr]) === null || _a === void 0 ? void 0 : _a.trait) & 16 /* COLOR */)) {
                     return calculateColor(element, value.trim());
                 }
                 const alias = checkWritingMode(attr, getStyle(element).writingMode);
@@ -4351,7 +4377,7 @@ var squared = (function (exports) {
                     case 'position':
                         return 'static';
                     case 'display':
-                        return ELEMENT_BLOCK.has(element.tagName) ? 'block' : 'inline';
+                        return ELEMENT_BLOCK.includes(element.tagName) ? 'block' : 'inline';
                     case 'fontSize':
                         return 'inherit';
                     case 'verticalAlign':
@@ -4513,10 +4539,10 @@ var squared = (function (exports) {
                         const attr = condition[1];
                         let operation = condition[2];
                         const rule = condition[3];
-                        if (attr.startsWith('min')) {
+                        if (startsWith(attr, 'min')) {
                             operation = '>=';
                         }
-                        else if (attr.startsWith('max')) {
+                        else if (startsWith(attr, 'max')) {
                             operation = '<=';
                         }
                         switch (attr) {
@@ -4537,7 +4563,7 @@ var squared = (function (exports) {
                             case 'height':
                             case 'min-height':
                             case 'max-height':
-                                valid = compareRange(operation, attr.endsWith('width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
+                                valid = compareRange(operation, endsWith(attr, 'width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
                                 break;
                             case 'orientation':
                                 valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -4778,7 +4804,7 @@ var squared = (function (exports) {
         let { srcset, sizes } = element;
         if (parentElement && parentElement.tagName === 'PICTURE') {
             iterateArray(parentElement.children, (item) => {
-                if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.has(item.type.trim().toLowerCase()))) {
+                if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
                     ({ srcset, sizes } = item);
                     return true;
                 }
@@ -4900,7 +4926,7 @@ var squared = (function (exports) {
     function extractURL(value) {
         const match = CSS.URL.exec(value);
         if (match) {
-            return trimBoth(match[1], '"');
+            return match[1] || match[2];
         }
     }
     function resolveURL(value) {
@@ -5221,7 +5247,7 @@ var squared = (function (exports) {
         let match;
         while (match = REGEXP_TRANSFORM.exec(value)) {
             const method = match[1];
-            if (method.startsWith('translate')) {
+            if (startsWith(method, 'translate')) {
                 const translate = TRANSFORM.TRANSLATE.exec(match[0]);
                 if (translate) {
                     const tX = translate[2];
@@ -5296,7 +5322,7 @@ var squared = (function (exports) {
                     result.push({ group, method, values: [x, y, z] });
                 }
             }
-            else if (method.startsWith('rotate')) {
+            else if (startsWith(method, 'rotate')) {
                 const rotate = TRANSFORM.ROTATE.exec(match[0]);
                 if (rotate) {
                     const angle = convertAngle(rotate[5], rotate[6]);
@@ -5343,7 +5369,7 @@ var squared = (function (exports) {
                     }
                 }
             }
-            else if (method.startsWith('scale')) {
+            else if (startsWith(method, 'scale')) {
                 const scale = TRANSFORM.SCALE.exec(match[0]);
                 if (scale) {
                     let x = 1, y = 1, z = 1, group = 'scale';
@@ -5384,7 +5410,7 @@ var squared = (function (exports) {
                     result.push({ group, method, values: [x, y, z] });
                 }
             }
-            else if (method.startsWith('skew')) {
+            else if (startsWith(method, 'skew')) {
                 const skew = TRANSFORM.SKEW.exec(match[0]);
                 if (skew) {
                     const angle = convertAngle(skew[2], skew[3]);
@@ -5416,7 +5442,7 @@ var squared = (function (exports) {
                     }
                 }
             }
-            else if (method.startsWith('matrix')) {
+            else if (startsWith(method, 'matrix')) {
                 const matrix = TRANSFORM.MATRIX.exec(match[0]);
                 if (matrix) {
                     let length;
@@ -5543,10 +5569,12 @@ var squared = (function (exports) {
         return !digits ? value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
     }
     function isPx(value) {
-        const length = value.length;
-        if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
-            const n = value.charCodeAt(length - 3);
-            return n >= 48 && n <= 57;
+        if (value) {
+            const length = value.length;
+            if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
+                const n = value.charCodeAt(length - 3);
+                return n >= 48 && n <= 57;
+            }
         }
         return false;
     }
@@ -5808,7 +5836,7 @@ var squared = (function (exports) {
 
     const FRAMEWORK_NOT_INSTALLED = 'Framework not installed.';
     const SERVER_REQUIRED = 'Server required. See README for instructions.';
-    const DIRECTORY_NOT_PROVIDED = 'Directory not provided.';
+    const DIRECTORY_NOT_PROVIDED = 'Directory (pathname) not provided.';
     const UNABLE_TO_FINALIZE_DOCUMENT = 'Unable to finalize document.';
     const INVALID_ASSET_REQUEST = 'Invalid asset request.';
     const OPERATION_NOT_SUPPORTED = 'Operation not supported.';
@@ -6372,7 +6400,7 @@ var squared = (function (exports) {
             if (addQueue.length) {
                 for (const item of addQueue) {
                     if (!extensionManager.add(item)) {
-                        console.log('FAIL: ' + (typeof item === 'string' ? item : item.name));
+                        console.log('FAIL: ' + (typeof item === 'string' ? item : item.name)); // eslint-disable-line no-console
                         extensionCheck = true;
                     }
                 }
@@ -6398,15 +6426,16 @@ var squared = (function (exports) {
             if (extensionCheck) {
                 const errors = extensionManager.checkDependencies();
                 if (errors) {
-                    console.log('FAIL: ' + errors.join(', '));
+                    console.log('FAIL: ' + errors.join(', ')); // eslint-disable-line no-console
                 }
                 extensionCheck = false;
             }
         }
     }
     function findElement(element, sync, cache) {
+        var _a;
         if (cache) {
-            const result = main.elementMap.get(element);
+            const result = (_a = main.elementMap) === null || _a === void 0 ? void 0 : _a.get(element);
             if (result) {
                 return sync ? result : Promise.resolve(result);
             }
@@ -6414,12 +6443,12 @@ var squared = (function (exports) {
         return sync ? main.parseDocumentSync(element) : main.parseDocument(element);
     }
     function findElementAll(query, length) {
-        let incomplete;
         const elementMap = main.elementMap;
         const result = new Array(length);
+        let incomplete;
         for (let i = 0; i < length; ++i) {
             const element = query[i];
-            const item = elementMap.get(element) || main.parseDocumentSync(element);
+            const item = elementMap && elementMap.get(element) || main.parseDocumentSync(element);
             if (item) {
                 result[i] = item;
             }
@@ -6430,8 +6459,9 @@ var squared = (function (exports) {
         return !incomplete ? result : result.filter(item => item);
     }
     async function findElementAsync(element, cache) {
+        var _a;
         if (cache) {
-            const result = main.elementMap.get(element);
+            const result = (_a = main.elementMap) === null || _a === void 0 ? void 0 : _a.get(element);
             if (result) {
                 return Promise.resolve([result]);
             }
@@ -6444,7 +6474,7 @@ var squared = (function (exports) {
         const result = new Array(length);
         for (let i = 0; i < length; ++i) {
             const element = query[i];
-            const item = elementMap.get(element) || await main.parseDocument(element);
+            const item = elementMap && elementMap.get(element) || await main.parseDocument(element);
             if (item) {
                 result[i] = item;
             }
@@ -6462,10 +6492,7 @@ var squared = (function (exports) {
         if (main) {
             const fileHandler = main.fileHandler;
             if (fileHandler) {
-                const match = FILE.PROTOCOL.exec(value);
-                if (match && match[1].startsWith('http')) {
-                    fileHandler.hostname = match[1] + match[2] + (match[3] || '');
-                }
+                fileHandler.hostname = value;
             }
         }
     }
@@ -6714,14 +6741,22 @@ var squared = (function (exports) {
         prototypeMap.set(value, Object.assign(prototypeMap.get(value) || {}, functionMap));
     }
     function latest(value = 1) {
-        if (main && value) {
-            const active = main.session.active;
-            if (active.size) {
-                const items = Array.from(active.keys());
-                return Math.abs(value) === 1 ? items[0] : items.length === 1 ? items : value < 0 ? items.slice(0, Math.abs(value)) : items.slice(Math.max(0, active.size - value)).reverse();
+        if (main) {
+            const items = Array.from(main.session.active.keys());
+            if (value < 0) {
+                items.reverse();
+                value *= -1;
+            }
+            switch (value) {
+                case 0:
+                    return items;
+                case 1:
+                    return items.pop() || '';
+                default:
+                    return items.slice(0, Math.abs(value));
             }
         }
-        return '';
+        return Math.abs(value) === 1 ? '' : [];
     }
     function close() {
         return checkWritable(main) && main.finalize();
@@ -6820,8 +6855,12 @@ var squared = (function (exports) {
         return sync ? null : Promise.resolve(null);
     }
     function clearCache() {
+        var _a;
         if (main) {
-            main.elementMap = new WeakMap();
+            main.elementMap = null;
+            main.session.active.clear();
+            (_a = main.resourceHandler) === null || _a === void 0 ? void 0 : _a.clear();
+            clearSessionAll();
         }
     }
     function toString() {

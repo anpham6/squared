@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.3.0
+/* vdom-lite-framework 2.4.0
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -26,30 +26,69 @@ var vdom = (function () {
     const { FILE, STRING } = squared.lib.regex;
     const { isUserAgent } = squared.lib.client;
     const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-    const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-    const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
-    const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
-    const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
-    const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
-    const REGEXP_FONTFAMILY = /\s*font-family:\s*([^;]+);/;
-    const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
-    const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-    const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?/;
-    const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
+    const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
+    const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+    const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
+    const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
     const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
+    function parseImageUrl(value, styleSheetHref, resource, resourceId) {
+        let result, match;
+        while (match = REGEXP_DATAURI.exec(value)) {
+            if (match[2]) {
+                if (resource) {
+                    const leading = match[3];
+                    const encoding = match[4] || (isBase64(match[5]) ? 'base64' : 'utf8');
+                    let content, base64;
+                    if (encoding === 'base64') {
+                        base64 = match[5];
+                    }
+                    else {
+                        content = match[5];
+                    }
+                    resource.addRawData(resourceId, match[1], { mimeType: leading && leading.includes('/') ? leading : 'image/unknown', encoding, content, base64 });
+                }
+            }
+            else {
+                const url = resolvePath(match[5], styleSheetHref);
+                if (url) {
+                    if (resource) {
+                        resource.addImageData(resourceId, url);
+                    }
+                    result = (result || value).replace(match[0], `url("${url}")`);
+                }
+            }
+        }
+        REGEXP_DATAURI.lastIndex = 0;
+        return result || value;
+    }
+    function parseError(error) {
+        if (typeof error === 'string') {
+            return error;
+        }
+        if (error instanceof Error) {
+            return error.message;
+        }
+        if (error instanceof Event) {
+            error = error.target;
+        }
+        if (error instanceof HTMLImageElement) {
+            return error.src;
+        }
+        return '';
+    }
+    const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
     class Application {
         constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor) {
             this.framework = framework;
             this.extensions = [];
             this.closed = false;
-            this.elementMap = new WeakMap();
-            this.session = {
-                active: new Map()
-            };
+            this.elementMap = null;
+            this.session = { active: new Map() };
             this._nextId = 0;
             this._resourceHandler = null;
             this._extensionManager = null;
+            this.Node = nodeConstructor;
             const controller = new ControllerConstructor(this);
             this._controllerHandler = controller;
             if (ExtensionManagerConstructor) {
@@ -61,7 +100,6 @@ var vdom = (function () {
             this._afterInsertNode = controller.afterInsertNode.bind(controller);
             this._includeElement = controller.includeElement.bind(controller);
             this._preventNodeCascade = controller.preventNodeCascade.bind(controller);
-            this.Node = nodeConstructor;
             this.init();
         }
         static prioritizeExtensions(value, extensions) {
@@ -80,13 +118,8 @@ var vdom = (function () {
             }
             return result.length ? result.filter(item => item).concat(untagged) : extensions;
         }
+        init() { }
         finalize() { return true; }
-        afterCreateCache(node) {
-            if (this.userSettings.createElementMap) {
-                const elementMap = this.elementMap;
-                this.getProcessingCache(node.sessionId).each(item => elementMap.set(item.element, item));
-            }
-        }
         createNode(sessionId, options) {
             return this.createNodeStatic(this.getProcessing(sessionId), options.element);
         }
@@ -98,9 +131,15 @@ var vdom = (function () {
             }
             return node;
         }
-        copyTo(directory, options) {
+        afterCreateCache(processing, node) {
+            if (this.userSettings.createElementMap) {
+                const elementMap = this.elementMap || (this.elementMap = new WeakMap());
+                processing.cache.each(item => elementMap.set(item.element, item));
+            }
+        }
+        copyTo(pathname, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyTo(directory, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyTo(pathname, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
         appendTo(pathname, options) {
             var _a;
@@ -118,16 +157,12 @@ var vdom = (function () {
             var _a;
             return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendFiles(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
-        copyFiles(directory, options) {
+        copyFiles(pathname, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyFiles(directory, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyFiles(pathname, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
         reset() {
             var _a;
-            this._nextId = 0;
-            this.elementMap = new WeakMap();
-            resetSessionAll();
-            this.session.active.clear();
             this.controllerHandler.reset();
             (_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.reset();
             for (const ext of this.extensions) {
@@ -137,198 +172,87 @@ var vdom = (function () {
         }
         parseDocument(...elements) {
             const resource = this.resourceHandler;
-            let preloadImages, preloadFonts, preloadCustomElements = true;
-            if (resource) {
-                ({ preloadImages, preloadFonts, preloadCustomElements } = resource.userSettings);
-            }
-            const [rootElements, processing, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
-            if (rootElements.size === 0) {
+            const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && resource ? resource.userSettings.preloadCustomElements : false);
+            if (rootElements.length === 0) {
                 return reject(DOCUMENT_ROOT_NOT_FOUND);
             }
-            const documentRoot = rootElements.values().next().value;
-            const preloadItems = [];
-            let preloaded;
-            const parseSrcSet = (value) => {
-                if (value) {
-                    for (const uri of value.split(',')) {
-                        resource.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
-                    }
-                }
-            };
-            if (resource) {
-                for (const element of shadowElements) {
-                    element.querySelectorAll('picture > source').forEach((source) => parseSrcSet(source.srcset));
-                    element.querySelectorAll('video').forEach((source) => resource.addImageData(source.poster));
-                    element.querySelectorAll('input[type=image]').forEach((image) => resource.addImageData(image.src, image.width, image.height));
-                    element.querySelectorAll('object, embed').forEach((source) => {
-                        const src = source.data || source.src;
-                        if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                            resource.addImageData(src.trim());
-                        }
-                    });
-                    element.querySelectorAll('svg use').forEach((use) => {
-                        const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
-                        if (href && href.indexOf('#') > 0) {
-                            const src = resolvePath(splitPairStart(href, '#'));
-                            if (FILE.SVG.test(src)) {
-                                resource.addImageData(src);
-                            }
-                        }
-                    });
-                }
-            }
-            if (preloadImages) {
-                preloaded = [];
-                const { image, rawData } = resource.mapOfAssets;
-                for (const item of image.values()) {
-                    const uri = item.uri;
-                    if (FILE.SVG.test(uri)) {
-                        preloadItems.push(uri);
-                    }
-                    else if (item.width === 0 || item.height === 0) {
-                        const element = document.createElement('img');
-                        element.src = uri;
-                        if (element.naturalWidth && element.naturalHeight) {
-                            item.width = element.naturalWidth;
-                            item.height = element.naturalHeight;
-                        }
-                        else {
-                            documentRoot.appendChild(element);
-                            preloaded.push(element);
-                        }
-                    }
-                }
-                for (const data of rawData) {
-                    const item = data[1];
-                    const mimeType = item.mimeType;
-                    if (mimeType && mimeType.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
-                        let src = `data:${mimeType};`;
-                        if (item.base64) {
-                            src += 'base64,' + item.base64;
-                        }
-                        else if (item.content) {
-                            src += item.content;
-                        }
-                        else {
-                            continue;
-                        }
-                        const element = document.createElement('img');
-                        element.src = src;
-                        const { naturalWidth: width, naturalHeight: height } = element;
-                        if (width && height) {
-                            item.width = width;
-                            item.height = height;
-                            image.set(data[0], { width, height, uri: item.filename });
-                        }
-                        else {
-                            document.body.appendChild(element);
-                            preloaded.push(element);
-                        }
-                    }
-                }
-            }
-            if (preloadFonts) {
-                for (const item of resource.mapOfAssets.fonts.values()) {
-                    for (const font of item) {
-                        const srcUrl = font.srcUrl;
-                        if (srcUrl && !preloadItems.includes(srcUrl)) {
-                            preloadItems.push(srcUrl);
-                        }
-                    }
-                }
-            }
-            if (resource) {
-                for (const element of shadowElements) {
-                    element.querySelectorAll('img').forEach((image) => {
-                        parseSrcSet(image.srcset);
-                        if (!preloadImages) {
-                            resource.addImage(image);
-                        }
-                        else if (FILE.SVG.test(image.src)) {
-                            preloadItems.push(image.src);
-                        }
-                        else if (image.complete) {
-                            resource.addImage(image);
-                        }
-                        else {
-                            preloadItems.push(image);
-                        }
-                    });
-                }
-            }
+            const resourceId = processing.resourceId;
+            const documentRoot = rootElements[0];
+            const [preloadItems, preloaded] = resource ? resource.preloadAssets(resourceId, documentRoot, shadowElements) : [[], []];
             if (styleSheets) {
                 preloadItems.push(...styleSheets);
             }
             if (preloadItems.length) {
                 processing.initializing = true;
-                return Promise.all(preloadItems.map(item => {
+                return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
                     return new Promise((success, error) => {
                         if (typeof item === 'string') {
                             fetch(item)
                                 .then(async (result) => {
                                 const mimeType = result.headers.get('content-type') || '';
-                                if (mimeType.startsWith('text/css') || styleSheets && styleSheets.includes(item)) {
-                                    success({ mimeType: 'text/css', encoding: 'utf8', data: await result.text() });
+                                if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                    success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
                                 }
-                                else if (mimeType.startsWith('image/svg+xml') || FILE.SVG.test(item)) {
-                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', data: await result.text() });
+                                else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
+                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), data: await result.arrayBuffer() });
+                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
                                 }
                             })
-                                .catch(() => error(item));
+                                .catch(err => error(err));
                         }
                         else {
                             item.addEventListener('load', () => success(item));
-                            item.addEventListener('error', () => error(item));
+                            item.addEventListener('error', err => error(err));
                         }
                     });
                 }))
                     .then((result) => {
+                    let errors;
                     for (let i = 0, length = result.length; i < length; ++i) {
-                        if (result[i]) {
-                            const item = preloadItems[i];
-                            if (typeof item === 'string') {
-                                resource.addRawData(item, '', result[i]);
+                        const item = result[i];
+                        if (item.status === 'rejected') {
+                            const message = parseError(item.reason);
+                            if (message) {
+                                (errors || (errors = [])).push(message);
                             }
-                            else {
-                                resource.addImage(item);
-                            }
+                            continue;
+                        }
+                        const data = preloadItems[i];
+                        if (typeof data === 'string') {
+                            resource.addRawData(resourceId, data, item.value);
+                        }
+                        else {
+                            resource.addImage(resourceId, data);
                         }
                     }
-                    return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
-                })
-                    .catch((error) => {
-                    let message;
-                    if (error instanceof Error) {
-                        message = error.message;
-                    }
-                    else {
-                        if (error instanceof Event) {
-                            error = error.target;
+                    if (errors) {
+                        const length = errors.length;
+                        if (length === 1) {
+                            this.writeError('FAIL: ' + errors[0]);
                         }
-                        if (error instanceof HTMLImageElement) {
-                            message = error.src;
+                        else {
+                            this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
                         }
                     }
-                    return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded) : Promise.reject(new Error(message));
+                    return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
                 });
             }
-            return Promise.resolve(this.resumeSessionThread(rootElements, processing, elements.length));
+            return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
         }
         parseDocumentSync(...elements) {
             const sessionData = this.createSessionThread(elements, false);
             return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
         }
-        createCache(documentRoot, sessionId) {
-            const node = this.createRootNode(documentRoot, sessionId);
+        createCache(processing, documentRoot) {
+            const node = this.createRootNode(processing, documentRoot);
             if (node) {
-                this.controllerHandler.sortInitialCache(this.getProcessingCache(sessionId));
+                this.controllerHandler.sortInitialCache(processing.cache);
             }
             return node;
         }
-        setStyleMap(sessionId, documentRoot = document, queryRoot) {
+        setStyleMap(sessionId, resourceId, documentRoot = document, queryRoot) {
             const styleSheets = documentRoot.styleSheets;
             let errors;
             for (let i = 0, length = styleSheets.length; i < length; ++i) {
@@ -341,7 +265,7 @@ var vdom = (function () {
                 }
                 if (!mediaText || checkMediaRule(mediaText)) {
                     try {
-                        this.applyStyleSheet(styleSheet, sessionId, documentRoot, queryRoot);
+                        this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                     }
                     catch (err) {
                         (errors || (errors = [])).push(err.message);
@@ -349,7 +273,7 @@ var vdom = (function () {
                 }
             }
             if (errors) {
-                (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + errors.join('\n\n'));
+                this.writeError(getErrorMessage(errors), CSS_CANNOT_BE_PARSED);
             }
         }
         replaceShadowRootSlots(shadowRoot) {
@@ -382,7 +306,7 @@ var vdom = (function () {
                 else {
                     const namespace = namespaces[i] + '.';
                     for (const data of builtInExtensions) {
-                        if (data[0].startsWith(namespace)) {
+                        if (startsWith(data[0], namespace)) {
                             ext = data[1];
                             if (!extensions.includes(ext)) {
                                 ext.application = this;
@@ -406,13 +330,16 @@ var vdom = (function () {
         setDatasetName(attr, element, value) {
             element.dataset[attr + capitalize(this.systemName)] = value;
         }
+        writeError(message, hint) {
+            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
+        }
         toString() {
             return this.systemName;
         }
-        createRootNode(rootElement, sessionId) {
-            const processing = this.getProcessing(sessionId);
+        createRootNode(processing, rootElement) {
+            const { sessionId, resourceId } = processing;
             const extensions = processing.extensions.filter(item => !!item.beforeInsertNode);
-            const node = this.cascadeParentNode(processing, rootElement, sessionId, 0, extensions.length ? extensions : null);
+            const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, extensions.length ? extensions : null);
             if (node) {
                 node.documentRoot = true;
                 processing.node = node;
@@ -458,7 +385,7 @@ var vdom = (function () {
             }
             return node;
         }
-        cascadeParentNode(processing, parentElement, sessionId, depth, extensions, shadowParent) {
+        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, extensions, shadowParent) {
             const node = this.insertNode(processing, parentElement);
             if (node) {
                 const cache = processing.cache;
@@ -494,9 +421,9 @@ var vdom = (function () {
                         }
                         let shadowRoot;
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
-                            this.setStyleMap(sessionId, shadowRoot);
+                            this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
-                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
+                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                             elements.push(child);
                             inlineText = false;
                         }
@@ -558,45 +485,18 @@ var vdom = (function () {
             }
             return result;
         }
-        applyStyleRule(item, sessionId, documentRoot, queryRoot) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
+            var _a, _b, _c;
+            var _d;
             const resource = this.resourceHandler;
             const styleSheetHref = ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href;
             const cssText = item.cssText;
             switch (item.type) {
                 case CSSRule.STYLE_RULE: {
                     const hostElement = documentRoot.host;
-                    const unusedStyles = !hostElement && this.session.unusedStyles;
                     const baseMap = {};
                     const important = {};
                     const cssStyle = item.style;
-                    const parseImageUrl = (attr) => {
-                        const value = baseMap[attr];
-                        if (value && value !== 'initial') {
-                            let result, match;
-                            while (match = REGEXP_DATAURI.exec(value)) {
-                                if (match[2]) {
-                                    if (resource) {
-                                        const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                        resource.addRawData(match[1], match[3], { mimeType, encoding });
-                                    }
-                                }
-                                else {
-                                    const uri = resolvePath(match[3], styleSheetHref);
-                                    if (uri) {
-                                        if (resource) {
-                                            resource.addImageData(uri);
-                                        }
-                                        result = (result || value).replace(match[0], `url("${uri}")`);
-                                    }
-                                }
-                            }
-                            if (result) {
-                                baseMap[attr] = result;
-                            }
-                            REGEXP_DATAURI.lastIndex = 0;
-                        }
-                    };
                     const hasExactValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                     const hasPartialValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                     for (let i = 0, length = cssStyle.length; i < length; ++i) {
@@ -608,7 +508,7 @@ var vdom = (function () {
                         let value = cssStyle[attr];
                         switch (value) {
                             case 'initial':
-                                if (isUserAgent(2 /* SAFARI */) && baseAttr.startsWith('background')) {
+                                if (isUserAgent(2 /* SAFARI */) && startsWith(baseAttr, 'background')) {
                                     break;
                                 }
                                 if (((_b = CSS_PROPERTIES[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) === 'auto') {
@@ -621,7 +521,7 @@ var vdom = (function () {
                                         for (const name in CSS_SHORTHANDNONE) {
                                             const css = CSS_SHORTHANDNONE[name];
                                             if (css.value.includes(baseAttr)) {
-                                                if (hasExactValue(css.name, 'none|initial') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, css.valueOfNone)) {
+                                                if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, css.valueOfNone)) {
                                                     break required;
                                                 }
                                                 break;
@@ -629,6 +529,15 @@ var vdom = (function () {
                                         }
                                         continue;
                                     }
+                                }
+                                break;
+                        }
+                        switch (baseAttr) {
+                            case 'backgroundImage':
+                            case 'listStyleImage':
+                            case 'content':
+                                if (value !== 'initial') {
+                                    value = parseImageUrl(value, styleSheetHref, resource, resourceId);
                                 }
                                 break;
                         }
@@ -648,15 +557,12 @@ var vdom = (function () {
                         }
                     }
                     REGEXP_IMPORTANT.lastIndex = 0;
-                    parseImageUrl('backgroundImage');
-                    parseImageUrl('listStyleImage');
-                    parseImageUrl('content');
                     for (const selectorText of parseSelectorText(item.selectorText)) {
                         const specificity = getSpecificity(selectorText);
                         const [selector, target] = splitPair(selectorText, '::');
                         const targetElt = target ? '::' + target : '';
                         let elements;
-                        if (selector.startsWith(':host')) {
+                        if (startsWith(selector, ':host')) {
                             if (!hostElement) {
                                 continue;
                             }
@@ -693,8 +599,8 @@ var vdom = (function () {
                         }
                         const length = elements.length;
                         if (length === 0) {
-                            if (unusedStyles) {
-                                unusedStyles.add(selectorText);
+                            if (!hostElement) {
+                                ((_d = this.getProcessing(sessionId)).unusedStyles || (_d.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
@@ -730,43 +636,15 @@ var vdom = (function () {
                 }
                 case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        const attr = (_d = REGEXP_FONTFACE.exec(cssText)) === null || _d === void 0 ? void 0 : _d[1];
-                        if (attr) {
-                            const src = (_e = REGEXP_FONTSRC.exec(attr)) === null || _e === void 0 ? void 0 : _e[1].trim();
-                            let fontFamily = (_f = REGEXP_FONTFAMILY.exec(attr)) === null || _f === void 0 ? void 0 : _f[1].trim();
-                            if (src && fontFamily) {
-                                fontFamily = trimBoth(fontFamily, '"');
-                                const fontStyle = ((_g = REGEXP_FONTSTYLE.exec(attr)) === null || _g === void 0 ? void 0 : _g[1].toLowerCase()) || 'normal';
-                                const fontWeight = +(((_h = REGEXP_FONTWEIGHT.exec(attr)) === null || _h === void 0 ? void 0 : _h[1]) || '400');
-                                for (const value of src.split(',')) {
-                                    const match = REGEXP_FONTURL.exec(value);
-                                    if (match) {
-                                        const data = {
-                                            fontFamily,
-                                            fontWeight,
-                                            fontStyle,
-                                            srcFormat: ((_j = match[4]) === null || _j === void 0 ? void 0 : _j.toLowerCase().trim()) || 'truetype'
-                                        };
-                                        const url = (match[2] || match[3]).trim();
-                                        if (match[1] === 'url') {
-                                            data.srcUrl = resolvePath(url, styleSheetHref);
-                                        }
-                                        else {
-                                            data.srcLocal = url;
-                                        }
-                                        resource.addFont(data);
-                                    }
-                                }
-                            }
-                        }
+                        resource.parseFontFace(resourceId, cssText, styleSheetHref);
                     }
                     break;
                 case CSSRule.SUPPORTS_RULE:
-                    this.applyCSSRuleList(item.cssRules, sessionId, documentRoot);
+                    this.applyCssRules(sessionId, resourceId, item.cssRules, documentRoot);
                     break;
             }
         }
-        applyStyleSheet(item, sessionId, documentRoot, queryRoot) {
+        applyStyleSheet(sessionId, resourceId, item, documentRoot, queryRoot) {
             var _a, _b;
             var _c;
             try {
@@ -775,27 +653,34 @@ var vdom = (function () {
                     const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
                     for (let i = 0, length = cssRules.length; i < length; ++i) {
                         const rule = cssRules[i];
-                        switch (rule.type) {
+                        const type = rule.type;
+                        switch (type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
-                                this.applyStyleRule(rule, sessionId, documentRoot, queryRoot);
+                                this.applyStyleRule(sessionId, resourceId, rule, documentRoot, queryRoot);
                                 break;
                             case CSSRule.IMPORT_RULE: {
                                 const uri = resolvePath(rule.href, ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href);
                                 if (uri) {
-                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(uri, '', { mimeType: 'text/css', encoding: 'utf8' });
+                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
                                 }
-                                this.applyStyleSheet(rule.styleSheet, sessionId, documentRoot, queryRoot);
+                                this.applyStyleSheet(sessionId, resourceId, rule.styleSheet, documentRoot, queryRoot);
                                 break;
                             }
                             case CSSRule.MEDIA_RULE:
                                 if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
-                                    this.applyCSSRuleList(rule.cssRules, sessionId, documentRoot, queryRoot);
+                                    this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
+                                }
+                                else {
+                                    this.parseStyleRules(sessionId, resourceId, rule.cssRules);
                                 }
                                 break;
                             case CSSRule.SUPPORTS_RULE:
                                 if (CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))) {
-                                    this.applyCSSRuleList(rule.cssRules, sessionId, documentRoot, queryRoot);
+                                    this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
+                                }
+                                else {
+                                    this.parseStyleRules(sessionId, resourceId, rule.cssRules);
                                 }
                                 break;
                             case CSSRule.KEYFRAMES_RULE: {
@@ -820,16 +705,48 @@ var vdom = (function () {
                 throw new Error((item.href ? item.href + ' - ' : '') + err);
             }
         }
-        applyCSSRuleList(rules, sessionId, documentRoot, queryRoot) {
+        applyCssRules(sessionId, resourceId, rules, documentRoot, queryRoot) {
             for (let i = 0, length = rules.length; i < length; ++i) {
-                this.applyStyleRule(rules[i], sessionId, documentRoot, queryRoot);
+                this.applyStyleRule(sessionId, resourceId, rules[i], documentRoot, queryRoot);
+            }
+        }
+        parseStyleRules(sessionId, resourceId, rules) {
+            var _a;
+            const resource = this.resourceHandler;
+            if (resource) {
+                for (let i = 0, length = rules.length; i < length; ++i) {
+                    const item = rules[i];
+                    switch (item.type) {
+                        case CSSRule.STYLE_RULE: {
+                            const cssStyle = item.style;
+                            for (let j = 0, q = cssStyle.length; j < q; ++j) {
+                                const attr = cssStyle[j];
+                                switch (attr) {
+                                    case 'background-image':
+                                    case 'list-style-image':
+                                    case 'content': {
+                                        const value = cssStyle[attr];
+                                        if (value !== 'initial') {
+                                            parseImageUrl(value, ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href, resource, resourceId);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        case CSSRule.FONT_FACE_RULE:
+                            this.applyStyleRule(sessionId, resourceId, item, document);
+                            break;
+                    }
+                }
             }
         }
         createSessionThread(elements, pierceShadowRoot) {
-            const rootElements = new Set();
+            const rootElements = [];
             const length = elements.length;
             if (length === 0) {
-                rootElements.add(this.mainElement);
+                rootElements.push(this.mainElement);
             }
             else {
                 for (let i = 0; i < length; ++i) {
@@ -837,46 +754,22 @@ var vdom = (function () {
                     if (typeof element === 'string') {
                         element = document.getElementById(element);
                     }
-                    if (element) {
-                        rootElements.add(element);
+                    if (element && !rootElements.includes(element)) {
+                        rootElements.push(element);
                     }
                 }
-                if (rootElements.size === 0) {
+                if (rootElements.length === 0) {
                     return [rootElements];
                 }
             }
-            let shadowElements, styleSheets;
-            if (pierceShadowRoot) {
-                let shadowRootItems;
-                for (const element of rootElements) {
-                    element.querySelectorAll('*').forEach(child => {
-                        const shadowRoot = child.shadowRoot;
-                        if (shadowRoot) {
-                            (shadowRootItems || (shadowRootItems = new Set())).add(shadowRoot);
-                        }
-                    });
-                }
-                if (shadowRootItems) {
-                    shadowElements = new Set(rootElements);
-                    for (const shadowRoot of shadowRootItems) {
-                        shadowElements.add(shadowRoot);
-                        shadowRoot.querySelectorAll('link').forEach(element => {
-                            const href = element.href.trim();
-                            if (href) {
-                                const mimeType = element.rel.trim() === 'stylesheet' ? 'text/css' : element.type.trim() || parseMimeType(href);
-                                if (mimeType === 'text/css') {
-                                    (styleSheets || (styleSheets = [])).push(href);
-                                }
-                            }
-                        });
-                    }
-                }
-            }
             const controller = this.controllerHandler;
+            const resource = this.resourceHandler;
             const sessionId = controller.generateSessionId;
+            const resourceId = this.resourceId;
             const extensions = this.extensionsAll;
             const processing = {
                 sessionId,
+                resourceId,
                 initializing: false,
                 cache: new NodeList(undefined, sessionId),
                 excluded: new NodeList(undefined, sessionId),
@@ -891,17 +784,53 @@ var vdom = (function () {
                 processing.afterInsertNode = afterInsertNode;
             }
             this.session.active.set(sessionId, processing);
-            controller.init();
-            const queryRoot = rootElements.size === 1 && rootElements.values().next().value.parentElement;
+            if (resource) {
+                resource.init(resourceId);
+            }
+            controller.init(resourceId);
+            const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
             if (queryRoot && queryRoot !== document.documentElement) {
-                this.setStyleMap(sessionId, document, queryRoot);
+                this.setStyleMap(sessionId, resourceId, document, queryRoot);
             }
             else {
-                this.setStyleMap(sessionId);
+                this.setStyleMap(sessionId, resourceId);
             }
-            return [rootElements, processing, shadowElements || rootElements, styleSheets];
+            let shadowElements, styleSheets;
+            if (pierceShadowRoot) {
+                for (const element of rootElements) {
+                    element.querySelectorAll('*').forEach(child => {
+                        const shadowRoot = child.shadowRoot;
+                        if (shadowRoot) {
+                            (shadowElements || (shadowElements = [])).push(shadowRoot);
+                        }
+                    });
+                }
+                if (shadowElements) {
+                    for (const element of shadowElements) {
+                        element.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child) => (styleSheets || (styleSheets = [])).push(child.href));
+                    }
+                }
+            }
+            if (resource) {
+                const queryElements = [queryRoot || document];
+                if (shadowElements) {
+                    queryElements.push(...shadowElements);
+                }
+                for (const element of queryElements) {
+                    element.querySelectorAll('[style]').forEach((child) => {
+                        const { backgroundImage, listStyleImage } = child.style;
+                        if (backgroundImage) {
+                            parseImageUrl(backgroundImage, location.href, resource, resourceId);
+                        }
+                        if (listStyleImage) {
+                            parseImageUrl(listStyleImage, location.href, resource, resourceId);
+                        }
+                    });
+                }
+            }
+            return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
         }
-        resumeSessionThread(rootElements, processing, multipleRequest, documentRoot, preloaded) {
+        resumeSessionThread(processing, rootElements, multipleRequest, documentRoot, preloaded) {
             processing.initializing = false;
             const { sessionId, extensions } = processing;
             const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
@@ -919,9 +848,9 @@ var vdom = (function () {
             }
             const success = [];
             for (const element of rootElements) {
-                const node = this.createCache(element, sessionId);
+                const node = this.createCache(processing, element);
                 if (node) {
-                    this.afterCreateCache(node);
+                    this.afterCreateCache(processing, node);
                     success.push(node);
                 }
             }
@@ -968,12 +897,21 @@ var vdom = (function () {
                 const processing = active.values().next().value;
                 return [processing.extensions, processing.cache.children];
             }
-            const extensions = [], children = [];
+            const extensions = [];
+            const children = [];
             for (const processing of active.values()) {
                 extensions.push(...processing.extensions);
                 children.push(...processing.cache.children);
             }
             return [Array.from(new Set(extensions)), children];
+        }
+        get resourceId() {
+            let result = -1;
+            if (this.resourceHandler) {
+                const ASSETS = this.resourceHandler.mapOfAssets;
+                ASSETS[result = ASSETS.length] = null;
+            }
+            return result;
         }
         get nextId() {
             return ++this._nextId;
@@ -989,7 +927,6 @@ var vdom = (function () {
             super(...arguments);
             this.systemName = 'vdom';
         }
-        init() { }
         insertNode(processing, element) {
             if (element.nodeName[0] !== '#') {
                 return new this.Node(this.nextId, processing.sessionId, element);
@@ -997,6 +934,7 @@ var vdom = (function () {
         }
     }
 
+    const { padStart } = squared.lib.util;
     class Controller {
         constructor(application) {
             this.application = application;
@@ -1008,15 +946,16 @@ var vdom = (function () {
                     video: '*'
                 }
             };
+            this._sessionId = 0;
         }
-        init() { }
+        init(resourceId) { }
         sortInitialCache(cache) { }
-        applyDefaultStyles(element, sessionId, pseudoElt) { }
+        applyDefaultStyles(processing, element, pseudoElt) { }
         reset() { }
         includeElement(element) { return true; }
         preventNodeCascade(node) { return false; }
         get generateSessionId() {
-            return Date.now() + '#' + this.application.session.active.size;
+            return padStart((++this._sessionId).toString(), 5, '0');
         }
         get afterInsertNode() {
             return (node) => { };
@@ -1025,6 +964,7 @@ var vdom = (function () {
             return this.application.userSettings;
         }
     }
+    Controller.KEY_NAME = 'squared.base.controller';
 
     const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
@@ -1033,7 +973,7 @@ var vdom = (function () {
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$1 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, endsWith, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1057,7 +997,7 @@ var vdom = (function () {
     const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
     const REGEXP_NOTINDEX = /:not-(x+)/;
     const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
-    const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+    const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
         let current = style[attr];
@@ -1093,7 +1033,7 @@ var vdom = (function () {
     }
     function hasTextAlign(node, ...values) {
         const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
-        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : node.display.startsWith('inline'));
+        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith$1(node.display, 'inline'));
     }
     function setDimension(node, styleMap, dimension) {
         const options = { dimension };
@@ -1261,7 +1201,7 @@ var vdom = (function () {
             for (let i = 0, length = attrList.length; i < length; ++i) {
                 const attr = attrList[i];
                 let value;
-                if (attr.endsWith) {
+                if (attr.trailing) {
                     const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
                     for (const name in attributes) {
                         if (pattern.test(name)) {
@@ -1288,12 +1228,12 @@ var vdom = (function () {
                             }
                             break;
                         case '^':
-                            if (!value.startsWith(other)) {
+                            if (!startsWith$1(value, other)) {
                                 return false;
                             }
                             break;
                         case '$':
-                            if (!value.endsWith(other)) {
+                            if (!endsWith(value, other)) {
                                 return false;
                             }
                             break;
@@ -1303,7 +1243,7 @@ var vdom = (function () {
                             }
                             break;
                         case '|':
-                            if (value !== other && !value.startsWith(other + '-')) {
+                            if (value !== other && !startsWith$1(value, other + '-')) {
                                 return false;
                             }
                             break;
@@ -1323,13 +1263,11 @@ var vdom = (function () {
                 const pseudo = pseudoList[i];
                 switch (pseudo) {
                     case ':first-child':
-                    case ':nth-child(1)':
                         if (this !== parent.firstElementChild) {
                             return false;
                         }
                         break;
                     case ':last-child':
-                    case ':nth-last-child(1)':
                         if (this !== parent.lastElementChild) {
                             return false;
                         }
@@ -1504,8 +1442,8 @@ var vdom = (function () {
                         scoped.push(pseudo);
                         break;
                     default: {
-                        let match;
-                        if (match = REGEXP_QUERYNTH.exec(pseudo)) {
+                        let match = REGEXP_QUERYNTH.exec(pseudo);
+                        if (match) {
                             const children = match[1] ? parent.naturalElements.slice(0).reverse() : parent.naturalElements;
                             const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item) => item.tagName === tagName).indexOf(this) + 1;
                             if (index) {
@@ -1521,10 +1459,6 @@ var vdom = (function () {
                                             return false;
                                         }
                                         break;
-                                    case 'n':
-                                        break;
-                                    case '-n':
-                                        return false;
                                     default:
                                         if (isNumber(placement)) {
                                             if (placement !== index.toString()) {
@@ -1532,47 +1466,37 @@ var vdom = (function () {
                                             }
                                         }
                                         else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
-                                            const modifier = parseInt(match[3]);
-                                            if (match[2]) {
-                                                const increment = +match[2];
-                                                if (!isNaN(modifier)) {
-                                                    if (increment !== 0) {
-                                                        if (index !== modifier) {
-                                                            const reverse = match[1];
-                                                            let j = modifier + increment * (reverse ? -1 : 1);
-                                                            do {
-                                                                if (j === index) {
-                                                                    break;
+                                            const reverse = match[1] === '-';
+                                            const increment = match[2] ? +match[2] : 1;
+                                            if (match[4]) {
+                                                const modifier = +match[4] * (match[3] === '-' ? -1 : 1);
+                                                if (increment !== 0) {
+                                                    if (index !== modifier) {
+                                                        let j = modifier;
+                                                        do {
+                                                            if (reverse) {
+                                                                j -= increment;
+                                                                if (j < 0) {
+                                                                    return false;
                                                                 }
-                                                                if (reverse) {
-                                                                    j -= increment;
-                                                                    if (j < 0) {
-                                                                        return false;
-                                                                    }
+                                                            }
+                                                            else {
+                                                                j += increment;
+                                                                if (j > index) {
+                                                                    return false;
                                                                 }
-                                                                else {
-                                                                    j += increment;
-                                                                    if (j > index) {
-                                                                        return false;
-                                                                    }
-                                                                }
-                                                            } while (true);
-                                                        }
-                                                    }
-                                                    else if (index !== modifier) {
-                                                        return false;
+                                                            }
+                                                            if (j === index) {
+                                                                break;
+                                                            }
+                                                        } while (true);
                                                     }
                                                 }
-                                                else if (match[1] || index % increment !== 0) {
+                                                else if (index !== modifier) {
                                                     return false;
                                                 }
                                             }
-                                            else if (match[3] && modifier > 0) {
-                                                if (index < modifier) {
-                                                    return false;
-                                                }
-                                            }
-                                            else if (match[1]) {
+                                            else if (reverse || index % increment !== 0) {
                                                 return false;
                                             }
                                         }
@@ -1804,7 +1728,7 @@ var vdom = (function () {
     const aboveRange = (a, b, offset = 1) => a + offset > b;
     const belowRange = (a, b, offset = 1) => a - offset < b;
     const sortById = (a, b) => a.id - b.id;
-    const isInlineVertical = (value) => value.startsWith('inline') || value === 'table-cell';
+    const isInlineVertical = (value) => startsWith$1(value, 'inline') || value === 'table-cell';
     const canTextAlign = (node) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element, children) {
@@ -2048,19 +1972,19 @@ var vdom = (function () {
                             this._cacheState.textEmpty = undefined;
                             continue;
                         default:
-                            if (attr.startsWith('background')) {
+                            if (startsWith$1(attr, 'background')) {
                                 cache.visibleStyle = undefined;
                             }
-                            else if (attr.startsWith('border')) {
-                                if (attr.startsWith('borderTop')) {
+                            else if (startsWith$1(attr, 'border')) {
+                                if (startsWith$1(attr, 'borderTop')) {
                                     cache.borderTopWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
-                                else if (attr.startsWith('borderRight')) {
+                                else if (startsWith$1(attr, 'borderRight')) {
                                     cache.borderRightWidth = undefined;
                                     cache.contentBoxWidth = undefined;
                                 }
-                                else if (attr.startsWith('borderBottom')) {
+                                else if (startsWith$1(attr, 'borderBottom')) {
                                     cache.borderBottomWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
@@ -2148,7 +2072,7 @@ var vdom = (function () {
             if (!attr) {
                 attr = 'actualParent';
             }
-            else if (attr !== 'parent' && !attr.endsWith('Parent')) {
+            else if (attr !== 'parent' && !endsWith(attr, 'Parent')) {
                 return [];
             }
             const result = [];
@@ -2637,7 +2561,7 @@ var vdom = (function () {
                 ({ percent, initial } = options);
             }
             const value = initial ? this.cssInitial(attr, options) : this._styleMap[attr];
-            return !!value && isLength(value, percent !== false);
+            return value ? isLength(value, percent !== false) : false;
         }
         setBounds(cache = true) {
             var _a;
@@ -2678,12 +2602,12 @@ var vdom = (function () {
             return getMinMax(this, false, attr, options);
         }
         querySelector(value) {
-            return this.querySelectorAll(value, undefined, 1)[0] || null;
+            return this.querySelectorAll(value)[0] || null;
         }
-        querySelectorAll(value, customMap, resultCount = -1) {
+        querySelectorAll(value, customMap) {
             const queryMap = customMap || this.queryMap;
             const result = [];
-            if (queryMap && resultCount !== 0) {
+            if (queryMap) {
                 const queries = [];
                 let notIndex;
                 const addNot = (part) => {
@@ -2808,20 +2732,20 @@ var vdom = (function () {
                                         start = true;
                                         continue;
                                     default:
-                                        if (segment.startsWith('*|')) {
+                                        if (startsWith$1(segment, '*|')) {
                                             segment = segment.substring(2);
                                         }
                                         break;
                                 }
                                 let attrList, subMatch;
                                 while (subMatch = CSS$1.SELECTOR_ATTR.exec(segment)) {
-                                    let key = subMatch[1].replace('\\:', ':').toLowerCase(), endsWith;
+                                    let key = subMatch[1].replace(/\\:/, ':').toLowerCase(), trailing;
                                     switch (key.indexOf('|')) {
                                         case -1:
                                             break;
                                         case 1:
                                             if (key[0] === '*') {
-                                                endsWith = true;
+                                                trailing = true;
                                                 key = key.substring(2);
                                                 break;
                                             }
@@ -2837,7 +2761,7 @@ var vdom = (function () {
                                         key,
                                         symbol: subMatch[2],
                                         value: attrValue,
-                                        endsWith,
+                                        trailing,
                                         caseInsensitive
                                     });
                                     segment = spliceString(segment, subMatch.index, subMatch[0].length);
@@ -2905,17 +2829,13 @@ var vdom = (function () {
                         }
                         const q = selectors.length;
                         if (q) {
-                            let currentCount = result.length;
-                            const all = currentCount === 0;
+                            const all = result.length === 0;
                             for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                                 const items = queryMap[j];
                                 for (let k = 0, s = items.length; k < s; ++k) {
                                     const node = items[k];
                                     if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
                                         result.push(node);
-                                        if (++currentCount === resultCount) {
-                                            return result.sort(sortById);
-                                        }
                                     }
                                 }
                             }
@@ -3078,10 +2998,10 @@ var vdom = (function () {
             return this.tagName === 'IMG';
         }
         get flexElement() {
-            return this.display.endsWith('flex');
+            return endsWith(this.display, 'flex');
         }
         get gridElement() {
-            return this.display.endsWith('grid');
+            return endsWith(this.display, 'grid');
         }
         get tableElement() {
             return this.tagName === 'TABLE' || this.display === 'table';
@@ -3202,12 +3122,12 @@ var vdom = (function () {
             if (result === undefined) {
                 if (this.flexElement) {
                     const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                    const row = flexDirection.startsWith('row');
+                    const row = startsWith$1(flexDirection, 'row');
                     result = {
                         row,
                         column: !row,
-                        reverse: flexDirection.endsWith('reverse'),
-                        wrap: flexWrap.startsWith('wrap'),
+                        reverse: endsWith(flexDirection, 'reverse'),
+                        wrap: startsWith$1(flexWrap, 'wrap'),
                         wrapReverse: flexWrap === 'wrap-reverse',
                         alignContent,
                         justifyContent
@@ -3440,7 +3360,7 @@ var vdom = (function () {
                             if (this.inlineStatic && ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
                                 result = true;
                             }
-                            else if (this.inline || this.display.startsWith('table-') || this.hasPX('maxWidth')) {
+                            else if (this.inline || startsWith$1(this.display, 'table-') || this.hasPX('maxWidth')) {
                                 result = false;
                             }
                         }
@@ -3517,7 +3437,7 @@ var vdom = (function () {
             let result = this._cache.baseline;
             if (result === undefined) {
                 const display = this.display;
-                if ((display.startsWith('inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                if ((startsWith$1(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
                     const value = this.css('verticalAlign');
                     result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
@@ -3978,7 +3898,7 @@ var vdom = (function () {
                                     value = '1rem';
                                 }
                             }
-                            result = (value.endsWith('rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
+                            result = (endsWith(value, 'rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
                         }
                     }
                     else {
@@ -4055,6 +3975,9 @@ var vdom = (function () {
                 x: (bounds.left + bounds.right) / 2,
                 y: (bounds.top + bounds.bottom) / 2
             };
+        }
+        get initial() {
+            return this._initial;
         }
     }
 

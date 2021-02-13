@@ -1,4 +1,4 @@
-/* squared.base 2.3.0
+/* squared.base 2.4.0
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -27,30 +27,69 @@ this.squared.base = (function (exports) {
     const { FILE, STRING } = squared.lib.regex;
     const { isUserAgent } = squared.lib.client;
     const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-    const { getElementCache, newSessionInit, resetSessionAll, setElementCache } = squared.lib.session;
-    const { capitalize, convertCamelCase, isEmptyString, parseMimeType, resolvePath, splitPair, splitPairStart, trimBoth } = squared.lib.util;
-    const REGEXP_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
-    const REGEXP_FONTFACE = /\s*@font-face\s*{([^}]+)}/;
-    const REGEXP_FONTSRC = /\s*src:\s*([^;]+);/;
-    const REGEXP_FONTFAMILY = /\s*font-family:\s*([^;]+);/;
-    const REGEXP_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
-    const REGEXP_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-    const REGEXP_FONTURL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?/;
-    const REGEXP_DATAURI = new RegExp(`\\s*url\\("?(${STRING.DATAURI})"?\\)`, 'g');
+    const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
+    const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+    const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
+    const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
     const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
+    function parseImageUrl(value, styleSheetHref, resource, resourceId) {
+        let result, match;
+        while (match = REGEXP_DATAURI.exec(value)) {
+            if (match[2]) {
+                if (resource) {
+                    const leading = match[3];
+                    const encoding = match[4] || (isBase64(match[5]) ? 'base64' : 'utf8');
+                    let content, base64;
+                    if (encoding === 'base64') {
+                        base64 = match[5];
+                    }
+                    else {
+                        content = match[5];
+                    }
+                    resource.addRawData(resourceId, match[1], { mimeType: leading && leading.includes('/') ? leading : 'image/unknown', encoding, content, base64 });
+                }
+            }
+            else {
+                const url = resolvePath(match[5], styleSheetHref);
+                if (url) {
+                    if (resource) {
+                        resource.addImageData(resourceId, url);
+                    }
+                    result = (result || value).replace(match[0], `url("${url}")`);
+                }
+            }
+        }
+        REGEXP_DATAURI.lastIndex = 0;
+        return result || value;
+    }
+    function parseError(error) {
+        if (typeof error === 'string') {
+            return error;
+        }
+        if (error instanceof Error) {
+            return error.message;
+        }
+        if (error instanceof Event) {
+            error = error.target;
+        }
+        if (error instanceof HTMLImageElement) {
+            return error.src;
+        }
+        return '';
+    }
+    const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
     class Application {
         constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor) {
             this.framework = framework;
             this.extensions = [];
             this.closed = false;
-            this.elementMap = new WeakMap();
-            this.session = {
-                active: new Map()
-            };
+            this.elementMap = null;
+            this.session = { active: new Map() };
             this._nextId = 0;
             this._resourceHandler = null;
             this._extensionManager = null;
+            this.Node = nodeConstructor;
             const controller = new ControllerConstructor(this);
             this._controllerHandler = controller;
             if (ExtensionManagerConstructor) {
@@ -62,7 +101,6 @@ this.squared.base = (function (exports) {
             this._afterInsertNode = controller.afterInsertNode.bind(controller);
             this._includeElement = controller.includeElement.bind(controller);
             this._preventNodeCascade = controller.preventNodeCascade.bind(controller);
-            this.Node = nodeConstructor;
             this.init();
         }
         static prioritizeExtensions(value, extensions) {
@@ -81,13 +119,8 @@ this.squared.base = (function (exports) {
             }
             return result.length ? result.filter(item => item).concat(untagged) : extensions;
         }
+        init() { }
         finalize() { return true; }
-        afterCreateCache(node) {
-            if (this.userSettings.createElementMap) {
-                const elementMap = this.elementMap;
-                this.getProcessingCache(node.sessionId).each(item => elementMap.set(item.element, item));
-            }
-        }
         createNode(sessionId, options) {
             return this.createNodeStatic(this.getProcessing(sessionId), options.element);
         }
@@ -99,9 +132,15 @@ this.squared.base = (function (exports) {
             }
             return node;
         }
-        copyTo(directory, options) {
+        afterCreateCache(processing, node) {
+            if (this.userSettings.createElementMap) {
+                const elementMap = this.elementMap || (this.elementMap = new WeakMap());
+                processing.cache.each(item => elementMap.set(item.element, item));
+            }
+        }
+        copyTo(pathname, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyTo(directory, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyTo(pathname, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
         appendTo(pathname, options) {
             var _a;
@@ -119,16 +158,12 @@ this.squared.base = (function (exports) {
             var _a;
             return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendFiles(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
-        copyFiles(directory, options) {
+        copyFiles(pathname, options) {
             var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyFiles(directory, options)) || reject(OPERATION_NOT_SUPPORTED);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyFiles(pathname, options)) || reject(OPERATION_NOT_SUPPORTED);
         }
         reset() {
             var _a;
-            this._nextId = 0;
-            this.elementMap = new WeakMap();
-            resetSessionAll();
-            this.session.active.clear();
             this.controllerHandler.reset();
             (_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.reset();
             for (const ext of this.extensions) {
@@ -138,198 +173,87 @@ this.squared.base = (function (exports) {
         }
         parseDocument(...elements) {
             const resource = this.resourceHandler;
-            let preloadImages, preloadFonts, preloadCustomElements = true;
-            if (resource) {
-                ({ preloadImages, preloadFonts, preloadCustomElements } = resource.userSettings);
-            }
-            const [rootElements, processing, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && preloadCustomElements);
-            if (rootElements.size === 0) {
+            const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && resource ? resource.userSettings.preloadCustomElements : false);
+            if (rootElements.length === 0) {
                 return reject(DOCUMENT_ROOT_NOT_FOUND);
             }
-            const documentRoot = rootElements.values().next().value;
-            const preloadItems = [];
-            let preloaded;
-            const parseSrcSet = (value) => {
-                if (value) {
-                    for (const uri of value.split(',')) {
-                        resource.addImageData(resolvePath(splitPairStart(uri.trim(), ' ')));
-                    }
-                }
-            };
-            if (resource) {
-                for (const element of shadowElements) {
-                    element.querySelectorAll('picture > source').forEach((source) => parseSrcSet(source.srcset));
-                    element.querySelectorAll('video').forEach((source) => resource.addImageData(source.poster));
-                    element.querySelectorAll('input[type=image]').forEach((image) => resource.addImageData(image.src, image.width, image.height));
-                    element.querySelectorAll('object, embed').forEach((source) => {
-                        const src = source.data || source.src;
-                        if (src && (source.type.startsWith('image/') || parseMimeType(src).startsWith('image/'))) {
-                            resource.addImageData(src.trim());
-                        }
-                    });
-                    element.querySelectorAll('svg use').forEach((use) => {
-                        const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
-                        if (href && href.indexOf('#') > 0) {
-                            const src = resolvePath(splitPairStart(href, '#'));
-                            if (FILE.SVG.test(src)) {
-                                resource.addImageData(src);
-                            }
-                        }
-                    });
-                }
-            }
-            if (preloadImages) {
-                preloaded = [];
-                const { image, rawData } = resource.mapOfAssets;
-                for (const item of image.values()) {
-                    const uri = item.uri;
-                    if (FILE.SVG.test(uri)) {
-                        preloadItems.push(uri);
-                    }
-                    else if (item.width === 0 || item.height === 0) {
-                        const element = document.createElement('img');
-                        element.src = uri;
-                        if (element.naturalWidth && element.naturalHeight) {
-                            item.width = element.naturalWidth;
-                            item.height = element.naturalHeight;
-                        }
-                        else {
-                            documentRoot.appendChild(element);
-                            preloaded.push(element);
-                        }
-                    }
-                }
-                for (const data of rawData) {
-                    const item = data[1];
-                    const mimeType = item.mimeType;
-                    if (mimeType && mimeType.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
-                        let src = `data:${mimeType};`;
-                        if (item.base64) {
-                            src += 'base64,' + item.base64;
-                        }
-                        else if (item.content) {
-                            src += item.content;
-                        }
-                        else {
-                            continue;
-                        }
-                        const element = document.createElement('img');
-                        element.src = src;
-                        const { naturalWidth: width, naturalHeight: height } = element;
-                        if (width && height) {
-                            item.width = width;
-                            item.height = height;
-                            image.set(data[0], { width, height, uri: item.filename });
-                        }
-                        else {
-                            document.body.appendChild(element);
-                            preloaded.push(element);
-                        }
-                    }
-                }
-            }
-            if (preloadFonts) {
-                for (const item of resource.mapOfAssets.fonts.values()) {
-                    for (const font of item) {
-                        const srcUrl = font.srcUrl;
-                        if (srcUrl && !preloadItems.includes(srcUrl)) {
-                            preloadItems.push(srcUrl);
-                        }
-                    }
-                }
-            }
-            if (resource) {
-                for (const element of shadowElements) {
-                    element.querySelectorAll('img').forEach((image) => {
-                        parseSrcSet(image.srcset);
-                        if (!preloadImages) {
-                            resource.addImage(image);
-                        }
-                        else if (FILE.SVG.test(image.src)) {
-                            preloadItems.push(image.src);
-                        }
-                        else if (image.complete) {
-                            resource.addImage(image);
-                        }
-                        else {
-                            preloadItems.push(image);
-                        }
-                    });
-                }
-            }
+            const resourceId = processing.resourceId;
+            const documentRoot = rootElements[0];
+            const [preloadItems, preloaded] = resource ? resource.preloadAssets(resourceId, documentRoot, shadowElements) : [[], []];
             if (styleSheets) {
                 preloadItems.push(...styleSheets);
             }
             if (preloadItems.length) {
                 processing.initializing = true;
-                return Promise.all(preloadItems.map(item => {
+                return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
                     return new Promise((success, error) => {
                         if (typeof item === 'string') {
                             fetch(item)
                                 .then(async (result) => {
                                 const mimeType = result.headers.get('content-type') || '';
-                                if (mimeType.startsWith('text/css') || styleSheets && styleSheets.includes(item)) {
-                                    success({ mimeType: 'text/css', encoding: 'utf8', data: await result.text() });
+                                if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                    success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
                                 }
-                                else if (mimeType.startsWith('image/svg+xml') || FILE.SVG.test(item)) {
-                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', data: await result.text() });
+                                else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
+                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), data: await result.arrayBuffer() });
+                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
                                 }
                             })
-                                .catch(() => error(item));
+                                .catch(err => error(err));
                         }
                         else {
                             item.addEventListener('load', () => success(item));
-                            item.addEventListener('error', () => error(item));
+                            item.addEventListener('error', err => error(err));
                         }
                     });
                 }))
                     .then((result) => {
+                    let errors;
                     for (let i = 0, length = result.length; i < length; ++i) {
-                        if (result[i]) {
-                            const item = preloadItems[i];
-                            if (typeof item === 'string') {
-                                resource.addRawData(item, '', result[i]);
+                        const item = result[i];
+                        if (item.status === 'rejected') {
+                            const message = parseError(item.reason);
+                            if (message) {
+                                (errors || (errors = [])).push(message);
                             }
-                            else {
-                                resource.addImage(item);
-                            }
+                            continue;
+                        }
+                        const data = preloadItems[i];
+                        if (typeof data === 'string') {
+                            resource.addRawData(resourceId, data, item.value);
+                        }
+                        else {
+                            resource.addImage(resourceId, data);
                         }
                     }
-                    return this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded);
-                })
-                    .catch((error) => {
-                    let message;
-                    if (error instanceof Error) {
-                        message = error.message;
-                    }
-                    else {
-                        if (error instanceof Event) {
-                            error = error.target;
+                    if (errors) {
+                        const length = errors.length;
+                        if (length === 1) {
+                            this.writeError('FAIL: ' + errors[0]);
                         }
-                        if (error instanceof HTMLImageElement) {
-                            message = error.src;
+                        else {
+                            this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
                         }
                     }
-                    return !message || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? this.resumeSessionThread(rootElements, processing, elements.length, documentRoot, preloaded) : Promise.reject(new Error(message));
+                    return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
                 });
             }
-            return Promise.resolve(this.resumeSessionThread(rootElements, processing, elements.length));
+            return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
         }
         parseDocumentSync(...elements) {
             const sessionData = this.createSessionThread(elements, false);
             return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
         }
-        createCache(documentRoot, sessionId) {
-            const node = this.createRootNode(documentRoot, sessionId);
+        createCache(processing, documentRoot) {
+            const node = this.createRootNode(processing, documentRoot);
             if (node) {
-                this.controllerHandler.sortInitialCache(this.getProcessingCache(sessionId));
+                this.controllerHandler.sortInitialCache(processing.cache);
             }
             return node;
         }
-        setStyleMap(sessionId, documentRoot = document, queryRoot) {
+        setStyleMap(sessionId, resourceId, documentRoot = document, queryRoot) {
             const styleSheets = documentRoot.styleSheets;
             let errors;
             for (let i = 0, length = styleSheets.length; i < length; ++i) {
@@ -342,7 +266,7 @@ this.squared.base = (function (exports) {
                 }
                 if (!mediaText || checkMediaRule(mediaText)) {
                     try {
-                        this.applyStyleSheet(styleSheet, sessionId, documentRoot, queryRoot);
+                        this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                     }
                     catch (err) {
                         (errors || (errors = [])).push(err.message);
@@ -350,7 +274,7 @@ this.squared.base = (function (exports) {
                 }
             }
             if (errors) {
-                (this.userSettings.showErrorMessages ? alert : console.log)(CSS_CANNOT_BE_PARSED + '\n\n' + errors.join('\n\n'));
+                this.writeError(getErrorMessage(errors), CSS_CANNOT_BE_PARSED);
             }
         }
         replaceShadowRootSlots(shadowRoot) {
@@ -383,7 +307,7 @@ this.squared.base = (function (exports) {
                 else {
                     const namespace = namespaces[i] + '.';
                     for (const data of builtInExtensions) {
-                        if (data[0].startsWith(namespace)) {
+                        if (startsWith(data[0], namespace)) {
                             ext = data[1];
                             if (!extensions.includes(ext)) {
                                 ext.application = this;
@@ -407,13 +331,16 @@ this.squared.base = (function (exports) {
         setDatasetName(attr, element, value) {
             element.dataset[attr + capitalize(this.systemName)] = value;
         }
+        writeError(message, hint) {
+            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
+        }
         toString() {
             return this.systemName;
         }
-        createRootNode(rootElement, sessionId) {
-            const processing = this.getProcessing(sessionId);
+        createRootNode(processing, rootElement) {
+            const { sessionId, resourceId } = processing;
             const extensions = processing.extensions.filter(item => !!item.beforeInsertNode);
-            const node = this.cascadeParentNode(processing, rootElement, sessionId, 0, extensions.length ? extensions : null);
+            const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, extensions.length ? extensions : null);
             if (node) {
                 node.documentRoot = true;
                 processing.node = node;
@@ -459,7 +386,7 @@ this.squared.base = (function (exports) {
             }
             return node;
         }
-        cascadeParentNode(processing, parentElement, sessionId, depth, extensions, shadowParent) {
+        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, extensions, shadowParent) {
             const node = this.insertNode(processing, parentElement);
             if (node) {
                 const cache = processing.cache;
@@ -495,9 +422,9 @@ this.squared.base = (function (exports) {
                         }
                         let shadowRoot;
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
-                            this.setStyleMap(sessionId, shadowRoot);
+                            this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
-                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, element, sessionId, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
+                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                             elements.push(child);
                             inlineText = false;
                         }
@@ -559,45 +486,18 @@ this.squared.base = (function (exports) {
             }
             return result;
         }
-        applyStyleRule(item, sessionId, documentRoot, queryRoot) {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
+            var _a, _b, _c;
+            var _d;
             const resource = this.resourceHandler;
             const styleSheetHref = ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href;
             const cssText = item.cssText;
             switch (item.type) {
                 case CSSRule.STYLE_RULE: {
                     const hostElement = documentRoot.host;
-                    const unusedStyles = !hostElement && this.session.unusedStyles;
                     const baseMap = {};
                     const important = {};
                     const cssStyle = item.style;
-                    const parseImageUrl = (attr) => {
-                        const value = baseMap[attr];
-                        if (value && value !== 'initial') {
-                            let result, match;
-                            while (match = REGEXP_DATAURI.exec(value)) {
-                                if (match[2]) {
-                                    if (resource) {
-                                        const [mimeType, encoding] = match[2].trim().split(/\s*;\s*/);
-                                        resource.addRawData(match[1], match[3], { mimeType, encoding });
-                                    }
-                                }
-                                else {
-                                    const uri = resolvePath(match[3], styleSheetHref);
-                                    if (uri) {
-                                        if (resource) {
-                                            resource.addImageData(uri);
-                                        }
-                                        result = (result || value).replace(match[0], `url("${uri}")`);
-                                    }
-                                }
-                            }
-                            if (result) {
-                                baseMap[attr] = result;
-                            }
-                            REGEXP_DATAURI.lastIndex = 0;
-                        }
-                    };
                     const hasExactValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                     const hasPartialValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                     for (let i = 0, length = cssStyle.length; i < length; ++i) {
@@ -609,7 +509,7 @@ this.squared.base = (function (exports) {
                         let value = cssStyle[attr];
                         switch (value) {
                             case 'initial':
-                                if (isUserAgent(2 /* SAFARI */) && baseAttr.startsWith('background')) {
+                                if (isUserAgent(2 /* SAFARI */) && startsWith(baseAttr, 'background')) {
                                     break;
                                 }
                                 if (((_b = CSS_PROPERTIES[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) === 'auto') {
@@ -622,7 +522,7 @@ this.squared.base = (function (exports) {
                                         for (const name in CSS_SHORTHANDNONE) {
                                             const css = CSS_SHORTHANDNONE[name];
                                             if (css.value.includes(baseAttr)) {
-                                                if (hasExactValue(css.name, 'none|initial') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, css.valueOfNone)) {
+                                                if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, css.valueOfNone)) {
                                                     break required;
                                                 }
                                                 break;
@@ -630,6 +530,15 @@ this.squared.base = (function (exports) {
                                         }
                                         continue;
                                     }
+                                }
+                                break;
+                        }
+                        switch (baseAttr) {
+                            case 'backgroundImage':
+                            case 'listStyleImage':
+                            case 'content':
+                                if (value !== 'initial') {
+                                    value = parseImageUrl(value, styleSheetHref, resource, resourceId);
                                 }
                                 break;
                         }
@@ -649,15 +558,12 @@ this.squared.base = (function (exports) {
                         }
                     }
                     REGEXP_IMPORTANT.lastIndex = 0;
-                    parseImageUrl('backgroundImage');
-                    parseImageUrl('listStyleImage');
-                    parseImageUrl('content');
                     for (const selectorText of parseSelectorText(item.selectorText)) {
                         const specificity = getSpecificity(selectorText);
                         const [selector, target] = splitPair(selectorText, '::');
                         const targetElt = target ? '::' + target : '';
                         let elements;
-                        if (selector.startsWith(':host')) {
+                        if (startsWith(selector, ':host')) {
                             if (!hostElement) {
                                 continue;
                             }
@@ -694,8 +600,8 @@ this.squared.base = (function (exports) {
                         }
                         const length = elements.length;
                         if (length === 0) {
-                            if (unusedStyles) {
-                                unusedStyles.add(selectorText);
+                            if (!hostElement) {
+                                ((_d = this.getProcessing(sessionId)).unusedStyles || (_d.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
@@ -731,43 +637,15 @@ this.squared.base = (function (exports) {
                 }
                 case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        const attr = (_d = REGEXP_FONTFACE.exec(cssText)) === null || _d === void 0 ? void 0 : _d[1];
-                        if (attr) {
-                            const src = (_e = REGEXP_FONTSRC.exec(attr)) === null || _e === void 0 ? void 0 : _e[1].trim();
-                            let fontFamily = (_f = REGEXP_FONTFAMILY.exec(attr)) === null || _f === void 0 ? void 0 : _f[1].trim();
-                            if (src && fontFamily) {
-                                fontFamily = trimBoth(fontFamily, '"');
-                                const fontStyle = ((_g = REGEXP_FONTSTYLE.exec(attr)) === null || _g === void 0 ? void 0 : _g[1].toLowerCase()) || 'normal';
-                                const fontWeight = +(((_h = REGEXP_FONTWEIGHT.exec(attr)) === null || _h === void 0 ? void 0 : _h[1]) || '400');
-                                for (const value of src.split(',')) {
-                                    const match = REGEXP_FONTURL.exec(value);
-                                    if (match) {
-                                        const data = {
-                                            fontFamily,
-                                            fontWeight,
-                                            fontStyle,
-                                            srcFormat: ((_j = match[4]) === null || _j === void 0 ? void 0 : _j.toLowerCase().trim()) || 'truetype'
-                                        };
-                                        const url = (match[2] || match[3]).trim();
-                                        if (match[1] === 'url') {
-                                            data.srcUrl = resolvePath(url, styleSheetHref);
-                                        }
-                                        else {
-                                            data.srcLocal = url;
-                                        }
-                                        resource.addFont(data);
-                                    }
-                                }
-                            }
-                        }
+                        resource.parseFontFace(resourceId, cssText, styleSheetHref);
                     }
                     break;
                 case CSSRule.SUPPORTS_RULE:
-                    this.applyCSSRuleList(item.cssRules, sessionId, documentRoot);
+                    this.applyCssRules(sessionId, resourceId, item.cssRules, documentRoot);
                     break;
             }
         }
-        applyStyleSheet(item, sessionId, documentRoot, queryRoot) {
+        applyStyleSheet(sessionId, resourceId, item, documentRoot, queryRoot) {
             var _a, _b;
             var _c;
             try {
@@ -776,27 +654,34 @@ this.squared.base = (function (exports) {
                     const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
                     for (let i = 0, length = cssRules.length; i < length; ++i) {
                         const rule = cssRules[i];
-                        switch (rule.type) {
+                        const type = rule.type;
+                        switch (type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
-                                this.applyStyleRule(rule, sessionId, documentRoot, queryRoot);
+                                this.applyStyleRule(sessionId, resourceId, rule, documentRoot, queryRoot);
                                 break;
                             case CSSRule.IMPORT_RULE: {
                                 const uri = resolvePath(rule.href, ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href);
                                 if (uri) {
-                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(uri, '', { mimeType: 'text/css', encoding: 'utf8' });
+                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
                                 }
-                                this.applyStyleSheet(rule.styleSheet, sessionId, documentRoot, queryRoot);
+                                this.applyStyleSheet(sessionId, resourceId, rule.styleSheet, documentRoot, queryRoot);
                                 break;
                             }
                             case CSSRule.MEDIA_RULE:
                                 if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
-                                    this.applyCSSRuleList(rule.cssRules, sessionId, documentRoot, queryRoot);
+                                    this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
+                                }
+                                else {
+                                    this.parseStyleRules(sessionId, resourceId, rule.cssRules);
                                 }
                                 break;
                             case CSSRule.SUPPORTS_RULE:
                                 if (CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))) {
-                                    this.applyCSSRuleList(rule.cssRules, sessionId, documentRoot, queryRoot);
+                                    this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
+                                }
+                                else {
+                                    this.parseStyleRules(sessionId, resourceId, rule.cssRules);
                                 }
                                 break;
                             case CSSRule.KEYFRAMES_RULE: {
@@ -821,16 +706,48 @@ this.squared.base = (function (exports) {
                 throw new Error((item.href ? item.href + ' - ' : '') + err);
             }
         }
-        applyCSSRuleList(rules, sessionId, documentRoot, queryRoot) {
+        applyCssRules(sessionId, resourceId, rules, documentRoot, queryRoot) {
             for (let i = 0, length = rules.length; i < length; ++i) {
-                this.applyStyleRule(rules[i], sessionId, documentRoot, queryRoot);
+                this.applyStyleRule(sessionId, resourceId, rules[i], documentRoot, queryRoot);
+            }
+        }
+        parseStyleRules(sessionId, resourceId, rules) {
+            var _a;
+            const resource = this.resourceHandler;
+            if (resource) {
+                for (let i = 0, length = rules.length; i < length; ++i) {
+                    const item = rules[i];
+                    switch (item.type) {
+                        case CSSRule.STYLE_RULE: {
+                            const cssStyle = item.style;
+                            for (let j = 0, q = cssStyle.length; j < q; ++j) {
+                                const attr = cssStyle[j];
+                                switch (attr) {
+                                    case 'background-image':
+                                    case 'list-style-image':
+                                    case 'content': {
+                                        const value = cssStyle[attr];
+                                        if (value !== 'initial') {
+                                            parseImageUrl(value, ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href, resource, resourceId);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        case CSSRule.FONT_FACE_RULE:
+                            this.applyStyleRule(sessionId, resourceId, item, document);
+                            break;
+                    }
+                }
             }
         }
         createSessionThread(elements, pierceShadowRoot) {
-            const rootElements = new Set();
+            const rootElements = [];
             const length = elements.length;
             if (length === 0) {
-                rootElements.add(this.mainElement);
+                rootElements.push(this.mainElement);
             }
             else {
                 for (let i = 0; i < length; ++i) {
@@ -838,46 +755,22 @@ this.squared.base = (function (exports) {
                     if (typeof element === 'string') {
                         element = document.getElementById(element);
                     }
-                    if (element) {
-                        rootElements.add(element);
+                    if (element && !rootElements.includes(element)) {
+                        rootElements.push(element);
                     }
                 }
-                if (rootElements.size === 0) {
+                if (rootElements.length === 0) {
                     return [rootElements];
                 }
             }
-            let shadowElements, styleSheets;
-            if (pierceShadowRoot) {
-                let shadowRootItems;
-                for (const element of rootElements) {
-                    element.querySelectorAll('*').forEach(child => {
-                        const shadowRoot = child.shadowRoot;
-                        if (shadowRoot) {
-                            (shadowRootItems || (shadowRootItems = new Set())).add(shadowRoot);
-                        }
-                    });
-                }
-                if (shadowRootItems) {
-                    shadowElements = new Set(rootElements);
-                    for (const shadowRoot of shadowRootItems) {
-                        shadowElements.add(shadowRoot);
-                        shadowRoot.querySelectorAll('link').forEach(element => {
-                            const href = element.href.trim();
-                            if (href) {
-                                const mimeType = element.rel.trim() === 'stylesheet' ? 'text/css' : element.type.trim() || parseMimeType(href);
-                                if (mimeType === 'text/css') {
-                                    (styleSheets || (styleSheets = [])).push(href);
-                                }
-                            }
-                        });
-                    }
-                }
-            }
             const controller = this.controllerHandler;
+            const resource = this.resourceHandler;
             const sessionId = controller.generateSessionId;
+            const resourceId = this.resourceId;
             const extensions = this.extensionsAll;
             const processing = {
                 sessionId,
+                resourceId,
                 initializing: false,
                 cache: new NodeList(undefined, sessionId),
                 excluded: new NodeList(undefined, sessionId),
@@ -892,17 +785,53 @@ this.squared.base = (function (exports) {
                 processing.afterInsertNode = afterInsertNode;
             }
             this.session.active.set(sessionId, processing);
-            controller.init();
-            const queryRoot = rootElements.size === 1 && rootElements.values().next().value.parentElement;
+            if (resource) {
+                resource.init(resourceId);
+            }
+            controller.init(resourceId);
+            const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
             if (queryRoot && queryRoot !== document.documentElement) {
-                this.setStyleMap(sessionId, document, queryRoot);
+                this.setStyleMap(sessionId, resourceId, document, queryRoot);
             }
             else {
-                this.setStyleMap(sessionId);
+                this.setStyleMap(sessionId, resourceId);
             }
-            return [rootElements, processing, shadowElements || rootElements, styleSheets];
+            let shadowElements, styleSheets;
+            if (pierceShadowRoot) {
+                for (const element of rootElements) {
+                    element.querySelectorAll('*').forEach(child => {
+                        const shadowRoot = child.shadowRoot;
+                        if (shadowRoot) {
+                            (shadowElements || (shadowElements = [])).push(shadowRoot);
+                        }
+                    });
+                }
+                if (shadowElements) {
+                    for (const element of shadowElements) {
+                        element.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child) => (styleSheets || (styleSheets = [])).push(child.href));
+                    }
+                }
+            }
+            if (resource) {
+                const queryElements = [queryRoot || document];
+                if (shadowElements) {
+                    queryElements.push(...shadowElements);
+                }
+                for (const element of queryElements) {
+                    element.querySelectorAll('[style]').forEach((child) => {
+                        const { backgroundImage, listStyleImage } = child.style;
+                        if (backgroundImage) {
+                            parseImageUrl(backgroundImage, location.href, resource, resourceId);
+                        }
+                        if (listStyleImage) {
+                            parseImageUrl(listStyleImage, location.href, resource, resourceId);
+                        }
+                    });
+                }
+            }
+            return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
         }
-        resumeSessionThread(rootElements, processing, multipleRequest, documentRoot, preloaded) {
+        resumeSessionThread(processing, rootElements, multipleRequest, documentRoot, preloaded) {
             processing.initializing = false;
             const { sessionId, extensions } = processing;
             const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
@@ -920,9 +849,9 @@ this.squared.base = (function (exports) {
             }
             const success = [];
             for (const element of rootElements) {
-                const node = this.createCache(element, sessionId);
+                const node = this.createCache(processing, element);
                 if (node) {
-                    this.afterCreateCache(node);
+                    this.afterCreateCache(processing, node);
                     success.push(node);
                 }
             }
@@ -969,12 +898,21 @@ this.squared.base = (function (exports) {
                 const processing = active.values().next().value;
                 return [processing.extensions, processing.cache.children];
             }
-            const extensions = [], children = [];
+            const extensions = [];
+            const children = [];
             for (const processing of active.values()) {
                 extensions.push(...processing.extensions);
                 children.push(...processing.cache.children);
             }
             return [Array.from(new Set(extensions)), children];
+        }
+        get resourceId() {
+            let result = -1;
+            if (this.resourceHandler) {
+                const ASSETS = this.resourceHandler.mapOfAssets;
+                ASSETS[result = ASSETS.length] = null;
+            }
+            return result;
         }
         get nextId() {
             return ++this._nextId;
@@ -985,6 +923,7 @@ this.squared.base = (function (exports) {
     }
     Application.KEY_NAME = 'squared.base.application';
 
+    const { padStart } = squared.lib.util;
     class Controller {
         constructor(application) {
             this.application = application;
@@ -996,15 +935,16 @@ this.squared.base = (function (exports) {
                     video: '*'
                 }
             };
+            this._sessionId = 0;
         }
-        init() { }
+        init(resourceId) { }
         sortInitialCache(cache) { }
-        applyDefaultStyles(element, sessionId, pseudoElt) { }
+        applyDefaultStyles(processing, element, pseudoElt) { }
         reset() { }
         includeElement(element) { return true; }
         preventNodeCascade(node) { return false; }
         get generateSessionId() {
-            return Date.now() + '#' + this.application.session.active.size;
+            return padStart((++this._sessionId).toString(), 5, '0');
         }
         get afterInsertNode() {
             return (node) => { };
@@ -1013,6 +953,7 @@ this.squared.base = (function (exports) {
             return this.application.userSettings;
         }
     }
+    Controller.KEY_NAME = 'squared.base.controller';
 
     class Extension {
         constructor(name, framework, options) {
@@ -1173,6 +1114,7 @@ this.squared.base = (function (exports) {
         }
     }
 
+    const { endsWith, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
     class GlobExp extends RegExp {
         constructor(source, flags, negate) {
             super(source, flags);
@@ -1415,7 +1357,7 @@ this.squared.base = (function (exports) {
                 value && (value = value.replace(/\\+/g, '/'));
                 break;
         }
-        return preceding + (preceding && value && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
+        return preceding + (preceding && value && !endsWith(preceding, separator) && !startsWith$1(value, separator) ? separator : '') + value;
     }
     function randomUUID(separator = '-') {
         return [8, 4, 4, 4, 12].reduce((a, b, index) => {
@@ -1445,101 +1387,6 @@ this.squared.base = (function (exports) {
         }
         return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
     }
-    function formatXml(value, options = {}) {
-        const { closeEmptyTags = true, caseSensitive, indentChar = '\t' } = options;
-        const pattern = /\s*(<(\/)?(!?[A-Za-z\d-]+)([^>]*)>)(\s*)([^<]*)/g;
-        const patternContent = /^([\S\s]*?)(\s*)$/;
-        const lines = [];
-        let output = '', indent = -1, ignoreIndent, match;
-        while (match = pattern.exec(value)) {
-            const tag = match[1];
-            const closing = match[2] === '/';
-            const content = patternContent.exec(match[6]);
-            lines.push({
-                tag,
-                closing,
-                tagName: caseSensitive ? match[3].toUpperCase() : match[3],
-                didClose: !closing && tag.endsWith('/>'),
-                leadingSpace: match[5],
-                content: content[1],
-                trailingSpace: content[2]
-            });
-        }
-        const length = lines.length;
-        for (let i = 0; i < length; ++i) {
-            const line = lines[i];
-            let previousIndent = indent, single, willClose;
-            if (line.closing) {
-                const previous = lines[i - 1];
-                if (!previous.closing && previous.tagName === previous.tagName && previous.leadingSpace.includes('\n')) {
-                    output += indentChar.repeat(previousIndent);
-                }
-                --indent;
-            }
-            else {
-                const next = lines[i + 1];
-                const tagName = line.tagName;
-                single = next && next.closing && tagName === next.tagName;
-                if (!line.didClose) {
-                    for (let j = i + 1, k = 0; j < length; ++j) {
-                        const item = lines[j];
-                        if (tagName === item.tagName) {
-                            if (item.closing) {
-                                if (k-- === 0) {
-                                    willClose = true;
-                                    break;
-                                }
-                            }
-                            else {
-                                ++k;
-                            }
-                        }
-                    }
-                    if (closeEmptyTags && !line.content && line.tag[1] !== '!') {
-                        if (single || !willClose) {
-                            line.tag = line.tag.replace(/\s*>$/, ' />');
-                            if (willClose) {
-                                ++i;
-                            }
-                        }
-                        else if (willClose) {
-                            ++indent;
-                        }
-                    }
-                    else if (willClose) {
-                        ++indent;
-                    }
-                }
-                ++previousIndent;
-            }
-            const tags = line.tag.split('\n');
-            for (let j = 0, q = tags.length; j < q; ++j) {
-                const partial = tags[j];
-                if (ignoreIndent) {
-                    output += partial;
-                    ignoreIndent = false;
-                }
-                else {
-                    const depth = previousIndent + Math.min(j, 1);
-                    output += (depth > 0 ? indentChar.repeat(depth) : '') + partial.trim();
-                }
-                if (single && q === 1) {
-                    ignoreIndent = true;
-                }
-                else {
-                    output += '\n';
-                }
-            }
-            if (line.content) {
-                let leadingSpace = line.leadingSpace;
-                if (leadingSpace && leadingSpace.includes('\n')) {
-                    leadingSpace = leadingSpace.replace(/^[^\n]+/, '');
-                }
-                output += (leadingSpace ? leadingSpace : '') + line.content + (leadingSpace || line.trailingSpace.includes('\n') ? '\n' : '');
-            }
-        }
-        return output;
-    }
     function parseGlob(value, options) {
         value = value.trim();
         let flags = '', fromEnd;
@@ -1549,7 +1396,7 @@ this.squared.base = (function (exports) {
             }
             fromEnd = options.fromEnd;
         }
-        const trimCurrent = (cwd) => fromEnd && cwd.startsWith('./') ? cwd.substring(2) : cwd;
+        const trimCurrent = (cwd) => fromEnd && startsWith$1(cwd, './') ? cwd.substring(2) : cwd;
         const source = ((!fromEnd ? '^' : '') + trimCurrent(value))
             .replace(/\\\\([^\\])/g, (...match) => ':' + match[1].charCodeAt(0))
             .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
@@ -1597,6 +1444,19 @@ this.squared.base = (function (exports) {
         }) + '$';
         return new GlobExp(source, flags, value[0] === '!');
     }
+    function parseTask(value) {
+        if (value) {
+            const result = [];
+            for (const item of value.split('+')) {
+                const [handler, command] = splitPair$1(item, ':', true);
+                if (handler && command) {
+                    const [task, preceding] = splitPair$1(command, ':', true);
+                    result.push({ handler, task, preceding: preceding === 'true' });
+                }
+            }
+            return result;
+        }
+    }
     function parseWatchInterval(value) {
         if (value) {
             value = value.trim();
@@ -1621,14 +1481,14 @@ this.squared.base = (function (exports) {
         randomUUID: randomUUID,
         upperCaseString: upperCaseString,
         lowerCaseString: lowerCaseString,
-        formatXml: formatXml,
         parseGlob: parseGlob,
+        parseTask: parseTask,
         parseWatchInterval: parseWatchInterval
     });
 
-    const { SERVER_REQUIRED } = squared.lib.error;
+    const { DIRECTORY_NOT_PROVIDED, SERVER_REQUIRED } = squared.lib.error;
     const { createElement } = squared.lib.dom;
-    const { fromLastIndexOf, hasValue, isPlainObject, splitPair: splitPair$1, trimEnd } = squared.lib.util;
+    const { fromLastIndexOf, isPlainObject, splitPair: splitPair$2, startsWith: startsWith$2, trimEnd } = squared.lib.util;
     function validateAsset(file, exclusions) {
         const { pathname, filename } = file;
         const glob = exclusions.glob;
@@ -1678,11 +1538,10 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    const getEndpoint = (hostname, endpoint) => endpoint.startsWith('http') ? endpoint : hostname + endpoint;
+    const getEndpoint = (hostname, endpoint) => startsWith$2(endpoint, 'http') ? endpoint : hostname + endpoint;
     class File {
         constructor() {
-            this.assets = [];
-            this.archiveFormats = new Set(['zip', '7z', 'tar', 'gz', 'tgz']);
+            this.archiveFormats = ['zip', '7z', 'tar', 'gz', 'tgz'];
             this._hostname = '';
             this._endpoints = {
                 ASSETS_COPY: '/api/v1/assets/copy',
@@ -1709,28 +1568,13 @@ this.squared.base = (function (exports) {
         getCopyQueryParameters(options) { return ''; }
         getArchiveQueryParameters(options) { return ''; }
         saveFiles(filename, options) {
-            return this.archiving(Object.assign(Object.assign({}, options), { filename }));
+            return this.archiving('', Object.assign(Object.assign({}, options), { filename }));
         }
-        appendFiles(uri, options) {
-            return this.archiving(Object.assign(Object.assign({}, options), { appendTo: uri }));
+        appendFiles(target, options) {
+            return this.archiving(target, Object.assign({}, options));
         }
-        copyFiles(directory, options) {
-            return this.copying(Object.assign(Object.assign({}, options), { directory }));
-        }
-        addAsset(asset) {
-            if (asset.content || asset.uri || asset.base64) {
-                const { pathname, filename } = asset;
-                const append = this.assets.find(item => item.pathname === pathname && item.filename === filename);
-                if (append) {
-                    Object.assign(append, asset);
-                }
-                else {
-                    this.assets.push(asset);
-                }
-            }
-        }
-        reset() {
-            this.assets = [];
+        copyFiles(pathname, options) {
+            return this.copying(pathname, Object.assign({}, options));
         }
         loadData(value, options) {
             const { type, cache } = options;
@@ -1757,54 +1601,56 @@ this.squared.base = (function (exports) {
             }
             return Promise.resolve(null);
         }
-        copying(options) {
+        copying(pathname = '', options) {
             if (this.hasHttpProtocol()) {
-                const body = this.createRequestBody(options.assets, options);
-                let directory = options.directory;
-                if (body && directory && (directory = directory.trim())) {
-                    if (!hasValue(options.emptyDir)) {
-                        options.emptyDir = this.userSettings.outputEmptyCopyDirectory;
+                if (pathname = pathname.trim()) {
+                    const body = this.createRequestBody(options.assets, options);
+                    if (body) {
+                        return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
+                            '?to=' + encodeURIComponent(pathname) +
+                            '&empty=' + (options.emptyDir ? '2' : this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
+                            this.getCopyQueryParameters(options), {
+                            method: 'POST',
+                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(body)
+                        })
+                            .then(async (response) => {
+                            const result = await response.json();
+                            if (typeof options.callback === 'function') {
+                                options.callback(result);
+                            }
+                            const error = result.error;
+                            if (error) {
+                                this.writeError(error.message, error.hint);
+                            }
+                            return result;
+                        });
                     }
-                    return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
-                        '?to=' + encodeURIComponent(directory) +
-                        '&empty=' + (options.emptyDir ? '1' : '0') +
-                        this.getCopyQueryParameters(options), {
-                        method: 'POST',
-                        headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
-                        body: JSON.stringify(body)
-                    })
-                        .then(async (response) => {
-                        const result = await response.json();
-                        if (typeof options.callback === 'function') {
-                            options.callback(result);
-                        }
-                        if (result.error) {
-                            this.writeErrorMesssage(result.error);
-                        }
-                        return result;
-                    });
+                }
+                else {
+                    this.writeError(DIRECTORY_NOT_PROVIDED);
                 }
             }
             else {
-                (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
+                this.writeError(SERVER_REQUIRED);
             }
             return Promise.resolve();
         }
-        archiving(options) {
+        archiving(target = '', options) {
             if (this.hasHttpProtocol()) {
                 const body = this.createRequestBody(options.assets, options);
                 if (body) {
                     let { filename, format } = options;
                     const setFilename = () => {
-                        if (!format || !this.archiveFormats.has(format = format.toLowerCase())) {
-                            [filename, format] = splitPair$1(filename, '.', true, true);
-                            if (format && !this.archiveFormats.has(format)) {
+                        if (!format || !this.archiveFormats.includes(format = format.toLowerCase())) {
+                            [filename, format] = splitPair$2(filename, '.', true, true);
+                            if (format && !this.archiveFormats.includes(format)) {
                                 filename += '.' + format;
                                 format = '';
                             }
                         }
                     };
-                    if (!options.appendTo) {
+                    if (!target) {
                         if (!filename) {
                             filename = this.userSettings.outputArchiveName;
                         }
@@ -1813,14 +1659,14 @@ this.squared.base = (function (exports) {
                         }
                     }
                     else {
-                        filename || (filename = fromLastIndexOf(options.appendTo, '/', '\\'));
+                        filename || (filename = fromLastIndexOf(target, '/', '\\'));
                         setFilename();
                     }
                     return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
                         '?format=' + (format || this.userSettings.outputArchiveFormat) +
-                        '&filename=' + encodeURIComponent(filename || '') +
+                        '&filename=' + encodeURIComponent(filename) +
                         '&to=' + encodeURIComponent(options.copyTo || '') +
-                        '&append_to=' + encodeURIComponent(options.appendTo || '') +
+                        '&append_to=' + encodeURIComponent(target || '') +
                         this.getArchiveQueryParameters(options), {
                         method: 'POST',
                         headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -1831,40 +1677,59 @@ this.squared.base = (function (exports) {
                         if (typeof options.callback === 'function') {
                             options.callback(result);
                         }
-                        const { downloadKey, zipname, error } = result;
+                        const { downloadKey, filename: zipname, error } = result;
                         if (downloadKey && zipname) {
-                            const download = await this.loadData(downloadKey, { type: 'blob', cache: false });
+                            const cache = this.userSettings.outputArchiveCache;
+                            const download = await this.loadData(downloadKey, { type: 'blob', cache });
                             if (download) {
                                 File.downloadFile(download, zipname);
                             }
+                            if (cache) {
+                                result.downloadUrl = getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + '/blob?key=' + downloadKey;
+                            }
                         }
                         if (error) {
-                            this.writeErrorMesssage(error);
+                            this.writeError(error.message, error.hint);
                         }
+                        delete result.downloadKey;
                         return result;
                     });
                 }
             }
             else {
-                (this.userSettings.showErrorMessages ? alert : console.log)(SERVER_REQUIRED);
+                this.writeError(SERVER_REQUIRED);
             }
             return Promise.resolve();
         }
         setEndpoint(name, value) {
             this._endpoints[name] = value;
         }
-        writeErrorMesssage(error) {
-            const { hint, message } = error;
-            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message);
+        writeError(message, hint) {
+            (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
         }
         createRequestBody(assets, options) {
-            assets = assets ? assets.concat(this.assets) : this.assets;
-            if (assets.length) {
+            if (assets && assets.length) {
                 const exclusions = options.exclusions;
                 if (exclusions) {
                     assets = assets.filter(item => validateAsset(item, exclusions));
                     if (!assets.length) {
                         return;
+                    }
+                }
+                const documentName = new Set(options.document);
+                const taskName = new Set();
+                for (let i = 0, length = assets.length; i < length; ++i) {
+                    const { document, tasks } = assets[i];
+                    if (document) {
+                        if (Array.isArray(document)) {
+                            document.forEach(value => documentName.add(value));
+                        }
+                        else {
+                            documentName.add(document);
+                        }
+                    }
+                    if (tasks) {
+                        tasks.forEach(item => taskName.add(item.handler));
                     }
                 }
                 const { outputTasks, outputWatch } = this.userSettings;
@@ -1879,20 +1744,27 @@ this.squared.base = (function (exports) {
                             for (let j = 0; j < length; ++j) {
                                 const item = unassigned[j];
                                 if (glob.test(appendSeparator(item.pathname, item.filename))) {
-                                    const value = output[module];
                                     if (i === 0) {
+                                        const value = output[module];
                                         item.tasks || (item.tasks = []);
-                                        if (typeof value === 'string') {
-                                            item.tasks.push(value);
+                                        if (Array.isArray(value)) {
+                                            for (const task of value) {
+                                                item.tasks.push(task);
+                                                taskName.add(task.handler);
+                                            }
                                         }
-                                        else if (Array.isArray(value)) {
-                                            item.tasks.push(...value);
+                                        else if (isPlainObject(value)) {
+                                            item.tasks.push(value);
+                                            taskName.add(value.handler);
                                         }
                                     }
-                                    else if (value === true || isPlainObject(value) && (value.interval || value.expires)) {
-                                        item.watch = value;
-                                        unassigned.splice(j--, 1);
-                                        --length;
+                                    else {
+                                        const value = output[module];
+                                        if (value === true || isPlainObject(value) && (value.interval || value.expires)) {
+                                            item.watch = value;
+                                            unassigned.splice(j--, 1);
+                                            --length;
+                                        }
                                     }
                                 }
                             }
@@ -1903,16 +1775,26 @@ this.squared.base = (function (exports) {
                     }
                 }
                 const data = { assets };
+                if (documentName.size) {
+                    data.document = Array.from(documentName);
+                }
+                if (taskName.size) {
+                    data.task = Array.from(taskName);
+                }
                 this.finalizeRequestBody(data, options);
                 return data;
             }
         }
         hasHttpProtocol() {
-            return (this._hostname || location.protocol).startsWith('http');
+            return startsWith$2(this._hostname || location.protocol, 'http');
         }
         set hostname(value) {
-            const url = new URL(value);
-            this._hostname = url.origin.startsWith('http') ? url.origin : '';
+            try {
+                const url = new URL(value);
+                this._hostname = startsWith$2(url.origin, 'http') ? url.origin : '';
+            }
+            catch (_a) {
+            }
         }
         get hostname() {
             return this._hostname || location.origin;
@@ -1926,7 +1808,7 @@ this.squared.base = (function (exports) {
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, hasValue: hasValue$1, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$2 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, endsWith: endsWith$1, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$3, startsWith: startsWith$3 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1950,7 +1832,7 @@ this.squared.base = (function (exports) {
     const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
     const REGEXP_NOTINDEX = /:not-(x+)/;
     const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
-    const REGEXP_QUERYNTHPOSITION = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+    const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
     function setStyleCache(element, attr, value, style, styleMap, sessionId) {
         let current = style[attr];
@@ -1977,7 +1859,7 @@ this.squared.base = (function (exports) {
         return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit(value, { fontSize });
     }
     function isFontFixedWidth(node) {
-        const [fontFirst, fontSecond] = splitPair$2(node.css('fontFamily'), ',', true);
+        const [fontFirst, fontSecond] = splitPair$3(node.css('fontFamily'), ',', true);
         return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
     function getFlexValue(node, attr, fallback, parent) {
@@ -1986,7 +1868,7 @@ this.squared.base = (function (exports) {
     }
     function hasTextAlign(node, ...values) {
         const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
-        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : node.display.startsWith('inline'));
+        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith$3(node.display, 'inline'));
     }
     function setDimension(node, styleMap, dimension) {
         const options = { dimension };
@@ -2076,7 +1958,7 @@ this.squared.base = (function (exports) {
                         default: {
                             const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
                             if (parent) {
-                                const [horizontal, vertical] = splitPair$2(parent.css('borderSpacing'), ' ');
+                                const [horizontal, vertical] = splitPair$3(parent.css('borderSpacing'), ' ');
                                 switch (attr) {
                                     case 'marginTop':
                                     case 'marginBottom':
@@ -2154,7 +2036,7 @@ this.squared.base = (function (exports) {
             for (let i = 0, length = attrList.length; i < length; ++i) {
                 const attr = attrList[i];
                 let value;
-                if (attr.endsWith) {
+                if (attr.trailing) {
                     const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
                     for (const name in attributes) {
                         if (pattern.test(name)) {
@@ -2181,12 +2063,12 @@ this.squared.base = (function (exports) {
                             }
                             break;
                         case '^':
-                            if (!value.startsWith(other)) {
+                            if (!startsWith$3(value, other)) {
                                 return false;
                             }
                             break;
                         case '$':
-                            if (!value.endsWith(other)) {
+                            if (!endsWith$1(value, other)) {
                                 return false;
                             }
                             break;
@@ -2196,7 +2078,7 @@ this.squared.base = (function (exports) {
                             }
                             break;
                         case '|':
-                            if (value !== other && !value.startsWith(other + '-')) {
+                            if (value !== other && !startsWith$3(value, other + '-')) {
                                 return false;
                             }
                             break;
@@ -2216,13 +2098,11 @@ this.squared.base = (function (exports) {
                 const pseudo = pseudoList[i];
                 switch (pseudo) {
                     case ':first-child':
-                    case ':nth-child(1)':
                         if (this !== parent.firstElementChild) {
                             return false;
                         }
                         break;
                     case ':last-child':
-                    case ':nth-last-child(1)':
                         if (this !== parent.lastElementChild) {
                             return false;
                         }
@@ -2397,8 +2277,8 @@ this.squared.base = (function (exports) {
                         scoped.push(pseudo);
                         break;
                     default: {
-                        let match;
-                        if (match = REGEXP_QUERYNTH.exec(pseudo)) {
+                        let match = REGEXP_QUERYNTH.exec(pseudo);
+                        if (match) {
                             const children = match[1] ? parent.naturalElements.slice(0).reverse() : parent.naturalElements;
                             const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item) => item.tagName === tagName).indexOf(this) + 1;
                             if (index) {
@@ -2414,10 +2294,6 @@ this.squared.base = (function (exports) {
                                             return false;
                                         }
                                         break;
-                                    case 'n':
-                                        break;
-                                    case '-n':
-                                        return false;
                                     default:
                                         if (isNumber(placement)) {
                                             if (placement !== index.toString()) {
@@ -2425,47 +2301,37 @@ this.squared.base = (function (exports) {
                                             }
                                         }
                                         else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
-                                            const modifier = parseInt(match[3]);
-                                            if (match[2]) {
-                                                const increment = +match[2];
-                                                if (!isNaN(modifier)) {
-                                                    if (increment !== 0) {
-                                                        if (index !== modifier) {
-                                                            const reverse = match[1];
-                                                            let j = modifier + increment * (reverse ? -1 : 1);
-                                                            do {
-                                                                if (j === index) {
-                                                                    break;
+                                            const reverse = match[1] === '-';
+                                            const increment = match[2] ? +match[2] : 1;
+                                            if (match[4]) {
+                                                const modifier = +match[4] * (match[3] === '-' ? -1 : 1);
+                                                if (increment !== 0) {
+                                                    if (index !== modifier) {
+                                                        let j = modifier;
+                                                        do {
+                                                            if (reverse) {
+                                                                j -= increment;
+                                                                if (j < 0) {
+                                                                    return false;
                                                                 }
-                                                                if (reverse) {
-                                                                    j -= increment;
-                                                                    if (j < 0) {
-                                                                        return false;
-                                                                    }
+                                                            }
+                                                            else {
+                                                                j += increment;
+                                                                if (j > index) {
+                                                                    return false;
                                                                 }
-                                                                else {
-                                                                    j += increment;
-                                                                    if (j > index) {
-                                                                        return false;
-                                                                    }
-                                                                }
-                                                            } while (true);
-                                                        }
-                                                    }
-                                                    else if (index !== modifier) {
-                                                        return false;
+                                                            }
+                                                            if (j === index) {
+                                                                break;
+                                                            }
+                                                        } while (true);
                                                     }
                                                 }
-                                                else if (match[1] || index % increment !== 0) {
+                                                else if (index !== modifier) {
                                                     return false;
                                                 }
                                             }
-                                            else if (match[3] && modifier > 0) {
-                                                if (index < modifier) {
-                                                    return false;
-                                                }
-                                            }
-                                            else if (match[1]) {
+                                            else if (reverse || index % increment !== 0) {
                                                 return false;
                                             }
                                         }
@@ -2697,7 +2563,7 @@ this.squared.base = (function (exports) {
     const aboveRange = (a, b, offset = 1) => a + offset > b;
     const belowRange = (a, b, offset = 1) => a - offset < b;
     const sortById = (a, b) => a.id - b.id;
-    const isInlineVertical = (value) => value.startsWith('inline') || value === 'table-cell';
+    const isInlineVertical = (value) => startsWith$3(value, 'inline') || value === 'table-cell';
     const canTextAlign = (node) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element, children) {
@@ -2853,7 +2719,7 @@ this.squared.base = (function (exports) {
                     obj = {};
                     data[name] = obj;
                 }
-                if (overwrite || !hasValue$1(obj[attr])) {
+                if (overwrite || !hasValue(obj[attr])) {
                     obj[attr] = value;
                 }
             }
@@ -2941,19 +2807,19 @@ this.squared.base = (function (exports) {
                             this._cacheState.textEmpty = undefined;
                             continue;
                         default:
-                            if (attr.startsWith('background')) {
+                            if (startsWith$3(attr, 'background')) {
                                 cache.visibleStyle = undefined;
                             }
-                            else if (attr.startsWith('border')) {
-                                if (attr.startsWith('borderTop')) {
+                            else if (startsWith$3(attr, 'border')) {
+                                if (startsWith$3(attr, 'borderTop')) {
                                     cache.borderTopWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
-                                else if (attr.startsWith('borderRight')) {
+                                else if (startsWith$3(attr, 'borderRight')) {
                                     cache.borderRightWidth = undefined;
                                     cache.contentBoxWidth = undefined;
                                 }
-                                else if (attr.startsWith('borderBottom')) {
+                                else if (startsWith$3(attr, 'borderBottom')) {
                                     cache.borderBottomWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
@@ -3041,7 +2907,7 @@ this.squared.base = (function (exports) {
             if (!attr) {
                 attr = 'actualParent';
             }
-            else if (attr !== 'parent' && !attr.endsWith('Parent')) {
+            else if (attr !== 'parent' && !endsWith$1(attr, 'Parent')) {
                 return [];
             }
             const result = [];
@@ -3530,7 +3396,7 @@ this.squared.base = (function (exports) {
                 ({ percent, initial } = options);
             }
             const value = initial ? this.cssInitial(attr, options) : this._styleMap[attr];
-            return !!value && isLength(value, percent !== false);
+            return value ? isLength(value, percent !== false) : false;
         }
         setBounds(cache = true) {
             var _a;
@@ -3571,12 +3437,12 @@ this.squared.base = (function (exports) {
             return getMinMax(this, false, attr, options);
         }
         querySelector(value) {
-            return this.querySelectorAll(value, undefined, 1)[0] || null;
+            return this.querySelectorAll(value)[0] || null;
         }
-        querySelectorAll(value, customMap, resultCount = -1) {
+        querySelectorAll(value, customMap) {
             const queryMap = customMap || this.queryMap;
             const result = [];
-            if (queryMap && resultCount !== 0) {
+            if (queryMap) {
                 const queries = [];
                 let notIndex;
                 const addNot = (part) => {
@@ -3701,20 +3567,20 @@ this.squared.base = (function (exports) {
                                         start = true;
                                         continue;
                                     default:
-                                        if (segment.startsWith('*|')) {
+                                        if (startsWith$3(segment, '*|')) {
                                             segment = segment.substring(2);
                                         }
                                         break;
                                 }
                                 let attrList, subMatch;
                                 while (subMatch = CSS$1.SELECTOR_ATTR.exec(segment)) {
-                                    let key = subMatch[1].replace('\\:', ':').toLowerCase(), endsWith;
+                                    let key = subMatch[1].replace(/\\:/, ':').toLowerCase(), trailing;
                                     switch (key.indexOf('|')) {
                                         case -1:
                                             break;
                                         case 1:
                                             if (key[0] === '*') {
-                                                endsWith = true;
+                                                trailing = true;
                                                 key = key.substring(2);
                                                 break;
                                             }
@@ -3730,7 +3596,7 @@ this.squared.base = (function (exports) {
                                         key,
                                         symbol: subMatch[2],
                                         value: attrValue,
-                                        endsWith,
+                                        trailing,
                                         caseInsensitive
                                     });
                                     segment = spliceString(segment, subMatch.index, subMatch[0].length);
@@ -3798,17 +3664,13 @@ this.squared.base = (function (exports) {
                         }
                         const q = selectors.length;
                         if (q) {
-                            let currentCount = result.length;
-                            const all = currentCount === 0;
+                            const all = result.length === 0;
                             for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                                 const items = queryMap[j];
                                 for (let k = 0, s = items.length; k < s; ++k) {
                                     const node = items[k];
                                     if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
                                         result.push(node);
-                                        if (++currentCount === resultCount) {
-                                            return result.sort(sortById);
-                                        }
                                     }
                                 }
                             }
@@ -3971,10 +3833,10 @@ this.squared.base = (function (exports) {
             return this.tagName === 'IMG';
         }
         get flexElement() {
-            return this.display.endsWith('flex');
+            return endsWith$1(this.display, 'flex');
         }
         get gridElement() {
-            return this.display.endsWith('grid');
+            return endsWith$1(this.display, 'grid');
         }
         get tableElement() {
             return this.tagName === 'TABLE' || this.display === 'table';
@@ -4095,12 +3957,12 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 if (this.flexElement) {
                     const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                    const row = flexDirection.startsWith('row');
+                    const row = startsWith$3(flexDirection, 'row');
                     result = {
                         row,
                         column: !row,
-                        reverse: flexDirection.endsWith('reverse'),
-                        wrap: flexWrap.startsWith('wrap'),
+                        reverse: endsWith$1(flexDirection, 'reverse'),
+                        wrap: startsWith$3(flexWrap, 'wrap'),
                         wrapReverse: flexWrap === 'wrap-reverse',
                         alignContent,
                         justifyContent
@@ -4333,7 +4195,7 @@ this.squared.base = (function (exports) {
                             if (this.inlineStatic && ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
                                 result = true;
                             }
-                            else if (this.inline || this.display.startsWith('table-') || this.hasPX('maxWidth')) {
+                            else if (this.inline || startsWith$3(this.display, 'table-') || this.hasPX('maxWidth')) {
                                 result = false;
                             }
                         }
@@ -4410,7 +4272,7 @@ this.squared.base = (function (exports) {
             let result = this._cache.baseline;
             if (result === undefined) {
                 const display = this.display;
-                if ((display.startsWith('inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                if ((startsWith$3(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
                     const value = this.css('verticalAlign');
                     result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
@@ -4573,7 +4435,7 @@ this.squared.base = (function (exports) {
                     let backgroundRepeatX = false, backgroundRepeatY = false;
                     if (backgroundImage) {
                         for (const repeat of this.css('backgroundRepeat').split(',')) {
-                            const [repeatX, repeatY] = splitPair$2(repeat.trim(), ' ');
+                            const [repeatX, repeatY] = splitPair$3(repeat.trim(), ' ');
                             backgroundRepeatX || (backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x');
                             backgroundRepeatY || (backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
                         }
@@ -4871,7 +4733,7 @@ this.squared.base = (function (exports) {
                                     value = '1rem';
                                 }
                             }
-                            result = (value.endsWith('rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
+                            result = (endsWith$1(value, 'rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
                         }
                     }
                     else {
@@ -4949,11 +4811,19 @@ this.squared.base = (function (exports) {
                 y: (bounds.top + bounds.bottom) / 2
             };
         }
+        get initial() {
+            return this._initial;
+        }
     }
 
-    const { STRING: STRING$1 } = squared.lib.regex;
+    const { FILE: FILE$2, STRING: STRING$1 } = squared.lib.regex;
     const { extractURL, resolveURL } = squared.lib.css;
-    const { convertBase64, fromLastIndexOf: fromLastIndexOf$1, parseMimeType: parseMimeType$1 } = squared.lib.util;
+    const { convertBase64, endsWith: endsWith$2, fromLastIndexOf: fromLastIndexOf$1, isBase64: isBase64$1, parseMimeType, resolvePath: resolvePath$1, splitPairStart, startsWith: startsWith$4, trimBoth } = squared.lib.util;
+    const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
+    const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
+    const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
+    const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
+    const REGEXP_FONTURL = /\s?(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
     const REGEXP_DATAURI$1 = new RegExp(`^${STRING$1.DATAURI}$`);
     class Resource {
         constructor(application) {
@@ -4961,143 +4831,405 @@ this.squared.base = (function (exports) {
             this._fileHandler = null;
         }
         static hasMimeType(formats, value) {
-            return formats === '*' || formats.has(parseMimeType$1(value));
+            return formats === '*' || formats.includes(parseMimeType(value));
         }
         static getExtension(value) {
-            const match = /\.(\w+)\s*$/.exec(value);
-            return match ? match[1] : '';
-        }
-        static resetDataMap(data) {
-            for (const name in data) {
-                const map = data[name];
-                if (map.size) {
-                    map.clear();
-                }
-            }
-        }
-        reset() {
             var _a;
-            Resource.resetDataMap(Resource.ASSETS);
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.reset();
+            return ((_a = /\.([^./]+)\s*$/.exec(value)) === null || _a === void 0 ? void 0 : _a[1]) || '';
         }
-        addImage(element) {
-            if (element.complete) {
-                const uri = element.src.trim();
-                if (uri.startsWith('data:image/')) {
-                    const match = REGEXP_DATAURI$1.exec(uri);
-                    if (match) {
-                        const [mimeType, encoding] = match[1].split(/\s*;\s*/);
-                        this.addRawData(uri, match[2], { encoding: encoding || 'base64', mimeType, width: element.naturalWidth, height: element.naturalHeight });
-                    }
+        static parseDataURI(value, mimeType = 'image/unknown', encoding = 'base64') {
+            const match = REGEXP_DATAURI$1.exec(value);
+            if (match && match[1]) {
+                const leading = match[2];
+                const trailing = match[3];
+                const data = match[4];
+                if (trailing) {
+                    mimeType = leading.trim();
+                    encoding = trailing.trim();
                 }
-                if (uri) {
-                    Resource.ASSETS.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
-                }
-            }
-        }
-        addAudio(uri, options) {
-            Resource.ASSETS.audio.set(uri, Object.assign({ uri }, options));
-        }
-        addVideo(uri, options) {
-            Resource.ASSETS.video.set(uri, Object.assign({ uri }, options));
-        }
-        addFont(data) {
-            const fonts = Resource.ASSETS.fonts;
-            const fontFamily = data.fontFamily.trim().toLowerCase();
-            data.fontFamily = fontFamily;
-            const items = fonts.get(fontFamily);
-            if (items) {
-                items.push(data);
-            }
-            else {
-                fonts.set(fontFamily, [data]);
-            }
-        }
-        addRawData(uri, content, options) {
-            let filename, mimeType, encoding, data, width, height;
-            if (options) {
-                ({ filename, mimeType, encoding, data, width, height } = options);
-                mimeType && (mimeType = mimeType.toLowerCase());
-                encoding && (encoding = encoding.toLowerCase());
-            }
-            content && (content = content.trim());
-            let base64, buffer;
-            if (encoding === 'base64') {
-                if (content) {
-                    if (mimeType === 'image/svg+xml') {
-                        content = window.atob(content);
+                else if (leading) {
+                    if (leading.includes('/')) {
+                        mimeType = leading;
+                        if (!encoding && isBase64$1(data)) {
+                            encoding = 'base64';
+                        }
                     }
                     else {
-                        base64 = content;
+                        encoding = leading;
                     }
                 }
-                else if (data) {
-                    base64 = data instanceof ArrayBuffer ? convertBase64(data) : data;
-                }
+                const result = { mimeType, encoding };
+                result[encoding === 'base64' ? 'base64' : 'content'] = data;
+                return result;
             }
-            else {
-                if (data) {
-                    if (data instanceof ArrayBuffer) {
-                        buffer = data;
+        }
+        init(resourceId) {
+            var _a;
+            const data = (_a = Resource.ASSETS)[resourceId] || (_a[resourceId] = {});
+            data.fonts = new Map();
+            data.image = new Map();
+            data.video = new Map();
+            data.audio = new Map();
+            data.rawData = new Map();
+            data.other = [];
+        }
+        clear() {
+            Resource.ASSETS.length = 0;
+        }
+        reset() { }
+        preloadAssets(resourceId, documentRoot, elements) {
+            const { preloadImages, preloadFonts } = this.userSettings;
+            const assets = Resource.ASSETS[resourceId];
+            const result = [];
+            const images = [];
+            const preloadMap = [];
+            const parseSrcSet = (value) => {
+                if (value) {
+                    for (const uri of value.split(',')) {
+                        this.addImageData(resourceId, resolvePath$1(splitPairStart(uri.trim(), ' ')));
                     }
-                    else if (!content) {
-                        content = data;
-                    }
                 }
-                content && (content = content.replace(/\\(["'])/g, (...match) => match[1]));
-            }
-            if (!content && !base64 && !buffer) {
-                return null;
-            }
-            if (!filename) {
-                const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
-                filename = uri.endsWith(ext) ? fromLastIndexOf$1(uri, '/', '\\') : this.randomUUID + ext;
-            }
-            const result = {
-                pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
-                filename,
-                content,
-                base64,
-                mimeType,
-                buffer,
-                width,
-                height
             };
-            Resource.ASSETS.rawData.set(uri, result);
-            return result;
+            for (const element of elements) {
+                element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source) => parseSrcSet(source.srcset));
+                element.querySelectorAll('video').forEach((source) => this.addImageData(resourceId, source.poster));
+                element.querySelectorAll('input[type=image]').forEach((image) => this.addImageData(resourceId, image.src, image.width, image.height));
+                element.querySelectorAll('object, embed').forEach((source) => {
+                    const src = source.data || source.src;
+                    if (src && (startsWith$4(source.type, 'image/') || startsWith$4(parseMimeType(src), 'image/'))) {
+                        this.addImageData(resourceId, src.trim());
+                    }
+                });
+                element.querySelectorAll('svg use').forEach((use) => {
+                    const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
+                    if (href && href.indexOf('#') > 0) {
+                        const src = resolvePath$1(splitPairStart(href, '#'));
+                        if (FILE$2.SVG.test(src)) {
+                            this.addImageData(resourceId, src);
+                        }
+                    }
+                });
+            }
+            if (preloadImages) {
+                const { image, rawData } = assets;
+                for (const item of image.values()) {
+                    const uri = item.uri;
+                    if (FILE$2.SVG.test(uri)) {
+                        result.push(uri);
+                    }
+                    else if (item.width === 0 || item.height === 0) {
+                        const element = document.createElement('img');
+                        element.src = uri;
+                        if (element.naturalWidth && element.naturalHeight) {
+                            item.width = element.naturalWidth;
+                            item.height = element.naturalHeight;
+                        }
+                        else {
+                            documentRoot.appendChild(element);
+                            images.push(element);
+                        }
+                    }
+                }
+                for (const data of rawData) {
+                    const item = data[1];
+                    const mimeType = item.mimeType;
+                    if (startsWith$4(mimeType, 'image/') && !endsWith$2(mimeType, 'svg+xml')) {
+                        let src = `data:${mimeType};`;
+                        if (item.base64) {
+                            src += 'base64,' + item.base64;
+                        }
+                        else if (item.content) {
+                            src += item.content;
+                        }
+                        else {
+                            continue;
+                        }
+                        const element = document.createElement('img');
+                        element.src = src;
+                        const { naturalWidth: width, naturalHeight: height } = element;
+                        if (width && height) {
+                            item.width = width;
+                            item.height = height;
+                            image.set(data[0], { width, height, uri: item.filename });
+                        }
+                        else {
+                            document.body.appendChild(element);
+                            images.push(element);
+                        }
+                    }
+                }
+            }
+            if (preloadFonts) {
+                for (const item of assets.fonts.values()) {
+                    for (const font of item) {
+                        const srcUrl = font.srcUrl;
+                        if (srcUrl) {
+                            result.push(srcUrl);
+                        }
+                    }
+                }
+            }
+            for (const element of elements) {
+                element.querySelectorAll('img').forEach((image) => {
+                    if (!preloadImages) {
+                        this.addImage(resourceId, image);
+                    }
+                    else {
+                        const src = image.src;
+                        if (!preloadMap.includes(src)) {
+                            if (FILE$2.SVG.test(src)) {
+                                result.push(src);
+                            }
+                            else if (image.complete) {
+                                this.addImage(resourceId, image);
+                            }
+                            else {
+                                result.push(image);
+                            }
+                            preloadMap.push(src);
+                        }
+                    }
+                });
+            }
+            return [result, images];
         }
-        getImage(uri) {
-            return Resource.ASSETS.image.get(uri);
+        parseFontFace(resourceId, cssText, styleSheetHref) {
+            var _a, _b, _c, _d;
+            const value = (_a = REGEXP_FONTFACE.exec(cssText)) === null || _a === void 0 ? void 0 : _a[1];
+            if (value) {
+                let fontFamily = (_b = REGEXP_FONTFAMILY.exec(value)) === null || _b === void 0 ? void 0 : _b[1].trim();
+                if (fontFamily) {
+                    const fontStyle = ((_c = REGEXP_FONTSTYLE.exec(value)) === null || _c === void 0 ? void 0 : _c[1].toLowerCase()) || 'normal';
+                    const fontWeight = +(((_d = REGEXP_FONTWEIGHT.exec(value)) === null || _d === void 0 ? void 0 : _d[1]) || '400');
+                    fontFamily = trimBoth(fontFamily, '"');
+                    let match;
+                    while (match = REGEXP_FONTURL.exec(value)) {
+                        const url = (match[2] || match[3] || match[4]).trim();
+                        let srcFormat = match[5] ? match[5].toLowerCase() : '', mimeType = '', srcLocal, srcUrl, srcBase64;
+                        const setMimeType = () => {
+                            switch (srcFormat) {
+                                case 'truetype':
+                                    mimeType = 'font/ttf';
+                                    break;
+                                case 'opentype':
+                                    mimeType = 'font/otf';
+                                    break;
+                                case 'woff2':
+                                    mimeType = 'font/woff2';
+                                    break;
+                                case 'woff':
+                                    mimeType = 'font/woff';
+                                    break;
+                                case 'svg':
+                                    mimeType = 'image/svg+xml';
+                                    break;
+                                case 'embedded-opentype':
+                                    mimeType = 'application/vnd.ms-fontobject';
+                                    break;
+                                default:
+                                    srcFormat = '';
+                                    break;
+                            }
+                        };
+                        setMimeType();
+                        if (match[1] === 'local') {
+                            srcLocal = url;
+                        }
+                        else {
+                            if (startsWith$4(url, 'data:')) {
+                                const [mime, base64] = url.split(',');
+                                srcBase64 = base64.trim();
+                                if (!mime.includes('base64') && !isBase64$1(srcBase64)) {
+                                    continue;
+                                }
+                                mimeType || (mimeType = mime.toLowerCase());
+                            }
+                            else {
+                                srcUrl = resolvePath$1(url, styleSheetHref);
+                                mimeType || (mimeType = parseMimeType(srcUrl));
+                            }
+                            if (!srcFormat) {
+                                if (mimeType.includes('/ttf')) {
+                                    srcFormat = 'truetype';
+                                }
+                                else if (mimeType.includes('/otf')) {
+                                    srcFormat = 'opentype';
+                                }
+                                else if (mimeType.includes('/woff2')) {
+                                    srcFormat = 'woff2';
+                                }
+                                else if (mimeType.includes('/woff')) {
+                                    srcFormat = 'woff';
+                                }
+                                else if (mimeType.includes('/svg+xml')) {
+                                    srcFormat = 'svg';
+                                }
+                                else if (mimeType.includes('/vnd.ms-fontobject')) {
+                                    srcFormat = 'embedded-opentype';
+                                }
+                                else {
+                                    continue;
+                                }
+                                setMimeType();
+                            }
+                        }
+                        this.addFont(resourceId, {
+                            fontFamily,
+                            fontWeight,
+                            fontStyle,
+                            mimeType,
+                            srcFormat,
+                            srcUrl,
+                            srcLocal,
+                            srcBase64
+                        });
+                    }
+                    REGEXP_FONTURL.lastIndex = 0;
+                }
+            }
         }
-        getVideo(uri) {
-            return Resource.ASSETS.video.get(uri);
+        addAsset(resourceId, asset) {
+            const assets = Resource.ASSETS[resourceId];
+            if (assets && (asset.content || asset.uri || asset.base64)) {
+                const { pathname, filename } = asset;
+                const append = assets.other.find(item => item.pathname === pathname && item.filename === filename);
+                if (append) {
+                    Object.assign(append, asset);
+                }
+                else {
+                    assets.other.push(asset);
+                }
+            }
         }
-        getAudio(uri) {
-            return Resource.ASSETS.audio.get(uri);
+        addImage(resourceId, element) {
+            const assets = Resource.ASSETS[resourceId];
+            if (assets && element.complete) {
+                const uri = element.src;
+                const image = Resource.parseDataURI(uri);
+                if (image) {
+                    image.width = element.naturalWidth;
+                    image.height = element.naturalHeight;
+                    this.addRawData(resourceId, uri, image);
+                }
+                if (uri) {
+                    assets.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
+                }
+            }
         }
-        getFont(fontFamily, fontStyle = 'normal', fontWeight) {
-            const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
+        addAudio(resourceId, uri, options) {
+            var _a;
+            (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.audio.set(uri, Object.assign({ uri }, options));
+        }
+        addVideo(resourceId, uri, options) {
+            var _a;
+            (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.video.set(uri, Object.assign({ uri }, options));
+        }
+        addFont(resourceId, data) {
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                const fontFamily = data.fontFamily.trim().toLowerCase();
+                data.fontFamily = fontFamily;
+                const items = assets.fonts.get(fontFamily);
+                if (items) {
+                    items.push(data);
+                }
+                else {
+                    assets.fonts.set(fontFamily, [data]);
+                }
+            }
+        }
+        addRawData(resourceId, uri, options) {
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                let filename, mimeType, encoding, content, base64, buffer, width, height;
+                if (options) {
+                    ({ filename, mimeType, encoding, content, base64, buffer, width, height } = options);
+                    mimeType && (mimeType = mimeType.toLowerCase());
+                    encoding && (encoding = encoding.toLowerCase());
+                    content && (content = content.trim());
+                }
+                if (base64 || encoding === 'base64') {
+                    if (!base64) {
+                        if (content) {
+                            base64 = startsWith$4(content, 'data:') ? content.split(',')[1].trim() : content;
+                            content = undefined;
+                        }
+                        else if (buffer) {
+                            base64 = convertBase64(buffer);
+                        }
+                        else {
+                            return;
+                        }
+                        buffer = undefined;
+                    }
+                    if (mimeType === 'image/svg+xml') {
+                        content = window.atob(base64);
+                    }
+                }
+                else if (buffer) {
+                    content = undefined;
+                }
+                if (content) {
+                    content = content.replace(/\\(["'])/g, (...match) => match[1]);
+                }
+                if (content || base64 || buffer) {
+                    const url = uri.split('?')[0];
+                    if (!filename) {
+                        const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
+                        filename = url.endsWith(ext) ? fromLastIndexOf$1(url, '/') : this.randomUUID + ext;
+                    }
+                    assets.rawData.set(uri, {
+                        pathname: startsWith$4(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
+                        filename,
+                        mimeType,
+                        content,
+                        base64,
+                        buffer,
+                        width,
+                        height
+                    });
+                }
+            }
+        }
+        getImage(resourceId, uri) {
+            var _a;
+            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.image.get(uri);
+        }
+        getVideo(resourceId, uri) {
+            var _a;
+            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.video.get(uri);
+        }
+        getAudio(resourceId, uri) {
+            var _a;
+            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.audio.get(uri);
+        }
+        getFonts(resourceId, fontFamily, fontStyle = 'normal', fontWeight) {
+            var _a;
+            const font = (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.fonts.get(fontFamily.trim().toLowerCase());
             if (font) {
                 const mimeType = this.mimeTypeMap.font;
-                return font.find(item => fontStyle.startsWith(item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (Resource.hasMimeType(mimeType, item.srcFormat) || item.srcUrl && Resource.hasMimeType(mimeType, item.srcUrl)));
+                return font.filter(item => startsWith$4(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
             }
+            return [];
         }
-        getRawData(uri) {
-            if (uri.startsWith('url(')) {
+        getRawData(resourceId, uri) {
+            var _a;
+            if (startsWith$4(uri, 'url(')) {
                 uri = extractURL(uri);
                 if (!uri) {
                     return;
                 }
             }
-            return Resource.ASSETS.rawData.get(uri);
+            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.rawData.get(uri);
         }
-        addImageData(uri, width = 0, height = 0) {
-            if (uri && (width && height || !this.getImage(uri))) {
-                Resource.ASSETS.image.set(uri, { width, height, uri });
+        addImageData(resourceId, uri, width = 0, height = 0) {
+            var _a;
+            if (uri && (width && height || !this.getImage(resourceId, uri))) {
+                (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.image.set(uri, { width, height, uri });
             }
         }
-        fromImageUrl(value) {
-            const data = this.getRawData(value);
+        fromImageUrl(resourceId, value) {
+            const data = this.getRawData(resourceId, value);
             if (data) {
                 return [data];
             }
@@ -5107,7 +5239,7 @@ this.squared.base = (function (exports) {
             while (match = pattern.exec(value)) {
                 const url = resolveURL(match[0]);
                 if (url) {
-                    const image = this.getImage(url);
+                    const image = this.getImage(resourceId, url);
                     if (image) {
                         result.push(image);
                     }
@@ -5141,14 +5273,9 @@ this.squared.base = (function (exports) {
         }
     }
     Resource.KEY_NAME = 'squared.base.resource';
-    Resource.ASSETS = {
-        fonts: new Map(),
-        image: new Map(),
-        video: new Map(),
-        audio: new Map(),
-        rawData: new Map()
-    };
+    Resource.ASSETS = [];
 
+    /* eslint no-shadow: "off" */
     var APP_FRAMEWORK;
     (function (APP_FRAMEWORK) {
         APP_FRAMEWORK[APP_FRAMEWORK["UNIVERSAL"] = 0] = "UNIVERSAL";
