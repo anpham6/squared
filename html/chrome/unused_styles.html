@@ -25,14 +25,26 @@
         section, .data-uri {
             background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAmVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjHWqVAAAAMnRSTlMADe6qwJnHFORZVBEJloOAUQX2ZsSfaQLMmhzp0ib689zOu3lyQjEs8KKJ5tWxkF46B8fHT9kAAAHVSURBVEjH3ZbZkqowEIZ/ICwCsi8Coo6jjnpmO/3+D3cOFhMgYZmquZvvwlR16quk204Cfjmm7Wlss2GaF5j4BkpmUI8kVpYE70oCqj8r2X9oBMvGFG5KExTuRNYGTWI4o8aWZtiakHANmsWQ95bSAgUEVrSIUDdlUF2LafqD10FUQR+PONF7ffbjEAjiNxrgDxZReXx3xgcRsRCXSOyD/jIZcdZwq2Y8Ac8kEKOjV+BPXB7jATBFJQGnP6egpgcvgCo6TteN1GEi3FNDgDx6LLep+GQg1ItHdWpY4dKOaz7pcUXrN0aIOmoq95IfJUXjCqMemoKzRdUqT0lSGFeehuUvTlkJ3EhWniSls4CyrVpLJihMVPYhQjaiMCn9jgwI10RXVVVt3P//RkL6HvXYvZ3OJRpOUi7+6F+plWF2rGj3DEAXlWCsYW5wk9b9i1JUHHASnrfS9a8OWES0PVojbYmYb6tXiyhEJTW/fMRSdKvs88vMEYPfRg85lNcvPT/OHGQoVhd23q/NtgrzRjRyXch1Tksgrz9r5+NAQwIIFHxqk97vBYtIQP/5Bbt8jTsYwVl8LGRcfcrQXUxhW0sPn4ziq4vPqyzFifSIL+ME/FPBwe/mH3xs3y1ExMGAAAAAAElFTkSuQmCC");
         }
+        a:visited {
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: none;
+        }
+        a:active {
+            text-decoration: none;
+        }
     </style>
     <style data-chrome-file="exportAs:common/dev2.css::beautify">
         section{display:block}.data-uri{width:100px;height:100px}.data-uri,body,section{position:static}section{display:block}.data-uri,section{background-color:#a9a9a9}.data-uri,section{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAmVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjHWqVAAAAMnRSTlMADe6qwJnHFORZVBEJloOAUQX2ZsSfaQLMmhzp0ib689zOu3lyQjEs8KKJ5tWxkF46B8fHT9kAAAHVSURBVEjH3ZbZkqowEIZ/ICwCsi8Coo6jjnpmO/3+D3cOFhMgYZmquZvvwlR16quk204Cfjmm7Wlss2GaF5j4BkpmUI8kVpYE70oCqj8r2X9oBMvGFG5KExTuRNYGTWI4o8aWZtiakHANmsWQ95bSAgUEVrSIUDdlUF2LafqD10FUQR+PONF7ffbjEAjiNxrgDxZReXx3xgcRsRCXSOyD/jIZcdZwq2Y8Ac8kEKOjV+BPXB7jATBFJQGnP6egpgcvgCo6TteN1GEi3FNDgDx6LLep+GQg1ItHdWpY4dKOaz7pcUXrN0aIOmoq95IfJUXjCqMemoKzRdUqT0lSGFeehuUvTlkJ3EhWniSls4CyrVpLJihMVPYhQjaiMCn9jgwI10RXVVVt3P//RkL6HvXYvZ3OJRpOUi7+6F+plWF2rGj3DEAXlWCsYW5wk9b9i1JUHHASnrfS9a8OWES0PVojbYmYb6tXiyhEJTW/fMRSdKvs88vMEYPfRg85lNcvPT/OHGQoVhd23q/NtgrzRjRyXch1Tksgrz9r5+NAQwIIFHxqk97vBYtIQP/5Bbt8jTsYwVl8LGRcfcrQXUxhW0sPn4ziq4vPqyzFifSIL+ME/FPBwe/mH3xs3y1ExMGAAAAAAElFTkSuQmCC)}
     </style>
-    <script src="/dist/bundles/squared.chrome.bundle.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/chrome.framework.js"></script>
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {
-            squared.saveAs('index.zip', { removeUnusedStyles: true, saveAs: { image: { pathname: 'images', blob: true } } });
+            squared.setFramework(chrome);
+            squared.saveAs('index.zip', { removeUnusedClasses: true, removeUnusedSelectors: true, retainUsedStyles: ['a:visited'], saveAs: { image: { pathname: 'images', blob: true } } });
         });
     </script>
 </head>
@@ -45,7 +57,7 @@
     <br /><br />
     <div class="data-uri"></div>
     <br />
-    <img alt="" id="android" src="/common/images/android.png" srcset="/common/images/android-ldpi.png 100w,
+    <a href="bundle.html"><img alt="" id="android" src="/common/images/android.png" srcset="/common/images/android-ldpi.png 100w,
                                                                    /common/images/android.png 200w,
                                                                    /common/images/android-hdpi.png 133w,
                                                                    /common/images/android-xhdpi.png 266w,
@@ -55,14 +67,14 @@
                                                                    (max-width: 900px) and (min-width: 400px) 266px,
                                                                    ( not (orientation: portrait) ) 133px,
                                                                    ( (orientation: landscape) or (min-width: 1000px) ) 533px,
-                                                                   200px" />
+                                                                   200px" /></a>
     <br /><br />
-    <img alt="" id="pencil" src="/common/images/pencil.png" srcset="/common/images/pencil-ldpi.png 0.75x,
+    <a href="https://www.google.com/index.html"><img alt="" id="pencil" src="/common/images/pencil.png" srcset="/common/images/pencil-ldpi.png 0.75x,
                                                                  /common/images/pencil.png,
                                                                  /common/images/pencil-hdpi.png 1.5x,
                                                                  /common/images/pencil-xhdpi.png 2x,
                                                                  /common/images/pencil-xxhdpi.png 3x,
-                                                                 /common/images/pencil-xxxhdpi.png 4x" />
+                                                                 /common/images/pencil-xxxhdpi.png 4x" /></a>
     <br /><br />
     <!--<audio controls>
         <source

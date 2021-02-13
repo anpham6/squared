@@ -32,7 +32,7 @@ function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Res
         if (match[2]) {
             if (resource) {
                 const leading = match[3];
-                const encoding = match[4] || (/<svg/i.test(match[5]) ? 'utf8' : 'base64');
+                const encoding = match[4] || match[5][0] === '<' ? 'utf8' : 'base64';
                 let content: Undef<string>,
                     base64: Undef<string>;
                 if (encoding === 'base64') {
@@ -45,12 +45,12 @@ function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Res
             }
         }
         else {
-            const uri = resolvePath(match[5], styleSheetHref);
-            if (uri) {
+            const url = resolvePath(match[5], styleSheetHref);
+            if (url) {
                 if (resource) {
-                    resource.addImageData(resourceId, uri);
+                    resource.addImageData(resourceId, url);
                 }
-                result = (result || value).replace(match[0], `url("${uri}")`);
+                result = (result || value).replace(match[0], `url("${url}")`);
             }
         }
     }
@@ -567,7 +567,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
-                                            if (hasExactValue(css.name!, 'none|initial') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                            if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
                                                 break required;
                                             }
                                             break;
