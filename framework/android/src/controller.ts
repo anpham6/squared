@@ -1489,10 +1489,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'password':
                         node.android('inputType', 'textPassword');
                         break;
-                    case 'number':
                     case 'range':
-                        node.android('inputType', 'number');
                         node.android('progress', element.value);
+                    case 'number':
+                        node.android('inputType', 'number');
                         setInputMinMax();
                         break;
                     case 'time':
