@@ -803,7 +803,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public createSvgElement(node: T, src: string): [Undef<HTMLElement>, Undef<SVGSVGElement>] | [] {
         src = extractURL(src) || src;
         if (FILE.SVG.test(src) || startsWith(src, 'data:image/svg+xml')) {
-            const fileAsset = this.resource!.getRawData(node.localSettings.resourceId, src);
+            const fileAsset = this.resource.getRawData(node.localSettings.resourceId, src);
             if (fileAsset) {
                 const parentElement = (node.actualParent || node.documentParent).element as HTMLElement;
                 parentElement.insertAdjacentHTML('beforeend', fileAsset.content!);

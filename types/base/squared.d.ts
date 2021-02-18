@@ -142,6 +142,7 @@ declare module "base" {
     }
 
     class ApplicationUI<T extends NodeUI> extends Application<T> {
+        resource: ResourceUI<T>;
         userSettings: UserResourceSettingsUI;
         builtInExtensions: Map<string, ExtensionUI<T>>;
         readonly session: AppSessionUI<T>;
@@ -296,7 +297,7 @@ declare module "base" {
         static includes(source: Undef<string>, value: string): boolean;
         static findNestedElement<U extends NodeUI>(node: U, name: string): Undef<HTMLElement>;
         controller: ControllerUI<T>;
-        resource: Null<ResourceUI<T>>;
+        resource: ResourceUI<T>;
         readonly tagNames?: string[];
         readonly eventOnly?: boolean;
         readonly cascadeAll?: boolean;

@@ -29,7 +29,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public readonly documentBase?: boolean;
 
     public abstract controller: ControllerUI<T>;
-    public abstract resource: Null<ResourceUI<T>>;
+    public abstract resource: ResourceUI<T>;
 
     constructor(name: string, framework: number, options?: ExtensionUIOptions) {
         super(name, framework, options);

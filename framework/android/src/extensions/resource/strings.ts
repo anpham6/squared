@@ -43,7 +43,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
 
     public afterResources(sessionId: string, resourceId: number) {
         const numberAsResource = this.options.numberAsResource;
-        const resource = this.resource!;
+        const resource = this.resource;
         this.application.getProcessingCache(sessionId).each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 if (node.styleElement) {
@@ -329,7 +329,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         else {
             const resourceArray = stringArray || numberArray;
             if (resourceArray) {
-                const resource = this.resource!;
+                const resource = this.resource;
                 result = [];
                 for (let i = 0, length = resourceArray.length; i < length; ++i) {
                     const value = Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(resourceArray[i]))), '', numberAsResource);

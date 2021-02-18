@@ -31,103 +31,94 @@ const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, plainMap } = sq
 
 const { fromMimeType } = squared.base.lib.util;
 
-function getFileAssets(pathname: string, items: string[], document: StringOfArray = 'android') {
+function getFileAssets(pathname: string, items: string[], document: StringOfArray) {
     const length = items.length;
-    if (length) {
-        const result: FileAsset[] = new Array(length / 3);
-        for (let i = 0, j = 0; i < length; i += 3) {
-            result[j++] = {
-                pathname: pathname + items[i + 1],
-                filename: items[i + 2],
-                content: items[i],
-                document: copyDocument(document)
-            };
-        }
-        return result;
+    const result: FileAsset[] = new Array(length / 3);
+    for (let i = 0, j = 0; i < length; i += 3) {
+        result[j++] = {
+            pathname: pathname + items[i + 1],
+            filename: items[i + 2],
+            content: items[i],
+            document: copyDocument(document)
+        };
     }
-    return items as [];
+    return result;
 }
 
-function getImageAssets(this: Resource<View>, resourceId: number, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray = 'android') {
+function getImageAssets(this: Resource<View>, resourceId: number, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray) {
     const length = items.length;
-    if (length) {
-        const result: FileAsset[] = new Array(length / 3);
-        for (let i = 0, j = 0; i < length; i += 3) {
-            const uri = items[i];
-            const filename = items[i + 2];
-            let mimeType: Undef<string>,
-                commands: Undef<string[]>,
-                compress: Undef<CompressFormat[]>;
-            if (endsWith(filename, '.unknown')) {
-                mimeType = 'image/unknown';
-                if (compressing) {
-                    compress = [{ format: 'png' }];
-                }
+    const result: FileAsset[] = new Array(length / 3);
+    for (let i = 0, j = 0; i < length; i += 3) {
+        const uri = items[i];
+        const filename = items[i + 2];
+        let mimeType: Undef<string>,
+            commands: Undef<string[]>,
+            compress: Undef<CompressFormat[]>;
+        if (endsWith(filename, '.unknown')) {
+            mimeType = 'image/unknown';
+            if (compressing) {
+                compress = [{ format: 'png' }];
             }
-            else if (convertImages) {
-                mimeType = parseMimeType(filename);
-                switch (mimeType) {
-                    case 'image/png':
-                    case 'image/jpeg':
-                    case 'image/webp':
-                    case 'image/gif':
-                    case 'image/bmp':
-                    case 'image/tiff':
-                        for (const value of convertImages.trim().toLowerCase().split(/\s*::\s*/)) {
-                            const match = /^[a-z]+/.exec(value);
-                            if (match) {
-                                switch (match[0]) {
-                                    case 'png':
-                                    case 'jpeg':
-                                    case 'webp':
-                                    case 'bmp':
-                                        (commands ||= []).push(value);
-                                        if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
-                                            compress = [{ format: 'png' }];
-                                        }
-                                        break;
-                                }
+        }
+        else if (convertImages) {
+            switch (mimeType = parseMimeType(filename)) {
+                case 'image/png':
+                case 'image/jpeg':
+                case 'image/webp':
+                case 'image/gif':
+                case 'image/bmp':
+                case 'image/tiff':
+                case 'image/unknown':
+                    for (const value of convertImages.trim().toLowerCase().split(/\s*::\s*/)) {
+                        const match = /^[a-z]+/.exec(value);
+                        if (match) {
+                            switch (match[0]) {
+                                case 'png':
+                                case 'jpeg':
+                                case 'webp':
+                                case 'bmp':
+                                    (commands ||= []).push(value);
+                                    if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
+                                        compress = [{ format: 'png' }];
+                                    }
+                                    break;
                             }
                         }
-                        break;
-                }
+                    }
+                    break;
             }
-            const image = this.getImage(resourceId, uri);
-            result[j++] = {
-                pathname: pathname + items[i + 1],
-                filename,
-                mimeType,
-                commands,
-                compress,
-                uri,
-                document: copyDocument(document),
-                tasks: image && image.tasks
-            };
         }
-        return result;
+        const image = this.getImage(resourceId, uri);
+        result[j++] = {
+            pathname: pathname + items[i + 1],
+            filename,
+            mimeType,
+            commands,
+            compress,
+            uri,
+            document: copyDocument(document),
+            tasks: image && image.tasks
+        };
     }
-    return items as [];
+    return result;
 }
 
-function getRawAssets(this: Resource<View>, resourceId: number, name: "video" | "audio", pathname: string, items: string[], document: StringOfArray = 'android') {
+function getRawAssets(this: Resource<View>, resourceId: number, name: "video" | "audio", pathname: string, items: string[], document: StringOfArray) {
     const length = items.length;
-    if (length) {
-        const result: FileAsset[] = new Array(length / 3);
-        for (let i = 0, j = 0; i < length; i += 3) {
-            const uri = items[i];
-            const rawData = name === 'video' ? this.getVideo(resourceId, uri) : this.getAudio(resourceId, uri);
-            result[j++] = {
-                pathname,
-                filename: items[i + 2].toLowerCase(),
-                mimeType: items[i + 1],
-                uri,
-                document: copyDocument(document),
-                tasks: rawData && rawData.tasks
-            };
-        }
-        return result;
+    const result: FileAsset[] = new Array(length / 3);
+    for (let i = 0, j = 0; i < length; i += 3) {
+        const uri = items[i];
+        const rawData = name === 'video' ? this.getVideo(resourceId, uri) : this.getAudio(resourceId, uri);
+        result[j++] = {
+            pathname,
+            filename: items[i + 1].toLowerCase(),
+            mimeType: items[i + 2],
+            uri,
+            document: copyDocument(document),
+            tasks: rawData && rawData.tasks
+        };
     }
-    return items as [];
+    return result;
 }
 
 function getOutputDirectory(value: string) {
@@ -175,23 +166,23 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
             if (hasFileAction(options)) {
-                const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
+                const { resource, resourceId, userSettings } = this;
+                const { convertImages, compressImages, outputDocumentHandler } = userSettings;
+                const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
                 const rawAssets: FileAsset[] = [];
-                const resource = this.resource;
-                const resourceId = this.resourceId;
                 for (const name in result) {
                     switch (name) {
                         case 'drawableImage':
-                            rawAssets.push(...getImageAssets.call(resource, resourceId, outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
+                            rawAssets.push(...getImageAssets.call(resource, resourceId, outputDirectory, result[name], convertImages, compressImages, outputDocumentHandler));
                             break;
                         case 'rawVideo':
-                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name]));
+                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name], outputDocumentHandler));
                             break;
                         case 'rawAudio':
-                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name]));
+                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name], outputDocumentHandler));
                             break;
                         default:
-                            rawAssets.push(...getFileAssets(outputDirectory, result[name]));
+                            rawAssets.push(...getFileAssets(outputDirectory, result[name], outputDocumentHandler));
                             break;
                     }
                 }
@@ -254,9 +245,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (!stored || !(length = stored.fonts.size)) {
             return [];
         }
+        const { resource, resourceId } = this;
         const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
-        const resource = this.resource;
-        const resourceId = this.resourceId;
         const xmlns = XML_NAMESPACE[targetAPI < BUILD_VERSION.OREO ? 'app' : 'android'];
         const directory = getOutputDirectory(outputDirectory);
         const pathname = this.directory.font;
@@ -273,8 +263,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 if (fonts.length) {
                     let uri: Undef<string>,
                         base64: Undef<string>,
-                        ext: Undef<string>;
-                    let data = fonts.find(item => item.srcUrl);
+                        ext: Undef<string>,
+                        data = fonts.find(item => item.srcUrl);
                     if (data) {
                         uri = data.srcUrl!;
                         const rawData = this.resource.getRawData(resourceId, uri);
@@ -453,7 +443,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
             if (hasFileAction(options)) {
-                const assets = getImageAssets.call(this.resource, this.resourceId, getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
+                const { resource, resourceId, userSettings } = this;
+                const assets = getImageAssets.call(resource, resourceId, getOutputDirectory(userSettings.outputDirectory), result, userSettings.convertImages, userSettings.compressImages, userSettings.outputDocumentHandler);
                 if (options.assets) {
                     assets.push(...options.assets);
                 }
@@ -509,6 +500,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     protected combineAssets(assets: FileAsset[]) {
         const { userSettings, resource, resourceId } = this;
+        const documentHandler = userSettings.outputDocumentHandler;
         const result: FileAsset[] = [];
         for (let i = 0, length = assets.length, first = true; i < length; ++i) {
             const item = assets[i];
@@ -528,17 +520,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (data) {
             const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
             result.push(
-                ...getFileAssets(outputDirectory, this.resourceStringToXml()),
-                ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()),
-                ...getFileAssets(outputDirectory, this.resourceFontToXml()),
-                ...getFileAssets(outputDirectory, this.resourceColorToXml()),
-                ...getFileAssets(outputDirectory, this.resourceDimenToXml()),
-                ...getFileAssets(outputDirectory, this.resourceStyleToXml()),
-                ...getFileAssets(outputDirectory, this.resourceDrawableToXml()),
-                ...getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
-                ...getFileAssets(outputDirectory, this.resourceAnimToXml()),
-                ...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString()),
-                ...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString())
+                ...getFileAssets(outputDirectory, this.resourceStringToXml(), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceStringArrayToXml(), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceFontToXml(), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceColorToXml(), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceDimenToXml(), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceStyleToXml(), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceDrawableToXml(), documentHandler),
+                ...getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler),
+                ...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler),
+                ...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler)
             );
             if (data.other.length) {
                 result.push(...data.other);
@@ -549,7 +541,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     protected checkFileAssets(content: string[], options?: FileUniversalOptions) {
         if (hasFileAction(options)) {
-            const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
+            const userSettings = this.userSettings;
+            const assets = getFileAssets(getOutputDirectory(userSettings.outputDirectory), content, userSettings.outputDocumentHandler);
             if (options.assets) {
                 assets.push(...options.assets);
             }
@@ -574,11 +567,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
         for (const item of assets[name].values()) {
             const uri = item.uri!;
             result[i++] = uri;
-            result[i++] = item.mimeType || '';
             result[i++] = fromLastIndexOf(uri.split('?')[0], '/');
+            result[i++] = item.mimeType || '';
         }
         if (hasFileAction(options)) {
-            const rawAssets = getRawAssets.call(this.resource, this.resourceId, name, getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
+            const { resource, resourceId, userSettings } = this;
+            const rawAssets = getRawAssets.call(resource, resourceId, name, getOutputDirectory(userSettings.outputDirectory) + this.directory[name], result, userSettings.outputDocumentHandler);
             if (options.assets) {
                 rawAssets.push(...options.assets);
             }

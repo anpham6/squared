@@ -42,9 +42,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public readonly eventOnly = true;
 
     public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
-        const resourceId = data.resourceId;
+        const { rendered, resourceId } = data;
         const dimens = Resource.STORED[resourceId]!.dimens;
-        const rendered = data.rendered;
         const groups: ObjectMapNested<T[]> = {};
         for (let i = 0, length = rendered.length; i < length; ++i) {
             const node = rendered[i];

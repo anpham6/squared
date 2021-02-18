@@ -154,7 +154,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 }
                 else {
                     name = name.toLowerCase();
-                    if (numeric || isLeadingDigit(name) || RESERVED_JAVA.includes(name)) {
+                    if (isLeadingDigit(name) || RESERVED_JAVA.includes(name)) {
                         name = '__' + name;
                     }
                 }

@@ -336,12 +336,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             else {
                 const namespace = namespaces[i] + '.';
                 for (const data of builtInExtensions) {
-                    if (startsWith(data[0], namespace)) {
-                        ext = data[1];
-                        if (!extensions.includes(ext)) {
-                            ext.application = this;
-                            extensions.push(ext);
-                        }
+                    if (startsWith(data[0], namespace) && !extensions.includes(ext = data[1])) {
+                        ext.application = this;
+                        extensions.push(ext);
                     }
                 }
             }
@@ -429,9 +426,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
         const node = this.insertNode(processing, parentElement);
         if (node) {
-            const cache = processing.cache;
             if (depth === 0) {
-                cache.add(node);
+                processing.cache.add(node);
             }
             if (this._preventNodeCascade(node)) {
                 return node;
@@ -492,10 +488,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                 node.inlineText = inlineText && plainText;
                 node.retainAs(children);
                 if (j > 1) {
-                    cache.addAll(children);
+                    processing.cache.addAll(children);
                 }
                 else {
-                    cache.add(children[0]);
+                    processing.cache.add(children[0]);
                 }
             }
             if (elements.length && this.userSettings.createQuerySelectorMap) {
@@ -643,7 +639,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     const length = elements.length;
                     if (length === 0) {
-                        if (!hostElement) {
+                        if (resource && !hostElement) {
                             (this.getProcessing(sessionId)!.unusedStyles ||= new Set()).add(selectorText);
                         }
                         continue;
@@ -807,11 +803,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return ([rootElements] as unknown) as SessionThreadData<T>;
             }
         }
-        const controller = this.controllerHandler;
-        const resource = this.resourceHandler;
-        const sessionId = controller.generateSessionId;
-        const resourceId = this.resourceId;
-        const extensions = this.extensionsAll;
+        const { controllerHandler, resourceHandler, resourceId, extensionsAll: extensions } = this;
+        const sessionId = controllerHandler.generateSessionId;
         const processing: squared.base.AppProcessing<T> = {
             sessionId,
             resourceId,
@@ -829,10 +822,10 @@ export default abstract class Application<T extends Node> implements squared.bas
             processing.afterInsertNode = afterInsertNode;
         }
         this.session.active.set(sessionId, processing);
-        if (resource) {
-            resource.init(resourceId);
+        if (resourceHandler) {
+            resourceHandler.init(resourceId);
         }
-        controller.init(resourceId);
+        controllerHandler.init(resourceId);
         const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
         if (queryRoot && queryRoot !== document.documentElement) {
             this.setStyleMap(sessionId, resourceId, document, queryRoot);
@@ -857,7 +850,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-        if (resource) {
+        if (resourceHandler) {
             const queryElements: QuerySelectorElement[] = [queryRoot || document];
             if (shadowElements) {
                 queryElements.push(...shadowElements);
@@ -866,10 +859,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                 element.querySelectorAll('[style]').forEach((child: HTMLElement) => {
                     const { backgroundImage, listStyleImage } = child.style;
                     if (backgroundImage) {
-                        parseImageUrl(backgroundImage, location.href, resource, resourceId);
+                        parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
                     }
                     if (listStyleImage) {
-                        parseImageUrl(listStyleImage, location.href, resource, resourceId);
+                        parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
                     }
                 });
             }

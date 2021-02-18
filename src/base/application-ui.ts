@@ -175,6 +175,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     };
     public readonly extensions: ExtensionUI<T>[] = [];
 
+    public abstract resource: ResourceUI<T>;
     public abstract userSettings: UserResourceSettingsUI;
 
     private _controllerSettings!: ControllerSettingsUI;

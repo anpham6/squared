@@ -1307,8 +1307,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const node = layout.node;
         const tagName = node.tagName;
         const resourceId = node.localSettings.resourceId;
-        let { parent, containerType } = layout,
-            controlName = View.getControlName(containerType, node.api);
+        let parent = layout.parent,
+            controlName = '';
+        const setControlType = (containerType: number) => {
+            controlName = View.getControlName(layout.containerType, node.api);
+            node.setControlType(controlName, containerType);
+        };
         const setReadOnly = () => {
             const element = node.element as HTMLInputElement;
             if (element.readOnly) {
@@ -1320,6 +1324,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         };
         const setBoundsWidth = () => node.css('width', Math.ceil(node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0)) + 'px', true);
         const setBoundsHeight = () => node.css('height', Math.ceil(node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0)) + 'px', true);
+        const getStringAttr = (attr: string) => node.controlId.toLowerCase() + '_' + attr;
+        setControlType(layout.containerType);
         switch (tagName) {
             case 'IMG':
             case 'CANVAS': {
@@ -1387,7 +1393,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (tagName === 'CANVAS') {
                         const content = ((element as unknown) as HTMLCanvasElement).toDataURL();
                         if (content) {
-                            node.setControlType(controlName, containerType);
                             src = 'canvas_' + convertWord(node.controlId, true).toLowerCase();
                             resource.writeRawImage(resourceId, src + '.png', { mimeType: 'image/png', encoding: 'base64', content, watch, tasks });
                         }
@@ -1461,18 +1466,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const element = node.element as HTMLInputElement;
                 const setInputMinMax = () => {
                     if (element.min) {
-                        node.android('min', element.min);
+                        node.android('min', Resource.addString(resourceId, element.min, getStringAttr('min'), true));
                     }
                     if (element.max) {
-                        node.android('max', element.max);
+                        node.android('max', Resource.addString(resourceId, element.max, getStringAttr('max'), true));
                     }
                 };
                 const setInputMinDimension = () => {
                     if (element.minLength !== -1) {
-                        node.android('minLength', element.minLength.toString());
+                        node.android('minLength', Resource.addString(resourceId, element.minLength.toString(), getStringAttr('min_length'), true));
                     }
-                    if (element.maxLength) {
-                        node.android('maxLength', element.maxLength.toString());
+                    if (element.maxLength > 0) {
+                        node.android('maxLength', Resource.addString(resourceId, element.maxLength.toString(), getStringAttr('max_length'), true));
                     }
                 };
                 switch (element.type) {
@@ -1489,10 +1494,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'password':
                         node.android('inputType', 'textPassword');
                         break;
-                    case 'number':
                     case 'range':
+                        if (!isNaN(+element.value)) {
+                            node.android('progress', Resource.addString(resourceId, element.value, getStringAttr('progress'), true));
+                        }
+                    case 'number':
                         node.android('inputType', 'number');
-                        node.android('progress', element.value);
                         setInputMinMax();
                         break;
                     case 'time':
@@ -1535,11 +1542,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
             }
             case 'BUTTON':
-                for (const item of node.naturalChildren as T[]) {
-                    if (!item.pageFlow || !item.textElement) {
-                        item.android('elevation', '2px');
-                    }
-                }
                 if (!node.hasWidth) {
                     const textContent = node.textContent.trim();
                     if (textContent.length === 1 || !/[\w\s-]/.test(textContent)) {
@@ -1548,8 +1550,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
             case 'TEXTAREA': {
-                const { cols, maxLength, rows } = node.element as HTMLTextAreaElement;
-                node.android('minLines', rows ? rows.toString() : '2');
+                const { rows, cols, maxLength } = node.element as HTMLTextAreaElement;
                 switch (node.css('verticalAlign')) {
                     case 'middle':
                         node.mergeGravity('gravity', 'center_vertical');
@@ -1561,8 +1562,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.mergeGravity('gravity', 'top');
                         break;
                 }
-                if (maxLength) {
-                    node.android('maxLength', maxLength.toString());
+                node.android('minLines', Resource.addString(resourceId, rows ? rows.toString() : '2', getStringAttr('min_lines'), true));
+                if (maxLength > 0) {
+                    node.android('maxLength', Resource.addString(resourceId, maxLength.toString(), getStringAttr('max_length'), true));
                 }
                 if (cols > 0 && !node.hasWidth) {
                     node.css('width', formatPX(cols * 8));
@@ -1587,24 +1589,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     backgroundColor: Undef<string>;
                 if (tagName === 'METER') {
                     ({ meterForegroundColor: foregroundColor, meterBackgroundColor: backgroundColor } = this.localSettings.style);
-                    if (max) {
-                        if (value) {
-                            node.android('progress', Math.round((value / max) * 100).toString());
-                        }
-                        if (max === 100) {
-                            node.android('min', min.toString());
-                            node.android('max', max.toString());
-                        }
-                    }
+                    node.android('min', Resource.addString(resourceId, min.toString(), getStringAttr('min'), true));
                 }
                 else {
                     ({ progressForegroundColor: foregroundColor, progressBackgroundColor: backgroundColor } = this.localSettings.style);
-                    if (value) {
-                        node.android('progress', value.toString());
-                    }
-                    if (max) {
-                        node.android('max', max.toString());
-                    }
+                }
+                if (max > 0) {
+                    node.android('max', Resource.addString(resourceId, max.toString(), getStringAttr('max'), true));
+                }
+                if (value > 0) {
+                    node.android('progress', Resource.addString(resourceId, (max > 0 ? Math.round((value / max) * 100) : value).toString(), getStringAttr('progress'), true));
                 }
                 if (!node.hasWidth) {
                     setBoundsWidth();
@@ -1687,17 +1681,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else if (element.poster) {
                     node.setCacheValue('tagName', 'IMG');
+                    setControlType(layout.containerType = CONTAINER_NODE.IMAGE);
                     src = element.src;
                     element.src = element.poster.trim();
-                    layout.containerType = CONTAINER_NODE.IMAGE;
                     const template = this.renderNode(layout);
                     element.src = src;
                     return template;
                 }
                 else {
-                    containerType = CONTAINER_NODE.TEXT;
-                    controlName = View.getControlName(containerType, node.api);
-                    layout.containerType = containerType;
+                    setControlType(layout.containerType = CONTAINER_NODE.TEXT);
                     node.inlineText = true;
                 }
             }
@@ -1715,7 +1707,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('scrollbars', overflow);
                 }
                 if (node.has('letterSpacing')) {
-                    node.android('letterSpacing', truncate(node.toFloat('letterSpacing') / node.fontSize, node.localSettings.floatPrecision));
+                    node.android('letterSpacing', Resource.addString(resourceId, truncate(node.parseUnit(node.css('letterSpacing')) / node.fontSize, node.localSettings.floatPrecision), getStringAttr('letter_spacing'), true));
                 }
                 if (node.cssValue('textAlign') === 'justify') {
                     node.android('justificationMode', 'inter_word');
@@ -1730,9 +1722,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             if (colorName) {
                                 const precision = node.localSettings.floatPrecision;
                                 node.android('shadowColor', `@color/${colorName}`);
-                                node.android('shadowDx', truncate(node.parseUnit(match[2]) * 2, precision));
-                                node.android('shadowDy', truncate(node.parseHeight(match[3]) * 2, precision));
-                                node.android('shadowRadius', truncate(match[4] ? Math.max(node.parseUnit(match[4]), 0) : 0.01, precision));
+                                node.android('shadowDx', Resource.addString(resourceId, truncate(node.parseUnit(match[2]) * 2, precision), getStringAttr('shadow_dx'), true));
+                                node.android('shadowDy', Resource.addString(resourceId, truncate(node.parseHeight(match[3]) * 2, precision), getStringAttr('shadow_dy'), true));
+                                node.android('shadowRadius', Resource.addString(resourceId, truncate(match[4] ? Math.max(node.parseUnit(match[4]), 0) : 0.01, precision), getStringAttr('shadow_radius'), true));
                             }
                         }
                     }
@@ -1789,6 +1781,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if ((node.element as HTMLInputElement).list?.children.length) {
                     controlName = CONTAINER_TAGNAME.EDIT_LIST;
+                    node.controlName = controlName;
+                    node.delete('android', 'inputType');
                 }
                 else if (node.api >= BUILD_VERSION.OREO) {
                     node.android('importantForAutofill', 'no');
@@ -1805,7 +1799,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
         }
-        node.setControlType(controlName, containerType);
         node.addAlign(layout.alignmentType);
         node.render(parent);
         return {
@@ -1817,14 +1810,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute) {
-        let controlName = attrs.controlName;
+        const controlName = attrs.controlName || attrs.controlType && View.getControlName(attrs.controlType, this.userSettings.targetAPI);
         if (!controlName) {
-            if (attrs.controlType) {
-                controlName = View.getControlName(attrs.controlType, this.userSettings.targetAPI);
-            }
-            else {
-                return '';
-            }
+            return '';
         }
         const node = new View();
         this.afterInsertNode(node as T);

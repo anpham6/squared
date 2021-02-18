@@ -13,7 +13,7 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        const images = this.resource!.fromImageUrl(node.localSettings.resourceId, node.backgroundImage);
+        const images = this.resource.fromImageUrl(node.localSettings.resourceId, node.backgroundImage);
         if (images.length === 1) {
             const dimension = node.actualDimension;
             const [backgroundPositionX, backgroundPositionY, backgroundSize] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY', 'backgroundSize');
