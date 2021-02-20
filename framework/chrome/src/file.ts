@@ -85,8 +85,10 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
     return [moveTo, result[0], result[1]];
 }
 
-function assignFilename(value: string, ext?: string) {
-    ext ||= value && getFileExt(value);
+function assignFilename(value?: string, ext?: string) {
+    if (value) {
+        ext ||= getFileExt(value);
+    }
     return DIR_FUNCTIONS.ASSIGN + (ext ? '.' + ext : 'unknown');
 }
 
@@ -216,7 +218,7 @@ function excludeAsset(assets: ChromeAsset[], command: AssetCommand, element: HTM
 }
 
 function checkSaveAs(uri: Undef<string>, pathname: Undef<string>, filename: string): [string, boolean] {
-    const value = getCustomPath(uri, pathname, filename || assignFilename(''));
+    const value = getCustomPath(uri, pathname, filename || assignFilename());
     if (value) {
         return [value, false];
     }
@@ -327,7 +329,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 file = '';
             }
             if (local && file) {
-                value = resolvePath(file, location.href);
+                value = resolvePath(file);
             }
         }
         if (!local && !file && preserveCrossOrigin) {
@@ -578,10 +580,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 base64: Undef<string>;
             const image = Resource.parseDataURI(src);
             if (image) {
-                base64 = image.base64;
-                if (base64) {
+                if (base64 = image.base64) {
                     mimeType = image.mimeType;
-                    src = resolvePath(randomUUID() + '.' + (mimeType && fromMimeType(mimeType) || 'unknown'), location.href);
+                    src = resolvePath(assignFilename('', mimeType && fromMimeType(mimeType)));
                 }
                 else {
                     return;
@@ -610,13 +611,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         this.resource.addRawData(resourceId!, uri, image);
                     }
                 }
-                else if (!result.find(item => item.uri === uri)) {
+                else {
                     this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
                 }
             }
             for (const { base64, content, filename, mimeType = parseMimeType(filename) } of assets.rawData.values()) {
                 if (base64) {
-                    if (saveAsImage?.blob && !result.find(item => item.base64 === base64)) {
+                    if (saveAsImage?.blob) {
                         let commands: Undef<string[]>;
                         if (startsWith(mimeType, 'image/') && (commands = saveAsImage.commands)) {
                             for (let i = 0; i < commands.length; ++i) {
@@ -630,7 +631,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             }
                         }
                         const pathname = saveAsImage.pathname;
-                        const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
+                        const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
                         if (data) {
                             if (endsWith(data.filename, '.unknown')) {
                                 data.mimeType = 'image/unknown';
@@ -689,18 +690,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 for (const { srcUrl, srcBase64, mimeType } of fonts) {
                     let data: Null<ChromeAsset> = null;
                     if (srcUrl) {
-                        data = File.parseUri(srcUrl, preserveCrossOrigin);
-                        if (data && inline) {
+                        if ((data = File.parseUri(srcUrl, preserveCrossOrigin)) && inline) {
                             data.format = 'base64';
                         }
                     }
                     else if (srcBase64 && blob) {
                         const filename = assignFilename('', fromMimeType(mimeType));
-                        data = File.parseUri(resolvePath(pathname ? appendSeparator(pathname, filename) : filename, location.href));
-                        if (data) {
+                        if (data = File.parseUri(resolvePath(pathname ? appendSeparator(pathname, filename) : filename))) {
                             data.format = 'blob';
                             data.base64 = srcBase64;
-                            delete data.watch;
                         }
                     }
                     if (this.processExtensions(data)) {
@@ -1145,22 +1143,29 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (filename) {
                     data.filename = filename;
                 }
-                if (commands && commands.length && commands[0] !== '~') {
-                    data.commands = commands;
-                }
-                if (watch) {
-                    data.watch = watch;
-                }
                 if (base64) {
+                    if (!fromConfig && assets.find(item => item.base64 === base64)) {
+                        return;
+                    }
                     data.format = 'blob';
                     data.base64 = base64;
-                    delete data.watch;
                 }
-                else if (srcSet) {
-                    data.format = 'srcset';
+                else {
+                    if (srcSet) {
+                        data.format = 'srcset';
+                    }
+                    else if (inline) {
+                        data.format = 'base64';
+                    }
+                    else if (!element && assets.find(item => item.moveTo === data.moveTo && item.pathname === data.pathname && item.filename === data.filename && !data.filename.includes(DIR_FUNCTIONS.ASSIGN))) {
+                        return;
+                    }
+                    if (watch) {
+                        data.watch = watch;
+                    }
                 }
-                else if (inline) {
-                    data.format = 'base64';
+                if (commands && commands.length && commands[0] !== '~') {
+                    data.commands = commands;
                 }
                 assets.push(data);
                 return data;
