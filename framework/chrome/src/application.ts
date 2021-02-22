@@ -141,6 +141,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             for (let i = 0, length = database.length; i < length; ++i) {
                 const [element, data] = database[i];
                 const node = File.createTagNode(element, domAll, cache);
+                node.textContent = element.textContent!;
                 data.element = node;
                 File.setDocumentId(node, element, data.document);
                 nodeMap.set(node, element);

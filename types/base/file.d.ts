@@ -86,6 +86,7 @@ interface XmlNode extends AttributeAction {
 
 interface XmlTagNode extends XmlNode, TagData {
     id?: StringMap;
+    textContent?: string;
     append?: TagAppend;
 }
 
