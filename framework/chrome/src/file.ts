@@ -820,7 +820,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private processAssets(options: FileActionOptions) {
-        const { appendMap, preserveCrossOrigin } = options;
+        const { assetMap, appendMap, preserveCrossOrigin } = options;
         const nodeMap = options.nodeMap ||= new Map<XmlNode, HTMLElement>();
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
@@ -856,7 +856,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             };
             for (const [element, siblings] of appendMap) {
                 const node = File.createTagNode(element, domAll, cache);
-                const command = options.assetMap?.get(element);
+                const command = assetMap && assetMap.get(element);
                 const documentData = command && command.document || this.userSettings.outputDocumentHandler;
                 File.setDocumentId(node, element, documentData);
                 node.outerXml = element.outerHTML.trim();

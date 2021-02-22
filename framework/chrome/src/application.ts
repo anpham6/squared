@@ -102,7 +102,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     case 'text':
                                     case 'attribute':
                                         if (cloudDatabase) {
-                                            database.push([element, { document: item.document || documentHandler, ...cloudDatabase }]);
+                                            database.push([element, { type, document: item.document || documentHandler, ...cloudDatabase }]);
                                         }
                                         break;
                                     default:

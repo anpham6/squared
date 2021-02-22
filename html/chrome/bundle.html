@@ -131,18 +131,15 @@
         });
     </script>
     <script type="text/template">
-        function (context, value, output, resolve) {
+        async function (context, value, output) {
             const sourceMap = output.sourceMap;
             const options = { presets: ['@babel/preset-env'], sourceMaps: true, inputSourceMap: sourceMap.map };
-            const result = context.transformSync(value, options);
+            const result = await context.transform(value, options);
             if (result) {
                 if (result.map) {
                     sourceMap.nextMap('babel', result.map, result.code);
                 }
-                resolve(result.code);
-            }
-            else {
-                resolve();
+                return result.code;
             }
         }
     </script>
