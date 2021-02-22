@@ -1,4 +1,4 @@
-/* android-framework 2.4.0
+/* android-framework 2.4.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -6138,10 +6138,10 @@ var android = (function () {
                         case 'password':
                             node.android('inputType', 'textPassword');
                             break;
-                        case 'number':
                         case 'range':
-                            node.android('inputType', 'number');
                             node.android('progress', element.value);
+                        case 'number':
+                            node.android('inputType', 'number');
                             setInputMinMax();
                             break;
                         case 'time':
@@ -6362,7 +6362,7 @@ var android = (function () {
                         node.android('scrollbars', overflow);
                     }
                     if (node.has('letterSpacing')) {
-                        node.android('letterSpacing', truncate$1(node.toFloat('letterSpacing') / node.fontSize, node.localSettings.floatPrecision));
+                        node.android('letterSpacing', truncate$1(node.parseUnit(node.css('letterSpacing')) / node.fontSize, node.localSettings.floatPrecision));
                     }
                     if (node.cssValue('textAlign') === 'justify') {
                         node.android('justificationMode', 'inter_word');
@@ -8516,99 +8516,90 @@ var android = (function () {
 
     const { convertBase64, endsWith: endsWith$1, fromLastIndexOf: fromLastIndexOf$2, parseMimeType: parseMimeType$1, plainMap: plainMap$1 } = squared.lib.util;
     const { fromMimeType } = squared.base.lib.util;
-    function getFileAssets(pathname, items, document = 'android') {
+    function getFileAssets(pathname, items, document) {
         const length = items.length;
-        if (length) {
-            const result = new Array(length / 3);
-            for (let i = 0, j = 0; i < length; i += 3) {
-                result[j++] = {
-                    pathname: pathname + items[i + 1],
-                    filename: items[i + 2],
-                    content: items[i],
-                    document: copyDocument(document)
-                };
-            }
-            return result;
+        const result = new Array(length / 3);
+        for (let i = 0, j = 0; i < length; i += 3) {
+            result[j++] = {
+                pathname: pathname + items[i + 1],
+                filename: items[i + 2],
+                content: items[i],
+                document: copyDocument(document)
+            };
         }
-        return items;
+        return result;
     }
-    function getImageAssets(resourceId, pathname, items, convertImages, compressing, document = 'android') {
+    function getImageAssets(resourceId, pathname, items, convertImages, compressing, document) {
         const length = items.length;
-        if (length) {
-            const result = new Array(length / 3);
-            for (let i = 0, j = 0; i < length; i += 3) {
-                const uri = items[i];
-                const filename = items[i + 2];
-                let mimeType, commands, compress;
-                if (endsWith$1(filename, '.unknown')) {
-                    mimeType = 'image/unknown';
-                    if (compressing) {
-                        compress = [{ format: 'png' }];
-                    }
+        const result = new Array(length / 3);
+        for (let i = 0, j = 0; i < length; i += 3) {
+            const uri = items[i];
+            const filename = items[i + 2];
+            let mimeType, commands, compress;
+            if (endsWith$1(filename, '.unknown')) {
+                mimeType = 'image/unknown';
+                if (compressing) {
+                    compress = [{ format: 'png' }];
                 }
-                else if (convertImages) {
-                    mimeType = parseMimeType$1(filename);
-                    switch (mimeType) {
-                        case 'image/png':
-                        case 'image/jpeg':
-                        case 'image/webp':
-                        case 'image/gif':
-                        case 'image/bmp':
-                        case 'image/tiff':
-                            for (const value of convertImages.trim().toLowerCase().split(/\s*::\s*/)) {
-                                const match = /^[a-z]+/.exec(value);
-                                if (match) {
-                                    switch (match[0]) {
-                                        case 'png':
-                                        case 'jpeg':
-                                        case 'webp':
-                                        case 'bmp':
-                                            (commands || (commands = [])).push(value);
-                                            if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
-                                                compress = [{ format: 'png' }];
-                                            }
-                                            break;
-                                    }
+            }
+            else if (convertImages) {
+                switch (mimeType = parseMimeType$1(filename)) {
+                    case 'image/png':
+                    case 'image/jpeg':
+                    case 'image/webp':
+                    case 'image/gif':
+                    case 'image/bmp':
+                    case 'image/tiff':
+                    case 'image/unknown':
+                        for (const value of convertImages.trim().toLowerCase().split(/\s*::\s*/)) {
+                            const match = /^[a-z]+/.exec(value);
+                            if (match) {
+                                switch (match[0]) {
+                                    case 'png':
+                                    case 'jpeg':
+                                    case 'webp':
+                                    case 'bmp':
+                                        (commands || (commands = [])).push(value);
+                                        if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
+                                            compress = [{ format: 'png' }];
+                                        }
+                                        break;
                                 }
                             }
-                            break;
-                    }
+                        }
+                        break;
                 }
-                const image = this.getImage(resourceId, uri);
-                result[j++] = {
-                    pathname: pathname + items[i + 1],
-                    filename,
-                    mimeType,
-                    commands,
-                    compress,
-                    uri,
-                    document: copyDocument(document),
-                    tasks: image && image.tasks
-                };
             }
-            return result;
+            const image = this.getImage(resourceId, uri);
+            result[j++] = {
+                pathname: pathname + items[i + 1],
+                filename,
+                mimeType,
+                commands,
+                compress,
+                uri,
+                document: copyDocument(document),
+                tasks: image && image.tasks
+            };
         }
-        return items;
+        return result;
     }
-    function getRawAssets(resourceId, name, pathname, items, document = 'android') {
+    function getRawAssets(resourceId, name, pathname, items, document) {
         const length = items.length;
-        if (length) {
-            const result = new Array(length / 3);
-            for (let i = 0, j = 0; i < length; i += 3) {
-                const uri = items[i];
-                const rawData = name === 'video' ? this.getVideo(resourceId, uri) : this.getAudio(resourceId, uri);
-                result[j++] = {
-                    pathname,
-                    filename: items[i + 2].toLowerCase(),
-                    mimeType: items[i + 1],
-                    uri,
-                    document: copyDocument(document),
-                    tasks: rawData && rawData.tasks
-                };
-            }
-            return result;
+        const result = new Array(length / 3);
+        for (let i = 0, j = 0; i < length; i += 3) {
+            const uri = items[i];
+            const rawData = name === 'video' ? this.getVideo(resourceId, uri) : this.getAudio(resourceId, uri);
+            result[j++] = {
+                pathname,
+                filename: items[i + 1].toLowerCase(),
+                mimeType: items[i + 2],
+                uri,
+                document: copyDocument(document),
+                tasks: rawData && rawData.tasks
+            };
         }
-        return items;
+        return result;
     }
     function getOutputDirectory(value) {
         value = value.replace(/\\/g, '/');
@@ -8648,23 +8639,23 @@ var android = (function () {
                     }
                 }
                 if (hasFileAction(options)) {
-                    const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
+                    const { resource, resourceId, userSettings } = this;
+                    const { convertImages, compressImages, outputDocumentHandler } = userSettings;
+                    const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
                     const rawAssets = [];
-                    const resource = this.resource;
-                    const resourceId = this.resourceId;
                     for (const name in result) {
                         switch (name) {
                             case 'drawableImage':
-                                rawAssets.push(...getImageAssets.call(resource, resourceId, outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
+                                rawAssets.push(...getImageAssets.call(resource, resourceId, outputDirectory, result[name], convertImages, compressImages, outputDocumentHandler));
                                 break;
                             case 'rawVideo':
-                                rawAssets.push(...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name]));
+                                rawAssets.push(...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name], outputDocumentHandler));
                                 break;
                             case 'rawAudio':
-                                rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name]));
+                                rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name], outputDocumentHandler));
                                 break;
                             default:
-                                rawAssets.push(...getFileAssets(outputDirectory, result[name]));
+                                rawAssets.push(...getFileAssets(outputDirectory, result[name], outputDocumentHandler));
                                 break;
                         }
                     }
@@ -8723,9 +8714,8 @@ var android = (function () {
             if (!stored || !(length = stored.fonts.size)) {
                 return [];
             }
+            const { resource, resourceId } = this;
             const { insertSpaces, outputDirectory, targetAPI } = this.userSettings;
-            const resource = this.resource;
-            const resourceId = this.resourceId;
             const xmlns = XML_NAMESPACE[targetAPI < 26 /* OREO */ ? 'app' : 'android'];
             const directory = getOutputDirectory(outputDirectory);
             const pathname = this.directory.font;
@@ -8740,8 +8730,7 @@ var android = (function () {
                     itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
                     const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
                     if (fonts.length) {
-                        let uri, base64, ext;
-                        let data = fonts.find(item => item.srcUrl);
+                        let uri, base64, ext, data = fonts.find(item => item.srcUrl);
                         if (data) {
                             uri = data.srcUrl;
                             const rawData = this.resource.getRawData(resourceId, uri);
@@ -8906,7 +8895,8 @@ var android = (function () {
                     }
                 }
                 if (hasFileAction(options)) {
-                    const assets = getImageAssets.call(this.resource, this.resourceId, getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages);
+                    const { resource, resourceId, userSettings } = this;
+                    const assets = getImageAssets.call(resource, resourceId, getOutputDirectory(userSettings.outputDirectory), result, userSettings.convertImages, userSettings.compressImages, userSettings.outputDocumentHandler);
                     if (options.assets) {
                         assets.push(...options.assets);
                     }
@@ -8957,6 +8947,7 @@ var android = (function () {
         }
         combineAssets(assets) {
             const { userSettings, resource, resourceId } = this;
+            const documentHandler = userSettings.outputDocumentHandler;
             const result = [];
             for (let i = 0, length = assets.length, first = true; i < length; ++i) {
                 const item = assets[i];
@@ -8975,7 +8966,7 @@ var android = (function () {
             const data = Resource.ASSETS[resourceId];
             if (data) {
                 const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
-                result.push(...getFileAssets(outputDirectory, this.resourceStringToXml()), ...getFileAssets(outputDirectory, this.resourceStringArrayToXml()), ...getFileAssets(outputDirectory, this.resourceFontToXml()), ...getFileAssets(outputDirectory, this.resourceColorToXml()), ...getFileAssets(outputDirectory, this.resourceDimenToXml()), ...getFileAssets(outputDirectory, this.resourceStyleToXml()), ...getFileAssets(outputDirectory, this.resourceDrawableToXml()), ...getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages), ...getFileAssets(outputDirectory, this.resourceAnimToXml()), ...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString()), ...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString()));
+                result.push(...getFileAssets(outputDirectory, this.resourceStringToXml(), documentHandler), ...getFileAssets(outputDirectory, this.resourceStringArrayToXml(), documentHandler), ...getFileAssets(outputDirectory, this.resourceFontToXml(), documentHandler), ...getFileAssets(outputDirectory, this.resourceColorToXml(), documentHandler), ...getFileAssets(outputDirectory, this.resourceDimenToXml(), documentHandler), ...getFileAssets(outputDirectory, this.resourceStyleToXml(), documentHandler), ...getFileAssets(outputDirectory, this.resourceDrawableToXml(), documentHandler), ...getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler), ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler), ...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler), ...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler));
                 if (data.other.length) {
                     result.push(...data.other);
                 }
@@ -8984,7 +8975,8 @@ var android = (function () {
         }
         checkFileAssets(content, options) {
             if (hasFileAction(options)) {
-                const assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content);
+                const userSettings = this.userSettings;
+                const assets = getFileAssets(getOutputDirectory(userSettings.outputDirectory), content, userSettings.outputDocumentHandler);
                 if (options.assets) {
                     assets.push(...options.assets);
                 }
@@ -9008,11 +9000,12 @@ var android = (function () {
             for (const item of assets[name].values()) {
                 const uri = item.uri;
                 result[i++] = uri;
-                result[i++] = item.mimeType || '';
                 result[i++] = fromLastIndexOf$2(uri.split('?')[0], '/');
+                result[i++] = item.mimeType || '';
             }
             if (hasFileAction(options)) {
-                const rawAssets = getRawAssets.call(this.resource, this.resourceId, name, getOutputDirectory(this.userSettings.outputDirectory) + this.directory[name], result);
+                const { resource, resourceId, userSettings } = this;
+                const rawAssets = getRawAssets.call(resource, resourceId, name, getOutputDirectory(userSettings.outputDirectory) + this.directory[name], result, userSettings.outputDocumentHandler);
                 if (options.assets) {
                     rawAssets.push(...options.assets);
                 }

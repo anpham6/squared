@@ -1,4 +1,4 @@
-/* squared.base 2.4.0
+/* squared.base 2.4.1
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};

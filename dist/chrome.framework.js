@@ -64,7 +64,9 @@ var chrome = (function () {
         return [moveTo, result[0], result[1]];
     }
     function assignFilename(value, ext) {
-        ext || (ext = value && getFileExt(value));
+        if (value) {
+            ext || (ext = getFileExt(value));
+        }
         return "__assign__" /* ASSIGN */ + (ext ? '.' + ext : 'unknown');
     }
     function resolveAssetSource(element, data) {
@@ -186,7 +188,7 @@ var chrome = (function () {
         return false;
     }
     function checkSaveAs(uri, pathname, filename) {
-        const value = getCustomPath(uri, pathname, filename || assignFilename(''));
+        const value = getCustomPath(uri, pathname, filename || assignFilename());
         if (value) {
             return [value, false];
         }
@@ -285,7 +287,7 @@ var chrome = (function () {
                     file = '';
                 }
                 if (local && file) {
-                    value = resolvePath(file, location.href);
+                    value = resolvePath(file);
                 }
             }
             if (!local && !file && preserveCrossOrigin) {
@@ -507,10 +509,9 @@ var chrome = (function () {
                 let src = element instanceof HTMLVideoElement ? element.poster : element.src, mimeType, base64;
                 const image = Resource.parseDataURI(src);
                 if (image) {
-                    base64 = image.base64;
-                    if (base64) {
+                    if (base64 = image.base64) {
                         mimeType = image.mimeType;
-                        src = resolvePath(randomUUID() + '.' + (mimeType && fromMimeType(mimeType) || 'unknown'), location.href);
+                        src = resolvePath(assignFilename('', mimeType && fromMimeType(mimeType)));
                     }
                     else {
                         return;
@@ -539,13 +540,13 @@ var chrome = (function () {
                             this.resource.addRawData(resourceId, uri, image);
                         }
                     }
-                    else if (!result.find(item => item.uri === uri)) {
+                    else {
                         this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
                     }
                 }
                 for (const { base64, content, filename, mimeType = parseMimeType(filename) } of assets.rawData.values()) {
                     if (base64) {
-                        if ((saveAsImage === null || saveAsImage === void 0 ? void 0 : saveAsImage.blob) && !result.find(item => item.base64 === base64)) {
+                        if (saveAsImage === null || saveAsImage === void 0 ? void 0 : saveAsImage.blob) {
                             let commands;
                             if (startsWith(mimeType, 'image/') && (commands = saveAsImage.commands)) {
                                 for (let i = 0; i < commands.length; ++i) {
@@ -559,7 +560,7 @@ var chrome = (function () {
                                 }
                             }
                             const pathname = saveAsImage.pathname;
-                            const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename, location.href), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
+                            const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename), saveAsImage, preserveCrossOrigin, undefined, mimeType, base64);
                             if (data) {
                                 if (endsWith(data.filename, '.unknown')) {
                                     data.mimeType = 'image/unknown';
@@ -612,18 +613,15 @@ var chrome = (function () {
                     for (const { srcUrl, srcBase64, mimeType } of fonts) {
                         let data = null;
                         if (srcUrl) {
-                            data = File.parseUri(srcUrl, preserveCrossOrigin);
-                            if (data && inline) {
+                            if ((data = File.parseUri(srcUrl, preserveCrossOrigin)) && inline) {
                                 data.format = 'base64';
                             }
                         }
                         else if (srcBase64 && blob) {
                             const filename = assignFilename('', fromMimeType(mimeType));
-                            data = File.parseUri(resolvePath(pathname ? appendSeparator(pathname, filename) : filename, location.href));
-                            if (data) {
+                            if (data = File.parseUri(resolvePath(pathname ? appendSeparator(pathname, filename) : filename))) {
                                 data.format = 'blob';
                                 data.base64 = srcBase64;
-                                delete data.watch;
                             }
                         }
                         if (this.processExtensions(data)) {
@@ -1016,22 +1014,29 @@ var chrome = (function () {
                     if (filename) {
                         data.filename = filename;
                     }
-                    if (commands && commands.length && commands[0] !== '~') {
-                        data.commands = commands;
-                    }
-                    if (watch) {
-                        data.watch = watch;
-                    }
                     if (base64) {
+                        if (!fromConfig && assets.find(item => item.base64 === base64)) {
+                            return;
+                        }
                         data.format = 'blob';
                         data.base64 = base64;
-                        delete data.watch;
                     }
-                    else if (srcSet) {
-                        data.format = 'srcset';
+                    else {
+                        if (srcSet) {
+                            data.format = 'srcset';
+                        }
+                        else if (inline) {
+                            data.format = 'base64';
+                        }
+                        else if (!element && assets.find(item => item.moveTo === data.moveTo && item.pathname === data.pathname && item.filename === data.filename && !data.filename.includes("__assign__" /* ASSIGN */))) {
+                            return;
+                        }
+                        if (watch) {
+                            data.watch = watch;
+                        }
                     }
-                    else if (inline) {
-                        data.format = 'base64';
+                    if (commands && commands.length && commands[0] !== '~') {
+                        data.commands = commands;
                     }
                     assets.push(data);
                     return data;
