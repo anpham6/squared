@@ -31,6 +31,22 @@ interface RawAsset extends FileAsset, Partial<ImageAsset> {
     buffer?: ArrayBuffer;
 }
 
+interface ViewEngine {
+    name: string;
+    options?: {
+        compile?: PlainObject;
+        output?: PlainObject;
+    };
+}
+
+interface DataSource extends ElementAction, DocumentAction, PlainObject {
+    source: "uri" | "cloud";
+    query?: unknown;
+    index?: number;
+    limit?: number;
+    removeEmpty?: boolean;
+}
+
 interface OutputAction<T = unknown> extends DocumentAction {
     moveTo?: string;
     process?: string[];
@@ -116,9 +132,9 @@ interface CompressFormat extends CompressLevel {
     options?: PlainObject;
 }
 
-interface RequestData<T = unknown> extends PlainObject {
+interface RequestData extends PlainObject {
     assets?: FileAsset[];
-    database?: T[];
+    dataSource?: DataSource[];
     document?: string[];
     task?: string[];
 }

@@ -1,3 +1,9 @@
+interface RequestData {
+    baseUrl?: string;
+    templateMap?: TemplateMap;
+    unusedStyles?: string[];
+}
+
 interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction {
     format?: string;
     preserve?: boolean;
@@ -13,23 +19,34 @@ interface OutputModifiers extends ElementScope {
     exclude?: boolean;
 }
 
+interface TemplateAction {
+    type: "text" | "attribute";
+    value?: string | ObjectMap<unknown>;
+    viewEngine?: ViewEngine | string;
+}
+
+interface DataSource extends TemplateAction {}
+
+interface UriDataSource extends TemplateAction {
+    format: string;
+    uri: string;
+    query?: string;
+}
+
+interface CloudDataSource extends TemplateAction, PlainObject {}
+
 interface AssetCommand extends SaveAsOptions, ElementAction, DocumentAction {
     selector?: string;
     type?: string;
     saveAs?: string;
     exportAs?: string;
     saveTo?: string;
-    cloudDatabase?: unknown;
     textContent?: string;
+    dataUri?: UriDataSource;
+    cloudDatabase?: CloudDataSource;
     template?: {
         module: string;
         identifier?: string;
         value?: string;
     };
-}
-
-interface RequestData {
-    baseUrl?: string;
-    templateMap?: TemplateMap;
-    unusedStyles?: string[];
 }

@@ -39,7 +39,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
         const { resourceId, unusedStyles } = this.getProcessing(result.sessionId)!;
-        const database: [HTMLElement, ElementAction & DocumentAction & PlainObject][] = [];
+        const dataSource: [HTMLElement, DataSource][] = [];
         const assetMap = new Map<HTMLElement, AssetCommand>();
         const nodeMap = new Map<XmlNode, HTMLElement>();
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
@@ -88,21 +88,31 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     }
                     for (const item of config.data as AssetCommand[]) {
                         if (item.selector) {
-                            const cloudDatabase = isPlainObject(item.cloudDatabase) && item.cloudDatabase;
-                            if (cloudDatabase && paramMap.size) {
-                                for (const attr in cloudDatabase) {
-                                    if (attr !== 'value') {
-                                        cloudDatabase[attr] = replaceParams(cloudDatabase[attr]);
+                            const type = item.type;
+                            let dataUri: Null<DataSource | UriDataSource> = isPlainObject(item.dataUri) ? item.dataUri : null,
+                                cloudDatabase: Null<DataSource | CloudDataSource> = isPlainObject(item.cloudDatabase) ? item.cloudDatabase : null;
+                            if (paramMap.size) {
+                                for (const data of [dataUri, cloudDatabase]) {
+                                    if (data) {
+                                        for (const attr in data) {
+                                            if (attr !== 'value') {
+                                                data[attr] = replaceParams(data[attr]);
+                                            }
+                                        }
                                     }
                                 }
                             }
+                            dataUri &&= { document: item.document || documentHandler, ...dataUri, type, source: 'uri' } as DataSource;
+                            cloudDatabase &&= { document: item.document || documentHandler, ...cloudDatabase, type, source: 'cloud' } as DataSource;
                             document.querySelectorAll(item.selector).forEach((element: HTMLElement) => {
-                                const type = item.type;
                                 switch (type) {
                                     case 'text':
                                     case 'attribute':
+                                        if (dataUri) {
+                                            dataSource.push([element, dataUri as DataSource]);
+                                        }
                                         if (cloudDatabase) {
-                                            database.push([element, { type, document: item.document || documentHandler, ...cloudDatabase }]);
+                                            dataSource.push([element, cloudDatabase as DataSource]);
                                         }
                                         break;
                                     default:
@@ -134,12 +144,12 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (appendMap.size === 0) {
             delete options.appendMap;
         }
-        if (database.length) {
+        if (dataSource.length) {
             const domAll = document.querySelectorAll('*');
             const cache: SelectorCache = {};
-            const items = options.database ||= [];
-            for (let i = 0, length = database.length; i < length; ++i) {
-                const [element, data] = database[i];
+            const items = options.dataSource ||= [];
+            for (let i = 0, length = dataSource.length; i < length; ++i) {
+                const [element, data] = dataSource[i];
                 const node = File.createTagNode(element, domAll, cache);
                 node.textContent = element.textContent!;
                 data.element = node;

@@ -10,6 +10,6 @@ md5sum.js
 gulpfile.js
 .DS_Store
 *-cloud.json
-*.dev.yml
+html/**/*.dev.*
 *.7z
 *.zip

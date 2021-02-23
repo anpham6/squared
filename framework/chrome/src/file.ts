@@ -711,10 +711,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public finalizeRequestBody(data: RequestData, options: FileActionOptions) {
-        data.database = options.database;
         data.baseUrl = options.baseUrl;
-        data.unusedStyles = options.unusedStyles;
+        data.dataSource = options.dataSource;
         data.templateMap = options.templateMap;
+        data.unusedStyles = options.unusedStyles;
         if (data.document) {
             for (const name of data.document) {
                 const attr = name + 'Id';
