@@ -349,7 +349,6 @@ declare module "lib" {
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function startsWith(value: Optional<string>, leading: string): boolean;
         function endsWith(value: Optional<string>, trailing: string): boolean;
-        function searchObject(obj: StringMap, value: string): Generator<string, void>;
         function hasValue<T>(value: any): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;

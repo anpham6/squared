@@ -675,24 +675,6 @@ export function endsWith(value: Optional<string>, trailing: string) {
     return value ? value.substring(value.length - trailing.length) === trailing : false;
 }
 
-export function* searchObject(obj: StringMap, value: string) {
-    const start = value[0] === '*';
-    const end = lastItemOf(value) === '*';
-    const search =
-        start && end
-            ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
-        : start
-            ? (a: string) => endsWith(a, value.replace(/^\*/, ''))
-        : end
-            ? (a: string) => startsWith(a, value.replace(/\*$/, ''))
-            : (a: string) => a === value;
-    for (const attr in obj) {
-        if (search(attr)) {
-            yield attr;
-        }
-    }
-}
-
 export function hasValue<T>(value: any): value is T {
     return value !== undefined && value !== null && value !== '';
 }

@@ -14,7 +14,9 @@ const { CSS_PROPERTIES, isPx } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { cloneObject, hasKeys, isArray, isEmptyString, searchObject, startsWith, withinRange } = squared.lib.util;
+const { cloneObject, hasKeys, isArray, isEmptyString, startsWith, withinRange } = squared.lib.util;
+
+const { searchAttributeName } = squared.base.lib.util;
 
 const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.MARGIN_TOP, 0],
@@ -518,7 +520,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             for (let i = 0, length = attrs.length; i < length; ++i) {
                 const attr = attrs[i];
                 if (attr.includes('*')) {
-                    for (const key of searchObject(obj, attr)) {
+                    for (const key of searchAttributeName(obj, attr)) {
                         delete obj[key];
                     }
                 }

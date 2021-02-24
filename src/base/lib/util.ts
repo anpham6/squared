@@ -280,6 +280,24 @@ export function lowerCaseString(value: string) {
     return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
 }
 
+export function* searchAttributeName(obj: StringMap, value: string) {
+    const start = value[0] === '*';
+    const end = endsWith(value, '*');
+    const search =
+        start && end
+            ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
+        : start
+            ? (a: string) => endsWith(a, value.replace(/^\*/, ''))
+        : end
+            ? (a: string) => startsWith(a, value.replace(/\*$/, ''))
+            : (a: string) => a === value;
+    for (const attr in obj) {
+        if (search(attr)) {
+            yield attr;
+        }
+    }
+}
+
 export function parseGlob(value: string, options?: ParseGlobOptions) {
     value = value.trim();
     let flags = '',
