@@ -51,7 +51,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             }
         }
         if (options.configUri) {
-            const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', cache: options.cache }) as Null<ResponseData>;
+            const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', mime: options.configMime, cache: options.cache }) as Null<ResponseData>;
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     const documentHandler = this.userSettings.outputDocumentHandler;

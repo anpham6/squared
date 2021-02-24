@@ -12,6 +12,7 @@ export interface FileActionOptions extends RequestData {
     exclusions?: Exclusions;
     callback?: (result: unknown) => void;
     configUri?: string;
+    configMime?: string;
     cache?: boolean;
 }
 

@@ -114,9 +114,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public loadData(value: string, options: LoadDataOptions): Promise<unknown> {
-        const { type, cache } = options;
+        const { type, mime, cache } = options;
         if (this.hasHttpProtocol() && type) {
-            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? `&cache=${cache ? '1' : '0'}` : ''), {
+            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mime ? '&mime=' + mime : ''), {
                 method: 'GET',
                 headers: new Headers({ Accept: options.accept || '*/*' })
             })
