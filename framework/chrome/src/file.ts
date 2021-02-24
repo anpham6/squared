@@ -20,7 +20,7 @@ interface FileAsData extends OptionsData {
     format?: string;
 }
 
-const { convertWord, endsWith, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+const { convertWord, endsWith, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
 const { appendSeparator, fromMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
 
@@ -263,7 +263,7 @@ const getTagNode = (node: XmlTagNode, attributes: Undef<AttributeMap>, append?: 
 const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
 const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
-const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback: string) => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
+const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
 const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 
@@ -522,19 +522,50 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         document.querySelectorAll('link, style').forEach((element: HTMLLinkElement | HTMLStyleElement) => {
-            let href: Undef<string>,
-                mimeType: Undef<string>;
-            if (element instanceof HTMLLinkElement && (href = element.href.trim())) {
-                switch (element.rel.trim().toLowerCase()) {
-                    case 'stylesheet':
-                        mimeType = 'text/css';
-                        break;
-                    case 'icon':
-                        mimeType = 'image/x-icon';
-                        break;
+            let mimeType = '',
+                href: Undef<string>;
+            if (element instanceof HTMLLinkElement) {
+                if (href = element.href) {
+                    const rel = element.rel.trim().toLowerCase();
+                    const checkMimeType = () => {
+                        const filename = fromLastIndexOf(href!, '/');
+                        if (filename.includes('.')) {
+                            mimeType = getMimeType(element, filename);
+                            return true;
+                        }
+                        return false;
+                    };
+                    switch (rel) {
+                        case 'stylesheet':
+                            mimeType = 'text/css';
+                            break;
+                        case 'alternate':
+                        case 'help':
+                        case 'license':
+                        case 'manifest':
+                        case 'modulepreload':
+                        case 'prefetch':
+                        case 'preload':
+                        case 'prerender':
+                            if (!checkMimeType()) {
+                                return;
+                            }
+                            break;
+                        default:
+                            if (!rel.includes('icon') || !checkMimeType()) {
+                                return;
+                            }
+                            break;
+                    }
+                }
+                else {
+                    return;
                 }
             }
-            this.createBundle(result, element, href, mimeType || getMimeType(element, href, 'text/css'), preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css' || element instanceof HTMLStyleElement);
+            else {
+                mimeType = 'text/css';
+            }
+            this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css' || element instanceof HTMLStyleElement);
         });
         let process: Undef<string[]>,
             compress: Undef<CompressFormat[]>,

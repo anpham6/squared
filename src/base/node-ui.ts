@@ -8,6 +8,8 @@ import type ExtensionUI from './extension-ui';
 
 import Node from './node';
 
+import { searchAttributeName } from './lib/util';
+
 type T = NodeUI;
 
 const { CSS_PROPERTIES, isPx } = squared.lib.css;
@@ -15,8 +17,6 @@ const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { cloneObject, hasKeys, isArray, isEmptyString, startsWith, withinRange } = squared.lib.util;
-
-const { searchAttributeName } = squared.base.lib.util;
 
 const CSS_SPACING = new Map<number, number>([
     [BOX_STANDARD.MARGIN_TOP, 0],
@@ -57,12 +57,12 @@ function cascadeActualPadding(children: T[], attr: "paddingTop" | "paddingBottom
 }
 
 function traverseElementSibling(element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: TraverseSiblingsOptions) {
-    let floating: Undef<boolean>,
+    const result: T[] = [];
+    let i = 0,
+        floating: Undef<boolean>,
         pageFlow: Undef<boolean>,
         lineBreak: Undef<boolean>,
         excluded: Undef<boolean>;
-    const result: T[] = [];
-    let i = 0;
     while (element) {
         if (i++) {
             const node = getElementAsNode<T>(element, sessionId);

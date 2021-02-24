@@ -66,8 +66,7 @@ const getEndpoint = (hostname: string, endpoint: string) => startsWith(endpoint,
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob | string, filename?: string, mimeType?: string) {
-        const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
-        const href = typeof data ==='string' ? data : URL.createObjectURL(blob);
+        const href = typeof data ==='string' ? data : URL.createObjectURL(new Blob([data], { type: mimeType || 'application/octet-stream' }));
         const element = createElement('a', {
             style: { display: 'none' },
             attrs: { href, download: filename }

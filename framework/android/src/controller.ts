@@ -2066,25 +2066,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if ((flags & CREATE_NODE.INHERIT_DATASET) && node.naturalElement) {
             Object.assign(container.dataset, node.dataset);
         }
-        if (node.documentParent.gridElement) {
+        const renderParent = node.renderParent;
+        if ((renderParent || node.documentParent as T).layoutGrid) {
+            const layout = (node.layoutWidth === '0px' && +node.android('layout_columnWeight') > 0 ? 1 : 0) | (node.layoutHeight === '0px' && +node.android('layout_rowWeight') > 0 ? 2 : 0);
             const android = node.namespace('android');
             for (const attr in android) {
-                if (startsWith(attr, 'layout_')) {
+                if (/^layout_(?:(?:row|column)(?:Span|Weight)?|width|height|gravity)$/.test(attr)) {
                     container.android(attr, android[attr]);
                     delete android[attr];
                 }
             }
-        }
-        if ((node.renderParent || parent).layoutGrid && node.android('layout_width') === '0px') {
-            const columnWeight = node.android('layout_columnWeight');
-            if (+columnWeight) {
-                node.delete('android', 'layout_columnWeight');
+            if (layout & 1) {
                 node.setLayoutWidth('match_parent');
-                container.android('layout_columnWeight', columnWeight);
-                container.setLayoutWidth('0px');
+            }
+            if (layout & 2) {
+                node.setLayoutHeight('match_parent');
             }
         }
-        if (node.renderParent && node.removeTry({ alignSiblings: true })) {
+        if (renderParent && node.removeTry({ alignSiblings: true })) {
             node.rendered = false;
         }
         return container;
