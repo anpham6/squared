@@ -890,7 +890,7 @@ declare module "base" {
             function randomUUID(separator?: string): string;
             function upperCaseString(value: string): string;
             function lowerCaseString(value: string): string;
-            function searchAttributeName(obj: StringMap, value: string): Generator<string, void>;
+            function searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void>;
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
             function parseTask(value: Undef<string>): Undef<TaskAction[]>;
             function parseWatchInterval(value: Undef<string>): Undef<WatchInterval>;

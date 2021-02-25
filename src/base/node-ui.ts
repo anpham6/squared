@@ -8,7 +8,7 @@ import type ExtensionUI from './extension-ui';
 
 import Node from './node';
 
-import { searchAttributeName } from './lib/util';
+import { searchObject } from './lib/util';
 
 type T = NodeUI;
 
@@ -520,8 +520,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             for (let i = 0, length = attrs.length; i < length; ++i) {
                 const attr = attrs[i];
                 if (attr.includes('*')) {
-                    for (const key of searchAttributeName(obj, attr)) {
-                        delete obj[key];
+                    for (const item of searchObject(obj, attr, true)) {
+                        delete obj[item[0]];
                     }
                 }
                 else {

@@ -280,7 +280,7 @@ export function lowerCaseString(value: string) {
     return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
 }
 
-export function* searchAttributeName(obj: StringMap, value: string) {
+export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void> {
     const start = value[0] === '*';
     const end = endsWith(value, '*');
     const search =
@@ -292,8 +292,13 @@ export function* searchAttributeName(obj: StringMap, value: string) {
             ? (a: string) => startsWith(a, value.replace(/\*$/, ''))
             : (a: string) => a === value;
     for (const attr in obj) {
-        if (search(attr)) {
-            yield attr;
+        if (checkName) {
+            if (search(attr)) {
+                yield [attr, obj[attr]];
+            }
+        }
+        else if (typeof obj[attr] === 'string' && search(obj[attr] as string)) {
+            yield [attr, obj[attr]];
         }
     }
 }
