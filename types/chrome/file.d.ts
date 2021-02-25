@@ -2,6 +2,7 @@ interface RequestData {
     baseUrl?: string;
     templateMap?: TemplateMap;
     unusedStyles?: string[];
+    productionRelease?: boolean | string;
 }
 
 interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction {

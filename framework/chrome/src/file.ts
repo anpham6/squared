@@ -211,10 +211,7 @@ function excludeAsset(assets: ChromeAsset[], command: AssetCommand, element: HTM
         assets.push({ pathname: '', filename: '', exclude: true, element, document });
         return true;
     }
-    if (command.ignore) {
-        return true;
-    }
-    return false;
+    return !!command.ignore;
 }
 
 function checkSaveAs(uri: Undef<string>, pathname: Undef<string>, filename: string): [string, boolean] {
@@ -404,7 +401,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             assetMap = options.assetMap;
             saveAsHtml = options.saveAs?.html;
         }
-        const command = assetMap && assetMap.get(element);
+        const command = assetMap && assetMap.get(element) || saveAsHtml;
         let filename: Undef<string>,
             format: Undef<string>,
             process: Undef<string[]>,
@@ -419,14 +416,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             ({ filename, process, compress, tasks, attributes, cloudStorage, document: documentData } = command);
         }
-        else if (saveAsHtml) {
-            if (saveAsHtml.ignore || saveAsHtml.exclude) {
-                return [];
-            }
-            ({ filename, process, compress, tasks, attributes, cloudStorage, document: documentData } = saveAsHtml);
-        }
         else {
-            tasks = parseTask(element.dataset.chromeTasks);
+            const { chromeOptions, chromeTasks } = element.dataset;
+            compress = parseOptions(chromeOptions).compress;
+            tasks = parseTask(chromeTasks);
         }
         if (filename) {
             file = '';
@@ -746,6 +739,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         data.dataSource = options.dataSource;
         data.templateMap = options.templateMap;
         data.unusedStyles = options.unusedStyles;
+        data.productionRelease = options.productionRelease;
         if (data.document) {
             for (const name of data.document) {
                 const attr = name + 'Id';
@@ -755,11 +749,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
-        return this.getArchiveQueryParameters(options) + (options.watch ? '&watch=1' : '');
-    }
-
-    public getArchiveQueryParameters(options: FileArchivingOptions) {
-        return options.productionRelease ? '&release=1' : '';
+        return options.watch ? '&watch=1' : '';
     }
 
     protected getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {
@@ -1024,15 +1014,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
                 filename = saveAsOptions.filename;
                 if (src) {
-                    if (file = filename && getCustomPath(src, saveAsOptions.pathname, filename)) {
+                    if ((file = filename) && getCustomPath(src, saveAsOptions.pathname, filename)) {
                         filename = '';
                     }
                 }
                 else if (filename) {
-                        file = './' + filename;
-                        filename = '';
-                        fromSaveAs = true;
-                    }
+                    file = './' + filename;
+                    filename = '';
+                    fromSaveAs = true;
+                }
             }
             const { chromeOptions, chromeTasks, chromeWatch } = element.dataset;
             const options = parseOptions(chromeOptions);

@@ -115,7 +115,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public loadData(value: string, options: LoadDataOptions): Promise<unknown> {
         const { type, mime, cache } = options;
         if (this.hasHttpProtocol() && type) {
-            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mime ? '&mime=' + mime : ''), {
+            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mime ? '&mime=' + encodeURIComponent(mime) : ''), {
                 method: 'GET',
                 headers: new Headers({ Accept: options.accept || '*/*' })
             })
@@ -291,16 +291,18 @@ export default abstract class File<T extends Node> implements squared.base.File<
                             if (glob.test(appendSeparator(item.pathname, item.filename))) {
                                 if (i === 0) {
                                     const value = output[module] as TaskAction | TaskAction[];
+                                    const addTask = (task: TaskAction) => {
+                                        item.tasks!.push(task);
+                                        taskName.add(task.handler);
+                                    };
                                     item.tasks ||= [];
                                     if (Array.isArray(value)) {
                                         for (const task of value) {
-                                            item.tasks.push(task);
-                                            taskName.add(task.handler);
+                                            addTask(task);
                                         }
                                     }
                                     else if (isPlainObject(value)) {
-                                        item.tasks.push(value);
-                                        taskName.add(value.handler);
+                                        addTask(value);
                                     }
                                 }
                                 else {
@@ -319,10 +321,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     }
                 }
             }
-            const data: RequestData = { assets };
-            if (documentName.size) {
-                data.document = Array.from(documentName);
-            }
+            const data: RequestData = { assets, document: Array.from(documentName) };
             if (taskName.size) {
                 data.task = Array.from(taskName);
             }
