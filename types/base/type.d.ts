@@ -6,5 +6,6 @@ type ResourceAssetType = "image" | "video" | "audio" | "fonts" | "rawData";
 type ResourceAssetTagName = "video" | "audio" | "object" | "embed" | "iframe";
 type ResourceSessionAsset = Optional<ResourceAssetMap>[];
 type ResourceSessionStored<T = ResourceStoredMap> = Optional<T>[];
+type WatchValue = boolean | WatchInterval;
 type KeyframesMap = Map<string, KeyframeData>;
 type AttributeMap = ObjectMap<Optional<string>>;

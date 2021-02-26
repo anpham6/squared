@@ -1,5 +1,5 @@
 interface ElementScope {
-    watch?: boolean | WatchInterval;
+    watch?: WatchValue;
     tasks?: TaskAction[];
 }
 
@@ -91,6 +91,7 @@ interface TagAppend extends TagData {
     id?: string;
     textContent?: string;
     prepend?: boolean;
+    nextSibling?: number;
 }
 
 interface XmlNode extends AttributeAction {

@@ -11,7 +11,7 @@ interface UserResourceSettings extends UserSettings {
     preloadFonts: boolean;
     preloadCustomElements: boolean;
     outputTasks: ObjectMap<TaskAction | TaskAction[]>;
-    outputWatch: ObjectMap<WatchInterval | boolean>;
+    outputWatch: ObjectMap<WatchValue>;
     outputEmptyCopyDirectory: boolean;
     outputDocumentHandler: StringOfArray;
     outputArchiveFormat: string;

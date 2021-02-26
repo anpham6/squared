@@ -306,7 +306,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                                     }
                                 }
                                 else {
-                                    const value = output[module] as WatchInterval | boolean;
+                                    const value = output[module] as WatchValue;
                                     if (value === true || isPlainObject<WatchInterval>(value) && (value.interval || value.expires)) {
                                         item.watch = value;
                                         unassigned.splice(j--, 1);

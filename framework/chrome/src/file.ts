@@ -799,7 +799,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     filename: Undef<string>,
                     compress: Undef<CompressFormat[]>,
                     tasks: Undef<TaskAction[]>,
-                    watch: Undef<boolean | WatchInterval>,
+                    watch: Undef<WatchValue>,
                     attributes: Undef<AttributeMap>,
                     cloudStorage: Undef<CloudStorage[]>,
                     documentData: Undef<StringOfArray>,
@@ -879,6 +879,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const node = File.createTagNode(element, domAll, cache);
                 const command = assetMap && assetMap.get(element);
                 const documentData = command && command.document || this.userSettings.outputDocumentHandler;
+                const getNextSibling = () => node.index + element.querySelectorAll('*').length + 1;
                 File.setDocumentId(node, element, documentData);
                 node.outerXml = element.outerHTML.trim();
                 let i = 0;
@@ -907,14 +908,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 }
                                 break;
                             default: {
-                                const data = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent);
+                                const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent);
                                 let elementData: Undef<XmlTagNode>;
                                 if (type.startsWith('append/')) {
-                                    elementData = getTagNode(node, attributes, data);
+                                    append.nextSibling = getNextSibling();
+                                    elementData = getTagNode(node, attributes, append);
                                 }
                                 else if (type.startsWith('prepend/')) {
-                                    data.prepend = true;
-                                    elementData = getTagNode(node, attributes, data);
+                                    append.prepend = true;
+                                    elementData = getTagNode(node, attributes, append);
                                 }
                                 if (elementData) {
                                     assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
@@ -928,7 +930,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 if (preserve) {
                                     delete data.uri;
                                 }
-                                data.element = getTagNode(node, attributes, getAppendData(js ? 'script' : 'link', ++i, undefined, prepend));
+                                const append = getAppendData(js ? 'script' : 'link', ++i, undefined, prepend);
+                                if (!prepend) {
+                                    append.nextSibling = getNextSibling();
+                                }
+                                data.element = getTagNode(node, attributes, append);
                             }
                         }
                     }
@@ -979,7 +985,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             process: Undef<string[]>,
             compress: Undef<CompressFormat[]>,
             tasks: Undef<TaskAction[]>,
-            watch: Undef<boolean | WatchInterval>,
+            watch: Undef<WatchValue>,
             attributes: Undef<AttributeMap>,
             cloudStorage: Undef<CloudStorage[]>,
             documentData: Undef<StringOfArray>,
@@ -1101,7 +1107,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 compress: Undef<CompressFormat[]>,
                 commands: Undef<string[]>,
                 tasks: Undef<TaskAction[]>,
-                watch: Undef<boolean | WatchInterval>,
+                watch: Undef<WatchValue>,
                 attributes: Undef<AttributeMap>,
                 cloudStorage: Undef<CloudStorage[]>,
                 documentData: Undef<StringOfArray>,

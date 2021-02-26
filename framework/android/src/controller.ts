@@ -1714,7 +1714,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const textShadow = node.cssValue('textShadow');
                 if (textShadow) {
-                    const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/.exec(textShadow);
+                    const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+(?:[a-zQ]+)?)\s+(-?[\d.]+(?:[a-zQ]+)?)\s*([\d.]+(?:[a-zQ]+)?)?/.exec(textShadow);
                     if (match) {
                         const colorData = parseColor(match[1] || node.css('color'));
                         if (colorData) {
