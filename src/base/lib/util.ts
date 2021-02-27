@@ -382,13 +382,24 @@ export function parseWatchInterval(value: Undef<string>) {
         if (value === 'true') {
             return true;
         }
-        const match = /^(~|\d+)\s*(?:::\s*(.+?))?$/.exec(value);
+        const match = /^(~|\d+)\s*(?:::\s*(~|.+?))?\s*(?:::\s*(.+?))?$/.exec(value);
         if (match) {
-            let interval: Undef<number>;
-            if (match[1] !== '~') {
+            let interval: Undef<number>,
+                expires: Undef<string>,
+                reload: Undef<WatchReload>;
+            if (match[1] !== '~' && !isNaN(+match[1])) {
                 interval = +match[1];
             }
-            return { interval, expires: match[2] } as WatchInterval;
+            if (match[2] && match[2] !== '~') {
+                expires = match[2].trim();
+            }
+            if (match[3]) {
+                const [socketId, port] = splitPair(match[3], ':', true, true);
+                if (socketId !== '~') {
+                    reload = { socketId, port: port && !isNaN(+port) ? +port : undefined };
+                }
+            }
+            return { interval, expires, reload } as WatchInterval;
         }
     }
 }

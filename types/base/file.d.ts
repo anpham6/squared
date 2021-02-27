@@ -110,6 +110,14 @@ interface XmlTagNode extends XmlNode, TagData {
 interface WatchInterval {
     interval?: number;
     expires?: string;
+    reload?: boolean | WatchReload;
+}
+
+interface WatchReload {
+    socketId: string;
+    handler?: { open?: string; message?: string; error?: string; close?: string };
+    port?: number;
+    secure?: boolean;
 }
 
 interface Exclusions {

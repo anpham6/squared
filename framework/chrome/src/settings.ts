@@ -8,6 +8,7 @@ const settings: UserResourceSettings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: true,
     showErrorMessages: false,
+    webSocketPort: 8080,
     outputDocumentHandler: 'chrome',
     outputEmptyCopyDirectory: false,
     outputTasks: {},

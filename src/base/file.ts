@@ -1,7 +1,7 @@
 import type Resource from './resource';
 import type Node from './node';
 
-import { appendSeparator, parseGlob } from './lib/util';
+import { appendSeparator, parseGlob, randomUUID } from './lib/util';
 
 type FileActionResult = Promise<Void<ResponseData>>;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
@@ -261,10 +261,12 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     return;
                 }
             }
+            let socketId: Undef<string>;
             const documentName = new Set(options.document);
             const taskName = new Set<string>();
+            const getSocketId = () => socketId ||= randomUUID();
             for (let i = 0, length = assets.length; i < length; ++i) {
-                const { document, tasks } = assets[i];
+                const { document, tasks, watch } = assets[i];
                 if (document) {
                     if (Array.isArray(document)) {
                         document.forEach(value => documentName.add(value));
@@ -276,9 +278,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 if (tasks) {
                     tasks.forEach(item => taskName.add(item.handler));
                 }
+                if (options.watch && isPlainObject<WatchInterval>(watch) && watch.reload === true) {
+                    watch.reload = { socketId: getSocketId() };
+                }
             }
             const { outputTasks, outputWatch } = this.userSettings;
             for (let i = 0; i < 2; ++i) {
+                if (i === 1 && !options.watch) {
+                    break;
+                }
                 const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
                 let unassigned: Undef<FileAsset[]>;
                 for (const module in output) {
@@ -307,11 +315,20 @@ export default abstract class File<T extends Node> implements squared.base.File<
                                 }
                                 else {
                                     const value = output[module] as WatchValue;
-                                    if (value === true || isPlainObject<WatchInterval>(value) && (value.interval || value.expires)) {
-                                        item.watch = value;
-                                        unassigned.splice(j--, 1);
-                                        --length;
+                                    if (value === true) {
+                                        item.watch = true;
                                     }
+                                    else if (isPlainObject<WatchInterval>(value)) {
+                                        item.watch = { ...value };
+                                        if (item.watch.reload === true) {
+                                            item.watch.reload = { socketId: getSocketId() };
+                                        }
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                    unassigned.splice(j--, 1);
+                                    --length;
                                 }
                             }
                         }

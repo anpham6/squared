@@ -20,7 +20,8 @@ interface FileAsData extends OptionsData {
     format?: string;
 }
 
-const { convertWord, endsWith, fromLastIndexOf, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+const { createElement } = squared.lib.dom;
+const { convertWord, endsWith, fromLastIndexOf, isPlainObject, parseMimeType, replaceMap, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
 const { appendSeparator, fromMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
 
@@ -734,12 +735,65 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(data: RequestData, options: FileActionOptions) {
+    public finalizeRequestBody(data: RequestData, options: FileCopyingOptions & FileArchivingOptions) {
+        const productionRelease = options.productionRelease;
         data.baseUrl = options.baseUrl;
         data.dataSource = options.dataSource;
         data.templateMap = options.templateMap;
         data.unusedStyles = options.unusedStyles;
-        data.productionRelease = options.productionRelease;
+        data.productionRelease = productionRelease;
+        let watchElement: Undef<HTMLElement>;
+        if (options.watch && !productionRelease) {
+            const socketMap: ObjectMap<string> = {};
+            const hostname = new URL(this.hostname).hostname;
+            for (const { watch } of options.assets!) {
+                if (watch && isPlainObject<WatchInterval>(watch) && watch.reload) {
+                    const reload = watch.reload as WatchReload;
+                    const { socketId: id, handler = {}, port = this.userSettings.webSocketPort || 8080, secure } = reload;
+                    socketMap[id + port] ||=
+                        `socket=new WebSocket('${secure ? 'wss' : 'ws'}://${hostname}:${port}');` +
+                        (handler.open ? `socket.onopen=${handler.open};` : '') +
+                        'socket.onmessage=' + (handler.message || `function(e){const d=JSON.parse(e.data);if(d&&d.socketId==="${id}"&&d.module==="watch"&&d.type==="modified"){if(!d.errors||d.errors.length===0){window.location.reload();}else{console.log("FAIL: "+d.errors.length+" errors\\n\\n"+d.errors.join("\\n"));}}}`) + ';' +
+                        (handler.error ? `socket.onerror=${handler.error};` : '') +
+                        (handler.close ? `socket.onclose=${handler.close};` : '');
+                    delete reload.handler;
+                }
+            }
+            if (Object.keys(socketMap).length) {
+                let textContent = '';
+                for (const id in socketMap) {
+                    textContent += socketMap[id];
+                }
+                watchElement = createElement('script', { parent: document.body, attrs: { textContent: `document.addEventListener("DOMContentLoaded", function(){let socket;${textContent}});` } });
+            }
+        }
+        for (const item of options.assets as ChromeAsset[]) {
+            const element = item.element as Undef<XmlTagNode>;
+            if (element) {
+                switch (element.tagName) {
+                    case 'html':
+                        element.innerXml = document.documentElement.innerHTML;
+                        break;
+                    case 'script':
+                        if (watchElement) {
+                            ++element.tagCount!;
+                        }
+                        break;
+                }
+                if (watchElement) {
+                    const append = element.append;
+                    if (append?.tagName === 'script') {
+                        ++append.tagCount!;
+                    }
+                }
+            }
+            if (productionRelease && item.watch) {
+                item.watch = false;
+            }
+        }
+        if (watchElement) {
+            document.body.removeChild(watchElement);
+        }
         if (data.document) {
             for (const name of data.document) {
                 const attr = name + 'Id';
@@ -749,7 +803,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
-        return options.watch ? '&watch=1' : '';
+        return options.watch && !options.productionRelease ? '&watch=1' : '';
     }
 
     protected getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {
@@ -954,10 +1008,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         for (const [node, element] of nodeMap) {
-            if (element.tagName === 'HTML') {
-                node.innerXml = element.innerHTML;
-            }
-            else {
+            if (element !== document.documentElement) {
                 node.outerXml = element.outerHTML.trim();
             }
         }
