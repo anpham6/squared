@@ -1,6 +1,7 @@
 interface UserResourceSettings {
     excludePlainText?: boolean;
     webSocketPort?: number;
+    webSocketSecurePort?: number;
 }
 
 interface FileUniversalAttribute extends PlainObject {

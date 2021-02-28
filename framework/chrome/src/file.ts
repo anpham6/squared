@@ -749,9 +749,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const { watch } of options.assets!) {
                 if (watch && isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
-                    const { socketId: id, handler = {}, port = this.userSettings.webSocketPort || 8080, secure } = reload;
-                    socketMap[id + port] ||=
-                        `socket=new WebSocket('${secure ? 'wss' : 'ws'}://${hostname}:${port}');` +
+                    const { socketId: id, handler = {}, secure } = reload;
+                    const port = reload.port || (secure ? this.userSettings.webSocketSecurePort! : this.userSettings.webSocketPort!);
+                    socketMap[id + '_' + port + (secure ? '_1' : '_0')] ||=
+                        `socket=new WebSocket("${secure ? 'wss' : 'ws'}://${hostname}:${port}");` +
                         (handler.open ? `socket.onopen=${handler.open};` : '') +
                         'socket.onmessage=' + (handler.message || `function(e){const d=JSON.parse(e.data);if(d&&d.socketId==="${id}"&&d.module==="watch"&&d.type==="modified"){if(!d.errors||d.errors.length===0){window.location.reload();}else{console.log("FAIL: "+d.errors.length+" errors\\n\\n"+d.errors.join("\\n"));}}}`) + ';' +
                         (handler.error ? `socket.onerror=${handler.error};` : '') +
