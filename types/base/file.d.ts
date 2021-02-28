@@ -115,9 +115,10 @@ interface WatchInterval {
 
 interface WatchReload {
     socketId: string;
-    handler?: { open?: string; message?: string; error?: string; close?: string };
     port?: number;
     secure?: boolean;
+    module?: boolean;
+    handler?: { open?: string; message?: string; error?: string; close?: string };
 }
 
 interface Exclusions {
