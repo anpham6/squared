@@ -23,7 +23,7 @@ type Main = squared.base.Application<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
-type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: any) => void; get?: () => any }>;
+type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: unknown) => void; get?: () => unknown }>;
 
 const optionsQueue = new Map<string, PlainObject>();
 const prototypeMap = new Map<number, ExtendPrototypeMap>();
@@ -44,7 +44,7 @@ function extendPrototype(id: number) {
             for (const method in functionMap) {
                 const item = functionMap[method];
                 if (util.isPlainObject(item)) {
-                    let property: Undef<ObjectMap<FunctionType<any>>>;
+                    let property: Undef<ObjectMap<FunctionType<unknown>>>;
                     if (typeof item.set === 'function') {
                         (property ||= {}).set = item.set;
                     }

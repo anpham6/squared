@@ -20,7 +20,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgBaseVal {
         private _baseVal: StandardMap = {};
 
-        public setBaseValue(attr: string, value?: any) {
+        public setBaseValue(attr: string, value?: unknown) {
             if (value !== undefined) {
                 if (this.verifyBaseValue(attr, value) === 1) {
                     this._baseVal[attr] = value;
@@ -107,7 +107,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             }
         }
 
-        public verifyBaseValue(attr: string, value?: any) {
+        public verifyBaseValue(attr: string, value?: unknown) {
             switch (attr) {
                 case 'd':
                     return typeof value === 'string' ? 1 : 0;

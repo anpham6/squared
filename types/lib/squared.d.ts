@@ -302,7 +302,7 @@ declare module "lib" {
     namespace session {
         function newSessionInit(value: string): Map<Element, ElementData>;
         function clearSessionAll(): void;
-        function setElementCache(element: Element, attr: string, data: any, sessionId?: string): void;
+        function setElementCache(element: Element, attr: string, data: unknown, sessionId?: string): void;
         function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string): Undef<T>;
         function getElementData(element: Element, sessionId?: string): Undef<ElementData>;
         function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;
@@ -332,13 +332,13 @@ declare module "lib" {
         function minMaxOf<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, number>, operator: ">" | "<" | ">=" | "<=", limiter?: number): [Null<T>, number];
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: string): boolean;
-        function isString(value: any): value is string;
-        function isArray<T>(value: any): value is Array<T>;
-        function isObject<T = PlainObject>(value: any): value is T;
-        function isPlainObject<T = PlainObject>(value: any): value is T;
+        function isString(value: unknown): value is string;
+        function isArray<T>(value: unknown): value is Array<T>;
+        function isObject<T = PlainObject>(value: unknown): value is T;
+        function isPlainObject<T = PlainObject>(value: unknown): value is T;
         function isBase64(value: string): boolean;
         function isEmptyString(value: string): boolean;
-        function isEqual(source: any, other: any): boolean;
+        function isEqual(source: unknown, other: unknown): boolean;
         function cloneInstance<T>(value: T): T;
         function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;
         function resolvePath(value: string, href?: string): string;
@@ -349,17 +349,17 @@ declare module "lib" {
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function startsWith(value: Optional<string>, leading: string): boolean;
         function endsWith(value: Optional<string>, trailing: string): boolean;
-        function hasValue<T>(value: any): value is T;
+        function hasValue<T>(value: unknown): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;
         function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)[]): T[];
-        function flatArray<T>(list: any[], depth?: number): T[];
+        function flatArray<T>(list: unknown[], depth?: number): T[];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
-        function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
+        function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>): boolean;
         function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string): string;
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;
         function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;

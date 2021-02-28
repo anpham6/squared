@@ -130,7 +130,7 @@ function formatTime(start: number) {
     return `${h}h ${m}m ${s}s ${time}ms`;
 }
 
-const failMessage = (message: string, status: any) => console.log('\n' + chalk.bold.red('FAIL') + `: ${message} ` + getStatus(status) + '\n');
+const failMessage = (message: string, status = '') => console.log('\n' + chalk.bold.red('FAIL') + `: ${message} ` + status && getStatus(status) + '\n');
 const warnMessage = (message: string, status: string) => console.log(chalk.yellow('WARN') + `: ${message} (${chalk.grey(status)})`);
 const requiredMessage = (message: string, status: string) => console.log(chalk.bold.yellow('REQUIRED') + `: ${message} ` + getStatus(status));
 const successMessage = (message: string, status: string) => console.log('\n\n' + chalk.bold.green('SUCCESS') + `: ${message} ` + getStatus(status) + '\n');

@@ -539,7 +539,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return Object.entries(this._namespaces);
     }
 
-    public unsafe<U = unknown>(name: string | PlainObject, value?: any): Undef<U> {
+    public unsafe<U = unknown>(name: string | PlainObject, value?: unknown): Undef<U> {
         if (arguments.length === 1) {
             if (typeof name === 'string') {
                 return this['_' + name] as Undef<U>;

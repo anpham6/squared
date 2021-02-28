@@ -12,7 +12,7 @@ export function clearSessionAll() {
     SESSION_MAP = { '0': SESSION_MAP['0'] };
 }
 
-export function setElementCache(element: Element, attr: string, data: any, sessionId = '0') {
+export function setElementCache(element: Element, attr: string, data: unknown, sessionId = '0') {
     let elementMap = SESSION_MAP[sessionId].get(element);
     if (!elementMap) {
         elementMap = {};

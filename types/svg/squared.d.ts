@@ -52,16 +52,16 @@ declare module "svg" {
         setBaseValue<T = unknown>(attr: string, value?: T): boolean;
         getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
     }
 
     interface SvgUse extends SvgElement, SvgViewRect, SvgBaseVal {
         readonly useElement: SVGUseElement;
         setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
     }
 
     interface SvgView extends SvgElement {
@@ -168,10 +168,10 @@ declare module "svg" {
         findFill(value: string | SVGGraphicsElement): Undef<SVGPatternElement>;
         findFillPattern(value: string | SVGGraphicsElement): Undef<SvgGradient>;
         setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
@@ -243,10 +243,10 @@ declare module "svg" {
     class SvgUseG extends SvgG implements SvgUse {
         readonly useElement: SVGUseElement;
         setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
         set x(value);
         get x(): number;
         set y(value);
@@ -302,10 +302,10 @@ declare module "svg" {
         patternParent?: SvgShapePattern;
         readonly useElement: SVGUseElement;
         setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
         setPaint(d?: string[], precision?: number): void;
         resetPaint(): void;
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
@@ -330,10 +330,10 @@ declare module "svg" {
         transformed: Null<SvgTransform[]>;
         readonly element: SVGImageElement | SVGUseElement;
         setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
         renderStatic(exclude?: number[]): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
@@ -391,10 +391,10 @@ declare module "svg" {
         getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
         resetPaint(): void;
         convertLength(value: string, dimension?: string|number): number;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
         build(options?: SvgBuildOptions): void;
         synchronize(options?: SvgSynchronizeOptions): void;
         draw(transforms?: Null<SvgTransform[]>, options?: SvgBuildOptions): string;
@@ -436,10 +436,10 @@ declare module "svg" {
         resetPaint(): void;
         convertLength(value: string, dimension?: string|number): number;
         setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
@@ -532,10 +532,10 @@ declare module "svg" {
         readonly element: SVGGeometryElement;
         readonly useElement: SVGUseElement;
         setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
+        setBaseValue<T = unknown>(attr: string, value?: T): boolean;
+        getBaseValue<T = unknown>(attr: string, fallback?: T): Undef<T>;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): number;
+        verifyBaseValue(attr: string, value?: unknown): number;
         set x(value);
         get x(): number;
         set y(value);

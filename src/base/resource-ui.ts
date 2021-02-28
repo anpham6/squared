@@ -395,7 +395,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         return '';
     }
 
-    public static insertStoredAsset(resourceId: number, type: string, name: string, value: any) {
+    public static insertStoredAsset(resourceId: number, type: string, name: string, value: unknown) {
         const stored = this.STORED[resourceId];
         if (stored && hasValue(value)) {
             const data = stored[type];

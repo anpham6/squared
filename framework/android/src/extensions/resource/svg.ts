@@ -1448,11 +1448,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const box = svg.viewBox;
                 const scaleX = svg.width / box.width;
                 const scaleY = svg.height / box.height;
-                const left: number = (image.getBaseValue('x', 0) * scaleX) + x;
-                const top: number = (image.getBaseValue('y', 0) * scaleY) + y;
+                const left: number = (image.getBaseValue('x', 0)! * scaleX) + x;
+                const top: number = (image.getBaseValue('y', 0)! * scaleY) + y;
                 const data: StandardMap = {
-                    width: formatPX(image.getBaseValue('width', 0) * scaleX),
-                    height: formatPX(image.getBaseValue('height', 0) * scaleY),
+                    width: formatPX(image.getBaseValue('width', 0)! * scaleX),
+                    height: formatPX(image.getBaseValue('height', 0)! * scaleY),
                     left: left !== 0 ? formatPX(left) : '',
                     top: top !== 0 ? formatPX(top) : ''
                 };

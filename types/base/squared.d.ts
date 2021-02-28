@@ -250,7 +250,7 @@ declare module "base" {
     class ResourceUI<T extends NodeUI> extends Resource<T> {
         static readonly STORED: ResourceSessionStored;
         static generateId(resourceId: number, section: string, name: string, start?: number): string;
-        static insertStoredAsset(resourceId: number, type: string, name: string, value: any): string;
+        static insertStoredAsset(resourceId: number, type: string, name: string, value: unknown): string;
         static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
@@ -411,7 +411,7 @@ declare module "base" {
         init(parent: Node, depth: number, index?: number): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
-        data<T = unknown>(name: string, attr: string, value?: any, overwrite?: boolean): Undef<T>;
+        data<T = unknown>(name: string, attr: string, value?: unknown, overwrite?: boolean): Undef<T>;
         unsetCache(...attrs: (CssStyleAttr | string)[]): void;
         unsetState(...attrs: (keyof CacheState<Node>)[]) : void;
         ascend(options?: AscendOptions<Node>): Node[];
@@ -622,7 +622,7 @@ declare module "base" {
         of(containerType: number, ...alignmentType: number[]): boolean;
         namespace(name: string): StringMap;
         namespaces(): [string, StringMap][];
-        unsafe<T = unknown>(name: string | PlainObject, value?: any): Undef<T>;
+        unsafe<T = unknown>(name: string | PlainObject, value?: unknown): Undef<T>;
         delete(name: string, ...attrs: string[]): void;
         apply(options: PlainObject): void;
         lockAttr(name: string, attr: string): void;

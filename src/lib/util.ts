@@ -135,7 +135,7 @@ const EXT_DATA = {
 };
 
 export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
-    return (...args: any[]) => {
+    return (...args: unknown[]) => {
         return new Promise((resolve, reject) => {
             try {
                 resolve(fn(...args));
@@ -467,19 +467,19 @@ export function isNumber(value: string) {
     return value ? !isNaN(+value) : false;
 }
 
-export function isString(value: any): value is string {
+export function isString(value: unknown): value is string {
     return typeof value === 'string' && !isEmptyString(value);
 }
 
-export function isArray<T>(value: any): value is Array<T> {
+export function isArray<T>(value: unknown): value is Array<T> {
     return Array.isArray(value) && value.length > 0;
 }
 
-export function isObject<T = PlainObject>(value: any): value is T {
+export function isObject<T = PlainObject>(value: unknown): value is T {
     return typeof value === 'object' && value !== null;
 }
 
-export function isPlainObject<T = PlainObject>(value: any): value is T {
+export function isPlainObject<T = PlainObject>(value: unknown): value is T {
     return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
 }
 
@@ -498,7 +498,7 @@ export function isEmptyString(value: string) {
     return true;
 }
 
-export function isEqual(source: any, other: any) {
+export function isEqual(source: unknown, other: unknown) {
     if (source === other) {
         return true;
     }
@@ -675,7 +675,7 @@ export function endsWith(value: Optional<string>, trailing: string) {
     return value ? value.substring(value.length - trailing.length) === trailing : false;
 }
 
-export function hasValue<T>(value: any): value is T {
+export function hasValue<T>(value: unknown): value is T {
     return value !== undefined && value !== null && value !== '';
 }
 
