@@ -89,10 +89,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     for (const item of config.data as AssetCommand[]) {
                         if (item.selector) {
                             const type = item.type;
-                            let dataUri: Null<DataSource | UriDataSource> = isPlainObject(item.dataUri) ? item.dataUri : null,
-                                cloudDatabase: Null<DataSource | CloudDataSource> = isPlainObject(item.cloudDatabase) ? item.cloudDatabase : null;
+                            let dataSrc: Null<DataSource> = isPlainObject(item.dataSource) ? item.dataSource : null,
+                                dataCloud: Null<DataSource> = isPlainObject(item.cloudDatabase) ? item.cloudDatabase : null;
                             if (paramMap.size) {
-                                for (const data of [dataUri, cloudDatabase]) {
+                                for (const data of [dataSrc, dataCloud]) {
                                     if (data) {
                                         for (const attr in data) {
                                             if (attr !== 'value') {
@@ -102,17 +102,17 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     }
                                 }
                             }
-                            dataUri &&= { document: item.document || documentHandler, ...dataUri, type, source: 'uri' } as DataSource;
-                            cloudDatabase &&= { document: item.document || documentHandler, ...cloudDatabase, type, source: 'cloud' } as DataSource;
+                            dataSrc &&= { document: item.document || documentHandler, ...dataSrc, type } as DataSource;
+                            dataCloud &&= { document: item.document || documentHandler, ...dataSrc, type, source: 'cloud' } as DataSource;
                             document.querySelectorAll(item.selector).forEach((element: HTMLElement) => {
                                 switch (type) {
                                     case 'text':
                                     case 'attribute':
-                                        if (dataUri) {
-                                            dataSource.push([element, dataUri as DataSource]);
+                                        if (dataSrc) {
+                                            dataSource.push([element, dataSrc]);
                                         }
-                                        if (cloudDatabase) {
-                                            dataSource.push([element, cloudDatabase as DataSource]);
+                                        else if (dataCloud) {
+                                            dataSource.push([element, dataCloud]);
                                         }
                                         break;
                                     default:

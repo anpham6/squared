@@ -5,7 +5,11 @@ interface RequestData {
     productionRelease?: boolean | string;
 }
 
-interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction {
+interface StorageAction<T = unknown> {
+    cloudStorage?: T[];
+}
+
+interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction, StorageAction {
     format?: string;
     preserve?: boolean;
     exclude?: boolean;
@@ -28,23 +32,15 @@ interface TemplateAction {
 
 interface DataSource extends TemplateAction {}
 
-interface UriDataSource extends TemplateAction {
-    format: string;
-    uri: string;
-    query?: string;
-}
-
-interface CloudDataSource extends TemplateAction, PlainObject {}
-
-interface AssetCommand extends SaveAsOptions, ElementAction, DocumentAction {
+interface AssetCommand extends SaveAsOptions, ElementAction, DocumentAction, StorageAction {
     selector?: string;
     type?: string;
     saveAs?: string;
     exportAs?: string;
     saveTo?: string;
     textContent?: string;
-    dataUri?: UriDataSource;
-    cloudDatabase?: CloudDataSource;
+    dataSource?: DataSource;
+    cloudDatabase?: DataSource;
     template?: {
         module: string;
         identifier?: string;

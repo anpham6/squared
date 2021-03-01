@@ -23,7 +23,7 @@ interface LayoutAsset extends TextAsset {
     index?: number;
 }
 
-interface FileAsset<T = unknown> extends TextAsset, OutputAction<T> {
+interface FileAsset extends TextAsset, OutputAction {
     base64?: string;
 }
 
@@ -40,19 +40,18 @@ interface ViewEngine {
 }
 
 interface DataSource extends ElementAction, DocumentAction, PlainObject {
-    source: "uri" | "cloud";
+    source: string;
     query?: unknown;
     index?: number;
     limit?: number;
     removeEmpty?: boolean;
 }
 
-interface OutputAction<T = unknown> extends DocumentAction {
+interface OutputAction extends DocumentAction {
     moveTo?: string;
     process?: string[];
     commands?: string[];
     compress?: CompressFormat[];
-    cloudStorage?: T[];
 }
 
 interface TaskAction {
