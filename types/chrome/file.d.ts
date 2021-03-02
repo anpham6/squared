@@ -20,6 +20,7 @@ interface OutputModifiers extends ElementScope {
     inline?: boolean;
     blob?: boolean;
     preserve?: boolean;
+    download?: boolean;
     ignore?: boolean;
     exclude?: boolean;
 }
