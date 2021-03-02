@@ -7,7 +7,7 @@ type FileActionResult = Promise<Void<ResponseData>>;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
-const { DIRECTORY_NOT_PROVIDED, SERVER_REQUIRED } = squared.lib.error;
+const { DIRECTORY_NOT_PROVIDED, INVALID_ASSET_REQUEST, SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
 const { fromLastIndexOf, isPlainObject, splitPair, startsWith, trimEnd } = squared.lib.util;
@@ -165,15 +165,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         return result;
                     });
                 }
+                return Promise.reject(INVALID_ASSET_REQUEST);
             }
-            else {
-                this.writeError(DIRECTORY_NOT_PROVIDED);
-            }
+            return Promise.reject(DIRECTORY_NOT_PROVIDED);
         }
-        else {
-            this.writeError(SERVER_REQUIRED);
-        }
-        return Promise.resolve();
+        return Promise.reject(SERVER_REQUIRED);
     }
 
     public archiving(target = '', options: FileArchivingOptions) {
@@ -237,11 +233,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     return result;
                 });
             }
+            return Promise.reject(INVALID_ASSET_REQUEST);
         }
-        else {
-            this.writeError(SERVER_REQUIRED);
-        }
-        return Promise.resolve();
+        return Promise.reject(SERVER_REQUIRED);
     }
 
     public setEndpoint(name: string, value: string) {

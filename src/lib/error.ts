@@ -1,6 +1,6 @@
 export const FRAMEWORK_NOT_INSTALLED = 'Framework not installed.';
 export const SERVER_REQUIRED = 'Server required. See README for instructions.';
-export const DIRECTORY_NOT_PROVIDED = 'Directory (pathname) not provided.';
+export const DIRECTORY_NOT_PROVIDED = 'Directory not provided (pathname).';
 export const UNABLE_TO_FINALIZE_DOCUMENT = 'Unable to finalize document.';
 export const INVALID_ASSET_REQUEST = 'Invalid asset request.';
 export const OPERATION_NOT_SUPPORTED = 'Operation not supported.';
