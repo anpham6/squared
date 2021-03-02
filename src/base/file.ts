@@ -15,8 +15,8 @@ const { fromLastIndexOf, isPlainObject, splitPair, startsWith, trimEnd } = squar
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
     const glob = exclusions.glob as (string | IGlobExp)[];
+    const url = appendSeparator(pathname, filename);
     if (glob) {
-        const url = appendSeparator(pathname, filename);
         for (let i = 0, length = glob.length; i < length; ++i) {
             let value = glob[i];
             if (typeof value === 'string') {
@@ -52,7 +52,6 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
         }
     }
     if (exclusions.pattern) {
-        const url = appendSeparator(pathname, filename);
         for (const value of exclusions.pattern) {
             if (new RegExp(value).test(url)) {
                 return false;
@@ -156,7 +155,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     .then(async response => {
                         const result: ResponseData = await response.json();
                         if (typeof options.callback === 'function') {
-                            options.callback(result);
+                            options.callback.call(null, result);
                         }
                         const error = result.error;
                         if (error) {
@@ -213,7 +212,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 .then(async response => {
                     const result: ResponseData = await response.json();
                     if (typeof options.callback === 'function') {
-                        options.callback(result);
+                        options.callback.call(null, result);
                     }
                     const { downloadKey, filename: zipname, error } = result;
                     if (downloadKey && zipname) {

@@ -79,6 +79,10 @@ interface AttributeAction {
     attributes?: AttributeMap;
 }
 
+interface StorageAction<T = unknown> {
+    cloudStorage?: T[];
+}
+
 interface TagData {
     tagName: string;
     tagCount?: number;

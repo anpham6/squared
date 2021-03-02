@@ -5,10 +5,6 @@ interface RequestData {
     productionRelease?: boolean | string;
 }
 
-interface StorageAction<T = unknown> {
-    cloudStorage?: T[];
-}
-
 interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction, StorageAction {
     format?: string;
     preserve?: boolean;
@@ -25,15 +21,15 @@ interface OutputModifiers extends ElementScope {
     exclude?: boolean;
 }
 
-interface TemplateAction {
+interface DataSource {
     type: "text" | "attribute";
     value?: string | ObjectMap<unknown>;
     viewEngine?: ViewEngine | string;
 }
 
-interface DataSource extends TemplateAction {}
+interface OutputCommand extends Partial<LocationUri>, OutputAction, AttributeAction, StorageAction {}
 
-interface AssetCommand extends SaveAsOptions, ElementAction, DocumentAction, StorageAction {
+interface AssetCommand extends OutputCommand, ElementAction, DocumentAction, OutputModifiers {
     selector?: string;
     type?: string;
     saveAs?: string;

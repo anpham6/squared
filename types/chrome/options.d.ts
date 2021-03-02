@@ -9,7 +9,9 @@ interface FileCopyingOptions extends squared.base.FileCopyingOptions, FileAction
 
 interface FileArchivingOptions extends squared.base.FileArchivingOptions, FileActionOptions {}
 
-interface SaveAsOptions extends Partial<LocationUri>, AttributeAction, OutputAction, StorageAction, OutputModifiers {}
+interface SaveAsOptions extends OutputCommand, OutputModifiers {
+    customize?: (uri: string, mimeType: string, command: OutputCommand) => Undef<string>;
+}
 
 interface UriOptions {
     saveAs?: string;
