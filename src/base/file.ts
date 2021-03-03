@@ -257,7 +257,15 @@ export default abstract class File<T extends Node> implements squared.base.File<
             let socketId: Undef<string>;
             const documentName = new Set(options.document);
             const taskName = new Set<string>();
-            const getSocketId = () => socketId ||= randomUUID();
+            const setSocketId = (watch: WatchInterval) => {
+                socketId ||= randomUUID();
+                if (watch.reload === true) {
+                    watch.reload = { socketId };
+                }
+                else if (watch.reload) {
+                    watch.reload.socketId ||= socketId;
+                }
+            };
             for (let i = 0, length = assets.length; i < length; ++i) {
                 const { document, tasks, watch } = assets[i];
                 if (document) {
@@ -271,8 +279,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 if (tasks) {
                     tasks.forEach(item => taskName.add(item.handler));
                 }
-                if (options.watch && isPlainObject<WatchInterval>(watch) && watch.reload === true) {
-                    watch.reload = { socketId: getSocketId() };
+                if (options.watch && isPlainObject<WatchInterval>(watch)) {
+                    setSocketId(watch);
                 }
             }
             const { outputTasks, outputWatch } = this.userSettings;
@@ -312,10 +320,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                                         item.watch = true;
                                     }
                                     else if (isPlainObject<WatchInterval>(value)) {
-                                        item.watch = { ...value };
-                                        if (item.watch.reload === true) {
-                                            item.watch.reload = { socketId: getSocketId() };
-                                        }
+                                        setSocketId(item.watch = { ...value });
                                     }
                                     else {
                                         continue;
