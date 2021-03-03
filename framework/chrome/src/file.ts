@@ -859,6 +859,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     document.querySelectorAll(`[data-${name}-id]`).forEach((element: HTMLElement) => delete element.dataset[attr]);
                 }
             }
+            if (options.removeInlineStyles) {
+                document.querySelectorAll(`[style]`).forEach(element => element.removeAttribute('style'));
+            }
         }
     }
 

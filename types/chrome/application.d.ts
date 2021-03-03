@@ -8,6 +8,7 @@ interface FileUniversalAttribute extends PlainObject {
     saveAsWebPage?: boolean;
     productionRelease?: boolean | string;
     useOriginalHtmlPage?: boolean;
+    removeInlineStyles?: boolean;
     retainUsedStyles?: string[];
     removeUnusedClasses?: boolean;
     removeUnusedSelectors?: boolean;
