@@ -7,6 +7,7 @@ interface UserResourceSettings {
 interface FileUniversalAttribute extends PlainObject {
     saveAsWebPage?: boolean;
     productionRelease?: boolean | string;
+    useOriginalHtmlPage?: boolean;
     retainUsedStyles?: string[];
     removeUnusedClasses?: boolean;
     removeUnusedSelectors?: boolean;

@@ -257,14 +257,6 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: Un
     return pathname && filename ? appendSeparator(pathname, filename) : '';
 }
 
-function getPageFilename(value: Undef<string>) {
-    if (!value) {
-        value = getFilename(location.href);
-        return /\.html?$/i.exec(value) ? value : 'index.html';
-    }
-    return value;
-}
-
 function setUUID(node: XmlTagNode, element: HTMLElement, name: string) {
     const id = element.dataset[name + 'Id'] ||= randomUUID();
     (node.id ||= {})[name] = id;
@@ -451,8 +443,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const data = File.parseUri(location.href, false, { saveAs: file, format, mimeType: 'text/html' });
         if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, element)) {
-            if (filename || !data.filename) {
-                data.filename = getPageFilename(filename);
+            if (filename) {
+                data.filename = filename;
+            }
+            else if (!data.filename) {
+                const value = getFilename(location.href);
+                data.filename = /\.html?$/i.exec(value) ? value : 'index.html';
             }
             return [data];
         }
@@ -813,44 +809,55 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
             if (Object.keys(socketMap).length) {
-                let textContent = '';
+                let textContent = 'document.addEventListener("DOMContentLoaded", function(){let socket;';
                 for (const id in socketMap) {
                     textContent += socketMap[id];
                 }
-                watchElement = createElement('script', { parent: document.body, attrs: { textContent: `document.addEventListener("DOMContentLoaded", function(){let socket;${textContent}});` } });
-            }
-        }
-        for (const item of options.assets as ChromeAsset[]) {
-            const element = item.element as Undef<XmlTagNode>;
-            if (element) {
-                switch (element.tagName) {
-                    case 'html':
-                        element.innerXml = document.documentElement.innerHTML;
-                        break;
-                    case 'script':
-                        if (watchElement) {
-                            ++element.tagCount!;
-                        }
-                        break;
+                textContent += '});';
+                if (!options.useOriginalHtmlPage) {
+                    watchElement = createElement('script', { parent: document.body, attrs: { textContent } });
                 }
-                if (watchElement) {
-                    const append = element.append;
-                    if (append?.tagName === 'script') {
-                        ++append.tagCount!;
+                else {
+                    const html = (options.assets as ChromeAsset[]).find(item => item.mimeType === '@text/html');
+                    if (html) {
+                        html.element!.textContent = `<script>${textContent}</script>`;
                     }
                 }
             }
-            if (productionRelease && item.watch) {
-                item.watch = false;
+        }
+        if (!options.useOriginalHtmlPage) {
+            for (const item of options.assets as ChromeAsset[]) {
+                const element = item.element as Undef<XmlTagNode>;
+                if (element) {
+                    switch (element.tagName) {
+                        case 'html':
+                            element.innerXml = document.documentElement.innerHTML;
+                            break;
+                        case 'script':
+                            if (watchElement) {
+                                ++element.tagCount!;
+                            }
+                            break;
+                    }
+                    if (watchElement) {
+                        const append = element.append;
+                        if (append?.tagName === 'script') {
+                            ++append.tagCount!;
+                        }
+                    }
+                }
+                if (productionRelease && item.watch) {
+                    delete item.watch;
+                }
             }
-        }
-        if (watchElement) {
-            document.body.removeChild(watchElement);
-        }
-        if (data.document) {
-            for (const name of data.document) {
-                const attr = name + 'Id';
-                document.querySelectorAll(`[data-${name}-id]`).forEach((element: HTMLElement) => delete element.dataset[attr]);
+            if (watchElement) {
+                document.body.removeChild(watchElement);
+            }
+            if (data.document) {
+                for (const name of data.document) {
+                    const attr = name + 'Id';
+                    document.querySelectorAll(`[data-${name}-id]`).forEach((element: HTMLElement) => delete element.dataset[attr]);
+                }
             }
         }
     }
@@ -946,7 +953,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private processAssets(options: FileActionOptions) {
-        const { assetMap, appendMap, preserveCrossOrigin } = options;
+        const { assetMap, appendMap, useOriginalHtmlPage, preserveCrossOrigin } = options;
         const nodeMap = options.nodeMap ||= new Map<XmlNode, HTMLElement>();
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
@@ -985,7 +992,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const command = assetMap && assetMap.get(element);
                 const documentData = command && command.document || this.userSettings.outputDocumentHandler;
                 const getNextSibling = () => node.index + element.querySelectorAll('*').length + 1;
-                File.setDocumentId(node, element, documentData);
+                if (!useOriginalHtmlPage) {
+                    File.setDocumentId(node, element, documentData);
+                }
                 node.outerXml = element.outerHTML.trim();
                 let i = 0;
                 for (const sibling of siblings) {
@@ -1054,7 +1063,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const element = asset.element;
             if (element instanceof Element) {
                 const node = File.createTagNode(element, domAll, cache);
-                File.setDocumentId(node, element, asset.document);
+                if (!useOriginalHtmlPage) {
+                    File.setDocumentId(node, element, asset.document);
+                }
                 asset.element = node;
                 nodeMap.set(node, element);
             }

@@ -145,6 +145,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             delete options.appendMap;
         }
         if (dataSource.length) {
+            const useOriginalHtmlPage = options.useOriginalHtmlPage;
             const domAll = document.querySelectorAll('*');
             const cache: SelectorCache = {};
             const items = options.dataSource ||= [];
@@ -153,7 +154,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 const node = File.createTagNode(element, domAll, cache);
                 node.textContent = element.textContent!;
                 data.element = node;
-                File.setDocumentId(node, element, data.document);
+                if (!useOriginalHtmlPage) {
+                    File.setDocumentId(node, element, data.document);
+                }
                 nodeMap.set(node, element);
                 items.push(data);
             }
