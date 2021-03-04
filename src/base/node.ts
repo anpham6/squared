@@ -13,7 +13,7 @@ const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, 
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
 
 const TEXT_STYLE: CssStyleAttr[] = [
     'fontFamily',
@@ -255,7 +255,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
             const attr = attrList[i];
             let value: Undef<string>;
             if (attr.trailing) {
-                const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
+                const pattern = new RegExp(`^([^:]+:)?${escapePattern(attr.key)}$`);
                 for (const name in attributes) {
                     if (pattern.test(name)) {
                         value = attributes[name];

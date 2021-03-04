@@ -5,7 +5,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertCamelCase, convertHyphenated, convertPercent, endsWith, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { convertCamelCase, convertHyphenated, convertPercent, endsWith, escapePattern, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -3024,7 +3024,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
             const segment = match[0];
             let optional = segment;
             for (let i = match.length - 1; i >= 1; --i) {
-                optional = optional.replace(new RegExp(match[i] + '$'), '');
+                optional = optional.replace(new RegExp(escapePattern(match[i]) + '$'), '');
             }
             if (optional === segment) {
                 return '';

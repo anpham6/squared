@@ -656,6 +656,10 @@ export function trimEnd(value: string, pattern: string) {
     return '';
 }
 
+export function escapePattern(value: string) {
+	return value.replace(/[-|\\{}()[\]^$+*?.]/g, capture => capture === '-' ? '\\x2d' : capture);
+}
+
 export function fromLastIndexOf(value: string, ...char: string[]) {
     let i = 0;
     while (i < char.length) {

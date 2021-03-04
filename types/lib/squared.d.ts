@@ -346,6 +346,7 @@ declare module "lib" {
         function trimString(value: string, pattern: string): string;
         function trimStart(value: string, pattern: string): string;
         function trimEnd(value: string, pattern: string): string;
+        function escapePattern(value: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function startsWith(value: Optional<string>, leading: string): boolean;
         function endsWith(value: Optional<string>, trailing: string): boolean;

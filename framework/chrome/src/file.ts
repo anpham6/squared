@@ -409,7 +409,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             assetMap = options.assetMap;
             saveAsHtml = options.saveAs?.html;
         }
-        const command = assetMap && assetMap.get(element) || saveAsHtml;
+        const command = assetMap?.get(element) || saveAsHtml;
         let filename: Undef<string>,
             format: Undef<string>,
             compress: Undef<CompressFormat[]>,
@@ -481,7 +481,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll('script').forEach(element => {
             const template = element.dataset.chromeTemplate;
             if (template || element.type === 'text/template') {
-                const command = assetMap && assetMap.get(element);
+                const command = assetMap?.get(element);
                 let category: Undef<string>,
                     module: Undef<string>,
                     identifier: Undef<string>;
@@ -904,7 +904,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (file === 'ignore') {
                     continue;
                 }
-                const command = assetMap && assetMap.get(item);
+                const command = assetMap?.get(item);
                 let saveAs: Undef<string>,
                     saveTo: Undef<boolean>,
                     filename: Undef<string>,
@@ -986,8 +986,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             };
             for (const [element, siblings] of appendMap) {
                 const node = File.createTagNode(element, domAll, cache);
-                const command = assetMap && assetMap.get(element);
-                const documentData = command && command.document || this.userSettings.outputDocumentHandler;
+                const command = assetMap?.get(element);
+                const documentData = command?.document;
                 const getNextSibling = () => node.index + element.querySelectorAll('*').length + 1;
                 if (!useOriginalHtmlPage) {
                     File.setDocumentId(node, element, documentData);
@@ -1036,6 +1036,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             }
                         }
                         if (url && attributes) {
+                            sibling.document ||= documentData;
                             delete sibling.download;
                             const data = this.createBundle(assets, element, url, attributes.type!, undefined, undefined, undefined, sibling);
                             if (data) {
@@ -1091,7 +1092,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (file === 'exclude' || file === 'ignore') {
             return;
         }
-        let filename: Undef<string>,
+        let command = assetMap?.get(element) || assetCommand,
+            filename: Undef<string>,
             format: Undef<string>,
             inline: Undef<boolean>,
             process: Undef<string[]>,
@@ -1105,7 +1107,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             documentData: Undef<StringOfArray>,
             fromConfig: Undef<boolean>,
             fromSaveAs: Undef<boolean>;
-        let command = assetMap && assetMap.get(element) || assetCommand;
         if (command) {
             ({ inline, compress, download, preserve, process, tasks, watch, attributes, cloudStorage, document: documentData } = command);
             if (excludeAsset(assets, command, element, documentData)) {
@@ -1233,7 +1234,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (file === 'ignore') {
                     return;
                 }
-                if (command = assetMap && assetMap.get(element)) {
+                if (command = assetMap?.get(element)) {
                     ({ pathname, filename, inline, compress, download, blob, commands, tasks, watch, attributes, cloudStorage, document: documentData } = command);
                     if (excludeAsset(assets, command, element, documentData)) {
                         return;

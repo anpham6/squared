@@ -3,7 +3,7 @@ import type Extension from './extension';
 import File from './file';
 
 const { UNABLE_TO_FINALIZE_DOCUMENT, reject } = squared.lib.error;
-const { isPlainObject } = squared.lib.util;
+const { escapePattern, isPlainObject } = squared.lib.util;
 
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public userSettings!: UserResourceSettings;
@@ -84,7 +84,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                         return param;
                     };
                     if (location.href.includes('?')) {
-                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value]));
+                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${escapePattern(key)}\\s*\\}\\}`, 'g'), value]));
                     }
                     for (const item of config.data as AssetCommand[]) {
                         if (item.selector) {

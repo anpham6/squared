@@ -18,7 +18,7 @@ const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, getSty
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { convertBase64, convertCamelCase, convertPercent, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, startsWith } = squared.lib.util;
+const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, startsWith } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -1490,7 +1490,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     if (styled && child.htmlElement) {
                         if (child.lineBreak) {
                             const previousSibling = child.previousSibling;
-                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${item.outerHTML}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
                         }
                         else if (child.positioned) {
                             value = value.replace(item.outerHTML, '');

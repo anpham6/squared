@@ -10,7 +10,7 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 const { DIRECTORY_NOT_PROVIDED, INVALID_ASSET_REQUEST, SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
-const { fromLastIndexOf, isPlainObject, splitPair, startsWith, trimEnd } = squared.lib.util;
+const { escapePattern, fromLastIndexOf, isPlainObject, splitPair, startsWith, trimEnd } = squared.lib.util;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
@@ -30,8 +30,7 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
     }
     if (exclusions.pathname) {
         for (const value of exclusions.pathname) {
-            const dirname = trimEnd(value.replace(/\\/g, '/'), '/');
-            if (new RegExp(`^${dirname}/?`).test(pathname)) {
+            if (new RegExp(`^${escapePattern(trimEnd(value.replace(/\\/g, '/'), '/'))}/?`).test(pathname)) {
                 return false;
             }
         }
@@ -246,7 +245,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
-        if (assets && assets.length) {
+        if (assets?.length) {
             const exclusions = options.exclusions;
             if (exclusions) {
                 assets = assets.filter(item => validateAsset(item, exclusions));

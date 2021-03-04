@@ -18,7 +18,7 @@ const { FILE, STRING } = squared.lib.regex;
 const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, escapePattern, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
 const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
@@ -33,8 +33,8 @@ function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Res
             if (resource) {
                 const leading = match[3];
                 const encoding = match[4] || (isBase64(match[5]) ? 'base64' : 'utf8');
-                let content: Undef<string>,
-                    base64: Undef<string>;
+                let base64: Undef<string>,
+                    content: Undef<string>;
                 if (encoding === 'base64') {
                     base64 = match[5];
                 }
@@ -66,12 +66,9 @@ function parseError(error: unknown) {
         return error.message;
     }
     if (error instanceof Event) {
-        error = error.target as HTMLImageElement;
+        error = error.target;
     }
-    if (error instanceof HTMLImageElement) {
-        return error.src;
-    }
-    return '';
+    return error instanceof HTMLImageElement ? error.src : '';
 }
 
 const getErrorMessage = (errors: string[]) => errors.map(value => '- ' + value).join('\n');
@@ -561,7 +558,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     for (const name in CSS_SHORTHANDNONE) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
-                                            if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                            if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, escapePattern(css.valueOfNone))) {
                                                 break required;
                                             }
                                             break;
@@ -597,6 +594,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 REGEXP_IMPORTANT.lastIndex = 0;
+                let processing: Undef<squared.base.AppProcessing<T>>;
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
@@ -640,14 +638,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const length = elements.length;
                     if (length === 0) {
                         if (resource && !hostElement) {
-                            (this.getProcessing(sessionId)!.unusedStyles ||= new Set()).add(selectorText);
+                            ((processing ||= this.getProcessing(sessionId)!).unusedStyles ||= new Set()).add(selectorText);
                         }
                         continue;
                     }
+                    const attrStyle = 'styleMap' + targetElt;
+                    const attrSpecificity = 'styleSpecificity' + targetElt;
                     for (let i = 0; i < length; ++i) {
                         const element = elements[i];
-                        const attrStyle = 'styleMap' + targetElt;
-                        const attrSpecificity = 'styleSpecificity' + targetElt;
                         const styleData = getElementCache<CssStyleMap>(element, attrStyle, sessionId);
                         if (styleData) {
                             const specificityData = getElementCache<ObjectMap<number>>(element, attrSpecificity, sessionId)!;
@@ -689,7 +687,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
-                const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
+                const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${escapePattern(rule)}([^{]+)`).exec(value)?.[1].trim() || value;
                 for (let i = 0, length = cssRules.length; i < length; ++i) {
                     const rule = cssRules[i];
                     const type = rule.type;
