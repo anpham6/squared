@@ -108,6 +108,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                 switch (type) {
                                     case 'text':
                                     case 'attribute':
+                                    case 'display':
                                         if (dataSrc) {
                                             dataSource.push([element, dataSrc]);
                                         }

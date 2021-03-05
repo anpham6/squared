@@ -22,8 +22,8 @@ interface OutputModifiers extends ElementScope {
 }
 
 interface DataSource {
-    type: "text" | "attribute";
-    value?: string | ObjectMap<unknown>;
+    type: "text" | "attribute" | "display";
+    value?: StringOfArray | ObjectMap<unknown>;
     viewEngine?: ViewEngine | string;
 }
 
