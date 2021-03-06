@@ -63,19 +63,21 @@ function validateAsset(file: FileAsset, exclusions: Exclusions) {
 const getEndpoint = (hostname: string, endpoint: string) => startsWith(endpoint, 'http') ? endpoint : hostname + endpoint;
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
-    public static downloadFile(data: Blob | string, filename?: string, mimeType?: string) {
-        const href = typeof data ==='string' ? data : URL.createObjectURL(new Blob([data], { type: mimeType || 'application/octet-stream' }));
-        const element = createElement('a', {
-            style: { display: 'none' },
-            attrs: { href, download: filename }
-        }) as HTMLAnchorElement;
-        if (!element.download) {
+    public static downloadFile(href: string | Blob, filename?: string, mimeType?: string) {
+        if (typeof href !== 'string') {
+            href = URL.createObjectURL(new Blob([href], { type: mimeType || 'application/octet-stream' }));
+        }
+        const element = createElement('a', { style: { display: 'none' }, attributes: { href } }) as HTMLAnchorElement;
+        if (filename) {
+            element.download = filename;
+        }
+        else {
             element.setAttribute('target', '_blank');
         }
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
-        setTimeout(() => URL.revokeObjectURL(href), 1);
+        setTimeout(() => URL.revokeObjectURL(href as string), 1);
     }
 
     public resource!: Resource<T>;

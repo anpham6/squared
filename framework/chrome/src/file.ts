@@ -809,7 +809,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
                 textContent += '});';
                 if (!options.useOriginalHtmlPage) {
-                    watchElement = createElement('script', { parent: document.body, attrs: { textContent } });
+                    watchElement = createElement('script', { parent: document.body, attributes: { textContent } });
                 }
                 else {
                     const html = (options.assets as ChromeAsset[]).find(item => item.mimeType === '@text/html');

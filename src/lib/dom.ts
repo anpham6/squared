@@ -157,7 +157,7 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
 }
 
 export function createElement(tagName: string, options: CreateElementOptions) {
-    const { parent, style, attrs, children } = options;
+    const { parent, style, attributes, children } = options;
     const element = document.createElement(tagName);
     if (style) {
         const cssStyle = element.style;
@@ -167,10 +167,10 @@ export function createElement(tagName: string, options: CreateElementOptions) {
             }
         }
     }
-    if (attrs) {
-        for (const attr in attrs) {
-            if (attr in element) {
-                element[attr] = attrs[attr];
+    if (attributes) {
+        for (const name in attributes) {
+            if (name in element) {
+                element[name] = attributes[name];
             }
         }
     }

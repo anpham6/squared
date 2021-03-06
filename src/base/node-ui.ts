@@ -1252,7 +1252,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         style.display = 'inline-block';
         const parent = this.actualParent?.element || document.body;
-        const element = createElement(tagName !== '#text' ? tagName : 'span', { attrs: { textContent: textContent || 'AgjpqyZ' }, style });
+        const element = createElement(tagName !== '#text' ? tagName : 'span', { attributes: { textContent: textContent || 'AgjpqyZ' }, style });
         parent.appendChild(element);
         const result = getRangeClientRect(element);
         parent.removeChild(element);
