@@ -1,4 +1,4 @@
-/* squared.base 2.4.0
+/* squared.base 2.5.0
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -24,23 +24,23 @@ this.squared.base = (function (exports) {
     }
 
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
-    const { FILE, STRING } = squared.lib.regex;
-    const { isUserAgent } = squared.lib.client;
-    const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-    const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-    const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+    const { FILE: FILE$2, STRING: STRING$1 } = squared.lib.regex;
+    const { isUserAgent: isUserAgent$1 } = squared.lib.client;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$1, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
+    const { getElementCache: getElementCache$1, newSessionInit, setElementCache: setElementCache$1 } = squared.lib.session;
+    const { allSettled, capitalize, convertCamelCase: convertCamelCase$1, escapePattern: escapePattern$2, isBase64: isBase64$1, isEmptyString, resolvePath: resolvePath$1, splitPair: splitPair$3, startsWith: startsWith$4 } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
-    const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
+    const REGEXP_DATAURI$1 = new RegExp(`\\s?url\\("(${STRING$1.DATAURI})"\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
     const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
     function parseImageUrl(value, styleSheetHref, resource, resourceId) {
         let result, match;
-        while (match = REGEXP_DATAURI.exec(value)) {
+        while (match = REGEXP_DATAURI$1.exec(value)) {
             if (match[2]) {
                 if (resource) {
                     const leading = match[3];
-                    const encoding = match[4] || (isBase64(match[5]) ? 'base64' : 'utf8');
-                    let content, base64;
+                    const encoding = match[4] || (isBase64$1(match[5]) ? 'base64' : 'utf8');
+                    let base64, content;
                     if (encoding === 'base64') {
                         base64 = match[5];
                     }
@@ -51,7 +51,7 @@ this.squared.base = (function (exports) {
                 }
             }
             else {
-                const url = resolvePath(match[5], styleSheetHref);
+                const url = resolvePath$1(match[5], styleSheetHref);
                 if (url) {
                     if (resource) {
                         resource.addImageData(resourceId, url);
@@ -60,7 +60,7 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        REGEXP_DATAURI.lastIndex = 0;
+        REGEXP_DATAURI$1.lastIndex = 0;
         return result || value;
     }
     function parseError(error) {
@@ -73,10 +73,7 @@ this.squared.base = (function (exports) {
         if (error instanceof Event) {
             error = error.target;
         }
-        if (error instanceof HTMLImageElement) {
-            return error.src;
-        }
-        return '';
+        return error instanceof HTMLImageElement ? error.src : '';
     }
     const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
     class Application {
@@ -191,14 +188,14 @@ this.squared.base = (function (exports) {
                             fetch(item)
                                 .then(async (result) => {
                                 const mimeType = result.headers.get('content-type') || '';
-                                if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                if (startsWith$4(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
                                     success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
                                 }
-                                else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
+                                else if (startsWith$4(mimeType, 'image/svg+xml') || FILE$2.SVG.test(item)) {
                                     success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
+                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair$3(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
                                 }
                             })
                                 .catch(err => error(err));
@@ -307,12 +304,9 @@ this.squared.base = (function (exports) {
                 else {
                     const namespace = namespaces[i] + '.';
                     for (const data of builtInExtensions) {
-                        if (startsWith(data[0], namespace)) {
-                            ext = data[1];
-                            if (!extensions.includes(ext)) {
-                                ext.application = this;
-                                extensions.push(ext);
-                            }
+                        if (startsWith$4(data[0], namespace) && !extensions.includes(ext = data[1])) {
+                            ext.application = this;
+                            extensions.push(ext);
                         }
                     }
                 }
@@ -389,9 +383,8 @@ this.squared.base = (function (exports) {
         cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, extensions, shadowParent) {
             const node = this.insertNode(processing, parentElement);
             if (node) {
-                const cache = processing.cache;
                 if (depth === 0) {
-                    cache.add(node);
+                    processing.cache.add(node);
                 }
                 if (this._preventNodeCascade(node)) {
                     return node;
@@ -450,10 +443,10 @@ this.squared.base = (function (exports) {
                     node.inlineText = inlineText && plainText;
                     node.retainAs(children);
                     if (j > 1) {
-                        cache.addAll(children);
+                        processing.cache.addAll(children);
                     }
                     else {
-                        cache.add(children[0]);
+                        processing.cache.add(children[0]);
                     }
                 }
                 if (elements.length && this.userSettings.createQuerySelectorMap) {
@@ -505,14 +498,14 @@ this.squared.base = (function (exports) {
                         if (attr[0] === '-') {
                             continue;
                         }
-                        const baseAttr = convertCamelCase(attr);
+                        const baseAttr = convertCamelCase$1(attr);
                         let value = cssStyle[attr];
                         switch (value) {
                             case 'initial':
-                                if (isUserAgent(2 /* SAFARI */) && startsWith(baseAttr, 'background')) {
+                                if (isUserAgent$1(2 /* SAFARI */) && startsWith$4(baseAttr, 'background')) {
                                     break;
                                 }
-                                if (((_b = CSS_PROPERTIES[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) === 'auto') {
+                                if (((_b = CSS_PROPERTIES$1[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) === 'auto') {
                                     value = 'auto';
                                     break;
                                 }
@@ -522,7 +515,7 @@ this.squared.base = (function (exports) {
                                         for (const name in CSS_SHORTHANDNONE) {
                                             const css = CSS_SHORTHANDNONE[name];
                                             if (css.value.includes(baseAttr)) {
-                                                if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, css.valueOfNone)) {
+                                                if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$2(css.valueOfNone))) {
                                                     break required;
                                                 }
                                                 break;
@@ -546,8 +539,8 @@ this.squared.base = (function (exports) {
                     }
                     let match;
                     while (match = REGEXP_IMPORTANT.exec(cssText)) {
-                        const attr = convertCamelCase(match[1]);
-                        const value = (_c = CSS_PROPERTIES[attr]) === null || _c === void 0 ? void 0 : _c.value;
+                        const attr = convertCamelCase$1(match[1]);
+                        const value = (_c = CSS_PROPERTIES$1[attr]) === null || _c === void 0 ? void 0 : _c.value;
                         if (Array.isArray(value)) {
                             for (let i = 0, length = value.length; i < length; ++i) {
                                 important[value[i]] = true;
@@ -558,12 +551,13 @@ this.squared.base = (function (exports) {
                         }
                     }
                     REGEXP_IMPORTANT.lastIndex = 0;
-                    for (const selectorText of parseSelectorText(item.selectorText)) {
+                    let processing;
+                    for (const selectorText of parseSelectorText$1(item.selectorText)) {
                         const specificity = getSpecificity(selectorText);
-                        const [selector, target] = splitPair(selectorText, '::');
+                        const [selector, target] = splitPair$3(selectorText, '::');
                         const targetElt = target ? '::' + target : '';
                         let elements;
-                        if (startsWith(selector, ':host')) {
+                        if (startsWith$4(selector, ':host')) {
                             if (!hostElement) {
                                 continue;
                             }
@@ -600,18 +594,18 @@ this.squared.base = (function (exports) {
                         }
                         const length = elements.length;
                         if (length === 0) {
-                            if (!hostElement) {
-                                ((_d = this.getProcessing(sessionId)).unusedStyles || (_d.unusedStyles = new Set())).add(selectorText);
+                            if (resource && !hostElement) {
+                                ((_d = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_d.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
+                        const attrStyle = 'styleMap' + targetElt;
+                        const attrSpecificity = 'styleSpecificity' + targetElt;
                         for (let i = 0; i < length; ++i) {
                             const element = elements[i];
-                            const attrStyle = 'styleMap' + targetElt;
-                            const attrSpecificity = 'styleSpecificity' + targetElt;
-                            const styleData = getElementCache(element, attrStyle, sessionId);
+                            const styleData = getElementCache$1(element, attrStyle, sessionId);
                             if (styleData) {
-                                const specificityData = getElementCache(element, attrSpecificity, sessionId);
+                                const specificityData = getElementCache$1(element, attrSpecificity, sessionId);
                                 for (const attr in baseMap) {
                                     const previous = specificityData[attr];
                                     const revised = specificity + (important[attr] ? 1000 : 0);
@@ -627,9 +621,9 @@ this.squared.base = (function (exports) {
                                 for (const attr in styleMap) {
                                     specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                                 }
-                                setElementCache(element, 'sessionId', sessionId);
-                                setElementCache(element, attrStyle, styleMap, sessionId);
-                                setElementCache(element, attrSpecificity, specificityData, sessionId);
+                                setElementCache$1(element, 'sessionId', sessionId);
+                                setElementCache$1(element, attrStyle, styleMap, sessionId);
+                                setElementCache$1(element, attrSpecificity, specificityData, sessionId);
                             }
                         }
                     }
@@ -651,7 +645,7 @@ this.squared.base = (function (exports) {
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
-                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
+                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${escapePattern$2(rule)}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
                     for (let i = 0, length = cssRules.length; i < length; ++i) {
                         const rule = cssRules[i];
                         const type = rule.type;
@@ -661,7 +655,7 @@ this.squared.base = (function (exports) {
                                 this.applyStyleRule(sessionId, resourceId, rule, documentRoot, queryRoot);
                                 break;
                             case CSSRule.IMPORT_RULE: {
-                                const uri = resolvePath(rule.href, ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href);
+                                const uri = resolvePath$1(rule.href, ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href);
                                 if (uri) {
                                     (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
                                 }
@@ -763,11 +757,8 @@ this.squared.base = (function (exports) {
                     return [rootElements];
                 }
             }
-            const controller = this.controllerHandler;
-            const resource = this.resourceHandler;
-            const sessionId = controller.generateSessionId;
-            const resourceId = this.resourceId;
-            const extensions = this.extensionsAll;
+            const { controllerHandler, resourceHandler, resourceId, extensionsAll: extensions } = this;
+            const sessionId = controllerHandler.generateSessionId;
             const processing = {
                 sessionId,
                 resourceId,
@@ -785,10 +776,10 @@ this.squared.base = (function (exports) {
                 processing.afterInsertNode = afterInsertNode;
             }
             this.session.active.set(sessionId, processing);
-            if (resource) {
-                resource.init(resourceId);
+            if (resourceHandler) {
+                resourceHandler.init(resourceId);
             }
-            controller.init(resourceId);
+            controllerHandler.init(resourceId);
             const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
             if (queryRoot && queryRoot !== document.documentElement) {
                 this.setStyleMap(sessionId, resourceId, document, queryRoot);
@@ -812,7 +803,7 @@ this.squared.base = (function (exports) {
                     }
                 }
             }
-            if (resource) {
+            if (resourceHandler) {
                 const queryElements = [queryRoot || document];
                 if (shadowElements) {
                     queryElements.push(...shadowElements);
@@ -821,10 +812,10 @@ this.squared.base = (function (exports) {
                     element.querySelectorAll('[style]').forEach((child) => {
                         const { backgroundImage, listStyleImage } = child.style;
                         if (backgroundImage) {
-                            parseImageUrl(backgroundImage, location.href, resource, resourceId);
+                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
                         }
                         if (listStyleImage) {
-                            parseImageUrl(listStyleImage, location.href, resource, resourceId);
+                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
                         }
                     });
                 }
@@ -996,7 +987,7 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { findSet, isObject } = squared.lib.util;
+    const { findSet, isObject: isObject$1 } = squared.lib.util;
     class ExtensionManager {
         constructor(application) {
             this.application = application;
@@ -1091,11 +1082,11 @@ this.squared.base = (function (exports) {
         valueOf(name, attr, fallback) {
             var _a;
             const options = (_a = this.get(name, true)) === null || _a === void 0 ? void 0 : _a.options;
-            return isObject(options) ? options[attr] : fallback;
+            return isObject$1(options) ? options[attr] : fallback;
         }
         valueAsObject(name, attr, fallback = null) {
             const value = this.valueOf(name, attr);
-            return isObject(value) ? value : fallback;
+            return isObject$1(value) ? value : fallback;
         }
         valueAsString(name, attr, fallback = '') {
             const value = this.valueOf(name, attr);
@@ -1114,7 +1105,7 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { endsWith, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
+    const { endsWith: endsWith$2, splitPair: splitPair$2, splitPairEnd, splitPairStart: splitPairStart$1, startsWith: startsWith$3 } = squared.lib.util;
     class GlobExp extends RegExp {
         constructor(source, flags, negate) {
             super(source, flags);
@@ -1127,7 +1118,135 @@ this.squared.base = (function (exports) {
             return values.filter(value => this.test(value));
         }
     }
-    const HEX = '0123456789abcdef';
+    const HEX_STRING = '0123456789abcdef';
+    const EXT_DATA = {
+        '3gp': 'video/3gpp',
+        '3g2': 'video/3gpp2',
+        '7z': 'application/x-7z-compressed',
+        aac: 'audio/aac',
+        abw: 'application/x-abiword',
+        apng: 'image/apng',
+        arc: 'application/x-freearc',
+        asf: 'video/x-ms-asf',
+        asx: 'video/x-ms-asf',
+        atom: 'application/atom+xml',
+        avi: 'video/x-msvideo',
+        avif: 'image/avif',
+        azw: 'application/vnd.amazon.ebook',
+        bin: 'application/octet-stream',
+        bmp: 'image/bmp',
+        bmpf: 'image/bmp',
+        bmpp: 'image/bmp',
+        bz: 'application/x-bzip',
+        bz2: 'application/x-bzip2',
+        cgi: 'application/x-httpd-cgi',
+        csh: 'application/x-csh',
+        css: 'text/css',
+        csv: 'text/csv',
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        eot: 'application/vnd.ms-fontobject',
+        epub: 'application/epub+zip',
+        flac: 'audio/flac',
+        flv: 'video/x-flv',
+        gif: 'image/gif',
+        gsm: 'audio/gsm',
+        h264: 'h264',
+        heic: 'image/heic',
+        heif: 'image/heif',
+        htc: 'text/x-component',
+        htm: 'text/html',
+        html: 'text/html',
+        shtml: 'text/html',
+        cur: 'image/x-icon',
+        ico: 'image/x-icon',
+        ics: 'text/calendar',
+        jad: 'text/vnd.sun.j2me.app-descriptor',
+        jar: 'application/java-archive',
+        java: 'text/x-java-source',
+        jpeg: 'image/jpeg',
+        jpg: 'image/jpeg',
+        jfif: 'image/jpeg',
+        pjpeg: 'image/jpeg',
+        pjp: 'image/jpeg',
+        jpeg2000: 'video/jpeg2000',
+        js: 'text/javascript',
+        mjs: 'text/javascript',
+        json: 'application/json',
+        jsonp: 'application/javascript',
+        jsonld: 'application/ld+json',
+        m3u8: 'application/vnd.apple.mpegurl',
+        md: 'text/markdown',
+        kar: 'audio/midi',
+        mid: 'audio/midi',
+        midi: 'audio/midi',
+        mks: 'video/x-matroska',
+        mkv: 'video/x-matroska',
+        mk3d: 'video/x-matroska',
+        mml: 'text/mathml',
+        mng: 'video/x-mng',
+        mov: 'video/quicktime',
+        mp3: 'audio/mpeg',
+        mpeg: 'audio/mpeg',
+        mp4: 'video/mp4',
+        m4a: 'video/mp4',
+        m4v: 'video/x-m4v',
+        mpd: 'application/dash+xml',
+        mpkg: 'application/vnd.apple.installer+xml',
+        odg: 'application/vnd.oasis.opendocument.graphics',
+        odp: 'application/vnd.oasis.opendocument.presentation',
+        ods: 'application/vnd.oasis.opendocument.spreadsheet',
+        odt: 'application/vnd.oasis.opendocument.text',
+        oga: 'audio/ogg',
+        spx: 'audio/ogg',
+        ogg: 'audio/ogg',
+        ogv: 'video/ogg',
+        ogm: 'video/ogg',
+        ogx: 'application/ogg',
+        otf: 'font/otf',
+        pl: 'application/x-perl',
+        png: 'image/png',
+        pdf: 'application/pdf',
+        ppt: 'application/vnd.ms-powerpoint',
+        pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        ps: 'application/postscript',
+        ra: 'audio/x-realaudio',
+        rar: 'application/x-rar-compressed',
+        rss: 'application/rss+xml',
+        rtf: 'application/rtf',
+        sgml: 'text/sgml',
+        sh: 'application/x-sh',
+        svg: 'image/svg+xml',
+        svgz: 'image/svg+xml',
+        swf: 'application/x-shockwave-flash',
+        tar: 'application/x-tar',
+        tif: 'image/tiff',
+        tiff: 'image/tiff',
+        ts: 'video/mp2t',
+        tsv: 'text/tab-separated-values',
+        ttf: 'font/ttf',
+        truetype: 'font/ttf',
+        txt: 'text/plain',
+        vsd: 'application/vnd.visio',
+        vtt: 'text/vtt',
+        wav: 'audio/wave',
+        wbmp: 'image/vnd.wap.wbmp',
+        weba: 'audio/webm',
+        webm: 'video/webm',
+        webp: 'image/webp',
+        woff: 'font/woff',
+        woff2: 'font/woff2',
+        xhtml: 'application/xhtml+xml',
+        xls: 'application/vnd.ms-excel',
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        xml: 'application/xml',
+        xul: 'application/vnd.mozilla.xul+xml',
+        wml: 'text/vnd.wap.wml',
+        wmv: 'video/x-ms-wmv',
+        yaml: 'text/yaml',
+        yml: 'text/yaml',
+        zip: 'application/zip'
+    };
     function fromMimeType(value) {
         const [type, name] = value.split('/');
         switch (type) {
@@ -1344,6 +1463,9 @@ this.squared.base = (function (exports) {
         }
         return '';
     }
+    function parseMimeType(value) {
+        return EXT_DATA[splitPairEnd(splitPairStart$1(value = value.toLowerCase(), '?'), '.', true, true) || value] || '';
+    }
     function appendSeparator(preceding = '', value = '', separator = '/') {
         preceding = preceding.trim();
         value = value.trim();
@@ -1357,7 +1479,7 @@ this.squared.base = (function (exports) {
                 value && (value = value.replace(/\\+/g, '/'));
                 break;
         }
-        return preceding + (preceding && value && !endsWith(preceding, separator) && !startsWith$1(value, separator) ? separator : '') + value;
+        return preceding + (preceding && value && !endsWith$2(preceding, separator) && !startsWith$3(value, separator) ? separator : '') + value;
     }
     function randomUUID(separator = '-') {
         return [8, 4, 4, 4, 12].reduce((a, b, index) => {
@@ -1365,7 +1487,7 @@ this.squared.base = (function (exports) {
                 a += separator;
             }
             for (let i = 0; i < b; ++i) {
-                a += HEX[Math.floor(Math.random() * 16)];
+                a += HEX_STRING[Math.floor(Math.random() * 16)];
             }
             return a;
         }, '');
@@ -1387,6 +1509,27 @@ this.squared.base = (function (exports) {
         }
         return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
     }
+    function* searchObject(obj, value, checkName) {
+        const start = value[0] === '*';
+        const end = endsWith$2(value, '*');
+        const search = start && end
+            ? (a) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
+            : start
+                ? (a) => endsWith$2(a, value.replace(/^\*/, ''))
+                : end
+                    ? (a) => startsWith$3(a, value.replace(/\*$/, ''))
+                    : (a) => a === value;
+        for (const attr in obj) {
+            if (checkName) {
+                if (search(attr)) {
+                    yield [attr, obj[attr]];
+                }
+            }
+            else if (typeof obj[attr] === 'string' && search(obj[attr])) {
+                yield [attr, obj[attr]];
+            }
+        }
+    }
     function parseGlob(value, options) {
         value = value.trim();
         let flags = '', fromEnd;
@@ -1396,7 +1539,7 @@ this.squared.base = (function (exports) {
             }
             fromEnd = options.fromEnd;
         }
-        const trimCurrent = (cwd) => fromEnd && startsWith$1(cwd, './') ? cwd.substring(2) : cwd;
+        const trimCurrent = (cwd) => fromEnd && startsWith$3(cwd, './') ? cwd.substring(2) : cwd;
         const source = ((!fromEnd ? '^' : '') + trimCurrent(value))
             .replace(/\\\\([^\\])/g, (...match) => ':' + match[1].charCodeAt(0))
             .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
@@ -1448,9 +1591,9 @@ this.squared.base = (function (exports) {
         if (value) {
             const result = [];
             for (const item of value.split('+')) {
-                const [handler, command] = splitPair$1(item, ':', true);
+                const [handler, command] = splitPair$2(item, ':', true);
                 if (handler && command) {
-                    const [task, preceding] = splitPair$1(command, ':', true);
+                    const [task, preceding] = splitPair$2(command, ':', true);
                     result.push({ handler, task, preceding: preceding === 'true' });
                 }
             }
@@ -1458,18 +1601,31 @@ this.squared.base = (function (exports) {
         }
     }
     function parseWatchInterval(value) {
-        if (value) {
-            value = value.trim();
+        if (value && (value = value.trim())) {
             if (value === 'true') {
                 return true;
             }
-            const match = /^(~|\d+)\s*(?:::\s*(.+?))?$/.exec(value);
+            const match = /^(~|\d+)(?:\s*::\s*(~|.+?)(?:\s*::\s*(.+?)(?:\[([^\]]+)\])?)?)?\s*$/.exec(value);
             if (match) {
-                let interval;
-                if (match[1] !== '~') {
+                let interval, expires, reload;
+                if (match[1] !== '~' && !isNaN(+match[1])) {
                     interval = +match[1];
                 }
-                return { interval, expires: match[2] };
+                if (match[2]) {
+                    if (match[2] !== '~') {
+                        expires = match[2].trim();
+                    }
+                    if (match[3]) {
+                        const [socketId, port] = splitPair$2(match[3], ':', true, true);
+                        let secure, module;
+                        if (match[4]) {
+                            secure = match[4].includes('secure');
+                            module = match[4].includes('module');
+                        }
+                        reload = { socketId: socketId !== '~' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
+                    }
+                }
+                return { interval, expires, reload };
             }
         }
     }
@@ -1477,23 +1633,25 @@ this.squared.base = (function (exports) {
     var util = /*#__PURE__*/Object.freeze({
         __proto__: null,
         fromMimeType: fromMimeType,
+        parseMimeType: parseMimeType,
         appendSeparator: appendSeparator,
         randomUUID: randomUUID,
         upperCaseString: upperCaseString,
         lowerCaseString: lowerCaseString,
+        searchObject: searchObject,
         parseGlob: parseGlob,
         parseTask: parseTask,
         parseWatchInterval: parseWatchInterval
     });
 
-    const { DIRECTORY_NOT_PROVIDED, SERVER_REQUIRED } = squared.lib.error;
+    const { DIRECTORY_NOT_PROVIDED, INVALID_ASSET_REQUEST, SERVER_REQUIRED } = squared.lib.error;
     const { createElement } = squared.lib.dom;
-    const { fromLastIndexOf, isPlainObject, splitPair: splitPair$2, startsWith: startsWith$2, trimEnd } = squared.lib.util;
+    const { escapePattern: escapePattern$1, fromLastIndexOf: fromLastIndexOf$1, isPlainObject, splitPair: splitPair$1, startsWith: startsWith$2, trimEnd } = squared.lib.util;
     function validateAsset(file, exclusions) {
         const { pathname, filename } = file;
         const glob = exclusions.glob;
+        const url = appendSeparator(pathname, filename);
         if (glob) {
-            const url = appendSeparator(pathname, filename);
             for (let i = 0, length = glob.length; i < length; ++i) {
                 let value = glob[i];
                 if (typeof value === 'string') {
@@ -1507,8 +1665,7 @@ this.squared.base = (function (exports) {
         }
         if (exclusions.pathname) {
             for (const value of exclusions.pathname) {
-                const dirname = trimEnd(value.replace(/\\/g, '/'), '/');
-                if (new RegExp(`^${dirname}/?`).test(pathname)) {
+                if (new RegExp(`^${escapePattern$1(trimEnd(value.replace(/\\/g, '/'), '/'))}/?`).test(pathname)) {
                     return false;
                 }
             }
@@ -1521,7 +1678,7 @@ this.squared.base = (function (exports) {
             }
         }
         if (exclusions.extension) {
-            const ext = fromLastIndexOf(filename, '.').toLowerCase();
+            const ext = fromLastIndexOf$1(filename, '.').toLowerCase();
             for (const value of exclusions.extension) {
                 if (ext === value.toLowerCase()) {
                     return false;
@@ -1529,7 +1686,6 @@ this.squared.base = (function (exports) {
             }
         }
         if (exclusions.pattern) {
-            const url = appendSeparator(pathname, filename);
             for (const value of exclusions.pattern) {
                 if (new RegExp(value).test(url)) {
                     return false;
@@ -1549,14 +1705,15 @@ this.squared.base = (function (exports) {
                 LOADER_DATA: '/api/v1/loader/data'
             };
         }
-        static downloadFile(data, filename, mimeType) {
-            const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
-            const href = typeof data === 'string' ? data : URL.createObjectURL(blob);
-            const element = createElement('a', {
-                style: { display: 'none' },
-                attrs: { href, download: filename }
-            });
-            if (!element.download) {
+        static downloadFile(href, filename, mimeType) {
+            if (typeof href !== 'string') {
+                href = URL.createObjectURL(new Blob([href], { type: mimeType || 'application/octet-stream' }));
+            }
+            const element = createElement('a', { style: { display: 'none' }, attributes: { href } });
+            if (filename) {
+                element.download = filename;
+            }
+            else {
                 element.setAttribute('target', '_blank');
             }
             document.body.appendChild(element);
@@ -1576,10 +1733,26 @@ this.squared.base = (function (exports) {
         copyFiles(pathname, options) {
             return this.copying(pathname, Object.assign({}, options));
         }
+        async loadConfig(uri, options) {
+            let mime, cache;
+            if (options) {
+                ({ configMime: mime, cache } = options);
+            }
+            const config = await this.loadData(uri, { type: 'json', mime, cache });
+            if (config) {
+                if (config.success && Array.isArray(config.data)) {
+                    return config.data;
+                }
+                const error = config.error;
+                if (error) {
+                    this.writeError(error.message, error.hint);
+                }
+            }
+        }
         loadData(value, options) {
-            const { type, cache } = options;
+            const { type, mime, cache } = options;
             if (this.hasHttpProtocol() && type) {
-                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? `&cache=${cache ? '1' : '0'}` : ''), {
+                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mime ? '&mime=' + encodeURIComponent(mime) : ''), {
                     method: 'GET',
                     headers: new Headers({ Accept: options.accept || '*/*' })
                 })
@@ -1617,7 +1790,7 @@ this.squared.base = (function (exports) {
                             .then(async (response) => {
                             const result = await response.json();
                             if (typeof options.callback === 'function') {
-                                options.callback(result);
+                                options.callback.call(null, result);
                             }
                             const error = result.error;
                             if (error) {
@@ -1626,15 +1799,11 @@ this.squared.base = (function (exports) {
                             return result;
                         });
                     }
+                    return Promise.reject(INVALID_ASSET_REQUEST);
                 }
-                else {
-                    this.writeError(DIRECTORY_NOT_PROVIDED);
-                }
+                return Promise.reject(DIRECTORY_NOT_PROVIDED);
             }
-            else {
-                this.writeError(SERVER_REQUIRED);
-            }
-            return Promise.resolve();
+            return Promise.reject(SERVER_REQUIRED);
         }
         archiving(target = '', options) {
             if (this.hasHttpProtocol()) {
@@ -1643,7 +1812,7 @@ this.squared.base = (function (exports) {
                     let { filename, format } = options;
                     const setFilename = () => {
                         if (!format || !this.archiveFormats.includes(format = format.toLowerCase())) {
-                            [filename, format] = splitPair$2(filename, '.', true, true);
+                            [filename, format] = splitPair$1(filename, '.', true, true);
                             if (format && !this.archiveFormats.includes(format)) {
                                 filename += '.' + format;
                                 format = '';
@@ -1659,7 +1828,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                     else {
-                        filename || (filename = fromLastIndexOf(target, '/', '\\'));
+                        filename || (filename = fromLastIndexOf$1(target, '/', '\\'));
                         setFilename();
                     }
                     return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_ARCHIVE) +
@@ -1675,7 +1844,7 @@ this.squared.base = (function (exports) {
                         .then(async (response) => {
                         const result = await response.json();
                         if (typeof options.callback === 'function') {
-                            options.callback(result);
+                            options.callback.call(null, result);
                         }
                         const { downloadKey, filename: zipname, error } = result;
                         if (downloadKey && zipname) {
@@ -1695,11 +1864,9 @@ this.squared.base = (function (exports) {
                         return result;
                     });
                 }
+                return Promise.reject(INVALID_ASSET_REQUEST);
             }
-            else {
-                this.writeError(SERVER_REQUIRED);
-            }
-            return Promise.resolve();
+            return Promise.reject(SERVER_REQUIRED);
         }
         setEndpoint(name, value) {
             this._endpoints[name] = value;
@@ -1708,7 +1875,7 @@ this.squared.base = (function (exports) {
             (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
         }
         createRequestBody(assets, options) {
-            if (assets && assets.length) {
+            if (assets === null || assets === void 0 ? void 0 : assets.length) {
                 const exclusions = options.exclusions;
                 if (exclusions) {
                     assets = assets.filter(item => validateAsset(item, exclusions));
@@ -1716,10 +1883,27 @@ this.squared.base = (function (exports) {
                         return;
                     }
                 }
+                let socketId;
                 const documentName = new Set(options.document);
                 const taskName = new Set();
+                const setSocketId = (watch) => {
+                    var _a;
+                    socketId || (socketId = randomUUID());
+                    if (watch.reload === true) {
+                        watch.reload = { socketId };
+                    }
+                    else if (watch.reload) {
+                        (_a = watch.reload).socketId || (_a.socketId = socketId);
+                    }
+                };
                 for (let i = 0, length = assets.length; i < length; ++i) {
-                    const { document, tasks } = assets[i];
+                    const { tasks, watch, document } = assets[i];
+                    if (tasks) {
+                        tasks.forEach(item => taskName.add(item.handler));
+                    }
+                    if (options.watch && isPlainObject(watch)) {
+                        setSocketId(watch);
+                    }
                     if (document) {
                         if (Array.isArray(document)) {
                             document.forEach(value => documentName.add(value));
@@ -1728,12 +1912,12 @@ this.squared.base = (function (exports) {
                             documentName.add(document);
                         }
                     }
-                    if (tasks) {
-                        tasks.forEach(item => taskName.add(item.handler));
-                    }
                 }
                 const { outputTasks, outputWatch } = this.userSettings;
                 for (let i = 0; i < 2; ++i) {
+                    if (i === 1 && !options.watch) {
+                        break;
+                    }
                     const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
                     let unassigned;
                     for (const module in output) {
@@ -1746,25 +1930,33 @@ this.squared.base = (function (exports) {
                                 if (glob.test(appendSeparator(item.pathname, item.filename))) {
                                     if (i === 0) {
                                         const value = output[module];
+                                        const addTask = (task) => {
+                                            item.tasks.push(task);
+                                            taskName.add(task.handler);
+                                        };
                                         item.tasks || (item.tasks = []);
                                         if (Array.isArray(value)) {
                                             for (const task of value) {
-                                                item.tasks.push(task);
-                                                taskName.add(task.handler);
+                                                addTask(task);
                                             }
                                         }
                                         else if (isPlainObject(value)) {
-                                            item.tasks.push(value);
-                                            taskName.add(value.handler);
+                                            addTask(value);
                                         }
                                     }
                                     else {
                                         const value = output[module];
-                                        if (value === true || isPlainObject(value) && (value.interval || value.expires)) {
-                                            item.watch = value;
-                                            unassigned.splice(j--, 1);
-                                            --length;
+                                        if (value === true) {
+                                            item.watch = true;
                                         }
+                                        else if (isPlainObject(value)) {
+                                            setSocketId(item.watch = Object.assign({}, value));
+                                        }
+                                        else {
+                                            continue;
+                                        }
+                                        unassigned.splice(j--, 1);
+                                        --length;
                                     }
                                 }
                             }
@@ -1774,10 +1966,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                 }
-                const data = { assets };
-                if (documentName.size) {
-                    data.document = Array.from(documentName);
-                }
+                const data = { assets, document: Array.from(documentName) };
                 if (taskName.size) {
                     data.task = Array.from(taskName);
                 }
@@ -1802,13 +1991,13 @@ this.squared.base = (function (exports) {
     }
 
     const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
-    const { isUserAgent: isUserAgent$1 } = squared.lib.client;
+    const { isUserAgent } = squared.lib.client;
     const { isTransparent } = squared.lib.color;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
+    const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
-    const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, endsWith: endsWith$1, hasValue, isNumber, isObject: isObject$1, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$3, startsWith: startsWith$3 } = squared.lib.util;
+    const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
+    const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith: endsWith$1, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith: startsWith$1 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1822,11 +2011,11 @@ this.squared.base = (function (exports) {
         'letterSpacing',
         'wordSpacing'
     ];
-    const BORDER_TOP = CSS_PROPERTIES$1.borderTop.value;
-    const BORDER_RIGHT = CSS_PROPERTIES$1.borderRight.value;
-    const BORDER_BOTTOM = CSS_PROPERTIES$1.borderBottom.value;
-    const BORDER_LEFT = CSS_PROPERTIES$1.borderLeft.value;
-    const BORDER_OUTLINE = CSS_PROPERTIES$1.outline.value;
+    const BORDER_TOP = CSS_PROPERTIES.borderTop.value;
+    const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value;
+    const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value;
+    const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value;
+    const BORDER_OUTLINE = CSS_PROPERTIES.outline.value;
     const REGEXP_EM = /\dem$/;
     const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
     const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
@@ -1847,7 +2036,7 @@ this.squared.base = (function (exports) {
                         value = '';
                     }
                 }
-                setElementCache$1(element, attr, value !== 'auto' ? current : '', sessionId);
+                setElementCache(element, attr, value !== 'auto' ? current : '', sessionId);
                 return 2 /* CHANGED */;
             }
             return 0 /* FAIL */;
@@ -1859,7 +2048,7 @@ this.squared.base = (function (exports) {
         return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit(value, { fontSize });
     }
     function isFontFixedWidth(node) {
-        const [fontFirst, fontSecond] = splitPair$3(node.css('fontFamily'), ',', true);
+        const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
         return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
     function getFlexValue(node, attr, fallback, parent) {
@@ -1868,7 +2057,7 @@ this.squared.base = (function (exports) {
     }
     function hasTextAlign(node, ...values) {
         const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
-        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith$3(node.display, 'inline'));
+        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith$1(node.display, 'inline'));
     }
     function setDimension(node, styleMap, dimension) {
         const options = { dimension };
@@ -1958,7 +2147,7 @@ this.squared.base = (function (exports) {
                         default: {
                             const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
                             if (parent) {
-                                const [horizontal, vertical] = splitPair$3(parent.css('borderSpacing'), ' ');
+                                const [horizontal, vertical] = splitPair(parent.css('borderSpacing'), ' ');
                                 switch (attr) {
                                     case 'marginTop':
                                     case 'marginBottom':
@@ -2037,7 +2226,7 @@ this.squared.base = (function (exports) {
                 const attr = attrList[i];
                 let value;
                 if (attr.trailing) {
-                    const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
+                    const pattern = new RegExp(`^([^:]+:)?${escapePattern(attr.key)}$`);
                     for (const name in attributes) {
                         if (pattern.test(name)) {
                             value = attributes[name];
@@ -2063,7 +2252,7 @@ this.squared.base = (function (exports) {
                             }
                             break;
                         case '^':
-                            if (!startsWith$3(value, other)) {
+                            if (!startsWith$1(value, other)) {
                                 return false;
                             }
                             break;
@@ -2078,7 +2267,7 @@ this.squared.base = (function (exports) {
                             }
                             break;
                         case '|':
-                            if (value !== other && !startsWith$3(value, other + '-')) {
+                            if (value !== other && !startsWith$1(value, other + '-')) {
                                 return false;
                             }
                             break;
@@ -2547,11 +2736,9 @@ this.squared.base = (function (exports) {
     function getQueryLength(value) {
         let result = 0;
         for (let i = 0, length = value.length; i < length; ++i) {
-            const n = value.charCodeAt(i);
-            if (n < 14 && n > 8 || n === 32) {
-                continue;
+            if (!isSpace(value[i])) {
+                ++result;
             }
-            ++result;
         }
         return result;
     }
@@ -2563,7 +2750,7 @@ this.squared.base = (function (exports) {
     const aboveRange = (a, b, offset = 1) => a + offset > b;
     const belowRange = (a, b, offset = 1) => a - offset < b;
     const sortById = (a, b) => a.id - b.id;
-    const isInlineVertical = (value) => startsWith$3(value, 'inline') || value === 'table-cell';
+    const isInlineVertical = (value) => startsWith$1(value, 'inline') || value === 'table-cell';
     const canTextAlign = (node) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element, children) {
@@ -2591,7 +2778,7 @@ this.squared.base = (function (exports) {
             if (element) {
                 this._element = element;
                 if (sessionId !== '0') {
-                    setElementCache$1(element, 'node', this, sessionId);
+                    setElementCache(element, 'node', this, sessionId);
                     const elementData = getElementData(element, sessionId);
                     if (elementData) {
                         this._elementData = elementData;
@@ -2649,7 +2836,7 @@ this.squared.base = (function (exports) {
             if (element) {
                 let elementData;
                 if (!sessionId) {
-                    sessionId = getElementCache$1(element, 'sessionId', '0');
+                    sessionId = getElementCache(element, 'sessionId', '0');
                     if (sessionId === this.sessionId) {
                         if (cache) {
                             this._cache = {};
@@ -2678,7 +2865,7 @@ this.squared.base = (function (exports) {
                                     const style = element.style;
                                     for (let i = 0; i < length; ++i) {
                                         const attr = style[i];
-                                        styleMap[convertCamelCase$1(attr)] = style.getPropertyValue(attr);
+                                        styleMap[convertCamelCase(attr)] = style.getPropertyValue(attr);
                                     }
                                 }
                             }
@@ -2715,7 +2902,7 @@ this.squared.base = (function (exports) {
             }
             else if (value !== undefined) {
                 let obj = data[name];
-                if (!isObject$1(obj)) {
+                if (!isObject(obj)) {
                     obj = {};
                     data[name] = obj;
                 }
@@ -2724,7 +2911,7 @@ this.squared.base = (function (exports) {
                 }
             }
             const stored = data[name];
-            if (isObject$1(stored)) {
+            if (isObject(stored)) {
                 return stored[attr];
             }
         }
@@ -2807,19 +2994,19 @@ this.squared.base = (function (exports) {
                             this._cacheState.textEmpty = undefined;
                             continue;
                         default:
-                            if (startsWith$3(attr, 'background')) {
+                            if (startsWith$1(attr, 'background')) {
                                 cache.visibleStyle = undefined;
                             }
-                            else if (startsWith$3(attr, 'border')) {
-                                if (startsWith$3(attr, 'borderTop')) {
+                            else if (startsWith$1(attr, 'border')) {
+                                if (startsWith$1(attr, 'borderTop')) {
                                     cache.borderTopWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
-                                else if (startsWith$3(attr, 'borderRight')) {
+                                else if (startsWith$1(attr, 'borderRight')) {
                                     cache.borderRightWidth = undefined;
                                     cache.contentBoxWidth = undefined;
                                 }
-                                else if (startsWith$3(attr, 'borderBottom')) {
+                                else if (startsWith$1(attr, 'borderBottom')) {
                                     cache.borderBottomWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
@@ -2845,10 +3032,10 @@ this.squared.base = (function (exports) {
             }
             if (!this._preferInitial && this.naturalChild) {
                 let parent;
-                if (attrs.some(value => CSS_PROPERTIES$1[value].trait & 4 /* LAYOUT */)) {
+                if (attrs.some(value => CSS_PROPERTIES[value].trait & 4 /* LAYOUT */)) {
                     parent = this.pageFlow && this.ascend({ condition: item => item.hasPX('width') && item.hasPX('height') || item.documentRoot })[0] || this;
                 }
-                else if (attrs.some(value => CSS_PROPERTIES$1[value].trait & 8 /* CONTAIN */)) {
+                else if (attrs.some(value => CSS_PROPERTIES[value].trait & 8 /* CONTAIN */)) {
                     parent = this;
                 }
                 else {
@@ -3044,7 +3231,7 @@ this.squared.base = (function (exports) {
             if (this.styleElement && attr in style) {
                 if (value === '') {
                     style[attr] = 'initial';
-                    const property = CSS_PROPERTIES$1[attr];
+                    const property = CSS_PROPERTIES[attr];
                     if (property && typeof property.value === 'string') {
                         this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & 256 /* UNIT */ ? 'px' : ''));
                     }
@@ -3372,7 +3559,7 @@ this.squared.base = (function (exports) {
                     ({ not, type, ignoreDefault } = options);
                 }
                 if (ignoreDefault !== true) {
-                    const data = CSS_PROPERTIES$1[attr];
+                    const data = CSS_PROPERTIES[attr];
                     if (data && (value === data.value || (data.trait & 256 /* UNIT */) && this.parseUnit(value) === parseFloat(data.value))) {
                         return false;
                     }
@@ -3449,7 +3636,7 @@ this.squared.base = (function (exports) {
                     (notIndex || (notIndex = [])).push(part);
                     return ':not-' + 'x'.repeat(notIndex.length);
                 };
-                const parseNot = (condition) => condition.includes(',') ? parseSelectorText$1(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
+                const parseNot = (condition) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
                 const checkNot = (condition) => {
                     return splitEnclosing(condition, /:not/i).reduce((a, b) => {
                         if (b[0] === ':') {
@@ -3461,7 +3648,7 @@ this.squared.base = (function (exports) {
                         return a + b;
                     }, '');
                 };
-                for (const query of parseSelectorText$1(value)) {
+                for (const query of parseSelectorText(value)) {
                     let selector = '', expand;
                     invalid: {
                         let match;
@@ -3478,7 +3665,7 @@ this.squared.base = (function (exports) {
                                             break invalid;
                                         }
                                         if (condition.includes(',')) {
-                                            seg = parseSelectorText$1(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
+                                            seg = parseSelectorText(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
                                             expand = true;
                                         }
                                         else {
@@ -3567,7 +3754,7 @@ this.squared.base = (function (exports) {
                                         start = true;
                                         continue;
                                     default:
-                                        if (startsWith$3(segment, '*|')) {
+                                        if (startsWith$1(segment, '*|')) {
                                             segment = segment.substring(2);
                                         }
                                         break;
@@ -3957,12 +4144,12 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 if (this.flexElement) {
                     const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                    const row = startsWith$3(flexDirection, 'row');
+                    const row = startsWith$1(flexDirection, 'row');
                     result = {
                         row,
                         column: !row,
                         reverse: endsWith$1(flexDirection, 'reverse'),
-                        wrap: startsWith$3(flexWrap, 'wrap'),
+                        wrap: startsWith$1(flexWrap, 'wrap'),
                         wrapReverse: flexWrap === 'wrap-reverse',
                         alignContent,
                         justifyContent
@@ -4133,7 +4320,7 @@ this.squared.base = (function (exports) {
             return result === undefined ? this._cache.paddingLeft = convertBox(this, 'paddingLeft', false) : result;
         }
         get contentBox() {
-            return this.css('boxSizing') !== 'border-box' || this.tableElement && isUserAgent$1(4 /* FIREFOX */);
+            return this.css('boxSizing') !== 'border-box' || this.tableElement && isUserAgent(4 /* FIREFOX */);
         }
         get contentBoxWidth() {
             const result = this._cache.contentBoxWidth;
@@ -4195,7 +4382,7 @@ this.squared.base = (function (exports) {
                             if (this.inlineStatic && ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
                                 result = true;
                             }
-                            else if (this.inline || startsWith$3(this.display, 'table-') || this.hasPX('maxWidth')) {
+                            else if (this.inline || startsWith$1(this.display, 'table-') || this.hasPX('maxWidth')) {
                                 result = false;
                             }
                         }
@@ -4272,7 +4459,7 @@ this.squared.base = (function (exports) {
             let result = this._cache.baseline;
             if (result === undefined) {
                 const display = this.display;
-                if ((startsWith$3(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                if ((startsWith$1(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
                     const value = this.css('verticalAlign');
                     result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
@@ -4435,7 +4622,7 @@ this.squared.base = (function (exports) {
                     let backgroundRepeatX = false, backgroundRepeatY = false;
                     if (backgroundImage) {
                         for (const repeat of this.css('backgroundRepeat').split(',')) {
-                            const [repeatX, repeatY] = splitPair$3(repeat.trim(), ' ');
+                            const [repeatX, repeatY] = splitPair(repeat.trim(), ' ');
                             backgroundRepeatX || (backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x');
                             backgroundRepeatY || (backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
                         }
@@ -4816,15 +5003,15 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { FILE: FILE$2, STRING: STRING$1 } = squared.lib.regex;
+    const { FILE, STRING } = squared.lib.regex;
     const { extractURL, resolveURL } = squared.lib.css;
-    const { convertBase64, endsWith: endsWith$2, fromLastIndexOf: fromLastIndexOf$1, isBase64: isBase64$1, parseMimeType, resolvePath: resolvePath$1, splitPairStart, startsWith: startsWith$4, trimBoth } = squared.lib.util;
+    const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
     const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
     const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
     const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
     const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
     const REGEXP_FONTURL = /\s?(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
-    const REGEXP_DATAURI$1 = new RegExp(`^${STRING$1.DATAURI}$`);
+    const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
     class Resource {
         constructor(application) {
             this.application = application;
@@ -4838,7 +5025,7 @@ this.squared.base = (function (exports) {
             return ((_a = /\.([^./]+)\s*$/.exec(value)) === null || _a === void 0 ? void 0 : _a[1]) || '';
         }
         static parseDataURI(value, mimeType = 'image/unknown', encoding = 'base64') {
-            const match = REGEXP_DATAURI$1.exec(value);
+            const match = REGEXP_DATAURI.exec(value);
             if (match && match[1]) {
                 const leading = match[2];
                 const trailing = match[3];
@@ -4850,7 +5037,7 @@ this.squared.base = (function (exports) {
                 else if (leading) {
                     if (leading.includes('/')) {
                         mimeType = leading;
-                        if (!encoding && isBase64$1(data)) {
+                        if (!encoding && isBase64(data)) {
                             encoding = 'base64';
                         }
                     }
@@ -4886,7 +5073,7 @@ this.squared.base = (function (exports) {
             const parseSrcSet = (value) => {
                 if (value) {
                     for (const uri of value.split(',')) {
-                        this.addImageData(resourceId, resolvePath$1(splitPairStart(uri.trim(), ' ')));
+                        this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
                     }
                 }
             };
@@ -4896,15 +5083,15 @@ this.squared.base = (function (exports) {
                 element.querySelectorAll('input[type=image]').forEach((image) => this.addImageData(resourceId, image.src, image.width, image.height));
                 element.querySelectorAll('object, embed').forEach((source) => {
                     const src = source.data || source.src;
-                    if (src && (startsWith$4(source.type, 'image/') || startsWith$4(parseMimeType(src), 'image/'))) {
+                    if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
                         this.addImageData(resourceId, src.trim());
                     }
                 });
                 element.querySelectorAll('svg use').forEach((use) => {
                     const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
                     if (href && href.indexOf('#') > 0) {
-                        const src = resolvePath$1(splitPairStart(href, '#'));
-                        if (FILE$2.SVG.test(src)) {
+                        const src = resolvePath(splitPairStart(href, '#'));
+                        if (FILE.SVG.test(src)) {
                             this.addImageData(resourceId, src);
                         }
                     }
@@ -4914,7 +5101,7 @@ this.squared.base = (function (exports) {
                 const { image, rawData } = assets;
                 for (const item of image.values()) {
                     const uri = item.uri;
-                    if (FILE$2.SVG.test(uri)) {
+                    if (FILE.SVG.test(uri)) {
                         result.push(uri);
                     }
                     else if (item.width === 0 || item.height === 0) {
@@ -4933,7 +5120,7 @@ this.squared.base = (function (exports) {
                 for (const data of rawData) {
                     const item = data[1];
                     const mimeType = item.mimeType;
-                    if (startsWith$4(mimeType, 'image/') && !endsWith$2(mimeType, 'svg+xml')) {
+                    if (startsWith(mimeType, 'image/') && !endsWith(mimeType, 'svg+xml')) {
                         let src = `data:${mimeType};`;
                         if (item.base64) {
                             src += 'base64,' + item.base64;
@@ -4977,7 +5164,7 @@ this.squared.base = (function (exports) {
                     else {
                         const src = image.src;
                         if (!preloadMap.includes(src)) {
-                            if (FILE$2.SVG.test(src)) {
+                            if (FILE.SVG.test(src)) {
                                 result.push(src);
                             }
                             else if (image.complete) {
@@ -5036,16 +5223,16 @@ this.squared.base = (function (exports) {
                             srcLocal = url;
                         }
                         else {
-                            if (startsWith$4(url, 'data:')) {
+                            if (startsWith(url, 'data:')) {
                                 const [mime, base64] = url.split(',');
                                 srcBase64 = base64.trim();
-                                if (!mime.includes('base64') && !isBase64$1(srcBase64)) {
+                                if (!mime.includes('base64') && !isBase64(srcBase64)) {
                                     continue;
                                 }
                                 mimeType || (mimeType = mime.toLowerCase());
                             }
                             else {
-                                srcUrl = resolvePath$1(url, styleSheetHref);
+                                srcUrl = resolvePath(url, styleSheetHref);
                                 mimeType || (mimeType = parseMimeType(srcUrl));
                             }
                             if (!srcFormat) {
@@ -5151,7 +5338,7 @@ this.squared.base = (function (exports) {
                 if (base64 || encoding === 'base64') {
                     if (!base64) {
                         if (content) {
-                            base64 = startsWith$4(content, 'data:') ? content.split(',')[1].trim() : content;
+                            base64 = startsWith(content, 'data:') ? content.split(',')[1].trim() : content;
                             content = undefined;
                         }
                         else if (buffer) {
@@ -5176,10 +5363,10 @@ this.squared.base = (function (exports) {
                     const url = uri.split('?')[0];
                     if (!filename) {
                         const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
-                        filename = url.endsWith(ext) ? fromLastIndexOf$1(url, '/') : this.randomUUID + ext;
+                        filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
                     }
                     assets.rawData.set(uri, {
-                        pathname: startsWith$4(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
+                        pathname: startsWith(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
                         filename,
                         mimeType,
                         content,
@@ -5208,13 +5395,13 @@ this.squared.base = (function (exports) {
             const font = (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.fonts.get(fontFamily.trim().toLowerCase());
             if (font) {
                 const mimeType = this.mimeTypeMap.font;
-                return font.filter(item => startsWith$4(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
+                return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
             }
             return [];
         }
         getRawData(resourceId, uri) {
             var _a;
-            if (startsWith$4(uri, 'url(')) {
+            if (startsWith(uri, 'url(')) {
                 uri = extractURL(uri);
                 if (!uri) {
                     return;

@@ -31,7 +31,7 @@ const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
+const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
 const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
@@ -2325,7 +2325,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         }
         case 'boxShadow':
         case 'textShadow':
-            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/ });
+            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-zQ]*\s+-?[\d.]+[a-zQ]*(\s+-[\d.]+[a-z]*)/ });
         case 'animation':
         case 'animationDelay':
         case 'animationDuration':
@@ -3419,7 +3419,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
-                                            if (/^\s*-?\d+\s*$/.test(partial)) {
+                                            if (/^\s*[+|-]?\d+\s*$/.test(partial)) {
                                                 seg.push(+partial);
                                                 found = true;
                                             }
@@ -3927,9 +3927,8 @@ export function isPercent(value: string, digits?: boolean) {
 export function isPx(value: string) {
     if (value) {
         const length = value.length;
-        if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
-            const n = value.charCodeAt(length - 3);
-            return n >= 48 && n <= 57;
+        if (length > 2 && value[length - 1] === 'x' && value[length - 2] === 'p') {
+            return !isNaN(+value.substring(0, length - 2));
         }
     }
     return false;

@@ -22,9 +22,9 @@ interface FileAsData extends OptionsData {
 }
 
 const { createElement } = squared.lib.dom;
-const { convertWord, endsWith, fromLastIndexOf, isPlainObject, parseMimeType, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+const { convertWord, endsWith, fromLastIndexOf, isPlainObject, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
-const { appendSeparator, fromMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
+const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
@@ -796,7 +796,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     socketMap[id + '_' + port + (secure ? '_0' : '_1')] ||=
                         'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
                         (handler.open ? `socket.onopen=${handler.open};` : '') +
-                        'socket.onmessage=' + (handler.message || `function(e){const c=JSON.parse(e.data);if(c&&c.socketId==="${id}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){const a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){const a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
+                        'socket.onmessage=' + (handler.message || `function(e){const c=JSON.parse(e.data);if(c&&c.socketId==="${id!}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){const a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){const a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
                         (handler.error ? `socket.onerror=${handler.error};` : '') +
                         (handler.close ? `socket.onclose=${handler.close};` : '');
                     delete reload.handler;
@@ -880,22 +880,19 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 case 'AUDIO':
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
                     break;
-                case 'OBJECT':
-                case 'EMBED':
-                    mimeType = (element as HTMLObjectElement | HTMLEmbedElement).type;
-                case 'IFRAME': {
-                    const iframe = element.tagName === 'IFRAME';
-                    const file = element.dataset.chromeFile;
-                    if (!iframe || startsWith(file, 'saveTo')) {
-                        const src = element instanceof HTMLObjectElement ? element.data : element.src;
-                        if (startsWith(mimeType, 'image/') || startsWith(parseMimeType(src), 'image/')) {
-                            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, mimeType);
-                            return;
-                        }
-                    }
-                    else if (iframe) {
+                case 'IFRAME':
+                    if (!(assetMap && assetMap.get(element)) && !startsWith(element.dataset.chromeFile, 'saveTo')) {
                         return;
                     }
+                case 'OBJECT':
+                case 'EMBED': {
+                    const src = element instanceof HTMLObjectElement ? element.data : element.src;
+                    mimeType = (element as HTMLObjectElement | HTMLEmbedElement).type || parseMimeType(src);
+                    if (startsWith(mimeType, 'image/')) {
+                        this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, mimeType);
+                        return;
+                    }
+                    break;
                 }
             }
             resolveAssetSource(element, items);

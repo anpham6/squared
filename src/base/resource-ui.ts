@@ -250,7 +250,8 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "background
 
 function hasEndingSpace(element: HTMLElement) {
     const value = element.textContent!;
-    return value.charCodeAt(value.length - 1) === 32;
+    const ch = value[value.length - 1];
+    return ch === ' ' || ch === '\t';
 }
 
 function newBoxRectPosition(orientation = ['left', 'top']): BoxRectPosition {

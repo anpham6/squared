@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.4.0
+/* vdom-lite-framework 2.5.0
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -23,11 +23,11 @@ var vdom = (function () {
     }
 
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
-    const { FILE, STRING } = squared.lib.regex;
-    const { isUserAgent } = squared.lib.client;
-    const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
-    const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-    const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+    const { FILE: FILE$1, STRING } = squared.lib.regex;
+    const { isUserAgent: isUserAgent$1 } = squared.lib.client;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$1, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
+    const { getElementCache: getElementCache$1, newSessionInit, setElementCache: setElementCache$1 } = squared.lib.session;
+    const { allSettled, capitalize, convertCamelCase: convertCamelCase$1, escapePattern: escapePattern$1, isBase64, isEmptyString, resolvePath, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
     const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
@@ -39,7 +39,7 @@ var vdom = (function () {
                 if (resource) {
                     const leading = match[3];
                     const encoding = match[4] || (isBase64(match[5]) ? 'base64' : 'utf8');
-                    let content, base64;
+                    let base64, content;
                     if (encoding === 'base64') {
                         base64 = match[5];
                     }
@@ -72,13 +72,10 @@ var vdom = (function () {
         if (error instanceof Event) {
             error = error.target;
         }
-        if (error instanceof HTMLImageElement) {
-            return error.src;
-        }
-        return '';
+        return error instanceof HTMLImageElement ? error.src : '';
     }
     const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
-    class Application {
+    class Application$1 {
         constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor) {
             this.framework = framework;
             this.extensions = [];
@@ -190,14 +187,14 @@ var vdom = (function () {
                             fetch(item)
                                 .then(async (result) => {
                                 const mimeType = result.headers.get('content-type') || '';
-                                if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                if (startsWith$1(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
                                     success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
                                 }
-                                else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
+                                else if (startsWith$1(mimeType, 'image/svg+xml') || FILE$1.SVG.test(item)) {
                                     success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
+                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair$1(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
                                 }
                             })
                                 .catch(err => error(err));
@@ -306,12 +303,9 @@ var vdom = (function () {
                 else {
                     const namespace = namespaces[i] + '.';
                     for (const data of builtInExtensions) {
-                        if (startsWith(data[0], namespace)) {
-                            ext = data[1];
-                            if (!extensions.includes(ext)) {
-                                ext.application = this;
-                                extensions.push(ext);
-                            }
+                        if (startsWith$1(data[0], namespace) && !extensions.includes(ext = data[1])) {
+                            ext.application = this;
+                            extensions.push(ext);
                         }
                     }
                 }
@@ -388,9 +382,8 @@ var vdom = (function () {
         cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, extensions, shadowParent) {
             const node = this.insertNode(processing, parentElement);
             if (node) {
-                const cache = processing.cache;
                 if (depth === 0) {
-                    cache.add(node);
+                    processing.cache.add(node);
                 }
                 if (this._preventNodeCascade(node)) {
                     return node;
@@ -417,7 +410,7 @@ var vdom = (function () {
                     else if (this._includeElement(element)) {
                         if (extensions) {
                             const use = this.getDatasetName('use', element);
-                            (use ? Application.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode(element, sessionId));
+                            (use ? Application$1.prioritizeExtensions(use, extensions) : extensions).some(item => item.beforeInsertNode(element, sessionId));
                         }
                         let shadowRoot;
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
@@ -449,10 +442,10 @@ var vdom = (function () {
                     node.inlineText = inlineText && plainText;
                     node.retainAs(children);
                     if (j > 1) {
-                        cache.addAll(children);
+                        processing.cache.addAll(children);
                     }
                     else {
-                        cache.add(children[0]);
+                        processing.cache.add(children[0]);
                     }
                 }
                 if (elements.length && this.userSettings.createQuerySelectorMap) {
@@ -504,14 +497,14 @@ var vdom = (function () {
                         if (attr[0] === '-') {
                             continue;
                         }
-                        const baseAttr = convertCamelCase(attr);
+                        const baseAttr = convertCamelCase$1(attr);
                         let value = cssStyle[attr];
                         switch (value) {
                             case 'initial':
-                                if (isUserAgent(2 /* SAFARI */) && startsWith(baseAttr, 'background')) {
+                                if (isUserAgent$1(2 /* SAFARI */) && startsWith$1(baseAttr, 'background')) {
                                     break;
                                 }
-                                if (((_b = CSS_PROPERTIES[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) === 'auto') {
+                                if (((_b = CSS_PROPERTIES$1[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) === 'auto') {
                                     value = 'auto';
                                     break;
                                 }
@@ -521,7 +514,7 @@ var vdom = (function () {
                                         for (const name in CSS_SHORTHANDNONE) {
                                             const css = CSS_SHORTHANDNONE[name];
                                             if (css.value.includes(baseAttr)) {
-                                                if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, css.valueOfNone)) {
+                                                if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$1(css.valueOfNone))) {
                                                     break required;
                                                 }
                                                 break;
@@ -545,8 +538,8 @@ var vdom = (function () {
                     }
                     let match;
                     while (match = REGEXP_IMPORTANT.exec(cssText)) {
-                        const attr = convertCamelCase(match[1]);
-                        const value = (_c = CSS_PROPERTIES[attr]) === null || _c === void 0 ? void 0 : _c.value;
+                        const attr = convertCamelCase$1(match[1]);
+                        const value = (_c = CSS_PROPERTIES$1[attr]) === null || _c === void 0 ? void 0 : _c.value;
                         if (Array.isArray(value)) {
                             for (let i = 0, length = value.length; i < length; ++i) {
                                 important[value[i]] = true;
@@ -557,12 +550,13 @@ var vdom = (function () {
                         }
                     }
                     REGEXP_IMPORTANT.lastIndex = 0;
-                    for (const selectorText of parseSelectorText(item.selectorText)) {
+                    let processing;
+                    for (const selectorText of parseSelectorText$1(item.selectorText)) {
                         const specificity = getSpecificity(selectorText);
-                        const [selector, target] = splitPair(selectorText, '::');
+                        const [selector, target] = splitPair$1(selectorText, '::');
                         const targetElt = target ? '::' + target : '';
                         let elements;
-                        if (startsWith(selector, ':host')) {
+                        if (startsWith$1(selector, ':host')) {
                             if (!hostElement) {
                                 continue;
                             }
@@ -599,18 +593,18 @@ var vdom = (function () {
                         }
                         const length = elements.length;
                         if (length === 0) {
-                            if (!hostElement) {
-                                ((_d = this.getProcessing(sessionId)).unusedStyles || (_d.unusedStyles = new Set())).add(selectorText);
+                            if (resource && !hostElement) {
+                                ((_d = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_d.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
+                        const attrStyle = 'styleMap' + targetElt;
+                        const attrSpecificity = 'styleSpecificity' + targetElt;
                         for (let i = 0; i < length; ++i) {
                             const element = elements[i];
-                            const attrStyle = 'styleMap' + targetElt;
-                            const attrSpecificity = 'styleSpecificity' + targetElt;
-                            const styleData = getElementCache(element, attrStyle, sessionId);
+                            const styleData = getElementCache$1(element, attrStyle, sessionId);
                             if (styleData) {
-                                const specificityData = getElementCache(element, attrSpecificity, sessionId);
+                                const specificityData = getElementCache$1(element, attrSpecificity, sessionId);
                                 for (const attr in baseMap) {
                                     const previous = specificityData[attr];
                                     const revised = specificity + (important[attr] ? 1000 : 0);
@@ -626,9 +620,9 @@ var vdom = (function () {
                                 for (const attr in styleMap) {
                                     specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                                 }
-                                setElementCache(element, 'sessionId', sessionId);
-                                setElementCache(element, attrStyle, styleMap, sessionId);
-                                setElementCache(element, attrSpecificity, specificityData, sessionId);
+                                setElementCache$1(element, 'sessionId', sessionId);
+                                setElementCache$1(element, attrStyle, styleMap, sessionId);
+                                setElementCache$1(element, attrSpecificity, specificityData, sessionId);
                             }
                         }
                     }
@@ -650,7 +644,7 @@ var vdom = (function () {
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
-                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
+                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${escapePattern$1(rule)}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
                     for (let i = 0, length = cssRules.length; i < length; ++i) {
                         const rule = cssRules[i];
                         const type = rule.type;
@@ -762,11 +756,8 @@ var vdom = (function () {
                     return [rootElements];
                 }
             }
-            const controller = this.controllerHandler;
-            const resource = this.resourceHandler;
-            const sessionId = controller.generateSessionId;
-            const resourceId = this.resourceId;
-            const extensions = this.extensionsAll;
+            const { controllerHandler, resourceHandler, resourceId, extensionsAll: extensions } = this;
+            const sessionId = controllerHandler.generateSessionId;
             const processing = {
                 sessionId,
                 resourceId,
@@ -784,10 +775,10 @@ var vdom = (function () {
                 processing.afterInsertNode = afterInsertNode;
             }
             this.session.active.set(sessionId, processing);
-            if (resource) {
-                resource.init(resourceId);
+            if (resourceHandler) {
+                resourceHandler.init(resourceId);
             }
-            controller.init(resourceId);
+            controllerHandler.init(resourceId);
             const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
             if (queryRoot && queryRoot !== document.documentElement) {
                 this.setStyleMap(sessionId, resourceId, document, queryRoot);
@@ -811,7 +802,7 @@ var vdom = (function () {
                     }
                 }
             }
-            if (resource) {
+            if (resourceHandler) {
                 const queryElements = [queryRoot || document];
                 if (shadowElements) {
                     queryElements.push(...shadowElements);
@@ -820,10 +811,10 @@ var vdom = (function () {
                     element.querySelectorAll('[style]').forEach((child) => {
                         const { backgroundImage, listStyleImage } = child.style;
                         if (backgroundImage) {
-                            parseImageUrl(backgroundImage, location.href, resource, resourceId);
+                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
                         }
                         if (listStyleImage) {
-                            parseImageUrl(listStyleImage, location.href, resource, resourceId);
+                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
                         }
                     });
                 }
@@ -920,9 +911,9 @@ var vdom = (function () {
             return this.session.active.size;
         }
     }
-    Application.KEY_NAME = 'squared.base.application';
+    Application$1.KEY_NAME = 'squared.base.application';
 
-    class Application$1 extends Application {
+    class Application extends Application$1 {
         constructor() {
             super(...arguments);
             this.systemName = 'vdom';
@@ -966,14 +957,14 @@ var vdom = (function () {
     }
     Controller.KEY_NAME = 'squared.base.controller';
 
-    const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
-    const { isUserAgent: isUserAgent$1 } = squared.lib.client;
+    const { CSS: CSS$1, FILE } = squared.lib.regex;
+    const { isUserAgent } = squared.lib.client;
     const { isTransparent } = squared.lib.color;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText: parseSelectorText$1, parseUnit } = squared.lib.css;
+    const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
-    const { getElementAsNode, getElementCache: getElementCache$1, getElementData, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent, endsWith, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
+    const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
+    const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -987,11 +978,11 @@ var vdom = (function () {
         'letterSpacing',
         'wordSpacing'
     ];
-    const BORDER_TOP = CSS_PROPERTIES$1.borderTop.value;
-    const BORDER_RIGHT = CSS_PROPERTIES$1.borderRight.value;
-    const BORDER_BOTTOM = CSS_PROPERTIES$1.borderBottom.value;
-    const BORDER_LEFT = CSS_PROPERTIES$1.borderLeft.value;
-    const BORDER_OUTLINE = CSS_PROPERTIES$1.outline.value;
+    const BORDER_TOP = CSS_PROPERTIES.borderTop.value;
+    const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value;
+    const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value;
+    const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value;
+    const BORDER_OUTLINE = CSS_PROPERTIES.outline.value;
     const REGEXP_EM = /\dem$/;
     const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
     const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
@@ -1012,7 +1003,7 @@ var vdom = (function () {
                         value = '';
                     }
                 }
-                setElementCache$1(element, attr, value !== 'auto' ? current : '', sessionId);
+                setElementCache(element, attr, value !== 'auto' ? current : '', sessionId);
                 return 2 /* CHANGED */;
             }
             return 0 /* FAIL */;
@@ -1024,7 +1015,7 @@ var vdom = (function () {
         return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit(value, { fontSize });
     }
     function isFontFixedWidth(node) {
-        const [fontFirst, fontSecond] = splitPair$1(node.css('fontFamily'), ',', true);
+        const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
         return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
     function getFlexValue(node, attr, fallback, parent) {
@@ -1033,7 +1024,7 @@ var vdom = (function () {
     }
     function hasTextAlign(node, ...values) {
         const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
-        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith$1(node.display, 'inline'));
+        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith(node.display, 'inline'));
     }
     function setDimension(node, styleMap, dimension) {
         const options = { dimension };
@@ -1123,7 +1114,7 @@ var vdom = (function () {
                         default: {
                             const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
                             if (parent) {
-                                const [horizontal, vertical] = splitPair$1(parent.css('borderSpacing'), ' ');
+                                const [horizontal, vertical] = splitPair(parent.css('borderSpacing'), ' ');
                                 switch (attr) {
                                     case 'marginTop':
                                     case 'marginBottom':
@@ -1202,7 +1193,7 @@ var vdom = (function () {
                 const attr = attrList[i];
                 let value;
                 if (attr.trailing) {
-                    const pattern = new RegExp(`^([^:]+:)?${attr.key}$`);
+                    const pattern = new RegExp(`^([^:]+:)?${escapePattern(attr.key)}$`);
                     for (const name in attributes) {
                         if (pattern.test(name)) {
                             value = attributes[name];
@@ -1228,7 +1219,7 @@ var vdom = (function () {
                             }
                             break;
                         case '^':
-                            if (!startsWith$1(value, other)) {
+                            if (!startsWith(value, other)) {
                                 return false;
                             }
                             break;
@@ -1243,7 +1234,7 @@ var vdom = (function () {
                             }
                             break;
                         case '|':
-                            if (value !== other && !startsWith$1(value, other + '-')) {
+                            if (value !== other && !startsWith(value, other + '-')) {
                                 return false;
                             }
                             break;
@@ -1712,11 +1703,9 @@ var vdom = (function () {
     function getQueryLength(value) {
         let result = 0;
         for (let i = 0, length = value.length; i < length; ++i) {
-            const n = value.charCodeAt(i);
-            if (n < 14 && n > 8 || n === 32) {
-                continue;
+            if (!isSpace(value[i])) {
+                ++result;
             }
-            ++result;
         }
         return result;
     }
@@ -1728,7 +1717,7 @@ var vdom = (function () {
     const aboveRange = (a, b, offset = 1) => a + offset > b;
     const belowRange = (a, b, offset = 1) => a - offset < b;
     const sortById = (a, b) => a.id - b.id;
-    const isInlineVertical = (value) => startsWith$1(value, 'inline') || value === 'table-cell';
+    const isInlineVertical = (value) => startsWith(value, 'inline') || value === 'table-cell';
     const canTextAlign = (node) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element, children) {
@@ -1756,7 +1745,7 @@ var vdom = (function () {
             if (element) {
                 this._element = element;
                 if (sessionId !== '0') {
-                    setElementCache$1(element, 'node', this, sessionId);
+                    setElementCache(element, 'node', this, sessionId);
                     const elementData = getElementData(element, sessionId);
                     if (elementData) {
                         this._elementData = elementData;
@@ -1814,7 +1803,7 @@ var vdom = (function () {
             if (element) {
                 let elementData;
                 if (!sessionId) {
-                    sessionId = getElementCache$1(element, 'sessionId', '0');
+                    sessionId = getElementCache(element, 'sessionId', '0');
                     if (sessionId === this.sessionId) {
                         if (cache) {
                             this._cache = {};
@@ -1843,7 +1832,7 @@ var vdom = (function () {
                                     const style = element.style;
                                     for (let i = 0; i < length; ++i) {
                                         const attr = style[i];
-                                        styleMap[convertCamelCase$1(attr)] = style.getPropertyValue(attr);
+                                        styleMap[convertCamelCase(attr)] = style.getPropertyValue(attr);
                                     }
                                 }
                             }
@@ -1972,19 +1961,19 @@ var vdom = (function () {
                             this._cacheState.textEmpty = undefined;
                             continue;
                         default:
-                            if (startsWith$1(attr, 'background')) {
+                            if (startsWith(attr, 'background')) {
                                 cache.visibleStyle = undefined;
                             }
-                            else if (startsWith$1(attr, 'border')) {
-                                if (startsWith$1(attr, 'borderTop')) {
+                            else if (startsWith(attr, 'border')) {
+                                if (startsWith(attr, 'borderTop')) {
                                     cache.borderTopWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
-                                else if (startsWith$1(attr, 'borderRight')) {
+                                else if (startsWith(attr, 'borderRight')) {
                                     cache.borderRightWidth = undefined;
                                     cache.contentBoxWidth = undefined;
                                 }
-                                else if (startsWith$1(attr, 'borderBottom')) {
+                                else if (startsWith(attr, 'borderBottom')) {
                                     cache.borderBottomWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
@@ -2010,10 +1999,10 @@ var vdom = (function () {
             }
             if (!this._preferInitial && this.naturalChild) {
                 let parent;
-                if (attrs.some(value => CSS_PROPERTIES$1[value].trait & 4 /* LAYOUT */)) {
+                if (attrs.some(value => CSS_PROPERTIES[value].trait & 4 /* LAYOUT */)) {
                     parent = this.pageFlow && this.ascend({ condition: item => item.hasPX('width') && item.hasPX('height') || item.documentRoot })[0] || this;
                 }
-                else if (attrs.some(value => CSS_PROPERTIES$1[value].trait & 8 /* CONTAIN */)) {
+                else if (attrs.some(value => CSS_PROPERTIES[value].trait & 8 /* CONTAIN */)) {
                     parent = this;
                 }
                 else {
@@ -2209,7 +2198,7 @@ var vdom = (function () {
             if (this.styleElement && attr in style) {
                 if (value === '') {
                     style[attr] = 'initial';
-                    const property = CSS_PROPERTIES$1[attr];
+                    const property = CSS_PROPERTIES[attr];
                     if (property && typeof property.value === 'string') {
                         this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & 256 /* UNIT */ ? 'px' : ''));
                     }
@@ -2537,7 +2526,7 @@ var vdom = (function () {
                     ({ not, type, ignoreDefault } = options);
                 }
                 if (ignoreDefault !== true) {
-                    const data = CSS_PROPERTIES$1[attr];
+                    const data = CSS_PROPERTIES[attr];
                     if (data && (value === data.value || (data.trait & 256 /* UNIT */) && this.parseUnit(value) === parseFloat(data.value))) {
                         return false;
                     }
@@ -2614,7 +2603,7 @@ var vdom = (function () {
                     (notIndex || (notIndex = [])).push(part);
                     return ':not-' + 'x'.repeat(notIndex.length);
                 };
-                const parseNot = (condition) => condition.includes(',') ? parseSelectorText$1(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
+                const parseNot = (condition) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
                 const checkNot = (condition) => {
                     return splitEnclosing(condition, /:not/i).reduce((a, b) => {
                         if (b[0] === ':') {
@@ -2626,7 +2615,7 @@ var vdom = (function () {
                         return a + b;
                     }, '');
                 };
-                for (const query of parseSelectorText$1(value)) {
+                for (const query of parseSelectorText(value)) {
                     let selector = '', expand;
                     invalid: {
                         let match;
@@ -2643,7 +2632,7 @@ var vdom = (function () {
                                             break invalid;
                                         }
                                         if (condition.includes(',')) {
-                                            seg = parseSelectorText$1(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
+                                            seg = parseSelectorText(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
                                             expand = true;
                                         }
                                         else {
@@ -2732,7 +2721,7 @@ var vdom = (function () {
                                         start = true;
                                         continue;
                                     default:
-                                        if (startsWith$1(segment, '*|')) {
+                                        if (startsWith(segment, '*|')) {
                                             segment = segment.substring(2);
                                         }
                                         break;
@@ -2977,7 +2966,7 @@ var vdom = (function () {
         }
         get svgElement() {
             const result = this._cacheState.svgElement;
-            return result === undefined ? this._cacheState.svgElement = !this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE$1.SVG.test(this.toElementString('src')) : result;
+            return result === undefined ? this._cacheState.svgElement = !this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src')) : result;
         }
         get styleElement() {
             const result = this._cacheState.styleElement;
@@ -3122,12 +3111,12 @@ var vdom = (function () {
             if (result === undefined) {
                 if (this.flexElement) {
                     const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                    const row = startsWith$1(flexDirection, 'row');
+                    const row = startsWith(flexDirection, 'row');
                     result = {
                         row,
                         column: !row,
                         reverse: endsWith(flexDirection, 'reverse'),
-                        wrap: startsWith$1(flexWrap, 'wrap'),
+                        wrap: startsWith(flexWrap, 'wrap'),
                         wrapReverse: flexWrap === 'wrap-reverse',
                         alignContent,
                         justifyContent
@@ -3298,7 +3287,7 @@ var vdom = (function () {
             return result === undefined ? this._cache.paddingLeft = convertBox(this, 'paddingLeft', false) : result;
         }
         get contentBox() {
-            return this.css('boxSizing') !== 'border-box' || this.tableElement && isUserAgent$1(4 /* FIREFOX */);
+            return this.css('boxSizing') !== 'border-box' || this.tableElement && isUserAgent(4 /* FIREFOX */);
         }
         get contentBoxWidth() {
             const result = this._cache.contentBoxWidth;
@@ -3360,7 +3349,7 @@ var vdom = (function () {
                             if (this.inlineStatic && ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
                                 result = true;
                             }
-                            else if (this.inline || startsWith$1(this.display, 'table-') || this.hasPX('maxWidth')) {
+                            else if (this.inline || startsWith(this.display, 'table-') || this.hasPX('maxWidth')) {
                                 result = false;
                             }
                         }
@@ -3437,7 +3426,7 @@ var vdom = (function () {
             let result = this._cache.baseline;
             if (result === undefined) {
                 const display = this.display;
-                if ((startsWith$1(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                if ((startsWith(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
                     const value = this.css('verticalAlign');
                     result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
@@ -3600,7 +3589,7 @@ var vdom = (function () {
                     let backgroundRepeatX = false, backgroundRepeatY = false;
                     if (backgroundImage) {
                         for (const repeat of this.css('backgroundRepeat').split(',')) {
-                            const [repeatX, repeatY] = splitPair$1(repeat.trim(), ' ');
+                            const [repeatX, repeatY] = splitPair(repeat.trim(), ' ');
                             backgroundRepeatX || (backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x');
                             backgroundRepeatY || (backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
                         }
@@ -3992,7 +3981,7 @@ var vdom = (function () {
     let application = null;
     const appBase = {
         create() {
-            application = new Application$1(1 /* VDOM */, Node, Controller);
+            application = new Application(1 /* VDOM */, Node, Controller);
             return {
                 application,
                 framework: 1 /* VDOM */,

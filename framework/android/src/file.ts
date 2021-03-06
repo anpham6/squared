@@ -27,9 +27,9 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, plainMap, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, plainMap, resolvePath } = squared.lib.util;
 
-const { fromMimeType } = squared.base.lib.util;
+const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
 function getFileAssets(pathname: string, items: string[], document: StringOfArray) {
     const length = items.length;

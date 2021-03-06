@@ -2,14 +2,14 @@ import type Application from './application';
 import type File from './file';
 import type Node from './node';
 
-import { fromMimeType, randomUUID } from './lib/util';
+import { fromMimeType, parseMimeType, randomUUID } from './lib/util';
 
 type PreloadItem = HTMLImageElement | string;
 
 const { FILE, STRING } = squared.lib.regex;
 
 const { extractURL, resolveURL } = squared.lib.css;
-const { convertBase64, endsWith, fromLastIndexOf, isBase64, parseMimeType, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
 const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;

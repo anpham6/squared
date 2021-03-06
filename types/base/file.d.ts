@@ -117,7 +117,7 @@ interface WatchInterval {
 }
 
 interface WatchReload {
-    socketId: string;
+    socketId?: string;
     port?: number;
     secure?: boolean;
     module?: boolean;

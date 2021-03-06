@@ -54,8 +54,8 @@ function formatObject(resourceId: number, obj: ObjectMap<Undef<string | StringMa
 }
 
 function isLeadingDigit(value: string) {
-    const n = value.charCodeAt(0);
-    return n >= 48 && n <= 57;
+    const ch = value[0];
+    return ch >= '0' && ch <= '9';
 }
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {

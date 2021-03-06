@@ -887,6 +887,7 @@ declare module "base" {
 
         namespace util {
             function fromMimeType(value: string): string;
+            function parseMimeType(value: string): string;
             function appendSeparator(preceding?: string, value?: string, separator?: string): string;
             function randomUUID(separator?: string): string;
             function upperCaseString(value: string): string;

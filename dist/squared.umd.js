@@ -1,4 +1,4 @@
-/* squared 2.4.0
+/* squared 2.5.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -52,8 +52,8 @@
         getDeviceDPI: getDeviceDPI
     });
 
-    const REGEXP_DECIMALNOTAION = /^(-?\d+\.\d+)e(-?\d+)$/;
-    const REGEXP_FRACTION = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+    const REGEXP_DECIMALNOTAION = /^([+|-]?\d+\.\d+)e([+|-]?\d+)$/;
+    const REGEXP_FRACTION = /^([+|-]?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
     const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
     function convertDecimalNotation(value) {
         const match = REGEXP_DECIMALNOTAION.exec(value.toString());
@@ -231,7 +231,7 @@
     });
 
     const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
-    const DECIMAL = '-?' + DECIMAL_UN;
+    const DECIMAL = '[+|-]?' + DECIMAL_UN;
     const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
     const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
     const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
@@ -240,7 +240,7 @@
     const TAG_ATTR = `=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]*))`;
     const STRING = {
         DECIMAL,
-        PERCENT: '-?\\d+(?:\\.\\d+)?%',
+        PERCENT: '[+|-]?\\d+(?:\\.\\d+)?%',
         LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
         UNIT_LENGTH,
@@ -857,134 +857,6 @@
     const CACHE_TRIMBOTH = {};
     const REGEXP_NONWORD = /[^\w]+/g;
     const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
-    const EXT_DATA = {
-        '3gp': 'video/3gpp',
-        '3g2': 'video/3gpp2',
-        '7z': 'application/x-7z-compressed',
-        aac: 'audio/aac',
-        abw: 'application/x-abiword',
-        apng: 'image/apng',
-        arc: 'application/x-freearc',
-        asf: 'video/x-ms-asf',
-        asx: 'video/x-ms-asf',
-        atom: 'application/atom+xml',
-        avi: 'video/x-msvideo',
-        avif: 'image/avif',
-        azw: 'application/vnd.amazon.ebook',
-        bin: 'application/octet-stream',
-        bmp: 'image/bmp',
-        bmpf: 'image/bmp',
-        bmpp: 'image/bmp',
-        bz: 'application/x-bzip',
-        bz2: 'application/x-bzip2',
-        cgi: 'application/x-httpd-cgi',
-        csh: 'application/x-csh',
-        css: 'text/css',
-        csv: 'text/csv',
-        doc: 'application/msword',
-        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        eot: 'application/vnd.ms-fontobject',
-        epub: 'application/epub+zip',
-        flac: 'audio/flac',
-        flv: 'video/x-flv',
-        gif: 'image/gif',
-        gsm: 'audio/gsm',
-        h264: 'h264',
-        heic: 'image/heic',
-        heif: 'image/heif',
-        htc: 'text/x-component',
-        htm: 'text/html',
-        html: 'text/html',
-        shtml: 'text/html',
-        cur: 'image/x-icon',
-        ico: 'image/x-icon',
-        ics: 'text/calendar',
-        jad: 'text/vnd.sun.j2me.app-descriptor',
-        jar: 'application/java-archive',
-        java: 'text/x-java-source',
-        jpeg: 'image/jpeg',
-        jpg: 'image/jpeg',
-        jfif: 'image/jpeg',
-        pjpeg: 'image/jpeg',
-        pjp: 'image/jpeg',
-        jpeg2000: 'video/jpeg2000',
-        js: 'text/javascript',
-        mjs: 'text/javascript',
-        json: 'application/json',
-        jsonp: 'application/javascript',
-        jsonld: 'application/ld+json',
-        m3u8: 'application/vnd.apple.mpegurl',
-        md: 'text/markdown',
-        kar: 'audio/midi',
-        mid: 'audio/midi',
-        midi: 'audio/midi',
-        mks: 'video/x-matroska',
-        mkv: 'video/x-matroska',
-        mk3d: 'video/x-matroska',
-        mml: 'text/mathml',
-        mng: 'video/x-mng',
-        mov: 'video/quicktime',
-        mp3: 'audio/mpeg',
-        mpeg: 'audio/mpeg',
-        mp4: 'video/mp4',
-        m4a: 'video/mp4',
-        m4v: 'video/x-m4v',
-        mpd: 'application/dash+xml',
-        mpkg: 'application/vnd.apple.installer+xml',
-        odg: 'application/vnd.oasis.opendocument.graphics',
-        odp: 'application/vnd.oasis.opendocument.presentation',
-        ods: 'application/vnd.oasis.opendocument.spreadsheet',
-        odt: 'application/vnd.oasis.opendocument.text',
-        oga: 'audio/ogg',
-        spx: 'audio/ogg',
-        ogg: 'audio/ogg',
-        ogv: 'video/ogg',
-        ogm: 'video/ogg',
-        ogx: 'application/ogg',
-        otf: 'font/otf',
-        pl: 'application/x-perl',
-        png: 'image/png',
-        pdf: 'application/pdf',
-        ppt: 'application/vnd.ms-powerpoint',
-        pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        ps: 'application/postscript',
-        ra: 'audio/x-realaudio',
-        rar: 'application/x-rar-compressed',
-        rss: 'application/rss+xml',
-        rtf: 'application/rtf',
-        sgml: 'text/sgml',
-        sh: 'application/x-sh',
-        svg: 'image/svg+xml',
-        svgz: 'image/svg+xml',
-        swf: 'application/x-shockwave-flash',
-        tar: 'application/x-tar',
-        tif: 'image/tiff',
-        tiff: 'image/tiff',
-        ts: 'video/mp2t',
-        tsv: 'text/tab-separated-values',
-        ttf: 'font/ttf',
-        truetype: 'font/ttf',
-        txt: 'text/plain',
-        vsd: 'application/vnd.visio',
-        vtt: 'text/vtt',
-        wav: 'audio/wave',
-        wbmp: 'image/vnd.wap.wbmp',
-        weba: 'audio/webm',
-        webm: 'video/webm',
-        webp: 'image/webp',
-        woff: 'font/woff',
-        woff2: 'font/woff2',
-        xhtml: 'application/xhtml+xml',
-        xls: 'application/vnd.ms-excel',
-        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        xml: 'application/xml',
-        xul: 'application/vnd.mozilla.xul+xml',
-        wml: 'text/vnd.wap.wml',
-        wmv: 'video/x-ms-wmv',
-        yaml: 'text/yaml',
-        yml: 'text/yaml',
-        zip: 'application/zip'
-    };
     function promisify(fn) {
         return (...args) => {
             return new Promise((resolve, reject) => {
@@ -999,9 +871,6 @@
     }
     function allSettled(values) {
         return Promise.all(values.map((promise) => promise.then(value => ({ status: 'fulfilled', value })).catch(reason => ({ status: 'rejected', reason }))));
-    }
-    function parseMimeType(value) {
-        return EXT_DATA[splitPairEnd(splitPairStart(value = value.toLowerCase(), '?'), '.', true, true) || value] || '';
     }
     function hasKeys(obj) {
         for (const attr in obj) {
@@ -1300,13 +1169,14 @@
     function isBase64(value) {
         return value.length % 4 === 0 && FILE.BASE64.test(value);
     }
+    function isSpace(ch) {
+        return ch === ' ' || ch === '\n' || ch === '\t' || ch === '\f' || ch === '\r' || ch === '\v';
+    }
     function isEmptyString(value) {
         for (let i = 0, length = value.length; i < length; ++i) {
-            const n = value.charCodeAt(i);
-            if (n === 32 || n < 14 && n > 8) {
-                continue;
+            if (!isSpace(value[i])) {
+                return false;
             }
-            return false;
         }
         return true;
     }
@@ -1459,6 +1329,9 @@
         }
         return '';
     }
+    function escapePattern(value) {
+        return value.replace(/[-|\\{}()[\]^$+*?.]/g, capture => capture === '-' ? '\\x2d' : capture);
+    }
     function fromLastIndexOf(value, ...char) {
         let i = 0;
         while (i < char.length) {
@@ -1474,22 +1347,6 @@
     }
     function endsWith(value, trailing) {
         return value ? value.substring(value.length - trailing.length) === trailing : false;
-    }
-    function* searchObject(obj, value) {
-        const start = value[0] === '*';
-        const end = lastItemOf(value) === '*';
-        const search = start && end
-            ? (a) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
-            : start
-                ? (a) => endsWith(a, value.replace(/^\*/, ''))
-                : end
-                    ? (a) => startsWith(a, value.replace(/\*$/, ''))
-                    : (a) => a === value;
-        for (const attr in obj) {
-            if (search(attr)) {
-                yield attr;
-            }
-        }
     }
     function hasValue(value) {
         return value !== undefined && value !== null && value !== '';
@@ -1701,7 +1558,6 @@
         __proto__: null,
         promisify: promisify,
         allSettled: allSettled,
-        parseMimeType: parseMimeType,
         hasKeys: hasKeys,
         capitalize: capitalize,
         convertHyphenated: convertHyphenated,
@@ -1727,6 +1583,7 @@
         isObject: isObject,
         isPlainObject: isPlainObject,
         isBase64: isBase64,
+        isSpace: isSpace,
         isEmptyString: isEmptyString,
         isEqual: isEqual,
         cloneInstance: cloneInstance,
@@ -1736,10 +1593,10 @@
         trimString: trimString,
         trimStart: trimStart,
         trimEnd: trimEnd,
+        escapePattern: escapePattern,
         fromLastIndexOf: fromLastIndexOf,
         startsWith: startsWith,
         endsWith: endsWith,
-        searchObject: searchObject,
         hasValue: hasValue,
         withinRange: withinRange,
         assignEmptyProperty: assignEmptyProperty,
@@ -1781,7 +1638,7 @@
     const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
     const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
     const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-    const REGEXP_EMBASED = /\s*-?[\d.]+(?:em|ch|ex)\s*/;
+    const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
     const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
     const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
     const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
@@ -4032,7 +3889,7 @@
             }
             case 'boxShadow':
             case 'textShadow':
-                return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/ });
+                return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-zQ]*\s+-?[\d.]+[a-zQ]*(\s+-[\d.]+[a-z]*)/ });
             case 'animation':
             case 'animationDelay':
             case 'animationDuration':
@@ -4716,7 +4573,7 @@
                 const segment = match[0];
                 let optional = segment;
                 for (let i = match.length - 1; i >= 1; --i) {
-                    optional = optional.replace(new RegExp(match[i] + '$'), '');
+                    optional = optional.replace(new RegExp(escapePattern(match[i]) + '$'), '');
                 }
                 if (optional === segment) {
                     return '';
@@ -5094,7 +4951,7 @@
                                                 }
                                                 break;
                                             case 16 /* INTEGER */:
-                                                if (/^\s*-?\d+\s*$/.test(partial)) {
+                                                if (/^\s*[+|-]?\d+\s*$/.test(partial)) {
                                                     seg.push(+partial);
                                                     found = true;
                                                 }
@@ -5574,9 +5431,8 @@
     function isPx(value) {
         if (value) {
             const length = value.length;
-            if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
-                const n = value.charCodeAt(length - 3);
-                return n >= 48 && n <= 57;
+            if (length > 2 && value[length - 1] === 'x' && value[length - 2] === 'p') {
+                return !isNaN(+value.substring(0, length - 2));
             }
         }
         return false;
@@ -5786,7 +5642,7 @@
         return result;
     }
     function createElement(tagName, options) {
-        const { parent, style, attrs, children } = options;
+        const { parent, style, attributes, children } = options;
         const element = document.createElement(tagName);
         if (style) {
             const cssStyle = element.style;
@@ -5796,10 +5652,10 @@
                 }
             }
         }
-        if (attrs) {
-            for (const attr in attrs) {
-                if (attr in element) {
-                    element[attr] = attrs[attr];
+        if (attributes) {
+            for (const name in attributes) {
+                if (name in element) {
+                    element[name] = attributes[name];
                 }
             }
         }
@@ -5839,7 +5695,7 @@
 
     const FRAMEWORK_NOT_INSTALLED = 'Framework not installed.';
     const SERVER_REQUIRED = 'Server required. See README for instructions.';
-    const DIRECTORY_NOT_PROVIDED = 'Directory (pathname) not provided.';
+    const DIRECTORY_NOT_PROVIDED = 'Directory not provided (pathname).';
     const UNABLE_TO_FINALIZE_DOCUMENT = 'Unable to finalize document.';
     const INVALID_ASSET_REQUEST = 'Invalid asset request.';
     const OPERATION_NOT_SUPPORTED = 'Operation not supported.';

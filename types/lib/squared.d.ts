@@ -311,7 +311,6 @@ declare module "lib" {
     namespace util {
         function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>;
         function allSettled<T>(values: readonly (T | PromiseLike<T>)[]): Promise<PromiseSettledResult<T>[]>;
-        function parseMimeType(value: string): string;
         function hasKeys(obj: PlainObject): boolean;
         function capitalize(value: string, upper?: boolean): string;
         function convertHyphenated(value: string, char?: string): string;

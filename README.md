@@ -1,31 +1,42 @@
-## squared 2.3
+## squared 2.5
+
+* README: [squared-functions](https://github.com/anpham6/squared-functions#readme)  
+* README: [squared-express](https://github.com/anpham6/squared-express#readme)
 
 ### Installation (global js variable: squared)
 
 Option #1 - [Node.js](http://www.nodejs.org)
 
-GitHub
+#### GitHub
+
 ```xml
 > git clone https://github.com/anpham6/squared
 > cd squared
 
 > npm install --only=prod
 > npm run prod
-
   <!-- OR -->
+> npm install
+> npm run dev
+
+> cd ..
+> git clone https://github.com/anpham6/squared-express
+> cd squared-express
 
 > npm install
+
+> npm run prod
+> npm run deploy
+<!-- OR -->
 > npm run dev
 ```
 
-NPM
+#### NPM
+
 ```xml
 > npm install squared  
 > cd node_modules/squared  
 ```
-
-* README: [squared-express](https://github.com/anpham6/squared-express#readme)  
-* README: [squared-functions](https://github.com/anpham6/squared-functions#readme)  
 
 ```xml
 > squared.settings.[json|yml] (configure)  
