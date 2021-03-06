@@ -126,7 +126,6 @@
     "postcss": "^8.2.7",
     "posthtml": "^0.15.1",
     "prettier": "^2.2.1",
-    "puppeteer": "^8.0.0",
     "readdirp": "^3.5.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.40.0",
