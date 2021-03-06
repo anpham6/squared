@@ -13,7 +13,7 @@ const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, 
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
 
 const TEXT_STYLE: CssStyleAttr[] = [
     'fontFamily',
@@ -775,11 +775,9 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
 function getQueryLength(value: string) {
     let result = 0;
     for (let i = 0, length = value.length; i < length; ++i) {
-        const n = value.charCodeAt(i);
-        if (n < 14 && n > 8 || n === 32) {
-            continue;
+        if (!isSpace(value[i])) {
+            ++result;
         }
-        ++result;
     }
     return result;
 }

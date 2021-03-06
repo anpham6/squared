@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, parseMimeType, plainMap, resolvePath } = squared.lib.util;
 
 const { fromMimeType } = squared.base.lib.util;
 
@@ -132,16 +132,16 @@ const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUni
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
 
-    public copyTo(pathname: string, options: FileCopyingOptions) {
-        return this.copying(pathname, { ...options, assets: this.combineAssets(options.assets!) });
+    public async copyTo(pathname: string, options: FileCopyingOptions) {
+        return this.copying(pathname, { ...options, assets: await this.processAssets(options.assets!, options) });
     }
 
-    public appendTo(pathname: string, options: FileArchivingOptions) {
-        return this.archiving(pathname, { ...options, assets: this.combineAssets(options.assets!) });
+    public async appendTo(pathname: string, options: FileArchivingOptions) {
+        return this.archiving(pathname, { ...options, assets: await this.processAssets(options.assets!, options) });
     }
 
-    public saveAs(filename: string, options: FileArchivingOptions) {
-        return this.archiving('', { ...options, assets: this.combineAssets(options.assets!), filename });
+    public async saveAs(filename: string, options: FileArchivingOptions) {
+        return this.archiving('', { ...options, assets: await this.processAssets(options.assets!, options), filename });
     }
 
     public resourceAllToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions) {
@@ -498,7 +498,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return options.watch ? '&watch=1' : '';
     }
 
-    protected combineAssets(assets: FileAsset[]) {
+    protected async processAssets(assets: FileAsset[], options: FileUniversalOptions) {
         const { userSettings, resource, resourceId } = this;
         const documentHandler = userSettings.outputDocumentHandler;
         const result: FileAsset[] = [];
@@ -519,6 +519,69 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const data = Resource.ASSETS[resourceId];
         if (data) {
             const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
+            const imageAssets = getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
+            const videoAssets = getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);
+            const audioAssets = getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler);
+            if (options.configUri) {
+                const items = await this.loadConfig(options.configUri, options);
+                if (items) {
+                    for (const item of items) {
+                        const { selector, commands, watch, tasks, document: documentData } = item;
+                        if (selector && (commands || watch || tasks || documentData)) {
+                            document.querySelectorAll(selector).forEach((element: HTMLElement) => {
+                                let src: string;
+                                switch (element.tagName) {
+                                    case 'IMG':
+                                    case 'AUDIO':
+                                    case 'SOURCE':
+                                    case 'EMBED':
+                                    case 'IFRAME':
+                                        src = (element as HTMLImageElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLIFrameElement).src;
+                                        break;
+                                    case 'VIDEO':
+                                        src = (element as HTMLVideoElement)[item.type === 'image' ? 'poster' : 'src'];
+                                        break;
+                                    case 'OBJECT':
+                                        src = (element as HTMLObjectElement).data;
+                                        break;
+                                    default:
+                                        return;
+                                }
+                                if (src = resolvePath(src)) {
+                                    let related: FileAsset[];
+                                    switch (item.type) {
+                                        case 'image':
+                                            related = imageAssets.filter(asset => asset.uri === src);
+                                            break;
+                                        case 'video':
+                                            related = videoAssets.filter(asset => asset.uri === src);
+                                            break;
+                                        case 'audio':
+                                            related = audioAssets.filter(asset => asset.uri === src);
+                                            break;
+                                        default:
+                                            return;
+                                    }
+                                    for (const asset of related) {
+                                        if (commands) {
+                                            asset.commands = commands;
+                                        }
+                                        if (watch) {
+                                            asset.watch = watch;
+                                        }
+                                        if (tasks) {
+                                            asset.tasks = tasks;
+                                        }
+                                        if (documentData) {
+                                            asset.document = documentData;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
             result.push(
                 ...getFileAssets(outputDirectory, this.resourceStringToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceStringArrayToXml(), documentHandler),
@@ -527,10 +590,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 ...getFileAssets(outputDirectory, this.resourceDimenToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceStyleToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceDrawableToXml(), documentHandler),
-                ...getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler),
-                ...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler),
-                ...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler)
+                ...imageAssets,
+                ...videoAssets,
+                ...audioAssets
             );
             if (data.other.length) {
                 result.push(...data.other);

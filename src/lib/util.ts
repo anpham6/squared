@@ -487,13 +487,15 @@ export function isBase64(value: string) {
     return value.length % 4 === 0 && FILE.BASE64.test(value);
 }
 
+export function isSpace(ch: string) {
+    return ch === ' ' || ch === '\n' || ch === '\t' || ch === '\f' || ch === '\r' || ch === '\v';
+}
+
 export function isEmptyString(value: string) {
     for (let i = 0, length = value.length; i < length; ++i) {
-        const n = value.charCodeAt(i);
-        if (n === 32 || n < 14 && n > 8) {
-            continue;
+        if (!isSpace(value[i])) {
+            return false;
         }
-        return false;
     }
     return true;
 }

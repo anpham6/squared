@@ -12,7 +12,7 @@ interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeA
     inlineContent?: string;
 }
 
-interface OutputModifiers extends ElementScope {
+interface OutputModifiers {
     inline?: boolean;
     blob?: boolean;
     preserve?: boolean;
@@ -27,11 +27,7 @@ interface DataSource {
     viewEngine?: ViewEngine | string;
 }
 
-interface OutputCommand extends Partial<LocationUri>, OutputAction, AttributeAction, StorageAction {}
-
-interface AssetCommand extends OutputCommand, ElementAction, DocumentAction, OutputModifiers {
-    selector?: string;
-    type?: string;
+interface AssetCommand extends OutputCommand, ElementAction, OutputModifiers {
     saveAs?: string;
     exportAs?: string;
     saveTo?: string;

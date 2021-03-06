@@ -139,6 +139,12 @@
                             }]
                         },
                         image: {
+                            blob: true,
+                            customize: (uri, mimeType, command) => {
+                                if (mimeType === 'image/jpeg') {
+                                    return Date.now() + '.jpg';
+                                }
+                            },
                             cloudStorage: [{
                                 service: 'ibm',
                                 bucket: 'squared-001',
@@ -171,24 +177,6 @@
                                     active: true,
                                     localStorage: false,
                                     all: true,
-                                    overwrite: true
-                                }
-                            }]
-                        },
-                        base64: {
-                            format: 'png',
-                            cloudStorage: [{
-                                service: 'oci',
-                                bucket: 'squared-002',
-                                credential: 'main',
-                                admin: {
-                                    publicRead: true,
-                                    emptyBucket: true,
-                                    preservePath: true
-                                },
-                                upload: {
-                                    active: true,
-                                    localStorage: false,
                                     overwrite: true
                                 }
                             }]

@@ -343,6 +343,7 @@ declare module "base" {
         static downloadFile(data: Blob | string, filename?: string, mimeType?: string): void;
         resource: Resource<T>;
         readonly archiveFormats: string[];
+        loadConfig(uri: string, options?: squared.FileActionOptions): Promise<Void<OutputCommand[]>>;
         loadData(value: string, options: LoadDataOptions): Promise<unknown>;
         copying(pathname: string, options: FileCopyingOptions): FileActionResult;
         archiving(target: string, options: FileArchivingOptions): FileActionResult;

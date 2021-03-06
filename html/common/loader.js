@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 squared.copyTo(copyTo).then(response => {
                     squared.lib.dom.createElement('div', {
                         parent: document.body,
-                        attrs: {
+                        attributes: {
                             id: 'md5_complete',
                             innerHTML: response.files.join('\n')
                         },

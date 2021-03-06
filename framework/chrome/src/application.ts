@@ -51,90 +51,80 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             }
         }
         if (options.configUri) {
-            const config = await this.fileHandler!.loadData(options.configUri, { type: 'json', mime: options.configMime, cache: options.cache }) as Null<ResponseData>;
-            if (config) {
-                if (config.success && Array.isArray(config.data)) {
-                    const documentHandler = this.userSettings.outputDocumentHandler;
-                    const paramMap = new Map<string, [RegExp, string]>();
-                    const replaceParams = (param: Undef<any>): unknown => {
-                        if (param) {
-                            if (typeof param !== 'number' && typeof param !== 'boolean') {
-                                const original = param;
-                                const converted = typeof param === 'object' || Array.isArray(param);
-                                if (converted) {
-                                    param = JSON.stringify(param);
-                                }
-                                const current = param;
-                                for (const [pattern, value] of paramMap.values()) {
-                                    param = (param as string).replace(pattern, value);
-                                }
-                                if (current === param) {
-                                    return original;
-                                }
-                                if (converted) {
-                                    try {
-                                        return JSON.parse(param);
-                                    }
-                                    catch {
-                                        return original;
-                                    }
-                                }
+            const commands = await this.fileHandler!.loadConfig(options.configUri, options) as Undef<AssetCommand[]>;
+            if (commands) {
+                const documentHandler = this.userSettings.outputDocumentHandler;
+                const paramMap = new Map<string, [RegExp, string]>();
+                const replaceParams = (param: Undef<any>): unknown => {
+                    if (param && typeof param !== 'number' && typeof param !== 'boolean') {
+                        const original = param;
+                        const converted = typeof param === 'object' || Array.isArray(param);
+                        if (converted) {
+                            param = JSON.stringify(param);
+                        }
+                        const current = param;
+                        for (const [pattern, value] of paramMap.values()) {
+                            param = (param as string).replace(pattern, value);
+                        }
+                        if (current === param) {
+                            return original;
+                        }
+                        if (converted) {
+                            try {
+                                return JSON.parse(param);
+                            }
+                            catch {
+                                return original;
                             }
                         }
-                        return param;
-                    };
-                    if (location.href.includes('?')) {
-                        new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${escapePattern(key)}\\s*\\}\\}`, 'g'), value]));
                     }
-                    for (const item of config.data as AssetCommand[]) {
-                        if (item.selector) {
-                            const type = item.type;
-                            let dataSrc: Null<DataSource> = isPlainObject(item.dataSource) ? item.dataSource : null,
-                                dataCloud: Null<DataSource> = isPlainObject(item.cloudDatabase) ? item.cloudDatabase : null;
-                            if (paramMap.size) {
-                                for (const data of [dataSrc, dataCloud]) {
-                                    if (data) {
-                                        for (const attr in data) {
-                                            if (attr !== 'value') {
-                                                data[attr] = replaceParams(data[attr]);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            dataSrc &&= { document: item.document || documentHandler, ...dataSrc, type } as DataSource;
-                            dataCloud &&= { document: item.document || documentHandler, ...dataSrc, type, source: 'cloud' } as DataSource;
-                            document.querySelectorAll(item.selector).forEach((element: HTMLElement) => {
-                                switch (type) {
-                                    case 'text':
-                                    case 'attribute':
-                                    case 'display':
-                                        if (dataSrc) {
-                                            dataSource.push([element, dataSrc]);
-                                        }
-                                        else if (dataCloud) {
-                                            dataSource.push([element, dataCloud]);
-                                        }
-                                        break;
-                                    default:
-                                        if (type && (type.startsWith('append/') || type.startsWith('prepend/'))) {
-                                            const items = appendMap.get(element) || [];
-                                            items.push({ ...item });
-                                            appendMap.set(element, items);
-                                        }
-                                        else {
-                                            assetMap.set(element, { ...item });
-                                        }
-                                        break;
-                                }
-                            });
-                        }
-                    }
+                    return param;
+                };
+                if (location.href.includes('?')) {
+                    new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${escapePattern(key)}\\s*\\}\\}`, 'g'), value]));
                 }
-                else {
-                    const error = config.error;
-                    if (error) {
-                        this.writeError(error.message, error.hint);
+                for (const item of commands) {
+                    if (item.selector) {
+                        const type = item.type;
+                        let dataSrc: Null<DataSource> = isPlainObject(item.dataSource) ? item.dataSource : null,
+                            dataCloud: Null<DataSource> = isPlainObject(item.cloudDatabase) ? item.cloudDatabase : null;
+                        if (paramMap.size) {
+                            for (const data of [dataSrc, dataCloud]) {
+                                if (data) {
+                                    for (const attr in data) {
+                                        if (attr !== 'value') {
+                                            data[attr] = replaceParams(data[attr]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        dataSrc &&= { document: item.document || documentHandler, ...dataSrc, type } as DataSource;
+                        dataCloud &&= { document: item.document || documentHandler, ...dataSrc, type, source: 'cloud' } as DataSource;
+                        document.querySelectorAll(item.selector).forEach((element: HTMLElement) => {
+                            switch (type) {
+                                case 'text':
+                                case 'attribute':
+                                case 'display':
+                                    if (dataSrc) {
+                                        dataSource.push([element, dataSrc]);
+                                    }
+                                    else if (dataCloud) {
+                                        dataSource.push([element, dataCloud]);
+                                    }
+                                    break;
+                                default:
+                                    if (type && (type.startsWith('append/') || type.startsWith('prepend/'))) {
+                                        const items = appendMap.get(element) || [];
+                                        items.push({ ...item });
+                                        appendMap.set(element, items);
+                                    }
+                                    else {
+                                        assetMap.set(element, { ...item });
+                                    }
+                                    break;
+                            }
+                        });
                     }
                 }
             }

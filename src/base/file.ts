@@ -112,6 +112,24 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return this.copying(pathname, { ...options });
     }
 
+    public async loadConfig(uri: string, options?: squared.FileActionOptions) {
+        let mime: Undef<string>,
+            cache: Undef<boolean>;
+        if (options) {
+            ({ configMime: mime, cache } = options);
+        }
+        const config = await this.loadData(uri, { type: 'json', mime, cache }) as Null<ResponseData>;
+        if (config) {
+            if (config.success && Array.isArray(config.data)) {
+                return config.data as OutputCommand[];
+            }
+            const error = config.error;
+            if (error) {
+                this.writeError(error.message, error.hint);
+            }
+        }
+    }
+
     public loadData(value: string, options: LoadDataOptions): Promise<unknown> {
         const { type, mime, cache } = options;
         if (this.hasHttpProtocol() && type) {
@@ -268,7 +286,13 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 }
             };
             for (let i = 0, length = assets.length; i < length; ++i) {
-                const { document, tasks, watch } = assets[i];
+                const { tasks, watch, document } = assets[i];
+                if (tasks) {
+                    tasks.forEach(item => taskName.add(item.handler));
+                }
+                if (options.watch && isPlainObject<WatchInterval>(watch)) {
+                    setSocketId(watch);
+                }
                 if (document) {
                     if (Array.isArray(document)) {
                         document.forEach(value => documentName.add(value));
@@ -276,12 +300,6 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     else {
                         documentName.add(document);
                     }
-                }
-                if (tasks) {
-                    tasks.forEach(item => taskName.add(item.handler));
-                }
-                if (options.watch && isPlainObject<WatchInterval>(watch)) {
-                    setSocketId(watch);
                 }
             }
             const { outputTasks, outputWatch } = this.userSettings;

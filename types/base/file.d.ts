@@ -167,3 +167,8 @@ interface ResponseError {
     message: string;
     hint?: string;
 }
+
+interface OutputCommand extends Partial<LocationUri>, ElementScope, DocumentAction, OutputAction, AttributeAction, StorageAction {
+    selector?: string;
+    type?: string;
+}

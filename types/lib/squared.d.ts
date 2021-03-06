@@ -337,6 +337,7 @@ declare module "lib" {
         function isObject<T = PlainObject>(value: unknown): value is T;
         function isPlainObject<T = PlainObject>(value: unknown): value is T;
         function isBase64(value: string): boolean;
+        function isSpace(ch: string): boolean;
         function isEmptyString(value: string): boolean;
         function isEqual(source: unknown, other: unknown): boolean;
         function cloneInstance<T>(value: T): T;
