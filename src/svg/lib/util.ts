@@ -9,7 +9,7 @@ const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calcula
 const { getNamedItem } = squared.lib.dom;
 const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
-const { convertCamelCase, convertPercent, endsWith, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { convertCamelCase, convertPercent, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
 const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:\s*,?\s+(-?[\d.]+))?(?:\s*,?\s+(-?[\d.]+))?\)/g);
@@ -400,9 +400,9 @@ export const TRANSFORM = {
                         result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix));
                     }
                 }
-                else if (!endsWith(method, '3d')) {
-                    const isX = endsWith(method, 'X');
-                    const isY = !isX && endsWith(method, 'Y');
+                else if (!method.endsWith('3d')) {
+                    const isX = lastItemOf(method) === 'X';
+                    const isY = !isX && lastItemOf(method) === 'Y';
                     if (startsWith(method, 'translate')) {
                         const translate = REGEXP_TRANSFORM.TRANSLATE.exec(transform);
                         if (translate) {

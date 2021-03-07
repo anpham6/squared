@@ -1894,7 +1894,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     constraint_referenced_ids: concatString(plainMap(unbound, item => getDocumentId(item.anchorTarget.documentId)), ',')
                 }
             };
-            const { api, anchorTarget } = unbound[length - 1];
+            const { api, anchorTarget } = lastItemOf(unbound)!;
             const content = this.renderNodeStatic({ controlName: api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.BARRIER : CONTAINER_TAGNAME_X.BARRIER }, options);
             switch (barrierDirection) {
                 case 'top':

@@ -1478,8 +1478,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     private parseVectorData(resourceId: number, group: SvgGroup, depth = 0) {
         const floatPrecision = this.options.floatPrecision;
         const result = this.createGroup(group);
-        const length = result.length;
-        const renderDepth = depth + length;
+        const renderDepth = depth + result.length;
         let output = '';
         group.each(item => {
             if (item.visible) {
@@ -1529,8 +1528,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             pathArray.push(path);
                         }
                         if (groupArray.length) {
-                            const enclosing = groupArray[groupArray.length - 1];
-                            enclosing.path = pathArray;
+                            lastItemOf(groupArray)!.path = pathArray;
                             output += applyTemplate('group', VECTOR_GROUP, groupArray, renderDepth + 1);
                         }
                         else {
@@ -1551,8 +1549,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
             }
         });
-        if (length) {
-            result[length - 1].include = output;
+        const groupItem = lastItemOf(result);
+        if (groupItem) {
+            groupItem.include = output;
             return applyTemplate('group', VECTOR_GROUP, result, depth + 1);
         }
         return output;

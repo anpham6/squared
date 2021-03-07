@@ -13,7 +13,7 @@ const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, 
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
 
 const TEXT_STYLE: CssStyleAttr[] = [
     'fontFamily',
@@ -1789,7 +1789,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     break;
                                 case 'is':
                                 case 'where':
-                                    if (selector && !/\s/.test(selector[selector.length - 1])) {
+                                    if (selector && !isSpace(lastItemOf(selector))) {
                                         break invalid;
                                     }
                                     if (condition.includes(',')) {
@@ -2983,8 +2983,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get lastChild(): Null<T> {
-        const children = this.naturalChildren;
-        return children[children.length - 1] || null;
+        return lastItemOf(this.naturalChildren) || null;
     }
 
     get firstElementChild() {
@@ -2992,8 +2991,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get lastElementChild() {
-        const children = this.naturalElements;
-        return children[children.length - 1] || null;
+        return lastItemOf(this.naturalElements) || null;
     }
 
     get previousSibling() {

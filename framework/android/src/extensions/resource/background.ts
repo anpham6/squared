@@ -65,7 +65,7 @@ interface LayerData {
 
 const { extractURL, formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
+const { delimitString, isEqual, lastItemOf, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -300,7 +300,7 @@ function createBackgroundGradient(resourceId: number, gradient: Gradient, api = 
             break;
         }
         case 'linear': {
-            if (!positioning || borderRadius && imageCount === 1 && colorStops[length - 1].offset === 1 && (length === 2 || length === 3 && colorStops[1].offset === 0.5)) {
+            if (!positioning || borderRadius && imageCount === 1 && lastItemOf(colorStops)!.offset === 1 && (length === 2 || length === 3 && colorStops[1].offset === 0.5)) {
                 result.angle = ((gradient as LinearGradient).angle + 90).toString();
                 result.positioning = false;
                 positioning = false;
@@ -340,7 +340,7 @@ function createBackgroundGradient(resourceId: number, gradient: Gradient, api = 
     }
     else {
         result.startColor = getColorValue(resourceId, colorStops[0].color);
-        result.endColor = getColorValue(resourceId, colorStops[length - 1].color);
+        result.endColor = getColorValue(resourceId, lastItemOf(colorStops)!.color);
         if (length > 2) {
             result.centerColor = getColorValue(resourceId, colorStops[Math.floor(length / 2)].color);
         }

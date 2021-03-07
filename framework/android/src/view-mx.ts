@@ -21,7 +21,7 @@ const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { capitalize, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf, hasKeys, isString, replaceMap, splitPair, startsWith } = squared.lib.util;
+const { capitalize, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, splitPair, startsWith } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.util;
 
@@ -1547,7 +1547,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             case 'top':
                                 return node === children[0];
                             case 'bottom':
-                                return node === children[children.length - 1];
+                                return node === lastItemOf(children);
                         }
                     }
                     else {
@@ -1555,7 +1555,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             case 'left':
                                 return node === children[0];
                             case 'right':
-                                return node === children[children.length - 1];
+                                return node === lastItemOf(children);
                         }
                     }
                 }

@@ -22,7 +22,7 @@ interface FileAsData extends OptionsData {
 }
 
 const { createElement } = squared.lib.dom;
-const { convertWord, endsWith, fromLastIndexOf, isPlainObject, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+const { convertWord, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
 const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
 
@@ -41,23 +41,28 @@ function parseFileAs(attr: string, value: Undef<string>) {
     }
 }
 
-function parseOptions(value: Undef<string>): OptionsData {
+function parseOptions(value: Undef<string>) {
+    const result: OptionsData = {};
     if (value) {
-        const pattern = /\bcompress\[\s*([a-z\d]+)\s*\]/g;
-        let compress: Undef<CompressFormat[]>,
-            match: Null<RegExpExecArray>;
-        while (match = pattern.exec(value)) {
-            (compress ||= []).push({ format: match[1] });
+        if (value.includes('inline')) {
+            result.inline = true;
         }
-        return {
-            inline: value.includes('inline'),
-            compress,
-            download: value.includes('crossorigin') ? false : undefined,
-            preserve: value.includes('preserve'),
-            blob: value.includes('blob')
-        };
+        if (value.includes('preserve')) {
+            result.preserve = true;
+        }
+        if (value.includes('blob')) {
+            result.blob = true;
+        }
+        if (value.includes('crossorigin')) {
+            result.download = false;
+        }
+        const pattern = /compress\[([^\]]+)\]/g;
+        let match: Null<RegExpExecArray>;
+        while (match = pattern.exec(value)) {
+            (result.compress ||= []).push({ format: match[1].trim() });
+        }
     }
-    return {};
+    return result;
 }
 
 function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<string>, string, string] {
@@ -164,7 +169,7 @@ function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: st
         if (inline) {
             data.inlineContent = getContentType(element);
         }
-        const previous = assets[assets.length - 1];
+        const previous = lastItemOf(assets);
         if (previous && hasSamePath(previous, data, true)) {
             (previous.trailingContent ||= []).push(content);
             excludeAsset(assets, { exclude: true }, element, document);
@@ -355,7 +360,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (uri !== location.href) {
                 if (local && !pathname) {
                     let pathbase = location.pathname;
-                    if (!pathbase.endsWith('/')) {
+                    if (lastItemOf(pathbase) !== '/') {
                         pathbase = splitPairStart(pathbase, '/', false, true);
                     }
                     if (pathsub.startsWith(pathbase)) {

@@ -13,6 +13,7 @@ import type View from '../view';
 const { formatPX } = squared.lib.css;
 const { createElement } = squared.lib.dom;
 const { truncate } = squared.lib.math;
+const { lastItemOf } = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.Column<T> {
     public processNode(node: T, parent: T) {
@@ -125,7 +126,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     for (let j = 0; j < r; ++j) {
                         const items = columns[j];
                         if (j < r - 1 && items.length > 1) {
-                            const columnEnd = items[items.length - 1];
+                            const columnEnd = lastItemOf(items)!;
                             if (/^H\d/.test(columnEnd.tagName)) {
                                 --items.length;
                                 above[j + 1] = columnEnd;
@@ -202,7 +203,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         if (height >= maxHeight) {
                             const column = columns[j];
                             anchorTop = column[0];
-                            anchorBottom = column[column.length - 1];
+                            anchorBottom = lastItemOf(column)!;
                             maxHeight = height;
                         }
                     }

@@ -23,7 +23,7 @@ interface ICssGridData<T> extends CssGridData<T> {
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertPercent, endsWith, flatArray, startsWith } = squared.lib.util;
+const { convertPercent, endsWith, flatArray, lastItemOf, startsWith } = squared.lib.util;
 
 const REGEXP_ALIGNSELF = /start|end|center|baseline/;
 const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
@@ -752,7 +752,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             const controller = this.controller as android.base.Controller<T>;
             const { children, column, row, rowData } = mainData;
             const wrapped = mainData.unsetContentBox;
-            const insertNode = children[children.length - 1];
+            const insertNode = lastItemOf(children)!;
             if (CssGrid.isJustified(node)) {
                 setContentSpacing(mainData, column, node, true, controller.userSettings.resolutionScreenWidth! - node.bounds.left, 0);
                 switch (mainData.justifyContent) {

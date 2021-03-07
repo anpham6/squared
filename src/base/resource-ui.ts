@@ -18,7 +18,7 @@ const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, getSty
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, startsWith } = squared.lib.util;
+const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, splitPair, startsWith } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -90,8 +90,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             if (/[a-z]/.test(color[0]) && /\d/.test(value[index - 1])) {
                 continue;
             }
-            if (colors.length) {
-                colors[colors.length - 1][2] = index;
+            const item = lastItemOf(colors);
+            if (item) {
+                item[2] = index;
             }
             colors.push([color, lastIndex, length]);
         }
@@ -130,72 +131,73 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                     }
                 }
             }
-            if (isNaN(offset)) {
-                continue;
-            }
-            if (result.length === 0) {
-                if (offset === -1) {
-                    offset = 0;
-                }
-                else if (offset > 0) {
-                    result.push({ color, offset: 0 });
-                }
-            }
-            if (offset !== -1) {
-                offset = Math.max(previousOffset, offset);
-                previousOffset = offset;
-            }
-            result.push({ color, offset });
-        }
-    }
-    const length = result.length;
-    const lastStop = result[length - 1];
-    if (lastStop.offset === -1) {
-        lastStop.offset = 1;
-    }
-    let percent = 0;
-    for (let i = 0; i < length; ++i) {
-        const stop = result[i];
-        if (stop.offset === -1) {
-            if (i === 0) {
-                stop.offset = 0;
-            }
-            else {
-                for (let j = i + 1, k = 2; j < length - 1; ++k) {
-                    const data = result[j++];
-                    if (data.offset !== -1) {
-                        stop.offset = (percent + data.offset) / k;
-                        break;
+            if (!isNaN(offset)) {
+                if (result.length === 0) {
+                    if (offset === -1) {
+                        offset = 0;
+                    }
+                    else if (offset > 0) {
+                        result.push({ color, offset: 0 });
                     }
                 }
-                if (stop.offset === -1) {
-                    stop.offset = percent + lastStop.offset / (length - 1);
+                if (offset !== -1) {
+                    offset = Math.max(previousOffset, offset);
+                    previousOffset = offset;
                 }
+                result.push({ color, offset });
             }
         }
-        percent = stop.offset;
     }
-    if (repeat) {
-        if (percent < 100) {
-            complete: {
-                let basePercent = percent;
-                const original = result.slice(0);
-                while (percent < 100) {
-                    for (let i = 0; i < length; ++i) {
-                        const data = original[i];
-                        percent = Math.min(basePercent + data.offset, 1);
-                        result.push({ ...data, offset: percent });
-                        if (percent === 1) {
-                            break complete;
+    const lastStop = lastItemOf(result);
+    if (lastStop) {
+        if (lastStop.offset === -1) {
+            lastStop.offset = 1;
+        }
+        let percent = 0;
+        const length = result.length;
+        for (let i = 0; i < length; ++i) {
+            const stop = result[i];
+            if (stop.offset === -1) {
+                if (i === 0) {
+                    stop.offset = 0;
+                }
+                else {
+                    for (let j = i + 1, k = 2; j < length - 1; ++k) {
+                        const data = result[j++];
+                        if (data.offset !== -1) {
+                            stop.offset = (percent + data.offset) / k;
+                            break;
                         }
                     }
-                    basePercent = percent;
+                    if (stop.offset === -1) {
+                        stop.offset = percent + lastStop.offset / (length - 1);
+                    }
+                }
+            }
+            percent = stop.offset;
+        }
+        if (repeat) {
+            if (percent < 100) {
+                complete: {
+                    let basePercent = percent;
+                    const original = result.slice(0);
+                    while (percent < 100) {
+                        for (let i = 0; i < length; ++i) {
+                            const data = original[i];
+                            percent = Math.min(basePercent + data.offset, 1);
+                            result.push({ ...data, offset: percent });
+                            if (percent === 1) {
+                                break complete;
+                            }
+                        }
+                        basePercent = percent;
+                    }
                 }
             }
         }
-    }
-    else if (percent < 1) {
-        result.push({ ...result[length - 1], offset: 1 });
+        else if (percent < 1) {
+            result.push({ ...lastStop, offset: 1 });
+        }
     }
     REGEXP_COLORSTOP.lastIndex = 0;
     return result;
@@ -249,8 +251,7 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "background
 }
 
 function hasEndingSpace(element: HTMLElement) {
-    const value = element.textContent!;
-    const ch = value[value.length - 1];
+    const ch = lastItemOf(element.textContent!);
     return ch === ' ' || ch === '\t';
 }
 

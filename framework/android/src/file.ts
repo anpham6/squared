@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, plainMap, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, lastItemOf, plainMap, resolvePath } = squared.lib.util;
 
 const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
@@ -123,7 +123,7 @@ function getRawAssets(this: Resource<View>, resourceId: number, name: "video" | 
 
 function getOutputDirectory(value: string) {
     value = value.replace(/\\/g, '/');
-    return value + (!endsWith(value, '/') ? '/' : '');
+    return value + (lastItemOf(value) !== '/' ? '/' : '');
 }
 
 const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;

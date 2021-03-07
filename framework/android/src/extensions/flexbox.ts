@@ -19,7 +19,7 @@ interface FlexBasis<T> {
 
 const { isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { capitalize, iterateReverseArray, sameArray } = squared.lib.util;
+const { capitalize, iterateReverseArray, lastItemOf, sameArray } = squared.lib.util;
 
 function getBaseline(nodes: View[]) {
     for (let i = 0, length = nodes.length; i < length; ++i) {
@@ -197,7 +197,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                     else {
-                        const item = chainVertical[chainVertical.length - 1][0];
+                        const item = lastItemOf(chainVertical)![0];
                         const offset = node.box.right - item.linear.right;
                         if (offset > 0) {
                             item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offset);
