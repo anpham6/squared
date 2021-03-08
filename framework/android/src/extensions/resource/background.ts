@@ -829,7 +829,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const gradient = createBackgroundGradient(resourceId, value, node.api, q, data.borderRadius);
                         if (gradient) {
                             images[length] = gradient;
-                            imageDimensions[length] = value.dimension!;
+                            imageDimensions[length] = value.dimension;
                             valid = true;
                         }
                     }

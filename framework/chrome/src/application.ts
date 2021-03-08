@@ -55,26 +55,24 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             if (commands) {
                 const documentHandler = this.userSettings.outputDocumentHandler;
                 const paramMap = new Map<string, [RegExp, string]>();
-                const replaceParams = (param: Undef<any>): unknown => {
-                    if (param && typeof param !== 'number' && typeof param !== 'boolean') {
-                        const original = param;
-                        const converted = typeof param === 'object' || Array.isArray(param);
-                        if (converted) {
-                            param = JSON.stringify(param);
-                        }
-                        const current = param;
+                const replaceParams = (param: unknown): unknown => {
+                    const type = typeof param;
+                    if (param && type !== 'number' && type !== 'boolean' && type !== 'bigint') {
+                        const current = type === 'object' ? JSON.stringify(param) : param as string;
+                        let output = current;
                         for (const [pattern, value] of paramMap.values()) {
-                            param = (param as string).replace(pattern, value);
+                            output = output.replace(pattern, value);
                         }
-                        if (current === param) {
-                            return original;
-                        }
-                        if (converted) {
-                            try {
-                                return JSON.parse(param);
+                        if (output !== current) {
+                            if (type === 'object') {
+                                try {
+                                    return JSON.parse(output);
+                                }
+                                catch {
+                                }
                             }
-                            catch {
-                                return original;
+                            else {
+                                return output;
                             }
                         }
                     }
@@ -152,7 +150,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 items.push(data);
             }
         }
-        return (this.fileHandler as chrome.base.File<T>)[module](pathname, options);
+        return this.fileHandler![module](pathname, options);
     }
 
     get initializing() {

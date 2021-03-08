@@ -16,13 +16,13 @@ interface OptionsData {
     compress?: CompressFormat[];
 }
 
-interface FileAsData extends OptionsData {
+interface FileAsData {
     file: string;
     format?: string;
 }
 
 const { createElement } = squared.lib.dom;
-const { convertWord, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isPlainObject, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
 const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
 
@@ -70,7 +70,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
         value = value.substring(2);
     }
     if (!value.includes('/')) {
-        return ['', '', value];
+        return [undefined, '', value];
     }
     let moveTo: Undef<string>;
     if (value[0] === '/') {
@@ -79,7 +79,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
     }
     else if (startsWith(value, '../')) {
         moveTo = DIR_FUNCTIONS.SERVERROOT;
-        let pathname: StringOfArray = location.pathname.split('/');
+        const pathname: StringOfArray = location.pathname.split('/');
         if (--pathname.length) {
             for (let i = 0, length = value.length; i < length; i += 3) {
                 if (value.substring(i, i + 3) !== '../' || --pathname.length === 0) {
@@ -87,15 +87,13 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
                 }
             }
         }
-        pathname.shift();
-        pathname = pathname.join('/');
-        value = (pathname ? pathname + '/' : '') + value.split('../').pop();
+        value = (pathname.shift() ? pathname.join('/') + '/' : '') + value.split('../').pop();
     }
     const result = splitPair(value, '/', false, true);
     if (saveTo) {
         result[1] = assignFilename(result[1], ext);
     }
-    return [moveTo, result[0], result[1]];
+    return [moveTo, ...result];
 }
 
 function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement | HTMLTrackElement | HTMLIFrameElement, data: Map<HTMLElement, string>) {
@@ -466,7 +464,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const bundleIndex: BundleIndex = {};
         let templateMap: Undef<TemplateMap>;
         if (assetMap) {
-            for (const { selector, type, template } of assetMap.values()) {
+            for (const { template, type, selector } of assetMap.values()) {
                 if (template && type && !selector) {
                     switch (type) {
                         case 'html':
@@ -532,7 +530,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         document.querySelectorAll('link, style').forEach((element: HTMLLinkElement | HTMLStyleElement) => {
-            let mimeType = '',
+            let mimeType = 'text/css',
                 href: Undef<string>;
             if (element instanceof HTMLLinkElement) {
                 if (href = element.href) {
@@ -547,7 +545,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     };
                     switch (rel) {
                         case 'stylesheet':
-                            mimeType = 'text/css';
                             break;
                         case 'alternate':
                         case 'help':
@@ -571,9 +568,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 else {
                     return;
                 }
-            }
-            else {
-                mimeType = 'text/css';
             }
             this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css' || element instanceof HTMLStyleElement);
         });
@@ -601,7 +595,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         }
                         ({ compress, download, preserve, process, tasks, cloudStorage, document: documentData } = command);
                     }
-                    const data = File.parseUri(resolvePath(uri), isCrossOrigin(download, preserveCrossOrigin), { saveAs, format: process ? process.join('+') : '' });
+                    const data = File.parseUri(resolvePath(uri), isCrossOrigin(download, preserveCrossOrigin), { saveAs, mimeType: 'text/css', format: process ? process.join('+') : '' });
                     if (this.processExtensions(data, documentData, compress, tasks, cloudStorage)) {
                         if (filename) {
                             data.filename = filename;
@@ -609,7 +603,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         if (preserve) {
                             data.preserve = true;
                         }
-                        data.mimeType = item.mimeType;
                         result.push(data);
                     }
                 }
@@ -637,16 +630,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (image) {
                 if (base64 = image.base64) {
                     mimeType = image.mimeType;
-                    src = resolvePath(assignFilename('', mimeType && fromMimeType(mimeType)));
+                    src = assignFilename('', mimeType && fromMimeType(mimeType));
                 }
                 else {
                     return;
                 }
             }
-            else {
-                src = resolvePath(src);
-            }
-            this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, mimeType, base64);
+            this.processImageUri(result, element, resolvePath(src), saveAsImage, preserveCrossOrigin, assetMap, mimeType, base64);
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
             RE_SRCSET.matcher(element.srcset.trim());
@@ -694,11 +684,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 }
                             }
                         }
-                        const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename), command, false, undefined, mimeType, base64);
+                        const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename), command, false, undefined, mimeType || 'image/unknown', base64);
                         if (data) {
-                            if (endsWith(data.filename, '.unknown')) {
-                                data.mimeType = 'image/unknown';
-                            }
                             if (commands && commands.length) {
                                 data.commands = commands;
                             }
@@ -794,21 +781,21 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const socketMap: ObjectMap<string> = {};
             const hostname = new URL(this.hostname).hostname;
             for (const { watch } of options.assets!) {
-                if (watch && isPlainObject<WatchInterval>(watch) && watch.reload) {
+                if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
                     const { socketId: id, handler = {}, secure } = reload;
                     const port = reload.port || (secure ? this.userSettings.webSocketSecurePort! : this.userSettings.webSocketPort!);
                     socketMap[id + '_' + port + (secure ? '_0' : '_1')] ||=
                         'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
                         (handler.open ? `socket.onopen=${handler.open};` : '') +
-                        'socket.onmessage=' + (handler.message || `function(e){const c=JSON.parse(e.data);if(c&&c.socketId==="${id!}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){const a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){const a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
+                        'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${id!}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.href=c.src+c.hot;});return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.src=c.src+c.hot;});return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
                         (handler.error ? `socket.onerror=${handler.error};` : '') +
                         (handler.close ? `socket.onclose=${handler.close};` : '');
                     delete reload.handler;
                 }
             }
             if (Object.keys(socketMap).length) {
-                let textContent = 'document.addEventListener("DOMContentLoaded", function(){let socket;';
+                let textContent = 'document.addEventListener("DOMContentLoaded", function(){var socket;';
                 for (const id in socketMap) {
                     textContent += socketMap[id];
                 }
@@ -886,7 +873,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
                     break;
                 case 'IFRAME':
-                    if (!(assetMap && assetMap.get(element)) && !startsWith(element.dataset.chromeFile, 'saveTo')) {
+                    if (!assetMap?.get(element) && !startsWith(element.dataset.chromeFile, 'saveTo')) {
                         return;
                     }
                 case 'OBJECT':
@@ -1148,7 +1135,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const options = parseOptions(chromeOptions);
             inline ??= options.inline;
             preserve ??= options.preserve;
-            compress ??= options.compress;
+            compress ||= options.compress;
             download ??= options.download;
             tasks ||= parseTask(chromeTasks);
             watch ||= parseWatchInterval(chromeWatch);
@@ -1266,12 +1253,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         }
                     }
                     const { chromeCommands, chromeOptions, chromeTasks, chromeWatch } = element.dataset;
-                    if (!commands && chromeCommands) {
-                        commands = chromeCommands.split('::').map(value => value.trim());
+                    if (chromeCommands) {
+                        commands ||= chromeCommands.split('::').map(value => value.trim());
                     }
                     const options = parseOptions(chromeOptions);
                     inline ??= options.inline;
-                    compress ??= options.compress;
+                    compress ||= options.compress;
                     download ??= options.download;
                     blob ??= options.blob;
                     tasks ||= parseTask(chromeTasks);

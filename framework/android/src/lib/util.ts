@@ -140,7 +140,7 @@ export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
     let result: Undef<StringMap>;
     for (const attr in dataset) {
         if (startsWith(attr, prefix)) {
-            (result ||= {})[capitalize(attr.substring(prefix.length), false)] = dataset[attr]!;
+            (result ||= {})[capitalize(attr.substring(prefix.length), false)] = dataset[attr];
         }
     }
     return result;
