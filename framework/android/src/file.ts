@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, lastItemOf, plainMap, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, plainMap, resolvePath } = squared.lib.util;
 
 const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
@@ -496,6 +496,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public getCopyQueryParameters(options: FileCopyingOptions) {
         return options.watch ? '&watch=1' : '';
+    }
+
+    public finalizeRequestBody(data: RequestData, options: FileUniversalOptions) {
+        if (options.watch) {
+            for (const item of data.assets!) {
+                if (isPlainObject<WatchInterval>(item.watch)) {
+                    delete item.watch.reload;
+                }
+            }
+        }
     }
 
     protected async processAssets(assets: FileAsset[], options: FileUniversalOptions) {
