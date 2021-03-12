@@ -112,7 +112,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     }
                                     break;
                                 default:
-                                    if (type && (type.startsWith('append/') || type.startsWith('prepend/'))) {
+                                    if (type && (type === 'replace' || type.startsWith('append/') || type.startsWith('prepend/'))) {
                                         const items = appendMap.get(element) || [];
                                         items.push({ ...item });
                                         appendMap.set(element, items);
