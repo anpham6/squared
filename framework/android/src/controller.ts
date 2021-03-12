@@ -3354,7 +3354,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             chain.modifyBox(BOX_STANDARD.MARGIN_TOP, lastItemOf(previousRow)!.bounds.height * -1, false);
                         }
                         if (floating && Math.ceil(chain.bounds.top) < minMaxOf(previousSiblings, item => Math.floor(item.bounds.bottom), '>')[1]) {
-                            aboveRowEnd = lastItemOf(previousRow)!;
+                            aboveRowEnd = lastItemOf(previousRow) as T;
                             for (let l = previousSiblings.length - 2; l >= 0; --l) {
                                 const aboveBefore = previousSiblings[l];
                                 if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {

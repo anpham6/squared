@@ -265,8 +265,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         base64: Undef<string>,
                         ext: Undef<string>,
                         data = fonts.find(item => item.srcUrl);
-                    if (data) {
-                        uri = data.srcUrl!;
+                    if (data && (uri = data.srcUrl)) {
                         const rawData = this.resource.getRawData(resourceId, uri);
                         if (rawData) {
                             base64 = rawData.base64;
@@ -280,15 +279,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         }
                         ext ||= fromMimeType(data.mimeType) || Resource.getExtension(uri.split('?')[0]).toLowerCase();
                     }
+                    else if (data = fonts.find(item => item.srcBase64)) {
+                        base64 = data.srcBase64;
+                        ext = fromMimeType(data.mimeType);
+                    }
                     else {
-                        data = fonts.find(item => item.srcBase64);
-                        if (data) {
-                            base64 = data.srcBase64;
-                            ext = fromMimeType(data.mimeType);
-                        }
-                        else {
-                            continue;
-                        }
+                        continue;
                     }
                     this.resource.addAsset(resourceId, {
                         pathname: directory + pathname,
