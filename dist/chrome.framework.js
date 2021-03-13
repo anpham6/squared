@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.0
+/* chrome-framework 2.5.1
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -250,7 +250,7 @@ var chrome = (function () {
                     break;
                 }
             }
-            return { index, tagName, tagIndex, tagCount, lowerCase: true };
+            return { index, tagName, tagIndex, tagCount, ignoreCase: true };
         }
         static setDocumentId(node, element, document) {
             if (Array.isArray(document)) {
@@ -707,20 +707,20 @@ var chrome = (function () {
                 const socketMap = {};
                 const hostname = new URL(this.hostname).hostname;
                 for (const { watch } of options.assets) {
-                    if (watch && isPlainObject$2(watch) && watch.reload) {
+                    if (isPlainObject$2(watch) && watch.reload) {
                         const reload = watch.reload;
                         const { socketId: id, handler = {}, secure } = reload;
                         const port = reload.port || (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
                         socketMap[_a = id + '_' + port + (secure ? '_0' : '_1')] || (socketMap[_a] = 'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
                             (handler.open ? `socket.onopen=${handler.open};` : '') +
-                            'socket.onmessage=' + (handler.message || `function(e){const c=JSON.parse(e.data);if(c&&c.socketId==="${id}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){const a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){const a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
+                            'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${id}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
                             (handler.error ? `socket.onerror=${handler.error};` : '') +
                             (handler.close ? `socket.onclose=${handler.close};` : ''));
                         delete reload.handler;
                     }
                 }
                 if (Object.keys(socketMap).length) {
-                    let textContent = 'document.addEventListener("DOMContentLoaded", function(){let socket;';
+                    let textContent = 'document.addEventListener("DOMContentLoaded", function(){var socket;';
                     for (const id in socketMap) {
                         textContent += socketMap[id];
                     }
@@ -795,7 +795,7 @@ var chrome = (function () {
                         element.querySelectorAll('source, track').forEach((source) => resolveAssetSource(source, items));
                         break;
                     case 'IFRAME':
-                        if (!(assetMap && assetMap.get(element)) && !startsWith(element.dataset.chromeFile, 'saveTo')) {
+                        if (!(assetMap === null || assetMap === void 0 ? void 0 : assetMap.get(element)) && !startsWith(element.dataset.chromeFile, 'saveTo')) {
                             return;
                         }
                     case 'OBJECT':
@@ -886,7 +886,7 @@ var chrome = (function () {
                     node.outerXml = element.outerHTML.trim();
                     let i = 0;
                     for (const sibling of siblings) {
-                        const { type, attributes, download } = sibling;
+                        const { type, attributes, download, textContent } = sibling;
                         if (type) {
                             let js, url, prepend;
                             switch (type) {
@@ -908,15 +908,23 @@ var chrome = (function () {
                                     }
                                     break;
                                 default: {
-                                    const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent);
                                     let elementData;
-                                    if (type.startsWith('append/')) {
-                                        append.nextSibling = getNextSibling();
-                                        elementData = getTagNode(node, attributes, append);
+                                    if (type === 'replace') {
+                                        if (textContent) {
+                                            elementData = getTagNode(node, attributes);
+                                            elementData.textContent = textContent;
+                                        }
                                     }
-                                    else if (type.startsWith('prepend/')) {
-                                        append.prepend = true;
-                                        elementData = getTagNode(node, attributes, append);
+                                    else {
+                                        const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, textContent);
+                                        if (type.startsWith('append/')) {
+                                            append.nextSibling = getNextSibling();
+                                            elementData = getTagNode(node, attributes, append);
+                                        }
+                                        else if (type.startsWith('prepend/')) {
+                                            append.prepend = true;
+                                            elementData = getTagNode(node, attributes, append);
+                                        }
                                     }
                                     if (elementData) {
                                         assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
@@ -1330,7 +1338,7 @@ var chrome = (function () {
                                         }
                                         break;
                                     default:
-                                        if (type && (type.startsWith('append/') || type.startsWith('prepend/'))) {
+                                        if (type && (type === 'replace' || type.startsWith('append/') || type.startsWith('prepend/'))) {
                                             const items = appendMap.get(element) || [];
                                             items.push(Object.assign({}, item));
                                             appendMap.set(element, items);

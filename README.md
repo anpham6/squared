@@ -38,6 +38,8 @@ Option #1 - [Node.js](http://www.nodejs.org)
 > cd node_modules/squared  
 ```
 
+#### GitHub &amp; NPM
+
 ```xml
 > squared.settings.[json|yml] (configure)  
 > node serve.js [--help]
@@ -80,25 +82,24 @@ The primary function "parseDocument" can be called on multiple elements and mult
 <script src="/dist/squared.svg.min.js"></script> /* optional */
 <script src="/dist/android.framework.min.js"></script>
 <script>
-    // optional
-    squared.settings.targetAPI = 30;
+    squared.settings.targetAPI = 30; // optional
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         squared.setFramework(android, /* optional: FrameworkOptions */);
 
-        squared.parseDocument(); // default: document.body 'BODY'
+        await squared.parseDocument(); // document.body 'BODY' (default)
         // OR
-        squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
+        await squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
 
-        squared.save(); // uses defaults from settings
+        await squared.save(); // Uses defaults from settings
         // OR
-        squared.saveAs(/* archive name */, /* options */);
+        await squared.saveAs(/* archive filename */, /* options */);
         // OR
-        squared.copyTo(/* local directory */, /* options */);
+        await squared.copyTo(/* directory */, /* options */);
         // OR
-        squared.appendTo(/* archive location */, /* options */);
+        await squared.appendTo(/* archive location */, /* options */);
 
-        squared.reset(); // start new "parseDocument" session
+        squared.reset(); // Start new "parseDocument" session
     });
 </script>
 ```
@@ -115,11 +116,11 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
     document.addEventListener('DOMContentLoaded', async () => {
         squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
-        const element = await squared.parseDocument(/* HTMLElement */); // default: document.documentElement 'HTML'
-        const elements = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // multiple elements
+        const element = await squared.parseDocument(/* HTMLElement */); // document.documentElement 'HTML' (default)
+        // OR
+        const elements = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // Multiple elements
 
-        // start new "parseDocument" session (optional)
-        squared.reset();
+        squared.reset(); // Start new "parseDocument" session (optional)
     });
 </script>
 ```
@@ -133,15 +134,6 @@ Browsers without ES2017 are not being supported to fully take advantage of async
 
 NOTE: Calling "save" or "copy" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
-```javascript
-document.addEventListener('DOMContentLoaded', () => {
-    squared.setFramework(android);
-    squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
-        squared.save();
-    });
-});
-```
-
 ### ALL: User Settings
 
 These settings are available in the global variable "squared" to customize your desired output structure. Each framework shares a common set of settings and also a subset of their own settings.
@@ -152,7 +144,7 @@ Gulp installation is required in order to use "outputTasks". Further instruction
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [ // default is all
+    builtInExtensions: [
         'squared.accessibility',
         'android.delegate.background',
         'android.delegate.negative-x',
@@ -192,9 +184,9 @@ squared.settings = {
     preloadFonts: true,
     preloadCustomElements: true,
     supportNegativeLeftTop: true,
-    fontMeasureWrap: true, // slower rendering performance (alias: android.delegate.multiline)
-    fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (element: data-android-font-measure-adjust)
-    lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (element: data-android-line-height-adjust)
+    fontMeasureWrap: true, // Slower rendering performance (android.delegate.multiline)
+    fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
+    lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createElementMap: false,
@@ -213,7 +205,7 @@ squared.settings = {
     outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify"} }
     outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (NOTE: Only applicabale to raw assets)
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip' // zip | 7z | gz | tar,
+    outputArchiveFormat: 'zip', // zip | 7z | gz | tar
     outputArchiveCache: false // Downloadable URL in ResponseData<downloadUrl>
 };
 ```
@@ -231,6 +223,8 @@ squared.settings = {
     createQuerySelectorMap: true,
     pierceShadowRoot: true,
     showErrorMessages: false,
+    webSocketPort: 80,
+    webSocketSecurePort: 443,
     outputDocumentHandler: 'chrome',
     outputEmptyCopyDirectory: false,
     outputTasks: {} // { "*.js": [{ handler: "gulp", task: "minify" }, { handler: "gulp", task: "beautify" }] }
@@ -265,7 +259,7 @@ interface FrameworkOptions {
     cache?: boolean;
 }
 
-// Required: Initial save
+// Initial save (required)
 squared.setFramework(android, {
     settings: { compressImages: true, createQuerySelectorMap: true },
     saveAs: 'android-example',
@@ -290,56 +284,56 @@ squared.setFramework(android, 'android-example', true); // "cache" can also be u
 There is no official documentation for this project. The entire source code including TypeScript definitions are available on GitHub if you need further clarification.
 
 ```javascript
-.settings // see user preferences section
+.settings // See user preferences section
 
-setFramework(module: {}, options?: FrameworkOptions) // install application interpreter
-setHostname(value: string) // use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
-setEndpoint(name: string, value: string) // set pathname for serverless cloud functions (ASSETS_COPY | ASSETS_ARCHIVE | LOADER_DATA)
+setFramework(module: {}, options?: FrameworkOptions) // Install application interpreter
+setHostname(value: string) // Use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
+setEndpoint(name: string, value: string) // Set pathname for serverless cloud functions (ASSETS_COPY | ASSETS_ARCHIVE | LOADER_DATA)
 
-parseDocument(...elements: (Element | string)[]) // see installation section (Promise)
-parseDocumentSync(...elements: (Element | string)[]) // skips preloadImages and preloadFonts (synchronous)
+parseDocument(...elements: (Element | string)[]) // See installation section (Promise)
+parseDocumentSync(...elements: (Element | string)[]) // Skips preloadImages and preloadFonts (synchronous)
 
-latest(count?: number) // most recent parseDocument session ids (1 newest / -1 oldest: string, other: string[])
+latest(count?: number) // Most recent parseDocument session ids (1 newest / -1 oldest: string, other: string[])
 
-close() // close current session preceding document write (android)
-save() // save current session to a new archive using default settings
-reset() // clear cache and reopen new session
+close() // Close current session preceding document write (android)
+save() // Save current session to a new archive using default settings
+reset() // Clear cache and reopen new session
 
-toString() // current framework loaded
+toString() // Current framework loaded
 
-add(...names: (string | Extension | ExtensionRequestObject)[]) // see extension configuration section
-remove(...names: (string | Extension)[]) // remove extensions by namespace or control
-get(...names: (string | Extension)[]) // retrieve extensions by namespace or control
-apply(name: string | Extension, options: FrameworkOptions) // see extension configuration section
+add(...names: (string | Extension | ExtensionRequestObject)[]) // See extension configuration section
+remove(...names: (string | Extension)[]) // Remove extensions by namespace or control
+get(...names: (string | Extension)[]) // Retrieve extensions by namespace or control
+apply(name: string | Extension, options: FrameworkOptions) // See extension configuration section
 
-extend(functionMap: {}, framework?: number) // add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
+extend(functionMap: {}, framework?: number) // Add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
 
 // Promise (cache: createElementMap - true)
 
-getElementById(value: string, sync?: boolean, cache?: boolean) // default: sync - false | cache - true
+getElementById(value: string, sync?: boolean, cache?: boolean) // sync - false | cache - true (default)
 querySelector(value: string, sync?: boolean, cache?: boolean)
 querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
-fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // default: sync - false | cache - false
+fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // sync - false | cache - false (default)
 
-clearCache() // clear all data stored in memory
+clearCache() // Clear all data stored in memory
 ```
 
 Packaging methods will return a Promise and require either node-express or squared-apache installed. These features are not supported when the framework is VDOM.
 
 ```javascript
-saveAs(filename: string, options?: {}) // save current sessionas a new archive
-saveFiles(filename: string, options: {}) // create new archive from FileAsset[]
+saveAs(filename: string, options?: {}) // Save current sessionas a new archive
+saveFiles(filename: string, options: {}) // Create new archive from FileAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 
-appendTo(target: string, options?: {}) // create new archive from a preexisting archive and current session
-appendFiles(target: string, options: {}) // create new archive from a preexisting archive and FileAsset[]
+appendTo(target: string, options?: {}) // Create new archive from a preexisting archive and current session
+appendFiles(target: string, options: {}) // Create new archive from a preexisting archive and FileAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
 
-copyTo(pathname: string, options?: {}) // copy current session to local 
-copyFiles(pathname: string, options: {}) // copy FileAsset[] to local 
+copyTo(pathname: string, options?: {}) // Copy current session to local 
+copyFiles(pathname: string, options: {}) // Copy FileAsset[] to local 
 ```
 
 ### ALL: Extending Node object
@@ -366,20 +360,20 @@ squared.extend({
 });
 
 const body = await squared.fromElement(document.body);
-body.altId = 5; // body.altId: 6
+body.altId = 2; // body.altId: 3
 body.addEvent('click', event => body.element.classList.toggle('example'));
 ```
 
 ### ANDROID: Public Methods
 
 ```javascript
-android.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
-android.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
-android.setViewModel(data: {}, sessionId?: string) // object data for layout bindings
+android.customize(build: number, widget: string, options: {}) // Global attributes applied to specific views
+android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
+android.setViewModel(data: {}, sessionId?: string) // Object data for layout bindings
 ```
 
 ```javascript
-// targetAPI: 0 - ALL, 30 - Android R
+// targetAPI: 0 - ALL, 30 - Android 11
 
 android.customize(squared.settings.targetAPI, 'Button', {
     android: {
@@ -393,7 +387,9 @@ android.customize(squared.settings.targetAPI, 'Button', {
 android.addXmlNs('tools', 'http://schemas.android.com/tools');
 ```
 
-View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session. Leaving the sessionId empty sets the default view model for the entire project.
+View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session.
+
+Leaving the sessionId empty sets the default view model for the entire project.
 
 ```javascript
 // NOTE: latest(1 | -1 | undefined): string
@@ -411,7 +407,7 @@ await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
                 { name: 'key', type: 'String' }
             ]
         },
-        sessions[1] /* optional: used when there are multiple layouts */
+        sessions[1] // Used when there are multiple layouts (optional)
     );
     android.setViewModel(
         {
@@ -553,7 +549,7 @@ data-android-attr-{namespace}? -> default: "android"
 
 Only the XML based layout and resource files can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation in MainActivity.java.
 
-```javascript
+```java
 import android.graphics.drawable.Animatable;
 
 android.widget.ImageView imageView1 = findViewById(R.id.imageview_1);
@@ -584,16 +580,13 @@ Layout rendering can also be customized using extensions as the program was buil
 
 ```javascript
 // Create an extension
-
 class Sample extends squared.base.Extension {
-    constructor(name, framework = 0, options = {}) {
-        // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
+    constructor(name, framework = 0, options = {}) { // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
         super(name, framework, options);
     }
 }
 
 // Install an extension
-
 const sample = new Sample('your.namespace.sample', 0, {/* same as configure */});
 squared.add(sample);
 // OR

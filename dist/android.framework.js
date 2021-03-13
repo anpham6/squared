@@ -1,4 +1,4 @@
-/* android-framework 2.5.0
+/* android-framework 2.5.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -318,7 +318,7 @@ var android = (function () {
     });
 
     const { parseColor: __parseColor } = squared.lib.color;
-    const { capitalize: capitalize$6, joinArray: joinArray$1, isPlainObject: isPlainObject$1, startsWith: startsWith$9 } = squared.lib.util;
+    const { capitalize: capitalize$6, joinArray: joinArray$1, isPlainObject: isPlainObject$2, startsWith: startsWith$9 } = squared.lib.util;
     const CACHE_COLORDATA = {};
     const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
     function parseColor(value, opacity = 1, transparency) {
@@ -372,7 +372,7 @@ var android = (function () {
                     if (Array.isArray(value)) {
                         innerText += applyTemplate(name, descend, value, childDepth);
                     }
-                    else if (isPlainObject$1(value)) {
+                    else if (isPlainObject$2(value)) {
                         innerText += applyTemplate(name, descend, [value], childDepth);
                     }
                 }
@@ -631,7 +631,7 @@ var android = (function () {
 
     const { PROTOCOL } = squared.lib.regex.FILE;
     const { extractURL: extractURL$2, getSrcSet: getSrcSet$1 } = squared.lib.css;
-    const { endsWith: endsWith$2, fromLastIndexOf: fromLastIndexOf$3, isNumber: isNumber$1, isPlainObject, isString: isString$1, padStart, resolvePath: resolvePath$2, splitPairStart: splitPairStart$1, startsWith: startsWith$8, trimString } = squared.lib.util;
+    const { endsWith: endsWith$2, fromLastIndexOf: fromLastIndexOf$3, isNumber: isNumber$1, isPlainObject: isPlainObject$1, isString: isString$1, padStart, resolvePath: resolvePath$2, splitPairStart: splitPairStart$1, startsWith: startsWith$8, trimString } = squared.lib.util;
     const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
     const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
     let CACHE_IMAGE = {};
@@ -667,7 +667,7 @@ var android = (function () {
                     }
                 }
             }
-            else if (isPlainObject(value)) {
+            else if (isPlainObject$1(value)) {
                 formatObject(resourceId, obj, numberAlias);
             }
         }
@@ -689,7 +689,7 @@ var android = (function () {
         static formatOptions(resourceId, options, numberAlias) {
             for (const namespace in options) {
                 const obj = options[namespace];
-                if (isPlainObject(obj)) {
+                if (isPlainObject$1(obj)) {
                     formatObject(resourceId, obj, numberAlias);
                 }
             }
@@ -8500,7 +8500,7 @@ var android = (function () {
         }
     };
 
-    const { convertBase64, endsWith: endsWith$1, fromLastIndexOf: fromLastIndexOf$1, plainMap: plainMap$2, resolvePath: resolvePath$1 } = squared.lib.util;
+    const { convertBase64, endsWith: endsWith$1, fromLastIndexOf: fromLastIndexOf$1, isPlainObject, plainMap: plainMap$2, resolvePath: resolvePath$1 } = squared.lib.util;
     const { fromMimeType, parseMimeType } = squared.base.lib.util;
     function getFileAssets(pathname, items, document) {
         const length = items.length;
@@ -8717,8 +8717,7 @@ var android = (function () {
                     const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
                     if (fonts.length) {
                         let uri, base64, ext, data = fonts.find(item => item.srcUrl);
-                        if (data) {
-                            uri = data.srcUrl;
+                        if (data && (uri = data.srcUrl)) {
                             const rawData = this.resource.getRawData(resourceId, uri);
                             if (rawData) {
                                 base64 = rawData.base64;
@@ -8732,15 +8731,12 @@ var android = (function () {
                             }
                             ext || (ext = fromMimeType(data.mimeType) || Resource.getExtension(uri.split('?')[0]).toLowerCase());
                         }
+                        else if (data = fonts.find(item => item.srcBase64)) {
+                            base64 = data.srcBase64;
+                            ext = fromMimeType(data.mimeType);
+                        }
                         else {
-                            data = fonts.find(item => item.srcBase64);
-                            if (data) {
-                                base64 = data.srcBase64;
-                                ext = fromMimeType(data.mimeType);
-                            }
-                            else {
-                                continue;
-                            }
+                            continue;
                         }
                         this.resource.addAsset(resourceId, {
                             pathname: directory + pathname,
@@ -8930,6 +8926,15 @@ var android = (function () {
         }
         getCopyQueryParameters(options) {
             return options.watch ? '&watch=1' : '';
+        }
+        finalizeRequestBody(data, options) {
+            if (options.watch) {
+                for (const item of data.assets) {
+                    if (isPlainObject(item.watch)) {
+                        delete item.watch.reload;
+                    }
+                }
+            }
         }
         async processAssets(assets, options) {
             const { userSettings, resource, resourceId } = this;
