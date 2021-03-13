@@ -492,7 +492,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     'android:windowFullscreen': 'true',
                     'android:fitsSystemWindows': 'true'
                 }
-            });
+            }, this.controller.localSettings.directory.theme);
             themeBackground = true;
         };
         const setDrawableBackground = (node: T, value: string) => {

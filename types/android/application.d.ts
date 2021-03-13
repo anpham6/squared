@@ -15,6 +15,11 @@ interface UserResourceSettingsUI {
     outputMainFileName: string;
 }
 
+interface ControllerSettingsDirectoryUI {
+    animation: string;
+    theme: string;
+}
+
 interface ControllerSettingsDeviationsUI {
     legendBottomOffset: number;
 }

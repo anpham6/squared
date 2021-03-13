@@ -530,7 +530,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             font: 'res/font',
             image: 'res/drawable',
             video: 'res/raw',
-            audio: 'res/raw'
+            audio: 'res/raw',
+            animation: 'res/anim',
+            theme: 'res/values'
         },
         use: {
             svg: false

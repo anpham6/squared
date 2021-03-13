@@ -401,11 +401,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
             return [];
         }
         const insertSpaces = this.userSettings.insertSpaces;
+        const directory = this.directory.animation;
         const result: string[] = new Array(length * 3);
         let i = 0;
         for (const data of stored.animators) {
             result[i++] = replaceTab(data[1], insertSpaces);
-            result[i++] = 'res/anim';
+            result[i++] = directory;
             result[i++] = data[0] + '.xml';
         }
         return this.checkFileAssets(result, options);

@@ -42,7 +42,7 @@ declare namespace base {
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
         static STORED: ResourceSessionStored<Required<ResourceStoredMap>>;
         static formatOptions(resourceId: number, options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
-        static addTheme(resourceId: number, theme: ThemeAttribute): boolean;
+        static addTheme(resourceId: number, theme: ThemeAttribute, pathname?: string): boolean;
         static addString(resourceId: number, value: string, name?: string, numberAlias?: boolean): string;
         static addImage(resourceId: number, images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         static addColor(resourceId: number, value: ColorData | string, transparency?: boolean): string;

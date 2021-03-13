@@ -71,14 +71,13 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return options;
     }
 
-    public static addTheme(resourceId: number, theme: ThemeAttribute) {
+    public static addTheme(resourceId: number, theme: ThemeAttribute, pathname = 'res/values') {
         const stored = this.STORED[resourceId];
         if (!stored) {
             return false;
         }
         const { items, output } = theme;
-        let pathname = 'res/values',
-            filename = 'themes.xml',
+        let filename = 'themes.xml',
             name = theme.name,
             appTheme = '';
         if (output) {
