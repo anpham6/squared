@@ -992,7 +992,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 node.outerXml = element.outerHTML.trim();
                 let i = 0;
                 for (const sibling of siblings) {
-                    const { type, attributes, download } = sibling;
+                    const { type, attributes, download, textContent } = sibling;
                     if (type) {
                         let js: Undef<boolean>,
                             url: Optional<string>,
@@ -1016,15 +1016,23 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 }
                                 break;
                             default: {
-                                const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, sibling.textContent);
                                 let elementData: Undef<XmlTagNode>;
-                                if (type.startsWith('append/')) {
-                                    append.nextSibling = getNextSibling();
-                                    elementData = getTagNode(node, attributes, append);
+                                if (type === 'replace') {
+                                    if (textContent) {
+                                        elementData = getTagNode(node, attributes);
+                                        elementData.textContent = textContent;
+                                    }
                                 }
-                                else if (type.startsWith('prepend/')) {
-                                    append.prepend = true;
-                                    elementData = getTagNode(node, attributes, append);
+                                else {
+                                    const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, textContent);
+                                    if (type.startsWith('append/')) {
+                                        append.nextSibling = getNextSibling();
+                                        elementData = getTagNode(node, attributes, append);
+                                    }
+                                    else if (type.startsWith('prepend/')) {
+                                        append.prepend = true;
+                                        elementData = getTagNode(node, attributes, append);
+                                    }
                                 }
                                 if (elementData) {
                                     assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
