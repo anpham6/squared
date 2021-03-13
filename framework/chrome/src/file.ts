@@ -284,7 +284,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 break;
             }
         }
-        return { index, tagName, tagIndex, tagCount, lowerCase: true };
+        return { index, tagName, tagIndex, tagCount, ignoreCase: true };
     }
 
     public static setDocumentId(node: XmlTagNode, element: HTMLElement, document: Undef<StringOfArray>) {
