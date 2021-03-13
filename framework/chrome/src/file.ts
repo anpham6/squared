@@ -575,7 +575,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (assets) {
             for (const [uri, item] of assets.rawData) {
                 if (item.mimeType === 'text/css') {
-                    let saveAs: Undef<string>,
+                    let command = saveAsLink,
+                        saveAs: Undef<string>,
                         filename: Undef<string>,
                         compress: Undef<CompressFormat[]>,
                         download: Undef<boolean>,
@@ -584,11 +585,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         tasks: Undef<TaskAction[]>,
                         cloudStorage: Undef<CloudStorage[]>,
                         documentData: Undef<StringOfArray>;
-                    if (saveAsLink) {
-                        let command = saveAsLink;
-                        if (saveAsLink.customize) {
-                            command = { ...command };
-                            filename = saveAsLink.customize.call(null, uri, 'text/css', command);
+                    if (command) {
+                        if (command.customize) {
+                            filename = command.customize.call(null, uri, 'text/css', command = { ...command });
                             if (command.pathname && filename) {
                                 saveAs = appendSeparator(command.pathname, filename);
                             }
@@ -667,9 +666,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         let command = saveAsImage,
                             filename: Undef<string>,
                             commands: Undef<string[]>;
-                        if (saveAsImage.customize) {
-                            command = { ...command };
-                            filename = saveAsImage.customize.call(null, '', mimeType, command);
+                        if (command.customize) {
+                            filename = command.customize.call(null, '', mimeType, command = { ...command });
                         }
                         const pathname = command.pathname;
                         filename ||= item.filename;
@@ -735,19 +733,18 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (assets) {
             for (const fonts of assets.fonts.values()) {
                 for (const { srcUrl, srcBase64, mimeType } of fonts) {
-                    let pathname: Undef<string>,
+                    let command = saveAsFont,
+                        data: Null<ChromeAsset> = null,
+                        pathname: Undef<string>,
                         filename: Undef<string>,
                         inline: Undef<boolean>,
                         blob: Undef<boolean>;
-                    if (saveAsFont) {
-                        let command = saveAsFont;
-                        if (saveAsFont.customize) {
-                            command = { ...command };
-                            filename = saveAsFont.customize.call(null, srcUrl || '', mimeType, command);
+                    if (command) {
+                        if (command.customize) {
+                            filename = command.customize.call(null, srcUrl || '', mimeType, command = { ...command });
                         }
                         ({ pathname, inline, blob } = command);
                     }
-                    let data: Null<ChromeAsset> = null;
                     if (srcUrl) {
                         if ((data = File.parseUri(srcUrl, inline === true ? false : preserveCrossOrigin)) && inline) {
                             data.format = 'base64';
@@ -1089,8 +1086,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (file === 'exclude' || file === 'ignore') {
             return;
         }
-        let command = assetMap?.get(element) || assetCommand,
-            filename: Undef<string>,
+        const command = assetMap?.get(element) || assetCommand;
+        let filename: Undef<string>,
             format: Undef<string>,
             inline: Undef<boolean>,
             process: Undef<string[]>,
@@ -1117,18 +1114,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         else {
             if (saveAsCondtion && saveAsOptions) {
-                command = saveAsOptions;
                 if (saveAsOptions.customize) {
-                    command = { ...command };
-                    filename = saveAsOptions.customize.call(null, src || '', mimeType, command);
+                    filename = saveAsOptions.customize.call(null, src || '', mimeType, saveAsOptions = { ...saveAsOptions });
                 }
-                ({ preserve, inline, compress, download, process, tasks, watch, attributes, cloudStorage, document: documentData } = command);
+                ({ preserve, inline, compress, download, process, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsOptions);
                 if (excludeAsset(assets, saveAsOptions, element, documentData)) {
                     return;
                 }
-                if (filename ||= command.filename) {
+                if (filename ||= saveAsOptions.filename) {
                     if (src) {
-                        if (file = getCustomPath(src, command.pathname, filename)) {
+                        if (file = getCustomPath(src, saveAsOptions.pathname, filename)) {
                             filename = '';
                         }
                     }
@@ -1222,8 +1217,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 fromConfig: Undef<boolean>;
             const setFilename = (options: SaveAsOptions) => {
                 if (options.customize) {
-                    command = { ...options };
-                    filename = options.customize.call(null, uri, mimeType || '', command);
+                    filename = options.customize.call(null, uri, mimeType || '', command = { ...options });
                 }
             };
             if (element) {
