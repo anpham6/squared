@@ -14,7 +14,7 @@ const { STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, getStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, calculateAll, convertAngle, formatPercent, formatPX, getStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -27,7 +27,7 @@ const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\s*\\d+\\s*,\\s*\\d+%?\\s*,\\s*\\d+%?\\s*(?:,\\s*[\\d.]+\\s*)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
-const PATTERN_COLORSTOP = `\\s*${PATTERN_COLOR}(?:\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|calc\\((.+)\\)(?=\\s*,)|calc\\((.+)\\))\\s*,?)*\\s*,?`;
+const PATTERN_COLORSTOP = `\\s*${PATTERN_COLOR}(?:\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:calc|min|max|clamp)\\((.+)\\)(?=\\s*,)|(?:calc|min|max|clamp)\\((.+)\\))\\s*,?)*\\s*,?`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\)`, 'g');
 const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
@@ -124,7 +124,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                         offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
                     }
                     else if (isCalc(unit)) {
-                        offset = calculate(match[6], { boundingSize: size, fontSize: node.fontSize }) / size;
+                        offset = calculateAll(unit, { boundingSize: size, fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension }) / size;
                     }
                     if (repeat && offset !== -1) {
                         offset *= extent;

@@ -17,19 +17,21 @@ interface ContainerRemoveIfOptions<T> extends ContainerCascadeOptions<T> {
     cascade?: boolean | IteratorPredicate<T, boolean>;
 }
 
-interface BackgroundPositionOptions {
+interface UnitOptions {
     fontSize?: number;
-    imageDimension?: Null<Dimension>;
-    imageSize?: string;
     screenDimension?: Null<Dimension>;
 }
 
-interface CalculateOptions {
+interface BackgroundPositionOptions extends UnitOptions {
+    imageDimension?: Null<Dimension>;
+    imageSize?: string;
+}
+
+interface CalculateOptions extends UnitOptions {
     min?: number;
     max?: number;
     boundingSize?: number;
     unitType?: number;
-    fontSize?: number;
 }
 
 interface CalculateVarAsStringOptions extends CalculateOptions {
@@ -56,10 +58,9 @@ interface CreateElementOptions {
     children?: Element[];
 }
 
-interface TransformOptions {
+interface TransformOptions extends UnitOptions {
     boundingBox?: Null<Dimension>;
     accumulate?: boolean;
-    fontSize?: number;
 }
 
 interface DelimitStringOptions {
@@ -71,10 +72,8 @@ interface DelimitStringOptions {
     not?: string[];
 }
 
-interface ParseUnitOptions {
-    fontSize?: number;
+interface ParseUnitOptions extends UnitOptions {
     fixedWidth?: boolean;
-    screenDimension?: Null<Dimension>;
 }
 
 interface ConvertUnitOptions extends ParseUnitOptions {

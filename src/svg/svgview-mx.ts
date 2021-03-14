@@ -16,7 +16,7 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const { hasCalc, isAngle, isCustomProperty, isPercent, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
+const { hasCalc, isAngle, hasCustomProperty, isPercent, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd, startsWith } = squared.lib.util;
 
@@ -192,7 +192,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             if (hasCalc(value)) {
                                 value = calculateStyle(element, convertCamelCase(attr), value);
                             }
-                            else if (isCustomProperty(value)) {
+                            else if (hasCustomProperty(value)) {
                                 value = parseVar(element, value);
                             }
                             if (value) {

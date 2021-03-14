@@ -5,7 +5,7 @@ import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
-import { convertCamelCase, convertHyphenated, convertPercent, endsWith, escapePattern, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { convertCamelCase, convertHyphenated, convertPercent, endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -13,23 +13,28 @@ let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
-const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
 const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
-const REGEXP_CALC = /^calc\((.+)\)$/i;
-const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
+const REGEXP_CALC = /^(?:calc|min|max|clamp)\((.+)\)$/i;
+const REGEXP_CALCTYPE = /\b(?:calc|min|max|clamp)/i;
+const REGEXP_CALCWITHIN = /\b(?:calc|min|max|clamp)\(/i;
+const REGEXP_CALCNESTED = (function() {
+    const method = '(?!(?:calc|min|max|clamp)\\()';
+    const unit = method + '([^,()]+|\\([^)]+\\)\\s*)';
+    return new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${unit},|(clamp)\\(\\s*${unit},\\s*${unit},|\\()\\s*${method}([^()]+|\\([^)]+\\)\\s*)\\)(\\s*)`, 'i');
+})();
+const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
+const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
 const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
-const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
-const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
-const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
-const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
+const REGEXP_VAR = /^var\(\s*--[\w-]+.*\)$/;
+const REGEXP_VARWITHIN = /\bvar\(\s*--[\w-]+[^)]*\)/;
+const REGEXP_VARNESTED = /(.*\b)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
 const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
@@ -58,7 +63,7 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    for (let seg of splitEnclosing(value.trim(), /calc/i)) {
+    for (let seg of splitEnclosing(value.trim(), REGEXP_CALCTYPE)) {
         if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
@@ -182,7 +187,7 @@ function calculateColor(element: StyleElement, value: string) {
 }
 
 function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Null<Dimension>, dimension: DimensionAttr = 'width') {
-    const segments = splitEnclosing(value, /calc/i);
+    const segments = splitEnclosing(value, REGEXP_CALCTYPE);
     for (let i = 0, length = segments.length; i < length; ++i) {
         const seg = segments[i];
         if (isCalc(seg)) {
@@ -350,15 +355,6 @@ function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>)
     return true;
 }
 
-function getContentBoxDimension(element: Null<StyleElement>) {
-    if (element) {
-        const { width, height } = element.getBoundingClientRect();
-        const style = getStyle(element);
-        return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) };
-    }
-    return { width: 0, height: 0 };
-}
-
 function getInnerDimension(horizontal: boolean, options?: ParseUnitOptions) {
     if (options) {
         const screenDimension = options.screenDimension;
@@ -367,6 +363,22 @@ function getInnerDimension(horizontal: boolean, options?: ParseUnitOptions) {
         }
     }
     return horizontal ? window.innerWidth : window.innerHeight;
+}
+
+function getUnitType(value: Undef<number>) {
+    switch (value) {
+        case CSS_UNIT.INTEGER:
+        case CSS_UNIT.DECIMAL:
+            return '';
+        case CSS_UNIT.PERCENT:
+            return '%';
+        case CSS_UNIT.TIME:
+            return 'ms';
+        case CSS_UNIT.ANGLE:
+            return 'deg';
+        default:
+            return 'px';
+    }
 }
 
 const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
@@ -2460,11 +2472,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                             const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
                             if (prefix === 'circle') {
                                 if (radius.includes('%')) {
-                                    const { width, height } = boundingBox || getContentBoxDimension(element.parentElement);
-                                    if (!width || !height) {
+                                    boundingBox ||= element.parentElement && getContentBoxDimension(element.parentElement);
+                                    if (!boundingBox) {
                                         return '';
                                     }
-                                    options.boundingSize = Math.min(width, height);
+                                    options.boundingSize = Math.min(boundingBox.width, boundingBox.height);
                                 }
                             }
                             else {
@@ -2720,7 +2732,7 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
     if (hasCalc(value)) {
         return calculateStyle(element, attr, value) || getStyle(element)[attr] as string;
     }
-    else if (isCustomProperty(value)) {
+    else if (hasCustomProperty(value)) {
         return parseVar(element, value) || getStyle(element)[attr] as string;
     }
     return value;
@@ -2919,7 +2931,7 @@ export function checkMediaRule(value: string, fontSize?: number) {
 
 export function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration) {
     let match: Null<RegExpMatchArray>;
-    while (match = REGEXP_VAR.exec(value)) {
+    while (match = REGEXP_VARNESTED.exec(value)) {
         let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
         const fallback = match[3];
         if (fallback && (!propertyValue || isLength(fallback, true) && !isLength(propertyValue, true) || isNumber(fallback) && !isNumber(propertyValue) || parseColor(fallback) && !parseColor(propertyValue))) {
@@ -2952,30 +2964,11 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     if (separator === ' ') {
         value = value.trim();
     }
-    let unit: string;
-    switch (unitType) {
-        case CSS_UNIT.INTEGER:
-        case CSS_UNIT.DECIMAL:
-            unit = '';
-            break;
-        case CSS_UNIT.PERCENT:
-            unit = '%';
-            break;
-        case CSS_UNIT.TIME:
-            unit = 'ms';
-            break;
-        case CSS_UNIT.ANGLE:
-            unit = 'deg';
-            break;
-        default:
-            unit = 'px';
-            unitType = CSS_UNIT.LENGTH;
-            break;
-    }
+    const unit = getUnitType(unitType ||= CSS_UNIT.LENGTH);
     const result: string[] = [];
     for (let seg of separator ? value.split(separator) : [value]) {
         if (seg = seg.trim()) {
-            const calc = splitEnclosing(seg, /calc/i);
+            const calc = splitEnclosing(seg, REGEXP_CALCTYPE);
             const length = calc.length;
             if (length === 0) {
                 return '';
@@ -3101,176 +3094,53 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         if (boundingSize && options.fontSize === undefined && hasEm(value)) {
             options.fontSize = getFontSize(element);
         }
-        const result = calculate(value, options);
-        if (precision !== undefined) {
-            return precision === 0 ? Math.floor(result) : +truncate(result, precision);
+        const result = calculateAll(value, options);
+        if (!isNaN(result)) {
+            if (precision !== undefined) {
+                return precision === 0 ? Math.floor(result) : +truncate(result, precision);
+            }
+            else if (options.roundValue) {
+                return Math.round(result);
+            }
+            return result;
         }
-        else if (options.roundValue) {
-            return Math.round(result);
-        }
-        return result;
     }
     return NaN;
 }
 
-export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
-    const result: ImageSrcSet[] = [];
-    const parentElement = element.parentElement as HTMLPictureElement;
-    let { srcset, sizes } = element;
-    if (parentElement && parentElement.tagName === 'PICTURE') {
-        iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
-                ({ srcset, sizes } = item);
-                return true;
-            }
-        });
-    }
-    if (srcset) {
-        for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
-            const match = REGEXP_IMGSRCSET.exec(value);
-            if (match) {
-                let width = 0,
-                    pixelRatio = 1;
-                if (match[3]) {
-                    if (match[3].toLowerCase() === 'w') {
-                        width = +match[2];
-                        pixelRatio = 0;
-                    }
-                    else {
-                        pixelRatio = +match[2];
-                    }
+export function calculateAll(value: string, options?: CalculateOptions) {
+    let match: Null<RegExpExecArray>;
+    while (match = REGEXP_CALCNESTED.exec(value)) {
+        const method = match[2] || match[4];
+        let result = calculateUnit(match[7].trim(), options);
+        switch (method && method.toLowerCase()) {
+            case 'min':
+                result = Math.min(result, calculateUnit(match[3].trim(), options));
+                break;
+            case 'max':
+                result = Math.max(result, calculateUnit(match[3].trim(), options));
+                break;
+            case 'clamp': {
+                const min = calculateUnit(match[5].trim(), options);
+                const current = calculateUnit(match[6].trim(), options);
+                if (isNaN(min) || isNaN(current)) {
+                    return NaN;
                 }
-                result.push({ src: resolvePath(match[1].split(CHAR_SPACE)[0]), pixelRatio, width });
+                result = clamp(current, min, result);
+                break;
             }
         }
-    }
-    const length = result.length;
-    if (length === 0) {
-        return;
-    }
-    else if (length > 1) {
-        result.sort((a, b) => {
-            const pxA = a.pixelRatio;
-            const pxB = b.pixelRatio;
-            if (pxA && pxB) {
-                if (pxA !== pxB) {
-                    return pxA - pxB;
-                }
+        if (!isNaN(result)) {
+            if (value.length === match[0].length) {
+                return result;
             }
-            else {
-                const widthA = a.width;
-                const widthB = b.width;
-                if (widthA !== widthB && widthA && widthB) {
-                    return widthA - widthB;
-                }
-            }
-            return 0;
-        });
-        if (isString(sizes)) {
-            let width = NaN,
-                match: Null<RegExpExecArray>;
-            for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
-                if (match = REGEXP_SOURCESIZES.exec(value)) {
-                    const ruleA = match[1] ? checkMediaRule(match[1]) : null;
-                    const ruleB = match[4] ? checkMediaRule(match[4]) : null;
-                    switch (match[3]) {
-                        case 'and':
-                            if (!ruleA || !ruleB) {
-                                continue;
-                            }
-                            break;
-                        case 'or':
-                            if (!ruleA && !ruleB) {
-                                continue;
-                            }
-                            break;
-                        case 'not':
-                            if (ruleA !== null || ruleB) {
-                                continue;
-                            }
-                            break;
-                        default:
-                            if (ruleA === false || ruleB !== null) {
-                                continue;
-                            }
-                            break;
-                    }
-                    const unit = match[6];
-                    if (unit) {
-                        if (match = REGEXP_CALC.exec(unit)) {
-                            width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
-                        }
-                        else if (isLength(unit)) {
-                            width = parseUnit(unit);
-                        }
-                    }
-                    if (!isNaN(width)) {
-                        break;
-                    }
-                }
-            }
-            if (!isNaN(width)) {
-                const resolution = width * window.devicePixelRatio;
-                let index = -1;
-                for (let i = 0; i < length; ++i) {
-                    const imageWidth = result[i].width;
-                    if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
-                        index = i;
-                    }
-                }
-                if (index === 0) {
-                    const item = result[0];
-                    item.pixelRatio = 1;
-                    item.actualWidth = width;
-                }
-                else if (index > 0) {
-                    const selected = result.splice(index, 1)[0];
-                    selected.pixelRatio = 1;
-                    selected.actualWidth = width;
-                    result.unshift(selected);
-                }
-                for (let i = 1; i < length; ++i) {
-                    const item = result[i];
-                    if (item.pixelRatio === 0) {
-                        item.pixelRatio = item.width / width;
-                    }
-                }
-            }
+            value = spliceString(value, match.index, match[0].length, match[1] + result + getUnitType(options && options.unitType) + match[8]);
+        }
+        else {
+            break;
         }
     }
-    return result;
-}
-
-export function extractURL(value: string) {
-    const match = CSS.URL.exec(value);
-    if (match) {
-        return match[1] || match[2];
-    }
-}
-
-export function resolveURL(value: string) {
-    const url = extractURL(value);
-    if (url) {
-        return resolvePath(url);
-    }
-}
-
-export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: ShadowRoot) {
-    const style = document.createElement('style');
-    if (isUserAgent(USER_AGENT.SAFARI)) {
-        style.appendChild(document.createTextNode(''));
-    }
-    (shadowRoot || document.head).appendChild(style);
-    const sheet = style.sheet as CSSStyleSheet;
-    if (sheet && typeof sheet.insertRule === 'function') {
-        try {
-            sheet.insertRule(value, index);
-        }
-        catch {
-            return null;
-        }
-    }
-    return style;
+    return NaN;
 }
 
 export function calculate(value: string, options?: CalculateOptions) {
@@ -3407,7 +3277,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 }
                                                 const angle = parseAngle(partial);
                                                 if (!isNaN(angle)) {
-                                                    seg.push();
+                                                    seg.push(angle);
                                                     found = true;
                                                 }
                                                 else {
@@ -3512,6 +3382,10 @@ export function calculate(value: string, options?: CalculateOptions) {
         while (true);
     }
     return NaN;
+}
+
+export function calculateUnit(value: string, options?: CalculateOptions) {
+    return isLength(value) ? parseUnit(value, options) : calculate(value, options);
 }
 
 export function parseUnit(value: string, options?: ParseUnitOptions) {
@@ -3909,7 +3783,7 @@ export function isCalc(value: string) {
 }
 
 export function isCustomProperty(value: string) {
-    return REGEXP_CUSTOMPROPERTY.test(value);
+    return REGEXP_VAR.test(value);
 }
 
 export function isAngle(value: string) {
@@ -3939,9 +3813,51 @@ export function hasEm(value: string) {
 }
 
 export function hasCalc(value: string) {
-    return value.includes('calc(');
+    return REGEXP_CALCWITHIN.test(value);
+}
+
+export function hasCustomProperty(value: string) {
+    return REGEXP_VARWITHIN.test(value);
 }
 
 export function hasCoords(value: string) {
     return value === 'absolute' || value === 'fixed';
+}
+
+export function extractURL(value: string) {
+    const match = CSS.URL.exec(value);
+    if (match) {
+        return match[1] || match[2];
+    }
+}
+
+export function resolveURL(value: string) {
+    const url = extractURL(value);
+    if (url) {
+        return resolvePath(url);
+    }
+}
+
+export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: ShadowRoot) {
+    const style = document.createElement('style');
+    if (isUserAgent(USER_AGENT.SAFARI)) {
+        style.appendChild(document.createTextNode(''));
+    }
+    (shadowRoot || document.head).appendChild(style);
+    const sheet = style.sheet as CSSStyleSheet;
+    if (sheet && typeof sheet.insertRule === 'function') {
+        try {
+            sheet.insertRule(value, index);
+        }
+        catch {
+            return null;
+        }
+    }
+    return style;
+}
+
+export function getContentBoxDimension(element: StyleElement) {
+    const { width, height } = element.getBoundingClientRect();
+    const style = getStyle(element);
+    return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) } as Dimension;
 }

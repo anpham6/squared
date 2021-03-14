@@ -7,8 +7,10 @@ import { concatString, parseColor } from './lib/util';
 
 const { PROTOCOL } = squared.lib.regex.FILE;
 
-const { extractURL, getSrcSet } = squared.lib.css;
+const { extractURL } = squared.lib.css;
 const { endsWith, fromLastIndexOf, isNumber, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith, trimString } = squared.lib.util;
+
+const { getSrcSet } = squared.base.lib.util;
 
 const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;

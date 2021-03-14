@@ -178,15 +178,13 @@ declare module "lib" {
         function getSpecificity(value: string): number;
         function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
         function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
+        function calculateAll(value: string, options?: CalculateOptions): number;
         function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: StyleElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions): string;
         function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Null<Dimension>): string;
         function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration): string;
-        function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
-        function extractURL(value: string): Undef<string>;
-        function resolveURL(value: string): Undef<string>;
-        function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): HTMLStyleElement;
+        function calculateUnit(value: string, options?: CalculateOptions): number;
         function parseUnit(value: string, options?: ParseUnitOptions): number;
         function convertUnit(value: NumString, unit: string, options?: ConvertUnitOptions): string;
         function parseTransform(value: string, options?: TransformOptions): TransformData[];
@@ -205,7 +203,12 @@ declare module "lib" {
         function isPx(value: string): boolean;
         function hasEm(value: string): boolean;
         function hasCalc(value: string): boolean;
+        function hasCustomProperty(value: string): boolean;
         function hasCoords(value: string): boolean;
+        function extractURL(value: string): Undef<string>;
+        function resolveURL(value: string): Undef<string>;
+        function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): HTMLStyleElement;
+        function getContentBoxDimension(element: StyleElement): Dimension;
     }
 
     namespace dom {
@@ -322,7 +325,7 @@ declare module "lib" {
         function convertBase64(value: ArrayBuffer): string;
         function delimitString(value: DelimitStringOptions | string, ...appending: string[]): string;
         function padStart(value: string, length: number, char: string): string;
-        function spliceString(value: string, index: number, length: number): string;
+        function spliceString(value: string, index: number, length: number, replacement?: string): string;
         function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string];
         function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean): string;
         function splitPairEnd(value: string, char: string, trim?: boolean, last?: boolean): string;
