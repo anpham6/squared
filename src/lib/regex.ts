@@ -1,4 +1,4 @@
-const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
+const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)(?:[eE][+|-]?\\d+)?';
 const DECIMAL = '[+|-]?' + DECIMAL_UN;
 const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
 const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
@@ -9,7 +9,7 @@ const TAG_ATTR = `=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]*))`;
 
 export const STRING = {
     DECIMAL,
-    PERCENT: '[+|-]?\\d+(?:\\.\\d+)?%',
+    PERCENT: DECIMAL + '%',
     LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
     UNIT_LENGTH,
@@ -25,11 +25,11 @@ export const FILE = {
     NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
     PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/,
     BASE64: /^[A-Za-z\d+/]+=*$/,
-    SVG: /\.svg\s*$/i
+    SVG: /\.svg$/i
 };
 
 export const CSS = {
-    URL: /^\s*url\((?:["'](.+)["']|(.+))\)\s*$/i,
+    URL: /^\s*url\((["'])?(.+)\1\)\s*$/i,
     HEX: /^#?[\dA-Fa-f]{3,8}$/,
     RGBA: /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/,
     HSLA: /hsla?\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+%?)\s*)?\)/,

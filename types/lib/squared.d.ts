@@ -244,7 +244,8 @@ declare module "lib" {
         function moreEqual(a: number, b: number, precision?: number): boolean;
         function lessEqual(a: number, b: number, precision?: number): boolean;
         function truncate(value: NumString, precision?: number): string;
-        function truncateFraction(value: number): number;
+        function truncateFraction(value: number, safe?: boolean, zeroThreshold?: number): number;
+        function truncateExponential(value: number, safe?: boolean, zeroThreshold?: number): string;
         function truncateTrailingZero(value: string): string;
         function triangulate(a: number, b: number, clen: number): [number, number];
         function absoluteAngle(start: Point, end: Point): number;

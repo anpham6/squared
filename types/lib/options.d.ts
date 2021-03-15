@@ -32,6 +32,7 @@ interface CalculateOptions extends UnitOptions {
     max?: number;
     boundingSize?: number;
     unitType?: number;
+    zeroThreshold?: number;
 }
 
 interface CalculateVarAsStringOptions extends CalculateOptions {

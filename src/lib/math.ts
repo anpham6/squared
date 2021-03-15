@@ -1,11 +1,6 @@
-const REGEXP_DECIMALNOTAION = /^([+|-]?\d+\.\d+)e([+|-]?\d+)$/;
-const REGEXP_FRACTION = /^([+|-]?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+const REGEXP_DECIMALNOTAION = /^(-)?((\d+)\.?(\d*))e([+|-])(\d+)$/;
+const REGEXP_FRACTION = /^-?(\d+)\.(\d*?)(?:0{5,}|9{5,})\d*$/;
 const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
-
-function convertDecimalNotation(value: number) {
-    const match = REGEXP_DECIMALNOTAION.exec(value.toString());
-    return match ? +match[2] > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0' : value.toString();
-}
 
 export function equal(a: number, b: number, precision = 5) {
     precision += Math.floor(a).toString().length;
@@ -37,9 +32,9 @@ export function truncate(value: NumString, precision = 3) {
     return truncateTrailingZero(value.toPrecision(precision));
 }
 
-export function truncateFraction(value: number) {
+export function truncateFraction(value: number, safe = true, zeroThreshold = 7) {
     if (value !== Math.floor(value)) {
-        const match = REGEXP_FRACTION.exec(convertDecimalNotation(value));
+        const match = REGEXP_FRACTION.exec(truncateExponential(value, safe, zeroThreshold));
         if (match) {
             const trailing = match[2];
             if (!trailing) {
@@ -50,6 +45,41 @@ export function truncateFraction(value: number) {
         }
     }
     return value;
+}
+
+export function truncateExponential(value: number, safe = true, zeroThreshold = 7) {
+    if (safe) {
+        if (value >= Number.MAX_SAFE_INTEGER) {
+            return Number.MAX_SAFE_INTEGER.toString();
+        }
+        if (value <= Number.MIN_SAFE_INTEGER) {
+            return Number.MIN_SAFE_INTEGER.toString();
+        }
+    }
+    const result = value.toString();
+    const match = REGEXP_DECIMALNOTAION.exec(result);
+    if (match) {
+        let exponent = +match[6],
+            leading: string,
+            trailing = '';
+        if (match[4]) {
+            match[3] += match[4];
+        }
+        if (match[5] === '-') {
+            if (exponent >= zeroThreshold) {
+                return '0';
+            }
+            --exponent;
+            leading = '0.';
+            trailing = match[3];
+        }
+        else {
+            exponent -= match[4].length;
+            leading = match[3];
+        }
+        return (match[1] || '') + leading + '0'.repeat(exponent) + trailing;
+    }
+    return result;
 }
 
 export function truncateTrailingZero(value: string) {

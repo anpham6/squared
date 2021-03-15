@@ -3384,7 +3384,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                     }
                     if (closing.length === 1) {
                         const result = seg[0];
-                        return min !== undefined && result < min || max !== undefined && result > max ? NaN : truncateFraction(result);
+                        return min !== undefined && result < min || max !== undefined && result > max ? NaN : truncateFraction(result, true, options?.zeroThreshold);
                     }
                     equated[index] = seg[0];
                     const hash = `{${index++}}`;
@@ -3842,7 +3842,7 @@ export function hasCoords(value: string) {
 export function extractURL(value: string) {
     const match = CSS.URL.exec(value);
     if (match) {
-        return match[1] || match[2];
+        return match[2].trim();
     }
 }
 
