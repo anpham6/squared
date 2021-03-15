@@ -469,7 +469,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         case 'css': {
                             const { module, identifier } = template;
                             let value = template.value;
-                            if (module && identifier && value && (value = value.trim()) && startsWith(value, 'function')) {
+                            if (module && identifier && value && (value = value.trim()) && value.includes('function')) {
                                 ((templateMap ||= { html: {}, js: {}, css: {} })[type][module] ||= {})[identifier] = value;
                             }
                             break;
