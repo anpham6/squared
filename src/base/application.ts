@@ -16,7 +16,7 @@ const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, 
 const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, escapePattern, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
@@ -687,6 +687,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
+                const resource = this.resourceHandler;
                 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${escapePattern(rule)}([^{]+)`).exec(value)?.[1].trim() || value;
                 for (let i = 0, length = cssRules.length; i < length; ++i) {
                     const rule = cssRules[i];
@@ -697,9 +698,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                             this.applyStyleRule(sessionId, resourceId, rule as CSSStyleRule, documentRoot, queryRoot);
                             break;
                         case CSSRule.IMPORT_RULE: {
-                            const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
-                            if (uri) {
-                                this.resourceHandler?.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
+                            if (resource) {
+                                const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
+                                if (uri) {
+                                    resource.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
+                                }
                             }
                             this.applyStyleSheet(sessionId, resourceId, (rule as CSSImportRule).styleSheet, documentRoot, queryRoot);
                             break;
@@ -720,20 +723,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
                             }
                             break;
-                        case CSSRule.KEYFRAMES_RULE: {
-                            const value = parseKeyframes((rule as CSSKeyframesRule).cssRules);
-                            if (value) {
-                                const keyframesMap = this.getProcessing(sessionId)!.keyframesMap ||= new Map<string, KeyframeData>();
-                                const name = (rule as CSSKeyframesRule).name;
-                                const keyframe = keyframesMap.get(name);
-                                if (keyframe) {
-                                    Object.assign(keyframe, value);
-                                }
-                                else {
-                                    keyframesMap.set(name, value);
-                                }
+                        case CSSRule.KEYFRAMES_RULE:
+                            if (resource) {
+                                resource.parseKeyFrames(resourceId, rule as CSSKeyframesRule);
                             }
-                        }
+                            break;
                     }
                 }
             }
@@ -871,7 +865,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: HTMLElement[], multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
         const { sessionId, extensions } = processing;
-        const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
+        const styleElement = this.resourceHandler && insertStyleSheetRule('html > body { overflow: hidden !important; }');
         if (preloaded) {
             for (let i = 0, length = preloaded.length; i < length; ++i) {
                 const image = preloaded[i];
@@ -895,10 +889,12 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; ++i) {
             extensions[i].afterParseDocument(sessionId);
         }
-        try {
-            document.head.removeChild(styleElement);
-        }
-        catch {
+        if (styleElement) {
+            try {
+                document.head.removeChild(styleElement);
+            }
+            catch {
+            }
         }
         return multipleRequest > 1 ? success : success[0];
     }

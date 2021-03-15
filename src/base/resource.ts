@@ -8,7 +8,7 @@ type PreloadItem = HTMLImageElement | string;
 
 const { FILE, STRING } = squared.lib.regex;
 
-const { extractURL, resolveURL } = squared.lib.css;
+const { extractURL, parseKeyframes, resolveURL } = squared.lib.css;
 const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
@@ -289,6 +289,21 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     } as FontFaceData);
                 }
                 REGEXP_FONTURL.lastIndex = 0;
+            }
+        }
+    }
+
+    public parseKeyFrames(resourceId: number, cssRule: CSSKeyframesRule) {
+        const assets = Resource.ASSETS[resourceId]!;
+        const value = parseKeyframes(cssRule.cssRules);
+        if (value) {
+            const keyFrames = assets.keyFrames ||= new Map();
+            const item = keyFrames.get(cssRule.name);
+            if (item) {
+                Object.assign(item, value);
+            }
+            else {
+                keyFrames.set(cssRule.name, value);
             }
         }
     }

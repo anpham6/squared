@@ -138,6 +138,7 @@ interface ResourceAssetMap extends ResourceMap {
     audio: Map<string, Asset>;
     rawData: Map<string, RawAsset>;
     other: RawAsset[];
+    keyFrames?: KeyframesMap;
 }
 
 interface ResourceStoredMap extends ResourceMap {

@@ -76,7 +76,6 @@ declare module "base" {
         documentElement: Null<T>;
         afterInsertNode?: Extension<T>[];
         unusedStyles?: Set<string>;
-        keyframesMap?: KeyframesMap;
     }
 
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
@@ -225,6 +224,7 @@ declare module "base" {
         init(resourceId: number): void;
         preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[]): [(HTMLImageElement | string)[], HTMLImageElement[]];
         parseFontFace(resourceId: number, cssText: string, styleSheetHref: string): void;
+        parseKeyFrames(resourceId: number, cssRule: CSSKeyframesRule): void;
         addAsset(resourceId: number, asset: RawAsset): void;
         addImage(resourceId: number, element: HTMLImageElement): void;
         getImage(resourceId: number, uri: string): Undef<ImageAsset>;

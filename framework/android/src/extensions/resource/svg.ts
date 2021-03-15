@@ -738,16 +738,17 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public afterResources(sessionId: string, resourceId: number) {
         if (SvgBuild) {
+            const { rawData, keyFrames } = Resource.ASSETS[resourceId]!;
             const contentMap: StringMap = {};
-            for (const data of Resource.ASSETS[resourceId]!.rawData) {
+            for (const data of rawData) {
                 const item = data[1];
                 if (item.mimeType === 'image/svg+xml' && item.content) {
                     contentMap[data[0]] = item.content;
                 }
             }
-            const { cache, keyframesMap } = this.application.getProcessing(sessionId)!;
+            const cache = this.application.getProcessingCache(sessionId);
             const addSvgElement = (node: T, element: SVGSVGElement, parentElement?: HTMLElement) => {
-                const drawable = this.createSvgDrawable(node, element, keyframesMap, contentMap);
+                const drawable = this.createSvgDrawable(node, element, keyFrames, contentMap);
                 if (drawable) {
                     if (node.api >= BUILD_VERSION.LOLLIPOP) {
                         node.android('src', getDrawableSrc(drawable));

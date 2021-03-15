@@ -1615,13 +1615,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const animations = node.cssInitial('animationName').split(/\s*,\s*/);
                 let circular = false;
                 if (animations.length) {
-                    const keyframesMap = this.application.getProcessing(node.sessionId)?.keyframesMap;
-                    if (keyframesMap) {
+                    const keyFrames = Resource.ASSETS[resourceId]!.keyFrames;
+                    if (keyFrames) {
                         for (const name of animations) {
-                            const keyframes = keyframesMap.get(name);
-                            if (keyframes) {
-                                for (const attr in keyframes) {
-                                    const data = keyframes[attr];
+                            const item = keyFrames.get(name);
+                            if (item) {
+                                for (const attr in item) {
+                                    const data = item[attr];
                                     if (data.transform?.includes('rotate')) {
                                         circular = true;
                                         break;
