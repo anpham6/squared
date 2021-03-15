@@ -1078,20 +1078,23 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             else {
                 content = undefined;
             }
-            const otherAssets = ResourceUI.ASSETS[resourceId]!.other;
             const pathname = appendSeparator((this.userSettings as UserResourceSettingsUI).outputDirectory, this.controllerSettings.directory.image);
-            let result = otherAssets.find(item => item.pathname === pathname && item.filename === filename);
-            if (result) {
-                if (content && result.content === content || base64 && result.base64 === base64) {
-                    return result;
+            const other = ResourceUI.ASSETS[resourceId]!.other;
+            let result: Undef<RawAsset>;
+            if (other) {
+                result = other.find(item => item.pathname === pathname && item.filename === filename);
+                if (result) {
+                    if (content && result.content === content || base64 && result.base64 === base64) {
+                        return result;
+                    }
+                    const ext = ResourceUI.getExtension(filename);
+                    const basename = filename.substring(0, filename.length - ext.length);
+                    let i = 1;
+                    do {
+                        filename = `${basename}_${i}.${ext}`;
+                    }
+                    while (other.find(item => item.pathname === pathname && item.filename === filename) && ++i);
                 }
-                const ext = ResourceUI.getExtension(filename);
-                const basename = filename.substring(0, filename.length - ext.length);
-                let i = 1;
-                do {
-                    filename = `${basename}_${i}.${ext}`;
-                }
-                while (otherAssets.find(item => item.pathname === pathname && item.filename === filename) && ++i);
             }
             result = {
                 pathname,

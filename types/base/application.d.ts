@@ -134,10 +134,10 @@ interface ResourceMap extends ObjectMap<Undef<Map<string, unknown>> | unknown[]>
 interface ResourceAssetMap extends ResourceMap {
     fonts: Map<string, FontFaceData[]>;
     image: Map<string, ImageAsset>;
-    video: Map<string, Asset>;
-    audio: Map<string, Asset>;
-    rawData: Map<string, RawAsset>;
-    other: RawAsset[];
+    video?: Map<string, Asset>;
+    audio?: Map<string, Asset>;
+    rawData?: Map<string, RawAsset>;
+    other?: RawAsset[];
     keyFrames?: KeyframesMap;
 }
 

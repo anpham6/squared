@@ -602,7 +602,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 ...videoAssets,
                 ...audioAssets
             );
-            if (data.other.length) {
+            if (data.other) {
                 result.push(...data.other);
             }
         }
@@ -628,13 +628,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     private resourceRawToString(assets = Resource.ASSETS[this.resourceId], name: "video" | "audio", options?: FileUniversalOptions) {
+        const rawData = assets && assets[name];
         let length: number;
-        if (!assets || !(length = assets[name].size)) {
+        if (!rawData || !(length = rawData.size)) {
             return [];
         }
         const result: string[] = new Array(length * 3);
         let i = 0;
-        for (const item of assets[name].values()) {
+        for (const item of rawData.values()) {
             const uri = item.uri!;
             result[i++] = uri;
             result[i++] = fromLastIndexOf(uri.split('?')[0], '/');

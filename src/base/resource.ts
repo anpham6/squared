@@ -65,10 +65,6 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const data = Resource.ASSETS[resourceId] ||= {} as ResourceAssetMap;
         data.fonts = new Map();
         data.image = new Map();
-        data.video = new Map();
-        data.audio = new Map();
-        data.rawData = new Map();
-        data.other = [];
     }
 
     public clear() {
@@ -130,31 +126,33 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     }
                 }
             }
-            for (const data of rawData) {
-                const item = data[1];
-                const mimeType = item.mimeType;
-                if (startsWith(mimeType, 'image/') && !endsWith(mimeType, 'svg+xml')) {
-                    let src = `data:${mimeType!};`;
-                    if (item.base64) {
-                        src += 'base64,' + item.base64;
-                    }
-                    else if (item.content) {
-                        src += item.content;
-                    }
-                    else {
-                        continue;
-                    }
-                    const element = document.createElement('img');
-                    element.src = src;
-                    const { naturalWidth: width, naturalHeight: height } = element;
-                    if (width && height) {
-                        item.width = width;
-                        item.height = height;
-                        image.set(data[0], { width, height, uri: item.filename });
-                    }
-                    else {
-                        document.body.appendChild(element);
-                        images.push(element);
+            if (rawData) {
+                for (const data of rawData) {
+                    const item = data[1];
+                    const mimeType = item.mimeType;
+                    if (startsWith(mimeType, 'image/') && !endsWith(mimeType, 'svg+xml')) {
+                        let src = `data:${mimeType!};`;
+                        if (item.base64) {
+                            src += 'base64,' + item.base64;
+                        }
+                        else if (item.content) {
+                            src += item.content;
+                        }
+                        else {
+                            continue;
+                        }
+                        const element = document.createElement('img');
+                        element.src = src;
+                        const { naturalWidth: width, naturalHeight: height } = element;
+                        if (width && height) {
+                            item.width = width;
+                            item.height = height;
+                            image.set(data[0], { width, height, uri: item.filename });
+                        }
+                        else {
+                            document.body.appendChild(element);
+                            images.push(element);
+                        }
                     }
                 }
             }
@@ -311,13 +309,14 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public addAsset(resourceId: number, asset: RawAsset) {
         const assets = Resource.ASSETS[resourceId];
         if (assets && (asset.content || asset.uri || asset.base64)) {
+            const other = assets.other ||= [];
             const { pathname, filename } = asset;
-            const append = assets.other.find(item => item.pathname === pathname && item.filename === filename);
+            const append = other.find(item => item.pathname === pathname && item.filename === filename);
             if (append) {
                 Object.assign(append, asset);
             }
             else {
-                assets.other.push(asset);
+                other.push(asset);
             }
         }
     }
@@ -339,11 +338,17 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public addAudio(resourceId: number, uri: string, options?: AudioVideoOptions) {
-        Resource.ASSETS[resourceId]?.audio.set(uri, { uri, ...options });
+        const assets = Resource.ASSETS[resourceId];
+        if (assets) {
+            (assets.audio ||= new Map()).set(uri, { uri, ...options });
+        }
     }
 
     public addVideo(resourceId: number, uri: string, options?: AudioVideoOptions) {
-        Resource.ASSETS[resourceId]?.video.set(uri, { uri, ...options });
+        const assets = Resource.ASSETS[resourceId];
+        if (assets) {
+            (assets.video ||= new Map()).set(uri, { uri, ...options });
+        }
     }
 
     public addFont(resourceId: number, data: FontFaceData) {
@@ -408,7 +413,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
                     filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
                 }
-                assets.rawData.set(uri, {
+                (assets.rawData ||= new Map()).set(uri, {
                     pathname: startsWith(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
                     filename,
                     mimeType,
@@ -427,11 +432,17 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public getVideo(resourceId: number, uri: string) {
-        return Resource.ASSETS[resourceId]?.video.get(uri);
+        const video = Resource.ASSETS[resourceId]?.video;
+        if (video) {
+            return video.get(uri);
+        }
     }
 
     public getAudio(resourceId: number, uri: string) {
-        return Resource.ASSETS[resourceId]?.audio.get(uri);
+        const audio = Resource.ASSETS[resourceId]?.audio;
+        if (audio) {
+            return audio.get(uri);
+        }
     }
 
     public getFonts(resourceId: number, fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
@@ -444,13 +455,16 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public getRawData(resourceId: number, uri: string) {
-        if (startsWith(uri, 'url(')) {
-            uri = extractURL(uri)!;
-            if (!uri) {
-                return;
+        const rawData = Resource.ASSETS[resourceId]?.rawData;
+        if (rawData) {
+            if (startsWith(uri, 'url(')) {
+                uri = extractURL(uri)!;
+                if (!uri) {
+                    return;
+                }
             }
+            return rawData.get(uri);
         }
-        return Resource.ASSETS[resourceId]?.rawData.get(uri);
     }
 
     public addImageData(resourceId: number, uri: string, width = 0, height = 0) {

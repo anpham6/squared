@@ -740,10 +740,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (SvgBuild) {
             const { rawData, keyFrames } = Resource.ASSETS[resourceId]!;
             const contentMap: StringMap = {};
-            for (const data of rawData) {
-                const item = data[1];
-                if (item.mimeType === 'image/svg+xml' && item.content) {
-                    contentMap[data[0]] = item.content;
+            if (rawData) {
+                for (const data of rawData) {
+                    const item = data[1];
+                    if (item.mimeType === 'image/svg+xml' && item.content) {
+                        contentMap[data[0]] = item.content;
+                    }
                 }
             }
             const cache = this.application.getProcessingCache(sessionId);

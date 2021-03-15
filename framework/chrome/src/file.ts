@@ -571,9 +571,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css' || element instanceof HTMLStyleElement);
         });
-        const assets = this.getResourceAssets(resourceId);
-        if (assets) {
-            for (const [uri, item] of assets.rawData) {
+        const rawData = this.getResourceAssets(resourceId)?.rawData;
+        if (rawData) {
+            for (const [uri, item] of rawData) {
                 if (item.mimeType === 'text/css') {
                     let command = saveAsLink,
                         saveAs: Undef<string>,
@@ -659,52 +659,54 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     this.processImageUri(result, null, uri, saveAsImage, preserveCrossOrigin);
                 }
             }
-            for (const item of assets.rawData.values()) {
-                const { base64, content, mimeType = parseMimeType(item.filename) } = item;
-                if (base64) {
-                    if (saveAsImage?.blob) {
-                        let command = saveAsImage,
-                            filename: Undef<string>,
-                            commands: Undef<string[]>;
-                        if (command.customize) {
-                            filename = command.customize.call(null, '', mimeType, command = { ...command });
-                        }
-                        const pathname = command.pathname;
-                        filename ||= item.filename;
-                        if (startsWith(mimeType, 'image/') && (commands = command.commands)) {
-                            for (let i = 0; i < commands.length; ++i) {
-                                const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
-                                if (match) {
-                                    commands[i] = match[1] + '@' + match[2].trim();
+            if (assets.rawData) {
+                for (const item of assets.rawData.values()) {
+                    const { base64, content, mimeType = parseMimeType(item.filename) } = item;
+                    if (base64) {
+                        if (saveAsImage?.blob) {
+                            let command = saveAsImage,
+                                filename: Undef<string>,
+                                commands: Undef<string[]>;
+                            if (command.customize) {
+                                filename = command.customize.call(null, '', mimeType, command = { ...command });
+                            }
+                            const pathname = command.pathname;
+                            filename ||= item.filename;
+                            if (startsWith(mimeType, 'image/') && (commands = command.commands)) {
+                                for (let i = 0; i < commands.length; ++i) {
+                                    const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
+                                    if (match) {
+                                        commands[i] = match[1] + '@' + match[2].trim();
+                                    }
+                                    else {
+                                        commands.splice(i--, 1);
+                                    }
+                                }
+                            }
+                            const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename), command, false, undefined, mimeType || 'image/unknown', base64);
+                            if (data) {
+                                if (commands && commands.length) {
+                                    data.commands = commands;
                                 }
                                 else {
-                                    commands.splice(i--, 1);
+                                    delete data.commands;
                                 }
-                            }
-                        }
-                        const data = this.processImageUri(result, null, resolvePath(pathname ? appendSeparator(pathname, filename) : filename), command, false, undefined, mimeType || 'image/unknown', base64);
-                        if (data) {
-                            if (commands && commands.length) {
-                                data.commands = commands;
-                            }
-                            else {
-                                delete data.commands;
-                            }
-                            if (!pathname) {
-                                delete data.uri;
+                                if (!pathname) {
+                                    delete data.uri;
+                                }
                             }
                         }
                     }
-                }
-                else if (content && mimeType) {
-                    const data = {
-                        pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
-                        filename: assignFilename(item.filename),
-                        content,
-                        mimeType
-                    };
-                    if (this.processExtensions(data)) {
-                        result.push(data);
+                    else if (content && mimeType) {
+                        const data = {
+                            pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
+                            filename: assignFilename(item.filename),
+                            content,
+                            mimeType
+                        };
+                        if (this.processExtensions(data)) {
+                            result.push(data);
+                        }
                     }
                 }
             }
