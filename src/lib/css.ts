@@ -562,7 +562,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'medium'
     },
     borderCollapse: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'separate'
     },
     borderColor: {
@@ -655,7 +655,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'medium'
     },
     borderSpacing: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT | CSS_TRAITS.INHERIT,
         value: '0',
         valueOfNone: '0px 0px'
     },
@@ -730,11 +730,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     captionSide: {
-        trait: 0,
+        trait: CSS_TRAITS.INHERIT,
         value: 'top'
     },
     caretColor: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR | CSS_TRAITS.INHERIT,
         value: 'auto'
     },
     clear: {
@@ -750,7 +750,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     color: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR | CSS_TRAITS.INHERIT,
         value: 'black'
     },
     columnCount: {
@@ -813,11 +813,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     cursor: {
-        trait: 0,
+        trait: CSS_TRAITS.INHERIT,
         value: 'auto'
     },
     direction: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'ltr'
     },
     display: {
@@ -825,7 +825,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'inline'
     },
     emptyCells: {
-        trait: 0,
+        trait: CSS_TRAITS.INHERIT,
         value: 'show'
     },
     filter: {
@@ -872,7 +872,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     font: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: [
             'fontStyle',
             'fontVariant',
@@ -884,39 +884,39 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     fontFamily: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: isPlatform(PLATFORM.MAC) ? 'Helvetica' : 'Arial'
     },
     fontFeatureSettings: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontKerning: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'auto'
     },
     fontSize: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'medium'
     },
     fontSizeAdjust: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'none'
     },
     fontOpticalSizing: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'auto'
     },
     fontStretch: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontStyle: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontVariant: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE | CSS_TRAITS.INHERIT,
         value: [
             'fontVariantCaps',
             'fontVariantLigatures',
@@ -926,27 +926,27 @@ export const CSS_PROPERTIES: CssProperties = {
         valueOfNone: 'no-common-ligatures no-discretionary-ligatures no-historical-ligatures no-contextual'
     },
     fontVariantCaps: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontVariantEastAsian: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontVariantLigatures: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontVariantNumeric: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontVariationSettings: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     fontWeight: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     gap: {
@@ -1063,7 +1063,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     hyphens: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'manual'
     },
     imageRendering: {
@@ -1095,15 +1095,15 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     letterSpacing: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     lineHeight: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     listStyle: {
-        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: [
             'listStyleType',
             'listStylePosition',
@@ -1111,15 +1111,15 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     listStyleImage: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'none'
     },
     listStylePosition: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'outside'
     },
     listStyleType: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'disc'
     },
     margin: {
@@ -1212,6 +1212,10 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
         value: '0'
     },
+    orphans: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
+        value: '2'
+    },
     outline: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
@@ -1248,7 +1252,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     overflowWrap: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     overflowX: {
@@ -1348,7 +1352,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'static'
     },
     quotes: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'none'
     },
     resize: {
@@ -1442,7 +1446,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     tabSize: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: '8'
     },
     tableLayout: {
@@ -1450,11 +1454,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     textAlign: {
-        trait: CSS_TRAITS.CONTAIN,
+        trait: CSS_TRAITS.CONTAIN | CSS_TRAITS.INHERIT,
         value: 'start'
     },
     textAlignLast: {
-        trait: CSS_TRAITS.CONTAIN,
+        trait: CSS_TRAITS.CONTAIN | CSS_TRAITS.INHERIT,
         value: 'auto'
     },
     textDecoration: {
@@ -1474,7 +1478,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     textDecorationSkipInk: {
-        trait: 0,
+        trait: CSS_TRAITS.INHERIT,
         value: 'auto'
     },
     textDecorationStyle: {
@@ -1489,31 +1493,35 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     textEmphasisColor: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR | CSS_TRAITS.INHERIT,
         value: 'currentcolor'
     },
     textEmphasisPosition: {
-        trait: 0,
+        trait: CSS_TRAITS.INHERIT,
         value: 'over right'
     },
     textEmphasisStyle: {
-        trait: CSS_TRAITS.NONE,
+        trait: CSS_TRAITS.NONE | CSS_TRAITS.INHERIT,
         value: 'none'
     },
     textIndent: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT | CSS_TRAITS.INHERIT,
         value: '0'
     },
     textJustify: {
-        trait: CSS_TRAITS.CONTAIN,
+        trait: CSS_TRAITS.CONTAIN | CSS_TRAITS.INHERIT,
         value: 'auto'
+    },
+    textOrientation: {
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
+        value: 'mixed'
     },
     textOverflow: {
         trait: 0,
         value: 'clip'
     },
     textShadow: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.INHERIT,
         value: 'none'
     },
     textSizeAdjust: {
@@ -1521,11 +1529,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     textTransform: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'none'
     },
     textUnderlinePosition: {
-        trait: 0,
+        trait: CSS_TRAITS.INHERIT,
         value: 'auto'
     },
     top: {
@@ -1587,12 +1595,16 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'baseline'
     },
     visibility: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'visible'
     },
     whiteSpace: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
+    },
+    widows: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
+        value: '2'
     },
     width: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -1603,20 +1615,20 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     wordBreak: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     wordSpacing: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'normal'
     },
     wordWrap: {
-        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.DEPRECATED,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.DEPRECATED | CSS_TRAITS.INHERIT,
         value: 'normal',
         alias: 'overflowWrap'
     },
     writingMode: {
-        trait: CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
         value: 'horizontal-tb'
     },
     zIndex: {
@@ -2167,10 +2179,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'zIndex':
             return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.INTEGER }));
         case 'tabSize':
+        case 'widows':
+        case 'orphans':
             return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.INTEGER, min: 0 }));
         case 'columnCount':
         case 'fontWeight':
-        case 'widows':
             return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.INTEGER, min: 1 }));
         case 'gridRow':
         case 'gridRowEnd':
@@ -2677,12 +2690,6 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
 
 export function checkStyleValue(element: StyleElement, attr: string, value: string) {
     switch (value) {
-        case 'unset':
-            switch (attr) {
-                case 'lineHeight':
-                case 'fontSize':
-                    return 'inherit';
-            }
         case 'initial':
             switch (attr) {
                 case 'position':
@@ -2717,17 +2724,25 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                     return 'content-box';
                 case 'borderCollapse':
                     return 'separate';
-                default:
-                    return '';
             }
+            return '';
         case 'inherit':
+        case 'unset':
+        case 'revert':
             switch (attr) {
-                case 'fontSize':
                 case 'lineHeight':
+                case 'fontSize':
                     return 'inherit';
                 default:
-                    return getStyle(element)[attr] as string;
+                    if (value === 'unset') {
+                        const property = CSS_PROPERTIES[attr];
+                        if (property && (property.trait & CSS_TRAITS.INHERIT) === 0 && typeof property.value === 'string') {
+                            return property.value;
+                        }
+                    }
+                    break;
             }
+            return getStyle(element)[attr] as string;
     }
     if (hasCalc(value)) {
         return calculateStyle(element, attr, value) || getStyle(element)[attr] as string;

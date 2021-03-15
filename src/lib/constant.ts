@@ -32,5 +32,6 @@ export const enum CSS_TRAITS {
     DEPRECATED = 1 << 5,
     NONE = 1 << 6,
     AUTO = 1 << 7,
-    UNIT = 1 << 8
+    UNIT = 1 << 8,
+    INHERIT = 1 << 9
 }

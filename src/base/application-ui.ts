@@ -70,7 +70,8 @@ function checkPseudoDimension(styleMap: CssStyleMap, after: boolean, absolute: b
         case 'block':
         case 'inherit':
         case 'initial':
-        case 'unset': {
+        case 'unset':
+        case 'revert': {
             const { width, height } = styleMap;
             if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
                 for (const attr in styleMap) {
@@ -1676,6 +1677,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     case 'initial':
                     case 'inherit':
                     case 'unset':
+                    case 'revert':
                     case 'no-open-quote':
                     case 'no-close-quote':
                     case '""':
