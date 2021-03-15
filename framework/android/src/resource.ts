@@ -317,11 +317,11 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(resourceId, images, prefix, this._imageFormat);
     }
 
-    get userSettings() {
-        return this.application.userSettings;
+    public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
+        return '__' + padStart((++COUNTER_UUID).toString(), 5, '0') + '.' + ext;
     }
 
-    get randomUUID() {
-        return '__' + padStart((++COUNTER_UUID).toString(), 5, '0');
+    get userSettings() {
+        return this.application.userSettings;
     }
 }

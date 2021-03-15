@@ -238,12 +238,12 @@ declare module "base" {
         getRawData(resourceId: number, uri: string): Undef<RawAsset>;
         addImageData(resourceId: number, uri: string, width?: number, height?: number): void;
         fromImageUrl(resourceId: number, value: string): ImageAsset[];
+        assignFilename(uri: string, mimeType?: string, ext?: string): string;
         set fileHandler(value);
         get fileHandler(): Null<File<T>>;
         get controllerSettings(): ControllerSettings;
         get userSettings(): UserResourceSettings;
         get mimeTypeMap(): ObjectMap<MIMEOrAll>;
-        get randomUUID(): string;
         get mapOfAssets(): ResourceSessionAsset;
     }
 

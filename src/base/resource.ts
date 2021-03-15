@@ -410,8 +410,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             if (content || base64 || buffer) {
                 const url = uri.split('?')[0];
                 if (!filename) {
-                    const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
-                    filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
+                    const ext = mimeType && fromMimeType(mimeType);
+                    filename = ext && url.endsWith('.' + ext) ? fromLastIndexOf(url, '/') : this.assignFilename(url, mimeType, ext);
                 }
                 (assets.rawData ||= new Map()).set(uri, {
                     pathname: startsWith(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
@@ -493,6 +493,10 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         return result;
     }
 
+    public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
+        return randomUUID() + '.' + ext;
+    }
+
     set fileHandler(value) {
         if (value) {
             value.resource = this;
@@ -513,10 +517,6 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     get mimeTypeMap() {
         return this.controllerSettings.mimeType;
-    }
-
-    get randomUUID() {
-        return randomUUID();
     }
 
     get mapOfAssets() {
