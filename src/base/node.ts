@@ -9,7 +9,7 @@ const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { isTransparent } = squared.lib.color;
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, asPx, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, asPx, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getInitialValue, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
@@ -1325,7 +1325,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 style[attr] = 'initial';
                 const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
                 if (property && typeof property.value === 'string') {
-                    this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & CSS_TRAITS.UNIT ? 'px' : ''));
+                    this._styleMap[attr] = property.valueOfNone || (getInitialValue(this._element!, attr) + (property.trait & CSS_TRAITS.UNIT ? 'px' : ''));
                 }
                 else {
                     delete this._styleMap[attr];
@@ -1682,9 +1682,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 ({ not, type, ignoreDefault } = options);
             }
             if (ignoreDefault !== true) {
-                const data = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
-                if (data && (value === data.value || (data.trait & CSS_TRAITS.UNIT) && this.parseUnit(value) === parseFloat(data.value as string))) {
-                    return false;
+                const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
+                if (property) {
+                    const propValue = this.styleElement ? getInitialValue(this._element!, attr) : property.value;
+                    if (typeof propValue === 'string' && (value === propValue || (property.trait & CSS_TRAITS.UNIT) && this.parseUnit(value) === parseFloat(propValue))) {
+                        return false;
+                    }
                 }
             }
             if (not && (value === not || Array.isArray(not) && not.includes(value))) {

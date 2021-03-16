@@ -8,6 +8,7 @@ interface CssPropertyData {
     readonly value: StringOfArray;
     readonly alias?: string;
     readonly valueOfNone?: string;
+    readonly valueOfSome?: (elememt: Element) => string;
 }
 
 interface KeyframeData extends ObjectMap<StringMap> {}

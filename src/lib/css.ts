@@ -445,6 +445,21 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC,
         value: 'ease'
     },
+    appearance: {
+        trait: 0,
+        value: 'none',
+        "valueOfSome": function(element: StyleElement) {
+            switch (element.tagName) {
+                case 'SELECT':
+                case 'TEXTAREA':
+                case 'BUTTON':
+                case 'INPUT':
+                    return 'auto';
+                default:
+                    return this.value as string;
+            }
+        }
+    },
     backdropFilter: {
         trait: CSS_TRAITS.CALC,
         value: 'none'
@@ -1646,13 +1661,8 @@ export const PROXY_INLINESTYLE = Object.freeze(
     ) as CSSStyleDeclaration,
     {
         get: (target, attr: CssStyleAttr) => {
-            let value: Undef<StringOfArray> = target[attr];
-            if (value) {
-                return value;
-            }
-            if (value = CSS_PROPERTIES[attr]?.value) {
-                return typeof value === 'string' ? value : '';
-            }
+            let value: Undef<unknown>;
+            return target[attr] || (value = CSS_PROPERTIES[attr]?.value) && typeof value === 'string' && value || '';
         }
     })
 );
@@ -1703,6 +1713,19 @@ export function getPropertiesAsTraits(value: number) {
         }
     }
     return result;
+}
+
+export function getInitialValue(element: Element, attr: string) {
+    const property = CSS_PROPERTIES[attr];
+    if (property) {
+        if (property.valueOfSome) {
+            return property.valueOfSome(element);
+        }
+        if (typeof property.value === 'string') {
+            return property.value;
+        }
+    }
+    return '';
 }
 
 export function getStyle(element: Element, pseudoElt = '') {
@@ -2722,6 +2745,8 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                     return 'content-box';
                 case 'borderCollapse':
                     return 'separate';
+                case 'appearance':
+                    return CSS_PROPERTIES.appearance.valueOfSome!(element);
             }
             return '';
         case 'inherit':
@@ -2735,7 +2760,7 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                     if (value === 'unset') {
                         const property = CSS_PROPERTIES[attr];
                         if (property && (property.trait & CSS_TRAITS.INHERIT) === 0 && typeof property.value === 'string') {
-                            return property.value;
+                            return getInitialValue(element, attr);
                         }
                     }
                     break;

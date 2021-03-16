@@ -544,14 +544,21 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                     let value: string = cssStyle[attr];
                     switch (value) {
-                        case 'initial':
+                        case 'initial': {
                             if (isUserAgent(USER_AGENT.SAFARI) && startsWith(baseAttr, 'background')) {
                                 break;
                             }
-                            if (CSS_PROPERTIES[baseAttr]?.value === 'auto') {
-                                value = 'auto';
-                                break;
+                            const property = CSS_PROPERTIES[baseAttr];
+                            if (property) {
+                                if (property.valueOfSome) {
+                                    break;
+                                }
+                                if (property.value === 'auto') {
+                                    value = 'auto';
+                                    break;
+                                }
                             }
+                        }
                         case 'normal':
                             if (!hasExactValue(attr, value)) {
                                 required: {

@@ -167,6 +167,7 @@ declare module "lib" {
         const CSS_PROPERTIES: CssProperties;
         const ELEMENT_BLOCK: string[];
         function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
+        function getInitialValue(element: Element, attr: string): string;
         function getStyle(element: Element, pseudoElt?: PseudoElt): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
