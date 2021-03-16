@@ -1770,7 +1770,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             };
             const parseNot = (condition: string) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
             const checkNot = (condition: string) => {
-                return splitEnclosing(condition, /:not/i).reduce((a, b) => {
+                return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
                     if (b[0] === ':') {
                         const match = REGEXP_ENCLOSING.exec(b);
                         if (match && match[1].toLowerCase() === 'not') {

@@ -185,6 +185,9 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, separato
             combined = opening;
         }
     }
+    else if (prefix && !prefix.global) {
+        prefix = new RegExp(prefix, prefix.flags + 'g');
+    }
     const result: string[] = [];
     const length = value.length;
     const appendValues = (segment: string) => {

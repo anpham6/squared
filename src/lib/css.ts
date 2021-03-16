@@ -13,6 +13,7 @@ let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
+const PATTERN_CALCUNIT = '(?!calc|min|max|clamp)([^,()]+|\\([^())]+\\)\\s*)';
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
 const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
@@ -21,12 +22,8 @@ const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
 const REGEXP_CALC = /^(?:calc|min|max|clamp)\((.+)\)$/i;
 const REGEXP_CALCWITHIN = /\b(?:calc|min|max|clamp)\(/i;
-const REGEXP_CALCNESTED = (function() {
-    const method = '(?!(?:calc|min|max|clamp)\\()';
-    const unit = method + '([^,()]+|\\([^)]+\\)\\s*)';
-    return new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${unit},|(clamp)\\(\\s*${unit},\\s*${unit},|\\()\\s*${method}([^()]+|\\([^)]+\\)\\s*)\\)(\\s*)`, 'i');
-})();
-const REGEXP_CALCENCLOSING = /\b(?:calc|min|max|clamp)/i;
+const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${PATTERN_CALCUNIT},|(clamp)\\(\\s*${PATTERN_CALCUNIT},\\s*${PATTERN_CALCUNIT},|\\()\\s*${PATTERN_CALCUNIT}\\)(\\s*)`, 'i');
+const REGEXP_CALCENCLOSING = /calc|min|max|clamp/gi;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCINTEGER = /^\s*[+|-]?\d+\s*$/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
