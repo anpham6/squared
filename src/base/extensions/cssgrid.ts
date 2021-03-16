@@ -28,7 +28,7 @@ interface RepeatItem {
     unitMin?: string;
 }
 
-const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
+const { asPx, formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { convertPercent, endsWith, isNumber, splitPairEnd, startsWith, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -83,8 +83,11 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
             if (isPercent(value)) {
                 sizeMin = Math.max(convertPercent(value) * dimension, sizeMin);
             }
-            else if (isPx(value)) {
-                sizeMin = Math.max(parseFloat(value), sizeMin);
+            else {
+                const min = asPx(value);
+                if (!isNaN(min)) {
+                    sizeMin = Math.max(min, sizeMin);
+                }
             }
         }
         if (sizeMin) {
@@ -104,8 +107,9 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     const length = unit.length;
     for (let i = 0; i < length; ++i) {
         const value = unit[i];
-        if (isPx(value)) {
-            filled += parseFloat(value);
+        const px = asPx(value);
+        if (!isNaN(px)) {
+            filled += px;
         }
         else if (endsWith(value, 'fr')) {
             fractional += parseFloat(value);

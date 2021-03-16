@@ -12,7 +12,7 @@ import { searchObject } from './lib/util';
 
 type T = NodeUI;
 
-const { CSS_PROPERTIES, isPx } = squared.lib.css;
+const { CSS_PROPERTIES, asPx } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -580,8 +580,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!value) {
             return 0;
         }
-        else if (isPx(value)) {
-            return parseFloat(value);
+        const unit = asPx(value);
+        if (!isNaN(unit)) {
+            return unit;
         }
         (options ||= {}).screenDimension ||= this.localSettings.screenDimension;
         return super.parseUnit(value, options);

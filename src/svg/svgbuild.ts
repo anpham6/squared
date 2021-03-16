@@ -30,7 +30,7 @@ const { getNamedItem } = squared.lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction } = squared.lib.math;
 const { hasBit, isArray, plainMap, splitPair } = squared.lib.util;
 
-const RE_DECIMAL = new Pattern(squared.lib.regex.STRING.DECIMAL);
+const RE_DECIMAL = new Pattern(squared.lib.regex.STRING.DECIMAL_SIGNED);
 const RE_PATHCOMMAND = new Pattern(/([A-Za-z])([^A-Za-z]+)?/g);
 
 export default class SvgBuild implements squared.svg.SvgBuild {

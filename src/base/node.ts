@@ -9,7 +9,7 @@ const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { isTransparent } = squared.lib.color;
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, asPx, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
@@ -147,7 +147,10 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                 return 0;
         }
         const width = node.css(border[0] as CssStyleAttr);
-        const result = isPx(width) ? parseFloat(width) : isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+        let result = asPx(width);
+        if (isNaN(result)) {
+            result = isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+        }
         if (result) {
             return Math.max(Math.round(result), 1);
         }
@@ -193,14 +196,15 @@ function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
 
 function convertPosition(node: T, attr: CssStyleAttr) {
     if (!node.positionStatic) {
-        const unit = node.valueOf(attr, { modified: true });
-        if (isPx(unit)) {
-            return parseFloat(unit);
+        const value = node.valueOf(attr, { modified: true });
+        const unit = asPx(value);
+        if (!isNaN(unit)) {
+            return unit;
         }
-        else if (isPercent(unit)) {
+        else if (isPercent(value)) {
             return node.styleElement && parseFloat(node.style[attr]) || 0;
         }
-        return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
+        return node.parseUnit(value, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
     }
     return 0;
 }
@@ -1643,8 +1647,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (!value) {
             return 0;
         }
-        else if (isPx(value)) {
-            return parseFloat(value);
+        const unit = asPx(value);
+        if (!isNaN(unit)) {
+            return unit;
         }
         else if (isPercent(value)) {
             return convertPercent(value) * getBoundsSize(this, options);
@@ -2673,11 +2678,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.verticalAlign;
         if (result === undefined) {
             const value = this.css('verticalAlign');
-            if (value !== 'baseline' && this.pageFlow) {
-                if (isPx(value)) {
-                    result = parseFloat(value);
-                }
-                else if (isLength(value)) {
+            if (value !== 'baseline' && this.pageFlow && isNaN(result = asPx(value))) {
+                if (isLength(value)) {
                     result = this.parseUnit(value);
                 }
                 else if (this.styleElement) {
@@ -3092,59 +3094,58 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (this.styleElement) {
                     const fixedWidth = isFontFixedWidth(this);
                     let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
-                    if (isPx(value)) {
-                        result = parseFloat(value);
-                    }
-                    else if (isPercent(value)) {
-                        const parent = this.actualParent;
-                        if (parent) {
-                            result = convertPercent(value) * parent.fontSize;
-                            if (fixedWidth && !isFontFixedWidth(parent)) {
-                                result *= 13 / getRemSize();
+                    if (isNaN(result = asPx(value))) {
+                        if (isPercent(value)) {
+                            const parent = this.actualParent;
+                            if (parent) {
+                                result = convertPercent(value) * parent.fontSize;
+                                if (fixedWidth && !isFontFixedWidth(parent)) {
+                                    result *= 13 / getRemSize();
+                                }
+                            }
+                            else {
+                                result = getRemSize(fixedWidth);
                             }
                         }
                         else {
-                            result = getRemSize(fixedWidth);
-                        }
-                    }
-                    else {
-                        let emRatio = 1;
-                        if (REGEXP_EM.test(value)) {
-                            emRatio = parseFloat(value);
-                            value = 'inherit';
-                        }
-                        if (value === 'inherit') {
-                            let parent = this.actualParent;
-                            if (parent) {
-                                do {
-                                    if (parent.tagName === 'HTML') {
-                                        value = '1rem';
-                                        break;
-                                    }
-                                    else {
-                                        const fontSize = parent.valueOf('fontSize');
-                                        if (fontSize && fontSize !== 'inherit') {
-                                            value = checkFontSizeValue(fontSize);
-                                            if (isPercent(value)) {
-                                                emRatio *= convertPercent(value);
-                                            }
-                                            else if (REGEXP_EM.test(value)) {
-                                                emRatio *= parseFloat(value);
-                                            }
-                                            else {
-                                                break;
-                                            }
+                            let emRatio = 1;
+                            if (REGEXP_EM.test(value)) {
+                                emRatio = parseFloat(value);
+                                value = 'inherit';
+                            }
+                            if (value === 'inherit') {
+                                let parent = this.actualParent;
+                                if (parent) {
+                                    do {
+                                        if (parent.tagName === 'HTML') {
+                                            value = '1rem';
+                                            break;
                                         }
-                                        parent = parent.actualParent;
+                                        else {
+                                            const fontSize = parent.valueOf('fontSize');
+                                            if (fontSize && fontSize !== 'inherit') {
+                                                value = checkFontSizeValue(fontSize);
+                                                if (isPercent(value)) {
+                                                    emRatio *= convertPercent(value);
+                                                }
+                                                else if (REGEXP_EM.test(value)) {
+                                                    emRatio *= parseFloat(value);
+                                                }
+                                                else {
+                                                    break;
+                                                }
+                                            }
+                                            parent = parent.actualParent;
+                                        }
                                     }
+                                    while (parent);
                                 }
-                                while (parent);
+                                else {
+                                    value = '1rem';
+                                }
                             }
-                            else {
-                                value = '1rem';
-                            }
+                            result = (endsWith(value, 'rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
                         }
-                        result = (endsWith(value, 'rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
                     }
                 }
                 else {

@@ -21,7 +21,7 @@ interface ICssGridData<T> extends CssGridData<T> {
     constraintData?: T[][];
 }
 
-const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
+const { asPx, formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { convertPercent, endsWith, flatArray, lastItemOf, startsWith } = squared.lib.util;
 
@@ -51,9 +51,9 @@ function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionDat
     let value = 0;
     if (length) {
         for (let i = 0; i < length; ++i) {
-            const unitPX = unit[i];
-            if (isPx(unitPX)) {
-                value += parseFloat(unitPX);
+            const unitPX = asPx(unit[i]);
+            if (!isNaN(unitPX)) {
+                value += unitPX;
             }
             else {
                 const rowData = mainData.rowData[i];
@@ -280,11 +280,12 @@ function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
 function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const unit = data.unit;
     let size = 0,
-        percent = 0;
+        percent = 0,
+        px = NaN;
     for (let i = 0, length = unit.length; i < length; ++i) {
         const value = unit[i];
-        if (isPx(value)) {
-            size += parseFloat(value);
+        if (!isNaN(px = asPx(value))) {
+            size += px;
         }
         else if (isPercent(value)) {
             percent += convertPercent(value);
@@ -1082,9 +1083,9 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
                 for (let i = 0, q = unit.length; i < q; ++i) {
-                    const value = unit[i];
-                    if (isPx(value)) {
-                        minWidth += parseFloat(value);
+                    const value = asPx(unit[i]);
+                    if (!isNaN(value)) {
+                        minWidth += value;
                     }
                     else {
                         return;

@@ -20,13 +20,13 @@ const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
 const REGEXP_CALC = /^(?:calc|min|max|clamp)\((.+)\)$/i;
-const REGEXP_CALCTYPE = /\b(?:calc|min|max|clamp)/i;
 const REGEXP_CALCWITHIN = /\b(?:calc|min|max|clamp)\(/i;
 const REGEXP_CALCNESTED = (function() {
     const method = '(?!(?:calc|min|max|clamp)\\()';
     const unit = method + '([^,()]+|\\([^)]+\\)\\s*)';
     return new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${unit},|(clamp)\\(\\s*${unit},\\s*${unit},|\\()\\s*${method}([^()]+|\\([^)]+\\)\\s*)\\)(\\s*)`, 'i');
 })();
+const REGEXP_CALCENCLOSING = /\b(?:calc|min|max|clamp)/i;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
@@ -37,7 +37,7 @@ const REGEXP_VARWITHIN = /\bvar\(\s*--[\w-]+[^)]*\)/;
 const REGEXP_VARNESTED = /(.*\b)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
-const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
+const REGEXP_SELECTORGROUP = /:(?:is|where)/;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const CHAR_SPACE = /\s+/;
@@ -63,7 +63,7 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    for (let seg of splitEnclosing(value.trim(), REGEXP_CALCTYPE)) {
+    for (let seg of splitEnclosing(value.trim(), REGEXP_CALCENCLOSING)) {
         if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
@@ -187,7 +187,7 @@ function calculateColor(element: StyleElement, value: string) {
 }
 
 function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Null<Dimension>, dimension: DimensionAttr = 'width') {
-    const segments = splitEnclosing(value, REGEXP_CALCTYPE);
+    const segments = splitEnclosing(value, REGEXP_CALCENCLOSING);
     for (let i = 0, length = segments.length; i < length; ++i) {
         const seg = segments[i];
         if (isCalc(seg)) {
@@ -1782,7 +1782,7 @@ export function parseSelectorText(value: string) {
         const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING);
         for (let i = 0; i < segments.length; ++i) {
             const seg = segments[i];
-            if (seg[0] === ':' && seg.includes(',') && /^:(is|where|not)\(/i.test(seg)) {
+            if (seg[0] === ':' && seg.includes(',') && /^:(not|is|where)\(/i.test(seg)) {
                 timestamp ||= Date.now();
                 (removed ||= []).push(seg);
                 segments[i] = timestamp + '-' + (removed.length - 1);
@@ -2983,7 +2983,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     const result: string[] = [];
     for (let seg of separator ? value.split(separator) : [value]) {
         if (seg = seg.trim()) {
-            const calc = splitEnclosing(seg, REGEXP_CALCTYPE);
+            const calc = splitEnclosing(seg, REGEXP_CALCENCLOSING);
             const length = calc.length;
             if (length === 0) {
                 return '';
@@ -3045,10 +3045,10 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
 
 export function calculateVar(element: StyleElement, value: string, options: CalculateVarOptions = {}) {
     if (value = parseVar(element, value)) {
-        const { precision, supportPercent, unitType } = options;
-        const boundingSize = !unitType || unitType === CSS_UNIT.LENGTH;
+        const unitType = options.unitType || CSS_UNIT.LENGTH;
+        const boundingSize = unitType === CSS_UNIT.LENGTH;
         if (value.includes('%')) {
-            if (supportPercent === false || unitType === CSS_UNIT.INTEGER) {
+            if (options.supportPercent === false || unitType === CSS_UNIT.INTEGER) {
                 return NaN;
             }
             else if (boundingSize && options.boundingSize === undefined) {
@@ -3103,7 +3103,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
                 }
             }
         }
-        else if (supportPercent) {
+        else if (options.supportPercent) {
             return NaN;
         }
         if (boundingSize && options.fontSize === undefined && hasEm(value)) {
@@ -3111,8 +3111,8 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         }
         const result = calculateAll(value, options);
         if (!isNaN(result)) {
-            if (precision !== undefined) {
-                return precision === 0 ? Math.floor(result) : +truncate(result, precision);
+            if (options.precision !== undefined) {
+                return options.precision === 0 ? Math.floor(result) : +truncate(result, options.precision);
             }
             else if (options.roundValue) {
                 return Math.round(result);
@@ -3126,23 +3126,23 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
 export function calculateAll(value: string, options?: CalculateOptions) {
     let match: Null<RegExpExecArray>;
     while (match = REGEXP_CALCNESTED.exec(value)) {
-        const method = match[2] || match[4];
-        let result = calculateUnit(match[7].trim(), options);
-        switch (method && method.toLowerCase()) {
-            case 'min':
-                result = Math.min(result, calculateUnit(match[3].trim(), options));
-                break;
-            case 'max':
-                result = Math.max(result, calculateUnit(match[3].trim(), options));
-                break;
-            case 'clamp': {
-                const min = calculateUnit(match[5].trim(), options);
-                const current = calculateUnit(match[6].trim(), options);
-                if (isNaN(min) || isNaN(current)) {
-                    return NaN;
+        let result = calculateUnit(match[7].trim(), options),
+            method = match[2] || match[4];
+        if (method) {
+            switch (method = method.toLowerCase()) {
+                case 'min':
+                case 'max':
+                    result = Math[method](result, calculateUnit(match[3].trim(), options));
+                    break;
+                case 'clamp': {
+                    const min = calculateUnit(match[5].trim(), options);
+                    const current = calculateUnit(match[6].trim(), options);
+                    if (isNaN(min) || isNaN(current)) {
+                        return NaN;
+                    }
+                    result = clamp(current, min, result);
+                    break;
                 }
-                result = clamp(current, min, result);
-                break;
             }
         }
         if (!isNaN(result)) {
@@ -3810,17 +3810,21 @@ export function isTime(value: string) {
 }
 
 export function isPercent(value: string, digits?: boolean) {
-    return !digits ? value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
+    return !digits ? typeof value === 'string' && value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
 }
 
-export function isPx(value: string) {
-    if (value) {
+export function asPx(value: unknown) {
+    if (typeof value === 'string') {
         const length = value.length;
-        if (length > 2 && value[length - 1] === 'x' && value[length - 2] === 'p') {
-            return !isNaN(+value.substring(0, length - 2));
+        if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
+            return +value.substring(0, length - 2);
         }
     }
-    return false;
+    return NaN;
+}
+
+export function isPx(value: unknown) {
+    return !isNaN(asPx(value));
 }
 
 export function hasEm(value: string) {

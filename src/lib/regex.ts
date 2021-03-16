@@ -1,6 +1,7 @@
-const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)(?:[eE][+|-]?\\d+)?';
-const DECIMAL = '[+|-]?' + DECIMAL_UN;
-const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
+const DECIMAL_PLAIN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
+const DECIMAL_SIGNED = '[+|-]?' + DECIMAL_PLAIN;
+const DECIMAL = DECIMAL_SIGNED + '(?:[eE][+|-]?\\d+)?';
+const UNIT_LENGTH = 'px|em|rem|vw|vh|vmin|vmax|pt|mm|cm|in|ch|pc|ex|Q';
 const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
 const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
 const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
@@ -9,6 +10,8 @@ const TAG_ATTR = `=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]*))`;
 
 export const STRING = {
     DECIMAL,
+    DECIMAL_PLAIN,
+    DECIMAL_SIGNED,
     PERCENT: DECIMAL + '%',
     LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
@@ -18,7 +21,7 @@ export const STRING = {
     TAG_OPEN: `(?:[^=>]|${TAG_ATTR})`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
-    CSS_RESOLUTION: `(${DECIMAL_UN})(dpi|dpcm|dppx)`
+    CSS_RESOLUTION: `\\+?(${DECIMAL_PLAIN})(dpi|dpcm|dppx)`
 };
 
 export const FILE = {
@@ -39,13 +42,13 @@ export const CSS = {
     SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
     SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
     SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g'),
-    SELECTOR_ENCLOSING: /:(not|is|where)/ig
+    SELECTOR_ENCLOSING: /:(not|is|where)/i
 };
 
 export const TRANSFORM = {
-    MATRIX: new RegExp(`(matrix|matrix3d)\\(\\s*(${DECIMAL})${`,\\s*(${DECIMAL})`.repeat(5)}(?:${`,\\s*(${DECIMAL})`.repeat(10)})?\\s*\\)`),
-    ROTATE: new RegExp(`(rotate(?:[XYZ]|3d)?)\\(\\s*(?:(${DECIMAL}),\\s*(${DECIMAL}),\\s*(${DECIMAL}),\\s*)?${STRING.CSS_ANGLE}\\s*\\)`),
-    SCALE: new RegExp(`(scale(?:[XYZ]|3d)?)\\(\\s*(${DECIMAL_UN})(?:,\\s*(${DECIMAL_UN}))?(?:,\\s*(${DECIMAL_UN}))?\\s*\\)`),
+    MATRIX: new RegExp(`(matrix|matrix3d)\\(\\s*(${DECIMAL_SIGNED})${`,\\s*(${DECIMAL_SIGNED})`.repeat(5)}(?:${`,\\s*(${DECIMAL_SIGNED})`.repeat(10)})?\\s*\\)`),
+    ROTATE: new RegExp(`(rotate(?:[XYZ]|3d)?)\\(\\s*(?:(${DECIMAL_SIGNED}),\\s*(${DECIMAL_SIGNED}),\\s*(${DECIMAL_SIGNED}),\\s*)?${STRING.CSS_ANGLE}\\s*\\)`),
+    SCALE: new RegExp(`(scale(?:[XYZ]|3d)?)\\(\\s*(\\+?${DECIMAL_PLAIN})(?:,\\s*(\\+?${DECIMAL_PLAIN}))?(?:,\\s*(\\+?${DECIMAL_PLAIN}))?\\s*\\)`),
     TRANSLATE: new RegExp(`(translate(?:[XYZ]|3d)?)\\(\\s*${STRING.LENGTH_PERCENTAGE}(?:,\\s*${STRING.LENGTH_PERCENTAGE})?(?:,\\s*${STRING.LENGTH_PERCENTAGE})?\\s*\\)`),
     SKEW: new RegExp(`(skew[XY]?)\\(\\s*${STRING.CSS_ANGLE}(?:,\\s*${STRING.CSS_ANGLE})?\\s*\\)`),
     PERSPECTIVE: new RegExp(`(perspective)\\(\\s*${STRING.LENGTH_PERCENTAGE}\\s*\\)`)

@@ -201,7 +201,8 @@ declare module "lib" {
         function isCustomProperty(value: string): boolean;
         function isTime(value: string): boolean;
         function isAngle(value: string): boolean;
-        function isPx(value: string): boolean;
+        function asPx(value: unknown): number;
+        function isPx(value: unknown): boolean;
         function hasEm(value: string): boolean;
         function hasCalc(value: string): boolean;
         function hasCustomProperty(value: string): boolean;
@@ -264,6 +265,8 @@ declare module "lib" {
     namespace regex {
         const STRING: {
             DECIMAL: string;
+            DECIMAL_PLAIN: string;
+            DECIMAL_SIGNED: string;
             PERCENT: string;
             LENGTH: string;
             LENGTH_PERCENTAGE: string;
