@@ -32,7 +32,7 @@ const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
-const REGEXP_SELECTORGROUP = /:(?:is|where)/;
+const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const CHAR_SPACE = /\s+/;
@@ -58,7 +58,7 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    for (let seg of splitEnclosing(value.trim(), /calc/i)) {
+    for (let seg of splitEnclosing(value.trim(), /calc/gi)) {
         if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
@@ -182,7 +182,7 @@ function calculateColor(element: StyleElement, value: string) {
 }
 
 function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Null<Dimension>, dimension: DimensionAttr = 'width') {
-    const segments = splitEnclosing(value, /calc/i);
+    const segments = splitEnclosing(value, /calc/gi);
     for (let i = 0, length = segments.length; i < length; ++i) {
         const seg = segments[i];
         if (isCalc(seg)) {
@@ -2103,10 +2103,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'offsetDistance': {
             let boundingSize = 0;
             if (value.includes('%')) {
-                const offsetPath = getStyle(element).getPropertyValue('offset-path');
-                if (offsetPath !== 'none') {
+                const path = getStyle(element).getPropertyValue('offset-path');
+                if (path !== 'none') {
                     const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    pathElement.setAttribute('d', /^path\("(.+)"\)$/.exec(offsetPath)?.[1] || offsetPath);
+                    const match = /^path\("(.+)"\)$/.exec(path);
+                    pathElement.setAttribute('d', match ? match[1] : path);
                     boundingSize = pathElement.getTotalLength();
                 }
             }
@@ -2975,7 +2976,7 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     const result: string[] = [];
     for (let seg of separator ? value.split(separator) : [value]) {
         if (seg = seg.trim()) {
-            const calc = splitEnclosing(seg, /calc/i);
+            const calc = splitEnclosing(seg, /calc/gi);
             const length = calc.length;
             if (length === 0) {
                 return '';
