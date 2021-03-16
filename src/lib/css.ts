@@ -32,7 +32,7 @@ const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
-const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
+const REGEXP_SELECTORGROUP = /:(?:is|where)/;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const CHAR_SPACE = /\s+/;
@@ -1758,7 +1758,7 @@ export function parseSelectorText(value: string) {
         const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING);
         for (let i = 0; i < segments.length; ++i) {
             const seg = segments[i];
-            if (seg[0] === ':' && seg.includes(',') && /^:(is|where|not)\(/i.test(seg)) {
+            if (seg[0] === ':' && seg.includes(',') && /^:(not|is|where)\(/i.test(seg)) {
                 timestamp ||= Date.now();
                 (removed ||= []).push(seg);
                 segments[i] = timestamp + '-' + (removed.length - 1);
