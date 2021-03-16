@@ -35,7 +35,7 @@ const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
-const REGEXP_EM = /\dem$/;
+const REGEXP_EM = /\dem$/i;
 const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
 const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
 const REGEXP_NOTINDEX = /:not-(x+)/;

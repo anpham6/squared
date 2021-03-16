@@ -9,14 +9,14 @@ type PreloadItem = HTMLImageElement | string;
 const { FILE, STRING } = squared.lib.regex;
 
 const { extractURL, parseKeyframes, resolveURL } = squared.lib.css;
-const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitPairStart, startsWith, trimBoth } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
-const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
-const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
-const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
-const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
-const REGEXP_FONTURL = /\s?(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
-const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
+const REGEXP_FONTFACE = /@font-face\s*{([^}]+)}/;
+const REGEXP_FONTFAMILY = /font-family:\s*([^;]+);/;
+const REGEXP_FONTSTYLE = /font-style:\s*(\w+)\s*;/;
+const REGEXP_FONTWEIGHT = /font-weight:\s*(\d+)\s*;/;
+const REGEXP_FONTURL = /(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
+const REGEXP_DATAURI = new RegExp(`^\\s*${STRING.DATAURI}\\s*$`);
 
 export default class Resource<T extends Node> implements squared.base.Resource<T> {
     public static readonly KEY_NAME = 'squared.base.resource';
@@ -479,10 +479,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             return [data as ImageAsset];
         }
         const result: ImageAsset[] = [];
-        const pattern = /url\([^)]+\)/g;
-        let match: Null<RegExpExecArray>;
-        while (match = pattern.exec(value)) {
-            const url = resolveURL(match[0]);
+        for (const seg of splitEnclosing(value, 'url')) {
+            const url = resolveURL(seg);
             if (url) {
                 const image = this.getImage(resourceId, url);
                 if (image) {

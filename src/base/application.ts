@@ -20,9 +20,9 @@ const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, ge
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
-const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
+const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
 const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
-const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
+const REGEXP_CSSHOST = /^:(host|host-context)\(([^)]+)\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
 function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Resource<Node>>, resourceId: number) {

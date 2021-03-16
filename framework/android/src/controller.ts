@@ -33,6 +33,7 @@ const { assignEmptyValue, capitalize, convertPercent, convertWord, iterateArray,
 const { getSrcSet, parseMimeType } = squared.base.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
+const REGEXP_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+(?:[a-z]+)?)\s+(-?[\d.]+(?:[a-z]+)?)\s*([\d.]+(?:[a-z]+)?)?/;
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
@@ -1718,7 +1719,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const textShadow = node.cssValue('textShadow');
                 if (textShadow) {
-                    const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+(?:[a-zQ]+)?)\s+(-?[\d.]+(?:[a-zQ]+)?)\s*([\d.]+(?:[a-zQ]+)?)?/.exec(textShadow);
+                    const match = REGEXP_TEXTSHADOW.exec(textShadow);
                     if (match) {
                         const colorData = parseColor(match[1] || node.css('color'));
                         if (colorData) {

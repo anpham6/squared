@@ -1,7 +1,7 @@
 const DECIMAL_PLAIN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
 const DECIMAL_SIGNED = '[+|-]?' + DECIMAL_PLAIN;
 const DECIMAL = DECIMAL_SIGNED + '(?:[eE][+|-]?\\d+)?';
-const UNIT_LENGTH = 'px|em|rem|vw|vh|vmin|vmax|pt|mm|cm|in|ch|pc|ex|Q';
+const UNIT_LENGTH = 'px|rem|e(?:m|x)|v(?:w|h|min|max)|p(?:t|c)|c(?:m|h)|mm|in|q';
 const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
 const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
 const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
@@ -16,7 +16,7 @@ export const STRING = {
     LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
     UNIT_LENGTH,
-    DATAURI: '\\s*(data:\\s*([^;,\\s]+)?\\s*;?\\s*([^,\\s]+)?\\s*,)?\\s*(.+?)\\s*',
+    DATAURI: '(data:\\s*([^;,\\s]+)?\\s*;?\\s*([^,\\s]+)?\\s*,)?\\s*(.+)',
     TAG_ATTR,
     TAG_OPEN: `(?:[^=>]|${TAG_ATTR})`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,

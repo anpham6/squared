@@ -3004,7 +3004,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         result = this.bounds.height === 0;
                     }
                     else if (!this.pageFlow) {
-                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*\)$/.test(this.cssValue('clip'));
+                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-z]*, 0[a-z]*, 0[a-z]*, 0[a-z]*\)$/.test(this.cssValue('clip'));
                     }
                     else {
                         const parent = this.renderParent || this.parent as T;

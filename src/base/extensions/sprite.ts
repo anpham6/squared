@@ -5,7 +5,7 @@ import ResourceUI from '../resource-ui';
 
 const { isLength } = squared.lib.css;
 
-const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
+const REGEXP_POSITION = /^0(?:[a-z]+|%)|left|start|top/;
 
 export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {

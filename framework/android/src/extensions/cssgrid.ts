@@ -25,8 +25,8 @@ const { asPx, formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib
 const { truncate } = squared.lib.math;
 const { convertPercent, endsWith, flatArray, lastItemOf, startsWith } = squared.lib.util;
 
-const REGEXP_ALIGNSELF = /start|end|center|baseline/;
-const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
+const CSS_ALIGNSELF = ['start', 'end', 'center', 'baseline'];
+const CSS_JUSTIFYSELF = ['start', 'center', 'end', 'baseline', 'right', 'left'];
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -406,7 +406,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
                 minSize += cellSize;
             }
         }
-        if (node.textElement && /^0[a-zQ]*$/.test(min)) {
+        if (node.textElement && /^0[a-z]*$/.test(min)) {
             fitContent = true;
         }
     }
@@ -652,7 +652,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             const justifySelf = node.cssValue('justifySelf') || mainData.justifyItems;
             let renderAs: Undef<T>,
                 outputAs: Undef<NodeXmlTemplate<T>>;
-            if (REGEXP_ALIGNSELF.test(alignSelf) || REGEXP_JUSTIFYSELF.test(justifySelf) || parent.layoutConstraint) {
+            if (CSS_ALIGNSELF.includes(alignSelf) || CSS_JUSTIFYSELF.includes(justifySelf) || parent.layoutConstraint) {
                 renderAs = this.application.createNode(node.sessionId, { parent, innerWrapped: node });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_TAGNAME.FRAME, CONTAINER_NODE.FRAME);
@@ -736,7 +736,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.box.height), true);
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && startsWith(mainData.alignContent, 'space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && startsWith(mainData.alignContent, 'space') && !CSS_ALIGNSELF.includes(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
             return {

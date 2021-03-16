@@ -14,30 +14,30 @@ let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
 const PATTERN_CALCUNIT = '(?!calc|min|max|clamp)([^,()]+|\\([^())]+\\)\\s*)';
-const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
-const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
+const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`, 'i');
+const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`, 'i');
 const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
-const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
-const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
-const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
+const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
+const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
+const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
 const REGEXP_CALC = /^(?:calc|min|max|clamp)\((.+)\)$/i;
-const REGEXP_CALCWITHIN = /\b(?:calc|min|max|clamp)\(/i;
+const REGEXP_CALCWITHIN = /(?:calc|min|max|clamp)\(/i;
 const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${PATTERN_CALCUNIT},|(clamp)\\(\\s*${PATTERN_CALCUNIT},\\s*${PATTERN_CALCUNIT},|\\()\\s*${PATTERN_CALCUNIT}\\)(\\s*)`, 'i');
 const REGEXP_CALCENCLOSING = /calc|min|max|clamp/gi;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCINTEGER = /^\s*[+|-]?\d+\s*$/;
-const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
-const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
-const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-const REGEXP_VAR = /^var\(\s*--[\w-]+.*\)$/;
-const REGEXP_VARWITHIN = /\bvar\(\s*--[\w-]+[^)]*\)/;
-const REGEXP_VARNESTED = /(.*\b)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
-const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
+const REGEXP_VAR = /^var\(\s*--[\w-]+.*\)$/i;
+const REGEXP_VARWITHIN = /var\(\s*--[\w-]+[^)]*\)/i;
+const REGEXP_VARNESTED = /(.*?)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/i;
+const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/i;
 const REGEXP_SELECTORGROUP = /:(?:is|where)/;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
+const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
+const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
+const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<|>|<=|>=)?\s*([\w.]+%?)?\)(?:\s+and\s+)?/g;
+const REGEXP_CALCPLACEHOLDER = /\s*{(\d+)}\s*/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -2371,7 +2371,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         }
         case 'boxShadow':
         case 'textShadow':
-            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-zQ]*\s+-?[\d.]+[a-zQ]*(\s+-[\d.]+[a-z]*)/ });
+            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*\s+(-[\d.]+[a-z]*)/ });
         case 'animation':
         case 'animationDelay':
         case 'animationDuration':
@@ -2893,11 +2893,13 @@ export function checkMediaRule(value: string, fontSize?: number) {
                     const attr = condition[1];
                     let operation = condition[2];
                     const rule = condition[3];
-                    if (startsWith(attr, 'min')) {
-                        operation = '>=';
-                    }
-                    else if (startsWith(attr, 'max')) {
-                        operation = '<=';
+                    if (!operation || operation === ':') {
+                        if (startsWith(attr, 'min')) {
+                            operation = '>=';
+                        }
+                        else if (startsWith(attr, 'max')) {
+                            operation = '<=';
+                        }
                     }
                     switch (attr) {
                         case 'aspect-ratio':
@@ -3247,7 +3249,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                 operator = partial;
                                 break;
                             default: {
-                                const match = REGEXP_CALCUNIT.exec(partial);
+                                const match = REGEXP_CALCPLACEHOLDER.exec(partial);
                                 if (match) {
                                     switch (unitType) {
                                         case CSS_UNIT.INTEGER:
@@ -3426,8 +3428,11 @@ export function calculateUnit(value: string, options?: CalculateOptions) {
 export function parseUnit(value: string, options?: ParseUnitOptions) {
     const match = REGEXP_LENGTH.exec(value);
     if (match) {
-        let result = parseFloat(match[1]);
-        switch (match[2]) {
+        if (!match[2]) {
+            return +match[1];
+        }
+        let result = +match[1];
+        switch (match[2].toLowerCase()) {
             case 'px':
                 return result;
             case 'ex':
@@ -3443,7 +3448,7 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
                 result *= 12;
             case 'pt':
                 return result * 4 / 3;
-            case 'Q':
+            case 'q':
                 result /= 4;
             case 'mm':
                 result /= 10;
@@ -3755,7 +3760,7 @@ export function convertAngle(value: string, unit = 'deg', fallback = NaN) {
     if (isNaN(result)) {
         return fallback;
     }
-    switch (unit) {
+    switch (unit.toLowerCase()) {
         case 'rad':
             result *= 180 / Math.PI;
             break;
@@ -3772,7 +3777,7 @@ export function parseTime(value: string) {
     const match = REGEXP_TIME.exec(value);
     if (match) {
         let result = +match[1];
-        if (match[2] === 'ms') {
+        if (match[2].toLowerCase() === 'ms') {
             result /= 1000;
         }
         return result;
@@ -3784,7 +3789,7 @@ export function parseResolution(value: string) {
     const match = REGEXP_RESOLUTION.exec(value);
     if (match) {
         let result = +match[1];
-        switch (match[2]) {
+        switch (match[2].toLowerCase()) {
             case 'dpcm':
                 result *= 2.54 / 96;
                 break;

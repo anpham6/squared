@@ -145,8 +145,8 @@ const EXT_DATA = {
     zip: 'application/zip'
 };
 const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
-const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
-const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
+const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`, 'i');
+const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 const CHAR_SEPARATOR = /\s*,\s*/;
 
 export function fromMimeType(value: string) {
@@ -647,7 +647,7 @@ export function parseWatchInterval(value: Undef<string>) {
         if (value === 'true') {
             return true;
         }
-        const match = /^(~|\d+)(?:\s*::\s*(~|.+?)(?:\s*::\s*(.+?)(?:\[([^\]]+)\])?)?)?\s*$/.exec(value);
+        const match = /^\s*(~|\d+)(?:\s*::\s*(~|.+?)(?:\s*::\s*(.+?)(?:\[([^\]]+)\])?)?)?\s*$/.exec(value);
         if (match) {
             let interval: Undef<number>,
                 expires: Undef<string>,
