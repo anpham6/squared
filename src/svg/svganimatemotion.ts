@@ -108,7 +108,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 const keyPoints = this._keyPoints;
                 if (keyTimes.length === keyPoints.length) {
                     const value = item.value;
-                    let distance = isPercent(value) ? convertPercent(value) : +value / this.offsetLength;
+                    let distance = isPercent(value) ? convertPercent(value) : parseFloat(value) / this.offsetLength;
                     if (!isNaN(distance)) {
                         distance = Math.min(distance, 1);
                         const index = keyTimes.findIndex(previous => previous === key);

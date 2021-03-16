@@ -28,6 +28,7 @@ const REGEXP_CALCNESTED = (function() {
 })();
 const REGEXP_CALCENCLOSING = /\b(?:calc|min|max|clamp)/i;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
+const REGEXP_CALCINTEGER = /^\s*[+|-]?\d+\s*$/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
@@ -2130,7 +2131,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                 const offsetPath = getStyle(element).getPropertyValue('offset-path');
                 if (offsetPath !== 'none') {
                     const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    pathElement.setAttribute('d', offsetPath);
+                    pathElement.setAttribute('d', /^path\("(.+)"\)$/.exec(offsetPath)?.[1] || offsetPath);
                     boundingSize = pathElement.getTotalLength();
                 }
             }
@@ -3293,29 +3294,26 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 const angle = parseAngle(partial);
                                                 if (!isNaN(angle)) {
                                                     seg.push(angle);
-                                                    found = true;
                                                 }
                                                 else {
                                                     return NaN;
                                                 }
+                                                found = true;
                                             }
                                             else {
                                                 return NaN;
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
-                                            if (/^\s*[+|-]?\d+\s*$/.test(partial)) {
-                                                seg.push(+partial);
-                                                found = true;
-                                            }
-                                            else {
+                                            if (!REGEXP_CALCINTEGER.test(partial)) {
                                                 return NaN;
                                             }
+                                            seg.push(+partial);
+                                            found = true;
                                             break;
                                         case CSS_UNIT.DECIMAL:
                                             if (isNumber(partial)) {
                                                 seg.push(+partial);
-                                                found = true;
                                             }
                                             else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
                                                 seg.push(convertPercent(partial) * boundingSize);
@@ -3323,6 +3321,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             else {
                                                 return NaN;
                                             }
+                                            found = true;
                                             break;
                                         default:
                                             if (isNumber(partial)) {
@@ -3337,15 +3336,14 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 }
                                                 if (isLength(partial)) {
                                                     seg.push(parseUnit(partial, { fontSize }));
-                                                    found = true;
                                                 }
                                                 else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
                                                     seg.push(convertPercent(partial) * boundingSize);
-                                                    found = true;
                                                 }
                                                 else {
                                                     return NaN;
                                                 }
+                                                found = true;
                                             }
                                             break;
                                     }
