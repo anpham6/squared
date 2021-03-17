@@ -1970,6 +1970,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 }
                                 segment = spliceString(segment, subMatch.index, label.length);
                             }
+                            if (selectors.length === 0 && (notList || pseudoList)) {
+                                start = true;
+                            }
                             selectors.push({
                                 tagName,
                                 id,
