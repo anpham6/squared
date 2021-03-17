@@ -10,7 +10,7 @@ type SvgUse = squared.svg.SvgUse;
 const { STRING } = squared.lib.regex;
 
 const { parseColor } = squared.lib.color;
-const { extractURL, getFontSize, hasCalc, hasEm, hasCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
+const { extractURL, getFontSize, getStyle, hasCalc, hasEm, hasCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { convertCamelCase, convertPercent, isNumber, joinArray, plainMap } = squared.lib.util;
 
@@ -174,10 +174,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             if (value) {
                 attr = convertCamelCase(attr);
                 if (hasCalc(value)) {
-                    value = calculateStyle(element, attr, value) || getComputedStyle(element)[attr];
+                    value = calculateStyle(element, attr, value) || getStyle(element)[attr];
                 }
                 else if (hasCustomProperty(value)) {
-                    value = parseVar(element, value) || getComputedStyle(element)[attr];
+                    value = parseVar(element, value) || getStyle(element)[attr];
                 }
                 switch (attr) {
                     case 'strokeDasharray':

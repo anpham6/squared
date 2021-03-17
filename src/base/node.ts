@@ -1788,7 +1788,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     expand: Undef<boolean>;
                 invalid: {
                     let match: Null<RegExpExecArray>;
-                    for (let seg of splitEnclosing(query, CSS.SELECTOR_ENCLOSING)) {
+                    for (let seg of splitEnclosing(query, CSS.SELECTOR_ENCLOSING_G)) {
                         if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
                             const condition = match[2].trim();
                             switch (match[1].toLowerCase()) {

@@ -1800,7 +1800,7 @@ export function parseSelectorText(value: string) {
     if ((value = value.trim()).includes(',')) {
         let timestamp: Undef<number>,
             removed: Undef<string[]>;
-        const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING);
+        const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
         for (let i = 0; i < segments.length; ++i) {
             const seg = segments[i];
             if (seg[0] === ':' && seg.includes(',') && /^:(not|is|where)\(/i.test(seg)) {
@@ -2148,10 +2148,11 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'offsetDistance': {
             let boundingSize = 0;
             if (value.includes('%')) {
-                const offsetPath = getStyle(element).getPropertyValue('offset-path');
-                if (offsetPath !== 'none') {
+                const path = getStyle(element).getPropertyValue('offset-path');
+                if (path !== 'none') {
                     const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    pathElement.setAttribute('d', /^path\("(.+)"\)$/.exec(offsetPath)?.[1] || offsetPath);
+                    const match = /^path\("(.+)"\)$/.exec(path);
+                    pathElement.setAttribute('d', match ? match[1] : path);
                     boundingSize = pathElement.getTotalLength();
                 }
             }

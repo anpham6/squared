@@ -10,7 +10,7 @@ import type NodeList from './nodelist';
 import Controller from './controller';
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, asPx, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
@@ -22,33 +22,19 @@ const BORDER_BOX = [
     CSS_PROPERTIES.borderLeft.value as string[]
 ];
 
-function setBorderStyle(styleMap: CssStyleMap, defaultColor: string) {
-    if (!BORDER_BOX.some(item => item[0] in styleMap)) {
-        for (let i = 0; i < 4; ++i) {
-            const border = BORDER_BOX[i];
-            styleMap[border[0]] = '1px';
-            styleMap[border[1]] = 'outset';
-            styleMap[border[2]] = defaultColor;
-        }
-        return true;
-    }
-    return false;
-}
-
-function setButtonStyle(styleMap: CssStyleMap, applied: boolean, defaultColor: string) {
-    if (applied) {
-        const backgroundColor = styleMap.backgroundColor;
-        if (!backgroundColor || backgroundColor === 'initial') {
-            styleMap.backgroundColor = defaultColor;
+function setBorderStyle(style: CssStyleMap, color: string) {
+    let result = false;
+    for (let i = 0; i < 4; ++i) {
+        const border = BORDER_BOX[i];
+        const attr = border[0];
+        if (!style[attr]) {
+            style[attr] = '1px';
+            style[border[1]] = 'outset';
+            style[border[2]] = color;
+            result = true;
         }
     }
-    styleMap.textAlign ||= 'center';
-    if (!(CSS_PROPERTIES.padding.value as string[]).some(attr => styleMap[attr])) {
-        styleMap.paddingTop = '2px';
-        styleMap.paddingRight = '6px';
-        styleMap.paddingBottom = '3px';
-        styleMap.paddingLeft = '6px';
-    }
+    return result;
 }
 
 function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
@@ -70,6 +56,8 @@ function pushIndentArray(values: string[], depth: number, char = '\t', separator
     }
     return values.join(separator);
 }
+
+const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial' || value === 'unset' || value === 'revert';
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerSettingsUI;
@@ -142,14 +130,31 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             let styleMap = getElementCache<CssStyleMap>(element, 'styleMap', sessionId);
             if (!styleMap) {
-                styleMap = {};
-                setElementCache(element, 'styleMap', styleMap, sessionId);
+                setElementCache(element, 'styleMap', styleMap = {}, sessionId);
             }
+            const setInputStyle = (style: CssStyleMap, disabled: boolean) => {
+                setBorderStyle(style, this._settingsStyle[disabled ? 'inputDisabledBorderColor' : 'inputBorderColor']);
+                if (disabled && hasEmptyStyle(style.backgroundColor)) {
+                    style.backgroundColor = this._settingsStyle.inputDisabledBackgroundColor;
+                }
+            };
+            const setButtonStyle = (style: CssStyleMap, disabled: boolean) => {
+                if ((setBorderStyle(style, this._settingsStyle[disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor']) || disabled) && hasEmptyStyle(style.backgroundColor)) {
+                    style.backgroundColor = this._settingsStyle[disabled ? 'buttonDisabledBackgroundColor' : 'buttonBackgroundColor'];
+                }
+                style.textAlign ||= 'center';
+                if (!(CSS_PROPERTIES.padding.value as string[]).some(attr => style[attr])) {
+                    style.paddingTop = '2px';
+                    style.paddingRight = '6px';
+                    style.paddingBottom = '3px';
+                    style.paddingLeft = '6px';
+                }
+            };
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
                     case 'BODY':
                         if (styleMap.backgroundColor === 'rgba(0, 0, 0, 0)') {
-                            styleMap.backgroundColor = '';
+                            delete styleMap.backgroundColor;
                         }
                         break;
                     case 'INPUT':
@@ -172,7 +177,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 case 'INPUT': {
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;
-                    const type = (element as HTMLInputElement).type;
+                    const { type, disabled } = element as HTMLInputElement;
                     switch (type) {
                         case 'radio':
                         case 'checkbox':
@@ -189,13 +194,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft!) + 1);
                             break;
                         default: {
-                            const result = setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
                             switch (type) {
                                 case 'file':
                                 case 'reset':
                                 case 'submit':
                                 case 'button':
-                                    setButtonStyle(styleMap, result, this._settingsStyle.inputBackgroundColor);
+                                    setButtonStyle(styleMap, disabled);
+                                    break;
+                                default:
+                                    setInputStyle(styleMap, disabled);
                                     break;
                             }
                             break;
@@ -203,22 +210,24 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     break;
                 }
-                case 'BUTTON':
+                case 'BUTTON': {
+                    const disabled = (element as HTMLButtonElement).disabled;
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;
-                    setButtonStyle(styleMap, setBorderStyle(styleMap, this._settingsStyle.inputBorderColor), this._settingsStyle.inputBackgroundColor);
+                    setButtonStyle(styleMap, disabled);
                     break;
+                }
                 case 'TEXTAREA':
-                case 'SELECT':
+                case 'SELECT': {
+                    const disabled = (element as HTMLTextAreaElement | HTMLSelectElement).disabled;
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;
-                    setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
+                    setInputStyle(styleMap, disabled);
                     break;
-                case 'BODY': {
-                    const backgroundColor = styleMap.backgroundColor;
-                    if ((!backgroundColor || backgroundColor === 'initial') && (getComputedStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
+                }
+                case 'BODY':
+                    if (hasEmptyStyle(styleMap.backgroundColor) && (getStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
                         styleMap.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
-                }
                 case 'H1':
                     if (!styleMap.fontSize) {
                         let parent = element.parentElement;
@@ -277,10 +286,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                 case 'IMG':
                 case 'CANVAS':
-                case 'svg':
                 case 'VIDEO':
                 case 'OBJECT':
                 case 'EMBED':
+                case 'svg':
                     this.setElementDimension(processing, element, styleMap, 'width', 'height');
                     this.setElementDimension(processing, element, styleMap, 'height', 'width');
                     break;
@@ -291,8 +300,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public addBeforeOutsideTemplate(node: T, value: string, format = true, index = -1) {
         let template = this._beforeOutside.get(node);
         if (!template) {
-            template = [];
-            this._beforeOutside.set(node, template);
+            this._beforeOutside.set(node, template = []);
         }
         if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
@@ -308,8 +316,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public addBeforeInsideTemplate(node: T, value: string, format = true, index = -1) {
         let template = this._beforeInside.get(node);
         if (!template) {
-            template = [];
-            this._beforeInside.set(node, template);
+            this._beforeInside.set(node, template = []);
         }
         if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
@@ -325,8 +332,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public addAfterInsideTemplate(node: T, value: string, format = true, index = -1) {
         let template = this._afterInside.get(node);
         if (!template) {
-            template = [];
-            this._afterInside.set(node, template);
+            this._afterInside.set(node, template = []);
         }
         if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
@@ -342,8 +348,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public addAfterOutsideTemplate(node: T, value: string, format = true, index = -1) {
         let template = this._afterOutside.get(node);
         if (!template) {
-            template = [];
-            this._afterOutside.set(node, template);
+            this._afterOutside.set(node, template = []);
         }
         if (index >= 0 && index < template.length) {
             template.splice(index, 0, value);
@@ -776,17 +781,21 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return '<' + controlName + attributes + (content || this._innerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
-    private setElementDimension(processing: squared.base.AppProcessing<T>, element: Element, styleMap: CssStyleMap, attr: CssStyleAttr, opposing: string) {
+    private setElementDimension(processing: squared.base.AppProcessing<T>, element: Element, styleMap: CssStyleMap, attr: DimensionAttr, opposing: DimensionAttr) {
         const dimension = styleMap[attr];
         if (!dimension || dimension === 'auto') {
-            const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
+            const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
             if (match) {
                 const value = match[1];
                 if (isPercent(value)) {
                     styleMap[attr] = value;
                 }
-                else if (isLength(value)) {
-                    styleMap[attr] = value + 'px';
+                else {
+                    let unit = asPx(value);
+                    if (isNaN(unit) && isNaN(unit = parseFloat(value))) {
+                        return;
+                    }
+                    styleMap[attr] = unit + 'px';
                 }
             }
             else if (element.clientWidth === 300 && element.clientHeight === 150 && !((element instanceof HTMLObjectElement || element instanceof HTMLEmbedElement) && element.type.startsWith('image/'))) {

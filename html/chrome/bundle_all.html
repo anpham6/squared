@@ -142,7 +142,7 @@
                             blob: true,
                             customize: (uri, mimeType, command) => {
                                 if (mimeType === 'image/jpeg') {
-                                    return Date.now() + '.jpg';
+                                    return Math.floor(Math.random() * 10000) + '.jpg';
                                 }
                             },
                             cloudStorage: [{

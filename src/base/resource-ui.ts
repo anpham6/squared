@@ -1292,7 +1292,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                             break;
                         case 'color': {
-                            const borderColor = this.controllerSettings.style.inputColorBorderColor;
+                            const borderColor = this.controllerSettings.style[element.disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor'];
                             const backgroundColor = (parseColor(value) || parseColor('black')!).valueAsRGBA;
                             const { width, height } = node.actualDimension;
                             const backgroundSize = `${width - 10}px ${height - 10}px, ${width - 8}px ${height - 8}px`;

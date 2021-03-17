@@ -67,8 +67,12 @@ interface ControllerSettingsStyleUI {
     anchorFontColor: string;
     formFontSize: string;
     inputBorderColor: string;
-    inputBackgroundColor: string;
-    inputColorBorderColor: string;
+    inputDisabledBorderColor: string;
+    inputDisabledBackgroundColor: string;
+    buttonBorderColor: string;
+    buttonBackgroundColor: string;
+    buttonDisabledBorderColor: string;
+    buttonDisabledBackgroundColor: string;
     meterForegroundColor?: string;
     meterBackgroundColor?: string;
     progressForegroundColor?: string;
