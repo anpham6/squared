@@ -144,7 +144,7 @@ const EXT_DATA = {
     yml: 'text/yaml',
     zip: 'application/zip'
 };
-const REGEXP_SOURCESIZES = new RegExp(`^(\\(?(?:\\s*(?:and)?\\s*\\(?\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)?)+\\)?)?\\s*(.+)$`, 'i');
+const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))+)?\\s*(.*)$`, 'i');
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -475,17 +475,16 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                 match: Null<RegExpExecArray>;
             for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                 if (match = REGEXP_SOURCESIZES.exec(value)) {
-                    if (match[1] && !window.matchMedia(match[1]).matches) {
+                    const query = match[1];
+                    const unit = match[2];
+                    if (!unit || query && !window.matchMedia(query).matches) {
                         continue;
                     }
-                    const unit = match[2];
-                    if (unit) {
-                        if (isCalc(unit)) {
-                            width = calculateAll(unit, unit.includes('%') && element.parentElement ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
-                        }
-                        else if (isLength(unit)) {
-                            width = parseUnit(unit);
-                        }
+                    if (isCalc(unit)) {
+                        width = calculateAll(unit, unit.includes('%') && element.parentElement ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
+                    }
+                    else if (isLength(unit)) {
+                        width = parseUnit(unit);
                     }
                     if (!isNaN(width)) {
                         break;

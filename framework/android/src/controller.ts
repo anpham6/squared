@@ -12,6 +12,7 @@ import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 import { BUILD_VERSION, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } from './lib/constant';
 
 import type Application from './application';
+import type ResourceBackground from './extensions/resource/background';
 
 import Resource from './resource';
 import View from './view';
@@ -541,13 +542,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         style: {
             anchorFontColor: 'rgb(0, 0, 238)',
             formFontSize: '13.3333px',
-            inputBorderColor: 'rgb(0, 0, 0)',
+            inputBorderColor: 'rgb(118, 118, 118)',
             inputDisabledBorderColor: 'rgba(118, 118, 118, 0.3)',
             inputDisabledBackgroundColor: 'rgba(239, 239, 239, 0.3)',
             buttonBorderColor: 'rgb(118, 118, 118)',
             buttonBackgroundColor: isPlatform(PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(239, 239, 239)',
             buttonDisabledBorderColor: 'rgba(118, 118, 118, 0.3)',
             buttonDisabledBackgroundColor: 'rgba(19, 1, 1, 0.3)',
+            rangeForegroundColor: 'rgb(0, 117, 255)',
+            rangeBackgroundColor: 'rgb(239, 239, 239)',
             meterForegroundColor: 'rgb(99, 206, 68)',
             meterBackgroundColor: 'rgb(237, 237, 237)',
             progressForegroundColor: 'rgb(138, 180, 248)',
@@ -1507,6 +1510,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (!isNaN(+element.value)) {
                             node.android('progress', Resource.addString(resourceId, element.value, getStringAttr('progress'), true));
                         }
+                        setInputMinMax();
+                        break;
                     case 'number':
                         node.android('inputType', 'number');
                         setInputMinMax();
@@ -1594,14 +1599,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'METER':
             case 'PROGRESS': {
                 const { min, max, value } = node.element as HTMLMeterElement;
-                let foregroundColor: Undef<string>,
-                    backgroundColor: Undef<string>;
                 if (tagName === 'METER') {
-                    ({ meterForegroundColor: foregroundColor, meterBackgroundColor: backgroundColor } = this.localSettings.style);
                     node.android('min', Resource.addString(resourceId, min.toString(), getStringAttr('min'), true));
-                }
-                else {
-                    ({ progressForegroundColor: foregroundColor, progressBackgroundColor: backgroundColor } = this.localSettings.style);
                 }
                 if (max > 0) {
                     node.android('max', Resource.addString(resourceId, max.toString(), getStringAttr('max'), true));
@@ -1609,40 +1608,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (value > 0) {
                     node.android('progress', Resource.addString(resourceId, (max > 0 ? Math.round((value / max) * 100) : value).toString(), getStringAttr('progress'), true));
                 }
-                if (!node.hasWidth) {
-                    setBoundsWidth();
-                }
-                if (!node.hasHeight) {
-                    setBoundsHeight();
-                }
-                node.android('progressTint', `@color/${Resource.addColor(resourceId, foregroundColor!)}`);
-                node.android('progressBackgroundTint', `@color/${Resource.addColor(resourceId, backgroundColor!)}`);
-                const animations = node.cssInitial('animationName').split(/\s*,\s*/);
-                let circular = false;
-                if (animations.length) {
-                    const keyFrames = Resource.ASSETS[resourceId]!.keyFrames;
-                    if (keyFrames) {
-                        for (const name of animations) {
-                            const item = keyFrames.get(name);
-                            if (item) {
-                                for (const attr in item) {
-                                    const data = item[attr];
-                                    if (data.transform?.includes('rotate')) {
-                                        circular = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (!circular) {
-                    node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
-                }
-                else if (node.hasHeight) {
-                    node.resetBox(BOX_STANDARD.PADDING_TOP | BOX_STANDARD.PADDING_BOTTOM);
-                }
-                node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
                 break;
             }
             case 'AUDIO':
@@ -1670,15 +1635,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     });
-                }
-                if (!node.hasPX('width')) {
-                    setBoundsWidth();
-                }
-                if (!node.hasPX('height')) {
-                    setBoundsHeight();
-                }
-                if (node.inline) {
-                    setInlineBlock(node);
                 }
                 if (src) {
                     this.application.resourceHandler[tagName === 'VIDEO' ? 'addVideo' : 'addAudio'](resourceId, src, { mimeType, tasks: node.tasks, watch: node.watch });
@@ -1771,6 +1727,81 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case CONTAINER_TAGNAME.RADIO:
                 setReadOnly();
                 break;
+            case CONTAINER_TAGNAME.VIDEOVIEW:
+                if (!node.hasPX('width')) {
+                    setBoundsWidth();
+                }
+                if (!node.hasPX('height')) {
+                    setBoundsHeight();
+                }
+                if (node.inline) {
+                    setInlineBlock(node);
+                }
+                break;
+            case CONTAINER_TAGNAME.RANGE: {
+                if (!node.hasWidth) {
+                    setBoundsWidth();
+                }
+                if (!node.hasHeight) {
+                    setBoundsHeight();
+                }
+                const resourceBackground = this.application.extensionManager.get(internal.android.EXT_ANDROID.RESOURCE_BACKGROUND) as Undef<ResourceBackground<T>>;
+                if (resourceBackground) {
+                    const backgroundColor = parseColor(this.localSettings.style.rangeForegroundColor)!;
+                    const height = node.bounds.height;
+                    const width = height + 'px';
+                    const drawable = resourceBackground.writeDrawableBackground(node, { backgroundColor, borderRadius: [Math.floor(height / 2) + 'px'] } as BoxStyle, { resourceName: 'thumb', resourceData: { width, height: width, order: 0 } });
+                    if (drawable) {
+                        node.android('thumb', drawable);
+                    }
+                }
+                break;
+            }
+            case CONTAINER_TAGNAME.PROGRESS: {
+                let foregroundColor: Undef<string>,
+                    backgroundColor: Undef<string>;
+                if (tagName === 'METER') {
+                    ({ meterForegroundColor: foregroundColor, meterBackgroundColor: backgroundColor } = this.localSettings.style);
+                }
+                else {
+                    ({ progressForegroundColor: foregroundColor, progressBackgroundColor: backgroundColor } = this.localSettings.style);
+                }
+                if (!node.hasWidth) {
+                    setBoundsWidth();
+                }
+                if (!node.hasHeight) {
+                    setBoundsHeight();
+                }
+                node.android('progressTint', `@color/${Resource.addColor(resourceId, foregroundColor)}`);
+                node.android('progressBackgroundTint', `@color/${Resource.addColor(resourceId, backgroundColor)}`);
+                const animations = node.cssInitial('animationName').split(/\s*,\s*/);
+                let circular = false;
+                if (animations.length) {
+                    const keyFrames = Resource.ASSETS[resourceId]!.keyFrames;
+                    if (keyFrames) {
+                        for (const name of animations) {
+                            const item = keyFrames.get(name);
+                            if (item) {
+                                for (const attr in item) {
+                                    const data = item[attr];
+                                    if (data.transform?.includes('rotate')) {
+                                        circular = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!circular) {
+                    node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
+                }
+                else if (node.hasHeight) {
+                    node.resetBox(BOX_STANDARD.PADDING_TOP | BOX_STANDARD.PADDING_BOTTOM);
+                }
+                node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
+                break;
+            }
             case CONTAINER_TAGNAME.EDIT:
                 if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
@@ -1797,11 +1828,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('importantForAutofill', 'no');
                 }
                 setReadOnly();
-            case CONTAINER_TAGNAME.RANGE:
-                if (!node.hasWidth) {
-                    setBoundsWidth();
-                }
-                break;
             case CONTAINER_TAGNAME.LINE:
                 if (!node.hasHeight) {
                     node.setLayoutHeight(formatPX(node.contentBoxHeight || 1));

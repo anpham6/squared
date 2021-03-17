@@ -867,7 +867,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', { initial: true })) {
                             value += this.borderTopWidth + this.borderBottomWidth;
                         }
-                        if ((this.controlElement || this.styleText && this.multiline && !this.overflowY && !actualParent.layoutElement) && !this.hasPX('minHeight')) {
+                        if ((this.controlElement && !this.is(CONTAINER_NODE.RANGE) || this.styleText && this.multiline && !this.overflowY && !actualParent.layoutElement) && !this.hasPX('minHeight')) {
                             this.android('minHeight', formatPX(value));
                             layoutHeight = 'wrap_content';
                         }

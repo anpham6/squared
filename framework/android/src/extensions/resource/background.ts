@@ -63,6 +63,18 @@ interface LayerData {
     shape?: StandardMap;
 }
 
+interface DrawableData {
+    images?: BackgroundImageData[];
+    indentWidth?: number;
+    borderOnly?: boolean;
+    outline?: BorderAttribute;
+}
+
+interface WriteDrawableBackgroundOptions extends DrawableData {
+    resourceData?: BackgroundImageData;
+    resourceName?: string;
+}
+
 const { extractURL, formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { delimitString, isEqual, lastItemOf, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
@@ -348,7 +360,7 @@ function createBackgroundGradient(resourceId: number, gradient: Gradient, api = 
     return result;
 }
 
-function createLayerList(resourceId: number, boxStyle: BoxStyle, images: Optional<BackgroundImageData[]>, borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
+function createLayerList(resourceId: number, boxStyle: BoxStyle, images: Undef<BackgroundImageData[]>, borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
     const solid = !borderOnly && getBackgroundColor(resourceId, boxStyle.backgroundColor);
@@ -514,20 +526,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         };
         this.application.getProcessingCache(sessionId).each(node => {
-            let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
-            const boxImage = node.containerName === 'INPUT_IMAGE' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE) ? [node] : undefined;
-            if (stored || boxImage) {
-                stored ||= {} as BoxStyle;
-                if (node.inputElement) {
-                    const companion = node.companion;
-                    if (companion && !companion.visible && companion.tagName === 'LABEL') {
-                        const backgroundColor = companion.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle')?.backgroundColor;
-                        if (backgroundColor) {
-                            stored.backgroundColor = backgroundColor;
-                        }
+            let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle'),
+                boxImage: Undef<T[]>;
+            if (node.inputElement) {
+                const companion = node.companion;
+                if (companion && !companion.visible && companion.tagName === 'LABEL') {
+                    const backgroundColor = companion.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle')?.backgroundColor;
+                    if (backgroundColor) {
+                        (stored ||= {} as BoxStyle).backgroundColor = backgroundColor;
                     }
                 }
-                const images = this.getDrawableImages(resourceId, node, stored, boxImage);
+                if (node.containerName === 'INPUT_IMAGE' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                    boxImage = [node];
+                }
+            }
+            if (stored || boxImage) {
+                const images = this.getDrawableImages(resourceId, node, stored ||= {} as BoxStyle, boxImage);
                 if (node.controlName === CONTAINER_TAGNAME.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient) && node.api >= BUILD_VERSION.PIE) {
                     node.android('buttonCornerRadius', stored.borderRadius[0]);
                     delete stored.borderRadius;
@@ -538,10 +552,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const width = roundFloat(outline.width);
                     indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                 }
-                let [shapeData, layerList] = this.getDrawableBorder(resourceId, stored, images, indentWidth);
+                let [shapeData, layerList] = this.getDrawableBackground(resourceId, stored, { indentWidth, images });
                 const emptyBackground = !shapeData && !layerList;
                 if (outline && (drawOutline || emptyBackground)) {
-                    const [outlineShapeData, outlineLayerList] = this.getDrawableBorder(resourceId, stored, emptyBackground ? images : null, 0, !emptyBackground, outline);
+                    const [outlineShapeData, outlineLayerList] = this.getDrawableBackground(resourceId, stored, { images: emptyBackground ? images : undefined, borderOnly: !emptyBackground, outline });
                     if (outlineShapeData) {
                         shapeData ||= outlineShapeData;
                     }
@@ -591,7 +605,29 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         });
     }
 
-    public getDrawableBorder(resourceId: number, data: BoxStyle, images: Optional<BackgroundImageData[]>, indentWidth: number, borderOnly = false, outline?: BorderAttribute): [Null<StandardMap[]>, Null<LayerList[]>] {
+    public writeDrawableBackground(node: T, boxStyle: BoxStyle, options: WriteDrawableBackgroundOptions = {}) {
+        const resourceId = node.localSettings.resourceId;
+        const [shapeData, layerList] = this.getDrawableBackground(resourceId, boxStyle, options);
+        let result: string;
+        if (shapeData) {
+            result = applyTemplate('shape', SHAPE_TMPL, shapeData);
+        }
+        else if (layerList) {
+            result = applyTemplate('layer-list', LAYERLIST_TMPL, layerList);
+        }
+        else {
+            return '';
+        }
+        const resourceName = options.resourceName;
+        const getDrawable = (template: string, suffix: string) => template ? `@drawable/${Resource.insertStoredAsset(resourceId, 'drawables', (node.containerName + '_' + node.controlId + '_' + suffix).toLowerCase(), template)}` : '';
+        if ((result = getDrawable(result, resourceName || 'system')) && options.resourceData) {
+            options.resourceData.drawable = result;
+            return getDrawable(applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, boxStyle, [options.resourceData], true)), 'main' + (resourceName ? '_' + resourceName : ''));
+        }
+        return result;
+    }
+
+    public getDrawableBackground(resourceId: number, boxStyle: BoxStyle, { indentWidth = 0, images, borderOnly = false, outline }: DrawableData): [Null<StandardMap[]>, Null<LayerList[]>] {
         const borderVisible: boolean[] = new Array(4);
         const indentOffset = indentWidth ? formatPX(indentWidth) : '';
         let shapeData: Null<StandardMap[]> = null,
@@ -603,7 +639,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             corners: Undef<StringMap>,
             borderData: Undef<BorderAttribute>;
         if (!borderOnly) {
-            const radius = data.borderRadius;
+            const radius = boxStyle.borderRadius;
             if (radius) {
                 switch (radius.length) {
                     case 1:
@@ -633,10 +669,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         }
         else {
             borders = [
-                data.borderTop,
-                data.borderRight,
-                data.borderBottom,
-                data.borderLeft
+                boxStyle.borderTop,
+                boxStyle.borderRight,
+                boxStyle.borderBottom,
+                boxStyle.borderLeft
             ];
             for (let i = 0; i < 4; ++i) {
                 const item = borders[i];
@@ -662,20 +698,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);
             if (images && images.length || indentWidth || borderOnly) {
-                layerList = createLayerList(resourceId, data, images, borderOnly, stroke, corners, indentOffset);
+                layerList = createLayerList(resourceId, boxStyle, images, borderOnly, stroke, corners, indentOffset);
             }
             else {
                 shapeData = [{
                     'xmlns:android': XML_NAMESPACE.android,
                     'android:shape': 'rectangle',
                     stroke,
-                    solid: !borderOnly && getBackgroundColor(resourceId, data.backgroundColor),
+                    solid: !borderOnly && getBackgroundColor(resourceId, boxStyle.backgroundColor),
                     corners
                 }];
             }
         }
         else if (borderData) {
-            layerList = createLayerList(resourceId, data, images, borderOnly);
+            layerList = createLayerList(resourceId, boxStyle, images, borderOnly);
             if (borderStyle && !isAlternatingBorder(borderData.style)) {
                 const width = roundFloat(borderData.width);
                 if (borderData.style === 'double' && width > 1) {

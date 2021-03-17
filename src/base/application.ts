@@ -282,13 +282,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         let errors: Undef<string[]>;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
             const styleSheet = styleSheets[i];
-            let mediaText: Undef<string>;
+            let query: Undef<string>;
             try {
-                mediaText = styleSheet.media.mediaText;
+                query = styleSheet.media.mediaText;
             }
             catch {
             }
-            if (!mediaText || window.matchMedia(mediaText).matches) {
+            if (!query || window.matchMedia(query).matches) {
                 try {
                     this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                 }

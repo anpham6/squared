@@ -73,10 +73,12 @@ interface ControllerSettingsStyleUI {
     buttonBackgroundColor: string;
     buttonDisabledBorderColor: string;
     buttonDisabledBackgroundColor: string;
-    meterForegroundColor?: string;
-    meterBackgroundColor?: string;
-    progressForegroundColor?: string;
-    progressBackgroundColor?: string;
+    rangeForegroundColor: string;
+    rangeBackgroundColor: string;
+    meterForegroundColor: string;
+    meterBackgroundColor: string;
+    progressForegroundColor: string;
+    progressBackgroundColor: string;
 }
 
 interface ControllerSettingsUnsupportedUI {

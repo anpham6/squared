@@ -201,6 +201,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 case 'button':
                                     setButtonStyle(styleMap, disabled);
                                     break;
+                                case 'range':
+                                    if (!disabled && hasEmptyStyle(styleMap.backgroundColor)) {
+                                        styleMap.backgroundColor = this._settingsStyle.rangeBackgroundColor;
+                                    }
                                 default:
                                     setInputStyle(styleMap, disabled);
                                     break;
