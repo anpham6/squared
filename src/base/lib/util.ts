@@ -1,4 +1,4 @@
-const { calculateAll, checkMediaRule, getContentBoxDimension, isCalc, isLength, parseUnit } = squared.lib.css;
+const { calculateAll, getContentBoxDimension, isCalc, isLength, parseUnit } = squared.lib.css;
 const { STRING } = squared.lib.regex;
 const { endsWith, isString, iterateArray, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
 
@@ -144,8 +144,7 @@ const EXT_DATA = {
     yml: 'text/yaml',
     zip: 'application/zip'
 };
-const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
-const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`, 'i');
+const REGEXP_SOURCESIZES = new RegExp(`^(\\(?(?:\\s*(?:and)?\\s*\\(?\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)?)+\\)?)?\\s*(.+)$`, 'i');
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -424,7 +423,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
+            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
                 ({ srcset, sizes } = item);
                 return true;
             }
@@ -476,31 +475,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                 match: Null<RegExpExecArray>;
             for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                 if (match = REGEXP_SOURCESIZES.exec(value)) {
-                    const ruleA = match[1] ? checkMediaRule(match[1]) : null;
-                    const ruleB = match[4] ? checkMediaRule(match[4]) : null;
-                    switch (match[3]) {
-                        case 'and':
-                            if (!ruleA || !ruleB) {
-                                continue;
-                            }
-                            break;
-                        case 'or':
-                            if (!ruleA && !ruleB) {
-                                continue;
-                            }
-                            break;
-                        case 'not':
-                            if (ruleA !== null || ruleB) {
-                                continue;
-                            }
-                            break;
-                        default:
-                            if (ruleA === false || ruleB !== null) {
-                                continue;
-                            }
-                            break;
+                    if (match[1] && !window.matchMedia(match[1]).matches) {
+                        continue;
                     }
-                    const unit = match[6];
+                    const unit = match[2];
                     if (unit) {
                         if (isCalc(unit)) {
                             width = calculateAll(unit, unit.includes('%') && element.parentElement ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);

@@ -16,7 +16,7 @@ const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, 
 const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
@@ -288,7 +288,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             catch {
             }
-            if (!mediaText || checkMediaRule(mediaText)) {
+            if (!mediaText || window.matchMedia(mediaText).matches) {
                 try {
                     this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                 }
@@ -695,7 +695,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             const cssRules = item.cssRules;
             if (cssRules) {
                 const resource = this.resourceHandler;
-                const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
+                const parseConditionText = (rule: string, value: string) => new RegExp(`@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
                 for (let i = 0, length = cssRules.length; i < length; ++i) {
                     const rule = cssRules[i];
                     const type = rule.type;
@@ -715,7 +715,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             break;
                         }
                         case CSSRule.MEDIA_RULE:
-                            if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
+                            if (window.matchMedia((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText)).matches) {
                                 this.applyCssRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules, documentRoot, queryRoot);
                             }
                             else {

@@ -35,29 +35,12 @@ const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
-const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<|>|<=|>=)?\s*([\w.]+%?)?\)(?:\s+and\s+)?/g;
 const REGEXP_CALCPLACEHOLDER = /\s*{(\d+)}\s*/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
 
 updateDocumentFont();
-
-function compareRange(operation: string, unit: number, range: number) {
-    switch (operation) {
-        case '<=':
-            return unit <= range;
-        case '<':
-            return unit < range;
-        case '>=':
-            return unit >= range;
-        case '>':
-            return unit > range;
-        default:
-            return unit === range;
-    }
-}
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
@@ -2874,100 +2857,6 @@ export function parseKeyframes(rules: CSSRuleList) {
         }
     }
     return valid ? result : null;
-}
-
-export function checkMediaRule(value: string, fontSize?: number) {
-    switch (value.trim()) {
-        case 'all':
-        case 'screen':
-        case 'only all':
-        case 'only screen':
-            return true;
-        default: {
-            REGEXP_MEDIARULE.lastIndex = 0;
-            let match: Null<RegExpExecArray>;
-            while (match = REGEXP_MEDIARULE.exec(value)) {
-                const negate = match[1] === 'not';
-                let valid: Undef<boolean>,
-                    condition: Null<RegExpExecArray>;
-                while (condition = REGEXP_MEDIARULECONDITION.exec(match[2])) {
-                    const attr = condition[1];
-                    let operation = condition[2];
-                    const rule = condition[3];
-                    if (!operation || operation === ':') {
-                        if (startsWith(attr, 'min')) {
-                            operation = '>=';
-                        }
-                        else if (startsWith(attr, 'max')) {
-                            operation = '<=';
-                        }
-                    }
-                    switch (attr) {
-                        case 'aspect-ratio':
-                        case 'min-aspect-ratio':
-                        case 'max-aspect-ratio':
-                            if (rule) {
-                                const [width, height] = splitPair(rule, '/');
-                                valid = compareRange(operation, window.innerWidth / window.innerHeight, +width / +height);
-                            }
-                            else {
-                                valid = false;
-                            }
-                            break;
-                        case 'width':
-                        case 'min-width':
-                        case 'max-width':
-                        case 'height':
-                        case 'min-height':
-                        case 'max-height':
-                            valid = compareRange(operation, endsWith(attr, 'width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
-                            break;
-                        case 'orientation':
-                            valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
-                            break;
-                        case 'resolution':
-                        case 'min-resolution':
-                        case 'max-resolution':
-                            valid = !!rule && compareRange(operation, window.devicePixelRatio, Math.max(0, parseResolution(rule)));
-                            break;
-                        case 'grid':
-                            valid = rule === '0';
-                            break;
-                        case 'color':
-                            valid = +rule > 0;
-                            break;
-                        case 'min-color':
-                            valid = +rule <= screen.colorDepth / 3;
-                            break;
-                        case 'max-color':
-                            valid = +rule >= screen.colorDepth / 3;
-                            break;
-                        case 'color-index':
-                        case 'min-color-index':
-                        case 'monochrome':
-                        case 'min-monochrome':
-                            valid = rule === '0';
-                            break;
-                        case 'max-color-index':
-                        case 'max-monochrome':
-                            valid = +rule >= 0;
-                            break;
-                        default:
-                            valid = false;
-                            break;
-                    }
-                    if (!valid) {
-                        break;
-                    }
-                }
-                REGEXP_MEDIARULECONDITION.lastIndex = 0;
-                if (!negate && valid || negate && !valid) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
 }
 
 export function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration) {
