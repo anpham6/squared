@@ -173,7 +173,6 @@ declare module "lib" {
         function checkWritingMode(attr: string, value?: string): StringOfArray;
         function checkStyleValue(element: StyleElement, attr: string, value: string): string;
         function checkFontSizeValue(value: string, fixedWidth?: boolean): string;
-        function checkMediaRule(value: string, fontSize?: number): boolean;
         function parseSelectorText(value: string): string[];
         function getSpecificity(value: string): number;
         function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;

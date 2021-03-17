@@ -13,7 +13,6 @@ let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
-const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
 const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
@@ -21,10 +20,8 @@ const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
 const REGEXP_CALC = /^calc\((.+)\)$/i;
-const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
+const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))+)?\\s*(.*)$`, 'i');
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
-const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
 const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
 const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
@@ -40,21 +37,6 @@ const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
 
 updateDocumentFont();
-
-function compareRange(operation: string, unit: number, range: number) {
-    switch (operation) {
-        case '<=':
-            return unit <= range;
-        case '<':
-            return unit < range;
-        case '>=':
-            return unit >= range;
-        case '>':
-            return unit > range;
-        default:
-            return unit === range;
-    }
-}
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
@@ -2826,98 +2808,6 @@ export function parseKeyframes(rules: CSSRuleList) {
     return valid ? result : null;
 }
 
-export function checkMediaRule(value: string, fontSize?: number) {
-    switch (value.trim()) {
-        case 'all':
-        case 'screen':
-        case 'only all':
-        case 'only screen':
-            return true;
-        default: {
-            REGEXP_MEDIARULE.lastIndex = 0;
-            let match: Null<RegExpExecArray>;
-            while (match = REGEXP_MEDIARULE.exec(value)) {
-                const negate = match[1] === 'not';
-                let valid: Undef<boolean>,
-                    condition: Null<RegExpExecArray>;
-                while (condition = REGEXP_MEDIARULECONDITION.exec(match[2])) {
-                    const attr = condition[1];
-                    let operation = condition[2];
-                    const rule = condition[3];
-                    if (startsWith(attr, 'min')) {
-                        operation = '>=';
-                    }
-                    else if (startsWith(attr, 'max')) {
-                        operation = '<=';
-                    }
-                    switch (attr) {
-                        case 'aspect-ratio':
-                        case 'min-aspect-ratio':
-                        case 'max-aspect-ratio':
-                            if (rule) {
-                                const [width, height] = splitPair(rule, '/');
-                                valid = compareRange(operation, window.innerWidth / window.innerHeight, +width / +height);
-                            }
-                            else {
-                                valid = false;
-                            }
-                            break;
-                        case 'width':
-                        case 'min-width':
-                        case 'max-width':
-                        case 'height':
-                        case 'min-height':
-                        case 'max-height':
-                            valid = compareRange(operation, endsWith(attr, 'width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
-                            break;
-                        case 'orientation':
-                            valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
-                            break;
-                        case 'resolution':
-                        case 'min-resolution':
-                        case 'max-resolution':
-                            valid = !!rule && compareRange(operation, window.devicePixelRatio, Math.max(0, parseResolution(rule)));
-                            break;
-                        case 'grid':
-                            valid = rule === '0';
-                            break;
-                        case 'color':
-                            valid = +rule > 0;
-                            break;
-                        case 'min-color':
-                            valid = +rule <= screen.colorDepth / 3;
-                            break;
-                        case 'max-color':
-                            valid = +rule >= screen.colorDepth / 3;
-                            break;
-                        case 'color-index':
-                        case 'min-color-index':
-                        case 'monochrome':
-                        case 'min-monochrome':
-                            valid = rule === '0';
-                            break;
-                        case 'max-color-index':
-                        case 'max-monochrome':
-                            valid = +rule >= 0;
-                            break;
-                        default:
-                            valid = false;
-                            break;
-                    }
-                    if (!valid) {
-                        break;
-                    }
-                }
-                REGEXP_MEDIARULECONDITION.lastIndex = 0;
-                if (!negate && valid || negate && !valid) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
 export function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration) {
     let match: Null<RegExpMatchArray>;
     while (match = REGEXP_VAR.exec(value)) {
@@ -3114,13 +3004,14 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
     return NaN;
 }
 
+
 export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     const result: ImageSrcSet[] = [];
     const parentElement = element.parentElement as HTMLPictureElement;
     let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
+            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
                 ({ srcset, sizes } = item);
                 return true;
             }
@@ -3172,38 +3063,16 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                 match: Null<RegExpExecArray>;
             for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                 if (match = REGEXP_SOURCESIZES.exec(value)) {
-                    const ruleA = match[1] ? checkMediaRule(match[1]) : null;
-                    const ruleB = match[4] ? checkMediaRule(match[4]) : null;
-                    switch (match[3]) {
-                        case 'and':
-                            if (!ruleA || !ruleB) {
-                                continue;
-                            }
-                            break;
-                        case 'or':
-                            if (!ruleA && !ruleB) {
-                                continue;
-                            }
-                            break;
-                        case 'not':
-                            if (ruleA !== null || ruleB) {
-                                continue;
-                            }
-                            break;
-                        default:
-                            if (ruleA === false || ruleB !== null) {
-                                continue;
-                            }
-                            break;
+                    const query = match[1];
+                    const unit = match[2];
+                    if (!unit || query && !window.matchMedia(query).matches) {
+                        continue;
                     }
-                    const unit = match[6];
-                    if (unit) {
-                        if (match = REGEXP_CALC.exec(unit)) {
-                            width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
-                        }
-                        else if (isLength(unit)) {
-                            width = parseUnit(unit);
-                        }
+                    if (isCalc(unit)) {
+                        width = calculate(unit, unit.includes('%') && element.parentElement ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
+                    }
+                    else if (isLength(unit)) {
+                        width = parseUnit(unit);
                     }
                     if (!isNaN(width)) {
                         break;

@@ -1500,6 +1500,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (!isNaN(+element.value)) {
                             node.android('progress', Resource.addString(resourceId, element.value, getStringAttr('progress'), true));
                         }
+                        setInputMinMax();
+                        break;
                     case 'number':
                         node.android('inputType', 'number');
                         setInputMinMax();

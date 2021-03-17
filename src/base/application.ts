@@ -16,7 +16,7 @@ const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, 
 const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, escapePattern, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
@@ -282,13 +282,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         let errors: Undef<string[]>;
         for (let i = 0, length = styleSheets.length; i < length; ++i) {
             const styleSheet = styleSheets[i];
-            let mediaText: Undef<string>;
+            let query: Undef<string>;
             try {
-                mediaText = styleSheet.media.mediaText;
+                query = styleSheet.media.mediaText;
             }
             catch {
             }
-            if (!mediaText || checkMediaRule(mediaText)) {
+            if (!query || window.matchMedia(query).matches) {
                 try {
                     this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                 }
@@ -687,7 +687,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
-                const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${escapePattern(rule)}([^{]+)`).exec(value)?.[1].trim() || value;
+                const parseConditionText = (rule: string, value: string) => new RegExp(`@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
                 for (let i = 0, length = cssRules.length; i < length; ++i) {
                     const rule = cssRules[i];
                     const type = rule.type;
@@ -705,7 +705,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             break;
                         }
                         case CSSRule.MEDIA_RULE:
-                            if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
+                            if (window.matchMedia((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText)).matches) {
                                 this.applyCssRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules, documentRoot, queryRoot);
                             }
                             else {
