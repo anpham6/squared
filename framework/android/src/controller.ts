@@ -551,6 +551,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             buttonDisabledBackgroundColor: 'rgba(19, 1, 1, 0.3)',
             rangeForegroundColor: 'rgb(0, 117, 255)',
             rangeBackgroundColor: 'rgb(239, 239, 239)',
+            rangeBackgroundCenterHeight: 0.75,
             meterForegroundColor: 'rgb(99, 206, 68)',
             meterBackgroundColor: 'rgb(237, 237, 237)',
             progressForegroundColor: 'rgb(138, 180, 248)',
@@ -1750,7 +1751,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const backgroundColor = parseColor(this.localSettings.style.rangeForegroundColor)!;
                     const height = node.bounds.height;
                     const width = height + 'px';
-                    const drawable = resourceBackground.writeDrawableBackground(node, { backgroundColor, borderRadius: [Math.floor(height / 2) + 'px'] } as BoxStyle, { resourceName: 'thumb', resourceData: { width, height: width, order: 0 } });
+                    const drawable = resourceBackground.writeDrawableBackground(node, { backgroundColor, borderRadius: [Math.floor(height / 2) + 'px'] } as BoxStyle, { resourceName: 'thumb', resourceData: [{ width, height: width, order: 0 }] });
                     if (drawable) {
                         node.android('thumb', drawable);
                     }

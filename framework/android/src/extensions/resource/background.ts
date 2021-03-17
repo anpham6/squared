@@ -71,7 +71,7 @@ interface DrawableData {
 }
 
 interface WriteDrawableBackgroundOptions extends DrawableData {
-    resourceData?: BackgroundImageData;
+    resourceData?: BackgroundImageData[];
     resourceName?: string;
 }
 
@@ -360,10 +360,10 @@ function createBackgroundGradient(resourceId: number, gradient: Gradient, api = 
     return result;
 }
 
-function createLayerList(resourceId: number, boxStyle: BoxStyle, images: Undef<BackgroundImageData[]>, borderOnly: boolean, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
+function createLayerList(resourceId: number, images: Undef<BackgroundImageData[]>, boxStyle?: BoxStyle, stroke?: StandardMap | false, corners?: StringMap | false, indentOffset?: string) {
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
-    const solid = !borderOnly && getBackgroundColor(resourceId, boxStyle.backgroundColor);
+    const solid = boxStyle && getBackgroundColor(resourceId, boxStyle.backgroundColor);
     if (solid && !(images && images.find(image => image.gradient))) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
@@ -379,11 +379,7 @@ function createLayerList(resourceId: number, boxStyle: BoxStyle, images: Undef<B
             right: indentOffset,
             left: indentOffset,
             bottom: indentOffset,
-            shape: {
-                'android:shape': 'rectangle',
-                stroke,
-                corners
-            }
+            shape: { 'android:shape': 'rectangle', stroke, corners }
         });
     }
     return result;
@@ -509,7 +505,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         const setDrawableBackground = (node: T, value: string) => {
             if (value) {
-                const drawable = `@drawable/${Resource.insertStoredAsset(resourceId, 'drawables', (node.containerName + '_' + node.controlId).toLowerCase(), value)}`;
+                let drawable = this.saveDrawable(resourceId, node, value);
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
@@ -521,6 +517,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         deleteBodyWrapper(innerWrapped, node);
                         return;
                     }
+                }
+                if (node.is(CONTAINER_NODE.RANGE)) {
+                    drawable = this.saveDrawable(resourceId, node, applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, [{ drawable, height: Math.floor(node.bounds.height * this.controller.localSettings.style.rangeBackgroundCenterHeight) + 'px', gravity: 'center_vertical', order: 0 }] )), 'main');
                 }
                 node.android('background', drawable, false);
             }
@@ -619,10 +618,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             return '';
         }
         const resourceName = options.resourceName;
-        const getDrawable = (template: string, suffix: string) => template ? `@drawable/${Resource.insertStoredAsset(resourceId, 'drawables', (node.containerName + '_' + node.controlId + '_' + suffix).toLowerCase(), template)}` : '';
-        if ((result = getDrawable(result, resourceName || 'system')) && options.resourceData) {
-            options.resourceData.drawable = result;
-            return getDrawable(applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, boxStyle, [options.resourceData], true)), 'main' + (resourceName ? '_' + resourceName : ''));
+        result = this.saveDrawable(resourceId, node, result, resourceName || 'system');
+        if (result && options.resourceData) {
+            for (const item of options.resourceData) {
+                if (!item.drawable) {
+                    item.drawable = result;
+                    break;
+                }
+            }
+            return this.saveDrawable(resourceId, node, applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, options.resourceData)), 'main' + (resourceName ? '_' + resourceName : ''));
         }
         return result;
     }
@@ -697,8 +701,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         }
         if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);
-            if (images && images.length || indentWidth || borderOnly) {
-                layerList = createLayerList(resourceId, boxStyle, images, borderOnly, stroke, corners, indentOffset);
+            if (images?.length || indentWidth || borderOnly) {
+                layerList = createLayerList(resourceId, images, !borderOnly ? boxStyle : undefined, stroke, corners, indentOffset);
             }
             else {
                 shapeData = [{
@@ -711,7 +715,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         }
         else if (borderData) {
-            layerList = createLayerList(resourceId, boxStyle, images, borderOnly);
+            layerList = createLayerList(resourceId, images, !borderOnly ? boxStyle : undefined);
             if (borderStyle && !isAlternatingBorder(borderData.style)) {
                 const width = roundFloat(borderData.width);
                 if (borderData.style === 'double' && width > 1) {
@@ -1714,5 +1718,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             return result.sort((a, b) => a.order - b.order);
         }
+    }
+
+    private saveDrawable(resourceId: number, node: T, value: string, suffix?: string) {
+        return value ? `@drawable/${Resource.insertStoredAsset(resourceId, 'drawables', (node.containerName + '_' + node.controlId + (suffix ? '_' + suffix : '')).toLowerCase(), value)}` : '';
     }
 }
