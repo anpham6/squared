@@ -13,7 +13,7 @@ const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
+const { capitalize, iterateArray, joinArray } = squared.lib.util;
 
 const BORDER_BOX = [
     CSS_PROPERTIES.borderTop.value as string[],
@@ -43,12 +43,10 @@ function setButtonStyle(styleMap: CssStyleMap, applied: boolean, defaultColor: s
         }
     }
     styleMap.textAlign ||= 'center';
-    if (!(CSS_PROPERTIES.padding.value as string[]).some(attr => styleMap[attr])) {
-        styleMap.paddingTop = '2px';
-        styleMap.paddingRight = '6px';
-        styleMap.paddingBottom = '3px';
-        styleMap.paddingLeft = '6px';
-    }
+    styleMap.paddingTop ||= '2px';
+    styleMap.paddingRight ||= '6px';
+    styleMap.paddingBottom ||= '3px';
+    styleMap.paddingLeft ||= '6px';
 }
 
 function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
@@ -178,28 +176,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'checkbox':
                         case 'image':
                             break;
-                        case 'week':
-                        case 'month':
-                        case 'time':
-                        case 'date':
-                        case 'datetime-local':
-                            styleMap.paddingTop = formatPX(convertFloat(styleMap.paddingTop!) + 1);
-                            styleMap.paddingRight = formatPX(convertFloat(styleMap.paddingRight!) + 1);
-                            styleMap.paddingBottom = formatPX(convertFloat(styleMap.paddingBottom!) + 1);
-                            styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft!) + 1);
+                        case 'file':
+                        case 'reset':
+                        case 'submit':
+                        case 'button':
+                            setButtonStyle(styleMap, setBorderStyle(styleMap, this._settingsStyle.inputBorderColor), this._settingsStyle.inputBackgroundColor);
                             break;
-                        default: {
-                            const result = setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
-                            switch (type) {
-                                case 'file':
-                                case 'reset':
-                                case 'submit':
-                                case 'button':
-                                    setButtonStyle(styleMap, result, this._settingsStyle.inputBackgroundColor);
-                                    break;
-                            }
+                        default:
+                            setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
                             break;
-                        }
                     }
                     break;
                 }
