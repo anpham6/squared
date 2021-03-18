@@ -25,11 +25,11 @@ const REGEXP_CALCWITHIN = /(?:calc|min|max|clamp)\(/i;
 const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${PATTERN_CALCUNIT},|(clamp)\\(\\s*${PATTERN_CALCUNIT},\\s*${PATTERN_CALCUNIT},|\\()\\s*${PATTERN_CALCUNIT}\\)(\\s*)`, 'i');
 const REGEXP_CALCENCLOSING = /calc|min|max|clamp/gi;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
-const REGEXP_CALCINTEGER = /^\s*[+|-]?\d+\s*$/;
+const REGEXP_CALCINTEGER = /^\s*[+-]?\d+\s*$/;
 const REGEXP_VAR = /^var\(\s*--[\w-]+.*\)$/i;
 const REGEXP_VARWITHIN = /var\(\s*--[\w-]+[^)]*\)/i;
 const REGEXP_VARNESTED = /(.*?)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/i;
-const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/i;
+const REGEXP_EMBASED = /\s*[+-]?[\d.]+(?:em|ch|ex)\s*/i;
 const REGEXP_SELECTORGROUP = /:(?:is|where)/;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
@@ -3318,10 +3318,10 @@ export function calculateUnit(value: string, options?: CalculateOptions) {
 export function parseUnit(value: string, options?: ParseUnitOptions) {
     const match = REGEXP_LENGTH.exec(value);
     if (match) {
-        if (!match[2]) {
-            return +match[1];
-        }
         let result = +match[1];
+        if (!match[2]) {
+            return result;
+        }
         switch (match[2].toLowerCase()) {
             case 'px':
                 return result;

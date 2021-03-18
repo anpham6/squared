@@ -13,7 +13,7 @@ const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, asPx, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
+const { capitalize, iterateArray, joinArray } = squared.lib.util;
 
 const BORDER_BOX = [
     CSS_PROPERTIES.borderTop.value as string[],
@@ -28,8 +28,8 @@ function setBorderStyle(style: CssStyleMap, color: string) {
         const border = BORDER_BOX[i];
         const attr = border[0];
         if (!style[attr]) {
-            style[attr] = '1px';
-            style[border[1]] = 'outset';
+            style[attr] = '2px';
+            style[border[1]] = 'inset';
             style[border[2]] = color;
             result = true;
         }
@@ -118,19 +118,18 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element) {
-        const sessionId = processing.sessionId;
         if (element.nodeName.charAt(0) === '#') {
             setElementCache(element, 'styleMap', {
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
                 float: 'none'
-            }, sessionId);
+            }, processing.sessionId);
         }
         else {
-            let styleMap = getElementCache<CssStyleMap>(element, 'styleMap', sessionId);
+            let styleMap = getElementCache<CssStyleMap>(element, 'styleMap', processing.sessionId);
             if (!styleMap) {
-                setElementCache(element, 'styleMap', styleMap = {}, sessionId);
+                setElementCache(element, 'styleMap', styleMap = {}, processing.sessionId);
             }
             const setInputStyle = (style: CssStyleMap, disabled: boolean) => {
                 setBorderStyle(style, this._settingsStyle[disabled ? 'inputDisabledBorderColor' : 'inputBorderColor']);
@@ -143,12 +142,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     style.backgroundColor = this._settingsStyle[disabled ? 'buttonDisabledBackgroundColor' : 'buttonBackgroundColor'];
                 }
                 style.textAlign ||= 'center';
-                if (!(CSS_PROPERTIES.padding.value as string[]).some(attr => style[attr])) {
-                    style.paddingTop = '2px';
-                    style.paddingRight = '6px';
-                    style.paddingBottom = '3px';
-                    style.paddingLeft = '6px';
-                }
+                style.paddingTop ||= '1px';
+                style.paddingRight ||= '6px';
+                style.paddingBottom ||= '1px';
+                style.paddingLeft ||= '6px';
             };
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
@@ -183,34 +180,19 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'checkbox':
                         case 'image':
                             break;
-                        case 'week':
-                        case 'month':
-                        case 'time':
-                        case 'date':
-                        case 'datetime-local':
-                            styleMap.paddingTop = formatPX(convertFloat(styleMap.paddingTop!) + 1);
-                            styleMap.paddingRight = formatPX(convertFloat(styleMap.paddingRight!) + 1);
-                            styleMap.paddingBottom = formatPX(convertFloat(styleMap.paddingBottom!) + 1);
-                            styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft!) + 1);
+                        case 'file':
+                        case 'reset':
+                        case 'submit':
+                        case 'button':
+                            setButtonStyle(styleMap, disabled);
                             break;
-                        default: {
-                            switch (type) {
-                                case 'file':
-                                case 'reset':
-                                case 'submit':
-                                case 'button':
-                                    setButtonStyle(styleMap, disabled);
-                                    break;
-                                case 'range':
-                                    if (!disabled && hasEmptyStyle(styleMap.backgroundColor)) {
-                                        styleMap.backgroundColor = this._settingsStyle.rangeBackgroundColor;
-                                    }
-                                default:
-                                    setInputStyle(styleMap, disabled);
-                                    break;
+                        case 'range':
+                            if (!disabled && hasEmptyStyle(styleMap.backgroundColor)) {
+                                styleMap.backgroundColor = this._settingsStyle.rangeBackgroundColor;
                             }
+                        default:
+                            setInputStyle(styleMap, disabled);
                             break;
-                        }
                     }
                     break;
                 }
