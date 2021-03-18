@@ -10,11 +10,12 @@ import Resource from './resource';
 
 import { appendSeparator } from './lib/util';
 
+const { CSS_PROPERTIES } = squared.lib.internal;
 const { STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { CSS_PROPERTIES, calculateAll, convertAngle, formatPercent, formatPX, getStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
+const { calculateAll, convertAngle, formatPercent, formatPX, getStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;

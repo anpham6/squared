@@ -6,9 +6,10 @@ import { fromMimeType, parseMimeType, randomUUID } from './lib/util';
 
 type PreloadItem = HTMLImageElement | string;
 
+const { parseKeyframes } = squared.lib.internal;
 const { FILE, STRING } = squared.lib.regex;
 
-const { extractURL, parseKeyframes, resolveURL } = squared.lib.css;
+const { extractURL, resolveURL } = squared.lib.css;
 const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPairStart, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTFACE = /@font-face\s*{([^}]+)}/;

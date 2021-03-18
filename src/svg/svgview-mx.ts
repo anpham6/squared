@@ -16,7 +16,9 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const { hasCalc, isAngle, hasCustomProperty, isPercent, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
+const { getKeyframesRules } = squared.lib.internal;
+
+const { hasCalc, isAngle, hasCustomProperty, isPercent, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd, startsWith } = squared.lib.util;
 

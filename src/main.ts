@@ -4,6 +4,7 @@ import * as constant from './lib/constant';
 import * as css from './lib/css';
 import * as dom from './lib/dom';
 import * as error from './lib/error';
+import * as internal from './lib/internal';
 import * as math from './lib/math';
 import * as regex from './lib/regex';
 import * as session from './lib/session';
@@ -585,6 +586,7 @@ const lib = {
     css,
     dom,
     error,
+    internal,
     math,
     regex,
     session,

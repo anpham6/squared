@@ -13,10 +13,10 @@ type FileActionOptions = squared.FileActionOptions;
 type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
+const { CSS_PROPERTIES, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule, parseSelectorText } = squared.lib.internal;
 const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
@@ -872,7 +872,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: HTMLElement[], multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
         const { sessionId, extensions } = processing;
-        const styleElement = this.resourceHandler && insertStyleSheetRule('html > body { overflow: hidden !important; }');
+        const removeStyle = this.resourceHandler && insertStyleSheetRule('html > body { overflow: hidden !important; }');
         if (preloaded) {
             for (let i = 0, length = preloaded.length; i < length; ++i) {
                 const image = preloaded[i];
@@ -896,12 +896,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (let i = 0; i < length; ++i) {
             extensions[i].afterParseDocument(sessionId);
         }
-        if (styleElement) {
-            try {
-                document.head.removeChild(styleElement);
-            }
-            catch {
-            }
+        if (removeStyle) {
+            removeStyle();
         }
         return multipleRequest > 1 ? success : success[0];
     }

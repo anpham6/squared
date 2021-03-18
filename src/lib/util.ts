@@ -543,12 +543,12 @@ export function fromLastIndexOf(value: string, ...char: string[]) {
     return value;
 }
 
-export function startsWith(value: Optional<string>, leading: string) {
-    return value ? value.substring(0, leading.length) === leading : false;
+export function startsWith(value: unknown, leading: string) {
+    return typeof value === 'string' && value.substring(0, leading.length) === leading;
 }
 
-export function endsWith(value: Optional<string>, trailing: string) {
-    return value ? value.substring(value.length - trailing.length) === trailing : false;
+export function endsWith(value: unknown, trailing: string) {
+    return typeof value === 'string' && value.substring(value.length - trailing.length) === trailing;
 }
 
 export function hasValue<T>(value: unknown): value is T {

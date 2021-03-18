@@ -5,11 +5,12 @@ import STYLE_STATE = squared.lib.internal.STYLE_STATE;
 
 type T = Node;
 
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, getFontSizeValue, getInitialValue, parseSelectorText } = squared.lib.internal;
 const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { isTransparent } = squared.lib.color;
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, asPx, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getInitialValue, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseSelectorText, parseUnit } = squared.lib.css;
+const { asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
@@ -3099,7 +3100,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (this.naturalChild) {
                 if (this.styleElement) {
                     const fixedWidth = isFontFixedWidth(this);
-                    let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
+                    let value = getFontSizeValue(this.valueOf('fontSize'), fixedWidth);
                     if (isNaN(result = asPx(value))) {
                         if (isPercent(value)) {
                             const parent = this.actualParent;
@@ -3130,7 +3131,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         else {
                                             const fontSize = parent.valueOf('fontSize');
                                             if (fontSize && fontSize !== 'inherit') {
-                                                value = checkFontSizeValue(fontSize);
+                                                value = getFontSizeValue(fontSize);
                                                 if (isPercent(value)) {
                                                     emRatio *= convertPercent(value);
                                                 }

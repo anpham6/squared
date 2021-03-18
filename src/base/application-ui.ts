@@ -25,9 +25,10 @@ type VisibleElementMethod = (element: HTMLElement, sessionId: string, pseudoElt?
 type ApplyDefaultStylesMethod<T extends NodeUI> = (processing: squared.base.AppProcessing<T>, element: Element, pseudoElt?: PseudoElt) => void;
 type RenderNodeMethod<T extends NodeUI> = (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
 
+const { insertStyleSheetRule } = squared.lib.internal;
 const { FILE } = squared.lib.regex;
 
-const { formatPX, getStyle, hasCoords, isCalc, insertStyleSheetRule, resolveURL } = squared.lib.css;
+const { formatPX, getStyle, hasCoords, isCalc, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, startsWith, trimBoth, trimString } = squared.lib.util;
@@ -513,12 +514,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             if (pseudoElements.length) {
-                const pseudoMap: [item: T, id: string, styleElement: Undef<HTMLStyleElement>][] = [];
+                const pseudoMap: [item: T, id: string, removeStyle: Null<VoidFunction>][] = [];
                 for (let i = 0, length = pseudoElements.length; i < length; ++i) {
                     const item = pseudoElements[i];
                     const parentElement = item.parentElement!;
                     let id = '',
-                        styleElement: Undef<HTMLStyleElement>;
+                        removeStyle: Null<VoidFunction> = null;
                     if (item.pageFlow) {
                         let tagName: string;
                         if (parentElement.shadowRoot) {
@@ -532,10 +533,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                             tagName = '#' + id;
                         }
-                        styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowHost);
+                        removeStyle = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowHost);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap.push([item, id, styleElement]);
+                        pseudoMap.push([item, id, removeStyle]);
                     }
                 }
                 const length = pseudoMap.length;
@@ -544,18 +545,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 for (let i = 0; i < length; ++i) {
                     const data = pseudoMap[i];
-                    const item = data[0];
                     if (startsWith(data[1], '__squared_')) {
-                        item.parentElement!.id = '';
+                        data[0].parentElement!.id = '';
                     }
                     if (data[2]) {
-                        try {
-                            (item.shadowHost || document.head).removeChild(data[2]);
-                        }
-                        catch {
-                        }
+                        data[2]();
                     }
-                    item.cssFinally('display');
+                    data[0].cssFinally('display');
                 }
             }
             excluded.each(item => {

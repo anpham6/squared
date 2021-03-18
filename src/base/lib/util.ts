@@ -1,4 +1,4 @@
-const { calculateAll, getContentBoxDimension, isCalc, isLength, parseUnit } = squared.lib.css;
+const { calculateVar, isCalc, isLength, parseUnit } = squared.lib.css;
 const { STRING } = squared.lib.regex;
 const { endsWith, isString, iterateArray, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
 
@@ -144,7 +144,7 @@ const EXT_DATA = {
     yml: 'text/yaml',
     zip: 'application/zip'
 };
-const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))+)?\\s*(.*)$`, 'i');
+const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)(?:\\s*\\))?)+)?\\s*(.*)$`, 'i');
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -477,11 +477,11 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                 if (match = REGEXP_SOURCESIZES.exec(value)) {
                     const query = match[1];
                     const unit = match[2];
-                    if (!unit || query && !window.matchMedia(query).matches) {
+                    if (!unit || query && !window.matchMedia(/^\(\s*(\(.+\))\s*\)$/.exec(query)?.[1] || query).matches) {
                         continue;
                     }
                     if (isCalc(unit)) {
-                        width = calculateAll(unit, unit.includes('%') && element.parentElement ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
+                        width = calculateVar(element, unit);
                     }
                     else if (isLength(unit)) {
                         width = parseUnit(unit);

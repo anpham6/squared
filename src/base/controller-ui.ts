@@ -9,8 +9,10 @@ import type NodeList from './nodelist';
 
 import Controller from './controller';
 
+const { CSS_PROPERTIES } = squared.lib.internal;
+
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, asPx, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
+const { asPx, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, iterateArray, joinArray } = squared.lib.util;

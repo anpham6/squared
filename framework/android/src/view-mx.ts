@@ -15,10 +15,12 @@ import { concatString, getDataSet, isHorizontalAlign, isVerticalAlign, localizeS
 
 type T = android.base.View;
 
+const { CSS_PROPERTIES } = squared.lib.internal;
+
 const { NODE_PROCEDURE } = squared.base.lib.constant;
 
 const { isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
+const { formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, splitPair, startsWith } = squared.lib.util;

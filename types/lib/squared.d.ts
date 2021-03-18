@@ -163,22 +163,12 @@ declare module "lib" {
     }
 
     namespace css {
-        const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
-        const CSS_PROPERTIES: CssProperties;
-        const ELEMENT_BLOCK: string[];
-        function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
-        function getInitialValue(element: Element, attr: string): string;
         function getStyle(element: Element, pseudoElt?: PseudoElt): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value?: string): StringOfArray;
         function checkStyleValue(element: StyleElement, attr: string, value: string): string;
-        function checkFontSizeValue(value: string, fixedWidth?: boolean): string;
-        function parseSelectorText(value: string): string[];
-        function getSpecificity(value: string): number;
-        function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
-        function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
         function calculateAll(value: string, options?: CalculateOptions): number;
         function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: StyleElement, value: string, options?: CalculateVarOptions): number;
@@ -209,8 +199,6 @@ declare module "lib" {
         function hasCoords(value: string): boolean;
         function extractURL(value: string): Undef<string>;
         function resolveURL(value: string): Undef<string>;
-        function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): HTMLStyleElement;
-        function getContentBoxDimension(element: StyleElement): Dimension;
     }
 
     namespace dom {
@@ -237,6 +225,22 @@ declare module "lib" {
         const DOCUMENT_IS_CLOSED: string;
         const CSS_CANNOT_BE_PARSED: string;
         function reject<T = void>(value: string): Promise<T>;
+    }
+
+    namespace internal {
+        const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
+        const CSS_PROPERTIES: CssProperties;
+        const ELEMENT_BLOCK: string[];
+        function updateDocumentFont(): void;
+        function getDocumentFontSize(): number;
+        function getFontSizeValue(value: string, fixedWidth?: boolean): string;
+        function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
+        function getInitialValue(element: Element, attr: string): string;
+        function parseSelectorText(value: string): string[];
+        function getSpecificity(value: string): number;
+        function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
+        function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
+        function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): Null<VoidFunction>;
     }
 
     namespace math {
@@ -356,8 +360,8 @@ declare module "lib" {
         function trimEnd(value: string, pattern: string): string;
         function escapePattern(value: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
-        function startsWith(value: Optional<string>, leading: string): boolean;
-        function endsWith(value: Optional<string>, trailing: string): boolean;
+        function startsWith(value: unknown, leading: string): boolean;
+        function endsWith(value: unknown, trailing: string): boolean;
         function hasValue<T>(value: unknown): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
         function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;

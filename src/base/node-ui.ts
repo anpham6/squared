@@ -12,7 +12,9 @@ import { searchObject } from './lib/util';
 
 type T = NodeUI;
 
-const { CSS_PROPERTIES, asPx } = squared.lib.css;
+const { CSS_PROPERTIES } = squared.lib.internal;
+
+const { asPx } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
