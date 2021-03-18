@@ -18,13 +18,9 @@ interface ContainerRemoveIfOptions<T> extends ContainerCascadeOptions<T> {
 }
 
 interface UnitOptions {
+    safe?: boolean;
     fontSize?: number;
     screenDimension?: Null<Dimension>;
-}
-
-interface BackgroundPositionOptions extends UnitOptions {
-    imageDimension?: Null<Dimension>;
-    imageSize?: string;
 }
 
 interface CalculateOptions extends UnitOptions {

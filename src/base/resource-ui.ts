@@ -433,12 +433,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
 
     public static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
         if (value && value !== 'left top' && value !== '0% 0%') {
-            let fontSize: Undef<number>,
-                imageDimension: Optional<Dimension>,
-                imageSize: Undef<string>,
-                screenDimension: Optional<Dimension>;
+            let imageDimension: Optional<Dimension>,
+                imageSize: Undef<string>;
             if (options) {
-                ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+                ({ imageDimension, imageSize } = options);
             }
             const { width, height } = dimension;
             const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
@@ -453,7 +451,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     imageWidth *= convertPercent(sizeW);
                                 }
                                 else {
-                                    imageWidth = parseUnit(sizeW, { fontSize, screenDimension }) || imageWidth;
+                                    imageWidth = parseUnit(sizeW, options) || imageWidth;
                                 }
                             }
                             else if (sizeH) {
@@ -462,7 +460,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     percent = (convertPercent(sizeH) * height) / imageDimension.height;
                                 }
                                 else if (isLength(sizeH)) {
-                                    const unit = parseUnit(sizeH, { fontSize, screenDimension });
+                                    const unit = parseUnit(sizeH, options);
                                     if (unit) {
                                         percent = unit / imageDimension.height;
                                     }
@@ -478,7 +476,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     imageHeight *= convertPercent(sizeH);
                                 }
                                 else {
-                                    imageHeight = parseUnit(sizeH, { fontSize, screenDimension }) || imageHeight;
+                                    imageHeight = parseUnit(sizeH, options) || imageHeight;
                                 }
                             }
                             else if (sizeW) {
@@ -487,7 +485,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     percent = (convertPercent(sizeW) * width) / imageDimension.width;
                                 }
                                 else if (isLength(sizeW)) {
-                                    const unit = parseUnit(sizeW, { fontSize, screenDimension });
+                                    const unit = parseUnit(sizeW, options);
                                     if (unit) {
                                         percent = unit / imageDimension.width;
                                     }
@@ -567,14 +565,14 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             result[directionAsPercent] = 0.5;
                             break;
                         default: {
-                            const percent = parsePercent(position, offsetParent, { fontSize, screenDimension });
+                            const percent = parsePercent(position, offsetParent, options);
                             if (percent > 1) {
                                 orientation[i] = '100%';
                                 position = horizontal ? 'right' : 'bottom';
-                                result[position] = parseLength(formatPercent(percent - 1), offsetParent, { fontSize, screenDimension }) * -1;
+                                result[position] = parseLength(formatPercent(percent - 1), offsetParent, options) * -1;
                             }
                             else {
-                                result[direction] = parseLength(position, offsetParent, { fontSize, screenDimension });
+                                result[direction] = parseLength(position, offsetParent, options);
                             }
                             result[directionAsPercent] = percent;
                             break;
@@ -657,8 +655,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         switch (alignment) {
                             case 'left':
                             case 'right': {
-                                const location = parseLength(position, width, { fontSize, screenDimension });
-                                const locationAsPercent = parsePercent(position, width, { fontSize, screenDimension });
+                                const location = parseLength(position, width, options);
+                                const locationAsPercent = parsePercent(position, width, options);
                                 if (alignment === 'right') {
                                     result.right = location;
                                     result.rightAsPercent = locationAsPercent;
@@ -670,7 +668,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     if (locationAsPercent > 1) {
                                         const percent = 1 - locationAsPercent;
                                         result.horizontal = 'right';
-                                        result.right = parseLength(formatPercent(percent), width, { fontSize, screenDimension });
+                                        result.right = parseLength(formatPercent(percent), width, options);
                                         result.rightAsPercent = percent;
                                         setImageOffset(position, true, 'right', 'rightAsPercent');
                                     }
@@ -682,8 +680,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             }
                             case 'top':
                             case 'bottom': {
-                                const location = parseLength(position, height, { fontSize, screenDimension });
-                                const locationAsPercent = parsePercent(position, height, { fontSize, screenDimension });
+                                const location = parseLength(position, height, options);
+                                const locationAsPercent = parsePercent(position, height, options);
                                 if (alignment === 'bottom') {
                                     result.bottom = location;
                                     result.bottomAsPercent = locationAsPercent;
@@ -695,7 +693,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                     if (locationAsPercent > 1) {
                                         const percent = 1 - locationAsPercent;
                                         result.horizontal = 'bottom';
-                                        result.bottom = parseLength(formatPercent(percent), height, { fontSize, screenDimension });
+                                        result.bottom = parseLength(formatPercent(percent), height, options);
                                         result.bottomAsPercent = percent;
                                         setImageOffset(position, false, 'bottom', 'bottomAsPercent');
                                     }

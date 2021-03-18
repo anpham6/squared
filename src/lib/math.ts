@@ -32,7 +32,7 @@ export function truncate(value: NumString, precision = 3) {
     return truncateTrailingZero(value.toPrecision(precision));
 }
 
-export function truncateFraction(value: number, safe = true, zeroThreshold = 7) {
+export function truncateFraction(value: number, safe?: boolean, zeroThreshold = 7) {
     if (value !== Math.floor(value)) {
         const match = REGEXP_FRACTION.exec(truncateExponential(value, safe, zeroThreshold));
         if (match) {
@@ -47,7 +47,7 @@ export function truncateFraction(value: number, safe = true, zeroThreshold = 7) 
     return value;
 }
 
-export function truncateExponential(value: number, safe = true, zeroThreshold = 7) {
+export function truncateExponential(value: number, safe?: boolean, zeroThreshold = 7) {
     if (safe) {
         if (value >= Number.MAX_SAFE_INTEGER) {
             return Number.MAX_SAFE_INTEGER.toString();

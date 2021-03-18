@@ -16,17 +16,17 @@ let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
-const PATTERN_CALCUNIT = '(?!calc|min|max|clamp)([^,()]+|\\([^())]+\\)\\s*)';
+const PATTERN_CALCUNIT = '(?!c(?:alc|lamp)|m(?:in|ax))([^,()]+|\\([^())]+\\)\\s*)';
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`, 'i');
 const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
-const REGEXP_CALC = /^(?:calc|min|max|clamp)\((.+)\)$/i;
-const REGEXP_CALCWITHIN = /(?:calc|min|max|clamp)\(/i;
+const REGEXP_CALC = /^(?:c(?:alc|lamp)|m(?:in|ax))\((.+)\)$/i;
+const REGEXP_CALCWITHIN = /(?:c(?:alc|lamp)|m(?:in|ax))\(/i;
 const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${PATTERN_CALCUNIT},|(clamp)\\(\\s*${PATTERN_CALCUNIT},\\s*${PATTERN_CALCUNIT},|\\()\\s*${PATTERN_CALCUNIT}\\)(\\s*)`, 'i');
-const REGEXP_CALCENCLOSING = /calc|min|max|clamp/gi;
+const REGEXP_CALCENCLOSING = /c(?:alc|lamp)|m(?:in|ax)/gi;
 const REGEXP_VAR = /^var\(\s*--.+\)$/i;
 const REGEXP_VARWITHIN = /var\(\s*--[\w-]+[^)]*\)/i;
 const REGEXP_VARNESTED = /(.*?)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/i;
@@ -3121,9 +3121,10 @@ export function calculate(value: string, options?: CalculateOptions) {
                         min: Undef<number>,
                         max: Undef<number>,
                         unitType: Undef<number>,
-                        fontSize: Undef<number>;
+                        safe: Undef<boolean>,
+                        zeroThreshold: Undef<number>;
                     if (options) {
-                        ({ boundingSize, min, max, unitType, fontSize } = options);
+                        ({ boundingSize, min, max, unitType, safe, zeroThreshold } = options);
                     }
                     let found: Undef<boolean>,
                         operand: Undef<string>,
@@ -3252,7 +3253,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                     return NaN;
                                                 }
                                                 if (isLength(partial)) {
-                                                    seg.push(parseUnit(partial, { fontSize }));
+                                                    seg.push(parseUnit(partial, options));
                                                 }
                                                 else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
                                                     seg.push(convertPercent(partial) * boundingSize);
@@ -3298,8 +3299,14 @@ export function calculate(value: string, options?: CalculateOptions) {
                         return NaN;
                     }
                     if (closing.length === 1) {
-                        const result = seg[0];
-                        return min !== undefined && result < min || max !== undefined && result > max ? NaN : truncateFraction(result, true, options?.zeroThreshold);
+                        let result = seg[0];
+                        if (min !== undefined && result < min || max !== undefined && result > max) {
+                            return NaN;
+                        }
+                        if (safe) {
+                            result = clamp(result, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+                        }
+                        return truncateFraction(result, false, zeroThreshold);
                     }
                     equated[index] = seg[0];
                     const hash = `{${index++}}`;
@@ -3322,42 +3329,53 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
     const match = REGEXP_LENGTH.exec(value);
     if (match) {
         let result = +match[1];
-        if (!match[2]) {
-            return result;
+        if (match[2]) {
+            switch (match[2].toLowerCase()) {
+                case 'px':
+                    break;
+                case 'ex':
+                    result /= 2;
+                case 'em':
+                case 'ch':
+                    if (options && options.fontSize !== undefined) {
+                        result *= options.fontSize;
+                        break;
+                    }
+                case 'rem':
+                    result *= options && options.fixedWidth ? 13 : DOCUMENT_FONTSIZE;
+                    break;
+                case 'pc':
+                    result *= 12;
+                case 'pt':
+                    result *= 4 / 3;
+                    break;
+                case 'q':
+                    result /= 4;
+                case 'mm':
+                    result /= 10;
+                case 'cm':
+                    result /= 2.54;
+                case 'in':
+                    result *= getDeviceDPI();
+                    break;
+                case 'vw':
+                    result *= getInnerDimension(true, options) / 100;
+                    break;
+                case 'vh':
+                    result *= getInnerDimension(false, options) / 100;
+                    break;
+                case 'vmin':
+                    result *= Math.min(getInnerDimension(true, options), getInnerDimension(false, options)) / 100;
+                    break;
+                case 'vmax':
+                    result *= Math.max(getInnerDimension(true, options), getInnerDimension(false, options)) / 100;
+                    break;
+            }
         }
-        switch (match[2].toLowerCase()) {
-            case 'px':
-                return result;
-            case 'ex':
-                result /= 2;
-            case 'em':
-            case 'ch':
-                if (options && options.fontSize !== undefined) {
-                    return result * options.fontSize;
-                }
-            case 'rem':
-                return result * (options && options.fixedWidth ? 13 : DOCUMENT_FONTSIZE);
-            case 'pc':
-                result *= 12;
-            case 'pt':
-                return result * 4 / 3;
-            case 'q':
-                result /= 4;
-            case 'mm':
-                result /= 10;
-            case 'cm':
-                result /= 2.54;
-            case 'in':
-                return result * getDeviceDPI();
-            case 'vw':
-                return result * getInnerDimension(true, options) / 100;
-            case 'vh':
-                return result * getInnerDimension(false, options) / 100;
-            case 'vmin':
-                return result * Math.min(getInnerDimension(true, options), getInnerDimension(false, options)) / 100;
-            case 'vmax':
-                return result * Math.max(getInnerDimension(true, options), getInnerDimension(false, options)) / 100;
+        if (options && options.safe) {
+            result = clamp(result, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
         }
+        return result;
     }
     return 0;
 }
@@ -3378,10 +3396,9 @@ export function convertUnit(value: NumString, unit: string, options?: ConvertUni
 
 export function parseTransform(value: string, options?: TransformOptions) {
     let accumulate: Undef<boolean>,
-        fontSize: Undef<number>,
         boundingBox: Optional<Dimension>;
     if (options) {
-        ({ accumulate, fontSize, boundingBox } = options);
+        ({ accumulate, boundingBox } = options);
     }
     const result: TransformData[] = [];
     (RE_TRANSFORM ||= new Pattern(/([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g)).matcher(value);
@@ -3404,7 +3421,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                             }
                         }
                         else {
-                            x = parseUnit(tX, { fontSize });
+                            x = parseUnit(tX, options);
                         }
                         const tY = translate[3];
                         if (tY) {
@@ -3414,13 +3431,13 @@ export function parseTransform(value: string, options?: TransformOptions) {
                                 }
                             }
                             else {
-                                y = parseUnit(tY, { fontSize });
+                                y = parseUnit(tY, options);
                             }
                         }
                         if (method === 'translate3d') {
                             const tZ = translate[4];
                             if (tZ && !isPercent(tZ)) {
-                                z = parseUnit(tZ, { fontSize });
+                                z = parseUnit(tZ, options);
                                 group += '3d';
                             }
                             else {
@@ -3436,7 +3453,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                             }
                         }
                         else {
-                            x = parseUnit(tX, { fontSize });
+                            x = parseUnit(tX, options);
                         }
                         break;
                     case 'translateY':
@@ -3446,11 +3463,11 @@ export function parseTransform(value: string, options?: TransformOptions) {
                             }
                         }
                         else {
-                            y = parseUnit(tX, { fontSize });
+                            y = parseUnit(tX, options);
                         }
                         break;
                     case 'translateZ':
-                        z = parseUnit(tX, { fontSize });
+                        z = parseUnit(tX, options);
                         break;
                 }
                 if (accumulate) {
@@ -3626,7 +3643,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
                     }
                 }
                 else {
-                    x = parseUnit(pX, { fontSize });
+                    x = parseUnit(pX, options);
                 }
                 if (accumulate) {
                     const values = result.find(item => item.group === 'perspective')?.values;
