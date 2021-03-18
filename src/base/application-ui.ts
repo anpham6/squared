@@ -528,7 +528,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         else {
                             id = parentElement.id.trim();
                             if (!id) {
-                                id = '__squared_' + Math.round(Math.random() * new Date().getTime());
+                                id = 'id__' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                                 parentElement.id = id;
                             }
                             tagName = '#' + id;
@@ -545,7 +545,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 for (let i = 0; i < length; ++i) {
                     const data = pseudoMap[i];
-                    if (startsWith(data[1], '__squared_')) {
+                    if (startsWith(data[1], 'id__')) {
                         data[0].parentElement!.id = '';
                     }
                     if (data[2]) {

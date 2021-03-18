@@ -15,7 +15,7 @@ const { isUserAgent } = squared.lib.client;
 const { asPx, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, iterateArray, joinArray } = squared.lib.util;
+const { capitalize, iterateArray } = squared.lib.util;
 
 const BORDER_BOX = [
     CSS_PROPERTIES.borderTop.value as string[],
@@ -23,6 +23,7 @@ const BORDER_BOX = [
     CSS_PROPERTIES.borderBottom.value as string[],
     CSS_PROPERTIES.borderLeft.value as string[]
 ];
+const CACHE_INDENT: StringMap = {};
 
 function setBorderStyle(style: CssStyleMap, color: string) {
     let result = false;
@@ -42,7 +43,7 @@ function setBorderStyle(style: CssStyleMap, color: string) {
 function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
         indent ||= char.repeat(depth);
-        return joinArray(value.split('\n'), line => line ? indent + line : '', '\n') + '\n';
+        return value.split('\n').reduce((a, b) => a + (b ? indent + b + '\n' : ''), '');
     }
     return value;
 }
@@ -731,7 +732,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public writeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean) {
-        const indent = '\t'.repeat(depth);
+        const indent = CACHE_INDENT[depth] ||= '\t'.repeat(depth);
         let output = '';
         for (let i = 0, length = templates.length; i < length; ++i) {
             const item = templates[i];

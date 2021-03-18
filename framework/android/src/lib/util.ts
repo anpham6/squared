@@ -1,7 +1,7 @@
 import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
 const { parseColor: __parseColor } = squared.lib.color;
-const { capitalize, joinArray, isPlainObject, startsWith } = squared.lib.util;
+const { capitalize, isPlainObject, startsWith } = squared.lib.util;
 
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
@@ -165,13 +165,32 @@ export function createThemeAttribute(data?: PlainObject): ThemeAttribute {
 
 export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
     if (spaces > 0) {
+        const padding = ' '.repeat(spaces);
         if (preserve) {
-            return joinArray(value.split('\n'), line => {
-                const match = /^(\t+)(.*)$/.exec(line);
-                return match ? ' '.repeat(spaces * match[1].length) + match[2] : line;
-            }, '\n') + '\n';
+            let result = '';
+            for (let i = 0, j = 0, start = true, length = value.length; i < length; ++i) {
+                const ch = value[i];
+                if (start) {
+                    if (ch === '\t') {
+                        ++j;
+                        continue;
+                    }
+                    else {
+                        if (j > 0) {
+                            result += padding.repeat(j);
+                            j = 0;
+                        }
+                        start = false;
+                    }
+                }
+                if (ch === '\n') {
+                    start = true;
+                }
+                result += ch;
+            }
+            return result;
         }
-        return value.replace(/\t/g, ' '.repeat(spaces));
+        return value.replace(/\t/g, padding);
     }
     return value;
 }

@@ -32,15 +32,16 @@ const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
 const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
 
+const REGEXP_CONTROLID = /[^\w$\-_.]/g;
+const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
+const CACHE_INDENT: StringMap = {};
+
 const OPTIONS_LINEHEIGHT: CssStyleMap = {
     height: 'auto',
     minHeight: 'auto',
     lineHeight: 'normal',
     whiteSpace: 'nowrap'
 };
-
-const REGEXP_CONTROLID = /[^\w$\-_.]/g;
-const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
 
 function checkTextAlign(value: string, ignoreStart?: boolean): Undef<LayoutGravityDirectionAttr> {
     switch (value) {
@@ -1522,7 +1523,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
-            const indent = '\n' + '\t'.repeat(depth);
+            const indent = CACHE_INDENT[depth] ||= '\n' + '\t'.repeat(depth);
             return this.combine().reduce((a, b) => a + indent + b, '');
         }
 
