@@ -1,11 +1,14 @@
 import { CSS_TRAITS, CSS_UNIT, PLATFORM, USER_AGENT } from './constant';
 
+import { CSS, STRING, TRANSFORM } from './regex';
+
 import { getDeviceDPI, isPlatform, isUserAgent } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
-import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { convertCamelCase, convertHyphenated, convertPercent, endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+
+import Pattern from './base/pattern';
 
 const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -24,21 +27,21 @@ const REGEXP_CALC = /^(?:calc|min|max|clamp)\((.+)\)$/i;
 const REGEXP_CALCWITHIN = /(?:calc|min|max|clamp)\(/i;
 const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${PATTERN_CALCUNIT},|(clamp)\\(\\s*${PATTERN_CALCUNIT},\\s*${PATTERN_CALCUNIT},|\\()\\s*${PATTERN_CALCUNIT}\\)(\\s*)`, 'i');
 const REGEXP_CALCENCLOSING = /calc|min|max|clamp/gi;
-const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
-const REGEXP_CALCINTEGER = /^\s*[+-]?\d+\s*$/;
-const REGEXP_VAR = /^var\(\s*--[\w-]+.*\)$/i;
+const REGEXP_VAR = /^var\(\s*--.+\)$/i;
 const REGEXP_VARWITHIN = /var\(\s*--[\w-]+[^)]*\)/i;
 const REGEXP_VARNESTED = /(.*?)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/i;
 const REGEXP_EMBASED = /\s*[+-]?[\d.]+(?:em|ch|ex)\s*/i;
 const REGEXP_SELECTORGROUP = /:(?:is|where)/;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
-const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-const REGEXP_CALCPLACEHOLDER = /\s*{(\d+)}\s*/;
+const CALC_OPERATION = /\s+([+-]\s+|\s*[*/])/;
+const CALC_PLACEHOLDER = /{(\d+)}/;
+const CALC_INTEGER = /^-?\d+$/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
+let RE_TRANSFORM: Undef<Pattern>;
 
 updateDocumentFont();
 
@@ -365,7 +368,7 @@ function getUnitType(value: Undef<number>) {
 const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
 const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
-const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
+const isColor = (value: string) => /(?:rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
@@ -3127,7 +3130,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                         operator: Undef<string>;
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    const operation = value.substring(j + 1, closing[i]).split(REGEXP_CALCOPERATION);
+                    const operation = value.substring(j + 1, closing[i]).split(CALC_OPERATION);
                     for (let k = 0, q = operation.length; k < q; ++k) {
                         const partial = operation[k].trim();
                         switch (partial) {
@@ -3139,7 +3142,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                 operator = partial;
                                 break;
                             default: {
-                                const match = REGEXP_CALCPLACEHOLDER.exec(partial);
+                                const match = CALC_PLACEHOLDER.exec(partial);
                                 if (match) {
                                     switch (unitType) {
                                         case CSS_UNIT.INTEGER:
@@ -3219,7 +3222,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
-                                            if (!REGEXP_CALCINTEGER.test(partial)) {
+                                            if (!CALC_INTEGER.test(partial)) {
                                                 return NaN;
                                             }
                                             seg.push(+partial);
@@ -3381,11 +3384,11 @@ export function parseTransform(value: string, options?: TransformOptions) {
         ({ accumulate, fontSize, boundingBox } = options);
     }
     const result: TransformData[] = [];
-    let match: Null<RegExpExecArray>;
-    while (match = REGEXP_TRANSFORM.exec(value)) {
-        const method = match[1];
+    (RE_TRANSFORM ||= new Pattern(/([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g)).matcher(value);
+    while (RE_TRANSFORM.find()) {
+        const [transform, method] = RE_TRANSFORM.groups();
         if (startsWith(method, 'translate')) {
-            const translate = TRANSFORM.TRANSLATE.exec(match[0]);
+            const translate = TRANSFORM.TRANSLATE.exec(transform);
             if (translate) {
                 const tX = translate[2];
                 let x = 0,
@@ -3463,7 +3466,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
         else if (startsWith(method, 'rotate')) {
-            const rotate = TRANSFORM.ROTATE.exec(match[0]);
+            const rotate = TRANSFORM.ROTATE.exec(transform);
             if (rotate) {
                 const angle = convertAngle(rotate[5], rotate[6]);
                 if (!isNaN(angle)) {
@@ -3513,7 +3516,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
         else if (startsWith(method, 'scale')) {
-            const scale = TRANSFORM.SCALE.exec(match[0]);
+            const scale = TRANSFORM.SCALE.exec(transform);
             if (scale) {
                 let x = 1,
                     y = 1,
@@ -3557,7 +3560,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
         else if (startsWith(method, 'skew')) {
-            const skew = TRANSFORM.SKEW.exec(match[0]);
+            const skew = TRANSFORM.SKEW.exec(transform);
             if (skew) {
                 const angle = convertAngle(skew[2], skew[3]);
                 if (!isNaN(angle)) {
@@ -3590,7 +3593,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
         else if (startsWith(method, 'matrix')) {
-            const matrix = TRANSFORM.MATRIX.exec(match[0]);
+            const matrix = TRANSFORM.MATRIX.exec(transform);
             if (matrix) {
                 let length: number;
                 if (method === 'matrix') {
@@ -3613,7 +3616,7 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
         else if (method === 'perspective') {
-            const perspective = TRANSFORM.PERSPECTIVE.exec(match[0]);
+            const perspective = TRANSFORM.PERSPECTIVE.exec(transform);
             if (perspective) {
                 const pX = perspective[2];
                 let x = 0;
@@ -3636,7 +3639,6 @@ export function parseTransform(value: string, options?: TransformOptions) {
             }
         }
     }
-    REGEXP_TRANSFORM.lastIndex = 0;
     return result;
 }
 

@@ -1829,6 +1829,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('importantForAutofill', 'no');
                 }
                 setReadOnly();
+                if (!node.hasWidth) {
+                    setBoundsWidth();
+                }
+                break;
             case CONTAINER_TAGNAME.LINE:
                 if (!node.hasHeight) {
                     node.setLayoutHeight(formatPX(node.contentBoxHeight || 1));

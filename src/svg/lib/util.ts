@@ -851,14 +851,11 @@ export function sanitizePath(value: string) {
     d = value;
     pattern = /((?:-?[\d.]+[\s,]+){3}\s*)0(0|1)(-?[\d.]+)/g;
     while (match = pattern.exec(d)) {
-        found: {
-            for (let i = pattern.lastIndex - 1; i >= 0; --i) {
-                switch (d[i]) {
-                    case 'A':
-                    case 'a':
-                        value = value.replace(match[0], d[i] + match[1] + ' 0 ' + match[2] + ' ' + match[3]);
-                        break found;
-                }
+        for (let i = pattern.lastIndex - 1; i >= 0; --i) {
+            const ch = d[i];
+            if (ch === 'A' || ch === 'a') {
+                value = value.replace(match[0], ch + match[1] + ' 0 ' + match[2] + ' ' + match[3]);
+                break;
             }
         }
     }

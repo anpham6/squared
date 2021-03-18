@@ -32,9 +32,9 @@ const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, startsWith, trimBoth, trimString } = squared.lib.util;
 
-const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
-const REGEXP_PSEUDOCOUNTERVALUE = /\s*([^-\d][^\s]*)\s+(-?\d+)\s*/g;
-const REGEXP_PSEUDOQUOTE = /("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)(?:\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+))?/;
+let REGEXP_COUNTER: Undef<RegExp>;
+let REGEXP_COUNTERVALUE: Undef<RegExp>;
+let REGEXP_QUOTE: Undef<RegExp>;
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
     let right: Undef<boolean>,
@@ -89,15 +89,16 @@ function checkPseudoDimension(styleMap: CssStyleMap, after: boolean, absolute: b
 }
 
 function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside: string, inside: string, sessionId: string) {
-    const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
+    REGEXP_QUOTE ||= /("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)(?:\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+))?/;
     let current: Null<HTMLElement> = element,
         found = 0,
         i = 0, j = -1;
     while (current && current.tagName === 'Q') {
         const quotes = (getElementCache<CSSStyleDeclaration>(current, 'styleMap', sessionId) || getStyle(current)).quotes;
         if (quotes) {
-            const match = REGEXP_PSEUDOQUOTE.exec(quotes);
+            const match = REGEXP_QUOTE.exec(quotes);
             if (match) {
+                const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
                 if (pseudoElt === '::before') {
                     if (found === 0) {
                         outside = extractQuote(match[1]);
@@ -138,9 +139,10 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
 
 function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
     if (value && value !== 'none') {
-        REGEXP_PSEUDOCOUNTERVALUE.lastIndex = 0;
+        REGEXP_COUNTERVALUE ||= /\s*([^-\d][^\s]*)\s+(-?\d+)\s*/g;
+        REGEXP_COUNTERVALUE.lastIndex = 0;
         let match: Null<RegExpExecArray>;
-        while (match = REGEXP_PSEUDOCOUNTERVALUE.exec(value)) {
+        while (match = REGEXP_COUNTERVALUE.exec(value)) {
             if (match[1] === counterName) {
                 return +match[2];
             }
@@ -1701,11 +1703,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
+                            REGEXP_COUNTER ||= /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
                             const style = getStyle(element);
                             const getCounterIncrementValue = (parent: HTMLElement, counterName: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
                             let found: Undef<boolean>,
                                 match: Null<RegExpExecArray>;
-                            while (match = REGEXP_PSEUDOCOUNTER.exec(value)) {
+                            while (match = REGEXP_COUNTER.exec(value)) {
                                 if (match[1]) {
                                     content += getNamedItem(element, match[1].trim());
                                 }
@@ -1815,7 +1818,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 found = true;
                             }
-                            REGEXP_PSEUDOCOUNTER.lastIndex = 0;
+                            REGEXP_COUNTER.lastIndex = 0;
                             if (!found) {
                                 content = value;
                             }

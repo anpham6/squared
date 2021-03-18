@@ -21,9 +21,9 @@ const { getElementCache, newSessionInit, setElementCache } = squared.lib.session
 const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
-const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(([^)]+)\)/;
-const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
+const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
+let CSS_SHORTHANDNONE: Undef<ObjectMap<CssPropertyData>>;
 
 function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Resource<Node>>, resourceId: number) {
     let result: Undef<string>,
@@ -562,7 +562,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case 'normal':
                             if (!hasExactValue(attr, value)) {
                                 required: {
-                                    for (const name in CSS_SHORTHANDNONE) {
+                                    for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE)) {
                                         const css = CSS_SHORTHANDNONE[name];
                                         if ((css.value as string[]).includes(baseAttr)) {
                                             if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {

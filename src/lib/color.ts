@@ -1,5 +1,6 @@
-import { clamp } from './math';
 import { CSS } from './regex';
+
+import { clamp } from './math';
 
 class Color implements ColorData {
     public key: string;
