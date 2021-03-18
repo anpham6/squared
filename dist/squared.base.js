@@ -1,4 +1,4 @@
-/* squared.base 2.5.1
+/* squared.base 2.5.2
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -26,7 +26,7 @@ this.squared.base = (function (exports) {
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
     const { FILE: FILE$3, STRING: STRING$2 } = squared.lib.regex;
     const { isUserAgent: isUserAgent$3 } = squared.lib.client;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$4, checkMediaRule, getSpecificity, insertStyleSheetRule: insertStyleSheetRule$1, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$4, getSpecificity, insertStyleSheetRule: insertStyleSheetRule$1, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
     const { getElementCache: getElementCache$3, newSessionInit, setElementCache: setElementCache$3 } = squared.lib.session;
     const { allSettled, capitalize: capitalize$2, convertCamelCase: convertCamelCase$2, escapePattern: escapePattern$3, isBase64: isBase64$1, isEmptyString: isEmptyString$1, resolvePath: resolvePath$1, splitPair: splitPair$4, startsWith: startsWith$8 } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
@@ -255,13 +255,13 @@ this.squared.base = (function (exports) {
             let errors;
             for (let i = 0, length = styleSheets.length; i < length; ++i) {
                 const styleSheet = styleSheets[i];
-                let mediaText;
+                let query;
                 try {
-                    mediaText = styleSheet.media.mediaText;
+                    query = styleSheet.media.mediaText;
                 }
                 catch (_a) {
                 }
-                if (!mediaText || checkMediaRule(mediaText)) {
+                if (!query || window.matchMedia(query).matches) {
                     try {
                         this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                     }
@@ -645,7 +645,7 @@ this.squared.base = (function (exports) {
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
-                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${escapePattern$3(rule)}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
+                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
                     for (let i = 0, length = cssRules.length; i < length; ++i) {
                         const rule = cssRules[i];
                         const type = rule.type;
@@ -663,7 +663,7 @@ this.squared.base = (function (exports) {
                                 break;
                             }
                             case CSSRule.MEDIA_RULE:
-                                if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
+                                if (window.matchMedia(rule.conditionText || parseConditionText('media', rule.cssText)).matches) {
                                     this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
                                 }
                                 else {
@@ -1997,7 +1997,7 @@ this.squared.base = (function (exports) {
     const { assignRect, getNamedItem: getNamedItem$3, getParentElement: getParentElement$1, getRangeClientRect: getRangeClientRect$1, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$2, getElementCache: getElementCache$2, getElementData, setElementCache: setElementCache$2 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat: convertFloat$1, convertInt, convertPercent: convertPercent$3, endsWith: endsWith$2, escapePattern: escapePattern$1, hasValue: hasValue$1, isNumber: isNumber$4, isObject, isSpace, iterateArray: iterateArray$3, iterateReverseArray: iterateReverseArray$1, spliceString, splitEnclosing, splitPair: splitPair$1, startsWith: startsWith$5 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent: convertPercent$3, endsWith: endsWith$2, escapePattern: escapePattern$1, hasValue: hasValue$1, isNumber: isNumber$4, isObject, isSpace, iterateArray: iterateArray$3, iterateReverseArray: iterateReverseArray$1, spliceString, splitEnclosing, splitPair: splitPair$1, startsWith: startsWith$5 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -3481,7 +3481,7 @@ this.squared.base = (function (exports) {
         }
         toFloat(attr, fallback = NaN, initial) {
             var _a;
-            return convertFloat$1((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], fallback);
+            return convertFloat((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], fallback);
         }
         toElementInt(attr, fallback = NaN) {
             if (this.naturalElement) {
@@ -3502,7 +3502,7 @@ this.squared.base = (function (exports) {
                     case 'number':
                         return value;
                     case 'string':
-                        return convertFloat$1(value, fallback);
+                        return convertFloat(value, fallback);
                 }
             }
             return fallback;
@@ -3638,7 +3638,7 @@ this.squared.base = (function (exports) {
                 };
                 const parseNot = (condition) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
                 const checkNot = (condition) => {
-                    return splitEnclosing(condition, /:not/i).reduce((a, b) => {
+                    return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
                         if (b[0] === ':') {
                             const match = REGEXP_ENCLOSING.exec(b);
                             if (match && match[1].toLowerCase() === 'not') {
@@ -3833,6 +3833,9 @@ this.squared.base = (function (exports) {
                                             break;
                                     }
                                     segment = spliceString(segment, subMatch.index, label.length);
+                                }
+                                if (selectors.length === 0 && (notList || pseudoList)) {
+                                    start = true;
                                 }
                                 selectors.push({
                                     tagName,
@@ -4356,7 +4359,7 @@ this.squared.base = (function (exports) {
                         break;
                     case 'inline':
                         if (this.tagName === 'svg' && this.actualParent.htmlElement) {
-                            result = !this.hasPX('width') && convertFloat$1(getNamedItem$3(this._element, 'width')) === 0;
+                            result = !this.hasPX('width') && convertFloat(getNamedItem$3(this._element, 'width')) === 0;
                             break;
                         }
                     default:
@@ -11129,7 +11132,7 @@ this.squared.base = (function (exports) {
     const { CSS_PROPERTIES, formatPX: formatPX$3, getStyle: getStyle$1, hasCoords: hasCoords$1, isLength: isLength$4, isPercent: isPercent$2, parseUnit } = squared.lib.css;
     const { getParentElement, withinViewport } = squared.lib.dom;
     const { getElementCache, setElementCache } = squared.lib.session;
-    const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
+    const { capitalize, iterateArray, joinArray } = squared.lib.util;
     const BORDER_BOX = [
         CSS_PROPERTIES.borderTop.value,
         CSS_PROPERTIES.borderRight.value,
@@ -11156,12 +11159,10 @@ this.squared.base = (function (exports) {
             }
         }
         styleMap.textAlign || (styleMap.textAlign = 'center');
-        if (!CSS_PROPERTIES.padding.value.some(attr => styleMap[attr])) {
-            styleMap.paddingTop = '2px';
-            styleMap.paddingRight = '6px';
-            styleMap.paddingBottom = '3px';
-            styleMap.paddingLeft = '6px';
-        }
+        styleMap.paddingTop || (styleMap.paddingTop = '2px');
+        styleMap.paddingRight || (styleMap.paddingRight = '6px');
+        styleMap.paddingBottom || (styleMap.paddingBottom = '3px');
+        styleMap.paddingLeft || (styleMap.paddingLeft = '6px');
     }
     function pushIndent(value, depth, char = '\t', indent) {
         if (depth > 0) {
@@ -11259,28 +11260,15 @@ this.squared.base = (function (exports) {
                             case 'checkbox':
                             case 'image':
                                 break;
-                            case 'week':
-                            case 'month':
-                            case 'time':
-                            case 'date':
-                            case 'datetime-local':
-                                styleMap.paddingTop = formatPX$3(convertFloat(styleMap.paddingTop) + 1);
-                                styleMap.paddingRight = formatPX$3(convertFloat(styleMap.paddingRight) + 1);
-                                styleMap.paddingBottom = formatPX$3(convertFloat(styleMap.paddingBottom) + 1);
-                                styleMap.paddingLeft = formatPX$3(convertFloat(styleMap.paddingLeft) + 1);
+                            case 'file':
+                            case 'reset':
+                            case 'submit':
+                            case 'button':
+                                setButtonStyle(styleMap, setBorderStyle$1(styleMap, this._settingsStyle.inputBorderColor), this._settingsStyle.inputBackgroundColor);
                                 break;
-                            default: {
-                                const result = setBorderStyle$1(styleMap, this._settingsStyle.inputBorderColor);
-                                switch (type) {
-                                    case 'file':
-                                    case 'reset':
-                                    case 'submit':
-                                    case 'button':
-                                        setButtonStyle(styleMap, result, this._settingsStyle.inputBackgroundColor);
-                                        break;
-                                }
+                            default:
+                                setBorderStyle$1(styleMap, this._settingsStyle.inputBorderColor);
                                 break;
-                            }
                         }
                         break;
                     }

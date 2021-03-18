@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.5.1
+/* vdom-lite-framework 2.5.2
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -25,7 +25,7 @@ var vdom = (function () {
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
     const { FILE: FILE$1, STRING } = squared.lib.regex;
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$1, checkMediaRule, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$1, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
     const { getElementCache: getElementCache$1, newSessionInit, setElementCache: setElementCache$1 } = squared.lib.session;
     const { allSettled, capitalize, convertCamelCase: convertCamelCase$1, escapePattern: escapePattern$1, isBase64, isEmptyString, resolvePath, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
@@ -254,13 +254,13 @@ var vdom = (function () {
             let errors;
             for (let i = 0, length = styleSheets.length; i < length; ++i) {
                 const styleSheet = styleSheets[i];
-                let mediaText;
+                let query;
                 try {
-                    mediaText = styleSheet.media.mediaText;
+                    query = styleSheet.media.mediaText;
                 }
                 catch (_a) {
                 }
-                if (!mediaText || checkMediaRule(mediaText)) {
+                if (!query || window.matchMedia(query).matches) {
                     try {
                         this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                     }
@@ -644,7 +644,7 @@ var vdom = (function () {
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
-                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${escapePattern$1(rule)}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
+                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
                     for (let i = 0, length = cssRules.length; i < length; ++i) {
                         const rule = cssRules[i];
                         const type = rule.type;
@@ -662,7 +662,7 @@ var vdom = (function () {
                                 break;
                             }
                             case CSSRule.MEDIA_RULE:
-                                if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
+                                if (window.matchMedia(rule.conditionText || parseConditionText('media', rule.cssText)).matches) {
                                     this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
                                 }
                                 else {
@@ -2605,7 +2605,7 @@ var vdom = (function () {
                 };
                 const parseNot = (condition) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
                 const checkNot = (condition) => {
-                    return splitEnclosing(condition, /:not/i).reduce((a, b) => {
+                    return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
                         if (b[0] === ':') {
                             const match = REGEXP_ENCLOSING.exec(b);
                             if (match && match[1].toLowerCase() === 'not') {
@@ -2800,6 +2800,9 @@ var vdom = (function () {
                                             break;
                                     }
                                     segment = spliceString(segment, subMatch.index, label.length);
+                                }
+                                if (selectors.length === 0 && (notList || pseudoList)) {
+                                    start = true;
                                 }
                                 selectors.push({
                                     tagName,

@@ -1,4 +1,4 @@
-/* squared 2.5.1
+/* squared 2.5.2
    https://github.com/anpham6/squared */
 
 var squared = (function (exports) {
@@ -265,7 +265,7 @@ var squared = (function (exports) {
         SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
         SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
         SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g'),
-        SELECTOR_ENCLOSING: /:(not|is|where)/ig
+        SELECTOR_ENCLOSING: /:(not|is|where)/gi
     };
     const TRANSFORM = {
         MATRIX: new RegExp(`(matrix|matrix3d)\\(\\s*(${DECIMAL})${`,\\s*(${DECIMAL})`.repeat(5)}(?:${`,\\s*(${DECIMAL})`.repeat(10)})?\\s*\\)`),
@@ -1008,6 +1008,9 @@ var squared = (function (exports) {
                 combined = opening;
             }
         }
+        else if (prefix && !prefix.global) {
+            prefix = new RegExp(prefix, prefix.flags + 'g');
+        }
         const result = [];
         const length = value.length;
         const appendValues = (segment) => {
@@ -1617,7 +1620,6 @@ var squared = (function (exports) {
     let DOCUMENT_FONTMAP;
     let DOCUMENT_FONTBASE;
     let DOCUMENT_FONTSIZE;
-    const PATTERN_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
     const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
     const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
     const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
@@ -1625,10 +1627,8 @@ var squared = (function (exports) {
     const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
     const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
     const REGEXP_CALC = /^calc\((.+)\)$/i;
-    const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(?:\\(\\s*)?${PATTERN_SIZES}|(?:\\(\\s*))?\\s*(and|or|not)?\\s*(?:${PATTERN_SIZES}(?:\\s*\\))?)?\\s*(.+)`);
+    const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))+)?\\s*(.*)$`, 'i');
     const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-    const REGEXP_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+)\s*,?/g;
-    const REGEXP_MEDIARULECONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
     const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
     const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
     const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
@@ -1643,23 +1643,9 @@ var squared = (function (exports) {
     const CHAR_SEPARATOR = /\s*,\s*/;
     const CHAR_DIVIDER = /\s*\/\s*/;
     updateDocumentFont();
-    function compareRange(operation, unit, range) {
-        switch (operation) {
-            case '<=':
-                return unit <= range;
-            case '<':
-                return unit < range;
-            case '>=':
-                return unit >= range;
-            case '>':
-                return unit > range;
-            default:
-                return unit === range;
-        }
-    }
     function calculatePosition(element, value, boundingBox) {
         const alignment = [];
-        for (let seg of splitEnclosing(value.trim(), /calc/i)) {
+        for (let seg of splitEnclosing(value.trim(), /calc/gi)) {
             if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
                 alignment.push(...seg.split(CHAR_SPACE));
             }
@@ -1780,7 +1766,7 @@ var squared = (function (exports) {
         return value;
     }
     function calculateGeneric(element, value, unitType, min, boundingBox, dimension = 'width') {
-        const segments = splitEnclosing(value, /calc/i);
+        const segments = splitEnclosing(value, /calc/gi);
         for (let i = 0, length = segments.length; i < length; ++i) {
             const seg = segments[i];
             if (isCalc(seg)) {
@@ -3325,7 +3311,7 @@ var squared = (function (exports) {
             const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING);
             for (let i = 0; i < segments.length; ++i) {
                 const seg = segments[i];
-                if (seg[0] === ':' && seg.includes(',') && /^:(is|where|not)\(/i.test(seg)) {
+                if (seg[0] === ':' && seg.includes(',') && /^:(not|is|where)\(/i.test(seg)) {
                     timestamp || (timestamp = Date.now());
                     (removed || (removed = [])).push(seg);
                     segments[i] = timestamp + '-' + (removed.length - 1);
@@ -3664,10 +3650,11 @@ var squared = (function (exports) {
             case 'offsetDistance': {
                 let boundingSize = 0;
                 if (value.includes('%')) {
-                    const offsetPath = getStyle(element).getPropertyValue('offset-path');
-                    if (offsetPath !== 'none') {
+                    const path = getStyle(element).getPropertyValue('offset-path');
+                    if (path !== 'none') {
                         const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        pathElement.setAttribute('d', offsetPath);
+                        const match = /^path\("(.+)"\)$/.exec(path);
+                        pathElement.setAttribute('d', match ? match[1] : path);
                         boundingSize = pathElement.getTotalLength();
                     }
                 }
@@ -4379,96 +4366,6 @@ var squared = (function (exports) {
         }
         return valid ? result : null;
     }
-    function checkMediaRule(value, fontSize) {
-        switch (value.trim()) {
-            case 'all':
-            case 'screen':
-            case 'only all':
-            case 'only screen':
-                return true;
-            default: {
-                REGEXP_MEDIARULE.lastIndex = 0;
-                let match;
-                while (match = REGEXP_MEDIARULE.exec(value)) {
-                    const negate = match[1] === 'not';
-                    let valid, condition;
-                    while (condition = REGEXP_MEDIARULECONDITION.exec(match[2])) {
-                        const attr = condition[1];
-                        let operation = condition[2];
-                        const rule = condition[3];
-                        if (startsWith(attr, 'min')) {
-                            operation = '>=';
-                        }
-                        else if (startsWith(attr, 'max')) {
-                            operation = '<=';
-                        }
-                        switch (attr) {
-                            case 'aspect-ratio':
-                            case 'min-aspect-ratio':
-                            case 'max-aspect-ratio':
-                                if (rule) {
-                                    const [width, height] = splitPair(rule, '/');
-                                    valid = compareRange(operation, window.innerWidth / window.innerHeight, +width / +height);
-                                }
-                                else {
-                                    valid = false;
-                                }
-                                break;
-                            case 'width':
-                            case 'min-width':
-                            case 'max-width':
-                            case 'height':
-                            case 'min-height':
-                            case 'max-height':
-                                valid = compareRange(operation, endsWith(attr, 'width') ? window.innerWidth : window.innerHeight, parseUnit(rule, { fontSize }));
-                                break;
-                            case 'orientation':
-                                valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
-                                break;
-                            case 'resolution':
-                            case 'min-resolution':
-                            case 'max-resolution':
-                                valid = !!rule && compareRange(operation, window.devicePixelRatio, Math.max(0, parseResolution(rule)));
-                                break;
-                            case 'grid':
-                                valid = rule === '0';
-                                break;
-                            case 'color':
-                                valid = +rule > 0;
-                                break;
-                            case 'min-color':
-                                valid = +rule <= screen.colorDepth / 3;
-                                break;
-                            case 'max-color':
-                                valid = +rule >= screen.colorDepth / 3;
-                                break;
-                            case 'color-index':
-                            case 'min-color-index':
-                            case 'monochrome':
-                            case 'min-monochrome':
-                                valid = rule === '0';
-                                break;
-                            case 'max-color-index':
-                            case 'max-monochrome':
-                                valid = +rule >= 0;
-                                break;
-                            default:
-                                valid = false;
-                                break;
-                        }
-                        if (!valid) {
-                            break;
-                        }
-                    }
-                    REGEXP_MEDIARULECONDITION.lastIndex = 0;
-                    if (!negate && valid || negate && !valid) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
     function parseVar(element, value, style) {
         let match;
         while (match = REGEXP_VAR.exec(value)) {
@@ -4521,7 +4418,7 @@ var squared = (function (exports) {
         const result = [];
         for (let seg of separator ? value.split(separator) : [value]) {
             if (seg = seg.trim()) {
-                const calc = splitEnclosing(seg, /calc/i);
+                const calc = splitEnclosing(seg, /calc/gi);
                 const length = calc.length;
                 if (length === 0) {
                     return '';
@@ -4661,7 +4558,7 @@ var squared = (function (exports) {
         let { srcset, sizes } = element;
         if (parentElement && parentElement.tagName === 'PICTURE') {
             iterateArray(parentElement.children, (item) => {
-                if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
+                if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
                     ({ srcset, sizes } = item);
                     return true;
                 }
@@ -4711,38 +4608,16 @@ var squared = (function (exports) {
                 let width = NaN, match;
                 for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                     if (match = REGEXP_SOURCESIZES.exec(value)) {
-                        const ruleA = match[1] ? checkMediaRule(match[1]) : null;
-                        const ruleB = match[4] ? checkMediaRule(match[4]) : null;
-                        switch (match[3]) {
-                            case 'and':
-                                if (!ruleA || !ruleB) {
-                                    continue;
-                                }
-                                break;
-                            case 'or':
-                                if (!ruleA && !ruleB) {
-                                    continue;
-                                }
-                                break;
-                            case 'not':
-                                if (ruleA !== null || ruleB) {
-                                    continue;
-                                }
-                                break;
-                            default:
-                                if (ruleA === false || ruleB !== null) {
-                                    continue;
-                                }
-                                break;
+                        const query = match[1];
+                        const unit = match[2];
+                        if (!unit || query && !window.matchMedia(query).matches) {
+                            continue;
                         }
-                        const unit = match[6];
-                        if (unit) {
-                            if (match = REGEXP_CALC.exec(unit)) {
-                                width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
-                            }
-                            else if (isLength(unit)) {
-                                width = parseUnit(unit);
-                            }
+                        if (isCalc(unit)) {
+                            width = calculate(unit, unit.includes('%') && element.parentElement ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
+                        }
+                        else if (isLength(unit)) {
+                            width = parseUnit(unit);
                         }
                         if (!isNaN(width)) {
                             break;
@@ -4948,18 +4823,15 @@ var squared = (function (exports) {
                                                 }
                                                 break;
                                             case 16 /* INTEGER */:
-                                                if (/^\s*[+|-]?\d+\s*$/.test(partial)) {
-                                                    seg.push(+partial);
-                                                    found = true;
-                                                }
-                                                else {
+                                                if (!/^\s*[+|-]?\d+\s*$/.test(partial)) {
                                                     return NaN;
                                                 }
+                                                seg.push(+partial);
+                                                found = true;
                                                 break;
                                             case 32 /* DECIMAL */:
                                                 if (isNumber(partial)) {
                                                     seg.push(+partial);
-                                                    found = true;
                                                 }
                                                 else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
                                                     seg.push(convertPercent(partial) * boundingSize);
@@ -4967,6 +4839,7 @@ var squared = (function (exports) {
                                                 else {
                                                     return NaN;
                                                 }
+                                                found = true;
                                                 break;
                                             default:
                                                 if (isNumber(partial)) {
@@ -4981,15 +4854,14 @@ var squared = (function (exports) {
                                                     }
                                                     if (isLength(partial)) {
                                                         seg.push(parseUnit(partial, { fontSize }));
-                                                        found = true;
                                                     }
                                                     else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
                                                         seg.push(convertPercent(partial) * boundingSize);
-                                                        found = true;
                                                     }
                                                     else {
                                                         return NaN;
                                                     }
+                                                    found = true;
                                                 }
                                                 break;
                                         }
@@ -5463,7 +5335,6 @@ var squared = (function (exports) {
         checkFontSizeValue: checkFontSizeValue,
         getKeyframesRules: getKeyframesRules,
         parseKeyframes: parseKeyframes,
-        checkMediaRule: checkMediaRule,
         parseVar: parseVar,
         calculateVarAsString: calculateVarAsString,
         calculateVar: calculateVar,

@@ -1,4 +1,4 @@
-/* android-framework 2.5.1
+/* android-framework 2.5.2
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -6146,6 +6146,8 @@ var android = (function () {
                             if (!isNaN(+element.value)) {
                                 node.android('progress', Resource.addString(resourceId, element.value, getStringAttr('progress'), true));
                             }
+                            setInputMinMax();
+                            break;
                         case 'number':
                             node.android('inputType', 'number');
                             setInputMinMax();

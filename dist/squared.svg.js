@@ -1,4 +1,4 @@
-/* squared.svg 2.5.1
+/* squared.svg 2.5.2
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -5168,7 +5168,7 @@ this.squared.svg = (function (exports) {
                     const keyPoints = this._keyPoints;
                     if (keyTimes.length === keyPoints.length) {
                         const value = item.value;
-                        let distance = isPercent$2(value) ? convertPercent$3(value) : +value / this.offsetLength;
+                        let distance = isPercent$2(value) ? convertPercent$3(value) : parseFloat(value) / this.offsetLength;
                         if (!isNaN(distance)) {
                             distance = Math.min(distance, 1);
                             const index = keyTimes.findIndex(previous => previous === key);

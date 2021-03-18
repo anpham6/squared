@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.1
+/* chrome-framework 2.5.2
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -414,7 +414,7 @@ var chrome = (function () {
                             case 'css': {
                                 const { module, identifier } = template;
                                 let value = template.value;
-                                if (module && identifier && value && (value = value.trim()) && startsWith(value, 'function')) {
+                                if (module && identifier && value && (value = value.trim()) && value.includes('function')) {
                                     ((_b = (templateMap || (templateMap = { html: {}, js: {}, css: {} }))[type])[module] || (_b[module] = {}))[identifier] = value;
                                 }
                                 break;
