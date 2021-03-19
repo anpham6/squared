@@ -885,6 +885,10 @@ declare module "base" {
             }
         }
 
+        namespace dom {
+            function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
+        }
+
         namespace util {
             function fromMimeType(value: string): string;
             function parseMimeType(value: string): string;
@@ -892,7 +896,7 @@ declare module "base" {
             function randomUUID(separator?: string): string;
             function upperCaseString(value: string): string;
             function lowerCaseString(value: string): string;
-            function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
+            function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
             function searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void>;
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
             function parseTask(value: Undef<string>): Undef<TaskAction[]>;

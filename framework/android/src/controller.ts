@@ -29,9 +29,10 @@ const { formatPX, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, plainMap, replaceAll, startsWith, withinRange } = squared.lib.util;
+const { capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, plainMap, replaceAll, startsWith, withinRange } = squared.lib.util;
 
-const { getSrcSet, parseMimeType } = squared.base.lib.util;
+const { getSrcSet } = squared.base.lib.dom;
+const { assignEmptyValue, parseMimeType } = squared.base.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
 const REGEXP_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+(?:[a-z]+)?)\s+(-?[\d.]+(?:[a-z]+)?)\s*([\d.]+(?:[a-z]+)?)?/;

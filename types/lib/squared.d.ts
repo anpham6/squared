@@ -364,8 +364,6 @@ declare module "lib" {
         function endsWith(value: unknown, trailing: string): boolean;
         function hasValue<T>(value: unknown): value is T;
         function withinRange(a: number, b: number, offset?: number): boolean;
-        function assignEmptyProperty(dest: PlainObject, source: PlainObject): PlainObject;
-        function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)[]): T[];

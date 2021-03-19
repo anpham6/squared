@@ -569,49 +569,6 @@ export function withinRange(a: number, b: number, offset = 1) {
     return b >= (a - offset) && b <= (a + offset);
 }
 
-export function assignEmptyProperty(dest: PlainObject, source: PlainObject) {
-    for (const attr in source) {
-        if (!Object.prototype.hasOwnProperty.call(dest, attr)) {
-            dest[attr] = source[attr];
-        }
-    }
-    return dest;
-}
-
-export function assignEmptyValue(dest: PlainObject, ...attrs: string[]) {
-    const length = attrs.length;
-    if (length > 1) {
-        let current = dest,
-            i = 0;
-        do {
-            const name = attrs[i];
-            const value = current[name];
-            if (i === length - 2) {
-                if (!hasValue(value)) {
-                    current[name] = attrs[i + 1];
-                }
-                break;
-            }
-            else if (name) {
-                if (value === undefined || value === null) {
-                    current = {};
-                    current[name] = current;
-                }
-                else if (isObject(value)) {
-                    current = value;
-                }
-                else {
-                    break;
-                }
-            }
-            else {
-                break;
-            }
-        }
-        while (++i);
-    }
-}
-
 export function sortNumber(values: number[], ascending = true) {
     return values.sort(ascending ? (a, b) => a - b : (a, b) => b - a);
 }
