@@ -19,7 +19,9 @@ interface FlexBasis<T> {
 
 const { isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { capitalize, iterateReverseArray, lastItemOf, sameArray } = squared.lib.util;
+const { capitalize, iterateReverseArray, lastItemOf } = squared.lib.util;
+
+const { sameArray } = squared.base.lib.util;
 
 function getBaseline(nodes: View[]) {
     for (let i = 0, length = nodes.length; i < length; ++i) {

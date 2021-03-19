@@ -469,6 +469,24 @@ export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?
     }
 }
 
+export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>) {
+    const length = list.length;
+    if (length) {
+        let baseValue: Undef<U>;
+        for (let i = 0; i < length; ++i) {
+            const value = predicate(list[i], i, list);
+            if (i === 0) {
+                baseValue = value;
+            }
+            else if (value !== baseValue) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 export function parseGlob(value: string, options?: ParseGlobOptions) {
     value = value.trim();
     let flags = '',

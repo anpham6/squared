@@ -898,6 +898,7 @@ declare module "base" {
             function lowerCaseString(value: string): string;
             function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
             function searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void>;
+            function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>): boolean;
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
             function parseTask(value: Undef<string>): Undef<TaskAction[]>;
             function parseWatchInterval(value: Undef<string>): Undef<WatchInterval>;

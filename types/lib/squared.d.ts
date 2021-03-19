@@ -371,7 +371,6 @@ declare module "lib" {
         function flatArray<T>(list: unknown[], depth?: number): T[];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
-        function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>): boolean;
         function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string): string;
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;
         function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;

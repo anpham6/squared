@@ -704,24 +704,6 @@ export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
     return [valid, invalid];
 }
 
-export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>) {
-    const length = list.length;
-    if (length) {
-        let baseValue: Undef<U>;
-        for (let i = 0; i < length; ++i) {
-            const value = predicate(list[i], i, list);
-            if (i === 0) {
-                baseValue = value;
-            }
-            else if (value !== baseValue) {
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = ''): string {
     let result = '';
     for (let i = 0, length = list.length; i < length; ++i) {
