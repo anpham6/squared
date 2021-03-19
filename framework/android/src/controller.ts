@@ -29,7 +29,7 @@ const { formatPX, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, plainMap, replaceAll, startsWith, withinRange } = squared.lib.util;
+const { capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, plainMap, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
 
 const { getSrcSet } = squared.base.lib.dom;
 const { assignEmptyValue, parseMimeType } = squared.base.lib.util;
@@ -1776,24 +1776,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 node.android('progressTint', `@color/${Resource.addColor(resourceId, foregroundColor)}`);
                 node.android('progressBackgroundTint', `@color/${Resource.addColor(resourceId, backgroundColor)}`);
-                const animations = node.cssInitial('animationName').split(/\s*,\s*/);
+                const keyFrames = Resource.ASSETS[resourceId]!.keyFrames;
                 let circular = false;
-                if (animations.length) {
-                    const keyFrames = Resource.ASSETS[resourceId]!.keyFrames;
-                    if (keyFrames) {
-                        for (const name of animations) {
-                            const item = keyFrames.get(name);
-                            if (item) {
-                                for (const attr in item) {
-                                    const data = item[attr];
-                                    if (data.transform?.includes('rotate')) {
-                                        circular = true;
-                                        break;
-                                    }
+                if (keyFrames) {
+                    splitSome(node.cssInitial('animationName'), name => {
+                        const item = keyFrames.get(name);
+                        if (item) {
+                            for (const attr in item) {
+                                const data = item[attr];
+                                if (data.transform?.includes('rotate')) {
+                                    circular = true;
+                                    return true;
                                 }
                             }
                         }
-                    }
+                    });
                 }
                 if (!circular) {
                     node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');

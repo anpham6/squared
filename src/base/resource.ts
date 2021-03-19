@@ -10,7 +10,7 @@ const { parseKeyframes } = squared.lib.internal;
 const { FILE, STRING } = squared.lib.regex;
 
 const { extractURL, resolveURL } = squared.lib.css;
-const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPairStart, startsWith, trimBoth } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTFACE = /@font-face\s*{([^}]+)}/;
 const REGEXP_FONTFAMILY = /font-family:\s*([^;]+);/;
@@ -82,9 +82,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const preloadMap: string[] = [];
         const parseSrcSet = (value: string) => {
             if (value) {
-                for (const uri of value.split(',')) {
-                    this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
-                }
+                splitSome(value, uri => {
+                    this.addImageData(resourceId, resolvePath(splitPairStart(uri, ' ', false, true)));
+                });
             }
         };
         for (const element of elements) {
@@ -240,8 +240,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     }
                     else {
                         if (startsWith(url, 'data:')) {
-                            const [mime, base64] = url.split(',');
-                            srcBase64 = base64.trim();
+                            let mime: string;
+                            [mime, srcBase64] = splitPair(url, ',', true);
                             if (!mime.includes('base64') && !isBase64(srcBase64)) {
                                 continue;
                             }
@@ -387,7 +387,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             if (base64 || encoding === 'base64') {
                 if (!base64) {
                     if (content) {
-                        base64 = startsWith(content, 'data:') ? content.split(',')[1].trim() : content;
+                        base64 = startsWith(content, 'data:') ? splitPairEnd(content, ',', true) : content;
                         content = undefined;
                     }
                     else if (buffer) {

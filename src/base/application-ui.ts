@@ -31,7 +31,7 @@ const { FILE } = squared.lib.regex;
 const { formatPX, getStyle, hasCoords, isCalc, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, startsWith, trimBoth, trimString } = squared.lib.util;
+const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, splitSome, startsWith, trimBoth, trimString } = squared.lib.util;
 
 let REGEXP_COUNTER: Undef<RegExp>;
 let REGEXP_COUNTERVALUE: Undef<RegExp>;
@@ -604,7 +604,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public useElement(element: HTMLElement) {
         const use = this.getDatasetName('use', element);
-        return use ? use.split(',').some(value => this.extensionManager.get(value.trim())) : false;
+        return !!use && splitSome(use, value => this.extensionManager.get(value));
     }
 
     public toString() {
@@ -1967,7 +1967,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return options ? { ...options, assets: options.assets ? this.layouts.concat(options.assets) : this.layouts } : { assets: this.layouts };
     }
 
-    private setResourceId() {
+    protected setResourceId() {
         ResourceUI.ASSETS[this._resourceId = ResourceUI.ASSETS.length] = null;
     }
 

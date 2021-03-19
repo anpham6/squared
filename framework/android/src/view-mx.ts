@@ -1505,7 +1505,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         const name = namespace === 'attr' ? 'android' : pattern.test(namespace) ? capitalize(namespace.substring(4), false) : '';
                         if (name) {
                             for (const values of dataset[namespace]!.split(';')) {
-                                const [key, value] = splitPair(values, '::');
+                                const [key, value] = splitPair(values, '::', true);
                                 if (value) {
                                     this.attr(name, key, value);
                                 }

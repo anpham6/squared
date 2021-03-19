@@ -503,7 +503,7 @@ export const TRANSFORM = {
     },
     origin(element: SVGElement, value?: string) {
         const result: Point = { x: 0, y: 0 };
-        if (value ||= getAttribute(element, 'transform-origin')) {
+        if ((value ||= getAttribute(element, 'transform-origin')) && (value = value.trim())) {
             const viewBox = getNearestViewBox(element);
             let width = 0,
                 height = 0;
@@ -522,7 +522,7 @@ export const TRANSFORM = {
             if (!width || !height) {
                 ({ width, height } = element.getBoundingClientRect());
             }
-            const positions = value.split(' ');
+            const positions = value.split(/\s+/);
             if (positions.length === 1) {
                 positions.push('center');
             }

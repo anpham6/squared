@@ -11,7 +11,7 @@ import { replaceCharacterData, sanitizeString } from '../../lib/util';
 const { isPercent, parseAngle } = squared.lib.css;
 const { getTextMetrics } = squared.lib.dom;
 const { clamp } = squared.lib.math;
-const { delimitString } = squared.lib.util;
+const { delimitString, splitSome } = squared.lib.util;
 
 const { lowerCaseString, upperCaseString } = squared.base.lib.util;
 
@@ -296,14 +296,14 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }, fontFeature);
                             }
                             if (node.has('fontVariationSettings' as CssStyleAttr)) {
-                                for (const variant of node.cssValue('fontVariationSettings' as CssStyleAttr).replace(/"/g, "'").split(',')) {
+                                splitSome(node.cssValue('fontVariationSettings' as CssStyleAttr).replace(/"/g, "'"), variant => {
                                     fontVariation = delimitString(fontVariation, variant);
-                                }
+                                });
                             }
                             if (node.has('fontFeatureSettings')) {
-                                for (const feature of node.cssValue('fontFeatureSettings').replace(/"/g, "'").split(',')) {
+                                splitSome(node.cssValue('fontFeatureSettings').replace(/"/g, "'"), feature => {
                                     fontFeature = delimitString(fontFeature, feature);
-                                }
+                                });
                             }
                             if (fontVariation) {
                                 node.android('fontVariationSettings', fontVariation);

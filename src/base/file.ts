@@ -197,7 +197,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 let { filename, format } = options;
                 const setFilename = () => {
                     if (!format || !this.archiveFormats.includes(format = format.toLowerCase())) {
-                        [filename, format] = splitPair(filename!, '.', true, true);
+                        [filename, format] = splitPair(filename!, '.', false, true);
                         if (format && !this.archiveFormats.includes(format)) {
                             filename += '.' + format;
                             format = '';

@@ -16,7 +16,7 @@ export const STRING = {
     LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
     UNIT_LENGTH,
-    DATAURI: '(data:\\s*([^;,\\s]+)?\\s*;?\\s*([^,\\s]+)?\\s*,)?\\s*(.+)',
+    DATAURI: '(data:\\s*([^;,\\s]+)?\\s*;?\\s*([^,\\s]+)?\\s*,)?\\s*(.+?)',
     TAG_ATTR,
     TAG_OPEN: `(?:[^=>]|${TAG_ATTR})`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,

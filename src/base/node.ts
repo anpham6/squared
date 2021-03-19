@@ -14,7 +14,7 @@ const { asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getSty
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair, startsWith } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
 
 const TEXT_STYLE: CssStyleAttr[] = [
     'fontFamily',
@@ -2838,11 +2838,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 let backgroundRepeatX = false,
                     backgroundRepeatY = false;
                 if (backgroundImage) {
-                    for (const repeat of this.css('backgroundRepeat').split(',')) {
-                        const [repeatX, repeatY] = splitPair(repeat.trim(), ' ');
+                    splitSome(this.css('backgroundRepeat'), repeat => {
+                        const [repeatX, repeatY] = splitPair(repeat, ' ');
                         backgroundRepeatX ||= repeatX === 'repeat' || repeatX === 'repeat-x';
                         backgroundRepeatY ||= repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
-                    }
+                    });
                 }
                 result = {
                     background: borderWidth || backgroundImage || backgroundColor,

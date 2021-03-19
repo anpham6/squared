@@ -256,7 +256,7 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
         case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
                 const baseArray = replaceMap(baseValue.split(' '), value => +value);
-                const valuesArray = plainMap(values, value => replaceMap(value.trim().split(' '), pt => +pt));
+                const valuesArray = plainMap(values, value => replaceMap(value.trim().split(/\s+/), pt => +pt));
                 const length = baseArray.length;
                 if (valuesArray.every(value => value.length === length)) {
                     const result = valuesArray[index];

@@ -12,7 +12,7 @@ const { STRING } = squared.lib.regex;
 const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, getStyle, hasCalc, hasEm, hasCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertPercent, isNumber, joinArray, plainMap } = squared.lib.util;
+const { convertCamelCase, convertPercent, isNumber, splitSome } = squared.lib.util;
 
 const REGEXP_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
@@ -112,10 +112,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     break;
                                 }
                                 case 'polygon': {
-                                    const points = plainMap(match[1].split(','), values => {
+                                    const points: Point[] = [];
+                                    splitSome(match[1], values => {
                                         let x = left,
                                             y = top;
-                                        values.trim().split(' ').forEach((value, index) => {
+                                        values.split(/\s+/).forEach((value, index) => {
                                             if (index === 0) {
                                                 x += this.convertLength(value, width);
                                             }
@@ -123,7 +124,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                 y += this.convertLength(value, height);
                                             }
                                         });
-                                        return { x, y };
+                                        points.push({ x, y });
                                     });
                                     if (parent) {
                                         parent.refitPoints(points);
@@ -181,7 +182,16 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 switch (attr) {
                     case 'strokeDasharray':
-                        value = value !== 'none' ? joinArray(value.replace(/[,\s]+/g, ',').split(','), unit => this.convertLength(unit).toString(), ', ') : '';
+                        if (value !== 'none') {
+                            let revised = '';
+                            splitSome(value, unit => {
+                                revised += (revised ? ', ' : '') + this.convertLength(unit);
+                            });
+                            value = revised;
+                        }
+                        else {
+                            return;
+                        }
                         break;
                     case 'strokeDashoffset':
                     case 'strokeWidth':

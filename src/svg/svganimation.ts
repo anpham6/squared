@@ -11,7 +11,7 @@ type SvgView = squared.svg.SvgView;
 
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { capitalize, hasValue, isString } = squared.lib.util;
+const { capitalize, hasValue, isString, sortNumber, splitSome } = squared.lib.util;
 
 const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
 const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
@@ -29,6 +29,18 @@ function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
 }
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
+    public static getClockTimes(value: string) {
+        const result: number[] = [];
+        splitSome(value, item => {
+            const time = this.parseClockTime(item);
+            if (!isNaN(time)) {
+                result.push(time);
+            }
+        }, ';');
+        sortNumber(result);
+        return result;
+    }
+
     public static parseClockTime(value: string) {
         let match = REGEXP_TIME.exec(value = value.trim());
         if (match) {

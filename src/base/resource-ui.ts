@@ -869,7 +869,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                 shape = 'circle';
                             }
                             else if (name) {
-                                const [radiusX, radiusY] = splitPair(name, ' ', true);
+                                const [radiusX, radiusY] = splitPair(name, ' ');
                                 let minRadius = Infinity;
                                 if (radiusX) {
                                     minRadius = node.parseWidth(radiusX, false);

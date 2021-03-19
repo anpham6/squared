@@ -20,7 +20,7 @@ const { getKeyframesRules } = squared.lib.internal;
 
 const { hasCalc, isAngle, hasCustomProperty, isPercent, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd, startsWith } = squared.lib.util;
+const { convertCamelCase, convertPercent, convertWord, iterateArray, splitPairEnd, startsWith } = squared.lib.util;
 
 const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
 
@@ -49,7 +49,7 @@ function parseAttribute(element: SVGElement, attr: string) {
 
 function convertRotate(value: string) {
     if (startsWith(value, 'reverse')) {
-        const angle = splitPairEnd(value, ' ', true);
+        const angle = splitPairEnd(value, ' ');
         return `auto ${angle ? isAngle(angle) ? 180 + parseAngle(angle, 0) : '0' : '180'}deg`;
     }
     return value;
@@ -102,9 +102,15 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             iterateArray(element.children, (item: SVGElement) => {
                 if (item instanceof SVGAnimationElement) {
                     const begin = getNamedItem(item, 'begin');
-                    const times = begin ? sortNumber(replaceMap(begin.split(';'), value => SvgAnimation.parseClockTime(value)).filter(value => !isNaN(value))) : [0];
-                    if (times.length === 0) {
-                        return;
+                    let times: number[];
+                    if (begin) {
+                        times = SvgAnimation.getClockTimes(begin);
+                        if (times.length === 0) {
+                            return;
+                        }
+                    }
+                    else {
+                        times = [0];
                     }
                     const precision = this.viewport?.precision;
                     switch (item.tagName) {
@@ -302,7 +308,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 const itemValue = convertRotate(item.value);
                                 previous.value = previousValue;
                                 item.value = itemValue;
-                                if (previousValue.split(' ').pop() !== itemValue.split(' ').pop()) {
+                                if (splitPairEnd(previousValue, ' ') !== splitPairEnd(itemValue, ' ')) {
                                     const previousAuto = startsWith(previousValue, 'auto');
                                     const auto = startsWith(itemValue, 'auto');
                                     if (previousAuto && !auto || !previousAuto && auto) {
@@ -321,7 +327,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 addAnimation(animate, delay, keyframeIndex);
                                 for (let j = 0, q = offsetRotate.length; j < q; ++j) {
                                     const item = offsetRotate[j];
-                                    item.value = (parseAngle(item.value.split(' ').pop()!, 0) + (startsWith(item.value, 'auto') ? 90 : 0)) + ' 0 0';
+                                    item.value = (parseAngle(splitPairEnd(item.value, ' '), 0) + (startsWith(item.value, 'auto') ? 90 : 0)) + ' 0 0';
                                 }
                                 attrData['rotate'] = offsetRotate;
                                 delete attrData['offset-rotate'];

@@ -1,4 +1,4 @@
-const { endsWith, hasValue, isObject, splitPair, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
+const { endsWith, hasValue, isObject, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
     constructor(source: string, flags: string, public negate: boolean) {
@@ -531,13 +531,13 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
 export function parseTask(value: Undef<string>) {
     if (value) {
         const result: TaskAction[] = [];
-        for (const item of value.split('+')) {
+        splitSome(value, item => {
             const [handler, command] = splitPair(item, ':', true);
             if (handler && command) {
                 const [task, preceding] = splitPair(command, ':', true);
                 result.push({ handler, task, preceding: preceding === 'true' });
             }
-        }
+        }, '+');
         return result;
     }
 }

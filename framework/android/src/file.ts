@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, plainMap, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, plainMap, splitSome, resolvePath } = squared.lib.util;
 
 const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
@@ -69,22 +69,15 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
                 case 'image/bmp':
                 case 'image/tiff':
                 case 'image/unknown':
-                    for (const value of convertImages.trim().toLowerCase().split(/\s*::\s*/)) {
-                        const match = /^[a-z]+/.exec(value);
+                    splitSome(convertImages.toLowerCase(), value => {
+                        const match = /^(png|jpeg|webp|bmp)/.exec(value);
                         if (match) {
-                            switch (match[0]) {
-                                case 'png':
-                                case 'jpeg':
-                                case 'webp':
-                                case 'bmp':
-                                    (commands ||= []).push(value);
-                                    if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
-                                        compress = [{ format: 'png' }];
-                                    }
-                                    break;
+                            (commands ||= []).push(value);
+                            if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
+                                compress = [{ format: 'png' }];
                             }
                         }
-                    }
+                    }, '::');
                     break;
             }
         }

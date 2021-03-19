@@ -97,9 +97,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract get containerTypePercent(): LayoutType;
 
     public init() {
-        const unsupported = this.localSettings.unsupported;
-        this._unsupportedCascade = unsupported.cascade;
-        this._unsupportedTagName = unsupported.tagName;
+        const { cascade, tagName } = this.localSettings.unsupported;
+        this._unsupportedCascade = cascade;
+        this._unsupportedTagName = tagName;
         this._innerXmlTags = this.localSettings.layout.innerXmlTags;
         this._settingsStyle = this.localSettings.style;
     }
@@ -746,15 +746,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const afterInside = this.getAfterInsideTemplate(node, next);
                     output +=
                         this.getBeforeOutsideTemplate(node, previous) + indent +
-                        `<${controlName + (depth === 0 ? '{#0}' : '')}` +
-                            (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
-                            (renderTemplates || beforeInside || afterInside || this._innerXmlTags.includes(controlName)
-                                ? '>\n' +
-                                    beforeInside +
-                                    (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
-                                    afterInside +
-                                    indent + `</${controlName}>`
-                                : ' />') + '\n' +
+                        '<' + controlName + (depth === 0 ? '{#0}' : '') +
+                        (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
+                        (renderTemplates || beforeInside || afterInside || this._innerXmlTags.includes(controlName)
+                            ? '>\n' +
+                                beforeInside +
+                                (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
+                                afterInside +
+                                indent + `</${controlName}>`
+                            : ' />') + '\n' +
                         this.getAfterOutsideTemplate(node, previous);
                     break;
                 }

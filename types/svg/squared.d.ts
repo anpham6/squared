@@ -548,6 +548,7 @@ declare module "svg" {
     }
 
     class SvgAnimation {
+        static getClockTimes(value: string): number[];
         static parseClockTime(value: string): number;
         fillMode: number;
         paused: boolean;

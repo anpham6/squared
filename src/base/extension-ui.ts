@@ -5,9 +5,11 @@ import type NodeUI from './node-ui';
 
 import Extension from './extension';
 
+const { splitSome } = squared.lib.util;
+
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static includes(source: Undef<string>, value: string) {
-        return source ? source.trim().split(/\s*,\s*/).includes(value) : false;
+        return !!source && splitSome(source, item => item === value);
     }
 
     public static findNestedElement(node: NodeUI, name: string) {
@@ -16,7 +18,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
             const children = (node.element as HTMLElement).children;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i] as HTMLElement;
-                if (ExtensionUI.includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
+                if (this.includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
                     return item;
                 }
             }

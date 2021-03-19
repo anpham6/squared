@@ -1,10 +1,9 @@
 const { calculateVar, isCalc, isLength, parseUnit } = squared.lib.css;
 const { STRING } = squared.lib.regex;
-const { isString, iterateArray, resolvePath } = squared.lib.util;
+const { isString, iterateArray, resolvePath, splitSome } = squared.lib.util;
 
 const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)(?:\\s*\\))?)+)?\\s*(.*)$`, 'i');
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
-const CHAR_SEPARATOR = /\s*,\s*/;
 
 export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     const result: ImageSrcSet[] = [];
@@ -19,7 +18,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
         });
     }
     if (srcset) {
-        for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
+        splitSome(srcset, value => {
             const match = REGEXP_IMGSRCSET.exec(value);
             if (match) {
                 let width = 0,
@@ -35,7 +34,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                 }
                 result.push({ src: resolvePath(match[1].split(/\s+/)[0]), pixelRatio, width });
             }
-        }
+        });
     }
     const length = result.length;
     if (length === 0) {
@@ -60,14 +59,14 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
             return 0;
         });
         if (isString(sizes)) {
-            let width = NaN,
-                match: Null<RegExpExecArray>;
-            for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
-                if (match = REGEXP_SOURCESIZES.exec(value)) {
+            let width = NaN;
+            splitSome(sizes, value => {
+                const match = REGEXP_SOURCESIZES.exec(value);
+                if (match) {
                     const query = match[1];
                     const unit = match[2];
                     if (!unit || query && !window.matchMedia(/^\(\s*(\(.+\))\s*\)$/.exec(query)?.[1] || query).matches) {
-                        continue;
+                        return;
                     }
                     if (isCalc(unit)) {
                         width = calculateVar(element, unit);
@@ -76,10 +75,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                         width = parseUnit(unit);
                     }
                     if (!isNaN(width)) {
-                        break;
+                        return true;
                     }
                 }
-            }
+            });
             if (!isNaN(width)) {
                 const resolution = width * window.devicePixelRatio;
                 let index = -1;

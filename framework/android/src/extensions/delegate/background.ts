@@ -10,6 +10,8 @@ import View from '../../view';
 import LayoutUI = squared.base.LayoutUI;
 import CssGrid = squared.base.extensions.CssGrid;
 
+const { splitSome } = squared.lib.util;
+
 const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasPX('width') || node.has('width', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && node.cssInitial('minWidth') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
 const hasFullHeight = (node: View) => node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%';
 const hasMargin = (node: View) => node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0;
@@ -83,7 +85,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = parent.cssInitial('minHeight');
             let backgroundSize = node.css('backgroundSize');
             if (!height && !minHeight) {
-                container.setLayoutHeight(!parentVisible && (fixed || !(backgroundSeparate && hasHeight) && (visibleStyle.backgroundRepeatY || node.has('backgroundSize') || node.css('backgroundPosition').split(' ').some(value => !value.includes('%') && parseInt(value) > 0))) ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && (fixed || !(backgroundSeparate && hasHeight) && (visibleStyle.backgroundRepeatY || node.has('backgroundSize') || splitSome(node.css('backgroundPosition'), value => !value.includes('%') && parseInt(value) > 0)), ' ') ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {

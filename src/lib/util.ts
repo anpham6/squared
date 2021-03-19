@@ -161,6 +161,31 @@ export function spliceString(value: string, index: number, length: number, repla
     return index === 0 ? replaceWith + value.substring(length) : value.substring(0, index) + replaceWith + value.substring(index + length);
 }
 
+export function splitSome(value: string, predicate: (item: string) => unknown, char = ',') {
+    const end = char.length;
+    const length = value.length;
+    let i = 0;
+    while (i < length) {
+        while (isSpace(value[i])) {
+            ++i;
+        }
+        let j = value.indexOf(char, i);
+        if (j === -1) {
+            j = length;
+        }
+        let k = j;
+        do {
+            --k;
+        }
+        while (isSpace(value[k]));
+        if (k >= i && predicate(value.substring(i, k + 1))) {
+            return true;
+        }
+        i = j + end;
+    }
+    return false;
+}
+
 export function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string] {
     const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
     if (index !== -1) {
@@ -173,15 +198,17 @@ export function splitPair(value: string, char: string, trim?: boolean, last?: bo
 
 export function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean) {
     const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
-    const result = index !== -1 ? value.substring(0, index) : value;
-    return !trim ? result : result.trim();
+    if (index !== -1) {
+        value = value.substring(0, index);
+    }
+    return !trim ? value : value.trim();
 }
 
 export function splitPairEnd(value: string, char: string, trim?: boolean, last?: boolean) {
     const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
     if (index !== -1) {
-        const result = value.substring(index + char.length);
-        return !trim ? result : result.trim();
+        value = value.substring(index + char.length);
+        return !trim ? value : value.trim();
     }
     return '';
 }

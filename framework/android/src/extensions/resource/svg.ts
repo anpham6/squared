@@ -139,7 +139,7 @@ const { FILE } = squared.lib.regex;
 
 const { extractURL, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap, startsWith } = squared.lib.util;
+const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap, splitSome, startsWith } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
@@ -701,7 +701,12 @@ function insertFillAfter(resourceId: number, propertyName: string, valueType: st
     }
 }
 
-const convertValueType = (resourceId: number, item: SvgAnimation, value: string) => isColorType(item.attributeName) ? getColorValue(resourceId, value) : value.trim() || undefined;
+function convertValueType(resourceId: number, item: SvgAnimation, value: Undef<string>) {
+    if (value && (value = value.trim())) {
+        return isColorType(item.attributeName) ? getColorValue(resourceId, value) : value;
+    }
+}
+
 const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
@@ -1051,6 +1056,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (propertyNames) {
                                             const values = isColorType(item.attributeName) ? getColorValue(resourceId, item.to, true) : item.to.trim().split(/\s+/);
                                             if (values && values.length === propertyNames.length && !values.some(value => !value)) {
+                                                const baseItems = requireBefore && item.baseValue?.trim().split(/\s+/);
                                                 let companionBefore: Undef<PropertyValue[]>,
                                                     companionAfter: Undef<PropertyValue[]>;
                                                 for (let k = 0, q = propertyNames.length; k < q; ++k) {
@@ -1058,10 +1064,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     if (valueType === 'pathType') {
                                                         valueFrom = values[k];
                                                     }
-                                                    else if (requireBefore) {
-                                                        if (item.baseValue) {
-                                                            valueFrom = convertValueType(resourceId, item, item.baseValue.trim().split(/\s+/)[k]);
-                                                        }
+                                                    else if (baseItems) {
+                                                        valueFrom = convertValueType(resourceId, item, baseItems[k]);
                                                     }
                                                     const propertyValue = createPropertyValue(propertyNames[k], valueType, values[k], '1', precision, valueFrom, item.delay > 0 ? item.delay.toString() : '');
                                                     if (index > 1) {
@@ -1826,10 +1830,16 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     for (const type of previousType) {
                         const propertyName = getTransformPropertyName(type);
                         if (propertyName) {
-                            const initialValue = TRANSFORM.typeAsValue(type).split(' ');
-                            for (let j = 0, q = initialValue.length; j < q; ++j) {
-                                transformResult.push(createAnimateFromTo(propertyName[j], item.time, initialValue[j], ''));
-                            }
+                            let j = 0;
+                            splitSome(TRANSFORM.typeAsValue(type), value => {
+                                const animate = propertyName[j++];
+                                if (animate) {
+                                    transformResult.push(createAnimateFromTo(animate, item.time, value, ''));
+                                }
+                                else {
+                                    return true;
+                                }
+                            }, ' ');
                         }
                     }
                 }

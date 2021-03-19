@@ -7,7 +7,7 @@ import { getDeviceDPI } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
-import { convertPercent, endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEnclosing, startsWith } from './util';
+import { convertPercent, endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 import Pattern from './base/pattern';
 
@@ -31,7 +31,6 @@ const CALC_PLACEHOLDER = /{(\d+)}/;
 const CALC_INTEGER = /^-?\d+$/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
-const CHAR_DIVIDER = /\s*\/\s*/;
 let RE_TRANSFORM: Undef<Pattern>;
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
@@ -1000,7 +999,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return value;
         }
         case 'grid': {
-            let [row, column] = value.trim().split(CHAR_DIVIDER);
+            let [row, column] = splitPair(value, '/', true);
             if (hasCalc(row)) {
                 const result = calculateStyle(element, 'gridTemplateRows', row, boundingBox);
                 if (!result) {
@@ -1018,7 +1017,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return row + (column ? ` / ${column}` : '');
         }
         case 'offset': {
-            let [offset, anchor] = value.trim().split(CHAR_DIVIDER);
+            let [offset, anchor] = splitPair(value, '/', true);
             if (hasCalc(offset)) {
                 const url = splitEnclosing(offset.trim());
                 const length = url.length;
@@ -1064,7 +1063,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     let width: Undef<string>,
                         outset: Undef<string>;
                     if (match[3]) {
-                        [width, outset] = match[3].trim().split(CHAR_DIVIDER);
+                        [width, outset] = splitPair(match[3], '/', true);
                         if (hasCalc(width)) {
                             const result = calculateStyle(element, 'borderImageWidth', width, boundingBox);
                             if (!result) {

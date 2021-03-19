@@ -3,7 +3,7 @@ import { CSS_TRAITS, PLATFORM, USER_AGENT } from './constant';
 import { CSS } from './regex';
 
 import { isPlatform, isUserAgent } from './client';
-import { convertCamelCase, convertHyphenated, replaceAll, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { convertCamelCase, convertHyphenated, replaceAll, spliceString, splitEnclosing, splitPair, splitSome, startsWith } from './util';
 
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
 let DOCUMENT_FONTMAP!: number[];
@@ -1641,10 +1641,9 @@ export function parseKeyframes(rules: CSSRuleList) {
         const item = rules[i] as CSSKeyframeRule;
         const match = pattern.exec(item.cssText);
         if (match) {
-            const keyframes = (item.keyText || match[1]).trim().split(/\s*,\s*/);
             const items = match[2].trim().split(/\s*;\s*/);
-            for (let j = 0, q = keyframes.length, r = items.length; j < q; ++j) {
-                let percent = keyframes[j];
+            const q = items.length;
+            splitSome(item.keyText || match[1], percent => {
                 switch (percent) {
                     case 'from':
                         percent = '0%';
@@ -1654,15 +1653,15 @@ export function parseKeyframes(rules: CSSRuleList) {
                         break;
                 }
                 const keyframe: StringMap = {};
-                for (let k = 0; k < r; ++k) {
-                    const [attr, value] = splitPair(items[k], ':', true);
+                for (let j = 0; j < q; ++j) {
+                    const [attr, value] = splitPair(items[j], ':', true);
                     if (value) {
                         keyframe[attr] = value;
                     }
                 }
                 result[percent] = keyframe;
                 valid = true;
-            }
+            });
         }
     }
     return valid ? result : null;

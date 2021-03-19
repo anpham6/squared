@@ -6,7 +6,7 @@ import { PATTERN_CUBICBEZIER } from './lib/util';
 const { convertHex, parseColor } = squared.lib.color;
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { isNumber, lastItemOf, replaceMap, sortNumber, trimEnd } = squared.lib.util;
+const { isNumber, lastItemOf, replaceMap, splitSome, trimEnd } = squared.lib.util;
 
 const REGEXP_BEZIER = new RegExp(`\\s*${PATTERN_CUBICBEZIER}\\s*`);
 const REGEXP_BEZIERCSS = new RegExp(`cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
@@ -267,11 +267,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 case 'paced':
                     this._keySplines = null;
                     break;
-                case 'spline':
-                    this.keySplines = replaceMap(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim()).filter(value => value);
+                case 'spline': {
+                    const keySplines: string[] = [];
+                    splitSome(getNamedItem(animationElement, 'keySplines'), value => {
+                        keySplines.push(value);
+                    }, ';');
+                    this.keySplines = keySplines;
+                }
                 case 'linear': {
-                    const keyTimesBase = this.keyTimes;
-                    if (keyTimesBase[0] !== 0 && lastItemOf(keyTimesBase) !== 1) {
+                    const current = this.keyTimes;
+                    if (current[0] !== 0 && lastItemOf(current) !== 1) {
                         const length = this.values.length;
                         const keyTimes: number[] = new Array(length);
                         for (let i = 0; i < length; ++i) {
@@ -350,7 +355,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const animationElement = this.animationElement;
         const end = animationElement && getNamedItem(animationElement, 'end');
         if (end) {
-            const endTime = sortNumber(replaceMap(end.split(';'), time => SvgAnimation.parseClockTime(time)).filter(time => !isNaN(time)))[0];
+            const endTime = SvgAnimation.getClockTimes(end)[0];
             if (!isNaN(endTime)) {
                 const { duration, iterationCount } = this;
                 if (iterationCount === -1 || duration > 0 && endTime < duration * iterationCount) {

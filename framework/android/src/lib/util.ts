@@ -183,10 +183,23 @@ export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
                         start = false;
                     }
                 }
+                result += ch;
                 if (ch === '\n') {
                     start = true;
                 }
-                result += ch;
+                else {
+                    const k = i + 1;
+                    const l = value.indexOf('\n', k);
+                    if (l === -1) {
+                        result += value.substring(k);
+                        break;
+                    }
+                    else {
+                        start = true;
+                        result += value.substring(k, l + 1);
+                        i = l;
+                    }
+                }
             }
             return result;
         }
