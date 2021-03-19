@@ -351,7 +351,6 @@ declare module "lib" {
         function isSpace(ch: unknown): ch is string;
         function isEmptyString(value: string): boolean;
         function isEqual(source: unknown, other: unknown): boolean;
-        function cloneInstance<T>(value: T): T;
         function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;
         function resolvePath(value: string, href?: string): string;
         function trimBoth(value: string, pattern: string): string;

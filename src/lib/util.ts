@@ -404,6 +404,9 @@ export function isEqual(source: unknown, other: unknown) {
     else if (isPlainObject(source) && isPlainObject(other)) {
         if (Object.keys(source).length === Object.keys(other).length) {
             for (const attr in source) {
+                if (!(attr in other)) {
+                    return false;
+                }
                 const a = source[attr];
                 const b = other[attr];
                 if (a !== b && !(isPlainObject(a) && isPlainObject(b) && isEqual(a, b))) {
@@ -414,10 +417,6 @@ export function isEqual(source: unknown, other: unknown) {
         }
     }
     return false;
-}
-
-export function cloneInstance<T>(value: T) {
-    return Object.assign(Object.create(Object.getPrototypeOf(value)), value) as T;
 }
 
 export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
@@ -433,15 +432,7 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
         }
         for (let i = 0, length = data.length; i < length; ++i) {
             const value = data[i];
-            if (Array.isArray(value)) {
-                target.push(cloneObject(value, nested));
-            }
-            else if (deep && isPlainObject(value)) {
-                target.push(cloneObject(value, nested));
-            }
-            else {
-                target.push(value);
-            }
+            target.push(Array.isArray(value) || deep && isPlainObject(value) ? cloneObject(value, nested) : value);
         }
     }
     else if (isObject(data)) {
@@ -460,6 +451,9 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
                 target[attr] = value;
             }
         }
+    }
+    else {
+        return data;
     }
     return target as T extends [] ? T[] : PlainObject;
 }
@@ -619,7 +613,7 @@ export function assignEmptyValue(dest: PlainObject, ...attrs: string[]) {
 }
 
 export function sortNumber(values: number[], ascending = true) {
-    return ascending ? values.sort((a, b) => a - b) : values.sort((a, b) => b - a);
+    return values.sort(ascending ? (a, b) => a - b : (a, b) => b - a);
 }
 
 export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>) {
