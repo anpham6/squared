@@ -7,7 +7,7 @@ import Pattern = squared.lib.base.Pattern;
 type GroupData = ObjectMap<View[]>;
 
 const { isPx } = squared.lib.css;
-const { convertHyphenated, fromLastIndexOf, startsWith } = squared.lib.util;
+const { convertHyphenated, fromLastIndexOf, replaceAll, startsWith } = squared.lib.util;
 
 const RE_DIMENS = new Pattern(/:(\w+)="(-?[\d.]+px)"/g);
 
@@ -81,7 +81,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     if (name !== 'text') {
                         CACHE_UNDERSCORE[name] ||= convertHyphenated(name, '_');
                         const key = getResourceName(resourceId, dimens, 'custom_' + CACHE_UNDERSCORE[name], value);
-                        content = content.replace(original, original.replace(value, `@dimen/${key}`));
+                        content = replaceAll(content, original, replaceAll(original, value, `@dimen/${key}`, 1), 1);
                         dimens.set(key, value);
                     }
                 }

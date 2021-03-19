@@ -3,7 +3,7 @@ import { CSS_TRAITS, PLATFORM, USER_AGENT } from './constant';
 import { CSS } from './regex';
 
 import { isPlatform, isUserAgent } from './client';
-import { convertCamelCase, convertHyphenated, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { convertCamelCase, convertHyphenated, replaceAll, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
 let DOCUMENT_FONTMAP!: number[];
@@ -1583,7 +1583,7 @@ export function parseSelectorText(value: string) {
                 const placeholder = timestamp! + '-' + i;
                 for (let j = k; j < result.length; ++j) {
                     const seg = result[j];
-                    result[j] = seg.replace(placeholder, part);
+                    result[j] = replaceAll(seg, placeholder, part, 1);
                     if (seg !== result[j]) {
                         k = j;
                         break;

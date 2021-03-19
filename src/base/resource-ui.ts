@@ -19,7 +19,7 @@ const { calculateAll, convertAngle, formatPercent, formatPX, getStyle, hasCoords
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, splitPair, startsWith } = squared.lib.util;
+const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, replaceAll, splitPair, startsWith } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -281,7 +281,7 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
         tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
         const style = ' ' + attr + `="${attrs[i++]}"`;
         const match = new RegExp(`<${tagName}(${STRING.TAG_OPEN}+?)${attr}\\s*${STRING.TAG_ATTR}(${STRING.TAG_OPEN}*)>`, 'i').exec(src);
-        src = match ? src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[6] + '>') : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+        src = match ? replaceAll(src, match[0], '<@@' + timestamp + match[1] + match[2] + style + match[6] + '>', 1) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
     }
     return src;
 }
@@ -289,7 +289,7 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
 function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], dimension?: Dimension) {
     for (let i = 0, length = children.length; i < length; ++i) {
         const item = children[i];
-        const timestamp = performance.now().toString().replace(/\./, '');
+        const timestamp = replaceAll(performance.now().toString(), '.', '', 1);
         const tagName = item.tagName;
         let start = true;
         switch (tagName) {
@@ -1339,7 +1339,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 default:
                     trimming = true;
                     if (node.plainText || node.pseudoElement || node.hasAlign(NODE_ALIGNMENT.INLINE) && node.textElement) {
-                        value = trimming ? node.textContent.replace(/&/g, '&amp;') : node.textContent;
+                        value = trimming ? replaceAll(node.textContent, '&', '&amp;') : node.textContent;
                         inlined = true;
                     }
                     else if (node.inlineText) {
@@ -1373,16 +1373,12 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 }
                 case 'break-spaces':
-                    value = value
-                        .replace(/\n/g, this.STRING_NEWLINE)
-                        .replace(/\t/g, this.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
-                        .replace(/\s/g, this.STRING_SPACE);
+                    value = replaceAll(value, '\n', this.STRING_NEWLINE);
+                    value = replaceAll(value, '\t', this.STRING_SPACE.repeat(node.toInt('tabSize', 8))).replace(/\s/g, this.STRING_SPACE);
                     trimming = false;
                     break;
                 case 'pre-line':
-                    value = value
-                        .replace(/\n/g, this.STRING_NEWLINE)
-                        .replace(/\s{2,}/g, ' ');
+                    value = replaceAll(value, '\n', this.STRING_NEWLINE).replace(/\s{2,}/g, ' ');
                     trimming = false;
                     break;
                 case 'nowrap':
@@ -1479,7 +1475,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public preFormatString(value: string) {
-        return value.replace(/\u00A0/g, this.STRING_SPACE);
+        return replaceAll(value, '\u00A0', this.STRING_SPACE);
     }
 
     public removeExcludedText(node: T, element: Element) {
@@ -1497,26 +1493,26 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
                         }
                         else if (child.positioned) {
-                            value = value.replace(item.outerHTML, '');
+                            value = replaceAll(value, item.outerHTML, '', 1);
                         }
                         else if (child.display === 'contents') {
-                            value = value.replace(item.outerHTML, child.textContent);
+                            value = replaceAll(value, item.outerHTML, child.textContent, 1);
                         }
                         else if (!preserveWhiteSpace) {
-                            value = value.replace(item.outerHTML, child.pageFlow && isString(child.textContent) ? this.STRING_SPACE : '');
+                            value = replaceAll(value, item.outerHTML, child.pageFlow && isString(child.textContent) ? this.STRING_SPACE : '', 1);
                         }
                         return;
                     }
                     const textContent = child.plainText ? child.textContent : child[attr] as string;
                     if (textContent) {
                         if (!preserveWhiteSpace) {
-                            value = value.replace(textContent, '');
+                            value = replaceAll(value, textContent, '', 1);
                         }
                         return;
                     }
                 }
                 else if (item.nodeName[0] !== '#') {
-                    value = value.replace(item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getComputedStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '');
+                    value = replaceAll(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getComputedStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '', 1);
                 }
                 if (!preserveWhiteSpace) {
                     if (index === 0) {

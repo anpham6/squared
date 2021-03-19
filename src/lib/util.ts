@@ -141,8 +141,24 @@ export function padStart(value: string, length: number, char: string) {
     return length > 0 ? char.repeat(length) + value : value;
 }
 
-export function spliceString(value: string, index: number, length: number, replacement = '') {
-    return index === 0 ? replacement + value.substring(length) : value.substring(0, index) + replacement + value.substring(index + length);
+export function replaceAll(value: string, searchValue: string, replaceWith: string, replaceCount = 0) {
+    const length = searchValue.length;
+    let result = '',
+        i = -1,
+        j = 0,
+        k = 0;
+    while ((i = value.indexOf(searchValue, k)) !== -1) {
+        result += value.substring(k, i) + replaceWith;
+        k = i + length;
+        if (++j === replaceCount) {
+            break;
+        }
+    }
+    return j ? result + value.substring(k) : value;
+}
+
+export function spliceString(value: string, index: number, length: number, replaceWith = '') {
+    return index === 0 ? replaceWith + value.substring(length) : value.substring(0, index) + replaceWith + value.substring(index + length);
 }
 
 export function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string] {
@@ -450,9 +466,9 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
 
 export function resolvePath(value: string, href?: string) {
     if ((value = value.trim()) && !FILE.PROTOCOL.test(value)) {
-        const pathname = (href ? href.replace(location.origin, '') : location.pathname).replace(/\\/g, '/').split('/');
+        const pathname = replaceAll(href ? href.replace(location.origin, '') : location.pathname, '\\', '/').split('/');
         --pathname.length;
-        value = value.replace(/\\/g, '/');
+        value = replaceAll(value, '\\', '/');
         if (value[0] === '/') {
             return location.origin + value;
         }

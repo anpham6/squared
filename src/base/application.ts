@@ -18,7 +18,7 @@ const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, replaceAll, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
 const REGEXP_CSSHOST = /^:(host|host-context)\(([^)]+)\)/;
@@ -50,7 +50,7 @@ function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Res
                 if (resource) {
                     resource.addImageData(resourceId, url);
                 }
-                result = (result || value).replace(match[0], `url("${url}")`);
+                result = replaceAll(result || value, match[0], `url("${url}")`, 1);
             }
         }
     }

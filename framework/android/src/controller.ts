@@ -29,7 +29,7 @@ const { formatPX, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { assignEmptyValue, capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, plainMap, startsWith, withinRange } = squared.lib.util;
+const { assignEmptyValue, capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, plainMap, replaceAll, startsWith, withinRange } = squared.lib.util;
 
 const { getSrcSet, parseMimeType } = squared.base.lib.util;
 
@@ -676,7 +676,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public finalize(layouts: FileAsset[]) {
         const insertSpaces = this.userSettings.insertSpaces;
         for (const layout of layouts) {
-            layout.content = replaceTab(layout.content!.replace(/\{#0\}/, getRootNs(layout.content!)), insertSpaces);
+            layout.content = replaceTab(replaceAll(layout.content!, '{#0}', getRootNs(layout.content!), 1), insertSpaces);
         }
     }
 

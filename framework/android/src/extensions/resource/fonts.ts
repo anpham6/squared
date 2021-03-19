@@ -16,7 +16,7 @@ interface IStyleAttribute<T> extends StyleAttribute {
 }
 
 const { truncate } = squared.lib.math;
-const { capitalize, convertWord, hasKeys, joinArray, spliceArray, startsWith, trimBoth } = squared.lib.util;
+const { capitalize, convertWord, hasKeys, joinArray, replaceAll, spliceArray, startsWith, trimBoth } = squared.lib.util;
 
 const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
@@ -154,7 +154,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         backgroundColor ||= fontData.backgroundColor;
                     }
                 }
-                fontFamily.replace(/"/g, '').split(',').some((value, index, array) => {
+                replaceAll(fontFamily, '"', '').split(',').some((value, index, array) => {
                     value = trimBoth(value.trim(), "'").toLowerCase();
                     let fontName = value,
                         actualFontWeight = '';

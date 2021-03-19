@@ -127,22 +127,22 @@ export default class Pattern implements squared.lib.base.Pattern {
         return [];
     }
 
-    public replaceAll(replacement: string | PatternGroupPredicate, replaceCount = Infinity) {
-        const stringAs = typeof replacement === 'string';
+    public replaceAll(replaceWith: string | PatternGroupPredicate, replaceCount = Infinity) {
+        const isMethod = typeof replaceWith === 'function';
         const input = this._input;
         let index = this._matcher.lastIndex,
             output = index ? input.substring(0, index) : '';
         while (replaceCount && this.find()) {
-            const matchResult = this._matchResult!;
-            output += input.substring(index, matchResult.index) + (stringAs ? replacement as string : (replacement as PatternGroupPredicate)(matchResult, matchResult[0]));
-            index = matchResult.index + matchResult[0].length;
+            const match = this._matchResult!;
+            output += input.substring(index, match.index) + (isMethod ? (replaceWith as PatternGroupPredicate)(match, match[0]) : replaceWith as string);
+            index = match.index + match[0].length;
             --replaceCount;
         }
         return output + input.substring(index);
     }
 
-    public replaceFirst(replacement: string | PatternGroupPredicate) {
-        return this.replaceAll(replacement, 1);
+    public replaceFirst(replaceWith: string | PatternGroupPredicate) {
+        return this.replaceAll(replaceWith, 1);
     }
 
     public usePattern(expression: string | RegExp, flags?: string) {

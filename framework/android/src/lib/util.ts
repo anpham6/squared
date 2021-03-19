@@ -1,7 +1,7 @@
 import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
 const { parseColor: __parseColor } = squared.lib.color;
-const { capitalize, isPlainObject, startsWith } = squared.lib.util;
+const { capitalize, isPlainObject, replaceAll, startsWith } = squared.lib.util;
 
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
@@ -190,7 +190,7 @@ export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
             }
             return result;
         }
-        return value.replace(/\t/g, padding);
+        return replaceAll(value, '\t', padding);
     }
     return value;
 }
@@ -307,7 +307,7 @@ export function concatString(list: (string | number)[], char = '') {
 
 export function formatString(value: string, ...params: string[]) {
     for (let i = 0, length = params.length; i < length; ++i) {
-        value = value.replace(`{${i}}`, params[i]);
+        value = replaceAll(value, `{${i}}`, params[i]);
     }
     return value;
 }

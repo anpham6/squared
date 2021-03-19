@@ -59,8 +59,8 @@ declare module "lib" {
             groups(start?: number, end?: number): string[];
             groupCount(): number;
             map<T>(predicate: IteratorPredicate<string, T>, start?: number, end?: number): T[];
-            replaceAll(replacement: string | PatternGroupPredicate, replaceCount?: number): string;
-            replaceFirst(replacement: string | PatternGroupPredicate): string;
+            replaceAll(replaceWith: string | PatternGroupPredicate, replaceCount?: number): string;
+            replaceFirst(replaceWith: string | PatternGroupPredicate): string;
             usePattern(expression: string | RegExp, flags?: string): void;
             pattern(): string;
             reset(input?: string): void;
@@ -334,7 +334,7 @@ declare module "lib" {
         function convertBase64(value: ArrayBuffer): string;
         function delimitString(value: DelimitStringOptions | string, ...appending: string[]): string;
         function padStart(value: string, length: number, char: string): string;
-        function spliceString(value: string, index: number, length: number, replacement?: string): string;
+        function spliceString(value: string, index: number, length: number, replaceWith?: string): string;
         function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string];
         function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean): string;
         function splitPairEnd(value: string, char: string, trim?: boolean, last?: boolean): string;
@@ -358,6 +358,7 @@ declare module "lib" {
         function trimString(value: string, pattern: string): string;
         function trimStart(value: string, pattern: string): string;
         function trimEnd(value: string, pattern: string): string;
+        function replaceAll(value: string, searchValue: string, replaceWith: string, replaceCount?: number): string;
         function escapePattern(value: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function startsWith(value: unknown, leading: string): boolean;
