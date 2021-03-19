@@ -12,10 +12,10 @@ import Controller from './controller';
 const { CSS_PROPERTIES } = squared.lib.internal;
 
 const { isUserAgent } = squared.lib.client;
-const { asPx, formatPX, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
+const { asPx, formatPX, getFontSize, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, iterateArray } = squared.lib.util;
+const { iterateArray } = squared.lib.util;
 
 const BORDER_BOX = [
     CSS_PROPERTIES.borderTop.value as string[],
@@ -24,21 +24,6 @@ const BORDER_BOX = [
     CSS_PROPERTIES.borderLeft.value as string[]
 ];
 const CACHE_INDENT: StringMap = {};
-
-function setBorderStyle(style: CssStyleMap, color: string) {
-    let result = false;
-    for (let i = 0; i < 4; ++i) {
-        const border = BORDER_BOX[i];
-        const attr = border[0];
-        if (!style[attr]) {
-            style[attr] = '2px';
-            style[border[1]] = 'inset';
-            style[border[2]] = color;
-            result = true;
-        }
-    }
-    return result;
-}
 
 function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
@@ -134,22 +119,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             if (!styleMap) {
                 setElementCache(element, 'styleMap', styleMap = {}, processing.sessionId);
             }
-            const setInputStyle = (style: CssStyleMap, disabled: boolean) => {
-                setBorderStyle(style, this._settingsStyle[disabled ? 'inputDisabledBorderColor' : 'inputBorderColor']);
-                if (disabled && hasEmptyStyle(style.backgroundColor)) {
-                    style.backgroundColor = this._settingsStyle.inputDisabledBackgroundColor;
-                }
-            };
-            const setButtonStyle = (style: CssStyleMap, disabled: boolean) => {
-                if ((setBorderStyle(style, this._settingsStyle[disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor']) || disabled) && hasEmptyStyle(style.backgroundColor)) {
-                    style.backgroundColor = this._settingsStyle[disabled ? 'buttonDisabledBackgroundColor' : 'buttonBackgroundColor'];
-                }
-                style.textAlign ||= 'center';
-                style.paddingTop ||= '1px';
-                style.paddingRight ||= '6px';
-                style.paddingBottom ||= '1px';
-                style.paddingLeft ||= '6px';
-            };
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
                     case 'BODY':
@@ -187,14 +156,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'reset':
                         case 'submit':
                         case 'button':
-                            setButtonStyle(styleMap, disabled);
+                            this.setButtonStyle(styleMap, disabled);
                             break;
                         case 'range':
                             if (!disabled && hasEmptyStyle(styleMap.backgroundColor)) {
                                 styleMap.backgroundColor = this._settingsStyle.rangeBackgroundColor;
                             }
                         default:
-                            setInputStyle(styleMap, disabled);
+                            this.setInputStyle(styleMap, disabled);
                             break;
                     }
                     break;
@@ -202,14 +171,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'BUTTON': {
                     const disabled = (element as HTMLButtonElement).disabled;
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;
-                    setButtonStyle(styleMap, disabled);
+                    this.setButtonStyle(styleMap, disabled);
                     break;
                 }
                 case 'TEXTAREA':
                 case 'SELECT': {
                     const disabled = (element as HTMLTextAreaElement | HTMLSelectElement).disabled;
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;
-                    setInputStyle(styleMap, disabled);
+                    this.setInputStyle(styleMap, disabled, '1px');
                     break;
                 }
                 case 'BODY':
@@ -253,6 +222,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'H6':
                     styleMap.fontSize ||= '0.67em';
                     break;
+                case 'HR':
+                    this.setBorderStyle(styleMap, '1px', 'silver');
+                    break;
                 case 'FORM':
                     styleMap.marginTop ||= '0px';
                     break;
@@ -279,8 +251,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'OBJECT':
                 case 'EMBED':
                 case 'svg':
-                    this.setElementDimension(processing, element, styleMap, 'width', 'height');
-                    this.setElementDimension(processing, element, styleMap, 'height', 'width');
+                    this.setElementDimension(processing.resourceId, element, styleMap, 'width');
+                    this.setElementDimension(processing.resourceId, element, styleMap, 'height');
                     break;
             }
         }
@@ -770,39 +742,74 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return '<' + controlName + attributes + (content || this._innerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
-    private setElementDimension(processing: squared.base.AppProcessing<T>, element: Element, styleMap: CssStyleMap, attr: DimensionAttr, opposing: DimensionAttr) {
-        const dimension = styleMap[attr];
+    protected setInputStyle(style: CssStyleMap, disabled: boolean, width = '2px') {
+        this.setBorderStyle(style, width, this._settingsStyle[disabled ? 'inputDisabledBorderColor' : 'inputBorderColor']);
+        if (disabled && hasEmptyStyle(style.backgroundColor)) {
+            style.backgroundColor = this._settingsStyle.inputDisabledBackgroundColor;
+        }
+    }
+
+    protected setButtonStyle(style: CssStyleMap, disabled: boolean) {
+        if ((this.setBorderStyle(style, '2px', this._settingsStyle[disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor']) || disabled) && hasEmptyStyle(style.backgroundColor)) {
+            style.backgroundColor = this._settingsStyle[disabled ? 'buttonDisabledBackgroundColor' : 'buttonBackgroundColor'];
+        }
+        style.textAlign ||= 'center';
+        style.paddingTop ||= '1px';
+        style.paddingRight ||= '6px';
+        style.paddingBottom ||= '1px';
+        style.paddingLeft ||= '6px';
+    }
+
+    protected setBorderStyle(style: CssStyleMap, width: string, color: string) {
+        let result = false;
+        for (let i = 0; i < 4; ++i) {
+            const border = BORDER_BOX[i];
+            const attr = border[0];
+            if (!style[attr]) {
+                style[attr] = width;
+                style[border[1]] = 'inset';
+                style[border[2]] = color;
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    protected setElementDimension(resourceId: number, element: Element, style: CssStyleMap, attr: DimensionAttr) {
+        const dimension = style[attr];
         if (!dimension || dimension === 'auto') {
+            const horizontal = attr === 'width';
             const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
             if (match) {
                 const value = match[1];
                 if (isPercent(value)) {
-                    styleMap[attr] = value;
+                    style[attr] = value;
                 }
                 else {
                     let unit = asPx(value);
                     if (isNaN(unit) && isNaN(unit = parseFloat(value))) {
                         return;
                     }
-                    styleMap[attr] = unit + 'px';
+                    style[attr] = unit + 'px';
                 }
             }
             else if (element.clientWidth === 300 && element.clientHeight === 150 && !((element instanceof HTMLObjectElement || element instanceof HTMLEmbedElement) && element.type.startsWith('image/'))) {
-                if (attr === 'width') {
-                    styleMap.width = '300px';
+                if (horizontal) {
+                    style.width = '300px';
                 }
                 else {
-                    styleMap.height = '150px';
+                    style.height = '150px';
                 }
             }
-            else {
-                const image = this.application.resourceHandler?.getImage(processing.resourceId, (element as HTMLImageElement).src);
+            else if (resourceId !== -1) {
+                const image = this.application.resourceHandler!.getImage(resourceId, (element as HTMLImageElement).src);
                 if (image && image.width && image.height) {
-                    const value = styleMap[opposing];
+                    const opposing = horizontal ? 'height' : 'width';
+                    const value = style[opposing];
                     if (value && isLength(value)) {
-                        const attrMax = 'max' + capitalize(attr);
-                        if (!styleMap[attrMax] || !isPercent(attrMax)) {
-                            styleMap[attr] = formatPX(image[attr] * parseUnit(value, { fontSize: parseFloat(getStyle(element).fontSize) }) / image[opposing]);
+                        const valueMax = horizontal ? style.maxWidth : style.maxHeight;
+                        if (!valueMax || !isPercent(valueMax)) {
+                            style[attr] = formatPX(image[attr] * parseUnit(value, { fontSize: getFontSize(element) }) / image[opposing]);
                         }
                     }
                 }

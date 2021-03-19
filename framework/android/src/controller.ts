@@ -549,7 +549,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             buttonBorderColor: 'rgb(118, 118, 118)',
             buttonBackgroundColor: isPlatform(PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(239, 239, 239)',
             buttonDisabledBorderColor: 'rgba(118, 118, 118, 0.3)',
-            buttonDisabledBackgroundColor: 'rgba(19, 1, 1, 0.3)',
+            buttonDisabledBackgroundColor: 'rgba(239, 239, 239, 0.3)',
             rangeForegroundColor: 'rgb(0, 117, 255)',
             rangeBackgroundColor: 'rgb(239, 239, 239)',
             rangeBackgroundCenterHeight: 0.75,
