@@ -177,28 +177,23 @@ export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
                     }
                     else {
                         if (j > 0) {
-                            result += padding.repeat(j);
+                            result += (ch === '<' ? padding : '\t').repeat(j);
                             j = 0;
                         }
                         start = false;
                     }
                 }
                 result += ch;
-                if (ch === '\n') {
-                    start = true;
+                const k = i + 1;
+                const l = value.indexOf('>\n', k);
+                if (l === -1) {
+                    result += value.substring(k);
+                    break;
                 }
                 else {
-                    const k = i + 1;
-                    const l = value.indexOf('\n', k);
-                    if (l === -1) {
-                        result += value.substring(k);
-                        break;
-                    }
-                    else {
-                        start = true;
-                        result += value.substring(k, l + 1);
-                        i = l;
-                    }
+                    start = true;
+                    result += value.substring(k, l + 2);
+                    i = l + 1;
                 }
             }
             return result;

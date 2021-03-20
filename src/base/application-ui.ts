@@ -18,7 +18,7 @@ import LayoutUI from './layout-ui';
 
 import { convertListStyle } from './extensions/list';
 
-import { appendSeparator } from './lib/util';
+import { appendSeparator, flatArray } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
 type VisibleElementMethod = (element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) => boolean;
@@ -31,7 +31,7 @@ const { FILE } = squared.lib.regex;
 const { formatPX, getStyle, hasCoords, isCalc, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, splitSome, startsWith, trimBoth, trimString } = squared.lib.util;
+const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith, trimBoth, trimString } = squared.lib.util;
 
 let REGEXP_COUNTER: Undef<RegExp>;
 let REGEXP_COUNTERVALUE: Undef<RegExp>;

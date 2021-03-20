@@ -23,7 +23,9 @@ interface ICssGridData<T> extends CssGridData<T> {
 
 const { asPx, formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertPercent, endsWith, flatArray, lastItemOf, startsWith } = squared.lib.util;
+const { convertPercent, endsWith, lastItemOf, startsWith } = squared.lib.util;
+
+const { flatArray } = squared.base.lib.util;
 
 const CSS_ALIGNSELF = ['start', 'end', 'center', 'baseline'];
 const CSS_JUSTIFYSELF = ['start', 'center', 'end', 'baseline', 'right', 'left'];

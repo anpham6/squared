@@ -487,6 +487,22 @@ export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: Iterato
     return false;
 }
 
+export function flatArray<T>(list: unknown[], depth = 1, current = 0): T[] {
+    const result: T[] = [];
+    for (let i = 0, length = list.length; i < length; ++i) {
+        const item = list[i];
+        if (current < depth && Array.isArray(item)) {
+            if (item.length) {
+                result.push(...flatArray<T>(item, depth, current + 1));
+            }
+        }
+        else if (item !== undefined && item !== null) {
+            result.push(item as T);
+        }
+    }
+    return result;
+}
+
 export function parseGlob(value: string, options?: ParseGlobOptions) {
     value = value.trim();
     let flags = '',

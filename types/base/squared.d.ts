@@ -899,6 +899,7 @@ declare module "base" {
             function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
             function searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void>;
             function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>): boolean;
+            function flatArray<T>(list: unknown[], depth?: number): T[];
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
             function parseTask(value: Undef<string>): Undef<TaskAction[]>;
             function parseWatchInterval(value: Undef<string>): Undef<WatchInterval>;

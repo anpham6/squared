@@ -104,15 +104,16 @@ export function convertBase64(value: ArrayBuffer) {
 }
 
 export function delimitString(value: DelimitStringOptions | string, ...appending: string[]) {
-    let delimiter = ', ',
+    let delimiter: Undef<string>,
         trim: Undef<boolean>,
         remove: Undef<boolean>,
         sort: Undef<FunctionSort<string> | boolean>,
         not: Undef<string[]>;
-    if (typeof value === 'object') {
-        ({ delimiter = ', ', trim, remove, not, sort } = value);
+    if (isObject<DelimitStringOptions>(value)) {
+        ({ delimiter, trim, remove, not, sort } = value);
         value = value.value;
     }
+    delimiter ||= ', ';
     const values = value ? value.split(delimiter) : [];
     for (let i = 0, length = appending.length; i < length; ++i) {
         let append = appending[i];
@@ -654,22 +655,6 @@ export function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)
         }
         return 0;
     });
-}
-
-export function flatArray<T>(list: T[], depth = 1, current = 0): T[] {
-    const result: T[] = [];
-    for (let i = 0, length = list.length; i < length; ++i) {
-        const item = list[i];
-        if (current < depth && Array.isArray(item)) {
-            if (item.length) {
-                result.push(...flatArray(item as T[], depth, current + 1));
-            }
-        }
-        else if (item !== undefined && item !== null) {
-            result.push(item);
-        }
-    }
-    return result;
 }
 
 export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number) {

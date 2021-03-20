@@ -368,7 +368,6 @@ declare module "lib" {
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)[]): T[];
-        function flatArray<T>(list: unknown[], depth?: number): T[];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string): string;
