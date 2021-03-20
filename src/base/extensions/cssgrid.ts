@@ -28,8 +28,8 @@ interface RepeatItem {
     unitMin?: string;
 }
 
-const { asPx, formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
-const { convertPercent, endsWith, isNumber, splitPairEnd, startsWith, trimString, withinRange } = squared.lib.util;
+const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
+const { endsWith, splitPairEnd, startsWith, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
@@ -78,16 +78,14 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
     const unit = data.unit;
     if (unit.length === 1 && (data.flags & LAYOUT_CSSGRID.AUTO_FIT || data.flags & LAYOUT_CSSGRID.AUTO_FILL)) {
         const unitMin = data.unitMin;
-        let sizeMin = 0;
+        let sizeMin = 0,
+            offset: number;
         for (const value of [unit[0], unitMin[0]]) {
-            if (isPercent(value)) {
-                sizeMin = Math.max(convertPercent(value) * dimension, sizeMin);
+            if (!isNaN(offset = asPx(value))) {
+                sizeMin = Math.max(offset, sizeMin);
             }
-            else {
-                const min = asPx(value);
-                if (!isNaN(min)) {
-                    sizeMin = Math.max(min, sizeMin);
-                }
+            else if (!isNaN(offset = asPercent(value))) {
+                sizeMin = Math.max(offset * dimension, sizeMin);
             }
         }
         if (sizeMin) {
@@ -103,19 +101,19 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
 function setFlexibleDimension(dimension: number, gap: number, count: number, unit: string[], max: number[]) {
     let filled = 0,
         fractional = 0,
-        percent = 1;
+        percent = 1,
+        n: number;
     const length = unit.length;
     for (let i = 0; i < length; ++i) {
         const value = unit[i];
-        const px = asPx(value);
-        if (!isNaN(px)) {
-            filled += px;
+        if (!isNaN(n = asPx(value))) {
+            filled += n;
         }
         else if (endsWith(value, 'fr')) {
             fractional += parseFloat(value);
         }
-        else if (isPercent(value)) {
-            percent -= convertPercent(value);
+        else if (!isNaN(n = asPercent(value))) {
+            percent -= n;
         }
     }
     if (percent < 1 && fractional) {
@@ -222,14 +220,17 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
     const length = unit.length;
     for (let i = 0; i < length; ++i) {
         const value = unit[i];
-        if (isPercent(value)) {
-            percent -= convertPercent(value);
-        }
-        else if (endsWith(value, 'fr')) {
-            fr += parseFloat(value);
-        }
-        else if (value === 'auto') {
+        if (value === 'auto') {
             ++auto;
+        }
+        else {
+            const n = asPercent(value);
+            if (!isNaN(n)) {
+                percent -= n;
+            }
+            else if (endsWith(value, 'fr')) {
+                fr += parseFloat(value);
+            }
         }
     }
     if (percent < 1 || fr > 0) {
@@ -505,18 +506,19 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const [gridRowEnd, gridColumnEnd] = item.cssAsTuple('gridRowEnd', 'gridColumnEnd');
                 let rowSpan = 1,
-                    columnSpan = 1;
+                    columnSpan = 1,
+                    n: number;
                 if (startsWith(gridRowEnd, 'span')) {
                     rowSpan = +splitPairEnd(gridRowEnd, ' ');
                 }
-                else if (isNumber(gridRowEnd)) {
-                    rowSpan = +gridRowEnd - rowIndex;
+                else if (!isNaN(n = +gridRowEnd)) {
+                    rowSpan = n - rowIndex;
                 }
                 if (startsWith(gridColumnEnd, 'span')) {
                     columnSpan = +splitPairEnd(gridColumnEnd, ' ');
                 }
-                else if (isNumber(gridColumnEnd)) {
-                    columnSpan = +gridColumnEnd - columnIndex;
+                else if (!isNaN(n = +gridColumnEnd)) {
+                    columnSpan = n - columnIndex;
                 }
                 if (columnIndex === 1 && columnMax) {
                     found: {
@@ -652,8 +654,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                     const setPlacement = (value: string, position: number, vertical: boolean, length: number) => {
-                        if (isNumber(value)) {
-                            const cellIndex = +value;
+                        let n: number;
+                        if (!isNaN(n = +value)) {
+                            const cellIndex = n;
                             if (cellIndex > 0) {
                                 placement[position] = cellIndex;
                                 return true;
@@ -686,19 +689,17 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             switch (position) {
                                 case 0: {
                                     const rowIndex = positions[2];
-                                    if (isNumber(rowIndex)) {
-                                        const pos = +rowIndex;
-                                        placement[0] = pos - span;
-                                        placement[2] = pos;
+                                    if (!isNaN(n = +rowIndex)) {
+                                        placement[0] = n - span;
+                                        placement[2] = n;
                                     }
                                     break;
                                 }
                                 case 1: {
                                     const colIndex = positions[3];
-                                    if (isNumber(colIndex)) {
-                                        const pos = +colIndex;
-                                        placement[1] = pos - span;
-                                        placement[3] = pos;
+                                    if (!isNaN(n = +colIndex)) {
+                                        placement[1] = n - span;
+                                        placement[3] = n;
                                     }
                                     break;
                                 }
@@ -723,7 +724,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     };
                     let rowStart: Undef<string[]>,
                         colStart: Undef<string[]>;
-                    for (let i = 0; i < 4; ++i) {
+                    for (let i = 0, n: number; i < 4; ++i) {
                         const value = positions[i];
                         if (value !== 'auto' && !placement[i]) {
                             const vertical = i % 2 === 0;
@@ -734,17 +735,17 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     alias[1] = alias[0];
                                     alias[0] = '1';
                                 }
-                                else if (isNumber(alias[0])) {
+                                else if (!isNaN(n = +alias[0])) {
                                     if (vertical) {
                                         if (rowStart) {
-                                            rowSpan = +alias[0] - +rowStart[0];
+                                            rowSpan = n - +rowStart[0];
                                         }
                                         else {
                                             rowStart = alias;
                                         }
                                     }
                                     else if (colStart) {
-                                        columnSpan = +alias[0] - +colStart[0];
+                                        columnSpan = n - +colStart[0];
                                     }
                                     else {
                                         colStart = alias;
@@ -752,9 +753,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                                 const named = direction.name[alias[1]];
                                 if (named) {
-                                    const nameIndex = +alias[0];
-                                    if (nameIndex <= named.length) {
-                                        placement[i] = named[nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
+                                    n = +alias[0];
+                                    if (n <= named.length) {
+                                        placement[i] = named[n - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
                                     }
                                 }
                             }
@@ -1093,8 +1094,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        if (isNumber(unitHeight)) {
-                            rowMax[i] = +unitHeight;
+                        const n = +unitHeight;
+                        if (!isNaN(n)) {
+                            rowMax[i] = n;
                         }
                         if (horizontal) {
                             mainData.emptyRows[i] = [Infinity];

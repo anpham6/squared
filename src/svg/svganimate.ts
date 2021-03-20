@@ -6,7 +6,7 @@ import { PATTERN_CUBICBEZIER } from './lib/util';
 const { convertHex, parseColor } = squared.lib.color;
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { isNumber, lastItemOf, replaceMap, splitSome, trimEnd } = squared.lib.util;
+const { lastItemOf, replaceMap, splitSome, trimEnd } = squared.lib.util;
 
 const REGEXP_BEZIER = new RegExp(`\\s*${PATTERN_CUBICBEZIER}\\s*`);
 const REGEXP_BEZIERCSS = new RegExp(`cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
@@ -70,20 +70,22 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 currentValue = replaceMap(valueA.trim().split(/\s+/), value => +value);
                 nextValue = replaceMap(valueB.trim().split(/\s+/), value => +value);
                 break;
-            default:
-                if (isNumber(valueA)) {
-                    currentValue = [+valueA];
+            default: {
+                let n = +valueA;
+                if (!isNaN(n)) {
+                    currentValue = [n];
                 }
                 else if (isLength(valueA)) {
                     currentValue = [parseUnit(valueA, checkOptions(valueA))];
                 }
-                if (isNumber(valueB)) {
-                    nextValue = [+valueB];
+                if (!isNaN(n = +valueB)) {
+                    nextValue = [n];
                 }
                 else if (isLength(valueB)) {
                     nextValue = [parseUnit(valueB, checkOptions(valueB))];
                 }
                 break;
+            }
         }
         if (currentValue && nextValue) {
             const length = currentValue.length;

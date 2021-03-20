@@ -944,10 +944,21 @@ export default abstract class Application<T extends Node> implements squared.bas
         const extensions: Extension<T>[] = [];
         const children: T[] = [];
         for (const processing of active.values()) {
-            extensions.push(...processing.extensions as Extension<T>[]);
+            if (extensions.length) {
+                const items = processing.extensions;
+                for (let i = 0, length = items.length; i < length; ++i) {
+                    const item = items[i] as Extension<T>;
+                    if (!extensions.includes(item)) {
+                        extensions.push(item);
+                    }
+                }
+            }
+            else {
+                extensions.push(...processing.extensions as Extension<T>[]);
+            }
             children.push(...processing.cache.children);
         }
-        return [Array.from(new Set(extensions)), children];
+        return [extensions, children];
     }
 
     get resourceId() {

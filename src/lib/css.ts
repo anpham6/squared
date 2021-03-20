@@ -7,14 +7,13 @@ import { getDeviceDPI } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
-import { convertPercent, endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 import Pattern from './base/pattern';
 
 const PATTERN_CALCUNIT = '(?!c(?:alc|lamp)|m(?:in|ax))([^,()]+|\\([^())]+\\)\\s*)';
 const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`, 'i');
-const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
@@ -1482,7 +1481,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                     const seg: number[] = [];
                     const evaluate: string[] = [];
                     const operation = value.substring(j + 1, closing[i]).split(CALC_OPERATION);
-                    for (let k = 0, q = operation.length; k < q; ++k) {
+                    for (let k = 0, n: number, q = operation.length; k < q; ++k) {
                         const partial = operation[k].trim();
                         switch (partial) {
                             case '+':
@@ -1511,19 +1510,20 @@ export function calculate(value: string, options?: CalculateOptions) {
                                     found = true;
                                 }
                                 else {
+                                    n = +partial;
                                     switch (unitType) {
                                         case CSS_UNIT.PERCENT:
-                                            if (isNumber(partial)) {
+                                            if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(+partial);
+                                                seg.push(n);
                                             }
-                                            else if (isPercent(partial)) {
+                                            else if (!isNaN(n = asPercent(partial))) {
                                                 if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(convertPercent(partial) * 100);
+                                                seg.push(n * 100);
                                                 found = true;
                                             }
                                             else {
@@ -1531,11 +1531,11 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                         case CSS_UNIT.TIME:
-                                            if (isNumber(partial)) {
+                                            if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(+partial);
+                                                seg.push(n);
                                             }
                                             else if (isTime(partial)) {
                                                 if (!checkCalculateNumber(operand, operator)) {
@@ -1549,11 +1549,11 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                         case CSS_UNIT.ANGLE:
-                                            if (isNumber(partial)) {
+                                            if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(+partial);
+                                                seg.push(n);
                                             }
                                             else if (isAngle(partial)) {
                                                 if (!checkCalculateNumber(operand, operator)) {
@@ -1576,15 +1576,15 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             if (!CALC_INTEGER.test(partial)) {
                                                 return NaN;
                                             }
-                                            seg.push(+partial);
+                                            seg.push(n);
                                             found = true;
                                             break;
                                         case CSS_UNIT.DECIMAL:
-                                            if (isNumber(partial)) {
-                                                seg.push(+partial);
+                                            if (!isNaN(n)) {
+                                                seg.push(n);
                                             }
-                                            else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
-                                                seg.push(convertPercent(partial) * boundingSize);
+                                            else if (boundingSize !== undefined && !isNaN(n = asPercent(partial)) && !isNaN(boundingSize)) {
+                                                seg.push(n * boundingSize);
                                             }
                                             else {
                                                 return NaN;
@@ -1592,11 +1592,11 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             found = true;
                                             break;
                                         default:
-                                            if (isNumber(partial)) {
+                                            if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(+partial);
+                                                seg.push(n);
                                             }
                                             else {
                                                 if (!checkCalculateNumber(operand, operator)) {
@@ -1605,8 +1605,8 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (isLength(partial)) {
                                                     seg.push(parseUnit(partial, options));
                                                 }
-                                                else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
-                                                    seg.push(convertPercent(partial) * boundingSize);
+                                                else if (boundingSize !== undefined && !isNaN(n = asPercent(partial)) && !isNaN(boundingSize)) {
+                                                    seg.push(n * boundingSize);
                                                 }
                                                 else {
                                                     return NaN;
@@ -1761,13 +1761,14 @@ export function parseTransform(value: string, options?: TransformOptions) {
                 let x = 0,
                     y = 0,
                     z = 0,
-                    group = 'translate';
+                    group = 'translate',
+                    n: number;
                 switch (method) {
                     case 'translate':
                     case 'translate3d': {
-                        if (isPercent(tX)) {
+                        if (!isNaN(n = asPercent(tX))) {
                             if (boundingBox) {
-                                x = convertPercent(tX) * boundingBox.width;
+                                x = n * boundingBox.width;
                             }
                         }
                         else {
@@ -1775,9 +1776,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
                         }
                         const tY = translate[3];
                         if (tY) {
-                            if (isPercent(tY)) {
+                            if (!isNaN(n = asPercent(tY))) {
                                 if (boundingBox) {
-                                    y = convertPercent(tY) * boundingBox.height;
+                                    y = n * boundingBox.height;
                                 }
                             }
                             else {
@@ -1797,9 +1798,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
                         break;
                     }
                     case 'translateX':
-                        if (isPercent(tX)) {
+                        if (!isNaN(n = asPercent(tX))) {
                             if (boundingBox) {
-                                x = convertPercent(tX) * boundingBox.width;
+                                x = n * boundingBox.width;
                             }
                         }
                         else {
@@ -1807,9 +1808,9 @@ export function parseTransform(value: string, options?: TransformOptions) {
                         }
                         break;
                     case 'translateY':
-                        if (isPercent(tX)) {
+                        if (!isNaN(n = asPercent(tX))) {
                             if (boundingBox) {
-                                y = convertPercent(tX) * boundingBox.height;
+                                y = n * boundingBox.height;
                             }
                         }
                         else {
@@ -1986,10 +1987,11 @@ export function parseTransform(value: string, options?: TransformOptions) {
             const perspective = TRANSFORM.PERSPECTIVE.exec(transform);
             if (perspective) {
                 const pX = perspective[2];
+                const n = asPercent(pX);
                 let x = 0;
-                if (isPercent(pX)) {
+                if (!isNaN(n)) {
                     if (boundingBox) {
-                        x = convertPercent(pX) * boundingBox.width;
+                        x = n * boundingBox.width;
                     }
                 }
                 else {
@@ -2093,8 +2095,18 @@ export function isTime(value: string) {
     return REGEXP_TIME.test(value);
 }
 
-export function isPercent(value: string, digits?: boolean) {
-    return !digits ? typeof value === 'string' && value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
+export function asPercent(value: unknown) {
+    if (typeof value === 'string') {
+        const length = value.length;
+        if (length > 1 && value[length - 1] === '%') {
+            return +value.substring(0, length - 1) / 100;
+        }
+    }
+    return NaN;
+}
+
+export function isPercent(value: unknown) {
+    return !isNaN(asPercent(value));
 }
 
 export function asPx(value: unknown) {

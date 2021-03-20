@@ -3,10 +3,10 @@ import SvgBuild from './svgbuild';
 
 import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 
-const { isPercent, parseAngle } = squared.lib.css;
+const { asPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { truncateFraction } = squared.lib.math;
-const { convertPercent, isEqual, isNumber, iterateArray, lastItemOf } = squared.lib.util;
+const { isEqual, iterateArray, lastItemOf } = squared.lib.util;
 
 const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
 
@@ -35,11 +35,13 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 case 'auto-reverse':
                     this.rotate = 'auto 180deg';
                     break;
-                default:
-                    if (isNumber(rotate)) {
-                        this.rotate = +rotate + 'deg';
+                default: {
+                    const n = +rotate;
+                    if (!isNaN(n)) {
+                        this.rotate = n + 'deg';
                     }
                     break;
+                }
             }
             iterateArray(animationElement.children, (item: SVGElement) => {
                 if (item.tagName === 'mpath') {
@@ -107,8 +109,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 const keyTimes = super.keyTimes;
                 const keyPoints = this._keyPoints;
                 if (keyTimes.length === keyPoints.length) {
-                    const value = item.value;
-                    let distance = isPercent(value) ? convertPercent(value) : parseFloat(value) / this.offsetLength;
+                    let distance = asPercent(item.value) || parseFloat(item.value) / this.offsetLength;
                     if (!isNaN(distance)) {
                         distance = Math.min(distance, 1);
                         const index = keyTimes.findIndex(previous => previous === key);

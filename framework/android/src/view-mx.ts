@@ -20,10 +20,10 @@ const { CSS_PROPERTIES } = squared.lib.internal;
 const { NODE_PROCEDURE } = squared.base.lib.constant;
 
 const { isUserAgent } = squared.lib.client;
-const { formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
+const { asPercent, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { capitalize, convertFloat, convertInt, convertPercent, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, splitPair, startsWith } = squared.lib.util;
+const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, splitPair, startsWith } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.util;
 
@@ -527,13 +527,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public static availablePercent(nodes: T[], dimension: DimensionAttr, boxSize: number) {
             const horizontal = dimension === 'width';
             let percent = 1;
-            for (let i = 0, length = nodes.length; i < length; ++i) {
+            for (let i = 0, n: number, length = nodes.length; i < length; ++i) {
                 const sibling = nodes[i].innerMostWrapped;
                 if (sibling.pageFlow) {
                     if (sibling.hasPX(dimension, { initial: true })) {
                         const value = sibling.cssInitial(dimension);
-                        if (isPercent(value)) {
-                            percent -= convertPercent(value);
+                        if (!isNaN(n = asPercent(value))) {
+                            percent -= n;
                             continue;
                         }
                         else if (isLength(value)) {
@@ -2602,17 +2602,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     return false;
                 };
-                if (basis !== '0%' && isPercent(basis)) {
-                    setConstraintPercent(this, convertPercent(basis), horizontal, NaN);
+                const n = asPercent(basis);
+                if (n) {
+                    setConstraintPercent(this, n, horizontal, NaN);
                 }
                 else if (isLength(basis) && setFlexGrow(this.parseUnit(basis, { dimension }))) {
                     setLayoutDimension(this, '0px', horizontal, true);
                 }
-                else if (horizontal) {
-                    percentAvailable = constraintPercentWidth(this, percentAvailable);
-                }
                 else {
-                    percentAvailable = constraintPercentHeight(this, percentAvailable);
+                    percentAvailable = horizontal ? constraintPercentWidth(this, percentAvailable) : constraintPercentHeight(this, percentAvailable);
                 }
                 if (shrink > 1) {
                     this.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');

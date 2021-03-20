@@ -496,7 +496,6 @@ function createFillGradient(resourceId: number, gradient: Gradient, path: SvgPat
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = gradient as SvgRadialGradient;
             const element = path.element;
-            const getRadiusPercent = (value: string) => convertPercent(value, 0.5);
             const points: Point[] = [];
             let cx!: number,
                 cy!: number,
@@ -545,8 +544,8 @@ function createFillGradient(resourceId: number, gradient: Gradient, path: SvgPat
                     }
                     break;
             }
-            result.centerX = (cx + cxDiameter * getRadiusPercent(cxAsString)).toString();
-            result.centerY = (cy + cyDiameter * getRadiusPercent(cyAsString)).toString();
+            result.centerX = (cx + cxDiameter * convertPercent(cxAsString, 0.5)).toString();
+            result.centerY = (cy + cyDiameter * convertPercent(cyAsString, 0.5)).toString();
             result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * convertPercent(rAsString, 1)).toString();
             if (spreadMethod) {
                 result.tileMode = getTileMode(spreadMethod);
@@ -1721,13 +1720,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         }
                         break;
                     case 'fillOpacity':
-                    case 'strokeOpacity':
-                        value = ((isNumber(value) ? +value : 1) * opacity).toString();
+                    case 'strokeOpacity': {
+                        const n = +value;
+                        value = Math.min((!isNaN(n) ? n : 1) * opacity, 1).toString();
                         if (value === '1') {
                             continue;
                         }
                         attr = attr === 'fillOpacity' ? 'fillAlpha' : 'strokeAlpha';
                         break;
+                    }
                     case 'strokeLinecap':
                         if (value === 'butt') {
                             continue;

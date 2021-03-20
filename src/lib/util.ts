@@ -89,9 +89,9 @@ export function convertFloat(value: string, fallback = 0) {
     return !isNaN(result) ? result : fallback;
 }
 
-export function convertPercent(value: string, fallback?: number) {
+export function convertPercent(value: string, fallback = 0) {
     const index = value.indexOf('%');
-    return index !== -1 ? +value.substring(0, index) / 100 : fallback === undefined ? +value : fallback;
+    return index !== -1 ? +value.substring(0, index) / 100 : fallback;
 }
 
 export function convertBase64(value: ArrayBuffer) {
@@ -378,7 +378,14 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string) {
-    return value ? !isNaN(+value) : false;
+    switch (typeof value) {
+        case 'string':
+            return !isNaN(+value);
+        case 'number':
+            return true;
+        default:
+            return false;
+    }
 }
 
 export function isString(value: unknown): value is string {

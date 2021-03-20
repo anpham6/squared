@@ -153,6 +153,7 @@ export function fromMimeType(value: string) {
                 case 'bmp':
                 case 'heic':
                 case 'heif':
+                case 'gif':
                 case 'png':
                 case 'webp':
                     return name;
@@ -174,7 +175,6 @@ export function fromMimeType(value: string) {
             switch (name) {
                 case 'aac':
                 case 'flac':
-                case 'gif':
                 case 'gsm':
                 case 'ogg':
                 case 'wav':

@@ -15,11 +15,11 @@ const { STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { calculateAll, convertAngle, formatPercent, formatPX, getStyle, hasCoords, isCalc, isLength, isPercent, parseAngle, parseUnit } = squared.lib.css;
+const { asPercent, calculateAll, convertAngle, formatPercent, formatPX, getStyle, hasCoords, isCalc, isLength, parseAngle, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, replaceAll, splitPair, startsWith } = squared.lib.util;
+const { convertBase64, convertCamelCase, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, replaceAll, splitPair, startsWith } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -118,8 +118,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             else {
                 const unit = match[2];
                 if (unit) {
-                    if (isPercent(unit)) {
-                        offset = convertPercent(unit);
+                    const n = asPercent(unit);
+                    if (!isNaN(n)) {
+                        offset = n;
                     }
                     else if (isLength(unit)) {
                         offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
@@ -366,8 +367,16 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
     return src;
 }
 
-const parseLength = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? Math.round(convertPercent(value) * dimension) : parseUnit(value, options);
-const parsePercent = (value: string, dimension: number, options?: ParseUnitOptions) => isPercent(value) ? convertPercent(value) : parseUnit(value, options) / dimension;
+function parseLength(value: string, dimension: number, options?: ParseUnitOptions) {
+    const n = asPercent(value);
+    return !isNaN(n) ? Math.round(n * dimension) : parseUnit(value, options);
+}
+
+function parsePercent(value: string, dimension: number, options?: ParseUnitOptions) {
+    const n = asPercent(value);
+    return !isNaN(n) ? n : parseUnit(value, options) / dimension;
+}
+
 const checkPreviousSibling = (node: Undef<NodeUI>) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
 
 export default class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
@@ -445,20 +454,20 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     let offset = result[directionAsPercent];
                     if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
                         const [sizeW, sizeH] = imageSize.split(/\s+/);
+                        let imageOffset: number,
+                            n: number;
                         if (horizontal) {
-                            let imageWidth = width;
-                            if (isLength(sizeW, true)) {
-                                if (isPercent(sizeW)) {
-                                    imageWidth *= convertPercent(sizeW);
-                                }
-                                else {
-                                    imageWidth = parseUnit(sizeW, options) || imageWidth;
-                                }
+                            imageOffset = width;
+                            if (!isNaN(n = asPercent(sizeW))) {
+                                imageOffset *= n;
+                            }
+                            else if (isLength(sizeW)) {
+                                imageOffset = parseUnit(sizeW, options) || imageOffset;
                             }
                             else if (sizeH) {
                                 let percent = 1;
-                                if (isPercent(sizeH)) {
-                                    percent = (convertPercent(sizeH) * height) / imageDimension.height;
+                                if (!isNaN(n = asPercent(sizeH))) {
+                                    percent = (n * height) / imageDimension.height;
                                 }
                                 else if (isLength(sizeH)) {
                                     const unit = parseUnit(sizeH, options);
@@ -466,24 +475,21 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                         percent = unit / imageDimension.height;
                                     }
                                 }
-                                imageWidth = percent * imageDimension.width;
+                                imageOffset = percent * imageDimension.width;
                             }
-                            offset *= imageWidth;
                         }
                         else {
-                            let imageHeight = height;
-                            if (isLength(sizeH, true)) {
-                                if (isPercent(sizeH)) {
-                                    imageHeight *= convertPercent(sizeH);
-                                }
-                                else {
-                                    imageHeight = parseUnit(sizeH, options) || imageHeight;
-                                }
+                            imageOffset = height;
+                            if (!isNaN(n = asPercent(sizeH))) {
+                                imageOffset *= n;
+                            }
+                            else if (isLength(sizeH)) {
+                                imageOffset = parseUnit(sizeH, options) || imageOffset;
                             }
                             else if (sizeW) {
                                 let percent = 1;
-                                if (isPercent(sizeW)) {
-                                    percent = (convertPercent(sizeW) * width) / imageDimension.width;
+                                if (!isNaN(n = asPercent(sizeW))) {
+                                    percent = (n * width) / imageDimension.width;
                                 }
                                 else if (isLength(sizeW)) {
                                     const unit = parseUnit(sizeW, options);
@@ -491,10 +497,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                         percent = unit / imageDimension.width;
                                     }
                                 }
-                                imageHeight = percent * imageDimension.height;
+                                imageOffset = percent * imageDimension.height;
                             }
-                            offset *= imageHeight;
                         }
+                        offset *= imageOffset;
                     }
                     else {
                         offset *= horizontal ? imageDimension.width : imageDimension.height;

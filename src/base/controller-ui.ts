@@ -392,24 +392,21 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     return false;
                 case 'SUMMARY':
                     return true;
-                default:
-                    parent = parent.parentElement;
-                    break;
             }
+            parent = parent.parentElement;
         }
         switch (element.tagName) {
             case 'IMG':
                 return display !== 'none';
             case 'SLOT':
                 return true;
-            default:
-                return !hasCoords(style.position) && (display === 'block' || width > 0 && style.float !== 'none' || style.clear !== 'none') || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity;
         }
+        return !hasCoords(style.position) && (display === 'block' || width > 0 && style.float !== 'none' || style.clear !== 'none') || iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item, sessionId)) === Infinity;
     }
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
-        const altered = new Set<T>();
-        const escaped = new Map<T, { parent: T; appending: T[] }>();
+        const altered: T[] = [];
+        let escaped: Undef<Map<T, { parent: T; appending: T[] }>>;;
         cache.each(node => {
             if (node.floating) {
                 if (node.float === 'left') {
@@ -421,7 +418,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         parent = parent.actualParent as Null<T>;
                     }
                     if (parent && previousParent && parent !== actualParent && parent.tagName === 'DIV') {
-                        if (escaped.has(previousParent)) {
+                        if ((escaped ||= new Map()).has(previousParent)) {
                             escaped.get(previousParent)!.appending.push(node);
                         }
                         else {
@@ -524,165 +521,171 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     while (current && current !== parent);
                     node.cssInitial('opacity', { value: opacity.toString() });
                     node.parent = parent;
-                    altered.add(parent);
+                    if (!altered.includes(parent)) {
+                        altered.push(parent);
+                    }
                 }
                 node.documentParent = parent;
             }
         });
-        for (const [floated, data] of escaped) {
-            const { parent, appending } = data;
-            const children = parent.children;
-            const containerIndex = children.findIndex(item => item === floated);
-            if (containerIndex !== -1) {
-                const childIndex = floated.childIndex;
-                const documentChildren = parent.naturalChildren.slice(0);
-                const target = children[containerIndex] as T;
-                const depth = parent.depth + 1;
-                const actualParent = new Set<T>();
-                for (let i = 0, j = 0, k = 0, prepend = false; i < appending.length; ++i) {
-                    const item = appending[i];
-                    if (item.actualParent!.firstStaticChild === item) {
-                        prepend = true;
-                    }
-                    else if (prepend) {
-                        const previous = appending[i - 1];
-                        prepend = previous.nextSibling === item && previous.float === item.float;
-                    }
-                    const increment = j + (prepend ? 0 : k + 1);
-                    const l = childIndex + increment;
-                    const m = containerIndex + increment;
-                    documentChildren.splice(l, 0, item);
-                    children.splice(m, 0, item);
-                    if (prepend) {
-                        target.siblingsLeading.unshift(item);
-                        ++j;
-                    }
-                    else {
-                        ++k;
-                    }
-                    item.parent!.remove(item);
-                    item.init(parent, depth);
-                    item.documentParent = parent;
-                    const clear = item.valueOf('clear');
-                    switch (clear) {
-                        case 'left':
-                        case 'right':
-                        case 'both':
-                            notFound: {
-                                let clearing: Undef<string>;
-                                for (let n = l - 1; n >= 0; --n) {
-                                    const sibling = documentChildren[n];
-                                    if (sibling.floating) {
-                                        const float = sibling.float;
-                                        if (clear === 'both' || float === clear) {
-                                            this.application.clearMap.set(item, clear);
-                                            let nextSibling = item.nextElementSibling as Null<T>;
-                                            while (nextSibling) {
-                                                if (nextSibling.floating && !appending.includes(nextSibling)) {
-                                                    appending.push(nextSibling);
-                                                }
-                                                nextSibling = nextSibling.nextElementSibling as Null<T>;
-                                            }
-                                            break;
-                                        }
-                                        else if (float === clearing) {
-                                            break;
-                                        }
-                                    }
-                                    else {
-                                        const clearBefore = sibling.valueOf('clear');
-                                        switch (clearBefore) {
-                                            case 'left':
-                                            case 'right':
-                                                if (clear === clearBefore) {
-                                                    break notFound;
-                                                }
-                                                else {
-                                                    clearing = clearBefore;
+        if (escaped) {
+            for (const [floated, data] of escaped) {
+                const { parent, appending } = data;
+                const children = parent.children;
+                const containerIndex = children.findIndex(item => item === floated);
+                if (containerIndex !== -1) {
+                    const childIndex = floated.childIndex;
+                    const documentChildren = parent.naturalChildren.slice(0);
+                    const target = children[containerIndex] as T;
+                    const depth = parent.depth + 1;
+                    const actualParent = new Set<T>();
+                    for (let i = 0, j = 0, k = 0, prepend = false; i < appending.length; ++i) {
+                        const item = appending[i];
+                        if (item.actualParent!.firstStaticChild === item) {
+                            prepend = true;
+                        }
+                        else if (prepend) {
+                            const previous = appending[i - 1];
+                            prepend = previous.nextSibling === item && previous.float === item.float;
+                        }
+                        const increment = j + (prepend ? 0 : k + 1);
+                        const l = childIndex + increment;
+                        const m = containerIndex + increment;
+                        documentChildren.splice(l, 0, item);
+                        children.splice(m, 0, item);
+                        if (prepend) {
+                            target.siblingsLeading.unshift(item);
+                            ++j;
+                        }
+                        else {
+                            ++k;
+                        }
+                        item.parent!.remove(item);
+                        item.init(parent, depth);
+                        item.documentParent = parent;
+                        const clear = item.valueOf('clear');
+                        switch (clear) {
+                            case 'left':
+                            case 'right':
+                            case 'both':
+                                notFound: {
+                                    let clearing: Undef<string>;
+                                    for (let n = l - 1; n >= 0; --n) {
+                                        const sibling = documentChildren[n];
+                                        if (sibling.floating) {
+                                            const float = sibling.float;
+                                            if (clear === 'both' || float === clear) {
+                                                this.application.clearMap.set(item, clear);
+                                                let nextSibling = item.nextElementSibling as Null<T>;
+                                                while (nextSibling) {
+                                                    if (nextSibling.floating && !appending.includes(nextSibling)) {
+                                                        appending.push(nextSibling);
+                                                    }
+                                                    nextSibling = nextSibling.nextElementSibling as Null<T>;
                                                 }
                                                 break;
-                                            case 'both':
-                                                break notFound;
+                                            }
+                                            else if (float === clearing) {
+                                                break;
+                                            }
+                                        }
+                                        else {
+                                            const clearBefore = sibling.valueOf('clear');
+                                            switch (clearBefore) {
+                                                case 'left':
+                                                case 'right':
+                                                    if (clear === clearBefore) {
+                                                        break notFound;
+                                                    }
+                                                    else {
+                                                        clearing = clearBefore;
+                                                    }
+                                                    break;
+                                                case 'both':
+                                                    break notFound;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            break;
-                    }
-                    actualParent.add(item.actualParent as T);
-                }
-                parent.floatContainer = true;
-                for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
-                    const item = appending[i];
-                    const index = documentChildren.findIndex(child => child === item);
-                    if (index !== -1) {
-                        const siblingsLeading: T[] = [];
-                        const siblingsTrailing: T[] = [];
-                        for (let j = index - 1; j >= 0; --j) {
-                            const sibling = documentChildren[j] as T;
-                            siblingsLeading.push(sibling);
-                            if (!sibling.excluded) {
                                 break;
-                            }
                         }
-                        for (let j = index + 1; j < q; ++j) {
-                            const sibling = documentChildren[j] as T;
-                            siblingsTrailing.push(sibling);
-                            if (!sibling.excluded) {
-                                break;
-                            }
-                        }
-                        item.siblingsLeading = siblingsLeading;
-                        item.siblingsTrailing = siblingsTrailing;
+                        actualParent.add(item.actualParent as T);
                     }
-                }
-                for (const item of actualParent) {
-                    if (!item.find(child => child.floating)) {
-                        item.floatContainer = false;
+                    parent.floatContainer = true;
+                    for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
+                        const item = appending[i];
+                        const index = documentChildren.findIndex(child => child === item);
+                        if (index !== -1) {
+                            const siblingsLeading: T[] = [];
+                            const siblingsTrailing: T[] = [];
+                            for (let j = index - 1; j >= 0; --j) {
+                                const sibling = documentChildren[j] as T;
+                                siblingsLeading.push(sibling);
+                                if (!sibling.excluded) {
+                                    break;
+                                }
+                            }
+                            for (let j = index + 1; j < q; ++j) {
+                                const sibling = documentChildren[j] as T;
+                                siblingsTrailing.push(sibling);
+                                if (!sibling.excluded) {
+                                    break;
+                                }
+                            }
+                            item.siblingsLeading = siblingsLeading;
+                            item.siblingsTrailing = siblingsTrailing;
+                        }
+                    }
+                    for (const item of actualParent) {
+                        if (!item.find(child => child.floating)) {
+                            item.floatContainer = false;
+                        }
                     }
                 }
             }
         }
-        for (const node of altered) {
-            const layers: T[][] = [];
-            node.each((item: T) => {
-                if (item.parent !== item.actualParent) {
-                    const sibling = node.find((adjacent: T) => {
-                        if (adjacent.naturalElements.includes(item)) {
-                            return true;
-                        }
-                        const nested = adjacent.cascade();
-                        return item.ascend({ condition: child => nested.includes(child) }).length > 0;
-                    });
-                    if (sibling) {
-                        const index = sibling.childIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
-                        (layers[index] ||= []).push(item);
-                    }
-                }
-            });
-            const length = layers.length;
-            if (length) {
-                const children: T[] = [];
-                for (let i = 0; i < length; ++i) {
-                    const order = layers[i];
-                    if (order) {
-                        order.sort((a, b) => {
-                            if (a.parent === b.parent) {
-                                const zA = a.zIndex;
-                                const zB = b.zIndex;
-                                return zA === zB ? a.id - b.id : zA - zB;
-                            }
-                            return 0;
-                        });
-                        children.push(...order);
-                    }
-                }
+        if (altered.length) {
+            for (const node of altered) {
+                const layers: T[][] = [];
                 node.each((item: T) => {
-                    if (!children.includes(item)) {
-                        children.push(item);
+                    if (item.parent !== item.actualParent) {
+                        const sibling = node.find((adjacent: T) => {
+                            if (adjacent.naturalElements.includes(item)) {
+                                return true;
+                            }
+                            const nested = adjacent.cascade();
+                            return item.ascend({ condition: child => nested.includes(child) }).length > 0;
+                        });
+                        if (sibling) {
+                            const index = sibling.childIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
+                            (layers[index] ||= []).push(item);
+                        }
                     }
                 });
-                node.retainAs(children);
+                const length = layers.length;
+                if (length) {
+                    const children: T[] = [];
+                    for (let i = 0; i < length; ++i) {
+                        const order = layers[i];
+                        if (order) {
+                            order.sort((a, b) => {
+                                if (a.parent === b.parent) {
+                                    const zA = a.zIndex;
+                                    const zB = b.zIndex;
+                                    return zA === zB ? a.id - b.id : zA - zB;
+                                }
+                                return 0;
+                            });
+                            children.push(...order);
+                        }
+                    }
+                    node.each((item: T) => {
+                        if (!children.includes(item)) {
+                            children.push(item);
+                        }
+                    });
+                    node.retainAs(children);
+                }
             }
         }
     }

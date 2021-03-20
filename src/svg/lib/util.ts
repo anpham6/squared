@@ -6,11 +6,11 @@ import Pattern = squared.lib.base.Pattern;
 const { CSS_PROPERTIES } = squared.lib.internal;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 
-const { calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, getStyle, hasEm, isLength, isPercent, parseUnit } = squared.lib.css;
+const { asPercent, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, getStyle, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
-const { convertCamelCase, convertPercent, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { convertCamelCase, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
 const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:\s*,?\s+(-?[\d.]+))?(?:\s*,?\s+(-?[\d.]+))?\)/g);
@@ -21,8 +21,11 @@ function setOriginPosition(element: Element, point: Point, attr: string, value: 
     if (isLength(value)) {
         point[attr] = parseUnit(value, createParseUnitOptions(element, value));
     }
-    else if (isPercent(value)) {
-        point[attr] = convertPercent(value) * dimension;
+    else {
+        const n = asPercent(value);
+        if (!isNaN(n)) {
+            point[attr] = n * dimension;
+        }
     }
 }
 

@@ -4,8 +4,6 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
-const { isNumber } = squared.lib.util;
-
 function isListItem(node: NodeUI) {
     if (node.display === 'list-item') {
         return true;
@@ -147,9 +145,9 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 else {
                     if (ordered && item.tagName === 'LI') {
-                        const value = item.attributes['value'];
-                        if (value && isNumber(value)) {
-                            i = parseInt(value);
+                        const n = +item.attributes['value']!;
+                        if (!isNaN(n)) {
+                            i = Math.floor(n);
                         }
                     }
                     let ordinal = convertListStyle(type, i);

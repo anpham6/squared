@@ -8,7 +8,7 @@ import Resource from '../../resource';
 
 import { replaceCharacterData, sanitizeString } from '../../lib/util';
 
-const { isPercent, parseAngle } = squared.lib.css;
+const { asPercent, parseAngle } = squared.lib.css;
 const { getTextMetrics } = squared.lib.dom;
 const { clamp } = squared.lib.math;
 const { delimitString, splitSome } = squared.lib.util;
@@ -132,7 +132,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             let fontVariation = getFontVariationStyle(node.css('fontStyle')),
                                 fontFeature = '';
                             if (node.has('fontStretch')) {
-                                let percent = node.cssValue('fontStretch');
+                                let percent: NumString = node.cssValue('fontStretch');
                                 switch (percent) {
                                     case '100%':
                                         percent = '';
@@ -162,8 +162,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         percent = '200%';
                                         break;
                                 }
-                                if (isPercent(percent)) {
-                                    fontVariation = delimitString(fontVariation, `'wdth' ${parseFloat(percent)}`);
+                                if (!isNaN(percent = asPercent(percent))) {
+                                    fontVariation = delimitString(fontVariation, `'wdth' ${percent}`);
                                 }
                             }
                             if (node.has('fontVariantCaps')) {

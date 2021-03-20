@@ -10,9 +10,9 @@ type SvgUse = squared.svg.SvgUse;
 const { STRING } = squared.lib.regex;
 
 const { parseColor } = squared.lib.color;
-const { extractURL, getFontSize, getStyle, hasCalc, hasEm, hasCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
+const { asPercent, extractURL, getFontSize, getStyle, hasCalc, hasEm, hasCustomProperty, isLength, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertPercent, isNumber, splitSome } = squared.lib.util;
+const { convertCamelCase, splitSome } = squared.lib.util;
 
 const REGEXP_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
@@ -253,16 +253,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         public convertLength(value: string, dimension?: NumString) {
-            if (isNumber(value)) {
-                return +value;
+            let n = +value;
+            if (!isNaN(n)) {
+                return n;
             }
             else if (isLength(value)) {
                 return parseUnit(value, hasEm(value) ? { fontSize: getFontSize(this.element) } : undefined);
             }
-            else if (isPercent(value)) {
-                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * convertPercent(value));
-            }
-            return 0;
+            return !isNaN(n = asPercent(value)) ? Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * n) : 0;
         }
 
         public resetPaint() {

@@ -18,11 +18,14 @@ interface PercentData {
     marginVertical?: boolean;
 }
 
-const { formatPX, isPercent } = squared.lib.css;
+const { asPercent, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertPercent, startsWith } = squared.lib.util;
+const { startsWith } = squared.lib.util;
 
-const checkPercent = (value: string) => isPercent(value) && parseFloat(value) > 0;
+function getPercent(value: string) {
+    const offset = asPercent(value);
+    return offset > 0 ? offset : 0;
+}
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -38,7 +41,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         if (!absoluteParent.hasPX('width', { percent: false })) {
             const percent = node.percentWidth;
             percentWidth = (percent > 0 && percent < 1 || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
-            marginHorizontal = (checkPercent(node.cssValue('marginLeft')) || checkPercent(node.cssValue('marginRight'))) && (
+            marginHorizontal = (!!getPercent(node.cssValue('marginLeft')) || !!getPercent(node.cssValue('marginRight'))) && (
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
                 parent.layoutFrame ||
                 node.blockStatic && node.alignedVertically(undefined, this.application.clearMap) > 0 ||
@@ -49,7 +52,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         if (!absoluteParent.hasPX('height', { percent: false })) {
             const percent = node.percentHeight;
             percentHeight = (percent > 0 && percent < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
-            marginVertical = (checkPercent(node.cssValue('marginTop')) || checkPercent(node.cssValue('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
+            marginVertical = (!!getPercent(node.cssValue('marginTop')) || !!getPercent(node.cssValue('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
         }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
             this.data.set(node, { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
@@ -117,8 +120,8 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 const boxRect = node.getAnchorPosition(renderParent, true, false);
                 const rightAligned = node.rightAligned;
                 let percentWidth = node.percentWidth,
-                    leftPercent = checkPercent(marginLeft) ? convertPercent(marginLeft) : 0,
-                    rightPercent = checkPercent(marginRight) ? convertPercent(marginRight) : 0;
+                    leftPercent = getPercent(marginLeft),
+                    rightPercent = getPercent(marginRight);
                 if (percentWidth) {
                     if (rightAligned) {
                         if (percentWidth + rightPercent < 1) {
@@ -232,8 +235,8 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 const boxRect = node.getAnchorPosition(renderParent, true, false);
                 const bottomAligned = node.bottomAligned;
                 let percentHeight = node.percentHeight,
-                    topPercent = checkPercent(marginTop) ? convertPercent(marginTop) : 0,
-                    bottomPercent = checkPercent(marginBottom) ? convertPercent(marginBottom) : 0;
+                    topPercent = getPercent(marginTop),
+                    bottomPercent = getPercent(marginBottom);
                 if (percentHeight) {
                     if (bottomAligned) {
                         if (percentHeight + bottomPercent < 1) {

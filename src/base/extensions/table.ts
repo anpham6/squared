@@ -11,7 +11,7 @@ import ExtensionUI from '../extension-ui';
 
 const { formatPercent, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertPercent, isNumber, replaceMap } = squared.lib.util;
+const { convertPercent, replaceMap } = squared.lib.util;
 
 function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
     data.percent = Math.round(td.bounds.width / node.box.width * 100) + '%';
@@ -157,21 +157,21 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (!td.hasPX('width')) {
-                    const value = getNamedItem(element, 'width');
+                    let value: NumString = getNamedItem(element, 'width');
                     if (isPercent(value)) {
                         td.css('width', value, true);
                     }
-                    else if (isNumber(value)) {
-                        td.css('width', formatPX(+value), true);
+                    else if (!isNaN(value = +value)) {
+                        td.css('width', formatPX(value), true);
                     }
                 }
                 if (!td.hasPX('height')) {
-                    const value = getNamedItem(element, 'height');
+                    let value: NumString = getNamedItem(element, 'height');
                     if (isPercent(value)) {
                         td.css('height', value);
                     }
-                    else if (isNumber(value)) {
-                        td.css('height', formatPX(+value));
+                    else if (!isNaN(value = +value)) {
+                        td.css('height', formatPX(value));
                     }
                 }
                 if (!td.valueOf('verticalAlign')) {
@@ -341,7 +341,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         mainData.layoutType = (() => {
             if (mapWidth.length > 1) {
-                mapPercent = mapWidth.reduce((a, b) => a + convertPercent(b, 0), 0);
+                mapPercent = mapWidth.reduce((a, b) => a + convertPercent(b), 0);
                 if (layoutFixed && mapWidth.reduce((a, b) => a + (isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
                     return LAYOUT_TABLETYPE.COMPRESS;
                 }

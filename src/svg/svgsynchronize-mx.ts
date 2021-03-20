@@ -28,7 +28,7 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const { clamp, equal, multipleOf } = squared.lib.math;
-const { hasKeys, hasValue, isEqual, isNumber, joinArray, lastItemOf, replaceMap, spliceArray, sortNumber } = squared.lib.util;
+const { hasKeys, hasValue, isEqual, joinArray, lastItemOf, replaceMap, spliceArray, sortNumber } = squared.lib.util;
 
 function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number, intervalMap: SvgAnimationIntervalMap, transforming: boolean) {
     let previousTime = 0,
@@ -94,8 +94,9 @@ function convertToFraction(values: TimelineEntries) {
 
 function convertToAnimateValue(value: AnimateValue, fromString?: boolean) {
     if (typeof value === 'string') {
-        if (isNumber(value)) {
-            value = +value;
+        const n = +value;
+        if (!isNaN(n)) {
+            value = n;
         }
         else {
             value = SvgBuild.parsePoints(value);
@@ -341,11 +342,7 @@ function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: Anima
     }
     const duration = item.duration;
     const offset = actualTime - (delay + duration * iteration);
-    const fraction = offset === 0
-        ? index === 0
-            ? 0
-            : 1
-        : clamp(offset / duration);
+    const fraction = offset === 0 ? index === 0 ? 0 : 1 : clamp(offset / duration);
     let previousIndex = -1,
         nextIndex = -1;
     for (let l = 0, length = keyTimes.length; l < length; ++l) {
@@ -565,8 +562,11 @@ function setStartItemValues(map: SvgAnimationIntervalMap, forwardMap: ForwardMap
         else {
             value = getForwardItem(forwardMap, item.attributeName)?.value.toString() || map.get(SvgAnimationIntervalMap.getKeyName(item), item.delay) || convertToString(baseValue);
         }
-        if (item.by && isNumber(value)) {
-            value = (+value + item.by).toString();
+        if (item.by) {
+            const n = +value;
+            if (!isNaN(n)) {
+                value = (n + item.by).toString();
+            }
         }
         keyTimes.unshift(0);
         values.unshift(value);

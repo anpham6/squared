@@ -21,9 +21,9 @@ interface ICssGridData<T> extends CssGridData<T> {
     constraintData?: T[][];
 }
 
-const { asPx, formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
+const { asPercent, asPx, formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertPercent, endsWith, lastItemOf, startsWith } = squared.lib.util;
+const { endsWith, lastItemOf, startsWith } = squared.lib.util;
 
 const { flatArray } = squared.base.lib.util;
 
@@ -87,11 +87,14 @@ function getRemainingSize(mainData: CssGridData<View>, data: CssGridDirectionDat
 
 function setCssPX(node: View, attr: CssStyleAttr, value: number) {
     const current = node.cssValue(attr);
-    if (isPercent(current)) {
-        node.css(attr, formatPercent(parseFloat(current) / 100 + value / node.actualParent!.box.width), true);
-    }
-    else if (isLength(current)) {
-        node.css(attr, formatPX(value + node.parseUnit(current)), true);
+    if (current) {
+        const n = asPercent(current);
+        if (!isNaN(n)) {
+            node.css(attr, formatPercent(n + value / node.actualParent!.box.width), true);
+        }
+        else if (isLength(current)) {
+            node.css(attr, formatPX(value + node.parseUnit(current)), true);
+        }
     }
 }
 
@@ -283,14 +286,14 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const unit = data.unit;
     let size = 0,
         percent = 0,
-        px = NaN;
+        n: number;
     for (let i = 0, length = unit.length; i < length; ++i) {
         const value = unit[i];
-        if (!isNaN(px = asPx(value))) {
-            size += px;
+        if (!isNaN(n = asPx(value))) {
+            size += n;
         }
-        else if (isPercent(value)) {
-            percent += convertPercent(value);
+        else if (!isNaN(n = asPercent(value))) {
+            percent += n;
         }
         else if (endsWith(value, 'fr')) {
             return 0;
@@ -330,6 +333,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         minSize = 0,
         minUnitSize = 0,
         sizeWeight = 0,
+        n: number,
         fitContent: Undef<boolean>,
         autoSize: Undef<boolean>;
     for (let i = 0, j = 0; i < cellSpan; ++i) {
@@ -391,11 +395,11 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             }
             size = 0;
         }
-        else if (isPercent(value)) {
+        else if (n = asPercent(value)) {
             if (sizeWeight === -1) {
                 sizeWeight = 0;
             }
-            sizeWeight += convertPercent(value);
+            sizeWeight += n;
             minSize = size;
             size = 0;
         }

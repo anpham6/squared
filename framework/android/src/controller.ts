@@ -25,11 +25,11 @@ import NodeUI = squared.base.NodeUI;
 import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor, replaceTab } from './lib/util';
 
 const { isPlatform, isUserAgent } = squared.lib.client;
-const { formatPX, hasCoords, parseTransform } = squared.lib.css;
+const { asPercent, formatPX, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
+const { capitalize, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
 
 const { getSrcSet } = squared.base.lib.dom;
 const { assignEmptyValue, parseMimeType } = squared.base.lib.util;
@@ -1866,10 +1866,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public renderSpace(attrs: RenderSpaceAttribute) {
         const android = attrs.android;
-        let { width, height } = attrs;
+        let { width, height } = attrs,
+            n: number;
         if (width) {
-            if (lastItemOf(width) === '%') {
-                android.layout_columnWeight = truncate(convertPercent(width), this.localSettings.floatPrecision);
+            if (!isNaN(n = asPercent(width))) {
+                android.layout_columnWeight = truncate(n, this.localSettings.floatPrecision);
                 width = '0px';
             }
         }
@@ -1877,8 +1878,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             width = 'wrap_content';
         }
         if (height) {
-            if (lastItemOf(height) === '%') {
-                android.layout_rowWeight = truncate(convertPercent(height), this.localSettings.floatPrecision);
+            if (!isNaN(n = asPercent(height))) {
+                android.layout_rowWeight = truncate(n, this.localSettings.floatPrecision);
                 height = '0px';
             }
         }

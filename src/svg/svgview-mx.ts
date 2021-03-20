@@ -18,9 +18,9 @@ interface AttributeData extends NumberValue {
 
 const { getKeyframesRules } = squared.lib.internal;
 
-const { hasCalc, isAngle, hasCustomProperty, isPercent, parseAngle, parseVar } = squared.lib.css;
+const { asPercent, hasCalc, isAngle, hasCustomProperty, isPercent, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertCamelCase, convertPercent, convertWord, iterateArray, splitPairEnd, startsWith } = squared.lib.util;
+const { convertCamelCase, convertWord, iterateArray, splitPairEnd, startsWith } = squared.lib.util;
 
 const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
 
@@ -190,7 +190,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         fillMode
                     });
                     for (const percent in keyframes) {
-                        const key = convertPercent(percent);
+                        const key = asPercent(percent);
                         const data = keyframes[percent];
                         for (const attr in data) {
                             let value = data[attr]!;
