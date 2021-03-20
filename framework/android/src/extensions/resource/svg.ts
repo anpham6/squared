@@ -139,7 +139,7 @@ const { FILE } = squared.lib.regex;
 
 const { extractURL, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, plainMap, replaceMap, splitSome, startsWith } = squared.lib.util;
+const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, replaceMap, splitSome, startsWith } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
@@ -1132,7 +1132,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     resetBefore = false;
                                                 }
                                                 if (resetBefore || requireBefore) {
-                                                    beforeValues = plainMap(propertyNames, value => getTransformInitialValue(value) || '0');
+                                                    beforeValues = propertyNames.map(value => getTransformInitialValue(value) || '0');
                                                 }
                                                 if (item.transformOrigin) {
                                                     transformOrigin = item.transformOrigin;
@@ -1159,14 +1159,14 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             propertyNames = getAttributePropertyName(item.attributeName);
                                             switch (valueType) {
                                                 case 'intType':
-                                                    values = plainMap(item.values, value => convertInt(value).toString());
+                                                    values = item.values.map(value => convertInt(value).toString());
                                                     if (requireBefore && item.baseValue) {
                                                         beforeValues = replaceMap(SvgBuild.parseCoordinates(item.baseValue), value => Math.trunc(value).toString());
                                                     }
                                                     break;
                                                 case 'floatType':
                                                     if (item.attributeName === 'stroke-dasharray') {
-                                                        values = plainMap(item.values, value => replaceMap(value.split(' '), fraction => +fraction));
+                                                        values = item.values.map(value => replaceMap(value.split(' '), fraction => +fraction));
                                                     }
                                                     else {
                                                         values = item.values;

@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, plainMap, splitSome, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, splitSome, resolvePath } = squared.lib.util;
 
 const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
@@ -228,7 +228,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const itemArray: { name: string; item: { innerText: string }[] }[] = new Array(length);
         for (let i = 0; i < length; ++i) {
             const item = items[i];
-            itemArray[i] = { name: item[0], item: plainMap(item[1], innerText => ({ innerText })) };
+            itemArray[i] = { name: item[0], item: item[1].map(innerText => ({ innerText })) };
         }
         return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'string_arrays.xml'], options);
     }
@@ -320,7 +320,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 itemArray.push({
                     name: style.name,
                     parent: style.parent,
-                    item: plainMap(style.items.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
+                    item: style.items.sort((a, b) => a.key >= b.key ? 1 : -1).map(obj => ({ name: obj.key, innerText: obj.value }))
                 });
             }
             result.push(replaceTab(applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'styles.xml');

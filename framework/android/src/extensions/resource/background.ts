@@ -77,7 +77,7 @@ interface WriteDrawableBackgroundOptions extends DrawableData {
 
 const { extractURL, formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { delimitString, isEqual, lastItemOf, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
+const { delimitString, isEqual, lastItemOf, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -443,7 +443,7 @@ const roundFloat = (value: string) => Math.round(parseFloat(value));
 const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
 
 export function convertColorStops(resourceId: number, list: ColorStop[], precision?: number) {
-    return plainMap(list, item => ({ color: getColorValue(resourceId, item.color), offset: truncate(item.offset, precision) }));
+    return list.map(item => ({ color: getColorValue(resourceId, item.color), offset: truncate(item.offset, precision) }));
 }
 
 export function drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {

@@ -6,7 +6,7 @@ import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 const { isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { truncateFraction } = squared.lib.math;
-const { convertPercent, isEqual, isNumber, iterateArray, lastItemOf, plainMap } = squared.lib.util;
+const { convertPercent, isEqual, isNumber, iterateArray, lastItemOf } = squared.lib.util;
 
 const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
 
@@ -335,7 +335,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             keyPoints: Undef<number[]>;
         if (this.validKeyPoints()) {
             keyPoints = this._keyPoints.slice(0).reverse();
-            keyTimes = plainMap(super.keyTimes, value => 1 - value).reverse();
+            keyTimes = super.keyTimes.map(value => 1 - value).reverse();
         }
         return { keyTimes, keyPoints };
     }
@@ -355,7 +355,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         const path = this._offsetPath;
         if (path) {
             const duration = this.duration;
-            return plainMap(path, item => item.key / duration);
+            return path.map(item => item.key / duration);
         }
         return super.keyTimes;
     }
@@ -367,7 +367,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
     get values() {
         this.setOffsetPath();
-        return this._offsetPath ? plainMap(this._offsetPath, item => `${item.value.x} ${item.value.y}`) : super.values;
+        return this._offsetPath ? this._offsetPath.map(item => item.value.x + ' ' + item.value.y) : super.values;
     }
 
     set reverse(value) {
@@ -453,7 +453,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     get rotateValues() {
         this.setOffsetPath();
-        return this._offsetPath && plainMap(this._offsetPath, item => item.rotate);
+        return this._offsetPath && this._offsetPath.map(item => item.rotate);
     }
 
     get keyPoints() {

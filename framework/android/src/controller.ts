@@ -29,7 +29,7 @@ const { formatPX, hasCoords, parseTransform } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, plainMap, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
+const { capitalize, convertPercent, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
 
 const { getSrcSet } = squared.base.lib.dom;
 const { assignEmptyValue, parseMimeType } = squared.base.lib.util;
@@ -293,7 +293,7 @@ function flattenContainer(node: View) {
             children[0].modifyBox(BOX_STANDARD.MARGIN_LEFT, item.marginLeft);
             lastItemOf(children)!.modifyBox(BOX_STANDARD.MARGIN_RIGHT, item.marginRight);
             renderChildren.splice(i, 0, ...children);
-            renderTemplates!.splice(i, 0, ...plainMap(children, child => {
+            renderTemplates!.splice(i, 0, ...children.map(child => {
                 child.init(node, depth);
                 child.renderParent = node;
                 return child.renderedAs!;
@@ -1416,7 +1416,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (watch || tasks) {
                             const images = [element.src];
                             if (imageSet) {
-                                images.push(...plainMap(imageSet, item => item.src));
+                                images.push(...imageSet.map(item => item.src));
                             }
                             for (const uri of images) {
                                 const image = resource.getImage(resourceId, uri);
@@ -1927,7 +1927,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 android: {},
                 app: {
                     barrierDirection,
-                    constraint_referenced_ids: concatString(plainMap(unbound, item => getDocumentId(item.anchorTarget.documentId)), ',')
+                    constraint_referenced_ids: concatString(unbound.map(item => getDocumentId(item.anchorTarget.documentId)), ',')
                 }
             };
             const { api, anchorTarget } = lastItemOf(unbound)!;
@@ -2337,7 +2337,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 currentFloated = null;
                                 currentFloatedWidth = 0;
                             }
-                            else if (currentFloated && rows.reduce((a, b) => a + Math.ceil(Math.max(...plainMap(b, sibling => Math.max(sibling.lineHeight, sibling.linear.height)))), 0) >= currentFloatedHeight) {
+                            else if (currentFloated && rows.reduce((a, b) => a + Math.ceil(Math.max(...b.map(sibling => Math.max(sibling.lineHeight, sibling.linear.height)))), 0) >= currentFloatedHeight) {
                                 currentFloated = null;
                                 currentFloatedWidth = 0;
                             }

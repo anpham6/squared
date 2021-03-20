@@ -742,12 +742,3 @@ export function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T
     }
     return list as U[];
 }
-
-export function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
-    const length = list.length;
-    const result: U[] = new Array(length);
-    for (let i = 0; i < length; ++i) {
-        result[i] = predicate(list[i], i, list);
-    }
-    return result;
-}

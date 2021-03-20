@@ -1,6 +1,6 @@
 import ListIterator from './listiterator';
 
-import { plainMap, sortByArray } from '../util';
+import { sortByArray } from '../util';
 
 class Iter<T> implements Iterator<T> {
     private index = -1;
@@ -285,7 +285,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     }
 
     public map<U = unknown>(predicate: IteratorPredicate<T, U>): U[] {
-        return plainMap(this.children, predicate);
+        return this.children.map(predicate);
     }
 
     public contains(item: T) {

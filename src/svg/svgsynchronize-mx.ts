@@ -28,7 +28,7 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const { clamp, equal, multipleOf } = squared.lib.math;
-const { hasKeys, hasValue, isEqual, isNumber, joinArray, lastItemOf, plainMap, replaceMap, spliceArray, sortNumber } = squared.lib.util;
+const { hasKeys, hasValue, isEqual, isNumber, joinArray, lastItemOf, replaceMap, spliceArray, sortNumber } = squared.lib.util;
 
 function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number, intervalMap: SvgAnimationIntervalMap, transforming: boolean) {
     let previousTime = 0,
@@ -256,7 +256,7 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
         case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
                 const baseArray = replaceMap(baseValue.split(' '), value => +value);
-                const valuesArray = plainMap(values, value => replaceMap(value.trim().split(/\s+/), pt => +pt));
+                const valuesArray = values.map(value => replaceMap(value.trim().split(/\s+/), pt => +pt));
                 const length = baseArray.length;
                 if (valuesArray.every(value => value.length === length)) {
                     const result = valuesArray[index];
@@ -714,7 +714,7 @@ function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
 }
 
 const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
-const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? plainMap(value, pt => pt.x + ',' + pt.y).join(' ') : value !== undefined ? value.toString() : '';
+const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? value.map(pt => pt.x + ',' + pt.y).join(' ') : value !== undefined ? value.toString() : '';
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => ((transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE) & keyTimeMode) > 0;
 const isFromToFormat = (transforming: boolean, keyTimeMode: number) => ((transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE) & keyTimeMode) > 0;
 const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;

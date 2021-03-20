@@ -375,6 +375,5 @@ declare module "lib" {
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;
         function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): number;
         function replaceMap<T, U>(list: (T | U)[], predicate: IteratorPredicate<T, U>): U[];
-        function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
     }
 }

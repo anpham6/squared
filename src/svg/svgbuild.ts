@@ -28,7 +28,7 @@ type SvgView = squared.svg.SvgView;
 const { isAngle, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction } = squared.lib.math;
-const { hasBit, isArray, plainMap, splitPair, splitPairEnd } = squared.lib.util;
+const { hasBit, isArray, splitPair, splitPairEnd } = squared.lib.util;
 
 const RE_DECIMAL = new Pattern(squared.lib.regex.STRING.DECIMAL_SIGNED);
 const RE_PATHCOMMAND = new Pattern(/([A-Za-z])([^A-Za-z]+)?/g);
@@ -849,7 +849,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static parsePoints(value: string) {
-        return plainMap(value.trim().split(/\s+/), coords => {
+        return value.trim().split(/\s+/).map(coords => {
             const [x, y] = splitPair(coords, ',');
             return { x: +x, y: +y };
         });
