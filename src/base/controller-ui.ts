@@ -48,6 +48,7 @@ function pushIndentArray(values: string[], depth: number, char = '\t', separator
 const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial' || value === 'unset' || value === 'revert';
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
+    public readonly application!: ApplicationUI<T>;
     public abstract readonly localSettings: ControllerSettingsUI;
 
     private _beforeOutside = new WeakMap<T, string[]>();
@@ -119,6 +120,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             if (!styleMap) {
                 setElementCache(element, 'styleMap', styleMap = {}, processing.sessionId);
             }
+            const setDimension = () => {
+                this.setElementDimension(processing.resourceId, element as HTMLImageElement, styleMap!, 'width');
+                this.setElementDimension(processing.resourceId, element as HTMLImageElement, styleMap!, 'height');
+            };
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
                     case 'BODY':
@@ -148,9 +153,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;
                     const { type, disabled } = element as HTMLInputElement;
                     switch (type) {
+                        case 'image':
+                            setDimension();
                         case 'radio':
                         case 'checkbox':
-                        case 'image':
                             break;
                         case 'file':
                         case 'reset':
@@ -248,11 +254,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'IMG':
                 case 'CANVAS':
                 case 'VIDEO':
+                case 'AUDIO':
                 case 'OBJECT':
                 case 'EMBED':
                 case 'svg':
-                    this.setElementDimension(processing.resourceId, element, styleMap, 'width');
-                    this.setElementDimension(processing.resourceId, element, styleMap, 'height');
+                    setDimension();
                     break;
             }
         }
@@ -569,7 +575,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     if (sibling.floating) {
                                         const float = sibling.float;
                                         if (clear === 'both' || float === clear) {
-                                            (this.application as ApplicationUI<T>).clearMap.set(item, clear);
+                                            this.application.clearMap.set(item, clear);
                                             let nextSibling = item.nextElementSibling as Null<T>;
                                             while (nextSibling) {
                                                 if (nextSibling.floating && !appending.includes(nextSibling)) {
@@ -775,43 +781,65 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return result;
     }
 
-    protected setElementDimension(resourceId: number, element: Element, style: CssStyleMap, attr: DimensionAttr) {
-        const dimension = style[attr];
-        if (!dimension || dimension === 'auto') {
+    protected setElementDimension(resourceId: number, element: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLEmbedElement | HTMLInputElement | HTMLObjectElement | HTMLIFrameElement | HTMLCanvasElement | SVGSVGElement, style: CssStyleMap, attr: DimensionAttr) {
+        if (!style[attr] || style[attr] === 'auto') {
             const horizontal = attr === 'width';
             const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
             if (match) {
                 const value = match[1];
                 if (isPercent(value)) {
                     style[attr] = value;
+                    return;
                 }
-                else {
-                    let unit = asPx(value);
-                    if (isNaN(unit) && isNaN(unit = parseFloat(value))) {
-                        return;
-                    }
+                let unit = asPx(value);
+                if (!isNaN(unit) || !isNaN(unit = parseFloat(value))) {
                     style[attr] = unit + 'px';
+                    return;
                 }
             }
-            else if (element.clientWidth === 300 && element.clientHeight === 150 && !((element instanceof HTMLObjectElement || element instanceof HTMLEmbedElement) && element.type.startsWith('image/'))) {
-                if (horizontal) {
-                    style.width = '300px';
-                }
-                else {
-                    style.height = '150px';
+            if (element.clientWidth === 300 && element.clientHeight === 150) {
+                switch (element.tagName) {
+                    case 'IMG':
+                    case 'INPUT':
+                        break;
+                    case 'OBJECT':
+                    case 'EMBED':
+                         if ((element as HTMLObjectElement).type.startsWith('image/')) {
+                            break;
+                         }
+                    default:
+                        if (horizontal) {
+                            style.width = '300px';
+                        }
+                        else {
+                            style.height = '150px';
+                        }
+                        return;
                 }
             }
-            else if (resourceId !== -1) {
-                const image = this.application.resourceHandler!.getImage(resourceId, (element as HTMLImageElement).src);
-                if (image && image.width && image.height) {
-                    const opposing = horizontal ? 'height' : 'width';
-                    const value = style[opposing];
-                    if (value && isLength(value)) {
-                        const valueMax = horizontal ? style.maxWidth : style.maxHeight;
-                        if (!valueMax || !isPercent(valueMax)) {
-                            style[attr] = formatPX(image[attr] * parseUnit(value, { fontSize: getFontSize(element) }) / image[opposing]);
+            switch (element.tagName) {
+                case 'IMG':
+                case 'INPUT':
+                case 'EMBED':
+                case 'IFRAME':
+                case 'OBJECT': {
+                    const image = this.application.resourceHandler.getImage(resourceId, element instanceof HTMLObjectElement ? element.data : (element as HTMLImageElement).src);
+                    if (image && image.width && image.height) {
+                        const opposing = horizontal ? 'height' : 'width';
+                        const value = style[opposing];
+                        if (value && isLength(value)) {
+                            const valueMax = horizontal ? style.maxWidth : style.maxHeight;
+                            if (!valueMax || !isPercent(valueMax)) {
+                                const options: ParseUnitOptions = { fontSize: getFontSize(element) };
+                                let unit = image[attr] * parseUnit(value, options) / image[opposing];
+                                if (valueMax && isLength(valueMax)) {
+                                    unit = Math.min(unit, parseUnit(valueMax, options));
+                                }
+                                style[attr] = formatPX(unit);
+                            }
                         }
                     }
+                    break;
                 }
             }
         }

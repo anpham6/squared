@@ -2,7 +2,7 @@ import USER_AGENT = squared.lib.constant.USER_AGENT;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 
-import type ControllerUI from './controller-ui';
+import type ApplicationUI from './application-ui';
 import type NodeUI from './node-ui';
 import type NodeList from './nodelist';
 
@@ -1027,6 +1027,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
     }
 
+    public readonly application!: ApplicationUI<T>;
+
     public init(resourceId: number) {
         const data = ResourceUI.STORED[resourceId] ||= {} as ResourceStoredMap;
         data.ids = new Map();
@@ -1534,7 +1536,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     get controllerSettings() {
-        return (this.application.controllerHandler as ControllerUI<T>).localSettings;
+        return this.application.controllerHandler.localSettings;
     }
 
     get STRING_SPACE() {
