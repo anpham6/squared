@@ -183,7 +183,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract userSettings: UserResourceSettingsUI;
 
     private _controllerSettings!: ControllerSettingsUI;
-    private _layoutFileExtension!: RegExp;
     private _excludedElements!: string[];
     private _resourceId!: number;
     private _layouts: LayoutAsset[] = [];
@@ -205,7 +204,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this._renderNode = controller.renderNode.bind(controller);
         this._renderNodeGroup = controller.renderNodeGroup.bind(controller);
         this._controllerSettings = localSettings;
-        this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`, 'i');
         this._excludedElements = localSettings.unsupported.excluded;
         this.setResourceId();
     }
@@ -302,12 +300,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public reset() {
         const session = this.session;
-        const iterationName = 'iteration' + capitalize(this.systemName);
-        for (const item of session.active.values()) {
-            for (const element of item.rootElements) {
-                delete element.dataset[iterationName];
-            }
-        }
         session.active.clear();
         session.extensionMap = new WeakMap();
         session.clearMap.clear();
@@ -447,7 +439,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 parent.visible = false;
                 node.documentParent = parent;
                 setElementState(parent, true, true, true, false);
-                if (parent.tagName === 'HTML') {
+                if (parent.element === document.documentElement) {
                     parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                     parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
                     cache.add(parent);
@@ -587,14 +579,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public afterCreateCache(processing: squared.base.AppProcessing<T>, node: T) {
         super.afterCreateCache(processing, node);
+        const { elementId, dataset } = node;
         const systemName = capitalize(this.systemName);
-        const dataset = node.dataset;
-        const filename = dataset['filename' + systemName] || dataset.filename;
-        const iteration = dataset['iteration' + systemName];
-        const prefix = isString(filename) && filename.replace(this._layoutFileExtension, '') || node.elementId || `document_${this.length}`;
-        const suffix = iteration ? +iteration + 1 : 0;
-        const layoutName = convertWord(suffix ? prefix + '_' + suffix : prefix, true);
-        dataset['iteration' + systemName] = suffix.toString();
+        let layoutName = dataset['filename' + systemName] || dataset.filename;
+        if (!layoutName) {
+            layoutName = elementId && convertWord(elementId, true) || 'document_' + this.length;
+            let i = 0;
+            while (this._layouts.find(item => item.filename === layoutName)) {
+                layoutName += layoutName + '_' + ++i;
+            }
+        }
         dataset['layoutName' + systemName] = layoutName;
         node.data(Application.KEY_NAME, 'layoutName', layoutName);
         this.setBaseLayout(processing);
@@ -1158,23 +1152,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const containerType = nodeY.containerType;
                         let layout: ContentUI<T>;
                         if (!nodeY.isEmpty()) {
-                            layout = new LayoutUI(
-                                parentY,
-                                nodeY,
-                                containerType,
-                                nodeY.alignmentType
-                            );
+                            layout = new LayoutUI(parentY, nodeY, containerType, nodeY.alignmentType);
                             if (containerType === 0) {
                                 controller.processUnknownParent(layout as LayoutUI<T>);
                             }
                         }
                         else {
-                            layout = new ContentUI(
-                                parentY,
-                                nodeY,
-                                containerType,
-                                nodeY.alignmentType
-                            );
+                            layout = new ContentUI(parentY, nodeY, containerType, nodeY.alignmentType);
                             if (containerType === 0) {
                                 controller.processUnknownChild(layout);
                             }
@@ -1575,8 +1559,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (blockCount > 1 || floating) {
-                        subgroup = controllerHandler.createNodeGroup(children[0], children);
-                        wrapper.push(subgroup);
+                        wrapper.push(subgroup = controllerHandler.createNodeGroup(children[0], children));
                     }
                     else if (blockCount === 1) {
                         wrapper.push(children[0]);
@@ -1964,7 +1947,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createAssetOptions(options?: FileActionOptions) {
-        return options ? { ...options, assets: options.assets ? this.layouts.concat(options.assets) : this.layouts } : { assets: this.layouts };
+        return options ? { ...options, assets: options.assets ? (this.layouts as FileAsset[]).concat(options.assets) : this.layouts } : { assets: this.layouts };
     }
 
     protected setResourceId() {
@@ -1981,13 +1964,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get layouts() {
         return this._layouts.sort((a, b) => {
-            const indexA = a.index!;
-            const indexB = b.index!;
+            const indexA = a.index;
+            const indexB = b.index;
             if (indexA !== indexB) {
                 if (indexA === 0 || indexB === Infinity || indexB === -1 && indexA !== Infinity) {
                     return -1;
                 }
-                else if (indexB === 0 || indexA === Infinity || indexA === -1 && indexB !== Infinity) {
+                if (indexB === 0 || indexA === Infinity || indexA === -1 && indexB !== Infinity) {
                     return 1;
                 }
                 return indexA - indexB;

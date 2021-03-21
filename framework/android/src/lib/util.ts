@@ -112,6 +112,10 @@ export function getDocumentId(value: string) {
     return value.replace(/^@\+?id\//, '');
 }
 
+export function removeFileExtension(value: string, ext = 'xml') {
+    return value.replace(new RegExp(`\\.${ext}\\s*$`, 'i'), '');
+}
+
 export function isHorizontalAlign(value: string) {
     switch (value) {
         case 'left':

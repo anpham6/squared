@@ -385,6 +385,7 @@ declare namespace lib {
         function isHorizontalAlign(value: string): boolean;
         function isVerticalAlign(value: string): boolean;
         function parseColor(value: string, opacity?: number, transparency?: boolean): Null<ColorData>;
+        function removeFileExtension(value: string, ext?: string): string;
         function createViewAttribute(data?: PlainObject): ViewAttribute;
         function createThemeAttribute(data?: PlainObject): Required<ThemeAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;

@@ -428,7 +428,7 @@ Two additional output parameters are required with the "data-viewmodel" prefix.
 data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 
 ```xml
-<div>
+<div data-filename-android="activity_sub.xml"> <!-- optional -->
     <label>Name:</label>
     <input type="text" data-viewmodel-android-text="user.firstName" />
     <input type="text" data-viewmodel-android-text="user.lastName" />

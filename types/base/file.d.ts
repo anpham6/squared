@@ -20,7 +20,7 @@ interface TextAsset extends Asset, LocationUri {
 interface ImageAsset extends Asset, Dimension {}
 
 interface LayoutAsset extends TextAsset {
-    index?: number;
+    index: number;
 }
 
 interface FileAsset extends TextAsset, OutputAction {

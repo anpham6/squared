@@ -502,21 +502,21 @@ export default class File<T extends View> extends squared.base.File<T> implement
     protected async processAssets(assets: FileAsset[], options: FileUniversalOptions) {
         const { userSettings, resource, resourceId } = this;
         const documentHandler = userSettings.outputDocumentHandler;
-        const result: FileAsset[] = [];
         for (let i = 0, length = assets.length, first = true; i < length; ++i) {
             const item = assets[i];
             if (item.content && !item.uri) {
-                if (first) {
-                    item.filename = userSettings.outputMainFileName;
-                    first = false;
-                }
-                else if (!endsWith(item.filename, '.xml')) {
-                    item.filename += '.xml';
+                if (!endsWith(item.filename, '.xml')) {
+                    if (first) {
+                        item.filename = userSettings.outputMainFileName;
+                    }
+                    else {
+                        item.filename += '.xml';
+                    }
                 }
                 item.document ||= userSettings.outputDocumentHandler;
+                first = false;
             }
         }
-        result.push(...assets);
         const data = Resource.ASSETS[resourceId];
         if (data) {
             const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
@@ -583,7 +583,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                 }
             }
-            result.push(
+            assets.push(
                 ...getFileAssets(outputDirectory, this.resourceStringToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceStringArrayToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceFontToXml(), documentHandler),
@@ -597,10 +597,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 ...audioAssets
             );
             if (data.other) {
-                result.push(...data.other);
+                assets.push(...data.other);
             }
         }
-        return result;
+        return assets;
     }
 
     protected checkFileAssets(content: string[], options?: FileUniversalOptions) {

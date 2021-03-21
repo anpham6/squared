@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
                 else {
-                    console.log('SQ: ' + (performance.now() - time));
+                    console.log('1: ' + (performance.now() - time));
                     squared.settings.outputEmptyCopyDirectory = true;
                     squared.copyTo('C:/Users/An/git/flexbox', {
                         assets: [
@@ -106,10 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         ]
                     })
                     .then(response => {
-                        console.log('CP: ' + (performance.now() - time))
+                        console.log('2: ' + (performance.now() - time));
                         console.log(response);
                     });
-                    console.log('NE: ' + (performance.now() - time));
                 }
             })
             .catch(err => console.log(err));
