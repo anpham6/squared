@@ -1,4 +1,4 @@
-const { endsWith, hasValue, isObject, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
+const { endsWith, escapePattern, hasValue, isObject, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
     constructor(source: string, flags: string, public negate: boolean) {
@@ -467,6 +467,60 @@ export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?
             yield [attr, obj[attr]];
         }
     }
+}
+
+export function extractQuote(value: string) {
+    return /^"([\S\s]*)"$/.exec(value)?.[1] || value;
+}
+
+export function trimString(value: string, pattern: string) {
+    if (pattern.length === 1) {
+        return trimEnd(trimStart(value, pattern), pattern);
+    }
+    const match = new RegExp(`^(?:${pattern = escapePattern(pattern)})*([\\s\\S]*?)(?:${pattern})*$`).exec(value);
+    return match ? match[1] : value;
+}
+
+export function trimStart(value: string, pattern: string) {
+    if (value) {
+        if (pattern.length === 1) {
+            for (let i = 0, length = value.length; i < length; ++i) {
+                if (value[i] !== pattern) {
+                    if (i > 0) {
+                        return value.substring(i);
+                    }
+                    break;
+                }
+            }
+            return value;
+        }
+        else {
+            const match = new RegExp(`^(?:${escapePattern(pattern)})+`).exec(value);
+            return match ? value.substring(match[0].length) : value;
+        }
+    }
+    return '';
+}
+
+export function trimEnd(value: string, pattern: string) {
+    if (value) {
+        if (pattern.length === 1) {
+            for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
+                if (value[i] !== pattern) {
+                    if (j > 0) {
+                        return value.substring(0, value.length - j);
+                    }
+                    break;
+                }
+            }
+            return value;
+        }
+        else {
+            const match = new RegExp(`(?:${escapePattern(pattern)})+$`).exec(value);
+            return match ? value.substring(0, value.length - match[0].length) : value;
+        }
+    }
+    return '';
 }
 
 export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>) {

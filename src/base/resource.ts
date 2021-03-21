@@ -2,7 +2,7 @@ import type Application from './application';
 import type File from './file';
 import type Node from './node';
 
-import { fromMimeType, parseMimeType, randomUUID } from './lib/util';
+import { extractQuote, fromMimeType, parseMimeType, randomUUID } from './lib/util';
 
 type PreloadItem = HTMLImageElement | string;
 
@@ -10,7 +10,7 @@ const { parseKeyframes } = squared.lib.internal;
 const { FILE, STRING } = squared.lib.regex;
 
 const { extractURL, resolveURL } = squared.lib.css;
-const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith, trimBoth } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
 const REGEXP_FONTFACE = /@font-face\s*{([^}]+)}/;
 const REGEXP_FONTFAMILY = /font-family:\s*([^;]+);/;
@@ -200,7 +200,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             if (fontFamily) {
                 const fontStyle = REGEXP_FONTSTYLE.exec(value)?.[1].toLowerCase() || 'normal';
                 const fontWeight = +(REGEXP_FONTWEIGHT.exec(value)?.[1] || '400');
-                fontFamily = trimBoth(fontFamily, '"');
+                fontFamily = extractQuote(fontFamily);
                 let match: Null<RegExpExecArray>;
                 while (match = REGEXP_FONTURL.exec(value)) {
                     const url = (match[2] || match[3] || match[4]).trim();

@@ -1,7 +1,7 @@
 import type Resource from './resource';
 import type Node from './node';
 
-import { appendSeparator, parseGlob, randomUUID } from './lib/util';
+import { appendSeparator, parseGlob, randomUUID, trimEnd } from './lib/util';
 
 type FileActionResult = Promise<Void<ResponseData>>;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
@@ -10,7 +10,7 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 const { DIRECTORY_NOT_PROVIDED, INVALID_ASSET_REQUEST, SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
-const { escapePattern, fromLastIndexOf, isPlainObject, splitPair, startsWith, trimEnd } = squared.lib.util;
+const { escapePattern, fromLastIndexOf, isPlainObject, splitPair, startsWith } = squared.lib.util;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;

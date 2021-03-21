@@ -1,7 +1,6 @@
 import { FILE } from './regex';
 
 const CACHE_CAMELCASE: StringMap = {};
-const CACHE_TRIMBOTH: ObjectMap<RegExp> = {};
 const REGEXP_NONWORD = /[^\w]+/g;
 const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
 
@@ -145,9 +144,7 @@ export function padStart(value: string, length: number, char: string) {
 export function replaceAll(value: string, searchValue: string, replaceWith: string, replaceCount = 0) {
     const length = searchValue.length;
     let result = '',
-        i = -1,
-        j = 0,
-        k = 0;
+        i = -1, j = 0, k = 0;
     while ((i = value.indexOf(searchValue, k)) !== -1) {
         result += value.substring(k, i) + replaceWith;
         k = i + length;
@@ -340,34 +337,33 @@ export function minMaxOf<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, 
     for (let i = 1, length = list.length; i < length; ++i) {
         const item = list[i];
         const itemValue = predicate(item, i, list);
-        if (isNaN(itemValue)) {
-            continue;
-        }
-        switch (operator) {
-            case '>':
-                if (itemValue > value) {
-                    result = item;
-                    value = itemValue;
-                }
-                break;
-            case '<':
-                if (itemValue < value) {
-                    result = item;
-                    value = itemValue;
-                }
-                break;
-            case '>=':
-                if (itemValue >= value) {
-                    result = item;
-                    value = itemValue;
-                }
-                break;
-            case '<=':
-                if (itemValue <= value) {
-                    result = item;
-                    value = itemValue;
-                }
-                break;
+        if (!isNaN(itemValue)) {
+            switch (operator) {
+                case '>':
+                    if (itemValue > value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+                case '<':
+                    if (itemValue < value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+                case '>=':
+                    if (itemValue >= value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+                case '<=':
+                    if (itemValue <= value) {
+                        result = item;
+                        value = itemValue;
+                    }
+                    break;
+            }
         }
     }
     return [result, value];
@@ -524,53 +520,6 @@ export function resolvePath(value: string, href?: string) {
         return location.origin + pathname.join('/') + '/' + value;
     }
     return value;
-}
-
-export function trimBoth(value: string, pattern: string) {
-    const match = (CACHE_TRIMBOTH[pattern] ||= new RegExp(`^(${pattern})+([\\s\\S]*)\\1$`)).exec(value);
-    return match ? match[2] : value;
-}
-
-export function trimString(value: string, pattern: string) {
-    if (pattern.length === 1) {
-        return trimEnd(trimStart(value, pattern), pattern);
-    }
-    const match = new RegExp(`^(?:${pattern})*([\\s\\S]*?)(?:${pattern})*$`).exec(value);
-    return match ? match[1] : value;
-}
-
-export function trimStart(value: string, pattern: string) {
-    if (value) {
-        if (pattern.length === 1) {
-            for (let i = 0, length = value.length; i < length; ++i) {
-                if (value[i] !== pattern) {
-                    return i > 0 ? value.substring(i) : value;
-                }
-            }
-        }
-        else {
-            const match = new RegExp(`^(?:${pattern})+`).exec(value);
-            return match ? value.substring(match[0].length) : value;
-        }
-    }
-    return '';
-}
-
-export function trimEnd(value: string, pattern: string) {
-    if (value) {
-        if (pattern.length === 1) {
-            for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
-                if (value[i] !== pattern) {
-                    return j > 0 ? value.substring(0, value.length - j) : value;
-                }
-            }
-        }
-        else {
-            const match = new RegExp(`(?:${pattern})+$`).exec(value);
-            return match ? value.substring(0, value.length - match[0].length) : value;
-        }
-    }
-    return '';
 }
 
 export function escapePattern(value: string) {

@@ -898,6 +898,10 @@ declare module "base" {
             function lowerCaseString(value: string): string;
             function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
             function searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void>;
+            function extractQuote(value: string): string;
+            function trimString(value: string, pattern: string): string;
+            function trimStart(value: string, pattern: string): string;
+            function trimEnd(value: string, pattern: string): string;
             function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>): boolean;
             function flatArray<T>(list: unknown[], depth?: number): T[];
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;

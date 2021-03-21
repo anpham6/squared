@@ -29,7 +29,9 @@ interface RepeatItem {
 }
 
 const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
-const { endsWith, splitPairEnd, startsWith, trimString, withinRange } = squared.lib.util;
+const { endsWith, splitPairEnd, startsWith, withinRange } = squared.lib.util;
+
+const { trimString } = squared.base.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';

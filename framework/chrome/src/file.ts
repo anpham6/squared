@@ -22,9 +22,9 @@ interface FileAsData {
 }
 
 const { createElement } = squared.lib.dom;
-const { convertWord, fromLastIndexOf, isPlainObject, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isPlainObject, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
 
-const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
+const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID, trimEnd } = squared.base.lib.util;
 
 const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 

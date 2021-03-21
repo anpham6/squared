@@ -6,7 +6,9 @@ import { PATTERN_CUBICBEZIER } from './lib/util';
 const { convertHex, parseColor } = squared.lib.color;
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { lastItemOf, replaceMap, splitSome, trimEnd } = squared.lib.util;
+const { lastItemOf, replaceMap, splitSome } = squared.lib.util;
+
+const { trimEnd } = squared.base.lib.util;
 
 const REGEXP_BEZIER = new RegExp(`^\\s*${PATTERN_CUBICBEZIER}\\s*$`);
 const REGEXP_BEZIERCSS = new RegExp(`cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);

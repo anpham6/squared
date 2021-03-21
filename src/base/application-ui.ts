@@ -18,7 +18,7 @@ import LayoutUI from './layout-ui';
 
 import { convertListStyle } from './extensions/list';
 
-import { appendSeparator, flatArray } from './lib/util';
+import { appendSeparator, extractQuote, flatArray, trimString } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
 type VisibleElementMethod = (element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) => boolean;
@@ -31,7 +31,7 @@ const { FILE } = squared.lib.regex;
 const { formatPX, getStyle, hasCoords, isCalc, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith, trimBoth, trimString } = squared.lib.util;
+const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith } = squared.lib.util;
 
 let REGEXP_COUNTER: Undef<RegExp>;
 let REGEXP_COUNTERVALUE: Undef<RegExp>;
@@ -99,7 +99,6 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
         if (quotes) {
             const match = REGEXP_QUOTE.exec(quotes);
             if (match) {
-                const extractQuote = (value: string) => /^"([\S\s]*)"$/.exec(value)?.[1] || value;
                 if (pseudoElt === '::before') {
                     if (found === 0) {
                         outside = extractQuote(match[1]);
@@ -1606,7 +1605,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (absolute && +styleMap.opacity! <= 0) {
                     return;
                 }
-                const textContent = trimBoth(value, '"');
+                const textContent = extractQuote(value);
                 if (!isString(textContent)) {
                     if (pseudoElt === '::after') {
                         const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
