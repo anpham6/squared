@@ -36,8 +36,8 @@ const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
 const PATTERN_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
 const PATTERN_NAMED = '\\[([\\w\\s\\-]+)\\]';
 const REGEXP_UNIT = new RegExp(`^${PATTERN_UNIT}$`);
-const REGEXP_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s*(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT}\\s*)`, 'g');
-const REGEXP_REPEAT = new RegExp(`\\s*(${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
+const REGEXP_NAMED = new RegExp(`(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s*(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
+const REGEXP_REPEAT = new RegExp(`(${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
 const REGEXP_CELL_UNIT = new RegExp(PATTERN_UNIT);
 const REGEXP_CELL_MINMAX = new RegExp(PATTERN_MINMAX);
 const REGEXP_CELL_FIT_CONTENT = new RegExp(PATTERN_FIT_CONTENT);
@@ -348,7 +348,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 let i = 1,
                     match: Null<RegExpMatchArray>;
                 while (match = REGEXP_NAMED.exec(value)) {
-                    const command = match[1].trim();
+                    const command = match[1];
                     switch (index) {
                         case 0:
                         case 1:

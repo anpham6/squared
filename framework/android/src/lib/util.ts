@@ -202,7 +202,7 @@ export function replaceTab(value: string, spaces: number, lineStart = '<', lineE
 }
 
 export function sanitizeString(value: string) {
-    return value.trim().replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ');
+    return value.trim().replace(/[ \t\n]+/g, ' ');
 }
 
 export function replaceCharacterData(value: string, tab?: number, quote?: boolean) {
@@ -231,7 +231,7 @@ export function replaceCharacterData(value: string, tab?: number, quote?: boolea
                 output += '\\\\';
                 break;
             case '\t':
-                output += tab ? '&#160;'.repeat(tab) : ch;
+                output += tab ? '&#160;'.repeat(tab) : '&#9;';
                 break;
             case '\u0003':
                 output += '&#3;';

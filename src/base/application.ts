@@ -22,7 +22,7 @@ const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, repla
 
 const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
 const REGEXP_CSSHOST = /^:(host|host-context)\(([^)]+)\)/;
-const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
+const REGEXP_DATAURI = new RegExp(`url\\("(${STRING.DATAURI})"\\)`, 'g');
 let CSS_SHORTHANDNONE: Undef<ObjectMap<CssPropertyData>>;
 
 function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Resource<Node>>, resourceId: number) {
@@ -534,8 +534,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const baseMap: CssStyleMap = {};
                 const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
-                const hasExactValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                const hasPartialValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
+                const hasExactValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
+                const hasPartialValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     if (attr[0] === '-') {

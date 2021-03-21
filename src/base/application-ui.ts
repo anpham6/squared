@@ -99,7 +99,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
         if (quotes) {
             const match = REGEXP_QUOTE.exec(quotes);
             if (match) {
-                const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
+                const extractQuote = (value: string) => /^"([\S\s]*)"$/.exec(value)?.[1] || value;
                 if (pseudoElt === '::before') {
                     if (found === 0) {
                         outside = extractQuote(match[1]);
@@ -140,7 +140,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
 
 function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
     if (value && value !== 'none') {
-        REGEXP_COUNTERVALUE ||= /\s*([^-\d][^\s]*)\s+(-?\d+)\s*/g;
+        REGEXP_COUNTERVALUE ||= /([^-\d][^\s]*)\s+(-?\d+)/g;
         REGEXP_COUNTERVALUE.lastIndex = 0;
         let match: Null<RegExpExecArray>;
         while (match = REGEXP_COUNTERVALUE.exec(value)) {
@@ -1699,7 +1699,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            REGEXP_COUNTER ||= /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
+                            REGEXP_COUNTER ||= /(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
                             const style = getStyle(element);
                             const getCounterIncrementValue = (parent: HTMLElement, counterName: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
                             let found: Undef<boolean>,

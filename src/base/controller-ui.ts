@@ -328,22 +328,22 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public getBeforeOutsideTemplate(node: T, depth: number): string {
+    public getBeforeOutsideTemplate(node: T, depth: number) {
         const template = this._beforeOutside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getBeforeInsideTemplate(node: T, depth: number): string {
+    public getBeforeInsideTemplate(node: T, depth: number) {
         const template = this._beforeInside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getAfterInsideTemplate(node: T, depth: number): string {
+    public getAfterInsideTemplate(node: T, depth: number) {
         const template = this._afterInside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
 
-    public getAfterOutsideTemplate(node: T, depth: number): string {
+    public getAfterOutsideTemplate(node: T, depth: number) {
         const template = this._afterOutside.get(node);
         return template ? pushIndentArray(template, depth) : '';
     }
@@ -406,7 +406,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
         const altered: T[] = [];
-        let escaped: Undef<Map<T, { parent: T; appending: T[] }>>;;
+        let escaped: Undef<Map<T, { parent: T; appending: T[] }>>;
         cache.each(node => {
             if (node.floating) {
                 if (node.float === 'left') {
