@@ -1936,10 +1936,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             switch (barrierDirection) {
                 case 'top':
                 case 'left':
-                    this.addBeforeOutsideTemplate(anchorTarget as T, content, false);
+                    this.addBeforeOutsideTemplate(anchorTarget as T, content);
                     break;
                 default:
-                    this.addAfterOutsideTemplate(anchorTarget as T, content, false);
+                    this.addAfterOutsideTemplate(anchorTarget as T, content);
                     break;
             }
             const documentId = options.documentId;

@@ -25,24 +25,28 @@ const BORDER_BOX = [
 ];
 const CACHE_INDENT: StringMap = {};
 
-function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
+function pushIndent(value: string, depth: number, indent = '\t'.repeat(depth)) {
     if (depth > 0) {
-        indent ||= char.repeat(depth);
-        return value.split('\n').reduce((a, b) => a + (b ? indent + b + '\n' : ''), '');
+        const lines = value.split('\n');
+        let result = '';
+        for (let i = 0, length = lines.length; i < length; ++i) {
+            result += (i === 0 || i === length - 1 || lines[i + 1][0] === '\t' ? indent : '') + lines[i] + '\n';
+        }
+        return result;
     }
     return value;
 }
 
-function pushIndentArray(values: string[], depth: number, char = '\t', separator = '') {
+function pushIndentArray(values: string[], depth: number) {
     if (depth > 0) {
-        const indent = char.repeat(depth);
+        const indent = '\t'.repeat(depth);
         let result = '';
         for (let i = 0, length = values.length; i < length; ++i) {
-            result += (i > 0 ? separator : '') + pushIndent(values[i], depth, char, indent);
+            result += pushIndent(values[i], depth, indent);
         }
         return result;
     }
-    return values.join(separator);
+    return values.join('');
 }
 
 const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial' || value === 'unset' || value === 'revert';
@@ -264,7 +268,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addBeforeOutsideTemplate(node: T, value: string, format = true, index = -1) {
+    public addBeforeOutsideTemplate(node: T, value: string, format?: boolean, index = -1) {
         let template = this._beforeOutside.get(node);
         if (!template) {
             this._beforeOutside.set(node, template = []);
@@ -280,7 +284,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addBeforeInsideTemplate(node: T, value: string, format = true, index = -1) {
+    public addBeforeInsideTemplate(node: T, value: string, format?: boolean, index = -1) {
         let template = this._beforeInside.get(node);
         if (!template) {
             this._beforeInside.set(node, template = []);
@@ -296,7 +300,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addAfterInsideTemplate(node: T, value: string, format = true, index = -1) {
+    public addAfterInsideTemplate(node: T, value: string, format?: boolean, index = -1) {
         let template = this._afterInside.get(node);
         if (!template) {
             this._afterInside.set(node, template = []);
@@ -312,7 +316,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    public addAfterOutsideTemplate(node: T, value: string, format = true, index = -1) {
+    public addAfterOutsideTemplate(node: T, value: string, format?: boolean, index = -1) {
         let template = this._afterOutside.get(node);
         if (!template) {
             this._afterOutside.set(node, template = []);
@@ -346,10 +350,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public getAfterOutsideTemplate(node: T, depth: number) {
         const template = this._afterOutside.get(node);
         return template ? pushIndentArray(template, depth) : '';
-    }
-
-    public hasAppendProcessing(node?: T) {
-        return node ? this._beforeOutside.has(node) || this._beforeInside.has(node) || this._afterInside.has(node) || this._afterOutside.has(node) : this._requireFormat;
     }
 
     public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt): boolean {
@@ -846,5 +846,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
             }
         }
+    }
+
+    get requireFormat() {
+        return this._requireFormat;
     }
 }

@@ -127,8 +127,7 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                                             height: `@dimen/${Resource.insertStoredAsset(node.localSettings.resourceId, 'dimens', node.controlId.toLowerCase() + '_grid_space', formatPX(heightBottom))}`,
                                             columnSpan: columnCount,
                                             android: {}
-                                        }),
-                                        false
+                                        })
                                     );
                                 }
                             }

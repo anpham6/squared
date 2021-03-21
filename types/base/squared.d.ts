@@ -201,7 +201,6 @@ declare module "base" {
         getBeforeInsideTemplate(node: T, depth: number): string;
         getAfterInsideTemplate(node: T, depth: number): string;
         getAfterOutsideTemplate(node: T, depth: number): string;
-        hasAppendProcessing(node?: T): boolean;
         writeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean): string;
         getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
         get userSettings(): UserResourceSettingsUI;
@@ -210,6 +209,7 @@ declare module "base" {
         get containerTypeVertical(): LayoutType;
         get containerTypeVerticalMargin(): LayoutType;
         get containerTypePercent(): LayoutType;
+        get requireFormat(): boolean;
     }
 
     class Resource<T extends Node> implements Resource<T>, AppHandler<T> {

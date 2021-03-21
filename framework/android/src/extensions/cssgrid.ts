@@ -806,8 +806,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                         layout_column: length.toString(),
                                         layout_columnWeight: column.flags & LAYOUT_CSSGRID.FLEXIBLE ? '0.01' : ''
                                     }
-                                }),
-                                false
+                                })
                             );
                         }
                         node.android('columnCount', (length + 1).toString());
@@ -857,8 +856,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                         layout_column: '0',
                                         layout_rowWeight: row.flags & LAYOUT_CSSGRID.FLEXIBLE ? '0.01' : ''
                                     }
-                                }),
-                                false
+                                })
                             );
                         }
                         node.android('rowCount', (row.length + 1).toString());

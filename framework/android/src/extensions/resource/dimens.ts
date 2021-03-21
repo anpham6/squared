@@ -70,7 +70,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     }
 
     public afterFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
-        if (this.controller.hasAppendProcessing()) {
+        if (this.controller.requireFormat) {
             const resourceId = data.resourceId;
             const dimens = Resource.STORED[resourceId]!.dimens;
             for (const layout of this.application.layouts) {

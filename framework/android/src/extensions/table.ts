@@ -146,8 +146,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         height: 'wrap_content',
                         columnSpan: cellData.spaceSpan,
                         android: {}
-                    }),
-                    false
+                    })
                 );
             }
             node.mergeGravity('layout_gravity', 'fill');
