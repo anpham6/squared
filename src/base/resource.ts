@@ -293,10 +293,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public parseKeyFrames(resourceId: number, cssRule: CSSKeyframesRule) {
-        const assets = Resource.ASSETS[resourceId]!;
         const value = parseKeyframes(cssRule.cssRules);
         if (value) {
-            const keyFrames = assets.keyFrames ||= new Map();
+            const keyFrames = Resource.ASSETS[resourceId]!.keyFrames ||= new Map();
             const item = keyFrames.get(cssRule.name);
             if (item) {
                 Object.assign(item, value);
@@ -429,7 +428,10 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public getImage(resourceId: number, uri: string) {
-        return Resource.ASSETS[resourceId]?.image.get(uri);
+        const image = Resource.ASSETS[resourceId]?.image;
+        if (image) {
+            return image.get(uri);
+        }
     }
 
     public getVideo(resourceId: number, uri: string) {
@@ -469,8 +471,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public addImageData(resourceId: number, uri: string, width = 0, height = 0) {
-        if (uri && (width && height || !this.getImage(resourceId, uri))) {
-            Resource.ASSETS[resourceId]?.image.set(uri, { width, height, uri });
+        const image = Resource.ASSETS[resourceId]?.image;
+        if (image && uri && (width && height || !this.getImage(resourceId, uri))) {
+            image.set(uri, { width, height, uri });
         }
     }
 

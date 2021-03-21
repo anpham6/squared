@@ -393,7 +393,7 @@ declare namespace lib {
         function formatString(value: string, ...params: string[]): string;
         function sanitizeString(value: string): string;
         function replaceCharacterData(value: string, tab?: number, quote?: boolean): string;
-        function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
+        function replaceTab(value: string, spaces: number, lineStart?: string, lineEnd?: string): string;
         function getXmlNs(value: string): string;
         function getRootNs(value: string): string;
     }

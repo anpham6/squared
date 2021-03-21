@@ -163,42 +163,40 @@ export function createThemeAttribute(data?: PlainObject): ThemeAttribute {
     return { name: '', parent: '', items: {}, ...data };
 }
 
-export function replaceTab(value: string, spaces = 4, preserve?: boolean) {
+export function replaceTab(value: string, spaces: number, lineStart = '<', lineEnd = '>\n') {
     if (spaces > 0) {
         const padding = ' '.repeat(spaces);
-        if (preserve) {
-            let result = '';
-            for (let i = 0, j = 0, start = true, length = value.length; i < length; ++i) {
-                const ch = value[i];
-                if (start) {
-                    if (ch === '\t') {
-                        ++j;
-                        continue;
-                    }
-                    else {
-                        if (j > 0) {
-                            result += (ch === '<' ? padding : '\t').repeat(j);
-                            j = 0;
-                        }
-                        start = false;
-                    }
-                }
-                result += ch;
-                const k = i + 1;
-                const l = value.indexOf('>\n', k);
-                if (l === -1) {
-                    result += value.substring(k);
-                    break;
+        const end = lineEnd.length;
+        let result = '';
+        for (let i = 0, j = 0, start = true, length = value.length; i < length; ++i) {
+            const ch = value[i];
+            if (start) {
+                if (ch === '\t') {
+                    ++j;
+                    continue;
                 }
                 else {
-                    start = true;
-                    result += value.substring(k, l + 2);
-                    i = l + 1;
+                    if (j > 0) {
+                        result += (!lineStart || ch === lineStart ? padding : '\t').repeat(j);
+                        j = 0;
+                    }
+                    start = false;
                 }
             }
-            return result;
+            result += ch;
+            const k = i + 1;
+            const l = value.indexOf(lineEnd, k);
+            if (l === -1) {
+                result += value.substring(k);
+                break;
+            }
+            else {
+                start = true;
+                result += value.substring(k, l + end);
+                i = l + (end - 1);
+            }
         }
-        return replaceAll(value, '\t', padding);
+        return result;
     }
     return value;
 }

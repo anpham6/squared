@@ -677,7 +677,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public finalize(layouts: FileAsset[]) {
         const insertSpaces = this.userSettings.insertSpaces;
         for (const layout of layouts) {
-            layout.content = replaceTab(replaceAll(layout.content!, '{#0}', getRootNs(layout.content!), 1), insertSpaces);
+            layout.content = replaceTab(replaceAll(layout.content!, '{#0}', getRootNs(layout.content!), 1), insertSpaces, '', '\n');
         }
     }
 

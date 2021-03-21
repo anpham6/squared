@@ -216,7 +216,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const item = items[i];
             itemArray[j++] = { name: item[0], innerText: item[1] };
         }
-        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'strings.xml'], options);
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRING_TMPL, [{ string: itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'strings.xml'], options);
     }
 
     public resourceStringArrayToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
@@ -230,7 +230,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const item = items[i];
             itemArray[i] = { name: item[0], item: item[1].map(innerText => ({ innerText })) };
         }
-        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces, true), this.directory.string, 'string_arrays.xml'], options);
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'string_arrays.xml'], options);
     }
 
     public resourceFontToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
@@ -361,14 +361,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (!stored || !(length = stored.dimens.size)) {
             return [];
         }
-        const convertPixels = this.userSettings.convertPixels === 'dp';
+        const userSettings = this.userSettings;
+        const convertPixels = userSettings.convertPixels === 'dp';
         const items = Array.from(stored.dimens).sort();
         const itemArray: ItemValue[] = new Array(length);
         for (let i = 0; i < length; ++i) {
             const item = items[i];
             itemArray[i] = { name: item[0], innerText: convertPixels ? item[1].replace(/px$/, 'dp') : item[1] };
         }
-        return this.checkFileAssets([replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }])), this.directory.string, 'dimens.xml'], options);
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', DIMEN_TMPL, [{ dimen: itemArray }]), userSettings.insertSpaces), this.directory.string, 'dimens.xml'], options);
     }
 
     public resourceDrawableToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
