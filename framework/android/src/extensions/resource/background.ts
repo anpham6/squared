@@ -65,7 +65,7 @@ interface LayerData {
 
 const { extractURL, formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { delimitString, isEqual, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
+const { delimitString, plainMap, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -430,6 +430,7 @@ function setBorderStyle(resourceId: number, layerList: LayerList, borders: Undef
     }
 }
 
+const isBorderEqual = (border: BorderAttribute, other: BorderAttribute) => border.style === border.style && border.width === other.width && border.color.rgbaAsString === other.color.rgbaAsString;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 const roundFloat = (value: string) => Math.round(parseFloat(value));
 const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
@@ -642,7 +643,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const item = borders[i];
                 if (item) {
                     if (borderStyle && borderData) {
-                        borderStyle = isEqual(borderData, item);
+                        borderStyle = isBorderEqual(borderData, item);
                         if (!borderStyle) {
                             borderAll = false;
                         }
