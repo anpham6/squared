@@ -2,7 +2,7 @@ import type Application from './application';
 import type File from './file';
 import type Node from './node';
 
-import { extractQuote, fromMimeType, parseMimeType, randomUUID } from './lib/util';
+import { fromMimeType, parseMimeType, randomUUID, trimBoth } from './lib/util';
 
 type PreloadItem = HTMLImageElement | string;
 
@@ -200,7 +200,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             if (fontFamily) {
                 const fontStyle = REGEXP_FONTSTYLE.exec(value)?.[1].toLowerCase() || 'normal';
                 const fontWeight = +(REGEXP_FONTWEIGHT.exec(value)?.[1] || '400');
-                fontFamily = extractQuote(fontFamily);
+                fontFamily = trimBoth(fontFamily);
                 let match: Null<RegExpExecArray>;
                 while (match = REGEXP_FONTURL.exec(value)) {
                     const url = (match[2] || match[3] || match[4]).trim();

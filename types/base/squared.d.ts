@@ -898,7 +898,7 @@ declare module "base" {
             function lowerCaseString(value: string): string;
             function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;
             function searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void>;
-            function extractQuote(value: string): string;
+            function trimBoth(value: string, char?: string, trim?: boolean): string;
             function trimString(value: string, pattern: string): string;
             function trimStart(value: string, pattern: string): string;
             function trimEnd(value: string, pattern: string): string;

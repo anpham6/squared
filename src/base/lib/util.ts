@@ -469,8 +469,12 @@ export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?
     }
 }
 
-export function extractQuote(value: string) {
-    return /^"([\S\s]*)"$/.exec(value)?.[1] || value;
+export function trimBoth(value: string, char = '"', trim?: boolean) {
+    if (trim) {
+        value = value.trim();
+    }
+    const length = value.length;
+    return value[0] === char && value[length - 1] === char ? value.substring(1, value.length - 1) : value;
 }
 
 export function trimString(value: string, pattern: string) {
@@ -494,10 +498,8 @@ export function trimStart(value: string, pattern: string) {
             }
             return value;
         }
-        else {
-            const match = new RegExp(`^(?:${escapePattern(pattern)})+`).exec(value);
-            return match ? value.substring(match[0].length) : value;
-        }
+        const match = new RegExp(`^(?:${escapePattern(pattern)})+`).exec(value);
+        return match ? value.substring(match[0].length) : value;
     }
     return '';
 }
@@ -515,10 +517,8 @@ export function trimEnd(value: string, pattern: string) {
             }
             return value;
         }
-        else {
-            const match = new RegExp(`(?:${escapePattern(pattern)})+$`).exec(value);
-            return match ? value.substring(0, value.length - match[0].length) : value;
-        }
+        const match = new RegExp(`(?:${escapePattern(pattern)})+$`).exec(value);
+        return match ? value.substring(0, value.length - match[0].length) : value;
     }
     return '';
 }

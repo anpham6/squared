@@ -6,7 +6,7 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
-import { concatString } from '../../lib/util';
+import { concatString} from '../../lib/util';
 
 type StyleList<T> = ObjectMap<T[]>;
 type AttributeMap<T> = ObjectMap<T[]>;
@@ -17,6 +17,8 @@ interface IStyleAttribute<T> extends StyleAttribute {
 
 const { truncate } = squared.lib.math;
 const { capitalize, convertWord, hasKeys, joinArray, replaceAll, spliceArray, startsWith } = squared.lib.util;
+
+const { trimBoth } = squared.base.lib.util;
 
 const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
@@ -106,8 +108,6 @@ function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], nod
     }
 }
 
-const extractSingleQuote = (value: string) => (/^\s*(')?(.+?)\1\s*$/.exec(value)?.[2] || value).toLowerCase();
-
 export default class ResourceFonts<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceFontsOptions = {
         defaultFontFamily: 'sans-serif',
@@ -157,7 +157,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                 }
                 replaceAll(fontFamily, '"', '').split(',').some((value, index, array) => {
-                    value = extractSingleQuote(value);
+                    value = trimBoth(value, "'", true).toLowerCase();
                     let fontName = value,
                         actualFontWeight = '';
                     if (!disableFontAlias && FONT_REPLACE[fontName]) {

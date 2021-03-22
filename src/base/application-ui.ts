@@ -18,7 +18,7 @@ import LayoutUI from './layout-ui';
 
 import { convertListStyle } from './extensions/list';
 
-import { appendSeparator, extractQuote, flatArray, trimString } from './lib/util';
+import { appendSeparator, flatArray, trimBoth, trimString } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
 type VisibleElementMethod = (element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt) => boolean;
@@ -101,21 +101,21 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
             if (match) {
                 if (pseudoElt === '::before') {
                     if (found === 0) {
-                        outside = extractQuote(match[1]);
+                        outside = trimBoth(match[1]);
                         ++found;
                     }
                     if (match[3] && found < 2) {
-                        inside = extractQuote(match[3]);
+                        inside = trimBoth(match[3]);
                         ++found;
                     }
                 }
                 else {
                     if (found === 0) {
-                        outside = extractQuote(match[2]);
+                        outside = trimBoth(match[2]);
                         ++found;
                     }
                     if (match[4] && found < 2) {
-                        inside = extractQuote(match[4]);
+                        inside = trimBoth(match[4]);
                         ++found;
                     }
                 }
@@ -1605,7 +1605,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (absolute && +styleMap.opacity! <= 0) {
                     return;
                 }
-                const textContent = extractQuote(value);
+                const textContent = trimBoth(value);
                 if (!isString(textContent)) {
                     if (pseudoElt === '::after') {
                         const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);

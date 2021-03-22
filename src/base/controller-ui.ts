@@ -40,11 +40,7 @@ function pushIndent(value: string, depth: number, indent = '\t'.repeat(depth)) {
 function pushIndentArray(values: string[], depth: number) {
     if (depth > 0) {
         const indent = '\t'.repeat(depth);
-        let result = '';
-        for (let i = 0, length = values.length; i < length; ++i) {
-            result += pushIndent(values[i], depth, indent);
-        }
-        return result;
+        return values.reduce((a, b) => a + pushIndent(b, depth, indent), '');
     }
     return values.join('');
 }
