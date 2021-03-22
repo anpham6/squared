@@ -64,7 +64,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                 const match = REGEXP_SOURCESIZES.exec(value);
                 if (match) {
                     const query = match[1];
-                    const unit = match[2];
+                    const unit = match[3];
                     if (!unit || query && !window.matchMedia(/^\(\s*(\(.+\))\s*\)$/.exec(query)?.[1] || query).matches) {
                         return;
                     }

@@ -138,7 +138,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             width += x;
             height += y;
         }
-        return `M${x},${y} ${width},${y} ${width},${height} ${x},${height} Z`;
+        return `M${x},${y} ${width},${y} ${width},${height} ${x},${height}Z`;
     }
 
     public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, precision?: number) {

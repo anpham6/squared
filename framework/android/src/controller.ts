@@ -1351,8 +1351,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const setImageDimension = (width: number, image: Undef<ImageAsset>) => {
                             node.css('width', formatPX(width), true);
                             if (image && image.width && image.height) {
-                                const height = image.height * (width / image.width);
-                                node.css('height', formatPX(height), true);
+                                node.css('height', formatPX(image.height * (width / image.width)), true);
                             }
                         };
                         const image = imageSet[0];
@@ -1750,7 +1749,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const resourceBackground = this.application.extensionManager.get(internal.android.EXT_ANDROID.RESOURCE_BACKGROUND) as Undef<ResourceBackground<T>>;
                 if (resourceBackground) {
                     const backgroundColor = parseColor(this.localSettings.style.rangeForegroundColor)!;
-                    const height = node.bounds.height;
+                    const height = Math.min(node.bounds.height, 16);
                     const width = height + 'px';
                     const drawable = resourceBackground.writeDrawableBackground(node, { backgroundColor, borderRadius: [Math.floor(height / 2) + 'px'] } as BoxStyle, { resourceName: 'thumb', resourceData: [{ width, height: width, order: 0 }] });
                     if (drawable) {

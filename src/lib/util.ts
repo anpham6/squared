@@ -90,7 +90,11 @@ export function convertFloat(value: string, fallback = 0) {
 
 export function convertPercent(value: string, fallback = 0) {
     const index = value.lastIndexOf('%');
-    return index !== -1 ? +value.substring(0, index) / 100 : fallback;
+    if (index !== -1) {
+        return +value.substring(0, index) / 100;
+    }
+    const percent = +value;
+    return percent >= 0 && percent <= 1 ? percent : fallback;
 }
 
 export function convertBase64(value: ArrayBuffer) {

@@ -85,7 +85,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = parent.cssInitial('minHeight');
             let backgroundSize = node.css('backgroundSize');
             if (!height && !minHeight) {
-                container.setLayoutHeight(!parentVisible && (fixed || !(backgroundSeparate && hasHeight) && (visibleStyle.backgroundRepeatY || node.has('backgroundSize') || splitSome(node.css('backgroundPosition'), value => !value.includes('%') && parseInt(value) > 0)), ' ') ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && (fixed || !(backgroundSeparate && hasHeight) && (visibleStyle.backgroundRepeatY || node.has('backgroundSize') || splitSome(node.css('backgroundPosition'), value => !value.includes('%') && parseInt(value) > 0, ' '))) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {

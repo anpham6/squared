@@ -158,20 +158,24 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!td.hasPX('width')) {
                     let value: NumString = getNamedItem(element, 'width');
-                    if (isPercent(value)) {
-                        td.css('width', value, true);
-                    }
-                    else if (!isNaN(value = +value)) {
-                        td.css('width', formatPX(value), true);
+                    if (value) {
+                        if (isPercent(value)) {
+                            td.css('width', value, true);
+                        }
+                        else if (!isNaN(value = +value)) {
+                            td.css('width', formatPX(value), true);
+                        }
                     }
                 }
                 if (!td.hasPX('height')) {
                     let value: NumString = getNamedItem(element, 'height');
-                    if (isPercent(value)) {
-                        td.css('height', value);
-                    }
-                    else if (!isNaN(value = +value)) {
-                        td.css('height', formatPX(value));
+                    if (value) {
+                        if (isPercent(value)) {
+                            td.css('height', value);
+                        }
+                        else if (!isNaN(value = +value)) {
+                            td.css('height', formatPX(value));
+                        }
                     }
                 }
                 if (!td.valueOf('verticalAlign')) {
@@ -348,18 +352,19 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 else if (mapWidth.length > 1 && mapWidth.some(value => isPercent(value)) || mapWidth.every(value => isLength(value) && value !== '0px')) {
                     return LAYOUT_TABLETYPE.VARIABLE;
                 }
-                else if (mapWidth.every(value => value === mapWidth[0])) {
+                const baseWidth = mapWidth[0];
+                if (mapWidth.every(value => value === baseWidth)) {
                     if (node.find(td => td.tagName === 'TD' && td.hasHeight, { cascade: true })) {
                         mainData.flags |= LAYOUT_TABLE.EXPAND;
                         return LAYOUT_TABLETYPE.VARIABLE;
                     }
-                    else if (mapWidth[0] === 'auto') {
+                    else if (baseWidth === 'auto') {
                         return hasWidth ? LAYOUT_TABLETYPE.VARIABLE : table.some(tr => tr.find(td => td.multiline)) ? LAYOUT_TABLETYPE.VARIABLE : LAYOUT_TABLETYPE.NONE;
                     }
                     else if (hasWidth) {
                         return LAYOUT_TABLETYPE.FIXED;
                     }
-                    else if (mapWidth[0] === '0px') {
+                    else if (baseWidth === '0px') {
                         return LAYOUT_TABLETYPE.NONE;
                     }
                 }

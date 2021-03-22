@@ -9,6 +9,8 @@ import type NodeList from './nodelist';
 
 import Controller from './controller';
 
+import { trimEnd } from './lib/util';
+
 const { CSS_PROPERTIES } = squared.lib.internal;
 
 const { isUserAgent } = squared.lib.client;
@@ -27,7 +29,7 @@ const CACHE_INDENT: StringMap = {};
 
 function pushIndent(value: string, depth: number, indent = '\t'.repeat(depth)) {
     if (depth > 0) {
-        const lines = value.split('\n');
+        const lines = trimEnd(value, '\n').split('\n');
         let result = '';
         for (let i = 0, length = lines.length; i < length; ++i) {
             result += (i === 0 || i === length - 1 || lines[i + 1][0] === '\t' ? indent : '') + lines[i] + '\n';

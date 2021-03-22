@@ -28,7 +28,7 @@ type RenderNodeMethod<T extends NodeUI> = (layout: ContentUI<T>) => Undef<NodeTe
 const { insertStyleSheetRule } = squared.lib.internal;
 const { FILE } = squared.lib.regex;
 
-const { formatPX, getStyle, hasCoords, isCalc, resolveURL } = squared.lib.css;
+const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith } = squared.lib.util;
@@ -1822,11 +1822,28 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             (pseudoElement as HTMLImageElement).src = content;
                             const image = this.resourceHandler.getImage(resourceId, content);
                             if (image) {
-                                if (image.width) {
-                                    styleMap.width ||= image.width + 'px';
-                                }
-                                if (image.height) {
-                                    styleMap.height ||= image.height + 'px';
+                                const { width, height } = image;
+                                if (width && height) {
+                                    let options: Undef<ParseUnitOptions>;
+                                    if (styleMap.fontSize) {
+                                        options = { fontSize: parseUnit(styleMap.fontSize) };
+                                    }
+                                    if (!styleMap.width && styleMap.height) {
+                                        const offset = parseUnit(styleMap.height, options);
+                                        if (offset > 0) {
+                                            styleMap.width = width * offset / height + 'px';
+                                        }
+                                    }
+                                    else if (styleMap.width && !styleMap.height) {
+                                        const offset = parseUnit(styleMap.width, options);
+                                        if (offset > 0) {
+                                            styleMap.height = height * offset / width + 'px';
+                                        }
+                                    }
+                                    else {
+                                        styleMap.width = width + 'px';
+                                        styleMap.height = height + 'px';
+                                    }
                                 }
                             }
                         }
