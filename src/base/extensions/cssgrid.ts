@@ -5,6 +5,8 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
+import { trimString } from '../lib/util';
+
 type RowData = Undef<NodeUI[]>[][];
 
 interface GridAlignment extends StringMap {
@@ -30,8 +32,6 @@ interface RepeatItem {
 
 const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
 const { endsWith, splitPairEnd, startsWith, withinRange } = squared.lib.util;
-
-const { trimString } = squared.base.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';

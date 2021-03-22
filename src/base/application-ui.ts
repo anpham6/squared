@@ -639,9 +639,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 plainText = -1,
                 lineBreak = -1,
                 j = 0;
-            for (let i = 0, length = childNodes.length; i < length; ++i) {
+            for (let i = 0, child: T, length = childNodes.length; i < length; ++i) {
                 const element = childNodes[i] as HTMLElement;
-                let child: T;
                 if (element === beforeElement) {
                     child = this.insertNode(processing, beforeElement, cascadeAll, '::before');
                     setElementState(child, true, false, true, false);
@@ -842,19 +841,34 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected setBaseLayout(processing: squared.base.AppProcessing<T>) {
         const controller = this.controllerHandler;
         const { extensionMap, clearMap } = this.session;
-        const { sessionId, extensions, cache, node: rootNode } = processing;
-        const mapData = new Map<number, Set<T>>();
+        const { sessionId, extensions, cache } = processing;
+        const rootNode = processing.node!.parent;
+        const mapData = new Map<number, T[]>();
         const setMapDepth = (depth: number, node: T) => {
-            const data = mapData.get(depth);
+            const data = mapData.get(depth = depth + 1);
             if (data) {
-                data.add(node);
+                if (!data.includes(node)) {
+                    data.push(node);
+                }
             }
             else {
-                mapData.set(depth, new Set([node]));
+                mapData.set(depth, [node]);
+            }
+            if (depth > 0 && !mapData.has(-depth)) {
+                mapData.set(-depth, []);
             }
         };
-        if (rootNode!.parent) {
-            setMapDepth(-1, rootNode!.parent as T);
+        const deleteNode = (depth: number, node: T) => {
+            const data = mapData.get(depth + 1);
+            if (data) {
+                const index = data.findIndex(item => item === node);
+                if (index !== -1) {
+                    data.splice(index, 1);
+                }
+            }
+        };
+        if (rootNode) {
+            setMapDepth(-1, rootNode as T);
         }
         cache.each(node => {
             if (!node.isEmpty()) {
@@ -888,21 +902,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         });
-        for (const depth of Array.from(mapData.keys())) {
-            if (depth !== -1) {
-                mapData.set(-(depth + 2), new Set<T>());
-            }
-        }
         cache.afterAdd = (node: T, cascade?: boolean, remove?: boolean) => {
             if (remove) {
-                mapData.get(node.depth)?.delete(node);
+                deleteNode(node.depth, node);
             }
             setMapDepth(-(node.depth + 2), node);
             if (cascade && !node.isEmpty()) {
                 node.cascade((item: T) => {
                     if (!item.isEmpty()) {
                         const depth = item.depth;
-                        mapData.get(depth)?.delete(item);
+                        deleteNode(depth, item);
                         setMapDepth(-(depth + 2), item);
                     }
                 });
@@ -914,36 +923,37 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         let extensionsTraverse = extensions.filter((item: ExtensionUI<T>) => !item.eventOnly) as ExtensionUI<T>[];
         for (const depth of mapData.values()) {
-            for (const parent of depth.values()) {
-                const q = parent.size();
-                if (q === 0) {
+            for (let i = 0, q = depth.length; i < q; ++i) {
+                const parent = depth[i];
+                const r = parent.size();
+                if (r === 0) {
                     continue;
                 }
                 const renderExtension = parent.renderExtension as Undef<ExtensionUI<T>[]>;
                 const floatContainer = parent.floatContainer;
                 const axisY = parent.toArray() as T[];
-                for (let i = 0; i < q; ++i) {
-                    let nodeY = axisY[i];
+                for (let j = 0; j < r; ++j) {
+                    let nodeY = axisY[j];
                     if (nodeY.rendered || !nodeY.visible) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (q > 1 && i < q - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (r > 1 && j < r - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
-                        let j = i, k = 0;
+                        let k = j, l = 0;
                         if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                             horizontal.push(nodeY);
-                            ++j;
                             ++k;
+                            ++l;
                         }
                         traverse: {
                             let floatActive: Undef<boolean>;
-                            for ( ; j < q; ++j, ++k) {
-                                const item = axisY[j];
+                            for ( ; k < r; ++k, ++l) {
+                                const item = axisY[k];
                                 if (item.pageFlow) {
                                     if (item.labelFor && !item.visible) {
-                                        --k;
+                                        --l;
                                         continue;
                                     }
                                     if (floatContainer) {
@@ -957,7 +967,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             floatActive = true;
                                         }
                                     }
-                                    if (k === 0) {
+                                    if (l === 0) {
                                         const next = item.siblingsTrailing[0];
                                         if (next) {
                                             if (!item.inlineFlow || next.alignedVertically([item])) {
@@ -1019,9 +1029,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                 }
                                 else if (item.autoPosition) {
-                                    const r = vertical.length;
-                                    if (r) {
-                                        if (vertical[r - 1].blockStatic && !item.renderExclude) {
+                                    const s = vertical.length;
+                                    if (s) {
+                                        if (vertical[s - 1].blockStatic && !item.renderExclude) {
                                             vertical.push(item);
                                         }
                                         break;
@@ -1036,7 +1046,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const items = horizontal.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                             if (items.length > 1) {
                                 const layout = controller.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
-                                if (horizontal[horizontal.length - 1] === axisY[q - 1]) {
+                                if (horizontal[horizontal.length - 1] === axisY[r - 1]) {
                                     parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                                 }
                                 if (layout && this.addLayout(layout)) {
@@ -1049,10 +1059,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             if (items.length > 1) {
                                 const layout = controller.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
                                 const segEnd = vertical[vertical.length - 1];
-                                if (segEnd === axisY[q - 1]) {
+                                if (segEnd === axisY[r - 1]) {
                                     parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                                 }
-                                else if (segEnd.inlineFlow && segEnd !== axisY[q - 1]) {
+                                else if (segEnd.inlineFlow && segEnd !== axisY[r - 1]) {
                                     segEnd.addAlign(NODE_ALIGNMENT.EXTENDABLE);
                                 }
                                 if (layout && this.addLayout(layout)) {
@@ -1062,7 +1072,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     nodeY.removeAlign(NODE_ALIGNMENT.EXTENDABLE);
-                    if (i === q - 1) {
+                    if (j === r - 1) {
                         parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                     }
                     if (nodeY.renderAs && parentY.replaceTry({ child: nodeY, replaceWith: nodeY.renderAs })) {
@@ -1077,8 +1087,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let combined = descendant ? renderExtension ? renderExtension.concat(descendant) : descendant : renderExtension,
                             next: Undef<boolean>;
                         if (combined) {
-                            for (let j = 0, r = combined.length; j < r; ++j) {
-                                const ext = combined[j];
+                            for (let k = 0, s = combined.length; k < s; ++k) {
+                                const ext = combined[k];
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result) {
                                     if (result.output) {
@@ -1105,8 +1115,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if (nodeY.styleElement) {
                             combined = nodeY.use ? ApplicationUI.prioritizeExtensions<T>(nodeY.use, extensionsTraverse) as ExtensionUI<T>[] : extensionsTraverse;
-                            for (let j = 0, r = combined.length; j < r; ++j) {
-                                const ext = combined[j];
+                            for (let k = 0, s = combined.length; k < s; ++k) {
+                                const ext = combined[k];
                                 if (ext.is(nodeY)) {
                                     if (ext.condition(nodeY, parentY) && !(descendant && descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
