@@ -49,7 +49,7 @@ interface ControllerSettingsUI extends ControllerSettings {
 }
 
 interface ControllerSettingsLayoutUI {
-    pathName: string;
+    baseDirectory: string;
     fileExtension: string;
     baseTemplate: string;
     innerXmlTags: string[];
