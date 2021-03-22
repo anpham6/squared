@@ -274,7 +274,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 layoutName,
                 this._controllerSettings.layout.baseTemplate + controller.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes),
                 node.dataset['pathname' + capitalize(this.systemName)],
-                node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
+                node.renderExtension?.some(item => item.documentBase) ? 0 : -1
             );
         }
         controller.finalize(this._layouts);
@@ -1692,16 +1692,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
-                                    let counterName: string,
-                                        styleName: string;
-                                    if (counterType) {
-                                        counterName = match[3];
-                                        styleName = match[4] || 'decimal';
-                                    }
-                                    else {
-                                        counterName = match[6];
-                                        styleName = match[8] || 'decimal';
-                                    }
+                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
                                     const initialValue = (getCounterIncrementValue(element, counterName, 0) ?? 1) + (getCounterValue(style.counterReset, counterName, 0) || 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element,

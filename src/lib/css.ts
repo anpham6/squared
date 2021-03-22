@@ -12,8 +12,8 @@ import { endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEncl
 import Pattern from './base/pattern';
 
 const PATTERN_CALCUNIT = '(?!c(?:alc|lamp)|m(?:in|ax))([^,()]+|\\([^())]+\\)\\s*)';
-const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`, 'i');
-const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`, 'i');
+const REGEXP_LENGTH = new RegExp(`^\\s*${STRING.LENGTH}\\s*$`, 'i');
+const REGEXP_LENGTHPERCENTAGE = new RegExp(`^\\s*${STRING.LENGTH_PERCENTAGE}\\s*$`, 'i');
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
@@ -2097,9 +2097,9 @@ export function isTime(value: string) {
 
 export function asPercent(value: unknown) {
     if (typeof value === 'string') {
-        const length = value.length;
-        if (length > 1 && value[length - 1] === '%') {
-            return +value.substring(0, length - 1) / 100;
+        const index = value.lastIndexOf('%');
+        if (index !== -1) {
+            return +value.substring(0, index) / 100;
         }
     }
     return NaN;
@@ -2111,9 +2111,9 @@ export function isPercent(value: unknown) {
 
 export function asPx(value: unknown) {
     if (typeof value === 'string') {
-        const length = value.length;
-        if (length > 2 && value[length - 2] === 'p' && value[length - 1] === 'x') {
-            return +value.substring(0, length - 2);
+        const index = value.lastIndexOf('x');
+        if (index !== -1 && value[index - 1] === 'p') {
+            return +value.substring(0, index - 1);
         }
     }
     return NaN;

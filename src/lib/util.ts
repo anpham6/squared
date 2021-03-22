@@ -89,7 +89,7 @@ export function convertFloat(value: string, fallback = 0) {
 }
 
 export function convertPercent(value: string, fallback = 0) {
-    const index = value.indexOf('%');
+    const index = value.lastIndexOf('%');
     return index !== -1 ? +value.substring(0, index) / 100 : fallback;
 }
 
