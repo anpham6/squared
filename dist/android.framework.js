@@ -1,4 +1,4 @@
-/* android-framework 2.5.2
+/* android-framework 2.5.3
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -6329,9 +6329,10 @@ var android = (function () {
                     }
                     else if (element.poster) {
                         node.setCacheValue('tagName', 'IMG');
+                        node.setCacheValue('inlineStatic', false);
                         setControlType(layout.containerType = 5 /* IMAGE */);
                         src = element.src;
-                        element.src = element.poster.trim();
+                        element.src = element.poster;
                         const template = this.renderNode(layout);
                         element.src = src;
                         return template;
@@ -13601,7 +13602,7 @@ var android = (function () {
 
     const { extractURL: extractURL$1, formatPercent, formatPX: formatPX$1, isLength } = squared.lib.css;
     const { truncate: truncate$2 } = squared.lib.math;
-    const { delimitString: delimitString$1, isEqual, plainMap: plainMap$1, resolvePath, spliceArray: spliceArray$1, splitPair, splitPairStart } = squared.lib.util;
+    const { delimitString: delimitString$1, plainMap: plainMap$1, resolvePath, spliceArray: spliceArray$1, splitPair, splitPairStart } = squared.lib.util;
     const CHAR_SEPARATOR = /\s*,\s*/;
     function getBorderStyle(resourceId, border, direction = -1, halfSize = false) {
         const { style, color } = border;
@@ -13937,6 +13938,7 @@ var android = (function () {
             }
         }
     }
+    const isBorderEqual = (border, other) => border.style === border.style && border.width === other.width && border.color.rgbaAsString === other.color.rgbaAsString;
     const getPixelUnit = (width, height) => `${width}px ${height}px`;
     const roundFloat = (value) => Math.round(parseFloat(value));
     const checkBackgroundPosition = (value, adjacent, fallback) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
@@ -14139,7 +14141,7 @@ var android = (function () {
                     const item = borders[i];
                     if (item) {
                         if (borderStyle && borderData) {
-                            borderStyle = isEqual(borderData, item);
+                            borderStyle = isBorderEqual(borderData, item);
                             if (!borderStyle) {
                                 borderAll = false;
                             }

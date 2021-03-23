@@ -1,4 +1,4 @@
-/* squared.base 2.5.2
+/* squared.base 2.5.3
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -13698,10 +13698,22 @@ this.squared.base = (function (exports) {
     }
 
     const { isLength: isLength$1 } = squared.lib.css;
-    const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
+    function hasInlineText(node) {
+        if (node.inlineText) {
+            const textIndent = node.valueOf('textIndent');
+            if (textIndent) {
+                const offset = node.parseUnit(textIndent);
+                if (offset < 0 && Math.abs(offset) >= node.bounds.width) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
     class Sprite extends ExtensionUI {
         is(node) {
-            return node.visibleStyle.backgroundImage && node.isEmpty() && node.hasWidth && node.hasHeight && (!node.use || this.included(node.element));
+            return node.visibleStyle.backgroundImage && node.isEmpty() && !hasInlineText(node) && node.hasWidth && node.hasHeight && (!node.use || this.included(node.element));
         }
         condition(node) {
             const images = this.resource.fromImageUrl(node.localSettings.resourceId, node.backgroundImage);
@@ -13709,24 +13721,22 @@ this.squared.base = (function (exports) {
                 const dimension = node.actualDimension;
                 const [backgroundPositionX, backgroundPositionY, backgroundSize] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY', 'backgroundSize');
                 const position = ResourceUI.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, { fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension });
-                const [sizeW, sizeH] = backgroundSize.split(' ');
+                const [sizeW, sizeH] = backgroundSize !== 'auto' ? backgroundSize.split(' ') : ['auto', 'auto'];
                 const image = images[0];
                 let { width, height } = image;
-                if (isLength$1(sizeW, true)) {
+                if (sizeW !== 'auto' && isLength$1(sizeW, true)) {
                     width = node.parseWidth(sizeW, false);
                     if (sizeH === 'auto') {
                         height = image.height * width / image.width;
                     }
                 }
-                if (isLength$1(sizeH, true)) {
+                if (sizeH !== 'auto' && isLength$1(sizeH, true)) {
                     height = node.parseHeight(sizeH, false);
                     if (sizeW === 'auto') {
                         width = image.width * height / image.height;
                     }
                 }
-                const x = width > dimension.width && (position.left < 0 || REGEXP_POSITION.test(backgroundPositionX));
-                const y = height > dimension.height && (position.top < 0 || REGEXP_POSITION.test(backgroundPositionY));
-                if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
+                if (width > dimension.width && position.left <= 0 || height > dimension.height && position.top <= 0) {
                     this.data.set(node, { image, width, height, position });
                     return true;
                 }
