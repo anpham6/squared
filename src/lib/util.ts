@@ -163,17 +163,41 @@ export function spliceString(value: string, index: number, length: number, repla
     return index === 0 ? replaceWith + value.substring(length) : value.substring(0, index) + replaceWith + value.substring(index + length);
 }
 
-export function splitSome(value: string, predicate: (item: string) => unknown, char = ',') {
-    const end = char.length;
+export function splitSome(value: string, predicate: (item: string) => unknown, pattern: string | RegExp = ',') {
+    let char: Undef<string>,
+        end = 0;
+    if (typeof pattern === 'string') {
+        char = pattern;
+        end = char.length;
+    }
+    else if (!pattern.global) {
+        pattern = new RegExp(pattern, pattern.flags + 'g');
+    }
+    else {
+        pattern.lastIndex = 0;
+    }
     const length = value.length;
     let i = 0;
     while (i < length) {
         while (isSpace(value[i])) {
             ++i;
         }
-        let j = value.indexOf(char, i);
-        if (j === -1) {
-            j = length;
+        let j: number;
+        if (char) {
+            j = value.indexOf(char, i);
+            if (j === -1) {
+                j = length;
+            }
+        }
+        else {
+            const match = (pattern as RegExp).exec(value);
+            if (match) {
+                j = match.index;
+                end = match[0].length;
+            }
+            else {
+                j = length;
+            }
         }
         let k = j;
         do {

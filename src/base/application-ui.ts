@@ -1806,8 +1806,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (content || value === '""') {
-                    styleMap.display ||= 'inline';
-                    tagName ||= /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
+                    tagName ||= /^(?:inline|table)/.test(styleMap.display ||= 'inline') ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
                     pseudoElement.className = '__squared-pseudo';
                     pseudoElement.style.setProperty('display', 'none');

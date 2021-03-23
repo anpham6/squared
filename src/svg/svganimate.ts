@@ -69,8 +69,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = replaceMap(valueA.trim().split(/\s+/), value => +value);
-                nextValue = replaceMap(valueB.trim().split(/\s+/), value => +value);
+                currentValue = [];
+                nextValue = [];
+                splitSome(valueA, value => {
+                    currentValue!.push(+value);
+                }, /\s+/g);
+                splitSome(valueB, value => {
+                    nextValue!.push(+value);
+                }, /\s+/g);
                 break;
             default: {
                 let n = +valueA;
@@ -479,8 +485,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (value.length >= minSegment && !value.every(spline => !spline || spline === SvgAnimate.KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; ++i) {
-                    const points = replaceMap(value[i].split(/\s+/), pt => +pt);
-                    if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
+                    const points: number[] = [];
+                    splitSome(value[i], (pt: NumString) => {
+                        if (!isNaN(pt = +pt)) {
+                            points.push(pt);
+                        }
+                        else {
+                            return true;
+                        }
+                    }, /\s+/g);
+                    if (points.length === 4 && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
                         keySplines.push(points.join(' '));
                     }
                     else {

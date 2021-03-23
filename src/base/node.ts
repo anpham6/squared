@@ -284,7 +284,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                 }
                 switch (attr.symbol) {
                     case '~':
-                        if (!value.split(/\s+/).includes(other)) {
+                        if (!splitSome(value, item => item === other, /\s+/g)) {
                             return false;
                         }
                         break;

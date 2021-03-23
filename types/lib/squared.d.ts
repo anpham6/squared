@@ -336,7 +336,7 @@ declare module "lib" {
         function delimitString(value: DelimitStringOptions | string, ...appending: string[]): string;
         function padStart(value: string, length: number, char: string): string;
         function spliceString(value: string, index: number, length: number, replaceWith?: string): string;
-        function splitSome(value: string, predicate: (item: string) => unknown, char?: string): boolean;
+        function splitSome(value: string, predicate: (item: string) => unknown, pattern?: string | RegExp): boolean;
         function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string];
         function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean): string;
         function splitPairEnd(value: string, char: string, trim?: boolean, last?: boolean): string;

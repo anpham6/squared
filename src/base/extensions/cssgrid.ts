@@ -31,7 +31,7 @@ interface RepeatItem {
 }
 
 const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
-const { endsWith, splitPairEnd, startsWith, withinRange } = squared.lib.util;
+const { endsWith, splitPairEnd, splitSome, startsWith, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
@@ -355,9 +355,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 0:
                         case 1:
                             if (command[0] === '[') {
-                                for (const attr of match[4].split(/\s+/)) {
+                                splitSome(match[4], attr => {
                                     (name[attr] ||= []).push(i);
-                                }
+                                }, /\s+/g);
                             }
                             else if (startsWith(command, 'repeat')) {
                                 let iterations = 1;
