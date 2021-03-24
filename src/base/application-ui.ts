@@ -894,8 +894,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (item.floating) {
-                            const float = item.float;
-                            floated.add(float);
+                            floated.add(item.float);
                             clearable.push(item);
                         }
                     }
@@ -1765,8 +1764,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (counterIncrement) {
                                                 incrementCounter(counterIncrement, false);
                                             }
-                                            const counterReset = getCounterValue(currentStyle.counterReset, counterName);
-                                            if (counterReset !== undefined) {
+                                            const counterReset = getCounterValue(currentStyle.counterReset, counterName, Infinity);
+                                            if (counterReset !== undefined && counterReset !== Infinity) {
                                                 if (!lastResetElement) {
                                                     counter += counterReset;
                                                 }

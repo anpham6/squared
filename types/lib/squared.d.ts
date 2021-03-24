@@ -251,7 +251,7 @@ declare module "lib" {
         function lessEqual(a: number, b: number, precision?: number): boolean;
         function truncate(value: NumString, precision?: number): string;
         function truncateFraction(value: number, safe?: boolean, zeroThreshold?: number): number;
-        function truncateExponential(value: number, safe?: boolean, zeroThreshold?: number): string;
+        function truncateExponential(value: NumString, safe?: boolean, zeroThreshold?: number): string;
         function truncateTrailingZero(value: string): string;
         function triangulate(a: number, b: number, clen: number): [number, number];
         function absoluteAngle(start: Point, end: Point): number;
@@ -272,6 +272,7 @@ declare module "lib" {
             DECIMAL: string;
             DECIMAL_PLAIN: string;
             DECIMAL_SIGNED: string;
+            DECIMAL_EXPONENT: string;
             PERCENT: string;
             LENGTH: string;
             LENGTH_PERCENTAGE: string;

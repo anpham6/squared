@@ -161,10 +161,8 @@ function getOpenCellIndex(iteration: number, length: number, available: Undef<nu
 
 function getOpenRowIndex(cells: number[][]) {
     for (let i = 0, length = cells.length; i < length; ++i) {
-        for (const value of cells[i]) {
-            if (value === 0) {
-                return i;
-            }
+        if (cells[i].some(value => value === 0)) {
+            return i;
         }
     }
     return Math.max(0, length - 1);

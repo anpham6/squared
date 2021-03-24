@@ -47,8 +47,8 @@ export function truncateFraction(value: number, safe?: boolean, zeroThreshold = 
     return value;
 }
 
-export function truncateExponential(value: number, safe?: boolean, zeroThreshold = 7) {
-    if (safe) {
+export function truncateExponential(value: NumString, safe?: boolean, zeroThreshold = 7) {
+    if (safe && typeof value === 'number') {
         if (value >= Number.MAX_SAFE_INTEGER) {
             return Number.MAX_SAFE_INTEGER.toString();
         }

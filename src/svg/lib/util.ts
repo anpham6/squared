@@ -4,17 +4,18 @@ import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import Pattern = squared.lib.base.Pattern;
 
 const { CSS_PROPERTIES } = squared.lib.internal;
-const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
+const { STRING, TRANSFORM: __TRANSFORM } = squared.lib.regex;
 
 const { asPercent, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, getStyle, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertRadian, hypotenuse, truncateFraction, truncateTrailingZero } = squared.lib.math;
+const { convertRadian, hypotenuse, truncateExponential, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
 const { convertCamelCase, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
 const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:\s*,?\s+(-?[\d.]+))?(?:\s*,?\s+(-?[\d.]+))?\)/g);
 
+const REGEXP_EXPONENT = new RegExp(STRING.DECIMAL_EXPONENT, 'g');
 const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
@@ -408,7 +409,7 @@ export const TRANSFORM = {
                     const isX = lastItemOf(method) === 'X';
                     const isY = !isX && lastItemOf(method) === 'Y';
                     if (startsWith(method, 'translate')) {
-                        const translate = REGEXP_TRANSFORM.TRANSLATE.exec(transform);
+                        const translate = __TRANSFORM.TRANSLATE.exec(transform);
                         if (translate) {
                             const arg1 = parseUnit(translate[2], createParseUnitOptions(element, translate[2]));
                             const arg2 = !isX && translate[3] ? parseUnit(translate[3], createParseUnitOptions(element, translate[3])) : 0;
@@ -418,7 +419,7 @@ export const TRANSFORM = {
                         }
                     }
                     else if (startsWith(method, 'rotate')) {
-                        const rotate = REGEXP_TRANSFORM.ROTATE.exec(transform);
+                        const rotate = __TRANSFORM.ROTATE.exec(transform);
                         if (rotate) {
                             const angle = convertAngle(rotate[5], rotate[6]);
                             if (!isNaN(angle)) {
@@ -438,7 +439,7 @@ export const TRANSFORM = {
                         }
                     }
                     else if (startsWith(method, 'scale')) {
-                        const scale = REGEXP_TRANSFORM.SCALE.exec(transform);
+                        const scale = __TRANSFORM.SCALE.exec(transform);
                         if (scale) {
                             const x = isY ? 1 : +scale[2];
                             const y = isX ? 1 : isY ? +scale[2] : !isX && scale[3] ? +scale[3] : x;
@@ -446,7 +447,7 @@ export const TRANSFORM = {
                         }
                     }
                     else if (startsWith(method, 'skew')) {
-                        const skew = REGEXP_TRANSFORM.SKEW.exec(transform);
+                        const skew = __TRANSFORM.SKEW.exec(transform);
                         if (skew) {
                             const angle = convertAngle(skew[2], skew[3], 0);
                             const x = isY ? 0 : angle;
@@ -479,7 +480,7 @@ export const TRANSFORM = {
         return null;
     },
     matrix(element: SVGElement, value: string = getAttribute(element, 'transform')): Null<SvgMatrix> {
-        const match = REGEXP_TRANSFORM.MATRIX.exec(value);
+        const match = __TRANSFORM.MATRIX.exec(value);
         if (match) {
             switch (match[1]) {
                 case 'matrix':
@@ -813,9 +814,12 @@ export function getRootOffset(element: SVGGraphicsElement, rootElement: Element)
 
 export function sanitizePath(value: string) {
     let d = value,
-        pattern = /(\d*)\.(\d+)\.(\d+)/g,
         match: Null<RegExpExecArray>;
-    while (match = pattern.exec(d)) {
+    while (match = REGEXP_EXPONENT.exec(d)) {
+        value = value.replace(match[0], truncateExponential(match[0], false, Infinity));
+    }
+    let pattern = /(\d*)\.(\d+)\.(\d+)/g;
+    while (match = pattern.exec(d = value)) {
         let seg: string;
         if (!match[1]) {
             seg = '.' + match[2] + ' .' + match[3];
@@ -825,36 +829,24 @@ export function sanitizePath(value: string) {
         }
         else {
             const length = match[2].length;
-            seg = match[1] + '.';
-            switch (length) {
-                case 1:
-                    seg += match[2] + ' .' + match[3];
-                    break;
-                default:
-                    seg += match[2].substring(0, length - 1) + ' ' + match[2][length - 1] + '.' + match[3];
-                    break;
-            }
+            seg = match[1] + '.' + (length === 1 ? match[2] + ' .' + match[3] : match[2].substring(0, length - 1) + ' ' + match[2][length - 1] + '.' + match[3]);
         }
         value = value.replace(match[0], seg + ' ');
     }
-    d = value;
     pattern = /(\d)([A-Za-z])/g;
-    while (match = pattern.exec(d)) {
+    while (match = pattern.exec(d = value)) {
         value = value.replace(match[0], match[1] + ' ' + match[2]);
     }
-    d = value;
     pattern = /([A-Za-z])\s+(\d)/g;
-    while (match = pattern.exec(d)) {
+    while (match = pattern.exec(d = value)) {
         value = value.replace(match[0], match[1] + match[2]);
     }
-    d = value;
     pattern = /([Aa](?:-?[\d.]+[\s,]+){3}\s*)(0|1)(0|1)(-?[\d.]+)/g;
-    while (match = pattern.exec(d)) {
+    while (match = pattern.exec(d = value)) {
         value = value.replace(match[0], match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4]);
     }
-    d = value;
     pattern = /((?:-?[\d.]+[\s,]+){3}\s*)0(0|1)(-?[\d.]+)/g;
-    while (match = pattern.exec(d)) {
+    while (match = pattern.exec(d = value)) {
         for (let i = pattern.lastIndex - 1; i >= 0; --i) {
             const ch = d[i];
             if (ch === 'A' || ch === 'a') {
@@ -863,16 +855,15 @@ export function sanitizePath(value: string) {
             }
         }
     }
-    d = value;
     pattern = /([A-Za-z\s,])(?:(0+)(\d)|(0{2,}))/g;
-    while (match = pattern.exec(d)) {
+    while (match = pattern.exec(d = value)) {
         value = value.replace(match[0], match[1] + ' ' + (match[4] ? '0 '.repeat(match[4].length) : '0 '.repeat(match[2].length) + ' ' + match[3]));
     }
-    d = value;
     pattern = /(\d+)-/g;
-    while (match = pattern.exec(d)) {
+    while (match = pattern.exec(d = value)) {
         value = value.replace(match[0], match[1] + ' -');
     }
+    REGEXP_EXPONENT.lastIndex = 0;
     return value.replace(/\s{2,}/g, ' ');
 }
 

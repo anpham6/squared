@@ -1,6 +1,8 @@
+const EXPONENT = '(?:[eE][+-]?\\d+)';
 const DECIMAL_PLAIN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
 const DECIMAL_SIGNED = '[+-]?' + DECIMAL_PLAIN;
-const DECIMAL = DECIMAL_SIGNED + '(?:[eE][+-]?\\d+)?';
+const DECIMAL_EXPONENT = DECIMAL_SIGNED + EXPONENT;
+const DECIMAL = DECIMAL_EXPONENT + '?';
 const UNIT_LENGTH = 'px|rem|e(?:m|x)|v(?:w|h|min|max)|p(?:t|c)|c(?:m|h)|mm|in|q';
 const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
 const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
@@ -12,6 +14,7 @@ export const STRING = {
     DECIMAL,
     DECIMAL_PLAIN,
     DECIMAL_SIGNED,
+    DECIMAL_EXPONENT,
     PERCENT: DECIMAL + '%',
     LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,

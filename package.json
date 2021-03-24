@@ -98,7 +98,7 @@
     "@cloudant/cloudant": "^4.3.1",
     "@google-cloud/bigquery": "^5.5.0",
     "@google-cloud/firestore": "^4.9.8",
-    "@google-cloud/storage": "^5.8.1",
+    "@google-cloud/storage": "^5.8.2",
     "@types/diff": "^5.0.0",
     "@types/fs-extra": "^9.0.8",
     "@types/glob": "^7.1.3",

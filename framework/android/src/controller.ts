@@ -1647,9 +1647,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else if (element.poster) {
                     node.setCacheValue('tagName', 'IMG');
+                    node.setCacheValue('inlineStatic', false);
                     setControlType(layout.containerType = CONTAINER_NODE.IMAGE);
                     src = element.src;
-                    element.src = element.poster.trim();
+                    element.src = element.poster;
                     const template = this.renderNode(layout);
                     element.src = src;
                     return template;

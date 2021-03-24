@@ -146,15 +146,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             ry = rx;
         }
         let radius = rx * 2;
+        cx -= rx;
         if (precision) {
-            cx = truncate(cx - rx, precision) as any;
+            cx = truncate(cx, precision) as any;
             cy = truncate(cy, precision) as any;
             rx = truncate(rx, precision) as any;
             ry = truncate(ry, precision) as any;
             radius = truncate(radius, precision) as any;
-        }
-        else {
-            cx -= rx;
         }
         return `M${cx},${cy} a${rx},${ry!},0,0,1,${radius},0 a${rx},${ry!},0,0,1,-${radius},0`;
     }
