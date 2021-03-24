@@ -10,7 +10,7 @@ const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { isTransparent } = squared.lib.color;
-const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isPx, isTime, parseUnit } = squared.lib.css;
+const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
@@ -47,17 +47,11 @@ const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
     let current = style[attr];
     if (value !== current) {
+        const restore = element.style[attr];
         element.style[attr] = value;
         const newValue = element.style[attr];
-        if (current !== newValue) {
-            if (isPx(current)) {
-                const styleValue = styleMap[attr];
-                if (styleValue) {
-                    current = styleValue;
-                    value = '';
-                }
-            }
-            setElementCache(element, attr, value !== 'auto' ? current : '', sessionId);
+        if (newValue && current !== newValue) {
+            setElementCache(element, attr, restore, sessionId);
             return STYLE_STATE.CHANGED;
         }
         return STYLE_STATE.FAIL;
@@ -1514,14 +1508,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (elementData) {
                 if (typeof attrs === 'string') {
                     const value = elementData[attrs] as Undef<string>;
-                    if (value) {
+                    if (value !== undefined) {
                         (this._element as HTMLElement).style[attrs] = value;
                     }
                 }
                 else {
                     for (const attr in attrs) {
                         const value = elementData[attr] as Undef<string>;
-                        if (value) {
+                        if (value !== undefined) {
                             (this._element as HTMLElement).style[attr] = value;
                         }
                     }

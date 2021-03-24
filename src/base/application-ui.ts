@@ -446,7 +446,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             node.rootElement = true;
             node.renderExclude = false;
-            const preAlignment = new WeakMap<T, StringMap>();
+            const preAlignment = new WeakMap<T, CssStyleMap>();
             const direction = new WeakSet<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds: Undef<boolean>;
@@ -461,8 +461,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'right':
                             case 'end':
                             case 'justify':
-                                data = { 'text-align': textAlign };
-                                element.style.setProperty('text-align', 'left');
+                                data = { textAlign };
+                                element.style.textAlign = 'left';
                                 preAlignment.set(item, data);
                                 break;
                         }
@@ -560,7 +560,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     const reset = preAlignment.get(item);
                     if (reset) {
                         for (const attr in reset) {
-                            element.style.setProperty(attr, reset[attr]!);
+                            element.style[attr] = reset[attr]!;
                         }
                     }
                     if (direction.has(element)) {
@@ -1808,7 +1808,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     tagName ||= /^(?:inline|table)/.test(styleMap.display ||= 'inline') ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
                     pseudoElement.className = '__squared-pseudo';
-                    pseudoElement.style.setProperty('display', 'none');
+                    pseudoElement.style.display = 'none';
                     if (pseudoElt === '::before') {
                         elementRoot.insertBefore(pseudoElement, elementRoot.childNodes[0]);
                     }
