@@ -642,8 +642,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             for (let i = 0, child: T, length = childNodes.length; i < length; ++i) {
                 const element = childNodes[i] as HTMLElement;
                 if (element === beforeElement) {
-                    child = this.insertNode(processing, beforeElement, cascadeAll, '::before');
-                    setElementState(child, true, false, true, false);
+                    setElementState(
+                        child = this.insertNode(processing, beforeElement, cascadeAll, '::before'),
+                        true,
+                        false,
+                        true,
+                        false
+                    );
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
                         child.inlineText = true;
@@ -652,8 +657,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     node.innerBefore = child;
                 }
                 else if (element === afterElement) {
-                    child = this.insertNode(processing, afterElement, cascadeAll, '::after');
-                    setElementState(child, true, false, true, false);
+                    setElementState(
+                        child = this.insertNode(processing, afterElement, cascadeAll, '::after'),
+                        true,
+                        false,
+                        true,
+                        false
+                    );
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
                         child.inlineText = true;
@@ -663,8 +673,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
-                        child = this.insertNode(processing, element);
-                        setElementState(child, false, false, false, false);
+                        setElementState(
+                            child = this.insertNode(processing, element),
+                            false,
+                            false,
+                            false,
+                            false
+                        );
                         child.cssApply(node.textStyle);
                         plainText = j;
                     }
@@ -1116,37 +1131,35 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             combined = nodeY.use ? ApplicationUI.prioritizeExtensions<T>(nodeY.use, extensionsTraverse) as ExtensionUI<T>[] : extensionsTraverse;
                             for (let k = 0, s = combined.length; k < s; ++k) {
                                 const ext = combined[k];
-                                if (ext.is(nodeY)) {
-                                    if (ext.condition(nodeY, parentY) && !(descendant && descendant.includes(ext))) {
-                                        const result = ext.processNode(nodeY, parentY);
-                                        if (result) {
-                                            if (result.output) {
-                                                this.addLayoutTemplate(result.outerParent || parentY, nodeY, result.output);
+                                if (ext.is(nodeY) && ext.condition(nodeY, parentY) && !(descendant && descendant.includes(ext))) {
+                                    const result = ext.processNode(nodeY, parentY);
+                                    if (result) {
+                                        if (result.output) {
+                                            this.addLayoutTemplate(result.outerParent || parentY, nodeY, result.output);
+                                        }
+                                        if (result.renderAs && result.outputAs) {
+                                            this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
+                                        }
+                                        if (result.parent) {
+                                            parentY = result.parent;
+                                        }
+                                        if (result.include) {
+                                            (nodeY.renderExtension ||= []).push(ext);
+                                            ext.subscribers.add(nodeY);
+                                        }
+                                        else if (result.subscribe) {
+                                            ext.subscribers.add(nodeY);
+                                        }
+                                        if (result.remove) {
+                                            const index = extensionsTraverse.indexOf(ext);
+                                            if (index !== -1) {
+                                                extensionsTraverse = extensionsTraverse.slice(0);
+                                                extensionsTraverse.splice(index, 1);
                                             }
-                                            if (result.renderAs && result.outputAs) {
-                                                this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
-                                            }
-                                            if (result.parent) {
-                                                parentY = result.parent;
-                                            }
-                                            if (result.include) {
-                                                (nodeY.renderExtension ||= []).push(ext);
-                                                ext.subscribers.add(nodeY);
-                                            }
-                                            else if (result.subscribe) {
-                                                ext.subscribers.add(nodeY);
-                                            }
-                                            if (result.remove) {
-                                                const index = extensionsTraverse.indexOf(ext);
-                                                if (index !== -1) {
-                                                    extensionsTraverse = extensionsTraverse.slice(0);
-                                                    extensionsTraverse.splice(index, 1);
-                                                }
-                                            }
-                                            next = result.next === true;
-                                            if (next || result.complete) {
-                                                break;
-                                            }
+                                        }
+                                        next = result.next === true;
+                                        if (next || result.complete) {
+                                            break;
                                         }
                                     }
                                 }

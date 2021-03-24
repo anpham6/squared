@@ -497,7 +497,7 @@ function calculateBias(start: number, end: number, accuracy = 3) {
 }
 
 const hasFlexibleContainer = (parent: Null<T>) => !!parent && (parent.layoutConstraint || parent.layoutGrid);
-const hasFlexibleHeight = (node: T) => node.hasHeight || node.layoutGrid || node.gridElement || node.layoutConstraint && node.blockHeight;
+const hasFlexibleHeight = (node: T) => node.hasHeight || node.layoutGrid || node.gridElement || node.layoutConstraint && (node.blockHeight || node.flexibleHeight);
 
 export function ascendFlexibleWidth(node: T, container?: boolean) {
     let current = container ? node : node.renderParent as Null<T>,
