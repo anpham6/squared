@@ -14,9 +14,9 @@ declare module "lib" {
             removeAll(list: T[] | Container): T[];
             retainAs(list: T[]): this;
             each(predicate: IteratorPredicate<T, void>, options?: ContainerRangeOptions): this;
-            every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions): boolean;
-            removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerRemoveIfOptions<T>): T[];
-            find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
+            every(predicate: IteratorPredicate<T, unknown>, options?: ContainerRangeOptions): boolean;
+            removeIf(predicate: IteratorPredicate<T, unknown>, options?: ContainerRemoveIfOptions<T>): T[];
+            find(predicate: IteratorPredicate<T, unknown>, options?: ContainerFindOptions<T>): Undef<T>;
             cascade(predicate?: IteratorPredicate<T, unknown>, options?: ContainerCascadeOptions<T>): T[];
             map<U = unknown>(predicate: IteratorPredicate<T, U>): U[];
             sortBy(...attrs: (string | boolean)[]): this;

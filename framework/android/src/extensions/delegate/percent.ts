@@ -39,8 +39,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             marginHorizontal: Undef<boolean>,
             marginVertical: Undef<boolean>;
         if (!absoluteParent.hasPX('width', { percent: false })) {
-            const percent = node.percentWidth;
-            percentWidth = (percent > 0 && percent < 1 || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
+            percentWidth = node.variableWidth && !parent.layoutConstraint && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
             marginHorizontal = (!!getPercent(node.cssValue('marginLeft')) || !!getPercent(node.cssValue('marginRight'))) && (
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
                 parent.layoutFrame ||

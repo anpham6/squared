@@ -779,20 +779,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (child.autoMargin.leftRight || child.autoMargin.left || child.hasPX('maxWidth') && !child.support.maxDimension && !child.inputElement || node.tagName === 'BUTTON' || this.hasClippedBackground(node)) {
                     layout.containerType = CONTAINER_NODE.CONSTRAINT;
                 }
+                else if (child.positionRelative) {
+                    if (child.isEmpty() && child.withinX(node.box, { dimension: 'linear', offset: 0 }) && child.withinY(node.box, { dimension: 'linear', offset: 0 })) {
+                        layout.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.HORIZONTAL);
+                    }
+                    else {
+                        layout.containerType = CONTAINER_NODE.FRAME;
+                    }
+                }
                 else {
                     const parent = layout.parent;
-                    if (parent.layoutHorizontal && (parent.layoutRelative || parent.layoutLinear)) {
-                        if (child.positionRelative) {
-                            layout.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.VERTICAL);
-                        }
-                        else if (child.baselineElement) {
-                            layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
-                        }
-                        else {
-                            layout.containerType = CONTAINER_NODE.FRAME;
-                        }
-                    }
-                    else if (child.baselineElement && (parent.layoutGrid && parent.hasAlign(NODE_ALIGNMENT.VERTICAL) || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
+                    if (child.baselineElement && (parent.layoutHorizontal || parent.layoutGrid && parent.hasAlign(NODE_ALIGNMENT.VERTICAL) || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {

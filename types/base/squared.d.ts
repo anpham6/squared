@@ -724,6 +724,7 @@ declare module "base" {
         get blockDimension(): boolean;
         get inlineFlow(): boolean;
         get verticalAligned(): boolean;
+        get variableWidth(): boolean;
         get positiveAxis(): boolean;
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;

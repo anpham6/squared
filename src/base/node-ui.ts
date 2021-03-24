@@ -1,3 +1,4 @@
+import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TRAVERSE = squared.base.lib.constant.NODE_TRAVERSE;
@@ -1657,6 +1658,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get verticalAligned() {
         const result = this._cache.verticalAligned;
         return result === undefined ? this._cache.verticalAligned = this.verticalAlign !== 0 && !isNaN(parseFloat(this.valueOf('verticalAlign'))) : result;
+    }
+
+    get variableWidth() {
+        const percent = this.percentWidth;
+        return percent > 0 && percent < 1 || this.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
     }
 
     set autoPosition(value) {

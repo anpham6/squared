@@ -119,7 +119,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return this;
     }
 
-    public every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions) {
+    public every(predicate: IteratorPredicate<T, unknown>, options?: ContainerRangeOptions) {
         const children = this.children;
         let length = children.length;
         if (length) {
@@ -143,7 +143,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         return false;
     }
 
-    public removeIf(predicate: IteratorPredicate<T, boolean>, options?: ContainerRemoveIfOptions<T>): T[] {
+    public removeIf(predicate: IteratorPredicate<T, unknown>, options?: ContainerRemoveIfOptions<T>): T[] {
         let count: Undef<number>,
             cascade: Undef<boolean | IteratorPredicate<T, boolean>>,
             also: Undef<BindGeneric<T, unknown>>,
@@ -186,7 +186,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         })(this, []);
     }
 
-    public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
+    public find(predicate: IteratorPredicate<T, unknown>, options?: ContainerFindOptions<T>) {
         if (options) {
             const { also, error, cascade } = options;
             let { start, end, count } = options;

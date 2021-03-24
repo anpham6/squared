@@ -45,7 +45,7 @@ const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
 function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
-    let current = style[attr];
+    const current = style[attr];
     if (value !== current) {
         const restore = element.style[attr];
         element.style[attr] = value;
@@ -789,8 +789,8 @@ function getBoundsSize(node: T, options?: NodeParseUnitOptions) {
     return bounds[options && options.dimension || 'width'];
 }
 
-const aboveRange = (a: number, b: number, offset = 1) => a + offset > b;
-const belowRange = (a: number, b: number, offset = 1) => a - offset < b;
+const aboveRange = (a: number, b: number, offset = 1) => a + offset >= b;
+const belowRange = (a: number, b: number, offset = 1) => a - offset <= b;
 const sortById = (a: T, b: T) => a.id - b.id;
 const isInlineVertical = (value: string) => startsWith(value, 'inline') || value === 'table-cell';
 const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
