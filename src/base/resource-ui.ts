@@ -766,7 +766,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string) {
         const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
         const images: (string | Gradient)[] = [];
-        const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.*?)\s*at\s+(.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
+        const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.*?)at\s+(.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
         const getAngle = (value: string, fallback = 0) => {
             if (value = value.trim()) {
                 let degree = parseAngle(value, fallback);
@@ -870,23 +870,25 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             radius = 0,
                             radiusExtent = 0;
                         if (position) {
-                            const name = position[1]?.trim();
-                            if (startsWith(name, 'circle')) {
-                                shape = 'circle';
-                            }
-                            else if (name) {
-                                const [radiusX, radiusY] = splitPair(name, ' ');
-                                let minRadius = Infinity;
-                                if (radiusX) {
-                                    minRadius = node.parseWidth(radiusX, false);
-                                }
-                                if (radiusY) {
-                                    minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
-                                }
-                                radius = minRadius;
-                                radiusExtent = minRadius;
-                                if (length === 1 || radiusX === radiusY) {
+                            const name = position[1].trim();
+                            if (name) {
+                                if (startsWith(name, 'circle')) {
                                     shape = 'circle';
+                                }
+                                else {
+                                    const [radiusX, radiusY] = splitPair(name, ' ');
+                                    let minRadius = Infinity;
+                                    if (radiusX) {
+                                        minRadius = node.parseWidth(radiusX, false);
+                                    }
+                                    if (radiusY) {
+                                        minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
+                                    }
+                                    radius = minRadius;
+                                    radiusExtent = minRadius;
+                                    if (length === 1 || radiusX === radiusY) {
+                                        shape = 'circle';
+                                    }
                                 }
                             }
                         }

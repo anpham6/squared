@@ -18,20 +18,20 @@ import type SvgUseSymbol from './svgusesymbol';
 
 import { MATRIX, SVG, TRANSFORM, createPath, truncateString } from './lib/util';
 
-import Pattern = squared.lib.base.Pattern;
-
 type SvgContainer = squared.svg.SvgContainer;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgUse = squared.svg.SvgUse;
 type SvgView = squared.svg.SvgView;
+
+const { STRING } = squared.lib.regex;
 
 const { isAngle, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction } = squared.lib.math;
 const { hasBit, isArray, splitPair, splitPairEnd, splitSome } = squared.lib.util;
 
-const RE_DECIMAL = new Pattern(squared.lib.regex.STRING.DECIMAL_SIGNED);
-const RE_PATHCOMMAND = new Pattern(/([A-Za-z])([^A-Za-z]+)?/g);
+const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL_SIGNED, 'g');
+const REGEXP_PATHCOMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
 
 export default class SvgBuild implements squared.svg.SvgBuild {
     public static isUse(object: SvgElement): object is SvgUse {
@@ -384,15 +384,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static toPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
-        let n = 0;
-        RE_PATHCOMMAND.matcher(value.trim());
-        while (RE_PATHCOMMAND.find()) {
-            let key = RE_PATHCOMMAND.group(1)!;
+        let n = 0,
+            match: Null<RegExpExecArray>;
+        while (match = REGEXP_PATHCOMMAND.exec(value)) {
+            let key = match[1];
             if (n === 0 && key.toUpperCase() !== 'M') {
                 break;
             }
-            const values = RE_PATHCOMMAND.group(2);
-            const coordinates = values ? SvgBuild.parseCoordinates(values.trim()) : [];
+            const coordinates = match[2] ? SvgBuild.parseCoordinates(match[2].trim()) : [];
             const items: number[][] = [];
             let length = coordinates.length,
                 previousCommand: Undef<string>,
@@ -513,6 +512,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             n = result.length;
         }
+        REGEXP_PATHCOMMAND.lastIndex = 0;
         return result;
     }
 
@@ -857,15 +857,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parseCoordinates(value: string) {
         const result: number[] = [];
-        if (value) {
-            RE_DECIMAL.matcher(value);
-            while (RE_DECIMAL.find()) {
-                const coord = +RE_DECIMAL.group()!;
-                if (!isNaN(coord)) {
-                    result.push(coord);
-                }
+        let match: Null<RegExpExecArray>;
+        while (match = REGEXP_DECIMAL.exec(value)) {
+            const coord = +match[0];
+            if (!isNaN(coord)) {
+                result.push(coord);
             }
         }
+        REGEXP_DECIMAL.lastIndex = 0;
         return result;
     }
 }

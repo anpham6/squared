@@ -11,7 +11,7 @@ type SvgView = squared.svg.SvgView;
 
 const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { capitalize, hasValue, isString, sortNumber, splitSome } = squared.lib.util;
+const { capitalize, hasValue, sortNumber, splitSome } = squared.lib.util;
 
 const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
 const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
@@ -96,13 +96,10 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         if (element) {
             const dataset = element.dataset;
             for (const name in dataset) {
-                const value = dataset[name];
-                if (isString(value)) {
-                    try {
-                        (this._dataset ||= {})[name] = JSON.parse(value);
-                    }
-                    catch {
-                    }
+                try {
+                    (this._dataset ||= {})[name] = JSON.parse(dataset[name]!);
+                }
+                catch {
                 }
             }
             this.element = element;
@@ -125,8 +122,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         if (animationElement) {
             const value = getNamedItem(animationElement, attr);
             if (value) {
-                if (isString(equality)) {
-                    equality = equality.trim();
+                if (equality) {
                     this[attr + capitalize(equality)] = value === equality;
                 }
                 else {

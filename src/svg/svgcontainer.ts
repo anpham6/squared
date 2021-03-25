@@ -8,9 +8,8 @@ type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgView = squared.svg.SvgView;
 
+const { isLength } = squared.lib.css;
 const { cloneObject, iterateArray } = squared.lib.util;
-
-const REGEXP_LENGTHPERCENTAGE = new RegExp(squared.lib.regex.STRING.LENGTH_PERCENTAGE);
 
 function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, viewBox?: DOMRect, element?: SvgViewBoxElement) {
     if (parent) {
@@ -55,8 +54,8 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                         boxHeight = +h;
                     }
                 }
-                const hasWidth = hasLength(w);
-                const hasHeight = hasLength(h);
+                const hasWidth = isLength(w, true);
+                const hasHeight = isLength(h, true);
                 const boxRatioWidth = boxWidth / width;
                 const boxRatioHeight = boxHeight / height;
                 let resizeUnit = hasWidth && hasHeight;
@@ -179,8 +178,6 @@ function getNearestViewBox(container: SvgContainer): Undef<Svg | SvgUseSymbol> {
     }
     while (container);
 }
-
-const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public parent: Null<SvgContainer> = null;

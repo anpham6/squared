@@ -1393,17 +1393,17 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
 export function calculateAll(value: string, options?: CalculateOptions) {
     let match: Null<RegExpExecArray>;
     while (match = REGEXP_CALCNESTED.exec(value)) {
-        let result = calculateUnit(match[7].trim(), options),
+        let result = calculateUnit(match[7], options),
             method = match[2] || match[4];
         if (method) {
             switch (method = method.toLowerCase()) {
                 case 'min':
                 case 'max':
-                    result = Math[method](result, calculateUnit(match[3].trim(), options));
+                    result = Math[method](result, calculateUnit(match[3], options));
                     break;
                 case 'clamp': {
-                    const min = calculateUnit(match[5].trim(), options);
-                    const current = calculateUnit(match[6].trim(), options);
+                    const min = calculateUnit(match[5], options);
+                    const current = calculateUnit(match[6], options);
                     if (isNaN(min) || isNaN(current)) {
                         return NaN;
                     }

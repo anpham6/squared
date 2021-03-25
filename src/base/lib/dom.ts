@@ -11,7 +11,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
+            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase()))) {
                 ({ srcset, sizes } = item);
                 return true;
             }

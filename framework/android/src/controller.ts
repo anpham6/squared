@@ -1639,7 +1639,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
                     if (element.poster) {
-                        Resource.addImage(resourceId, { mdpi: element.poster.trim() });
+                        Resource.addImage(resourceId, { mdpi: element.poster });
                     }
                 }
                 else if (element.poster) {

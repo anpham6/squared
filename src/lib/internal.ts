@@ -1564,11 +1564,11 @@ export function parseSelectorText(value: string) {
             do {
                 const index = normalized.indexOf(',', position);
                 if (index !== -1) {
-                    result.push(value.substring(position, index).trim());
+                    result.push(value.substring(position, index));
                     position = index + 1;
                 }
                 else {
-                    result.push(value.substring(position).trim());
+                    result.push(value.substring(position));
                     break;
                 }
             }

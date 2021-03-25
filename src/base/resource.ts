@@ -354,14 +354,12 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public addFont(resourceId: number, data: FontFaceData) {
         const assets = Resource.ASSETS[resourceId];
         if (assets) {
-            const fontFamily = data.fontFamily.trim().toLowerCase();
-            data.fontFamily = fontFamily;
-            const items = assets.fonts.get(fontFamily);
+            const items = assets.fonts.get(data.fontFamily = data.fontFamily.toLowerCase());
             if (items) {
                 items.push(data);
             }
             else {
-                assets.fonts.set(fontFamily, [data]);
+                assets.fonts.set(data.fontFamily, [data]);
             }
         }
     }
@@ -449,10 +447,13 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public getFonts(resourceId: number, fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
-        const font = Resource.ASSETS[resourceId]?.fonts.get(fontFamily.trim().toLowerCase());
-        if (font) {
-            const mimeType = this.mimeTypeMap.font;
-            return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
+        const fonts = Resource.ASSETS[resourceId]?.fonts;
+        if (fonts) {
+            const font = fonts.get(fontFamily.trim().toLowerCase());
+            if (font) {
+                const mimeType = this.mimeTypeMap.font;
+                return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
+            }
         }
         return [];
     }
