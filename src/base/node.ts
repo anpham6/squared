@@ -44,7 +44,7 @@ const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
-function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
+function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, sessionId: string) {
     const current = style[attr];
     if (value !== current) {
         const restore = element.style[attr];
@@ -82,10 +82,10 @@ function hasTextAlign(node: T, ...values: string[]) {
     return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasUnit('width', { initial: true }) && !node.hasUnit('maxWidth', { initial: true }) : startsWith(node.display, 'inline'));
 }
 
-function setDimension(node: T, styleMap: CssStyleMap, dimension: DimensionAttr) {
+function setDimension(node: T, style: CssStyleMap, dimension: DimensionAttr) {
     const options: NodeParseUnitOptions = { dimension };
-    const value = styleMap[dimension];
-    const minValue = styleMap[dimension === 'width' ? 'minWidth' : 'minHeight'];
+    const value = style[dimension];
+    const minValue = style[dimension === 'width' ? 'minWidth' : 'minHeight'];
     const baseValue = value ? node.parseUnit(value, options) : 0;
     let result = minValue ? Math.max(baseValue, node.parseUnit(minValue, options)) : baseValue;
     if (result === 0 && node.styleElement) {
@@ -115,17 +115,17 @@ function setDimension(node: T, styleMap: CssStyleMap, dimension: DimensionAttr) 
     }
     if (baseValue && !node.imageElement) {
         const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
-        const max = styleMap[attr];
+        const max = style[attr];
         if (max) {
             if (value === max) {
-                delete styleMap[attr];
+                delete style[attr];
             }
             else {
                 const maxValue = node.parseUnit(max, { dimension });
                 if (maxValue) {
                     if (maxValue <= baseValue && value && isLength(value)) {
-                        styleMap[dimension] = max;
-                        delete styleMap[attr];
+                        style[dimension] = max;
+                        delete style[attr];
                     }
                     else {
                         return Math.min(result, maxValue);
@@ -1462,7 +1462,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssTry(attr: CssStyleAttr, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this._styleMap, this.sessionId)) {
+            if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this.sessionId)) {
                 if (callback) {
                     callback.call(this, attr);
                     this.cssFinally(attr);
@@ -1481,7 +1481,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const style = !this.pseudoElement ? this.style : getStyle(element);
             for (const attr in values) {
                 const value = values[attr]!;
-                switch (setStyleCache(element, attr as CssStyleAttr, value, style, this._styleMap, sessionId)) {
+                switch (setStyleCache(element, attr as CssStyleAttr, value, style, sessionId)) {
                     case STYLE_STATE.FAIL:
                         this.cssFinally(result);
                         return false;
@@ -1675,9 +1675,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public parseUnit(value: string, options?: NodeParseUnitOptions) {
-        if (!value) {
-            return 0;
+    public parseUnit(value: unknown, options?: NodeParseUnitOptions) {
+        if (typeof value !== 'string') {
+            return options && options.fallback !== undefined ? options.fallback : 0;
         }
         let n = asPx(value);
         if (!isNaN(n)) {
@@ -1690,13 +1690,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             options = { fontSize: this.fontSize };
         }
         else {
-            options.fontSize ||= this.fontSize;
+            options.fontSize ??= this.fontSize;
         }
         return parseUnit(value, options);
     }
 
-    public convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions) {
-        let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
+    public convertUnit(value: unknown, unit: string, options?: NodeConvertUnitOptions) {
+        let result = typeof value === 'number' ? value : this.parseUnit(value, options);
         if (unit === 'percent' || unit === '%') {
             result *= 100 / getBoundsSize(this, options);
             return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';

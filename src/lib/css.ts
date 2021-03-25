@@ -285,6 +285,7 @@ function getContentBoxDimension(element: StyleElement) {
     return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) } as Dimension;
 }
 
+const getFallbackResult = (options: Undef<UnitOptions>, value: number) => options && options.fallback !== undefined ? options.fallback : value;
 const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
 const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
 const isColor = (value: string) => /(?:rgb|hsl)a?/.test(value);
@@ -1316,7 +1317,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
         const boundingSize = unitType === CSS_UNIT.LENGTH;
         if (value.includes('%')) {
             if (options.supportPercent === false || unitType === CSS_UNIT.INTEGER) {
-                return NaN;
+                return getFallbackResult(options, NaN);
             }
             else if (boundingSize && options.boundingSize === undefined) {
                 const { dimension, boundingBox } = options;
@@ -1371,7 +1372,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
             }
         }
         else if (options.supportPercent) {
-            return NaN;
+            return getFallbackResult(options, NaN);
         }
         if (boundingSize && options.fontSize === undefined && hasEm(value)) {
             options.fontSize = getFontSize(element);
@@ -1387,7 +1388,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
             return result;
         }
     }
-    return NaN;
+    return getFallbackResult(options, NaN);
 }
 
 export function calculateAll(value: string, options?: CalculateOptions) {
@@ -1405,7 +1406,7 @@ export function calculateAll(value: string, options?: CalculateOptions) {
                     const min = calculateUnit(match[5], options);
                     const current = calculateUnit(match[6], options);
                     if (isNaN(min) || isNaN(current)) {
-                        return NaN;
+                        return getFallbackResult(options, NaN);
                     }
                     result = clamp(current, min, result);
                     break;
@@ -1422,15 +1423,15 @@ export function calculateAll(value: string, options?: CalculateOptions) {
             break;
         }
     }
-    return NaN;
+    return getFallbackResult(options, NaN);
 }
 
 export function calculate(value: string, options?: CalculateOptions) {
     let length = (value = value.trim()).length;
     if (length === 0) {
-        return NaN;
+        return getFallbackResult(options, NaN);
     }
-    else if (value[0] !== '(' || value[length - 1] !== ')') {
+    if (value[0] !== '(' || value[length - 1] !== ')') {
         value = `(${value})`;
         length += 2;
     }
@@ -1500,7 +1501,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             break;
                                         default:
                                             if (!checkCalculateNumber(operand, operator)) {
-                                                return NaN;
+                                                return getFallbackResult(options, NaN);
                                             }
                                             break;
                                     }
@@ -1515,66 +1516,66 @@ export function calculate(value: string, options?: CalculateOptions) {
                                         case CSS_UNIT.PERCENT:
                                             if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
                                             }
                                             else if (!isNaN(n = asPercent(partial))) {
                                                 if (!checkCalculateNumber(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n * 100);
                                                 found = true;
                                             }
                                             else {
-                                                return NaN;
+                                                return getFallbackResult(options, NaN);
                                             }
                                             break;
                                         case CSS_UNIT.TIME:
                                             if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
                                             }
                                             else if (isTime(partial)) {
                                                 if (!checkCalculateNumber(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(parseTime(partial) * 1000);
                                                 found = true;
                                             }
                                             else {
-                                                return NaN;
+                                                return getFallbackResult(options, NaN);
                                             }
                                             break;
                                         case CSS_UNIT.ANGLE:
                                             if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
                                             }
                                             else if (isAngle(partial)) {
                                                 if (!checkCalculateNumber(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 const angle = parseAngle(partial);
                                                 if (!isNaN(angle)) {
                                                     seg.push(angle);
                                                 }
                                                 else {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 found = true;
                                             }
                                             else {
-                                                return NaN;
+                                                return getFallbackResult(options, NaN);
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
                                             if (!CALC_INTEGER.test(partial)) {
-                                                return NaN;
+                                                return getFallbackResult(options, NaN);
                                             }
                                             seg.push(n);
                                             found = true;
@@ -1587,20 +1588,20 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 seg.push(n * boundingSize);
                                             }
                                             else {
-                                                return NaN;
+                                                return getFallbackResult(options, NaN);
                                             }
                                             found = true;
                                             break;
                                         default:
                                             if (!isNaN(n)) {
                                                 if (!checkCalculateOperator(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
                                             }
                                             else {
                                                 if (!checkCalculateNumber(operand, operator)) {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 if (isLength(partial)) {
                                                     seg.push(parseUnit(partial, options));
@@ -1609,7 +1610,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                     seg.push(n * boundingSize);
                                                 }
                                                 else {
-                                                    return NaN;
+                                                    return getFallbackResult(options, NaN);
                                                 }
                                                 found = true;
                                             }
@@ -1622,7 +1623,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                         }
                     }
                     if (!found || seg.length !== evaluate.length + 1) {
-                        return NaN;
+                        return getFallbackResult(options, NaN);
                     }
                     for (let k = 0; k < evaluate.length; ++k) {
                         if (evaluate[k] === '/') {
@@ -1631,7 +1632,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                 evaluate.splice(k--, 1);
                             }
                             else {
-                                return NaN;
+                                return getFallbackResult(options, NaN);
                             }
                         }
                     }
@@ -1646,17 +1647,14 @@ export function calculate(value: string, options?: CalculateOptions) {
                         evaluate.splice(k--, 1);
                     }
                     if (seg.length !== 1) {
-                        return NaN;
+                        return getFallbackResult(options, NaN);
                     }
                     if (closing.length === 1) {
-                        let result = seg[0];
+                        const result = seg[0];
                         if (min !== undefined && result < min || max !== undefined && result > max) {
-                            return NaN;
+                            return getFallbackResult(options, NaN);
                         }
-                        if (safe) {
-                            result = clamp(result, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
-                        }
-                        return truncateFraction(result, false, zeroThreshold);
+                        return truncateFraction(safe ? clamp(result, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER) : result, false, zeroThreshold);
                     }
                     equated[index] = seg[0];
                     const hash = `{${index++}}`;
@@ -1668,7 +1666,7 @@ export function calculate(value: string, options?: CalculateOptions) {
         }
         while (true);
     }
-    return NaN;
+    return getFallbackResult(options, NaN);
 }
 
 export function calculateUnit(value: string, options?: CalculateOptions) {
@@ -1722,26 +1720,20 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
                     break;
             }
         }
-        if (options && options.safe) {
-            result = clamp(result, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
-        }
-        return result;
+        return options && options.safe ? clamp(result, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER) : result;
     }
-    return 0;
+    return getFallbackResult(options, 0);
 }
 
 export function convertUnit(value: NumString, unit: string, options?: ConvertUnitOptions) {
     let result = parseUnit('1' + unit, options);
-    if (result !== 0) {
-        if (typeof value === 'string') {
-            value = parseUnit(value, options);
-        }
-        result = value / result;
+    if (result) {
+        result = (typeof value === 'string' ? parseUnit(value, options) : value) / result;
         if (options && options.precision !== undefined) {
             return truncate(result, options.precision) + unit;
         }
     }
-    return result + unit;
+    return (result || 0) + unit;
 }
 
 export function parseTransform(value: string, options?: TransformOptions) {

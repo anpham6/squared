@@ -21,6 +21,7 @@ interface UnitOptions {
     safe?: boolean;
     fontSize?: number;
     screenDimension?: Null<Dimension>;
+    fallback?: number;
 }
 
 interface CalculateOptions extends UnitOptions {

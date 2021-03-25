@@ -440,8 +440,8 @@ declare module "base" {
         cssTry(attr: CssStyleAttr, value: string, callback?: FunctionSelf<this>): boolean;
         cssTryAll(attrs: CssStyleMap, callback?: FunctionSelf<this>): CssStyleMap | boolean;
         cssFinally(attrs: CssStyleAttr | CssStyleMap): void;
-        parseUnit(value: string, options?: NodeParseUnitOptions): number;
-        convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions): string;
+        parseUnit(value: unknown, options?: NodeParseUnitOptions): number;
+        convertUnit(value: unknown, unit: string, options?: NodeConvertUnitOptions): string;
         has(attr: CssStyleAttr, options?: HasOptions): boolean;
         hasUnit(attr: CssStyleAttr, options?: HasUnitOptions): boolean;
         toInt(attr: CssStyleAttr, fallback?: number, initial?: boolean): number;

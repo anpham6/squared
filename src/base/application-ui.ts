@@ -65,18 +65,18 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     return result;
 }
 
-function checkPseudoDimension(styleMap: CssStyleMap, after: boolean, absolute: boolean) {
-    switch (styleMap.display) {
+function checkPseudoDimension(style: CssStyleMap, after: boolean, absolute: boolean) {
+    switch (style.display) {
         case 'inline':
         case 'block':
         case 'inherit':
         case 'initial':
         case 'unset':
         case 'revert': {
-            const { width, height } = styleMap;
+            const { width, height } = style;
             if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
-                for (const attr in styleMap) {
-                    const value = styleMap[attr]!;
+                for (const attr in style) {
+                    const value = style[attr]!;
                     if (/(padding|Width|Height)/.test(attr) && parseFloat(value) || !absolute && startsWith(attr, 'margin') && parseFloat(value)) {
                         return true;
                     }

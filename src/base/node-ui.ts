@@ -15,7 +15,6 @@ type T = NodeUI;
 
 const { CSS_PROPERTIES } = squared.lib.internal;
 
-const { asPx } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -579,15 +578,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this.rendered = true;
     }
 
-    public parseUnit(value: string, options?: NodeParseUnitOptions) {
-        if (!value) {
-            return 0;
-        }
-        const unit = asPx(value);
-        if (!isNaN(unit)) {
-            return unit;
-        }
-        (options ||= {}).screenDimension ||= this.localSettings.screenDimension;
+    public parseUnit(value: unknown, options?: NodeParseUnitOptions) {
+         (options ||= {}).screenDimension ||= this.localSettings.screenDimension;
         return super.parseUnit(value, options);
     }
 
