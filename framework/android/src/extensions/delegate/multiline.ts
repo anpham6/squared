@@ -112,7 +112,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 return false;
             }
             const nodes: MultilineData<T> = [];
-            const checkWidth = node.blockStatic && !node.hasPX('width', { percent: false }) && node.tagName !== 'LEGEND';
+            const checkWidth = node.blockStatic && !node.hasUnit('width', { percent: false }) && node.tagName !== 'LEGEND';
             let textWidth = 0,
                 textHeight = 0,
                 floatHeight = 0,
@@ -237,7 +237,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         verticalAlign: 'baseline',
                         ...seg.textStyle
                     };
-                    const boxRect: Partial<BoxRectDimension> = { ...!seg.hasPX('width') && seg.textBounds || seg.bounds };
+                    const boxRect: Partial<BoxRectDimension> = { ...!seg.hasUnit('width') && seg.textBounds || seg.bounds };
                     boxRect.height = Math.floor(seg.bounds.height / (boxRect.numberOfLines || 1));
                     boxRect.numberOfLines = 1;
                     const createContainer = (tagName: string, value: string) => {

@@ -445,7 +445,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             node.autoPosition = false;
                         }
                         parent = absoluteParent;
-                        if (this.userSettings.supportNegativeLeftTop && !(node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right'))) {
+                        if (this.userSettings.supportNegativeLeftTop && !(node.hasUnit('top') && node.hasUnit('bottom') || node.hasUnit('left') && node.hasUnit('right'))) {
                             let outside: Undef<boolean>;
                             while (parent && parent.bounds.height) {
                                 if (parent.layoutElement) {
@@ -496,7 +496,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             bounds.left += left;
                             bounds.right += left;
                         }
-                        else if (!absoluteParent.hasPX('left') && right !== 0) {
+                        else if (!absoluteParent.hasUnit('left') && right !== 0) {
                             bounds.left -= right;
                             bounds.right -= right;
                         }
@@ -504,7 +504,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             bounds.top += top;
                             bounds.bottom += top;
                         }
-                        else if (!absoluteParent.hasPX('top') && bottom !== 0) {
+                        else if (!absoluteParent.hasUnit('top') && bottom !== 0) {
                             bounds.top -= bottom;
                             bounds.bottom -= bottom;
                         }

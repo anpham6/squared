@@ -167,10 +167,10 @@ function setOverflow(node: T) {
     if (node.scrollElement) {
         const element = node.element as HTMLElement;
         const [overflowX, overflowY] = node.cssAsTuple('overflowX', 'overflowY');
-        if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
+        if (node.hasHeight && (node.hasUnit('height') || node.hasUnit('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
             result |= NODE_ALIGNMENT.VERTICAL;
         }
-        if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
+        if ((node.hasUnit('width') || node.hasUnit('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
             result |= NODE_ALIGNMENT.HORIZONTAL;
         }
     }
@@ -641,7 +641,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
                     if (!this.positionStatic) {
                         const setPosition = (attr: CssStyleAttr) => {
-                            if (node.hasPX(attr)) {
+                            if (node.hasUnit(attr)) {
                                 this._styleMap[attr] = node.css(attr);
                             }
                         };
@@ -918,7 +918,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const checkBlockDimension = (previous: T) => this.blockDimension && Math.ceil(this.bounds.top) >= previous.bounds.bottom && (this.blockVertical || previous.blockVertical || this.percentWidth > 0 || previous.percentWidth > 0);
         if (isArray(siblings)) {
             const previous = siblings[siblings.length - 1];
-            const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
+            const getPercentWidth = (node: T) => node.inlineDimension && !node.hasUnit('maxWidth') ? node.percentWidth : -Infinity;
             if (cleared) {
                 if (cleared.size && (cleared.has(this) || this.siblingsLeading.some(item => item.excluded && cleared.has(item)))) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
@@ -1202,7 +1202,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 offsetRight = 0,
                 current = this.actualParent;
             while (current) {
-                if (current.hasPX('width', { percent: false }) || !current.pageFlow) {
+                if (current.hasUnit('width', { percent: false }) || !current.pageFlow) {
                     return value;
                 }
                 offsetLeft += Math.max(current.marginLeft, 0) + current.borderLeftWidth + current.paddingLeft;
@@ -1634,7 +1634,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get inlineFlow() {
         const result = this._cache.inlineFlow;
-        return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && !!this.previousSibling?.floating) && this.pageFlow : result;
+        return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasUnit('width', { percent: false }) || this.tableElement && !!this.previousSibling?.floating) && this.pageFlow : result;
     }
 
     get blockStatic() {
@@ -1685,7 +1685,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get positiveAxis() {
         const result = this._cache.positiveAxis;
-        return result === undefined ? this._cache.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
+        return result === undefined ? this._cache.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasUnit('left')) && (this.bottom <= 0 || this.hasUnit('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
     }
 
     get leftTopAxis() {
@@ -1969,7 +1969,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textWidth() {
         const result = this._cache.textWidth;
         if (result === undefined) {
-            if (this.styleText && !this.hasPX('width')) {
+            if (this.styleText && !this.hasUnit('width')) {
                 const textBounds = this.textBounds;
                 if (textBounds && (textBounds.numberOfLines! > 1 || Math.ceil(textBounds.width) < this.box.width)) {
                     return this._cache.textWidth = textBounds.width;

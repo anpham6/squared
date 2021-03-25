@@ -133,7 +133,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                         }
                                         if (node.layoutVertical) {
                                             const firstChild = node.renderChildren.find(item => item.pageFlow);
-                                            if (firstChild && firstChild !== child.outerMostWrapper && (target.positionStatic || target.top >= 0 && !target.hasPX('bottom'))) {
+                                            if (firstChild && firstChild !== child.outerMostWrapper && (target.positionStatic || target.top >= 0 && !target.hasUnit('bottom'))) {
                                                 adjustRegion(firstChild, region, offsetChild);
                                                 adjustRegion(target, region, 0);
                                                 resetChild = true;
@@ -815,7 +815,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 parent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                             }
                             else if (!parent.hasHeight) {
-                                const value = Math.max(offset, parent.hasPX('minHeight', { percent: false }) ? parent.cssUnit('minHeight', { dimension: 'height' }) : 0);
+                                const value = Math.max(offset, parent.hasUnit('minHeight', { percent: false }) ? parent.cssUnit('minHeight', { dimension: 'height' }) : 0);
                                 if (value) {
                                     parent.css('minHeight', formatPX(value));
                                 }

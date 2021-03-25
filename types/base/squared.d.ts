@@ -443,7 +443,7 @@ declare module "base" {
         parseUnit(value: string, options?: NodeParseUnitOptions): number;
         convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions): string;
         has(attr: CssStyleAttr, options?: HasOptions): boolean;
-        hasPX(attr: CssStyleAttr, options?: HasPXOptions): boolean;
+        hasUnit(attr: CssStyleAttr, options?: HasUnitOptions): boolean;
         toInt(attr: CssStyleAttr, fallback?: number, initial?: boolean): number;
         toFloat(attr: CssStyleAttr, fallback?: number, initial?: boolean): number;
         toElementInt(attr: string, fallback?: number): number;

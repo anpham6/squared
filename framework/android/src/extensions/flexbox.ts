@@ -68,7 +68,7 @@ function setBoxPercentage(node: View, parent: View, attr: DimensionAttr) {
     flexbox.basis = (node.bounds[attr] / parent.box[attr] * 100) + '%';
 }
 
-const hasMultiline = (node: View, parent: View) => node.find(child => child.multiline && child.ascend({ condition: above => above.hasWidth, including: parent }).length === 0, { cascade: item => !item.hasPX('width', { percent: false }) });
+const hasMultiline = (node: View, parent: View) => node.find(child => child.multiline && child.ascend({ condition: above => above.hasWidth, including: parent }).length === 0, { cascade: item => !item.hasUnit('width', { percent: false }) });
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
@@ -151,7 +151,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         const mainData = this.data.get(node) as Undef<FlexboxData<T>>;
         if (mainData) {
             const { row, column, rowGap, columnGap, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
-            const parentBottom = node.hasPX('height', { percent: false }) || node.percentHeight ? node.linear.bottom : 0;
+            const parentBottom = node.hasUnit('height', { percent: false }) || node.percentHeight ? node.linear.bottom : 0;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
@@ -529,7 +529,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     let size = 0;
                                                     chain.cascade(item => {
                                                         if (item.pageFlow) {
-                                                            if (item.hasPX(HWL, { percent: false })) {
+                                                            if (item.hasUnit(HWL, { percent: false })) {
                                                                 size = Math.max(size, item.bounds[HWL]);
                                                             }
                                                         }
@@ -783,7 +783,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             for (let i = 0, length = items.length; i < length; ++i) {
                 const item = items[i].innerMostWrapped as T;
                 const { alignSelf, basis, shrink, grow } = item.flexbox;
-                if (basis === 'auto' && grow === 0 && item.hasPX(dimension, { percent: false })) {
+                if (basis === 'auto' && grow === 0 && item.hasUnit(dimension, { percent: false })) {
                     continue;
                 }
                 const size = item.bounds[dimension];
@@ -791,7 +791,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     result += grow;
                     let value: number;
                     if (basis === 'auto' || basis === '0%') {
-                        if (item.hasPX(dimension)) {
+                        if (item.hasUnit(dimension)) {
                             value = item.cssUnit(dimension);
                         }
                         else {

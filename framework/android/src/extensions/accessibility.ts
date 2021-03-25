@@ -69,8 +69,8 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                                 sibling.labelFor = node;
                                                 if (!this.options.displayLabel) {
                                                     sibling.hide();
-                                                    if (node.hasPX('width')) {
-                                                        if (!node.hasPX('minWidth')) {
+                                                    if (node.hasUnit('width')) {
+                                                        if (!node.hasUnit('minWidth')) {
                                                             node.css('minWidth', node.cssValue('width'));
                                                         }
                                                         node.css('width', 'auto', true);

@@ -38,7 +38,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             percentHeight: Undef<boolean>,
             marginHorizontal: Undef<boolean>,
             marginVertical: Undef<boolean>;
-        if (!absoluteParent.hasPX('width', { percent: false })) {
+        if (!absoluteParent.hasUnit('width', { percent: false })) {
             percentWidth = node.variableWidth && !parent.layoutConstraint && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
             marginHorizontal = (!!getPercent(node.cssValue('marginLeft')) || !!getPercent(node.cssValue('marginRight'))) && (
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
@@ -48,7 +48,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 !node.pageFlow
             );
         }
-        if (!absoluteParent.hasPX('height', { percent: false })) {
+        if (!absoluteParent.hasUnit('height', { percent: false })) {
             const percent = node.percentHeight;
             percentHeight = (percent > 0 && percent < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
             marginVertical = (!!getPercent(node.cssValue('marginTop')) || !!getPercent(node.cssValue('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
@@ -74,7 +74,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 target.css('display', 'block');
                 target.setLayoutWidth('match_parent');
             }
-            node.setLayoutWidth(node.cssInitial('width') === '100%' && !node.hasPX('maxWidth') ? 'match_parent' : '0px');
+            node.setLayoutWidth(node.cssInitial('width') === '100%' && !node.hasUnit('maxWidth') ? 'match_parent' : '0px');
         }
         else if (container && !mainData.marginHorizontal) {
             container.setLayoutWidth('wrap_content');
@@ -84,7 +84,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 target.setCacheValue('hasHeight', true);
                 target.setLayoutHeight('match_parent');
             }
-            node.setLayoutHeight(node.cssInitial('height') === '100%' && !node.hasPX('maxHeight') ? 'match_parent' : '0px');
+            node.setLayoutHeight(node.cssInitial('height') === '100%' && !node.hasUnit('maxHeight') ? 'match_parent' : '0px');
         }
         else if (container && !mainData.marginVertical) {
             container.setLayoutHeight('wrap_content');

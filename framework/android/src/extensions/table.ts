@@ -11,7 +11,7 @@ const { asPercent, formatPX } = squared.lib.css;
 const { truncateTrailingZero } = squared.lib.math;
 
 function setLayoutHeight(node: View) {
-    if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
+    if (node.hasUnit('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
         node.setLayoutHeight('wrap_content');
     }
 }
@@ -51,7 +51,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 item.android('layout_columnWeight', '0.01');
                                 requireWidth = true;
                             }
-                            else if (item.hasPX('width')) {
+                            else if (item.hasUnit('width')) {
                                 const width = item.bounds.width;
                                 if (item.actualWidth < width) {
                                     item.setLayoutWidth(formatPX(width));
@@ -93,7 +93,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     node.android('width', formatPX(node.bounds.width));
                 }
                 else {
-                    if (!node.hasPX('minWidth')) {
+                    if (!node.hasUnit('minWidth')) {
                         node.android('minWidth', formatPX(node.actualWidth));
                     }
                     node.css('width', 'auto');
@@ -109,7 +109,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             }
         }
         if (node.hasHeight && node.height < Math.floor(node.bounds.height)) {
-            if (!node.hasPX('minHeight')) {
+            if (!node.hasUnit('minHeight')) {
                 node.android('minHeight', formatPX(node.actualHeight));
             }
             node.css('height', 'auto');

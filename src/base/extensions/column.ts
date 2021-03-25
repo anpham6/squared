@@ -10,7 +10,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        return node.has('columnCount') || node.hasPX('columnWidth');
+        return node.has('columnCount') || node.hasUnit('columnWidth');
     }
 
     public processNode(node: T, parent: T) {

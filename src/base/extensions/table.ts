@@ -156,7 +156,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (!td.hasPX('width')) {
+                if (!td.hasUnit('width')) {
                     let value: NumString = getNamedItem(element, 'width');
                     if (value) {
                         if (isPercent(value)) {
@@ -167,7 +167,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (!td.hasPX('height')) {
+                if (!td.hasUnit('height')) {
                     let value: NumString = getNamedItem(element, 'height');
                     if (value) {
                         if (isPercent(value)) {
@@ -291,7 +291,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
         }
-        if (node.hasPX('width', { percent: false }) && mapWidth.some(value => isPercent(value))) {
+        if (node.hasUnit('width', { percent: false }) && mapWidth.some(value => isPercent(value))) {
             replaceMap(mapWidth, (value, index) => {
                 if (value === 'auto') {
                     const dimension = mapBounds[index];
@@ -339,7 +339,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            if (layoutFixed && !node.hasPX('width')) {
+            if (layoutFixed && !node.hasUnit('width')) {
                 node.css('width', formatPX(node.bounds.width));
             }
         }
@@ -381,7 +381,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         if (caption) {
             if (!caption.hasWidth) {
                 if (caption.textElement) {
-                    if (!caption.hasPX('maxWidth')) {
+                    if (!caption.hasUnit('maxWidth')) {
                         caption.css('maxWidth', formatPX(caption.bounds.width));
                     }
                 }
@@ -450,7 +450,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else {
-                                if (!td.hasPX('width', { percent: false }) || td.percentWidth) {
+                                if (!td.hasUnit('width', { percent: false }) || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
                                 flags |= LAYOUT_TABLECELL.SHRINK;

@@ -154,7 +154,7 @@ function getCounterValue(value: Undef<string>, counterName: string, fallback = 1
 function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
     for (let i = 0, length = nodes.length; i < length; ++i) {
         const child = nodes[i];
-        if (!child.hasPX('width') && !child.hasPX('maxWidth') && !child.imageElement && !child.svgElement) {
+        if (!child.hasUnit('width') && !child.hasUnit('maxWidth') && !child.imageElement && !child.svgElement) {
             child.css('maxWidth', formatPX(offset));
         }
     }
@@ -471,7 +471,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (item.positionRelative) {
                         const setPosition = (attr: PositionAttr) => {
-                            if (item.hasPX(attr)) {
+                            if (item.hasUnit(attr)) {
                                 if (!data) {
                                     data = {};
                                     preAlignment.set(item, data);
@@ -1933,7 +1933,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (marginLeft !== -Infinity) {
                     const offset = floatPosition + marginOffset - (parent.box.left + marginLeft + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0)));
                     if (offset > 0 && offset < parent.actualBoxWidth()) {
-                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasUnit('width', { percent: false }) }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(leftAbove, offset);
                     }
                 }
@@ -1971,7 +1971,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (marginRight !== -Infinity) {
                     const offset = parent.box.right - (floatPosition - marginOffset + marginRight + Math.max(...target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0)));
                     if (offset > 0 && offset < parent.actualBoxWidth()) {
-                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasUnit('width', { percent: false }) }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         setColumnMaxWidth(rightAbove, offset);
                     }
                 }

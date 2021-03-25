@@ -898,7 +898,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         );
                         const stored = resource.getImage(resourceId, element.src);
-                        if (!node.hasPX('width')) {
+                        if (!node.hasUnit('width')) {
                             const offsetStart = (stored?.width || element.naturalWidth) + position.left - (node.paddingLeft + node.borderLeftWidth);
                             if (offsetStart > 0) {
                                 node.modifyBox(BOX_STANDARD.PADDING_LEFT, offsetStart);
@@ -1083,7 +1083,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '100% 100%':
                     case '100% auto':
                     case 'auto 100%':
-                        if (node.ascend({ condition: item => item.hasPX('width'), startSelf: true }).length) {
+                        if (node.ascend({ condition: item => item.hasUnit('width'), startSelf: true }).length) {
                             gravityX = '';
                             gravityY = '';
                         }
@@ -1197,7 +1197,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         top = Math.round((boundsHeight - height) * percent);
                                     }
                                     const attr = node.layoutConstraint || node.layoutRelative ? 'minHeight' : 'height';
-                                    if (!node.hasPX(attr)) {
+                                    if (!node.hasUnit(attr)) {
                                         node.css(attr, formatPX(boundsHeight - node.contentBoxHeight));
                                     }
                                     if (!offsetX) {

@@ -17,13 +17,13 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
-        const maxWidth = node.hasPX('maxWidth') && !parent.layoutConstraint && !parent.layoutElement && (
+        const maxWidth = node.hasUnit('maxWidth') && !parent.layoutConstraint && !parent.layoutElement && (
             parent.layoutVertical ||
             parent.layoutFrame ||
             node.blockStatic ||
             node.onlyChild && (parent.blockStatic || parent.hasWidth)
         );
-        const maxHeight = node.hasPX('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
+        const maxHeight = node.hasUnit('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
         if (maxWidth || maxHeight) {
             this.data.set(node, { maxWidth, maxHeight } as MaxWidthHeightData);
             return true;

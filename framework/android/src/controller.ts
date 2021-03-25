@@ -149,7 +149,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                     item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                     item.baselineAltered = true;
                 }
-                else if (Math.ceil(height) >= baselineHeight && item.find((child: View) => (!child.baselineElement || child.verticalAligned || child.positionRelative && (child.top < 0 || !child.hasPX('top') && child.bottom > 0)) && (Math.ceil(child.bounds.top + (child.positionRelative ? child.hasPX('top') ? child.top : child.bottom : 0)) < item.box.top)) || item.wrapperOf?.verticalAlign) {
+                else if (Math.ceil(height) >= baselineHeight && item.find((child: View) => (!child.baselineElement || child.verticalAligned || child.positionRelative && (child.top < 0 || !child.hasUnit('top') && child.bottom > 0)) && (Math.ceil(child.bounds.top + (child.positionRelative ? child.hasUnit('top') ? child.top : child.bottom : 0)) < item.box.top)) || item.wrapperOf?.verticalAlign) {
                     item.anchor('top', documentId);
                 }
                 else {
@@ -776,7 +776,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (child.percentWidth > 0 && child.percentWidth < 1) {
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.PERCENT);
                 }
-                else if (child.autoMargin.leftRight || child.autoMargin.left || child.hasPX('maxWidth') && !child.support.maxDimension && !child.inputElement || node.tagName === 'BUTTON' || this.hasClippedBackground(node)) {
+                else if (child.autoMargin.leftRight || child.autoMargin.left || child.hasUnit('maxWidth') && !child.support.maxDimension && !child.inputElement || node.tagName === 'BUTTON' || this.hasClippedBackground(node)) {
                     layout.containerType = CONTAINER_NODE.CONSTRAINT;
                 }
                 else if (child.positionRelative) {
@@ -1438,7 +1438,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         container.app('layout_constraintWidth_percent', truncate(node.percentWidth, node.localSettings.floatPrecision));
                         container.setLayoutHeight('0px');
                     }
-                    else if (node.hasPX('width')) {
+                    else if (node.hasUnit('width')) {
                         container.setLayoutWidth(formatPX(node.actualWidth));
                     }
                     else {
@@ -1448,7 +1448,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         container.app('layout_constraintHeight_percent', truncate(node.percentHeight, node.localSettings.floatPrecision));
                         container.setLayoutHeight('0px');
                     }
-                    else if (node.hasPX('height')) {
+                    else if (node.hasUnit('height')) {
                         container.setLayoutHeight(formatPX(node.actualHeight));
                     }
                     else {
@@ -1727,10 +1727,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 setReadOnly();
                 break;
             case CONTAINER_TAGNAME.VIDEOVIEW:
-                if (!node.hasPX('width')) {
+                if (!node.hasUnit('width')) {
                     setBoundsWidth();
                 }
-                if (!node.hasPX('height')) {
+                if (!node.hasUnit('height')) {
                     setBoundsHeight();
                 }
                 if (node.inline) {
@@ -2186,7 +2186,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     currentFloatedHeight = 0;
                 const setCurrentFloated = (item: T) => {
                     currentFloated = item;
-                    currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom) + (item.positionRelative ? item.hasPX('top') ? item.top : item.bottom * -1 : 0));
+                    currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom) + (item.positionRelative ? item.hasUnit('top') ? item.top : item.bottom * -1 : 0));
                 };
                 const createNewRow = (item: T, floating: boolean) => {
                     if (currentFloated) {
@@ -2229,7 +2229,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const nextSibling = node.nextSibling;
                         if (nextSibling && nextSibling.floating && nextSibling.float !== node.float && nextSibling.hasWidth) {
                             boxWidth = Math.max(boxWidth, node.actualParent!.box.width - nextSibling.linear.width);
-                            if (boxWidth > node.width && !node.visibleStyle.background && !node.hasPX('maxWidth')) {
+                            if (boxWidth > node.width && !node.visibleStyle.background && !node.hasUnit('maxWidth')) {
                                 node.css('width', formatPX(boxWidth), true);
                             }
                         }
@@ -2271,7 +2271,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             textNewRow: Undef<boolean>;
                         if (multiline && Math.floor(textWidth) <= boxWidth && !isMultiline(item)) {
                             multiline = false;
-                            if (!item.hasPX('width')) {
+                            if (!item.hasUnit('width')) {
                                 item.multiline = false;
                             }
                         }
@@ -2359,7 +2359,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             setCurrentFloated(item);
                         }
                         else {
-                            if (currentFloated !== previous && !previous.hasPX('width')) {
+                            if (currentFloated !== previous && !previous.hasUnit('width')) {
                                 previous.multiline = false;
                             }
                             if (floating) {
@@ -3001,7 +3001,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const getMaxHeight = (item: T) => Math.max(item.actualHeight, item.lineHeight);
         let parent: Null<T> = null,
             percentWidth = View.availablePercent(children, 'width', boxWidth),
-            checkPercent = !node.hasPX('width'),
+            checkPercent = !node.hasUnit('width'),
             baselineActive: boolean,
             documentId: string,
             buttonElement: Undef<boolean>;
@@ -3605,12 +3605,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else if (withinRange(linearA[LT], linearB[RB])) {
                                 if (horizontal) {
-                                    if (!node.hasPX('left') && !node.hasPX('right') || !child.inlineStatic && child.hasPX('width', { percent: false, initial: true })) {
+                                    if (!node.hasUnit('left') && !node.hasUnit('right') || !child.inlineStatic && child.hasUnit('width', { percent: false, initial: true })) {
                                         position = 'leftRight';
                                         offset = boundsA.left - boundsB.right;
                                     }
                                 }
-                                else if (!node.hasPX('top') && !node.hasPX('bottom') || !child.inlineStatic && child.hasPX('height', { percent: false, initial: true })) {
+                                else if (!node.hasUnit('top') && !node.hasUnit('bottom') || !child.inlineStatic && child.hasUnit('height', { percent: false, initial: true })) {
                                     position = 'topBottom';
                                     if (node.top !== 0) {
                                         offset = boundsA.top - boundsB.bottom;
@@ -3722,13 +3722,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.anchor(LT, 'parent', true);
                 return;
             }
-            else if (horizontal && location + bounds.width >= box.right && documentParent.hasPX('width') && !node.hasPX('right') || !horizontal && location + bounds.height >= box.bottom && documentParent.hasPX('height') && !node.hasPX('bottom')) {
+            else if (horizontal && location + bounds.width >= box.right && documentParent.hasUnit('width') && !node.hasUnit('right') || !horizontal && location + bounds.height >= box.bottom && documentParent.hasUnit('height') && !node.hasUnit('bottom')) {
                 node.anchor(RB, 'parent', true);
                 return;
             }
             let valid: Undef<boolean>;
             if (horizontal) {
-                const rightAligned = node.hasPX('right');
+                const rightAligned = node.hasUnit('right');
                 if (!rightAligned) {
                     if (box.left + location === bounds.left) {
                         valid = true;
@@ -3739,7 +3739,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else {
-                const bottomAligned = node.hasPX('bottom');
+                const bottomAligned = node.hasUnit('bottom');
                 if (!bottomAligned) {
                     if (box.top + location === bounds.top) {
                         valid = true;
@@ -3838,7 +3838,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (parent.flexElement && parent.flexdata.row && (parent.cssValue('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(node.box.bottom))) {
             return false;
         }
-        return layout.find(item => (item.rightAligned || item.centerAligned) && layout.size() > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0)) || this.hasClippedBackground(node);
+        return layout.find(item => (item.rightAligned || item.centerAligned) && layout.size() > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasUnit('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0)) || this.hasClippedBackground(node);
     }
 
     private getVerticalLayout(layout: LayoutUI<T>) {

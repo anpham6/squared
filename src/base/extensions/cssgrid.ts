@@ -211,7 +211,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
             }
         }
     }
-    else if (data.flags & LAYOUT_CSSGRID.AUTO_FIT || data.flags & LAYOUT_CSSGRID.AUTO_FILL && (horizontal && node.blockStatic && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
+    else if (data.flags & LAYOUT_CSSGRID.AUTO_FIT || data.flags & LAYOUT_CSSGRID.AUTO_FILL && (horizontal && node.blockStatic && !node.hasWidth && !node.hasUnit('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
         unit.length = dataCount;
     }
     let percent = 1,
@@ -1105,7 +1105,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 mainData.minCellHeight = minCellHeight;
                 if (horizontal) {
-                    if (node.hasPX('width', { percent: false })) {
+                    if (node.hasUnit('width', { percent: false })) {
                         column.flags |= LAYOUT_CSSGRID.FIXED_WIDTH;
                         column.flags &= ~LAYOUT_CSSGRID.FLEXIBLE;
                         setFlexibleDimension(node.actualWidth, columnGap, columnCount, column.unit, columnMax);
@@ -1115,7 +1115,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 else {
-                    if (node.hasPX('height', { percent: false })) {
+                    if (node.hasUnit('height', { percent: false })) {
                         row.flags |= LAYOUT_CSSGRID.FIXED_WIDTH;
                         row.flags &= ~LAYOUT_CSSGRID.FLEXIBLE;
                         setFlexibleDimension(node.actualHeight, rowGap, rowCount, rowUnit, rowMax);

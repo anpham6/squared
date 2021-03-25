@@ -1423,7 +1423,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     break;
             }
         }
-        else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
+        else if (node.naturalChildren.length === 0 && !node.hasUnit('height') && ResourceUI.isBackgroundVisible(node.data<BoxStyle>(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
             value = node.textContent;
         }
         if (value) {

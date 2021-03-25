@@ -357,7 +357,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         }
         if (value === 'auto' || value === 'max-content') {
             autoSize = true;
-            if (cellSpan < unit.length && (!parent.hasPX(dimension) || unit.some(px => isLength(px)) || value === 'max-content')) {
+            if (cellSpan < unit.length && (!parent.hasUnit(dimension) || unit.some(px => isLength(px)) || value === 'max-content')) {
                 size = node.bounds[dimension];
                 minSize = 0;
                 sizeWeight = 0;
@@ -371,7 +371,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             }
         }
         else if (value === 'min-content') {
-            if (!item.hasPX(dimension)) {
+            if (!item.hasUnit(dimension)) {
                 if (horizontal) {
                     item.setLayoutWidth('wrap_content', false);
                 }
@@ -437,12 +437,12 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             minSize = minUnitSize;
         }
     }
-    if (minSize && !item.hasPX(minDimension)) {
+    if (minSize && !item.hasUnit(minDimension)) {
         item.css(minDimension, formatPX(minSize), true);
     }
     if (parent.layoutConstraint) {
         if (horizontal) {
-            if (!item.hasPX('width', { percent: false })) {
+            if (!item.hasUnit('width', { percent: false })) {
                 item.app('layout_constraintWidth_percent', truncate(sizeWeight / column.frTotal, item.localSettings.floatPrecision));
                 item.setLayoutWidth('0px');
             }
@@ -462,7 +462,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
             }
             item.positioned = true;
         }
-        else if (!item.hasPX('height', { percent: false })) {
+        else if (!item.hasUnit('height', { percent: false })) {
             if (sizeWeight) {
                 if (row.length === 1) {
                     item.setLayoutHeight('match_parent');
@@ -485,7 +485,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
         let columnWeight = horizontal && (column.flags & LAYOUT_CSSGRID.FLEXIBLE) > 0;
         if (sizeWeight !== 0) {
-            if (!item.hasPX(dimension)) {
+            if (!item.hasUnit(dimension)) {
                 if (horizontal) {
                     if (cellData.columnSpan === column.length) {
                         item.setLayoutWidth('match_parent');
@@ -509,15 +509,15 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         }
         else if (size) {
             const maxDimension = horizontal ? 'maxWidth' : 'maxHeight';
-            if (fitContent && !item.hasPX(maxDimension)) {
+            if (fitContent && !item.hasUnit(maxDimension)) {
                 item.css(maxDimension, formatPX(size), true);
                 item.mergeGravity('layout_gravity', horizontal ? 'fill_horizontal' : 'fill_vertical');
             }
-            else if (!item.hasPX(dimension)) {
+            else if (!item.hasUnit(dimension)) {
                 if (item.contentBox) {
                     size -= horizontal ? item.contentBoxWidth : item.contentBoxHeight;
                 }
-                if (autoSize && !parent.hasPX(maxDimension)) {
+                if (autoSize && !parent.hasUnit(maxDimension)) {
                     item.css(minDimension, formatPX(size), true);
                     if (horizontal) {
                         item.setLayoutWidth('wrap_content');
@@ -531,7 +531,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
                 }
             }
         }
-        else if (unit.length === 0 && !item.hasPX(dimension)) {
+        else if (unit.length === 0 && !item.hasUnit(dimension)) {
             if (horizontal) {
                 item.setLayoutWidth('match_parent', false);
             }
@@ -566,7 +566,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 if (CssGrid.isJustified(node)) {
                     node.setLayoutWidth(getLayoutDimension(node.cssValue('justifyContent')));
                 }
-                else if (node.hasPX('width', { percent: false })) {
+                else if (node.hasUnit('width', { percent: false })) {
                     node.setLayoutWidth('match_parent');
                 }
                 else {
@@ -575,7 +575,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 if (CssGrid.isAligned(node)) {
                     node.setLayoutHeight(getLayoutDimension(node.cssValue('alignContent')));
                 }
-                else if (node.hasPX('height', { percent: false })) {
+                else if (node.hasUnit('height', { percent: false })) {
                     node.setLayoutHeight('match_parent');
                 }
                 else {
@@ -732,17 +732,17 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             }
             const target = renderAs || node;
             applyLayout(node, parent, target, mainData, cellData, 'width');
-            if (target !== node || node.hasPX('maxHeight')) {
+            if (target !== node || node.hasUnit('maxHeight')) {
                 target.mergeGravity('layout_gravity', 'fill');
             }
-            else if (!target.hasPX('width')) {
+            else if (!target.hasUnit('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(node, parent, target, mainData, cellData, 'height');
-            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
+            if (mainData.alignContent === 'normal' && !parent.hasUnit('height') && !node.hasUnit('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.box.height), true);
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && startsWith(mainData.alignContent, 'space') && !CSS_ALIGNSELF.includes(mainData.alignItems))) {
+            else if (!target.hasUnit('height') && !target.hasUnit('maxHeight') && !(row.length === 1 && startsWith(mainData.alignContent, 'space') && !CSS_ALIGNSELF.includes(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
             return {
@@ -813,7 +813,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
                 if (wrapped) {
-                    if (node.contentBoxWidth && node.hasPX('width', { percent: false })) {
+                    if (node.contentBoxWidth && node.hasUnit('width', { percent: false })) {
                         node.anchorParent('horizontal', 0.5, undefined, true);
                     }
                     else if (length === 1) {
@@ -863,7 +863,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
                 if (wrapped) {
-                    if (node.contentBoxHeight && node.hasPX('height', { percent: false })) {
+                    if (node.contentBoxHeight && node.hasUnit('height', { percent: false })) {
                         node.anchorParent('vertical', 0.5, undefined, true);
                     }
                     else {
@@ -1081,7 +1081,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     }
 
     public postOptimize(node: T) {
-        if (node.blockStatic && !node.hasPX('minWidth', { percent: false }) && node.actualParent?.layoutElement === false) {
+        if (node.blockStatic && !node.hasUnit('minWidth', { percent: false }) && node.actualParent?.layoutElement === false) {
             const mainData = this.data.get(node) as Undef<CssGridData<T>>;
             if (mainData) {
                 const { gap, length, unit } = mainData.column;

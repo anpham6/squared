@@ -112,7 +112,7 @@ interface HasOptions extends CssInitialOptions {
     ignoreDefault?: boolean;
 }
 
-interface HasPXOptions extends CssInitialOptions {
+interface HasUnitOptions extends CssInitialOptions {
     percent?: boolean;
 }
 

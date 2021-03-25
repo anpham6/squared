@@ -21,7 +21,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         const children = node.children.filter((item: T) => {
             return item.pageFlow
                 ? item.marginLeft < 0 && item === node.firstStaticChild && Math.abs(item.marginLeft) <= node.marginLeft + node.paddingLeft && item.inlineFlow && !item.centerAligned && !item.rightAligned && !node.floatContainer
-                : item.leftTopAxis && (item.left < 0 || !item.hasPX('left') && item.right < 0);
+                : item.leftTopAxis && (item.left < 0 || !item.hasUnit('left') && item.right < 0);
         });
         if (children.length) {
             this.data.set(node, { children, offsetLeft: node.marginLeft + node.paddingLeft } as NegativeXData);
@@ -45,7 +45,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
                 mainData.firstChild = item;
             }
-            else if (item.hasPX('left')) {
+            else if (item.hasUnit('left')) {
                 if (item.left < 0 && (isNaN(left) || linear.left < left)) {
                     left = linear.left;
                 }
@@ -68,10 +68,10 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
             }
         }
-        else if (node.hasPX('width', { percent: false })) {
+        else if (node.hasUnit('width', { percent: false })) {
             container.setLayoutWidth('wrap_content');
         }
-        else if (node.hasPX('width')) {
+        else if (node.hasUnit('width')) {
             container.css('width', node.cssValue('width'), true);
             node.setLayoutWidth('0px');
         }
@@ -108,12 +108,12 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 if (item === firstChild) {
                     continue;
                 }
-                if (item.hasPX('left')) {
+                if (item.hasUnit('left')) {
                     item.translateX(item.left);
                     item.alignSibling('left', node.documentId);
                     item.constraint.horizontal = true;
                 }
-                else if (item.hasPX('right')) {
+                else if (item.hasUnit('right')) {
                     item.translateX(-item.right);
                     item.alignSibling('right', node.documentId);
                     item.constraint.horizontal = true;

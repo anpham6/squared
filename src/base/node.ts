@@ -78,8 +78,8 @@ function getFlexValue(node: T, attr: CssStyleAttr, fallback: number, parent?: Nu
 }
 
 function hasTextAlign(node: T, ...values: string[]) {
-    const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
-    return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith(node.display, 'inline'));
+    const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasUnit('width', { initial: true }) });
+    return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasUnit('width', { initial: true }) && !node.hasUnit('maxWidth', { initial: true }) : startsWith(node.display, 'inline'));
 }
 
 function setDimension(node: T, styleMap: CssStyleMap, dimension: DimensionAttr) {
@@ -1095,7 +1095,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (!this._preferInitial && this.naturalChild) {
             let parent: T;
             if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.LAYOUT)) {
-                parent = this.pageFlow && this.ascend({ condition: item => item.hasPX('width') && item.hasPX('height') || item.documentRoot })[0] || this;
+                parent = this.pageFlow && this.ascend({ condition: item => item.hasUnit('width') && item.hasUnit('height') || item.documentRoot })[0] || this;
             }
             else if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.CONTAIN)) {
                 parent = this;
@@ -1641,35 +1641,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return fallback;
     }
 
-    public parseUnit(value: string, options?: NodeParseUnitOptions) {
-        if (!value) {
-            return 0;
-        }
-        let n = asPx(value);
-        if (!isNaN(n)) {
-            return n;
-        }
-        else if (!isNaN(n = asPercent(value))) {
-            return n * getBoundsSize(this, options);
-        }
-        if (!options) {
-            options = { fontSize: this.fontSize };
-        }
-        else {
-            options.fontSize ||= this.fontSize;
-        }
-        return parseUnit(value, options);
-    }
-
-    public convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions) {
-        let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
-        if (unit === 'percent' || unit === '%') {
-            result *= 100 / getBoundsSize(this, options);
-            return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
-        }
-        return convertUnit(result, unit, options);
-    }
-
     public has(attr: CssStyleAttr, options?: HasOptions) {
         const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
         if (value) {
@@ -1704,7 +1675,36 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public hasPX(attr: CssStyleAttr, options?: HasPXOptions) {
+    public parseUnit(value: string, options?: NodeParseUnitOptions) {
+        if (!value) {
+            return 0;
+        }
+        let n = asPx(value);
+        if (!isNaN(n)) {
+            return n;
+        }
+        else if (!isNaN(n = asPercent(value))) {
+            return n * getBoundsSize(this, options);
+        }
+        if (!options) {
+            options = { fontSize: this.fontSize };
+        }
+        else {
+            options.fontSize ||= this.fontSize;
+        }
+        return parseUnit(value, options);
+    }
+
+    public convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions) {
+        let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
+        if (unit === 'percent' || unit === '%') {
+            result *= 100 / getBoundsSize(this, options);
+            return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
+        }
+        return convertUnit(result, unit, options);
+    }
+
+    public hasUnit(attr: CssStyleAttr, options?: HasUnitOptions) {
         let percent: Undef<boolean>,
             initial: Undef<boolean>;
         if (options) {
@@ -2110,6 +2110,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this._preferInitial ? this.cssInitial(attr, options) : this._styleMap[attr] || options && options.computed && this.style[attr] || '';
     }
 
+    protected hasPX(attr: CssStyleAttr, options?: HasUnitOptions) {
+        return this.hasUnit(attr, options);
+    }
+
     get naturalChild() { return true; }
 
     get pseudoElement() { return false; }
@@ -2386,7 +2390,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
     get hasHeight(): boolean {
         const result = this._cache.hasHeight;
-        return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.valueOf('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false }) : result;
+        return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.valueOf('position') === 'fixed' || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
     }
 
     get lineHeight() {
@@ -2558,7 +2562,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     break;
                 case 'inline':
                     if (this.tagName === 'svg' && this.actualParent!.htmlElement) {
-                        result = !this.hasPX('width') && convertFloat(getNamedItem(this._element as SVGSVGElement, 'width')) === 0;
+                        result = !this.hasUnit('width') && convertFloat(getNamedItem(this._element as SVGSVGElement, 'width')) === 0;
                         break;
                     }
                 default:
@@ -2584,7 +2588,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         if (this.inlineStatic && this.firstChild?.blockStatic) {
                             result = true;
                         }
-                        else if (this.inline || startsWith(this.display, 'table-') || this.hasPX('maxWidth')) {
+                        else if (this.inline || startsWith(this.display, 'table-') || this.hasUnit('maxWidth')) {
                             result = false;
                         }
                     }
@@ -2622,17 +2626,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get centerAligned() {
         const result = this._cache.centerAligned;
-        return result === undefined ? this._cache.centerAligned = !this.pageFlow ? this.hasPX('left') && this.hasPX('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center') : result;
+        return result === undefined ? this._cache.centerAligned = !this.pageFlow ? this.hasUnit('left') && this.hasUnit('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center') : result;
     }
 
     get rightAligned() {
         const result = this._cache.rightAligned;
-        return result === undefined ? this._cache.rightAligned = !this.pageFlow ? this.hasPX('right') && !this.hasPX('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', this.dir === 'rtl' ? 'start' : 'end') : result;
+        return result === undefined ? this._cache.rightAligned = !this.pageFlow ? this.hasUnit('right') && !this.hasUnit('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', this.dir === 'rtl' ? 'start' : 'end') : result;
     }
 
     get bottomAligned() {
         const result = this._cache.bottomAligned;
-        return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : !!(this.actualParent?.hasHeight && this.autoMargin.top) : result;
+        return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasUnit('bottom') && !this.hasUnit('top') : !!(this.actualParent?.hasHeight && this.autoMargin.top) : result;
     }
 
     get autoMargin() {
@@ -2640,10 +2644,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.blockStatic || !this.pageFlow || this.display === 'table') {
                 const styleMap = this._styleMap;
-                const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasPX('right'));
-                const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
-                const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasPX('bottom'));
-                const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.hasPX('top'));
+                const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasUnit('right'));
+                const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasUnit('left'));
+                const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasUnit('bottom'));
+                const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.hasUnit('top'));
                 result = {
                     horizontal: left || right,
                     left: left && !right,

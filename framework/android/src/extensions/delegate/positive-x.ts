@@ -55,7 +55,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 return;
             }
             const fixedPosition = fixed && item.autoPosition;
-            if (item.hasPX('left') || fixedPosition) {
+            if (item.hasUnit('left') || fixedPosition) {
                 if (documentBody && (item.cssInitial('width') === '100%' || item.cssInitial('minWidth') === '100%')) {
                     if (paddingLeft || paddingRight) {
                         children.add(item);
@@ -66,13 +66,13 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     const value = item.left;
                     if ((value >= 0 || rootElement) && value < paddingLeft ||
                         value < 0 && Math.ceil(item.linear.left) >= Math.ceil(node.linear.left) ||
-                        !item.hasPX('right') && checkMarginLeft(node, item))
+                        !item.hasUnit('right') && checkMarginLeft(node, item))
                     {
                         children.add(item);
                     }
                 }
             }
-            else if (item.hasPX('right')) {
+            else if (item.hasUnit('right')) {
                 if (expandBody) {
                     children.add(item);
                     right = true;
@@ -90,7 +90,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             else if (checkMarginLeft(node, item)) {
                 children.add(item);
             }
-            if (item.hasPX('top') || fixedPosition) {
+            if (item.hasUnit('top') || fixedPosition) {
                 if (documentBody && (item.cssInitial('height') === '100%' || item.cssInitial('minHeight') === '100%')) {
                     if (paddingTop || paddingBottom) {
                         children.add(item);
@@ -101,13 +101,13 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     const value = item.top;
                     if ((value >= 0 || rootElement) && (value < paddingTop || aboveInvalid) ||
                         (value < 0 && Math.ceil(item.linear.top) >= Math.ceil(node.linear.top)) ||
-                        !item.hasPX('bottom') && checkMarginTop(node, item))
+                        !item.hasUnit('bottom') && checkMarginTop(node, item))
                     {
                         children.add(item);
                     }
                 }
             }
-            else if (item.hasPX('bottom')) {
+            else if (item.hasUnit('bottom')) {
                 if (expandBody) {
                     children.add(item);
                     bottom = true;
@@ -153,10 +153,10 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             }
         }
         else if (!node.pageFlow) {
-            if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {
+            if (!node.hasUnit('width') && node.hasUnit('left') && node.hasUnit('right')) {
                 node.setLayoutWidth('match_parent');
             }
-            if (!node.hasPX('height') && node.hasPX('top') && node.hasPX('bottom')) {
+            if (!node.hasUnit('height') && node.hasUnit('top') && node.hasUnit('bottom')) {
                 node.setLayoutHeight('match_parent');
             }
         }
@@ -188,7 +188,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             for (const item of mainData.children) {
                 const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.cssValue('position') === 'fixed' || node.documentBody);
                 const wrapper = item.outerMostWrapper as T;
-                if (item.hasPX('left')) {
+                if (item.hasUnit('left')) {
                     if (!nested) {
                         const left = item.left;
                         if (left === 0 && !node.rightAligned && !node.centerAligned) {
@@ -202,7 +202,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                 }
-                if (item.hasPX('right')) {
+                if (item.hasUnit('right')) {
                     if (!nested) {
                         const right = item.right;
                         if (right === 0 && !node.centerAligned) {
@@ -228,7 +228,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     wrapper.constraint.horizontal = true;
                     item.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
                 }
-                if (item.hasPX('top')) {
+                if (item.hasUnit('top')) {
                     if (!nested) {
                         const top = item.top;
                         if (top === 0 && !node.bottomAligned) {
@@ -242,7 +242,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                 }
-                if (item.hasPX('bottom')) {
+                if (item.hasUnit('bottom')) {
                     if (!nested) {
                         const bottom = item.bottom;
                         if (bottom === 0) {
@@ -273,7 +273,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postConstraints(node: T) {
-        if (!node.hasPX('width')) {
+        if (!node.hasUnit('width')) {
             node.setLayoutWidth(node.getMatchConstraint(), false);
         }
     }
