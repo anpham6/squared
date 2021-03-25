@@ -259,9 +259,18 @@ function setUUID(node: XmlTagNode, element: HTMLElement, name: string) {
     (node.id ||= {})[name] = id;
 }
 
+function createFile(mimeType: Undef<string>): ChromeAsset {
+    return {
+        pathname: '',
+        filename: '',
+        mimeType,
+        format: 'crossorigin'
+    };
+}
+
 const assignFilename = (value: string, ext?: string) => DIR_FUNCTIONS.ASSIGN + '.' + (ext || value && getFileExt(value) || 'unknown');
 const isCrossOrigin = (download: Undef<boolean>, preserveCrossOrigin: Undef<boolean>) => typeof download === 'boolean' ? !download : !!preserveCrossOrigin;
-const getContentType = (element: HTMLElement) => element.tagName === 'LINK' ? 'style' : element.tagName.toLowerCase();
+const getContentType = (element: HTMLElement) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
 const getTagNode = (node: XmlTagNode, attributes: Undef<AttributeMap>, append?: TagAppend): XmlTagNode => ({ ...node, attributes, append });
 const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
@@ -315,12 +324,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             file: Undef<string>;
         const local = startsWith(value, location.origin);
         if (!local && preserveCrossOrigin) {
-            return {
-                pathname: '',
-                filename: '',
-                mimeType,
-                format: 'crossorigin'
-            };
+            return createFile(mimeType);
         }
         if (saveAs) {
             saveAs = trimEnd(normalizePath(saveAs), '/');
@@ -532,44 +536,48 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll('link, style').forEach((element: HTMLLinkElement | HTMLStyleElement) => {
             let mimeType = 'text/css',
                 href: Undef<string>;
+            const checkMimeType = () => {
+                const filename = fromLastIndexOf(href!, '/');
+                if (filename.includes('.')) {
+                    mimeType = getMimeType(element, filename);
+                    return true;
+                }
+                return false;
+            };
             if (element instanceof HTMLLinkElement) {
-                if (href = element.href) {
+                href = element.href;
+                if (assetMap && assetMap.get(element)) {
+                    checkMimeType();
+                }
+                else if (href) {
                     const rel = element.rel.trim().toLowerCase();
-                    const checkMimeType = () => {
-                        const filename = fromLastIndexOf(href!, '/');
-                        if (filename.includes('.')) {
-                            mimeType = getMimeType(element, filename);
-                            return true;
+                    if (rel !== 'stylesheet') {
+                        switch (rel) {
+                            case 'alternate':
+                            case 'help':
+                            case 'license':
+                            case 'manifest':
+                            case 'modulepreload':
+                            case 'prefetch':
+                            case 'preload':
+                            case 'prerender':
+                                if (!checkMimeType()) {
+                                    return;
+                                }
+                                break;
+                            default:
+                                if (!rel.includes('icon') || !checkMimeType()) {
+                                    return;
+                                }
+                                break;
                         }
-                        return false;
-                    };
-                    switch (rel) {
-                        case 'stylesheet':
-                            break;
-                        case 'alternate':
-                        case 'help':
-                        case 'license':
-                        case 'manifest':
-                        case 'modulepreload':
-                        case 'prefetch':
-                        case 'preload':
-                        case 'prerender':
-                            if (!checkMimeType()) {
-                                return;
-                            }
-                            break;
-                        default:
-                            if (!rel.includes('icon') || !checkMimeType()) {
-                                return;
-                            }
-                            break;
                     }
                 }
                 else {
                     return;
                 }
             }
-            this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css' || element instanceof HTMLStyleElement);
+            this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css');
         });
         const rawData = this.getResourceAssets(resourceId)?.rawData;
         if (rawData) {
@@ -866,7 +874,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll(tagName).forEach(element => {
             const items = new Map<HTMLElement, string>();
             let mimeType = '';
-            switch (element.tagName) {
+            switch (element.tagName.toUpperCase()) {
                 case 'VIDEO':
                 case 'AUDIO':
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
@@ -1183,6 +1191,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (data = createBundleAsset(assets, element, file, mimeType, format, preserve, inline, documentData)) {
                 data.bundleIndex = -1;
             }
+        }
+        else if (!(element instanceof HTMLScriptElement)) {
+            data = createFile(mimeType);
         }
         if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, !assetCommand ? element : undefined, watch)) {
             if (filename) {
