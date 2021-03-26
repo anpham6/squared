@@ -259,6 +259,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'AUDIO':
                 case 'OBJECT':
                 case 'EMBED':
+                case 'SVG':
                 case 'svg':
                     setDimension();
                     break;

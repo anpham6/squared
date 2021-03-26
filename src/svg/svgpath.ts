@@ -229,7 +229,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public build(options?: SvgBuildOptions) {
-        this.draw(options && options.transforms ? SvgBuild.filterTransforms(options.transforms, options.exclude?.[this.element.tagName]) : null, options);
+        this.draw(options && options.transforms ? SvgBuild.filterTransforms(options.transforms, options.exclude?.[this.element.tagName.toLowerCase()]) : null, options);
     }
 
     public draw(transforms?: Null<SvgTransform[]>, options?: SvgBuildOptions) {
@@ -417,7 +417,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         }
         this.value = d;
         this.setPaint([d], precision);
-        switch (element.tagName) {
+        switch (element.tagName.toLowerCase()) {
             case 'line':
             case 'polyline':
                 this.fill = '';
@@ -428,7 +428,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     public extendLength(data: SvgPathExtendData, precision?: number) {
         if (this.value) {
-            switch (this.element.tagName) {
+            switch (this.element.tagName.toLowerCase()) {
                 case 'path':
                 case 'line':
                 case 'polyline': {

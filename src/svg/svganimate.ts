@@ -243,7 +243,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             const repeatCount = getNamedItem(animationElement, 'repeatCount');
             this.iterationCount = repeatCount === 'indefinite' ? -1 : +repeatCount || 0;
-            if (animationElement.tagName === 'animate') {
+            if (animationElement.tagName.toLowerCase() === 'animate') {
                 this.setCalcMode();
             }
         }

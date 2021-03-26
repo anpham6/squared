@@ -578,6 +578,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'VIDEO',
                 'AUDIO',
                 'OBJECT',
+                'SVG',
                 'svg'
             ],
             tagName: [

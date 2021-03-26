@@ -291,7 +291,7 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
     for (let i = 0, length = children.length; i < length; ++i) {
         const item = children[i];
         const timestamp = replaceAll(performance.now().toString(), '.', '', 1);
-        const tagName = item.tagName;
+        const tagName = item.tagName.toLowerCase();
         let start = true;
         switch (tagName) {
             case 'svg':
@@ -869,26 +869,23 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             farthestCorner = -Infinity,
                             radius = 0,
                             radiusExtent = 0;
-                        if (position) {
-                            const name = position[1].trim();
-                            if (name) {
-                                if (startsWith(name, 'circle')) {
-                                    shape = 'circle';
+                        if (position && (position[1] = position[1].trim())) {
+                            if (startsWith(position[1], 'circle')) {
+                                shape = 'circle';
+                            }
+                            else {
+                                const [radiusX, radiusY] = splitPair(position[1], ' ');
+                                let minRadius = Infinity;
+                                if (radiusX) {
+                                    minRadius = node.parseWidth(radiusX, false);
                                 }
-                                else {
-                                    const [radiusX, radiusY] = splitPair(name, ' ');
-                                    let minRadius = Infinity;
-                                    if (radiusX) {
-                                        minRadius = node.parseWidth(radiusX, false);
-                                    }
-                                    if (radiusY) {
-                                        minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
-                                    }
-                                    radius = minRadius;
-                                    radiusExtent = minRadius;
-                                    if (length === 1 || radiusX === radiusY) {
-                                        shape = 'circle';
-                                    }
+                                if (radiusY) {
+                                    minRadius = Math.min(node.parseHeight(radiusY, false), minRadius);
+                                }
+                                radius = minRadius;
+                                radiusExtent = minRadius;
+                                if (length === 1 || radiusX === radiusY) {
+                                    shape = 'circle';
                                 }
                             }
                         }
@@ -914,7 +911,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         } as RadialGradient;
                         if (radius === 0 && radiusExtent === 0) {
                             radius = farthestCorner;
-                            const extent = position && position[1]?.split(' ').pop() || '';
+                            const extent = position && position[1].split(' ').pop() || '';
                             switch (extent) {
                                 case 'closest-corner':
                                 case 'closest-side':

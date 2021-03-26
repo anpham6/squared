@@ -44,7 +44,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 }
             }
             iterateArray(animationElement.children, (item: SVGElement) => {
-                if (item.tagName === 'mpath') {
+                if (item.tagName.toLowerCase() === 'mpath') {
                     let target = getTargetElement(item);
                     if (target) {
                         if (SVG.use(target)) {

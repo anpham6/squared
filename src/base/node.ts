@@ -98,6 +98,7 @@ function setDimension(node: T, style: CssStyleMap, dimension: DimensionAttr) {
             case 'IMG':
             case 'TD':
             case 'TH':
+            case 'SVG':
             case 'svg':
             case 'IFRAME':
             case 'VIDEO':
@@ -2561,7 +2562,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     result = true;
                     break;
                 case 'inline':
-                    if (this.tagName === 'svg' && this.actualParent!.htmlElement) {
+                    if (this.tagName.toLowerCase() === 'svg' && this.actualParent!.htmlElement) {
                         result = !this.hasUnit('width') && convertFloat(getNamedItem(this._element as SVGSVGElement, 'width')) === 0;
                         break;
                     }

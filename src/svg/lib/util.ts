@@ -55,6 +55,7 @@ function getDataValue(element: SVGElement, attr: string) {
     return getDataSetValue(element, attr) || element.style[attrStyle] as Undef<string> || getStyleValue(element, attrStyle);
 }
 
+const isElement = (element: Element, value: string) => element.tagName.toLowerCase() === value;
 const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
 const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
 
@@ -259,19 +260,19 @@ export const PATTERN_CUBICBEZIER = '([01](?:\\.\\d+)?)\\s*,?\\s+(-?\\d+(?:\\.\\d
 
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {
-        return element.tagName === 'svg';
+        return isElement(element, 'svg');
     },
     g: (element: Element): element is SVGGElement => {
-        return element.tagName === 'g';
+        return isElement(element, 'g');
     },
     symbol: (element: Element): element is SVGSymbolElement => {
-        return element.tagName === 'symbol';
+        return isElement(element, 'symbol');
     },
     path: (element: Element): element is SVGPathElement => {
-        return element.tagName === 'path';
+        return isElement(element, 'path');
     },
     shape: (element: Element): element is SVGGeometryElement => {
-        switch (element.tagName) {
+        switch (element.tagName.toLowerCase()) {
             case 'path':
             case 'line':
             case 'rect':
@@ -285,40 +286,40 @@ export const SVG = {
         }
     },
     image: (element: Element): element is SVGImageElement => {
-        return element.tagName === 'image';
+        return isElement(element, 'image');
     },
     use: (element: Element): element is SVGUseElement => {
-        return element.tagName === 'use';
+        return isElement(element, 'use');
     },
     line: (element: Element): element is SVGLineElement => {
-        return element.tagName === 'line';
+        return isElement(element, 'line');
     },
     rect: (element: Element): element is SVGRectElement => {
-        return element.tagName === 'rect';
+        return isElement(element, 'rect');
     },
     circle: (element: Element): element is SVGCircleElement => {
-        return element.tagName === 'circle';
+        return isElement(element, 'circle');
     },
     ellipse: (element: Element): element is SVGEllipseElement => {
-        return element.tagName === 'ellipse';
+        return isElement(element, 'ellipse');
     },
     polygon: (element: Element): element is SVGPolygonElement => {
-        return element.tagName === 'polygon';
+        return isElement(element, 'polygon');
     },
     polyline: (element: Element): element is SVGPolylineElement => {
-        return element.tagName === 'polyline';
+        return isElement(element, 'polyline');
     },
     clipPath: (element: Element): element is SVGClipPathElement => {
-        return element.tagName === 'clipPath';
+        return isElement(element, 'clippath');
     },
     pattern: (element: Element): element is SVGPatternElement => {
-        return element.tagName === 'pattern';
+        return isElement(element, 'pattern');
     },
     linearGradient: (element: Element): element is SVGLinearGradientElement => {
-        return element.tagName === 'linearGradient';
+        return isElement(element, 'lineargradient');
     },
     radialGradient: (element: Element): element is SVGRadialGradientElement => {
-        return element.tagName === 'radialGradient';
+        return isElement(element, 'radialgradient');
     }
 };
 

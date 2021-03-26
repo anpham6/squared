@@ -113,7 +113,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         times = [0];
                     }
                     const precision = this.viewport?.precision;
-                    switch (item.tagName) {
+                    switch (item.tagName.toLowerCase()) {
                         case 'set':
                             for (const time of times) {
                                 addAnimation(new SvgAnimation(element, item), time);
@@ -124,7 +124,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 addAnimation(new SvgAnimate(element, item as SVGAnimateElement), time);
                             }
                             break;
-                        case 'animateTransform':
+                        case 'animatetransform':
                             for (const time of times) {
                                 const animate = new SvgAnimateTransform(element, item as SVGAnimateTransformElement);
                                 if (SvgBuild.isShape(this) && this.path) {
@@ -133,7 +133,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 addAnimation(animate, time);
                             }
                             break;
-                        case 'animateMotion':
+                        case 'animatemotion':
                             for (const time of times) {
                                 const animate = new SvgAnimateMotion(element, item as SVGAnimateMotionElement);
                                 const motionPathElement = animate.motionPathElement;
@@ -490,7 +490,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     tagName = id;
                 }
                 else {
-                    tagName = element.tagName;
+                    tagName = element.tagName.toLowerCase();
                 }
                 let index = CACHE_VIEWNAME.get(tagName) || 0;
                 if (value) {

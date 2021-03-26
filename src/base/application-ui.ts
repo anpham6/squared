@@ -160,13 +160,37 @@ function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
     }
 }
 
-function setElementState(node: NodeUI, styleElement: boolean, naturalElement: boolean, htmlElement: boolean, svgElement: boolean) {
+function setElementState(node: NodeUI, type?: number) {
     const cacheState = node.unsafe<CacheStateUI<NodeUI>>('cacheState')!;
     cacheState.naturalChild = true;
-    cacheState.styleElement = styleElement;
-    cacheState.naturalElement = naturalElement;
-    cacheState.htmlElement = htmlElement;
-    cacheState.svgElement = svgElement;
+    if (type === 1) {
+        cacheState.styleElement = false;
+        cacheState.naturalElement = false;
+        cacheState.htmlElement = false;
+        cacheState.svgElement = false;
+    }
+    else {
+        cacheState.styleElement = true;
+        if (type === 2) {
+            cacheState.naturalElement = false;
+            cacheState.htmlElement = true;
+            cacheState.svgElement = false;
+        }
+        else {
+            cacheState.naturalElement = true;
+            switch (node.tagName) {
+                case 'SVG':
+                case 'svg':
+                    cacheState.htmlElement = false;
+                    cacheState.svgElement = true;
+                    break;
+                default:
+                    cacheState.htmlElement = true;
+                    cacheState.svgElement = type === 0 && node.imageElement && FILE.SVG.test(node.toElementString('src'));
+                    break;
+            }
+        }
+    }
 }
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
@@ -439,7 +463,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (parent) {
                 parent.visible = false;
                 node.documentParent = parent;
-                setElementState(parent, true, true, true, false);
+                setElementState(parent);
                 if (parent.element === document.documentElement) {
                     parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                     parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
@@ -608,12 +632,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
         const node = this.insertNode(processing, parentElement, cascadeAll);
-        if (parentElement.tagName === 'svg') {
-            setElementState(node, true, true, false, true);
-        }
-        else {
-            setElementState(node, true, true, true, false);
-        }
+        setElementState(node);
         if (depth === 0) {
             processing.cache.add(node);
             for (const name of node.extensions) {
@@ -644,13 +663,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             for (let i = 0, child: T, length = childNodes.length; i < length; ++i) {
                 const element = childNodes[i] as HTMLElement;
                 if (element === beforeElement) {
-                    setElementState(
-                        child = this.insertNode(processing, beforeElement, cascadeAll, '::before'),
-                        true,
-                        false,
-                        true,
-                        false
-                    );
+                    setElementState(child = this.insertNode(processing, beforeElement, cascadeAll, '::before'), 2);
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
                         child.inlineText = true;
@@ -659,13 +672,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     node.innerBefore = child;
                 }
                 else if (element === afterElement) {
-                    setElementState(
-                        child = this.insertNode(processing, afterElement, cascadeAll, '::after'),
-                        true,
-                        false,
-                        true,
-                        false
-                    );
+                    setElementState(child = this.insertNode(processing, afterElement, cascadeAll, '::after'), 2);
                     if (!child.textEmpty) {
                         child.cssApply(node.textStyle, false);
                         child.inlineText = true;
@@ -675,13 +682,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
-                        setElementState(
-                            child = this.insertNode(processing, element),
-                            false,
-                            false,
-                            false,
-                            false
-                        );
+                        setElementState(child = this.insertNode(processing, element), 1);
                         child.cssApply(node.textStyle);
                         plainText = j;
                     }
@@ -723,12 +724,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             child = this.insertNode(processing, element, cascadeAll);
-                            if (element.tagName === 'svg') {
-                                setElementState(child, true, true, false, true);
-                            }
-                            else {
-                                setElementState(child, true, true, true, child.imageElement && FILE.SVG.test(child.toElementString('src')));
-                            }
+                            setElementState(child, 0);
                         }
                         if (!child.excluded) {
                             inlineText = false;

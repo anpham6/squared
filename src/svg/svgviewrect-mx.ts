@@ -3,7 +3,7 @@ import USER_AGENT = squared.lib.constant.USER_AGENT;
 const { isUserAgent } = squared.lib.client;
 
 function hasUnsupportedAccess(element: SVGElement) {
-    if (element.tagName === 'svg') {
+    if (element.tagName.toLowerCase() === 'svg') {
         if (isUserAgent(USER_AGENT.FIREFOX)) {
             return element.parentElement instanceof HTMLElement;
         }
@@ -40,7 +40,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
 
         protected getRectElement() {
             const element = this.rectElement || this.element;
-            switch (element.tagName) {
+            switch (element.tagName.toLowerCase()) {
                 case 'svg':
                 case 'use':
                 case 'image':
