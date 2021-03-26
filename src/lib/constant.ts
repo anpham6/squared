@@ -10,7 +10,8 @@ export const enum USER_AGENT {
     CHROME = 1,
     SAFARI = 1 << 1,
     FIREFOX = 1 << 2,
-    EDGE = 1 << 3
+    EDGE = 1 << 3,
+    EDGE_WIN = 1 << 4
 }
 
 export const enum CSS_UNIT {

@@ -83,7 +83,7 @@ declare module "lib" {
 
     namespace client {
         function isPlatform(value: NumString): boolean;
-        function isUserAgent(value: NumString): boolean;
+        function isUserAgent(value: NumString, version?: unknown): boolean;
         function getDeviceDPI(): number;
     }
 

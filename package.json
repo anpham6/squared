@@ -91,7 +91,7 @@
     "yargs": "^16.2.0"
   },
   "devDependencies": {
-    "@azure/cosmos": "^3.10.4",
+    "@azure/cosmos": "^3.10.5",
     "@azure/storage-blob": "^12.5.0",
     "@babel/core": "^7.13.10",
     "@babel/preset-env": "^7.13.12",
@@ -107,7 +107,7 @@
     "@types/puppeteer": "^5.4.3",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
-    "aws-sdk": "^2.872.0",
+    "aws-sdk": "^2.874.0",
     "clean-css": "^5.1.2",
     "csv-parse": "^4.15.3",
     "cwebp-bin": "^6.1.1",
