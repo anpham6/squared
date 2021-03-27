@@ -1666,10 +1666,10 @@ export function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot) {
     if (isUserAgent(USER_AGENT.CHROME | USER_AGENT.EDGE, 73)) {
         try {
             const sheet = new CSSStyleSheet();
-            sheet.replaceSync(value);
+            sheet.replaceSync!(value);
             const target = shadowRoot || document;
-            target.adoptedStyleSheets = [...target.adoptedStyleSheets, sheet] as CSSStyleSheet[];
-            return () => target.adoptedStyleSheets = target.adoptedStyleSheets.filter(item => item !== sheet);
+            target.adoptedStyleSheets = [...target.adoptedStyleSheets!, sheet] as CSSStyleSheet[];
+            return () => target.adoptedStyleSheets = target.adoptedStyleSheets!.filter(item => item !== sheet);
         }
         catch {
         }

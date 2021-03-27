@@ -144,6 +144,7 @@ interface ImageSrcSet {
     width: number;
     pixelRatio: number;
     actualWidth?: number;
+    aspectRatio?: number;
 }
 
 interface ColorData extends StringValue {

@@ -1,11 +1,16 @@
 interface Document {
-    adoptedStyleSheets: CSSStyleSheet[];
+    adoptedStyleSheets?: CSSStyleSheet[];
 }
 
 interface ShadowRoot {
-    adoptedStyleSheets: CSSStyleSheet[];
+    adoptedStyleSheets?: CSSStyleSheet[];
 }
 
 interface CSSStyleSheet {
-    replaceSync: (value: string) => void;
+    replaceSync?: (value: string) => void;
+}
+
+interface HTMLSourceElement {
+    width?: number;
+    height?: number;
 }

@@ -5,14 +5,22 @@ const { isString, iterateArray, resolvePath, splitSome } = squared.lib.util;
 const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)(?:\\s*\\))?)+)?\\s*(.*)$`, 'i');
 const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 
+function getAspectRatio(element: HTMLImageElement | HTMLSourceElement) {
+    if (element.width && element.height) {
+        return element.width / element.height;
+    }
+}
+
 export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     const result: ImageSrcSet[] = [];
     const parentElement = element.parentElement as HTMLPictureElement;
-    let { srcset, sizes } = element;
+    let { srcset, sizes } = element,
+        aspectRatio = getAspectRatio(element);
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase()))) {
+            if (item.tagName === 'SOURCE' && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase()))) {
                 ({ srcset, sizes } = item);
+                aspectRatio = getAspectRatio(item);
                 return true;
             }
         });
@@ -32,7 +40,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                         pixelRatio = +match[2];
                     }
                 }
-                result.push({ src: resolvePath(match[1].split(/\s+/)[0]), pixelRatio, width });
+                result.push({ src: resolvePath(match[1].split(/\s+/)[0]), pixelRatio, width, aspectRatio });
             }
         });
     }
@@ -40,46 +48,46 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     if (length === 0) {
         return;
     }
-    else if (length > 1) {
-        result.sort((a, b) => {
-            const pxA = a.pixelRatio;
-            const pxB = b.pixelRatio;
-            if (pxA && pxB) {
-                if (pxA !== pxB) {
-                    return pxA - pxB;
+    result.sort((a, b) => {
+        const pxA = a.pixelRatio;
+        const pxB = b.pixelRatio;
+        if (pxA && pxB) {
+            if (pxA !== pxB) {
+                return pxA - pxB;
+            }
+        }
+        else {
+            const widthA = a.width;
+            const widthB = b.width;
+            if (widthA !== widthB && widthA && widthB) {
+                return widthA - widthB;
+            }
+        }
+        return 0;
+    });
+    if (sizes) {
+        let width = NaN;
+        splitSome(sizes, value => {
+            const match = REGEXP_SOURCESIZES.exec(value);
+            if (match) {
+                const query = match[1];
+                const unit = match[3];
+                if (!unit || query && !window.matchMedia(/^\(\s*(\(.+\))\s*\)$/.exec(query)?.[1] || query).matches) {
+                    return;
+                }
+                if (isCalc(unit)) {
+                    width = calculateVar(element, unit);
+                }
+                else if (isLength(unit)) {
+                    width = parseUnit(unit);
+                }
+                if (!isNaN(width)) {
+                    return true;
                 }
             }
-            else {
-                const widthA = a.width;
-                const widthB = b.width;
-                if (widthA !== widthB && widthA && widthB) {
-                    return widthA - widthB;
-                }
-            }
-            return 0;
         });
-        if (isString(sizes)) {
-            let width = NaN;
-            splitSome(sizes, value => {
-                const match = REGEXP_SOURCESIZES.exec(value);
-                if (match) {
-                    const query = match[1];
-                    const unit = match[3];
-                    if (!unit || query && !window.matchMedia(/^\(\s*(\(.+\))\s*\)$/.exec(query)?.[1] || query).matches) {
-                        return;
-                    }
-                    if (isCalc(unit)) {
-                        width = calculateVar(element, unit);
-                    }
-                    else if (isLength(unit)) {
-                        width = parseUnit(unit);
-                    }
-                    if (!isNaN(width)) {
-                        return true;
-                    }
-                }
-            });
-            if (!isNaN(width)) {
+        if (!isNaN(width)) {
+            if (length > 1) {
                 const resolution = width * window.devicePixelRatio;
                 let index = -1;
                 for (let i = 0; i < length; ++i) {
@@ -88,16 +96,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                         index = i;
                     }
                 }
-                if (index === 0) {
-                    const item = result[0];
-                    item.pixelRatio = 1;
-                    item.actualWidth = width;
-                }
-                else if (index > 0) {
-                    const selected = result.splice(index, 1)[0];
-                    selected.pixelRatio = 1;
-                    selected.actualWidth = width;
-                    result.unshift(selected);
+                if (index > 0) {
+                    result.unshift(result.splice(index, 1)[0]);
                 }
                 for (let i = 1; i < length; ++i) {
                     const item = result[i];
@@ -106,6 +106,9 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                     }
                 }
             }
+            const item = result[0];
+            item.pixelRatio = 1;
+            item.actualWidth = width;
         }
     }
     return result;

@@ -253,6 +253,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (!styleMap.display || styleMap.display === 'inline') {
                         styleMap.display = 'inline-block';
                     }
+                case 'SOURCE':
+                    if (element.parentElement!.tagName !== 'PICTURE') {
+                        break;
+                    }
                 case 'IMG':
                 case 'CANVAS':
                 case 'VIDEO':
@@ -783,7 +787,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return result;
     }
 
-    protected setElementDimension(resourceId: number, element: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLEmbedElement | HTMLInputElement | HTMLObjectElement | HTMLIFrameElement | HTMLCanvasElement | SVGSVGElement, style: CssStyleMap, attr: DimensionAttr) {
+    protected setElementDimension(resourceId: number, element: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLInputElement | HTMLObjectElement | HTMLIFrameElement | HTMLCanvasElement | SVGSVGElement, style: CssStyleMap, attr: DimensionAttr) {
         if (!style[attr] || style[attr] === 'auto') {
             const horizontal = attr === 'width';
             const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
@@ -803,6 +807,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 switch (element.tagName) {
                     case 'IMG':
                     case 'INPUT':
+                    case 'SOURCE':
                         break;
                     case 'OBJECT':
                     case 'EMBED':
@@ -822,6 +827,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             switch (element.tagName) {
                 case 'IMG':
                 case 'INPUT':
+                case 'SOURCE':
                 case 'EMBED':
                 case 'IFRAME':
                 case 'OBJECT': {
