@@ -301,9 +301,8 @@ function checkOverflowValue(value: string) {
         case 'hidden':
         case 'overlay':
             return false;
-        default:
-            return true;
     }
+    return true;
 }
 
 function resetBox(node: NodeUI, region: number, register?: NodeUI, wrapper?: NodeUI[]) {

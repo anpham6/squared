@@ -666,9 +666,8 @@ export const DEPRECATED_ATTRIBUTE: Deprecations<View> = {
                 case 'signatureOrSystem':
                 case 'system':
                     return api < BUILD_VERSION.MARSHMALLOW;
-                default:
-                    return true;
             }
+            return true;
         },
         restoreNeedsApplication: (result, api) => api < BUILD_VERSION.ICE_CREAM_SANDWICH_1,
         rowEdgeFlags: (result, api) => api < BUILD_VERSION.Q,

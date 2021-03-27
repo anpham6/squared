@@ -281,9 +281,8 @@ export const SVG = {
             case 'polyline':
             case 'polygon':
                 return true;
-            default:
-                return false;
         }
+        return false;
     },
     image: (element: Element): element is SVGImageElement => {
         return isElement(element, 'image');
@@ -588,9 +587,8 @@ export const TRANSFORM = {
                 return 'skewY';
             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                 return 'translate';
-            default:
-                return '';
         }
+        return '';
     },
     typeAsValue(type: NumString) {
         switch (type) {
@@ -608,9 +606,8 @@ export const TRANSFORM = {
             case 'translate':
             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                 return '0 0';
-            default:
-                return '';
         }
+        return '';
     }
 };
 

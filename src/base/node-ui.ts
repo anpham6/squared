@@ -156,9 +156,8 @@ function getSpacingOffset(node: T, index: number) {
             return node.paddingBottom;
         case 7:
             return node.paddingLeft;
-        default:
-            return 0;
     }
+    return 0;
 }
 
 function setOverflow(node: T) {

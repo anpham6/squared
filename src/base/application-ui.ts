@@ -69,17 +69,16 @@ function checkPseudoDimension(style: CssStyleMap, after: boolean, absolute: bool
             const { width, height } = style;
             if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
                 for (const attr in style) {
-                    const value = style[attr]!;
-                    if (/(padding|Width|Height)/.test(attr) && parseFloat(value) || !absolute && startsWith(attr, 'margin') && parseFloat(value)) {
+                    const value = style[attr as CssStyleAttr]!;
+                    if (/padding|Width|Height/.test(attr) && parseFloat(value) || !absolute && startsWith(attr, 'margin') && parseFloat(value)) {
                         return true;
                     }
                 }
                 return false;
             }
         }
-        default:
-            return true;
     }
+    return true;
 }
 
 function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside: string, inside: string, sessionId: string) {

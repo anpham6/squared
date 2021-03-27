@@ -35,9 +35,8 @@ function checkAlignment(node: NodeUI) {
             case 'middle':
             case 'bottom':
                 return true;
-            default:
-                return node.floating;
         }
+        return node.floating;
     }
     return false;
 }

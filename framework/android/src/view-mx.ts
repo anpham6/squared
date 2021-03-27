@@ -2937,9 +2937,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return true;
                 case 'INPUT':
                     return this.toElementString('type') === 'range';
-                default:
-                    return false;
             }
+            return false;
         }
 
         get imageElement() {
@@ -2947,9 +2946,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 case 'IMG':
                 case 'CANVAS':
                     return true;
-                default:
-                    return false;
             }
+            return false;
         }
 
         get imageContainer() {

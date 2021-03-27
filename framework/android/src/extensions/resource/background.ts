@@ -235,9 +235,8 @@ function isAlternatingBorder(value: string, width = 0) {
         case 'inset':
         case 'outset':
             return width !== 1;
-        default:
-            return false;
     }
+    return false;
 }
 
 function insertDoubleBorder(resourceId: number, items: StandardMap[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth = 0, corners?: StringMap) {

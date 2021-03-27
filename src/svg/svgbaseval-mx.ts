@@ -127,9 +127,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     return typeof value === 'number' ? 1 : 0;
                 case 'points':
                     return Array.isArray(value) ? 1 : 0;
-                default:
-                    return 2;
             }
+            return 2;
         }
     };
 };

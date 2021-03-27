@@ -1858,7 +1858,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 case '~':
                                     --offset;
                                 case '>':
-                                    if (adjacent || selectors.length === 0 && (segment !== '>' || !/^:(root|scope)/.test(query))) {
+                                    if (adjacent || selectors.length === 0 && (segment !== '>' || !/^:(?:root|scope)/.test(query))) {
                                         break invalid;
                                     }
                                     adjacent = segment;
@@ -2209,9 +2209,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             case 'SELECT':
             case 'TEXTAREA':
                 return true;
-            default:
-                return false;
         }
+        return false;
     }
 
     get buttonElement() {
@@ -2227,9 +2226,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     case 'image':
                         return true;
                 }
-            default:
-                return false;
         }
+        return false;
     }
 
     get plainText() {

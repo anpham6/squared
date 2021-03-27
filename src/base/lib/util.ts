@@ -593,9 +593,8 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
                     return escape() + match[1];
                 case '@':
                     return match[2];
-                default:
-                    return match[0];
             }
+            return match[0];
         })
         .replace(/\?(?!!)/g, '[^/]')
         .replace(/\*/g, '[^/]*?')
@@ -609,9 +608,8 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
                     return '\\*';
                 case '<':
                     return '\\?';
-                default:
-                    return '\\\\' + String.fromCharCode(+match[1]);
             }
+            return '\\\\' + String.fromCharCode(+match[1]);
         }) + '$';
     return new GlobExp(source, flags, value[0] === '!') as IGlobExp;
 }

@@ -445,9 +445,8 @@ function getTransformValues(item: SvgAnimate): Null<number[][]> {
             return SvgAnimateTransform.toScaleList(item.values);
         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
             return SvgAnimateTransform.toTranslateList(item.values);
-        default:
-            return null;
     }
+    return null;
 }
 
 function getTransformInitialValue(name: string): Undef<string> {
@@ -480,9 +479,8 @@ function getTileMode(value: number) {
             return 'mirror';
         case SVGGradientElement.SVG_SPREADMETHOD_REPEAT:
             return 'repeat';
-        default:
-            return '';
     }
+    return '';
 }
 
 function createFillGradient(resourceId: number, gradient: Gradient, path: SvgPath, precision?: number) {

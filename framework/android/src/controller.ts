@@ -277,9 +277,8 @@ function canControlAscendItems(node: View) {
         case CONTAINER_TAGNAME_X.VERTICAL_SCROLL:
         case CONTAINER_TAGNAME.RADIOGROUP:
             return false;
-        default:
-            return true;
     }
+    return true;
 }
 
 function flattenContainer(node: View) {
@@ -354,9 +353,8 @@ function causesLineBreak(element: Element) {
                 case 'flex':
                 case 'grid':
                     return style.float === 'none' || hasWidth();
-                default:
-                    return (startsWith(display, 'inline-') || display === 'table') && hasWidth();
             }
+            return (startsWith(display, 'inline-') || display === 'table') && hasWidth();
         }
     }
     return false;

@@ -7,7 +7,7 @@ type PositionDirectionAttr = "start" | "end";
 type PositionAllAttr = PositionAttr | PositionDirectionAttr;
 type DimensionAttr = "width" | "height";
 type PseudoElt = "::before" | "::after" | "::first-letter" | "::first-line";
-type CssStyleMap = Partial<MapOfType<CSSStyleDeclaration, string, string>>;
+type CssStyleMap = Partial<MapOfType<CSSStyleDeclaration, CssStyleAttr, string>>;
 type CssStyleAttr = KeyOfType<CSSStyleDeclaration, string, string>;
 
 interface BoxRect<T = number> {

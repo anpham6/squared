@@ -45,9 +45,8 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
                 case 'use':
                 case 'image':
                     return element as SVGSVGElement;
-                default:
-                    return null;
             }
+            return null;
         }
 
         set x(value) {

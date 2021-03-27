@@ -12,9 +12,8 @@ function isListItem(node: NodeUI) {
         case 'DT':
         case 'DD':
             return true;
-        default:
-            return false;
     }
+    return false;
 }
 
 const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';

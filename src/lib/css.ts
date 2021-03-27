@@ -274,9 +274,8 @@ function getUnitType(value: Undef<number>) {
             return 'ms';
         case CSS_UNIT.ANGLE:
             return 'deg';
-        default:
-            return 'px';
     }
+    return 'px';
 }
 
 function getContentBoxDimension(element: StyleElement) {
@@ -374,144 +373,128 @@ export function checkWritingMode(attr: string, value?: string) {
                     return 'marginTop';
                 case 1:
                     return 'marginLeft';
-                default:
-                    return 'marginRight';
             }
+            return 'marginRight';
         case 'marginBlockEnd':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'marginBottom';
                 case 1:
                     return 'marginRight';
-                default:
-                    return 'marginLeft';
             }
+            return 'marginLeft';
         case 'borderBlockStart':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderTop';
                 case 1:
                     return 'borderLeft';
-                default:
-                    return 'borderRight';
             }
+            return 'borderRight';
         case 'borderBlockStartWidth':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderTopWidth';
                 case 1:
                     return 'borderLeftWidth';
-                default:
-                    return 'borderRightWidth';
             }
+            return 'borderRightWidth';
         case 'borderBlockStartStyle':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderTopStyle';
                 case 1:
                     return 'borderLeftStyle';
-                default:
-                    return 'borderRightStyle';
             }
+            return 'borderRightStyle';
         case 'borderBlockStartColor':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderTopColor';
                 case 1:
                     return 'borderLeftColor';
-                default:
-                    return 'borderRightColor';
             }
+            return 'borderRightColor';
         case 'borderBlockEnd':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderBottom';
                 case 1:
                     return 'borderRight';
-                default:
-                    return 'borderLeft';
             }
+            return 'borderLeft';
         case 'borderBlockEndWidth':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderBottomWidth';
                 case 1:
                     return 'borderRightWidth';
-                default:
-                    return 'borderLeftWidth';
             }
+            return 'borderLeftWidth';
         case 'borderBlockEndStyle':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderBottomStyle';
                 case 1:
                     return 'borderRightStyle';
-                default:
-                    return 'borderLeftStyle';
             }
+            return 'borderLeftStyle';
         case 'borderBlockEndColor':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'borderBottomColor';
                 case 1:
                     return 'borderRightColor';
-                default:
-                    return 'borderLeftColor';
             }
+            return 'borderLeftColor';
         case 'paddingBlockStart':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'paddingTop';
                 case 1:
                     return 'paddingLeft';
-                default:
-                    return 'paddingRight';
             }
+            return 'paddingRight';
         case 'paddingBlockEnd':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'paddingBottom';
                 case 1:
                     return 'paddingRight';
-                default:
-                    return 'paddingLeft';
             }
+            return 'paddingLeft';
         case 'scrollMarginBlockStart':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'scrollMarginTop';
                 case 1:
                     return 'scrollMarginLeft';
-                default:
-                    return 'scrollMarginRight';
             }
+            return 'scrollMarginRight';
         case 'scrollMarginBlockEnd':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'scrollMarginBottom';
                 case 1:
                     return 'scrollMarginRight';
-                default:
-                    return 'scrollMarginLeft';
             }
+            return 'scrollMarginLeft';
         case 'scrollPaddingBlockStart':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'scrollPaddingTop';
                 case 1:
                     return 'scrollPaddingLeft';
-                default:
-                    return 'scrollPaddingRight';
             }
+            return 'scrollPaddingRight';
         case 'scrollPaddingBlockEnd':
             switch (getWritingMode(value)) {
                 case 0:
                     return 'scrollPaddingBottom';
                 case 1:
                     return 'scrollPaddingRight';
-                default:
-                    return 'scrollPaddingLeft';
             }
+            return 'scrollPaddingLeft';
         case 'scrollMarginInline':
             return getWritingMode(value) === 0 ? ['scrollMarginLeft', 'scrollMarginRight'] : ['scrollMarginTop', 'scrollMarginBottom'];
         case 'scrollMarginBlock':
@@ -520,9 +503,8 @@ export function checkWritingMode(attr: string, value?: string) {
             return getWritingMode(value) === 0 ? ['scrollPaddingLeft', 'scrollPaddingRight'] : ['scrollPaddingTop', 'scrollPaddingBottom'];
         case 'scrollPaddingBlock':
             return getWritingMode(value) === 0 ? ['scrollPaddingTop', 'scrollPaddingBottom'] : ['scrollPaddingLeft', 'scrollPaddingRight'];
-        default:
-            return attr;
     }
+    return attr;
 }
 
 export function calculateStyle(element: StyleElement, attr: string, value: string, boundingBox?: Null<Dimension>): string {
@@ -1161,9 +1143,8 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                             return 'super';
                         case 'SUB':
                             return 'sub';
-                        default:
-                            return 'baseline';
                     }
+                    return 'baseline';
                 case 'backgroundColor':
                     return 'transparent';
                 case 'backgroundRepeat':

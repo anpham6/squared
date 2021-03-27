@@ -257,9 +257,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             case 0:
             case FILL_MODE.BACKWARDS:
                 return true;
-            default:
-                return false;
         }
+        return false;
     }
 
     get parentContainer() {

@@ -444,9 +444,8 @@ export function latest(value = 1) {
                 return items;
             case 1:
                 return items.pop() || '';
-            default:
-                return items.slice(0, Math.abs(value));
         }
+        return items.slice(0, Math.abs(value));
     }
     return Math.abs(value) === 1 ? '' : [];
 }

@@ -159,9 +159,8 @@ export const CSS_PROPERTIES: CssProperties = {
                 case 'BUTTON':
                 case 'INPUT':
                     return 'auto';
-                default:
-                    return this.value as string;
             }
+            return 'none';
         }
     },
     backdropFilter: {
@@ -1479,9 +1478,8 @@ export function getFontSizeValue(value: string, fixedWidth?: boolean) {
             return fromFontNamedValue(1, fixedWidth);
         case 'xx-small':
             return fromFontNamedValue(0, fixedWidth);
-        default:
-            return value;
     }
+    return value;
 }
 
 export function getPropertiesAsTraits(value: number) {
@@ -1598,36 +1596,33 @@ export function parseSelectorText(value: string) {
 
 export function getKeyframesRules(documentRoot: DocumentOrShadowRoot = document): KeyframesMap {
     const result = new Map<string, KeyframeData>();
-    violation: {
-        const styleSheets = documentRoot.styleSheets;
-        for (let i = 0, length = styleSheets.length; i < length; ++i) {
-            try {
-                const cssRules = styleSheets[i].cssRules;
-                if (cssRules) {
-                    for (let j = 0, q = cssRules.length; j < q; ++j) {
-                        try {
-                            const item = cssRules[j] as CSSKeyframesRule;
-                            if (item.type === CSSRule.KEYFRAMES_RULE) {
-                                const value = parseKeyframes(item.cssRules);
-                                if (value) {
-                                    const data = result.get(item.name);
-                                    if (data) {
-                                        Object.assign(data, value);
-                                    }
-                                    else {
-                                        result.set(item.name, value);
-                                    }
+    const styleSheets = documentRoot.styleSheets;
+    for (let i = 0, length = styleSheets.length; i < length; ++i) {
+        try {
+            const cssRules = styleSheets[i].cssRules;
+            if (cssRules) {
+                for (let j = 0, q = cssRules.length; j < q; ++j) {
+                    try {
+                        const item = cssRules[j] as CSSKeyframesRule;
+                        if (item.type === CSSRule.KEYFRAMES_RULE) {
+                            const value = parseKeyframes(item.cssRules);
+                            if (value) {
+                                const data = result.get(item.name);
+                                if (data) {
+                                    Object.assign(data, value);
+                                }
+                                else {
+                                    result.set(item.name, value);
                                 }
                             }
                         }
-                        catch {
-                            break violation;
-                        }
+                    }
+                    catch {
                     }
                 }
             }
-            catch {
-            }
+        }
+        catch {
         }
     }
     return result;
@@ -1672,10 +1667,9 @@ export function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot) {
         try {
             const sheet = new CSSStyleSheet();
             sheet.replaceSync(value);
-            document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet] as CSSStyleSheet[];
-            return () => {
-                document.adoptedStyleSheets = document.adoptedStyleSheets.filter(item => item !== sheet);
-            };
+            const target = shadowRoot || document;
+            target.adoptedStyleSheets = [...target.adoptedStyleSheets, sheet] as CSSStyleSheet[];
+            return () => target.adoptedStyleSheets = target.adoptedStyleSheets.filter(item => item !== sheet);
         }
         catch {
         }
