@@ -203,7 +203,6 @@ declare module "lib" {
     }
 
     namespace dom {
-        function newBoxRectDimension(): BoxRectDimension;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): Null<BoxRectDimension>;

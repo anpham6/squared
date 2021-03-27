@@ -1,17 +1,6 @@
 import { getStyle, hasCoords } from './css';
 import { iterateArray, withinRange } from './util';
 
-export function newBoxRectDimension(): BoxRectDimension {
-    return {
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: 0,
-        height: 0
-    };
-}
-
 export function withinViewport(rect: DOMRect | ClientRect) {
     return !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
 }

@@ -11,7 +11,7 @@ const { CSS, FILE } = squared.lib.regex;
 const { isUserAgent } = squared.lib.client;
 const { isTransparent } = squared.lib.color;
 const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseUnit } = squared.lib.css;
-const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+const { assignRect, getNamedItem, getParentElement, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
@@ -795,6 +795,7 @@ const belowRange = (a: number, b: number, offset = 1) => a - offset <= b;
 const sortById = (a: T, b: T) => a.id - b.id;
 const isInlineVertical = (value: string) => startsWith(value, 'inline') || value === 'table-cell';
 const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
+const newBoxRectDimension = (): BoxRectDimension => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 });
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static sanitizeCss(element: DocumentElement, styleMap: CssStyleMap, writingMode?: string) {
