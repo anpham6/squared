@@ -26,7 +26,6 @@ type ApplyDefaultStylesMethod<T extends NodeUI> = (processing: squared.base.AppP
 type RenderNodeMethod<T extends NodeUI> = (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
 
 const { insertStyleSheetRule } = squared.lib.internal;
-const { FILE } = squared.lib.regex;
 
 const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
@@ -170,17 +169,6 @@ function setElementState(node: NodeUI, type?: number) {
         }
         else {
             cacheState.naturalElement = true;
-            switch (node.tagName) {
-                case 'SVG':
-                case 'svg':
-                    cacheState.htmlElement = false;
-                    cacheState.svgElement = true;
-                    break;
-                default:
-                    cacheState.htmlElement = true;
-                    cacheState.svgElement = type === 0 && node.imageElement && FILE.SVG.test(node.toElementString('src'));
-                    break;
-            }
         }
     }
 }
@@ -251,9 +239,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         length = extensions.length;
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i];
-            let postOptimize = ext.postOptimize;
+            const postOptimize = ext.postOptimize?.bind(ext);
             if (postOptimize) {
-                postOptimize = postOptimize.bind(ext);
                 for (const node of ext.subscribers) {
                     postOptimize(node, rendered);
                 }
@@ -277,9 +264,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i];
-            let postBoxSpacing = ext.postBoxSpacing;
+            const postBoxSpacing = ext.postBoxSpacing?.bind(ext);
             if (postBoxSpacing) {
-                postBoxSpacing = postBoxSpacing.bind(ext);
                 for (const node of ext.subscribers) {
                     postBoxSpacing(node, rendered);
                 }
@@ -1215,9 +1201,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         });
         for (let i = 0; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            let postBaseLayout = ext.postBaseLayout;
+            const postBaseLayout = ext.postBaseLayout?.bind(ext);
             if (postBaseLayout) {
-                postBaseLayout = postBaseLayout.bind(ext);
                 for (const node of ext.subscribers) {
                     if (node.sessionId === sessionId) {
                         postBaseLayout(node);
@@ -1233,9 +1218,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.controllerHandler.setConstraints(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            let postConstraints = ext.postConstraints;
+            const postConstraints = ext.postConstraints?.bind(ext);
             if (postConstraints) {
-                postConstraints = postConstraints.bind(ext);
                 for (const node of ext.subscribers) {
                     if (node.sessionId === sessionId) {
                         postConstraints(node);
@@ -1251,9 +1235,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.resourceHandler.setData(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            let postResources = ext.postResources;
+            const postResources = ext.postResources?.bind(ext);
             if (postResources) {
-                postResources = postResources.bind(ext);
                 for (const node of ext.subscribers) {
                     if (node.sessionId === sessionId) {
                         postResources(node);
