@@ -537,15 +537,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
                             document.querySelectorAll(selector).forEach((element: HTMLElement) => {
                                 let src: string;
                                 switch (element.tagName) {
+                                    case 'VIDEO':
+                                        if (item.type === 'image') {
+                                            src = (element as HTMLVideoElement).poster;
+                                            break;
+                                        }
                                     case 'IMG':
                                     case 'AUDIO':
                                     case 'SOURCE':
                                     case 'EMBED':
                                     case 'IFRAME':
-                                        src = (element as HTMLImageElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLIFrameElement).src;
-                                        break;
-                                    case 'VIDEO':
-                                        src = (element as HTMLVideoElement)[item.type === 'image' ? 'poster' : 'src'];
+                                        src = (element as HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLIFrameElement).src;
                                         break;
                                     case 'OBJECT':
                                         src = (element as HTMLObjectElement).data;
