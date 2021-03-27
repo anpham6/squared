@@ -55,14 +55,7 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
             right = true;
         }
     }
-    let result = 0;
-    if (!floating) {
-        result |= NODE_ALIGNMENT.FLOAT;
-    }
-    if (!right) {
-        result |= NODE_ALIGNMENT.RIGHT;
-    }
-    return result;
+    return (!floating ? NODE_ALIGNMENT.FLOAT : 0) | (!right ? NODE_ALIGNMENT.RIGHT : 0);
 }
 
 function checkPseudoDimension(style: CssStyleMap, after: boolean, absolute: boolean) {
@@ -487,9 +480,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'right':
                             case 'end':
                             case 'justify':
-                                data = { textAlign };
                                 element.style.textAlign = 'left';
-                                preAlignment.set(item, data);
+                                preAlignment.set(item, data = { textAlign });
                                 break;
                         }
                     }
@@ -550,7 +542,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                             tagName = '#' + id;
                         }
-                        removeStyle = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowHost);
+                        removeStyle = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, item.shadowHost);
                     }
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.push([item, id, removeStyle]);

@@ -241,7 +241,7 @@ declare module "lib" {
         function getSpecificity(value: string): number;
         function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
         function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
-        function insertStyleSheetRule(value: string, index?: number, shadowRoot?: ShadowRoot): Null<VoidFunction>;
+        function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot): Null<VoidFunction>;
     }
 
     namespace math {

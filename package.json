@@ -93,7 +93,7 @@
   "devDependencies": {
     "@azure/cosmos": "^3.10.5",
     "@azure/storage-blob": "^12.5.0",
-    "@babel/core": "^7.13.10",
+    "@babel/core": "^7.13.13",
     "@babel/preset-env": "^7.13.12",
     "@cloudant/cloudant": "^4.3.1",
     "@google-cloud/bigquery": "^5.5.0",
@@ -114,7 +114,7 @@
     "diff": "^5.0.0",
     "dwebp-bin": "^1.0.0",
     "ejs": "^3.1.6",
-    "eslint": "^7.22.0",
+    "eslint": "^7.23.0",
     "glob": "^7.1.6",
     "gulp": "^4.0.2",
     "htmlparser2": "^6.0.1",

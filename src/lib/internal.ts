@@ -1667,7 +1667,19 @@ export function parseKeyframes(rules: CSSRuleList) {
     return valid ? result : null;
 }
 
-export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: ShadowRoot) {
+export function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot) {
+    if (isUserAgent(USER_AGENT.CHROME | USER_AGENT.EDGE, 73)) {
+        try {
+            const sheet = new CSSStyleSheet();
+            sheet.replaceSync(value);
+            document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet] as CSSStyleSheet[];
+            return () => {
+                document.adoptedStyleSheets = document.adoptedStyleSheets.filter(item => item !== sheet);
+            };
+        }
+        catch {
+        }
+    }
     const style = document.createElement('style');
     const sheet = style.sheet as CSSStyleSheet;
     if (sheet && typeof sheet.insertRule === 'function') {
@@ -1675,7 +1687,7 @@ export function insertStyleSheetRule(value: string, index = 0, shadowRoot?: Shad
             if (isUserAgent(USER_AGENT.SAFARI)) {
                 style.appendChild(document.createTextNode(''));
             }
-            sheet.insertRule(value, index);
+            sheet.insertRule(value);
             const parentElement = shadowRoot || document.head;
             parentElement.appendChild(style);
             return () => {
