@@ -400,7 +400,7 @@ declare module "base" {
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel, Dimension {
         static readonly TEXT_STYLE: string[];
-        static sanitizeCss(element: DocumentElement, styleMap: CssStyleMap, writingMode?: string): CssStyleMap;
+        static sanitizeCss(element: DocumentElement, style: CssStyleMap, writingMode?: string): CssStyleMap;
         depth: number;
         documentRoot: boolean;
         shadowRoot: boolean;

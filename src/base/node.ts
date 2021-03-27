@@ -798,14 +798,14 @@ const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInli
 const newBoxRectDimension = (): BoxRectDimension => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 });
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static sanitizeCss(element: DocumentElement, styleMap: CssStyleMap, writingMode?: string) {
+    public static sanitizeCss(element: DocumentElement, style: CssStyleMap, writingMode?: string) {
         const result: CssStyleMap = {};
-        for (let attr in styleMap) {
-            let value = styleMap[attr as CssStyleAttr]!;
+        for (let attr in style) {
+            let value = style[attr as CssStyleAttr]!;
             const alias = checkWritingMode(attr, writingMode);
             if (alias !== attr) {
                 if (typeof alias === 'string') {
-                    if (!styleMap[alias]) {
+                    if (!style[alias]) {
                         attr = alias;
                     }
                     else {
@@ -813,11 +813,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                 }
                 else {
-                    for (const attrAlt of alias) {
-                        if (!styleMap[attrAlt]) {
-                            const valueAlt = checkStyleValue(element, attrAlt, value);
-                            if (valueAlt) {
-                                result[attrAlt] = valueAlt;
+                    for (const alt of alias) {
+                        if (!style[alt]) {
+                            value = checkStyleValue(element, alt, value);
+                            if (value) {
+                                result[alt] = value;
                             }
                         }
                     }
@@ -825,7 +825,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             if (value = checkStyleValue(element, attr, value)) {
-                result[attr as CssStyleAttr] = value;
+                result[attr] = value;
             }
         }
         return result;
@@ -1840,10 +1840,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 invalid: {
                     const query = queries[i];
                     const selectors: QueryData[] = [];
-                    let start: Undef<boolean>,
-                        offset = 0;
+                    let q = 0,
+                        offset = 0,
+                        start: Undef<boolean>;
                     if (query === '*') {
-                        selectors.push({ all: true });
+                        q = selectors.push({ all: true });
                         start = true;
                     }
                     else {
@@ -1859,7 +1860,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 case '~':
                                     --offset;
                                 case '>':
-                                    if (adjacent || selectors.length === 0 && (segment !== '>' || !/^:(?:root|scope)/.test(query))) {
+                                    if (adjacent || q === 0 && (segment !== '>' || !/^:(?:root|scope)/.test(query))) {
                                         break invalid;
                                     }
                                     adjacent = segment;
@@ -1874,11 +1875,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     else {
                                         start = true;
                                     }
-                                    selectors.push({ all: true, adjacent });
+                                    q = selectors.push({ all: true, adjacent });
                                     adjacent = '';
                                     continue;
                                 case ':root':
-                                    if (selectors.length === 0 && this._element === document.documentElement) {
+                                    if (q === 0 && this._element === document.documentElement) {
                                         if (result.includes(this)) {
                                             result.push(this);
                                         }
@@ -1887,7 +1888,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     }
                                     break invalid;
                                 case ':scope':
-                                    if (selectors.length) {
+                                    if (q) {
                                         break invalid;
                                     }
                                     start = true;
@@ -1978,10 +1979,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 }
                                 segment = spliceString(segment, subMatch.index, label.length);
                             }
-                            if (selectors.length === 0 && (notList || pseudoList)) {
+                            if (q === 0 && (notList || pseudoList)) {
                                 start = true;
                             }
-                            selectors.push({
+                            q = selectors.push({
                                 tagName,
                                 id,
                                 adjacent,
@@ -1996,8 +1997,29 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             continue;
                         }
                     }
-                    const q = selectors.length;
                     if (q) {
+                        if (q > 1 && selectors[0].all && selectors[1].all) {
+                            let max = 0,
+                                parent = this.actualParent;
+                            while (parent) {
+                                ++max;
+                                parent = parent.actualParent;
+                            }
+                            if (max) {
+                                let min = 0;
+                                for (let j = 2; j < q; ++j) {
+                                    if (selectors[j].all) {
+                                        ++min;
+                                    }
+                                    else {
+                                        break;
+                                    }
+                                }
+                                const s = min <= max ? min + 1 : max;
+                                selectors.splice(0, s);
+                                q -= s;
+                            }
+                        }
                         const all = result.length === 0;
                         for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                             const items = queryMap[j];
