@@ -193,14 +193,10 @@ function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
 
 function convertPosition(node: T, attr: CssStyleAttr) {
     if (!node.positionStatic) {
-        const unit = node.valueOf(attr, { modified: true });
-        if (isPx(unit)) {
-            return parseFloat(unit);
+        const value = node.valueOf(attr, { modified: true });
+        if (value) {
+            return node.parseUnit(value, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
         }
-        else if (isPercent(unit)) {
-            return node.styleElement && parseFloat(node.style[attr]) || 0;
-        }
-        return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
     }
     return 0;
 }
@@ -1894,7 +1890,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             let attrList: Undef<QueryAttribute[]>,
                                 subMatch: Null<RegExpExecArray>;
                             while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
-                                let key = subMatch[1].replace(/\\:/, ':').toLowerCase(),
+                                let key = subMatch[1].replace('\\:', ':').toLowerCase(),
                                     trailing: Undef<boolean>;
                                 switch (key.indexOf('|')) {
                                     case -1:
