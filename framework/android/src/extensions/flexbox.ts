@@ -287,7 +287,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         baseline: Null<T> = null,
                         emptyContent: Undef<T[]>,
                         spreadInside = justifyContent === 'space-between',
-                        boundsWeight: Undef<number>;
+                        boundsWeight = 0;
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
                     if (opposing) {

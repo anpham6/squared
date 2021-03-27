@@ -196,14 +196,9 @@ function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
 function convertPosition(node: T, attr: CssStyleAttr) {
     if (!node.positionStatic) {
         const value = node.valueOf(attr, { modified: true });
-        const n = asPx(value);
-        if (!isNaN(n)) {
-            return n;
+        if (value) {
+            return node.parseUnit(value, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
         }
-        else if (isPercent(value)) {
-            return node.styleElement && parseFloat(node.style[attr]) || 0;
-        }
-        return node.parseUnit(value, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
     }
     return 0;
 }
@@ -1860,7 +1855,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 case '~':
                                     --offset;
                                 case '>':
-                                    if (adjacent || q === 0 && (segment !== '>' || !/^:(?:root|scope)/.test(query))) {
+                                    if (adjacent || q === 0 && (segment !== '>' || !/^:(?:root|scope)/i.test(query))) {
                                         break invalid;
                                     }
                                     adjacent = segment;
@@ -1902,7 +1897,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             let attrList: Undef<QueryAttribute[]>,
                                 subMatch: Null<RegExpExecArray>;
                             while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
-                                let key = subMatch[1].replace(/\\:/, ':').toLowerCase(),
+                                let key = subMatch[1].replace('\\:', ':').toLowerCase(),
                                     trailing: Undef<boolean>;
                                 switch (key.indexOf('|')) {
                                     case -1:

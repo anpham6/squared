@@ -817,9 +817,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 replaceWith.parent?.remove(replaceWith);
                 let childIndex: Undef<number>;
                 if (replaceWith.naturalChild && this.naturalElement) {
-                    childIndex = child.childIndex;
                     replaceWith.actualParent!.naturalChildren.splice(replaceWith.childIndex, 1);
-                    this.naturalChildren.splice(childIndex, 1, replaceWith);
+                    this.naturalChildren.splice(childIndex = child.childIndex, 1, replaceWith);
                 }
                 replaceWith.init(this, child.depth, childIndex);
                 children[i] = replaceWith;
