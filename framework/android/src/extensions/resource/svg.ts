@@ -449,7 +449,7 @@ function getTransformValues(item: SvgAnimate): Null<number[][]> {
     return null;
 }
 
-function getTransformInitialValue(name: string): Undef<string> {
+function getTransformInitialValue(name: string): Undef<"0" | "1"> {
     switch (name) {
         case 'rotation':
         case 'pivotX':

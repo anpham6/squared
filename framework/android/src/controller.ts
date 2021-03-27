@@ -1756,8 +1756,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
             }
             case CONTAINER_TAGNAME.PROGRESS: {
-                let foregroundColor: Undef<string>,
-                    backgroundColor: Undef<string>;
+                let foregroundColor: string,
+                    backgroundColor: string;
                 if (tagName === 'METER') {
                     ({ meterForegroundColor: foregroundColor, meterBackgroundColor: backgroundColor } = this.localSettings.style);
                 }

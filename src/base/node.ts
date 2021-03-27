@@ -808,11 +808,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                 }
                 else {
+                    let actual: string;
                     for (const alt of alias) {
                         if (!style[alt]) {
-                            value = checkStyleValue(element, alt, value);
-                            if (value) {
-                                result[alt] = value;
+                            if (actual ||= checkStyleValue(element, alt, value)) {
+                                result[alt] = actual;
+                            }
+                            else {
+                                break;
                             }
                         }
                     }
@@ -1044,9 +1047,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     case 'paddingBottom':
                         cache.contentBoxHeight = undefined;
                         break;
-                    case 'fontSize':
-                        cache.lineHeight = undefined;
-                        break;
                     case 'whiteSpace':
                         cache.preserveWhiteSpace = undefined;
                         cache.textStyle = undefined;
@@ -1075,7 +1075,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             }
                             cache.visibleStyle = undefined;
                         }
-                        else if (TEXT_STYLE.includes(attr as CssStyleAttr)) {
+                        else if (attr === 'fontSize' || TEXT_STYLE.includes(attr as CssStyleAttr)) {
                             cache.lineHeight = undefined;
                             cache.textStyle = undefined;
                         }
@@ -1380,11 +1380,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssAscend(attr: CssStyleAttr, options?: CssAscendOptions) {
-        let parent = options && options.startSelf ? this : this.actualParent,
-            value: string;
+        let value: string,
+            parent = options && options.startSelf ? this : this.actualParent;
         while (parent) {
-            value = parent.valueOf(attr, options);
-            if (value && value !== 'inherit') {
+            if ((value = parent.valueOf(attr, options)) && value !== 'inherit') {
                 return value;
             }
             parent = parent.actualParent;
@@ -1523,17 +1522,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssCopy(node: T, ...attrs: CssStyleAttr[]) {
         const styleMap = this._styleMap;
-        for (let i = 0, length = attrs.length; i < length; ++i) {
-            const attr = attrs[i];
-            styleMap[attr] = node.css(attr);
+        for (let i = 0, attr: CssStyleAttr, length = attrs.length; i < length; ++i) {
+            styleMap[attr = attrs[i]] = node.css(attr);
         }
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: CssStyleAttr[]) {
         const styleMap = this._styleMap;
-        for (let i = 0, length = attrs.length; i < length; ++i) {
-            const attr = attrs[i];
-            if (!styleMap[attr]) {
+        for (let i = 0, attr: CssStyleAttr, length = attrs.length; i < length; ++i) {
+            if (!styleMap[attr = attrs[i]]) {
                 styleMap[attr] = node.css(attr);
             }
         }
@@ -1550,9 +1547,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssAsObject(...attrs: CssStyleAttr[]) {
         const result: CssStyleMap = {};
-        for (let i = 0, length = attrs.length; i < length; ++i) {
-            const attr = attrs[i];
-            result[attr] = this.css(attr);
+        for (let i = 0, attr: CssStyleAttr, length = attrs.length; i < length; ++i) {
+            result[attr = attrs[i]] = this.css(attr);
         }
         return result;
     }
@@ -1756,7 +1752,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.querySelectorAll(value)[0] || null;
     }
 
-    public querySelectorAll(value: string, customMap?: T[][]) {
+    public querySelectorAll(value: string, sorted = true, customMap?: T[][]) {
         const queryMap = customMap || this.queryMap;
         const result: T[] = [];
         if (queryMap) {
@@ -2029,7 +2025,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
         }
-        return result.sort(sortById);
+        return sorted ? result.sort(sortById) : result;
     }
 
     public ancestors(value?: string, options?: AscendOptions<T>) {
@@ -2046,7 +2042,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 customMap.push([item]);
                 depth = item.depth;
             });
-            return this.querySelectorAll(value, customMap);
+            return this.querySelectorAll(value, true, customMap);
         }
         return result.sort(sortById);
     }
@@ -2069,7 +2065,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     for (let i = 0; i < length; ++i) {
                         customMap[i] ||= [];
                     }
-                    return this.querySelectorAll(value, customMap);
+                    return this.querySelectorAll(value, true, customMap);
                 }
                 return children.sort(sortById);
             }
@@ -2118,7 +2114,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const customMap: T[][] = [];
                 iterateReverseArray(ancestors, (item: T) => customMap.push([item]));
                 customMap.push(result);
-                result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
+                result = this.querySelectorAll(value, true, customMap).filter(item => !ancestors.includes(item));
             }
             return reverse && result.length > 1 ? result.reverse() : result;
         }
@@ -2183,7 +2179,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get svgElement() {
         const result = this._cacheState.svgElement;
-        return result === undefined ? this._cacheState.svgElement = !this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src')) : result;
+        return result === undefined ? this._cacheState.svgElement = !this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test((this._element as HTMLImageElement).src) : result;
     }
 
     get styleElement() {
@@ -2236,7 +2232,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             case 'BUTTON':
                 return true;
             case 'INPUT':
-                switch (this.toElementString('type')) {
+                switch ((this._element as HTMLInputElement).type) {
                     case 'button':
                     case 'submit':
                     case 'reset':
@@ -2800,8 +2796,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.backgroundColor;
         if (result === undefined) {
             if (!this.plainText) {
-                result = this.css('backgroundColor');
-                if (isTransparent(result) && !this.buttonElement) {
+                if (isTransparent(result = this.css('backgroundColor')) && !this.buttonElement) {
                     result = '';
                 }
             }
@@ -2953,11 +2948,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             else {
                 let parent: Null<T>;
-                if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.row)) {
-                    result = this.width;
-                    if (result && this.contentBox && !this.tableElement) {
-                        result += this.contentBoxWidth;
-                    }
+                if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.row) && (result = this.width) && this.contentBox && !this.tableElement) {
+                    result += this.contentBoxWidth;
                 }
             }
             return this._cache.actualWidth = result || this.bounds.width;
@@ -2969,11 +2961,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.actualHeight;
         if (result === undefined) {
             let parent: Null<T>;
-            if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.column)) {
-                result = this.height;
-                if (result && this.contentBox && !this.tableElement) {
-                    result += this.contentBoxHeight;
-                }
+            if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.column) && (result = this.height) && this.contentBox && !this.tableElement) {
+                result += this.contentBoxHeight;
             }
             return this._cache.actualHeight = result || this.bounds.height;
         }

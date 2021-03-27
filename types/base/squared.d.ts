@@ -455,7 +455,7 @@ declare module "base" {
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
-        querySelectorAll(value: string, customMap?: Node[][], resultCount?: number): Node[];
+        querySelectorAll(value: string, sorted?: boolean, customMap?: Node[][]): Node[];
         ancestors(value?: string, options?: AscendOptions<Node>): Node[];
         descendants(value?: string, options?: DescendOptions<Node>): Node[];
         siblings(value?: string, options?: SiblingsOptions<Node>): Node[];

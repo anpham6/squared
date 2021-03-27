@@ -2044,7 +2044,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     const layout: string[] = [];
-                    for (let i = 0, length = position.length, attr: Undef<string>; i < length; ++i) {
+                    for (let i = 0, length = position.length, attr: string; i < length; ++i) {
                         const value = position[i];
                         if (attr = LAYOUT_RELATIVE[value]) {
                             layout.push(this.localizeString(attr));

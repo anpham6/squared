@@ -1435,7 +1435,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (this.htmlElement) {
                 switch (this.tagName) {
                     case 'INPUT':
-                        switch (this.toElementString('type')) {
+                        switch ((this._element as HTMLInputElement).type) {
                             case 'button':
                             case 'submit':
                             case 'reset':

@@ -26,7 +26,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     const nested = tag['>>'] === true;
     let output = '',
         length = children.length,
-        indent: Undef<string>;
+        indent: string;
     if (depth === undefined) {
         output += '<?xml version="1.0" encoding="utf-8"?>\n';
         indent = '';
