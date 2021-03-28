@@ -81,6 +81,7 @@
     "content": true,
     "counterIncrement": true,
     "counterReset": true,
+    "counterSet": true,
     "cursor": false,
     "direction": true,
     "display": true,

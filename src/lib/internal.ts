@@ -521,11 +521,15 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal'
     },
     counterIncrement: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'none'
     },
     counterReset: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    counterSet: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'none'
     },
     cursor: {

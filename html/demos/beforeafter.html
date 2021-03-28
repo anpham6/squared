@@ -78,7 +78,10 @@
             margin: 1em;
         }
         .reset {
-            counter-reset: section -1;
+            counter-reset: section 1;
+        }
+        .set {
+            counter-set: section 1;
         }
         .increment {
             counter-increment: section;
@@ -102,39 +105,49 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 400px;">
-        <div class="reset">
-            <ol class="reset increment">
-                <li>item</li>
-                <li>item
+        <div>
+            <ol class="increment">
+                <li>item 20</li>
+                <li class="increment">item 21</li>
+                <li>item 22
+                    <ol>
+                        <li>item 23</li>
+                        <li>item 24</li>
+                    </ol>
+                </li>
             </ol>
             <div class="reset">
-                <ol class="reset">
-                    <li>item</li>
-                    <li>item
-                        <ol class="reset">
-                            <li>item</li>
-                            <li>item</li>
-                            <li>item
+                <ol class="increment">
+                    <li>item 1</li>
+                    <li>item 2
+                        <ol class="increment">
+                            <li>item 3</li>
+                            <li>item 4</li>
+                            <li>item 5</li>
+                            <li>item 6
                                 <ol>
-                                    <li>item</li>
-                                    <li>item</li>
+                                    <li class="increment">item 7</li>
+                                    <li>item 8</li>
                                 </ol>
-                                <ol class="reset">
-                                    <li>item</li>
-                                    <li>item</li>
-                                    <li>item
+                                <ol class="set">
+                                    <li>item 9</li>
+                                    <li>item 10</li>
+                                    <li>item 11
                                         <ol class="reset">
-                                            <li>item</li>
-                                            <li>item</li>
+                                            <li>item 12</li>
+                                            <li>item 13</li>
+                                            <li>item 14</li>
                                         </ol>
                                     </li>
                                 </ol>
                             </li>
-                            <li>item</li>
+                            <li class="increment">item 15</li>
+                            <li class="reset">item 16</li>
+                            <li>item 17</li>
                         </ol>
                     </li>
-                    <li>item</li>
-                    <li>item</li>
+                    <li class="set">item 18</li>
+                    <li>item 19</li>
                 </ol>
             </div>
         </div>

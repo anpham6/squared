@@ -130,16 +130,16 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
 
 function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
     if (value && value !== 'none') {
-        REGEXP_COUNTERVALUE ||= /([^-\d][^\s]*)\s+(-?\d+)/g;
+        REGEXP_COUNTERVALUE ||= /([^-\d][^\s]*)(\s+([+-]?\d+))?/g;
         REGEXP_COUNTERVALUE.lastIndex = 0;
         let match: Null<RegExpExecArray>;
         while (match = REGEXP_COUNTERVALUE.exec(value)) {
             if (match[1] === counterName) {
-                return +match[2];
+                return match[2] ? +match[2] : fallback;
             }
         }
-        return fallback;
     }
+    return null;
 }
 
 function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
@@ -1386,20 +1386,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const item = layerIndex[i];
             let segments: T[][],
                 itemCount: number,
-                floatgroup: Undef<T>;
+                outerGroup: Undef<T>;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
                 itemCount = segments.length;
                 const grouping = flatArray(segments, Infinity).sort((a: T, b: T) => a.childIndex - b.childIndex) as T[];
                 const node = layout.node;
                 if (node.layoutVertical) {
-                    floatgroup = node;
+                    outerGroup = node;
                 }
                 else {
-                    floatgroup = controllerHandler.createNodeGroup(grouping[0], grouping, node);
+                    outerGroup = controllerHandler.createNodeGroup(grouping[0], grouping, node);
                     this.addLayout(LayoutUI.create({
                         parent: node,
-                        node: floatgroup,
+                        node: outerGroup,
                         containerType,
                         alignmentType: alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
                         itemCount
@@ -1410,11 +1410,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 segments = [item as T[]];
                 itemCount = 1;
             }
-            const parent = floatgroup || layout.node;
+            outerGroup ||= layout.node;
             for (let j = 0; j < itemCount; ++j) {
                 const seg = segments[j];
-                const target = controllerHandler.createNodeGroup(seg[0], seg, parent, { flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE });
-                const group = new LayoutUI(parent, target, 0, NODE_ALIGNMENT.SEGMENTED, seg);
+                const target = controllerHandler.createNodeGroup(seg[0], seg, outerGroup, { flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE });
+                const group = new LayoutUI(outerGroup, target, 0, NODE_ALIGNMENT.SEGMENTED, seg);
                 if (seg === inlineAbove) {
                     group.addAlign(NODE_ALIGNMENT.COLUMN);
                     if (inheritStyle) {
@@ -1447,7 +1447,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 this.addLayout(group);
                 if (seg === inlineAbove) {
-                    this.setFloatPadding(parent, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
+                    this.setFloatPadding(outerGroup, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
                 }
             }
         }
@@ -1678,116 +1678,155 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            REGEXP_COUNTER ||= /(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
-                            const style = getStyle(element);
-                            const getCounterIncrementValue = (parent: HTMLElement, counterName: string, fallback?: number) => getCounterValue(getElementCache<CSSStyleDeclaration>(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement, counterName, fallback);
-                            let found: Undef<boolean>,
-                                match: Null<RegExpExecArray>;
+                            REGEXP_COUNTER ||= /(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)")/g;
+                            const getStyleMap = (target: Element, targetElt?: PseudoElt) => getElementCache<CSSStyleDeclaration>(target, 'styleMap' + targetElt, sessionId) || getStyle(target, targetElt);
+                            const getPseudoIncrement = (sibling: Element, counterName: string) => getCounterValue(getStyleMap(sibling, pseudoElt).counterIncrement, counterName);
+                            let match: Null<RegExpExecArray>;
                             while (match = REGEXP_COUNTER.exec(value)) {
                                 if (match[1]) {
                                     content += getNamedItem(element, match[1].trim());
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
-                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
-                                    const initialValue = (getCounterIncrementValue(element, counterName, 0) ?? 1) + (getCounterValue(style.counterReset, counterName, 0) || 0);
-                                    const subcounter: number[] = [];
-                                    let current: Null<HTMLElement> = element,
-                                        counter = initialValue,
-                                        ascending: Undef<boolean>,
-                                        lastResetElement: Undef<Element>;
-                                    const incrementCounter = (increment: number, pseudo: boolean) => {
-                                        if (subcounter.length === 0) {
-                                            counter += increment;
-                                        }
-                                        else if (ascending || pseudo) {
-                                            subcounter[subcounter.length - 1] += increment;
-                                        }
-                                    };
-                                    const cascadeCounterSibling = (sibling: Element) => {
-                                        if (getCounterValue(getStyle(sibling).counterReset, counterName) === undefined) {
-                                            iterateArray(sibling.children, (item: HTMLElement) => {
-                                                if (item.className !== '__squared-pseudo') {
-                                                    let increment = getCounterIncrementValue(item, counterName);
-                                                    if (increment) {
-                                                        incrementCounter(increment, true);
-                                                    }
-                                                    const childStyle = getStyle(item);
-                                                    if (increment = getCounterValue(childStyle.counterIncrement, counterName)) {
-                                                        incrementCounter(increment, false);
-                                                    }
-                                                    increment = getCounterValue(childStyle.counterReset, counterName);
-                                                    if (increment !== undefined) {
-                                                        return true;
-                                                    }
-                                                    cascadeCounterSibling(item);
-                                                }
-                                            });
-                                        }
-                                    };
-                                    while (current) {
-                                        ascending = false;
-                                        if (current.previousElementSibling) {
-                                            if (current = current.previousElementSibling as Null<HTMLElement>) {
-                                                cascadeCounterSibling(current);
+                                    const [counterName, styleName = 'decimal'] = counterType ? [match[3], match[4]] : [match[6], match[8]];
+                                    const counters: number[] = [NaN];
+                                    let depth = 0,
+                                        locked: Undef<boolean>,
+                                        wasSet: Undef<boolean>,
+                                        wasReset: Undef<boolean>;
+                                    const incrementCounter = (increment: Null<number>, isSet: boolean) => {
+                                        if (increment !== null && !locked && (isSet || !wasSet)) {
+                                            if (isNaN(counters[0])) {
+                                                counters[0] = increment;
                                             }
                                             else {
-                                                break;
+                                                counters[0] += increment;
                                             }
+                                        }
+                                    };
+                                    const cascadeSibling = (target: Element, ascending = true): number => {
+                                        const [counterReset, counterSet] = setCounter(target, ascending);
+                                        let type = 0;
+                                        if (counterReset !== null) {
+                                            if (depth === 0) {
+                                                if (!wasReset && ascending) {
+                                                    type = 1;
+                                                }
+                                                else {
+                                                    return 1;
+                                                }
+                                            }
+                                            else {
+                                                return 0;
+                                            }
+                                        }
+                                        iterateArray(target.children, (item: Element) => {
+                                            if (item.className !== '__squared-pseudo') {
+                                                switch (cascadeSibling(item, false)) {
+                                                    case 0:
+                                                    case 1:
+                                                        wasReset = true;
+                                                        return true;
+                                                }
+                                            }
+                                        });
+                                        if (type === 1) {
+                                            incrementCounter(counterReset, true);
+                                            locked = false;
+                                            counters.unshift(NaN);
+                                            return 1;
+                                        }
+                                        if (ascending && counterSet !== null) {
+                                            return 2;
+                                        }
+                                        return wasReset ? 0 : -1;
+                                    };
+                                    const setCounter = (target: Element, ascending?: boolean): [Null<number>, Null<number>] => {
+                                        const { counterSet, counterIncrement, counterReset } = getStyleMap(target);
+                                        const setValue = getCounterValue(counterSet, counterName, 0);
+                                        if (!locked) {
+                                            const isSet = setValue !== null;
+                                            if (ascending) {
+                                                incrementCounter(setValue, isSet);
+                                            }
+                                            else if (isSet) {
+                                                counters[0] = setValue!;
+                                            }
+                                            incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
+                                            incrementCounter(getPseudoIncrement(target, counterName), isSet);
+                                            if (ascending && isSet) {
+                                                wasSet = true;
+                                            }
+                                        }
+                                        return [getCounterValue(counterReset, counterName), setValue];
+                                    };
+                                    let current: Null<HTMLElement> = element,
+                                        reset: number;
+                                    while (current) {
+                                        const [counterReset, counterSet] = setCounter(current, true);
+                                        reset = 0;
+                                        wasReset = false;
+                                        if (counterSet !== null) {
+                                            locked = true;
+                                            wasSet = true;
                                         }
                                         else {
-                                            current = current.parentElement;
-                                            if (!current) {
+                                            wasSet = false;
+                                        }
+                                        if (counterReset !== null) {
+                                            incrementCounter(counterReset, true);
+                                            if (counterType) {
                                                 break;
                                             }
-                                            ascending = true;
-                                        }
-                                        if (current.className !== '__squared-pseudo') {
-                                            const pesudoIncrement = getCounterIncrementValue(current, counterName);
-                                            if (pesudoIncrement) {
-                                                incrementCounter(pesudoIncrement, true);
-                                            }
-                                            const currentStyle = getStyle(current);
-                                            const counterIncrement = getCounterValue(currentStyle.counterIncrement, counterName);
-                                            if (counterIncrement) {
-                                                incrementCounter(counterIncrement, false);
-                                            }
-                                            const counterReset = getCounterValue(currentStyle.counterReset, counterName, Infinity);
-                                            if (counterReset !== undefined && counterReset !== Infinity) {
-                                                if (!lastResetElement) {
-                                                    counter += counterReset;
-                                                }
-                                                lastResetElement = current;
-                                                if (counterType) {
-                                                    break;
-                                                }
-                                                else if (ascending) {
-                                                    subcounter.push((pesudoIncrement || 0) + counterReset);
-                                                }
+                                            else {
+                                                locked = false;
+                                                counters.unshift(NaN);
                                             }
                                         }
-                                    }
-                                    if (lastResetElement) {
-                                        if (!counterType && subcounter.length > 1) {
-                                            subcounter.reverse().splice(1, 1);
-                                            const textValue = match[7];
-                                            content += subcounter.reduce((a, b) => a + convertListStyle(styleName, b, true) + textValue, '');
+                                        let sibling = current.previousElementSibling;
+                                        while (sibling) {
+                                            if (sibling.className !== '__squared-pseudo') {
+                                                if (!locked) {
+                                                    reset = counters[0];
+                                                }
+                                                switch (cascadeSibling(sibling)) {
+                                                    case 0:
+                                                        if (!wasSet) {
+                                                            incrementCounter(reset, true);
+                                                        }
+                                                        locked = true;
+                                                        break;
+                                                    case 1:
+                                                        wasSet = false;
+                                                        if (depth === 0) {
+                                                            if (counterSet !== null) {
+                                                                counters[0] -= counterSet;
+                                                            }
+                                                            if (counterReset !== null) {
+                                                                counters[0] -= counterReset;
+                                                            }
+                                                        }
+                                                        break;
+                                                    case 2:
+                                                        locked = true;
+                                                        wasSet = true;
+                                                        break;
+                                                }
+                                            }
+                                            sibling = sibling.previousElementSibling;
                                         }
+                                        current = current.parentElement;
+                                        ++depth;
                                     }
-                                    else {
-                                        counter = initialValue;
-                                    }
-                                    content += convertListStyle(styleName, counter, true);
+                                    const delimiter = match[7] ? match[7].replace(/\\"/g, '"') : '';
+                                    content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
                                 }
                                 else if (match[9]) {
                                     content += match[9];
                                 }
-                                found = true;
                             }
+                            content ||= value;
                             REGEXP_COUNTER.lastIndex = 0;
-                            if (!found) {
-                                content = value;
-                            }
                         }
                         break;
                     }

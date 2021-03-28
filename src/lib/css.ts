@@ -632,6 +632,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'gridColumnStart':
         case 'counterIncrement':
         case 'counterReset':
+        case 'counterSet':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER });
         case 'gridArea':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER, min: 1 });

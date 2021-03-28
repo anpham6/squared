@@ -14,3 +14,7 @@ interface HTMLSourceElement {
     width?: number;
     height?: number;
 }
+
+interface CSSStyleDeclaration {
+    counterSet: string;
+}
