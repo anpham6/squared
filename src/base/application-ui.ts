@@ -522,7 +522,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         else {
                             id = parentElement.id.trim();
                             if (!id) {
-                                id = 'id__' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+                                id = 'sqd__' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                                 parentElement.id = id;
                             }
                             tagName = '#' + id;
@@ -538,14 +538,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoMap[i][0].setBounds(false);
                 }
                 for (let i = 0; i < length; ++i) {
-                    const data = pseudoMap[i];
-                    if (startsWith(data[1], 'id__')) {
-                        data[0].parentElement!.id = '';
+                    const [item, id, removeStyle] = pseudoMap[i];
+                    if (startsWith(id, 'sqd__')) {
+                        item.parentElement!.id = '';
                     }
-                    if (data[2]) {
-                        data[2]();
+                    if (removeStyle) {
+                        removeStyle();
                     }
-                    data[0].cssFinally('display');
+                    item.cssFinally('display');
                 }
             }
             excluded.each(item => {
@@ -1692,9 +1692,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     let current: Null<HTMLElement> = element,
                                         depth = 0,
                                         initial = 0,
-                                        locked: Undef<boolean>,
-                                        wasSet: Undef<number>,
-                                        wasReset: Undef<boolean>;
+                                        wasSet = 0,
+                                        wasReset: Undef<boolean>,
+                                        locked: Undef<boolean>;
                                     const incrementCounter = (increment: Null<number>, isSet?: boolean) => {
                                         if (increment !== null && !locked && (isSet || wasSet !== 2)) {
                                             if (isNaN(counters[0])) {
@@ -1706,10 +1706,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                     };
                                     const cascadeSibling = (target: Element, ignoreReset?: boolean, ascending?: boolean): number => {
-                                        const [counterReset, counterSet] = setCounter(target, ascending);
+                                        const [counterSet, counterReset] = setCounter(target, ascending);
                                         let type = 0;
                                         if (counterSet !== null) {
-                                            wasSet = ascending && !locked ? 2 : 1;
+                                            wasSet = ascending ? 2 : 1;
                                         }
                                         if (counterReset !== null) {
                                             if (depth === 0) {
@@ -1743,15 +1743,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             return ascending ? -1 : 0;
                                         }
-                                        if (wasSet === 1 && ascending && !wasReset) {
-                                            incrementCounter(initial);
-                                            locked = true;
+                                        if (ascending) {
+                                            if (wasSet === 2) {
+                                                return 2;
+                                            }
+                                            if (wasSet === 1 && !wasReset) {
+                                                incrementCounter(initial);
+                                                locked = true;
+                                            }
                                         }
-                                        return wasSet === 2 ? 2 : wasReset ? 0 : -1;
+                                        return wasReset ? 0 : -1;
                                     };
                                     const setCounter = (target: Element, ascending?: boolean): [Null<number>, Null<number>] => {
-                                        const { counterSet, counterIncrement, counterReset } = getStyleMap(target);
+                                        const { counterSet, counterReset, counterIncrement } = getStyleMap(target);
                                         const setValue = getCounterValue(counterSet, counterName, 0);
+                                        const resetValue = getCounterValue(counterReset, counterName);
                                         if (!locked) {
                                             const isSet = setValue !== null;
                                             if (ascending) {
@@ -1760,13 +1766,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             else if (isSet) {
                                                 counters[0] = setValue!;
                                             }
-                                            incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
+                                            if (ascending || setValue === null && resetValue === null) {
+                                                incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
+                                            }
                                             incrementCounter(getPseudoIncrement(target, counterName), isSet);
                                         }
-                                        return [getCounterValue(counterReset, counterName), setValue];
+                                        return [setValue, resetValue];
                                     };
                                     while (current) {
-                                        const [counterReset, counterSet] = setCounter(current, true);
+                                        const [counterSet, counterReset] = setCounter(current, true);
                                         initial = 0;
                                         wasReset = false;
                                         if (counterSet !== null) {
