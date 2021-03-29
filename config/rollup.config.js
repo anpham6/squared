@@ -1,7 +1,5 @@
+import { terser } from 'rollup-plugin-terser';
 import { terser_options } from './rollup-options';
-import { version } from '../package.json';
-
-import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
@@ -59,7 +57,7 @@ export default [
             file: './dist/squared.js',
             name: 'squared',
             format: 'iife',
-            banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* squared\n   https://github.com/anpham6/squared */\n`
         },
         plugins: []
     },
@@ -70,7 +68,7 @@ export default [
             file: './dist/squared.base.js',
             name: 'squared.base',
             format: 'iife',
-            banner: `/* squared.base ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* squared.base\n   https://github.com/anpham6/squared */\n`
         },
         plugins: []
     },
@@ -81,7 +79,7 @@ export default [
             file: './dist/squared.base-dom.js',
             name: 'squared.base',
             format: 'iife',
-            banner: `/* squared.base ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* squared.base-dom\n   https://github.com/anpham6/squared */\n`
         },
         plugins: []
     },
@@ -92,7 +90,7 @@ export default [
             file: './dist/squared.svg.js',
             name: 'squared.svg',
             format: 'iife',
-            banner: `/* squared.svg ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* squared.svg\n   https://github.com/anpham6/squared */\n`
         },
         plugins: []
     },
@@ -103,7 +101,7 @@ export default [
             file: './dist/squared.umd.js',
             name: 'squared',
             format: 'umd',
-            banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* squared-umd\n   https://github.com/anpham6/squared */\n`
         },
         plugins: []
     },

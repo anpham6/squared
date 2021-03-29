@@ -1,7 +1,5 @@
+import { terser } from 'rollup-plugin-terser';
 import { terser_options } from '../../config/rollup-options';
-import { version } from './package.json';
-
-import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
@@ -23,7 +21,7 @@ export default [
             file: './dist/vdom.framework.js',
             name: 'vdom',
             format: 'iife',
-            banner: `/* vdom-framework ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* vdom-framework\n   https://github.com/anpham6/squared */\n`
         },
         plugins: []
     }
