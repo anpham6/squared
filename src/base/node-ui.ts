@@ -1304,10 +1304,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         else {
-            const styleMap = this._styleMap;
+            const style = this._styleMap;
             for (const attr in values) {
-                if (!styleMap[attr]) {
-                    styleMap[attr] = values[attr];
+                if (!style[attr]) {
+                    style[attr] = values[attr];
                     if (cache) {
                         this.unsetCache(attr as CssStyleAttr);
                     }
@@ -1404,11 +1404,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public cssValues(...attrs: CssStyleAttr[]) {
-        const styleMap = this._styleMap;
+        const style = this._styleMap;
         const length = attrs.length;
         const result: string[] = new Array(length);
         for (let i = 0; i < length; ++i) {
-            result[i] = styleMap[attrs[i]] || '';
+            result[i] = style[attrs[i]] || '';
         }
         return result;
     }

@@ -226,7 +226,7 @@ declare module "base" {
         parseFontFace(resourceId: number, cssText: string, styleSheetHref: string): void;
         parseKeyFrames(resourceId: number, cssRule: CSSKeyframesRule): void;
         addAsset(resourceId: number, asset: RawAsset): void;
-        addImage(resourceId: number, element: HTMLImageElement): void;
+        addImage(resourceId: number, uri: string, width?: number, height?: number): void;
         getImage(resourceId: number, uri: string): Undef<ImageAsset>;
         addFont(resourceId: number, data: FontFaceData): void;
         getFonts(resourceId: number, fontFamily: string, fontStyle?: string, fontWeight?: string): FontFaceData[];
@@ -236,7 +236,7 @@ declare module "base" {
         getAudio(resourceId: number, uri: string): Undef<Asset>;
         addRawData(resourceId: number, uri: string, options: RawDataOptions): void;
         getRawData(resourceId: number, uri: string): Undef<RawAsset>;
-        addImageData(resourceId: number, uri: string, width?: number, height?: number): void;
+        addImageElement(resourceId: number, element: HTMLImageElement): void;
         fromImageUrl(resourceId: number, value: string): ImageAsset[];
         assignFilename(uri: string, mimeType?: string, ext?: string): string;
         set fileHandler(value);
@@ -264,6 +264,7 @@ declare module "base" {
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
+        getImageDimension(resourceId: number, uri: string): Dimension;
         preFormatString(value: string): string
         removeExcludedText(node: T, element: Element): string;
         get controllerSettings(): ControllerSettingsUI;

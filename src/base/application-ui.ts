@@ -1586,26 +1586,26 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(sessionId: string, resourceId: number, element: HTMLElement, pseudoElt: PseudoElt, elementRoot: HTMLElement | ShadowRoot = element.shadowRoot || element) {
-        let styleMap = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
+        let style = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
-            if (!styleMap) {
-                styleMap = {};
-                setElementCache(element, 'styleMap' + pseudoElt, styleMap, sessionId);
+            if (!style) {
+                style = {};
+                setElementCache(element, 'styleMap' + pseudoElt, style, sessionId);
             }
-            styleMap.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
+            style.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
         }
-        if (styleMap) {
-            let value = styleMap.content;
+        if (style) {
+            let value = style.content;
             if (value) {
-                const absolute = hasCoords(styleMap.position ||= 'static');
-                if (absolute && +styleMap.opacity! <= 0) {
+                const absolute = hasCoords(style.position ||= 'static');
+                if (absolute && +style.opacity! <= 0) {
                     return;
                 }
                 const textContent = trimBoth(value);
                 if (!isString(textContent)) {
                     if (pseudoElt === '::after') {
                         const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
-                        if ((absolute || !textContent || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(styleMap, true, absolute)) {
+                        if ((absolute || !textContent || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(style, true, absolute)) {
                             return;
                         }
                     }
@@ -1619,17 +1619,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                             else {
-                                const style = getStyle(child);
-                                if (hasCoords(styleMap.position)) {
+                                const { position, float } = getStyle(child);
+                                if (hasCoords(position)) {
                                     continue;
                                 }
-                                else if (style.float !== 'none') {
+                                else if (float !== 'none') {
                                     return;
                                 }
                                 break;
                             }
                         }
-                        if (!checkPseudoDimension(styleMap, false, absolute)) {
+                        if (!checkPseudoDimension(style, false, absolute)) {
                             return;
                         }
                     }
@@ -1832,7 +1832,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (content || value === '""') {
-                    tagName ||= /^(?:inline|table)/.test(styleMap.display ||= 'inline') ? 'span' : 'div';
+                    tagName ||= /^(?:inline|table)/.test(style.display ||= 'inline') ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
                     pseudoElement.className = '__squared-pseudo';
                     pseudoElement.style.display = 'none';
@@ -1845,30 +1845,27 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (content) {
                         if (tagName === 'img') {
                             (pseudoElement as HTMLImageElement).src = content;
-                            const image = this.resourceHandler.getImage(resourceId, content);
-                            if (image) {
-                                const { width, height } = image;
-                                if (width && height) {
-                                    let options: Undef<ParseUnitOptions>;
-                                    if (styleMap.fontSize) {
-                                        options = { fontSize: parseUnit(styleMap.fontSize) };
+                            const { width, height } = this.resourceHandler.getImageDimension(resourceId, content);
+                            if (width && height) {
+                                let options: Undef<ParseUnitOptions>;
+                                if (style.fontSize) {
+                                    options = { fontSize: parseUnit(style.fontSize) };
+                                }
+                                if (!style.width && style.height) {
+                                    const offset = parseUnit(style.height, options);
+                                    if (offset > 0) {
+                                        style.width = width * offset / height + 'px';
                                     }
-                                    if (!styleMap.width && styleMap.height) {
-                                        const offset = parseUnit(styleMap.height, options);
-                                        if (offset > 0) {
-                                            styleMap.width = width * offset / height + 'px';
-                                        }
+                                }
+                                else if (style.width && !style.height) {
+                                    const offset = parseUnit(style.width, options);
+                                    if (offset > 0) {
+                                        style.height = height * offset / width + 'px';
                                     }
-                                    else if (styleMap.width && !styleMap.height) {
-                                        const offset = parseUnit(styleMap.width, options);
-                                        if (offset > 0) {
-                                            styleMap.height = height * offset / width + 'px';
-                                        }
-                                    }
-                                    else {
-                                        styleMap.width = width + 'px';
-                                        styleMap.height = height + 'px';
-                                    }
+                                }
+                                else {
+                                    style.width = width + 'px';
+                                    style.height = height + 'px';
                                 }
                             }
                         }
@@ -1876,12 +1873,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             pseudoElement.innerText = content;
                         }
                     }
-                    for (const attr in styleMap) {
+                    for (const attr in style) {
                         if (attr !== 'display') {
-                            pseudoElement.style[attr] = styleMap[attr];
+                            pseudoElement.style[attr] = style[attr];
                         }
                     }
-                    setElementCache(pseudoElement, 'styleMap', styleMap, sessionId);
+                    setElementCache(pseudoElement, 'styleMap', style, sessionId);
                     setElementCache(pseudoElement, 'pseudoElt', pseudoElt, sessionId);
                     return pseudoElement;
                 }

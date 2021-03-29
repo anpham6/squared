@@ -1480,6 +1480,11 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         }
     }
 
+    public getImageDimension(resourceId: number, uri: string) {
+        const image = this.getImage(resourceId, uri);
+        return image ? { width: image.width, height: image.height } : { width: NaN, height: NaN };
+    }
+
     public preFormatString(value: string) {
         return replaceAll(value, '\u00A0', this.STRING_SPACE);
     }

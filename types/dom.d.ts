@@ -2,6 +2,7 @@ type DocumentRoot = Document | ShadowRoot;
 type DocumentElement = HTMLElement | SVGSVGElement;
 type QuerySelectorElement = DocumentRoot | DocumentElement;
 type StyleElement = HTMLElement | SVGElement;
+type DimensionElement = HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLInputElement | HTMLObjectElement | HTMLIFrameElement | HTMLCanvasElement | SVGSVGElement;
 type PositionAttr = "top" | "right" | "bottom" | "left";
 type PositionDirectionAttr = "start" | "end";
 type PositionAllAttr = PositionAttr | PositionDirectionAttr;

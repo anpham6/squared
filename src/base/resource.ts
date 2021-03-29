@@ -83,18 +83,18 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const parseSrcSet = (value: string) => {
             if (value) {
                 splitSome(value, uri => {
-                    this.addImageData(resourceId, resolvePath(splitPairStart(uri, ' ', false, true)));
+                    this.addImage(resourceId, resolvePath(splitPairStart(uri, ' ', false, true)));
                 });
             }
         };
         for (const element of elements) {
             element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source: HTMLImageElement | HTMLSourceElement) => parseSrcSet(source.srcset));
-            element.querySelectorAll('video').forEach((source: HTMLVideoElement) => this.addImageData(resourceId, source.poster));
-            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => this.addImageData(resourceId, image.src, image.width, image.height));
+            element.querySelectorAll('video').forEach((source: HTMLVideoElement) => this.addImage(resourceId, source.poster));
+            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => this.addImage(resourceId, image.src, image.width, image.height));
             element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
                 const src = source.data || source.src;
                 if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
-                    this.addImageData(resourceId, src.trim());
+                    this.addImage(resourceId, src.trim());
                 }
             });
             element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
@@ -102,7 +102,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 if (href && href.indexOf('#') > 0) {
                     const src = resolvePath(splitPairStart(href, '#'));
                     if (FILE.SVG.test(src)) {
-                        this.addImageData(resourceId, src);
+                        this.addImage(resourceId, src);
                     }
                 }
             });
@@ -114,7 +114,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 if (FILE.SVG.test(uri)) {
                     result.push(uri);
                 }
-                else if (item.width === 0 || item.height === 0) {
+                else if (isNaN(item.width) || isNaN(item.height)) {
                     const element = document.createElement('img');
                     element.src = uri;
                     if (element.naturalWidth && element.naturalHeight) {
@@ -171,7 +171,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         for (const element of elements) {
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
                 if (!preloadImages) {
-                    this.addImage(resourceId, image);
+                    this.addImageElement(resourceId, image);
                 }
                 else {
                     const src = image.src;
@@ -180,7 +180,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                             result.push(src);
                         }
                         else if (image.complete) {
-                            this.addImage(resourceId, image);
+                            this.addImageElement(resourceId, image);
                         }
                         else {
                             result.push(image);
@@ -321,19 +321,10 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
-    public addImage(resourceId: number, element: HTMLImageElement) {
-        const assets = Resource.ASSETS[resourceId];
-        if (assets && element.complete) {
-            const uri = element.src;
-            const image = Resource.parseDataURI(uri);
-            if (image) {
-                image.width = element.naturalWidth;
-                image.height = element.naturalHeight;
-                this.addRawData(resourceId, uri, image);
-            }
-            if (uri) {
-                assets.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
-            }
+    public addImage(resourceId: number, uri: string, width = NaN, height = NaN) {
+        const image = Resource.ASSETS[resourceId]?.image;
+        if (image && uri && (width && height || !this.getImage(resourceId, uri))) {
+            image.set(uri, { width, height, uri });
         }
     }
 
@@ -471,10 +462,18 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         }
     }
 
-    public addImageData(resourceId: number, uri: string, width = 0, height = 0) {
-        const image = Resource.ASSETS[resourceId]?.image;
-        if (image && uri && (width && height || !this.getImage(resourceId, uri))) {
-            image.set(uri, { width, height, uri });
+    public addImageElement(resourceId: number, element: HTMLImageElement) {
+        if (element.complete) {
+            const uri = element.src;
+            const image = Resource.parseDataURI(uri);
+            if (image) {
+                image.width = element.naturalWidth;
+                image.height = element.naturalHeight;
+                this.addRawData(resourceId, uri, image);
+            }
+            if (uri) {
+                Resource.ASSETS[resourceId]?.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
+            }
         }
     }
 

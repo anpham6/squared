@@ -846,7 +846,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _box: Null<BoxRectDimension> = null;
     protected _linear: Null<BoxRectDimension> = null;
     protected _initial: Null<InitialData<T>> = null;
-    protected _cssStyle: Null<CssStyleMap> = null;
     protected _styleMap!: CssStyleMap;
     protected _naturalChildren: Null<T[]> = null;
     protected _naturalElements: Null<T[]> = null;
@@ -938,7 +937,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     else {
                         this._styleMap = styleMap;
                     }
-                    this._cssStyle = styleMap;
                     if (cache) {
                         this._cache = {};
                     }
@@ -1354,9 +1352,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
         }
         else {
-            const styleMap = this._styleMap;
+            const style = this._styleMap;
             for (const attr in values) {
-                if (!styleMap[attr]) {
+                if (!style[attr]) {
                     this.css(attr as CssStyleAttr, values[attr], cache);
                 }
             }
@@ -1523,17 +1521,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public cssCopy(node: T, ...attrs: CssStyleAttr[]) {
-        const styleMap = this._styleMap;
+        const style = this._styleMap;
         for (let i = 0, attr: CssStyleAttr, length = attrs.length; i < length; ++i) {
-            styleMap[attr = attrs[i]] = node.css(attr);
+            style[attr = attrs[i]] = node.css(attr);
         }
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: CssStyleAttr[]) {
-        const styleMap = this._styleMap;
+        const style = this._styleMap;
         for (let i = 0, attr: CssStyleAttr, length = attrs.length; i < length; ++i) {
-            if (!styleMap[attr = attrs[i]]) {
-                styleMap[attr] = node.css(attr);
+            if (!style[attr = attrs[i]]) {
+                style[attr] = node.css(attr);
             }
         }
     }
@@ -1560,8 +1558,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (attr) {
                 return getStyle(this._element!, name)[attr] as Undef<string>;
             }
-            const styleMap = this._elementData!['styleMap' + name] as Undef<CssStyleMap>;
-            if (styleMap) {
+            const style = this._elementData!['styleMap' + name] as Undef<CssStyleMap>;
+            if (style) {
                 switch (name) {
                     case '::first-letter':
                     case '::first-line':
@@ -1576,7 +1574,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                     case '::before':
                     case '::after':
-                        return Node.sanitizeCss(this._element as HTMLElement, styleMap, styleMap.writingMode || this.valueOf('writingMode'));
+                        return Node.sanitizeCss(this._element as HTMLElement, style, style.writingMode || this.valueOf('writingMode'));
                 }
             }
         }
@@ -2658,11 +2656,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         let result = this._cache.autoMargin;
         if (result === undefined) {
             if (this.blockStatic || !this.pageFlow || this.display === 'table') {
-                const styleMap = this._styleMap;
-                const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasUnit('right'));
-                const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasUnit('left'));
-                const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasUnit('bottom'));
-                const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.hasUnit('top'));
+                const style = this._styleMap;
+                const left = style.marginLeft === 'auto' && (this.pageFlow || this.hasUnit('right'));
+                const right = style.marginRight === 'auto' && (this.pageFlow || this.hasUnit('left'));
+                const top = style.marginTop === 'auto' && (this.pageFlow || this.hasUnit('bottom'));
+                const bottom = style.marginBottom === 'auto' && (this.pageFlow || this.hasUnit('top'));
                 result = {
                     horizontal: left || right,
                     left: left && !right,
@@ -3180,7 +3178,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get cssStyle() {
-        return { ...this._cssStyle };
+        return this._elementData ? { ...this._elementData.styleMap } : {};
     }
 
     get textStyle() {

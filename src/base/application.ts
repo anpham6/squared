@@ -48,7 +48,7 @@ function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Res
             const url = resolvePath(match[5], styleSheetHref);
             if (url) {
                 if (resource) {
-                    resource.addImageData(resourceId, url);
+                    resource.addImage(resourceId, url);
                 }
                 result = replaceAll(result || value, match[0], `url("${url}")`, 1);
             }
@@ -246,7 +246,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resource!.addRawData(resourceId, data, (item as PromiseFulfilledResult<unknown>).value as RawDataOptions);
                     }
                     else {
-                        resource!.addImage(resourceId, data);
+                        resource!.addImageElement(resourceId, data);
                     }
                 }
                 if (errors) {
@@ -666,13 +666,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                         }
                         else {
-                            const styleMap = { ...baseMap };
+                            const style = { ...baseMap };
                             const specificityData: ObjectMap<number> = {};
-                            for (const attr in styleMap) {
+                            for (const attr in style) {
                                 specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
                             setElementCache(element, 'sessionId', sessionId);
-                            setElementCache(element, attrStyle, styleMap, sessionId);
+                            setElementCache(element, attrStyle, style, sessionId);
                             setElementCache(element, attrSpecificity, specificityData, sessionId);
                         }
                     }

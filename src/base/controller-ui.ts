@@ -48,6 +48,7 @@ function pushIndentArray(values: string[], depth: number) {
 }
 
 const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial' || value === 'unset' || value === 'revert';
+const hasEmptyDimension = (value: Undef<string>) => !value || value === 'auto';
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public readonly application!: ApplicationUI<T>;
@@ -118,45 +119,41 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }, processing.sessionId);
         }
         else {
-            let styleMap = getElementCache<CssStyleMap>(element, 'styleMap', processing.sessionId);
-            if (!styleMap) {
-                setElementCache(element, 'styleMap', styleMap = {}, processing.sessionId);
+            let style = getElementCache<CssStyleMap>(element, 'styleMap', processing.sessionId);
+            if (!style) {
+                setElementCache(element, 'styleMap', style = {}, processing.sessionId);
             }
-            const setDimension = () => {
-                this.setElementDimension(processing.resourceId, element as HTMLImageElement, styleMap!, 'width');
-                this.setElementDimension(processing.resourceId, element as HTMLImageElement, styleMap!, 'height');
-            };
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (element.tagName) {
                     case 'BODY':
-                        if (styleMap.backgroundColor === 'rgba(0, 0, 0, 0)') {
-                            delete styleMap.backgroundColor;
+                        if (style.backgroundColor === 'rgba(0, 0, 0, 0)') {
+                            delete style.backgroundColor;
                         }
                         break;
                     case 'INPUT':
                     case 'SELECT':
                     case 'BUTTON':
                     case 'TEXTAREA':
-                        styleMap.display ||= 'inline-block';
+                        style.display ||= 'inline-block';
                         break;
                     case 'FIELDSET':
-                        styleMap.display ||= 'block';
+                        style.display ||= 'block';
                         break;
                     case 'RUBY':
-                        styleMap.display ||= 'inline';
+                        style.display ||= 'inline';
                         break;
                 }
             }
             switch (element.tagName) {
                 case 'A':
-                    styleMap.color ||= this._settingsStyle.anchorFontColor;
+                    style.color ||= this._settingsStyle.anchorFontColor;
                     break;
                 case 'INPUT': {
-                    styleMap.fontSize ||= this._settingsStyle.formFontSize;
+                    style.fontSize ||= this._settingsStyle.formFontSize;
                     const { type, disabled } = element as HTMLInputElement;
                     switch (type) {
                         case 'image':
-                            setDimension();
+                            this.setElementDimension(processing.resourceId, element as HTMLInputElement, style);
                         case 'radio':
                         case 'checkbox':
                             break;
@@ -164,38 +161,38 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'reset':
                         case 'submit':
                         case 'button':
-                            this.setButtonStyle(styleMap, disabled);
+                            this.setButtonStyle(style, disabled);
                             break;
                         case 'range':
-                            if (!disabled && hasEmptyStyle(styleMap.backgroundColor)) {
-                                styleMap.backgroundColor = this._settingsStyle.rangeBackgroundColor;
+                            if (!disabled && hasEmptyStyle(style.backgroundColor)) {
+                                style.backgroundColor = this._settingsStyle.rangeBackgroundColor;
                             }
                         default:
-                            this.setInputStyle(styleMap, disabled);
+                            this.setInputStyle(style, disabled);
                             break;
                     }
                     break;
                 }
                 case 'BUTTON': {
                     const disabled = (element as HTMLButtonElement).disabled;
-                    styleMap.fontSize ||= this._settingsStyle.formFontSize;
-                    this.setButtonStyle(styleMap, disabled);
+                    style.fontSize ||= this._settingsStyle.formFontSize;
+                    this.setButtonStyle(style, disabled);
                     break;
                 }
                 case 'TEXTAREA':
                 case 'SELECT': {
                     const disabled = (element as HTMLTextAreaElement | HTMLSelectElement).disabled;
-                    styleMap.fontSize ||= this._settingsStyle.formFontSize;
-                    this.setInputStyle(styleMap, disabled, '1px');
+                    style.fontSize ||= this._settingsStyle.formFontSize;
+                    this.setInputStyle(style, disabled, '1px');
                     break;
                 }
                 case 'BODY':
-                    if (hasEmptyStyle(styleMap.backgroundColor) && (getStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
-                        styleMap.backgroundColor = 'rgb(255, 255, 255)';
+                    if (hasEmptyStyle(style.backgroundColor) && (getStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
+                        style.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
                 case 'H1':
-                    if (!styleMap.fontSize) {
+                    if (!style.fontSize) {
                         let parent = element.parentElement;
                         found: {
                             while (parent) {
@@ -204,58 +201,58 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     case 'ASIDE':
                                     case 'NAV':
                                     case 'SECTION':
-                                        styleMap.fontSize = '1.5em';
+                                        style.fontSize = '1.5em';
                                         break found;
                                     default:
                                         parent = parent.parentElement;
                                         break;
                                 }
                             }
-                            styleMap.fontSize = '2em';
+                            style.fontSize = '2em';
                         }
                     }
                     break;
                 case 'H2':
-                    styleMap.fontSize ||= '1.5em';
+                    style.fontSize ||= '1.5em';
                     break;
                 case 'H3':
-                    styleMap.fontSize ||= '1.17em';
+                    style.fontSize ||= '1.17em';
                     break;
                 case 'H4':
-                    styleMap.fontSize ||= '1em';
+                    style.fontSize ||= '1em';
                     break;
                 case 'H5':
-                    styleMap.fontSize ||= '0.83em';
+                    style.fontSize ||= '0.83em';
                     break;
                 case 'H6':
-                    styleMap.fontSize ||= '0.67em';
+                    style.fontSize ||= '0.67em';
                     break;
                 case 'HR':
-                    this.setBorderStyle(styleMap, '1px', 'silver');
+                    this.setBorderStyle(style, '1px', 'silver');
                     break;
                 case 'FORM':
-                    styleMap.marginTop ||= '0px';
+                    style.marginTop ||= '0px';
                     break;
                 case 'LI':
-                    styleMap.listStyleImage ||= 'inherit';
+                    style.listStyleImage ||= 'inherit';
                     break;
                 case 'SUP':
                 case 'SUB':
                 case 'SMALL':
-                    styleMap.fontSize ||= 'smaller';
+                    style.fontSize ||= 'smaller';
                     break;
                 case 'RT':
-                    if (!styleMap.fontSize && element.parentElement!.tagName === 'RUBY') {
-                        styleMap.fontSize = '50%';
+                    if (!style.fontSize && element.parentElement!.tagName === 'RUBY') {
+                        style.fontSize = '50%';
                     }
                     break;
-                case 'IFRAME':
-                    if (!styleMap.display || styleMap.display === 'inline') {
-                        styleMap.display = 'inline-block';
-                    }
                 case 'SOURCE':
                     if (element.parentElement!.tagName !== 'PICTURE') {
                         break;
+                    }
+                case 'IFRAME':
+                    if (!style.display || style.display === 'inline') {
+                        style.display = 'inline-block';
                     }
                 case 'IMG':
                 case 'CANVAS':
@@ -265,7 +262,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'EMBED':
                 case 'SVG':
                 case 'svg':
-                    setDimension();
+                    this.setElementDimension(processing.resourceId, element as DimensionElement, style);
                     break;
             }
         }
@@ -787,7 +784,42 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return result;
     }
 
-    protected setElementDimension(resourceId: number, element: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLInputElement | HTMLObjectElement | HTMLIFrameElement | HTMLCanvasElement | SVGSVGElement, style: CssStyleMap, attr: DimensionAttr) {
+    protected setElementDimension(resourceId: number, element: DimensionElement, style: CssStyleMap) {
+        this.setDimension(element, style, 'width');
+        this.setDimension(element, style, 'height');
+        if (!hasEmptyDimension(style.height) && hasEmptyDimension(style.width) || !hasEmptyDimension(style.width) && hasEmptyDimension(style.height)) {
+            switch (element.tagName) {
+                case 'IMG':
+                case 'INPUT':
+                case 'SOURCE':
+                case 'EMBED':
+                case 'IFRAME':
+                case 'OBJECT': {
+                    const image = this.application.resourceHandler.getImageDimension(resourceId, element instanceof HTMLObjectElement ? element.data : (element as HTMLImageElement).src);
+                    if (image.width && image.height) {
+                        for (let i = 0; i < 2; ++i) {
+                            const [attr, opposing, maxDimension] = (i === 0 ? ['width', 'height', 'maxWidth'] : ['height', 'width', 'maxHeight']) as CssStyleAttr[];
+                            const value = style[opposing];
+                            if (value && isLength(value)) {
+                                const valueMax = style[maxDimension];
+                                if (!valueMax || !isPercent(valueMax)) {
+                                    const options: ParseUnitOptions = { fontSize: getFontSize(element) };
+                                    let unit = image[attr] * parseUnit(value, options) / image[opposing];
+                                    if (valueMax && isLength(valueMax)) {
+                                        unit = Math.min(unit, parseUnit(valueMax, options));
+                                    }
+                                    style[attr] = formatPX(unit);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    private setDimension(element: DimensionElement, style: CssStyleMap, attr: DimensionAttr) {
         if (!style[attr] || style[attr] === 'auto') {
             const horizontal = attr === 'width';
             const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
@@ -821,33 +853,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         else {
                             style.height = '150px';
                         }
-                        return;
-                }
-            }
-            switch (element.tagName) {
-                case 'IMG':
-                case 'INPUT':
-                case 'SOURCE':
-                case 'EMBED':
-                case 'IFRAME':
-                case 'OBJECT': {
-                    const image = this.application.resourceHandler.getImage(resourceId, element instanceof HTMLObjectElement ? element.data : (element as HTMLImageElement).src);
-                    if (image && image.width && image.height) {
-                        const opposing = horizontal ? 'height' : 'width';
-                        const value = style[opposing];
-                        if (value && isLength(value)) {
-                            const valueMax = horizontal ? style.maxWidth : style.maxHeight;
-                            if (!valueMax || !isPercent(valueMax)) {
-                                const options: ParseUnitOptions = { fontSize: getFontSize(element) };
-                                let unit = image[attr] * parseUnit(value, options) / image[opposing];
-                                if (valueMax && isLength(valueMax)) {
-                                    unit = Math.min(unit, parseUnit(valueMax, options));
-                                }
-                                style[attr] = formatPX(unit);
-                            }
-                        }
-                    }
-                    break;
+                        break;
                 }
             }
         }
