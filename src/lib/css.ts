@@ -830,7 +830,6 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'borderTop':
         case 'columnRule':
         case 'outline':
-        case 'textEmphasis':
         case 'textDecoration': {
             const border = splitEnclosing(value);
             const length = border.length;

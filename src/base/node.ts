@@ -24,7 +24,9 @@ const TEXT_STYLE: CssStyleAttr[] = [
     'fontStretch',
     'color',
     'whiteSpace',
-    'textDecoration',
+    'textDecorationLine',
+    'textDecorationStyle',
+    'textDecorationColor',
     'textTransform',
     'letterSpacing',
     'wordSpacing'
@@ -1320,7 +1322,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 style[attr] = 'initial';
                 const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
                 if (property && typeof property.value === 'string') {
-                    this._styleMap[attr] = property.valueOfNone || (getInitialValue(this._element!, attr) + (property.trait & CSS_TRAITS.UNIT ? 'px' : ''));
+                    this._styleMap[attr] = getInitialValue(this._element!, attr) + (property.trait & CSS_TRAITS.UNIT ? 'px' : '');
                 }
                 else {
                     delete this._styleMap[attr];
@@ -3186,6 +3188,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             result = this.cssAsObject(...TEXT_STYLE);
             result.fontSize = 'inherit';
+            result.lineHeight = 'inherit';
             this._cache.textStyle = result;
         }
         return result;

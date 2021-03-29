@@ -650,6 +650,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 case 'textStyle':
                     result = node.textStyle;
                     result.fontSize = node.fontSize + 'px';
+                    result.lineHeight = node.lineHeight + 'px';
                     this.cssApply(result);
                     break;
                 case 'boxStyle': {
@@ -1238,6 +1239,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             );
         Object.assign(style, this.textStyle);
         style.fontSize = this.naturalElement && this.valueOf('fontSize') || this.fontSize + 'px';
+        style.lineHeight = this.naturalElement && this.valueOf('lineHeight') || this.lineHeight + 'px';
         if (width) {
             style.width = width;
         }
