@@ -700,8 +700,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            child = this.insertNode(processing, element, cascadeAll);
-                            setElementState(child, 0);
+                            setElementState(child = this.insertNode(processing, element, cascadeAll), 0);
                         }
                         if (!child.excluded) {
                             inlineText = false;
@@ -1690,12 +1689,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     const counterType = match[2] === 'counter';
                                     const [counterName, styleName = 'decimal'] = counterType ? [match[3], match[4]] : [match[6], match[8]];
                                     const counters: number[] = [NaN];
-                                    let depth = 0,
+                                    let current: Null<HTMLElement> = element,
+                                        depth = 0,
+                                        initial = 0,
                                         locked: Undef<boolean>,
-                                        wasSet: Undef<boolean>,
+                                        wasSet: Undef<number>,
                                         wasReset: Undef<boolean>;
-                                    const incrementCounter = (increment: Null<number>, isSet: boolean) => {
-                                        if (increment !== null && !locked && (isSet || !wasSet)) {
+                                    const incrementCounter = (increment: Null<number>, isSet?: boolean) => {
+                                        if (increment !== null && !locked && (isSet || wasSet !== 2)) {
                                             if (isNaN(counters[0])) {
                                                 counters[0] = increment;
                                             }
@@ -1704,12 +1705,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                         }
                                     };
-                                    const cascadeSibling = (target: Element, ascending = true): number => {
+                                    const cascadeSibling = (target: Element, ignoreReset?: boolean, ascending?: boolean): number => {
                                         const [counterReset, counterSet] = setCounter(target, ascending);
                                         let type = 0;
+                                        if (counterSet !== null) {
+                                            wasSet = ascending && !locked ? 2 : 1;
+                                        }
                                         if (counterReset !== null) {
                                             if (depth === 0) {
-                                                if (!wasReset && ascending) {
+                                                if (ascending && !wasReset) {
                                                     type = 1;
                                                 }
                                                 else {
@@ -1722,7 +1726,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                         iterateArray(target.children, (item: Element) => {
                                             if (item.className !== '__squared-pseudo') {
-                                                switch (cascadeSibling(item, false)) {
+                                                switch (cascadeSibling(item)) {
                                                     case 0:
                                                     case 1:
                                                         wasReset = true;
@@ -1731,15 +1735,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                         });
                                         if (type === 1) {
-                                            incrementCounter(counterReset, true);
-                                            locked = false;
-                                            counters.unshift(NaN);
-                                            return 1;
+                                            if (!ignoreReset || target === current) {
+                                                incrementCounter(counterReset, true);
+                                                locked = false;
+                                                counters.unshift(NaN);
+                                                return 1;
+                                            }
+                                            return ascending ? -1 : 0;
                                         }
-                                        if (ascending && counterSet !== null) {
-                                            return 2;
+                                        if (wasSet === 1 && ascending && !wasReset) {
+                                            incrementCounter(initial);
+                                            locked = true;
                                         }
-                                        return wasReset ? 0 : -1;
+                                        return wasSet === 2 ? 2 : wasReset ? 0 : -1;
                                     };
                                     const setCounter = (target: Element, ascending?: boolean): [Null<number>, Null<number>] => {
                                         const { counterSet, counterIncrement, counterReset } = getStyleMap(target);
@@ -1754,24 +1762,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
                                             incrementCounter(getPseudoIncrement(target, counterName), isSet);
-                                            if (ascending && isSet) {
-                                                wasSet = true;
-                                            }
                                         }
                                         return [getCounterValue(counterReset, counterName), setValue];
                                     };
-                                    let current: Null<HTMLElement> = element,
-                                        reset: number;
                                     while (current) {
                                         const [counterReset, counterSet] = setCounter(current, true);
-                                        reset = 0;
+                                        initial = 0;
                                         wasReset = false;
                                         if (counterSet !== null) {
                                             locked = true;
-                                            wasSet = true;
+                                            wasSet = 2;
                                         }
                                         else {
-                                            wasSet = false;
+                                            wasSet = 0;
                                         }
                                         if (counterReset !== null) {
                                             incrementCounter(counterReset, true);
@@ -1787,36 +1790,25 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         while (sibling) {
                                             if (sibling.className !== '__squared-pseudo') {
                                                 if (!locked) {
-                                                    reset = counters[0];
+                                                    initial = counters[0];
                                                 }
-                                                switch (cascadeSibling(sibling)) {
+                                                switch (cascadeSibling(sibling, counterReset !== null, true)) {
                                                     case 0:
-                                                        if (!wasSet) {
-                                                            incrementCounter(reset, true);
-                                                        }
+                                                        incrementCounter(initial, true);
                                                         locked = true;
                                                         break;
                                                     case 1:
-                                                        wasSet = false;
-                                                        if (depth === 0) {
-                                                            if (counterSet !== null) {
-                                                                counters[0] -= counterSet;
-                                                            }
-                                                            if (counterReset !== null) {
-                                                                counters[0] -= counterReset;
-                                                            }
-                                                        }
+                                                        wasSet = 0;
                                                         break;
                                                     case 2:
                                                         locked = true;
-                                                        wasSet = true;
                                                         break;
                                                 }
                                             }
                                             sibling = sibling.previousElementSibling;
                                         }
-                                        current = current.parentElement;
                                         ++depth;
+                                        current = current.parentElement;
                                     }
                                     const delimiter = match[7] ? match[7].replace(/\\"/g, '"') : '';
                                     content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
