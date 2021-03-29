@@ -74,8 +74,8 @@ function isFontFixedWidth(node: T) {
     return fontFirst === 'monospace' && fontSecond !== 'monospace';
 }
 
-function getFlexValue(node: T, attr: CssStyleAttr, fallback: number, parent?: Null<Node>): number {
-    const value = +(parent || node).css(attr);
+function getCssFloat(node: T, attr: CssStyleAttr, fallback: number): number {
+    const value = +node.css(attr);
     return !isNaN(value) ? value : fallback;
 }
 
@@ -1580,12 +1580,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public toInt(attr: CssStyleAttr, fallback = NaN, initial?: boolean) {
-        return convertInt((initial && this._initial?.styleMap || this._styleMap)[attr]!, fallback);
+    public toInt(attr: CssStyleAttr, fallback = NaN, options?: CssInitialOptions) {
+        return convertInt(this.cssInitial(attr, options)!, fallback);
     }
 
-    public toFloat(attr: CssStyleAttr, fallback = NaN, initial?: boolean) {
-        return convertFloat((initial && this._initial?.styleMap || this._styleMap)[attr]!, fallback);
+    public toFloat(attr: CssStyleAttr, fallback = NaN, options?: CssInitialOptions) {
+        return convertFloat(this.cssInitial(attr, options), fallback);
     }
 
     public toElementInt(attr: string, fallback = NaN) {
@@ -2375,8 +2375,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
                     justifySelf: justifySelf === 'auto' ? this.cssParent('justifyItems') : justifySelf,
                     basis,
-                    grow: getFlexValue(this, 'flexGrow', 0),
-                    shrink: getFlexValue(this, 'flexShrink', 1),
+                    grow: getCssFloat(this, 'flexGrow', 0),
+                    shrink: getCssFloat(this, 'flexShrink', 1),
                     order: this.toInt('order', 0)
                 };
             }

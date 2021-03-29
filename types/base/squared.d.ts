@@ -445,8 +445,8 @@ declare module "base" {
         convertUnit(value: unknown, unit: string, options?: NodeConvertUnitOptions): string;
         has(attr: CssStyleAttr, options?: HasOptions): boolean;
         hasUnit(attr: CssStyleAttr, options?: HasUnitOptions): boolean;
-        toInt(attr: CssStyleAttr, fallback?: number, initial?: boolean): number;
-        toFloat(attr: CssStyleAttr, fallback?: number, initial?: boolean): number;
+        toInt(attr: CssStyleAttr, fallback?: number, options?: CssInitialOptions): number;
+        toFloat(attr: CssStyleAttr, fallback?: number, options?: CssInitialOptions): number;
         toElementInt(attr: string, fallback?: number): number;
         toElementFloat(attr: string, fallback?: number): number;
         toElementBoolean(attr: string, fallback?: boolean): boolean;
