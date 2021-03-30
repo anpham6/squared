@@ -20,7 +20,7 @@ const { capitalize, convertWord, hasKeys, joinArray, replaceAll, spliceArray, st
 
 const { trimBoth } = squared.base.lib.util;
 
-const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
+const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|(?<=\\)")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
 
 const FONT_NAME = {

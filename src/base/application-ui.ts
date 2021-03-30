@@ -59,29 +59,6 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     return (!floating ? NODE_ALIGNMENT.FLOAT : 0) | (!right ? NODE_ALIGNMENT.RIGHT : 0);
 }
 
-function checkPseudoDimension(style: CssStyleMap, after: boolean, absolute: boolean) {
-    switch (style.display) {
-        case 'inline':
-        case 'block':
-        case 'inherit':
-        case 'initial':
-        case 'unset':
-        case 'revert': {
-            const { width, height } = style;
-            if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
-                for (const attr in style) {
-                    const value = style[attr as CssStyleAttr]!;
-                    if (/padding|Width|Height/.test(attr) && parseFloat(value) || !absolute && startsWith(attr, 'margin') && parseFloat(value)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
 function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside: string, inside: string, sessionId: string) {
     REGEXP_QUOTE ||= new RegExp(STRING.CSS_QUOTE + `(?:\\s+${STRING.CSS_QUOTE})?`);
     let current: Null<HTMLElement> = element,
@@ -1616,63 +1593,24 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (absolute && +style.opacity! <= 0) {
                     return;
                 }
-                const textContent = trimBoth(value);
-                if (!isString(textContent)) {
-                    if (pseudoElt === '::after') {
-                        const checkPseudoAfter = (sibling: Element) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
-                        if ((absolute || !textContent || !checkPseudoAfter(element.lastChild as Element)) && !checkPseudoDimension(style, true, absolute)) {
-                            return;
-                        }
-                    }
-                    else {
-                        const childNodes = elementRoot.childNodes;
-                        for (let i = 0, length = childNodes.length; i < length; ++i) {
-                            const child = childNodes[i] as Element;
-                            if (child.nodeName[0] === '#') {
-                                if (child.nodeName === '#text' && isString(child.textContent)) {
-                                    break;
-                                }
-                            }
-                            else {
-                                const { position, float } = getStyle(child);
-                                if (hasCoords(position)) {
-                                    continue;
-                                }
-                                else if (float !== 'none') {
-                                    return;
-                                }
-                                break;
-                            }
-                        }
-                        if (!checkPseudoDimension(style, false, absolute)) {
-                            return;
-                        }
-                    }
-                }
-                else if (value === 'inherit') {
-                    let current: Null<HTMLElement> = element;
-                    do {
-                        value = getStyle(current).content;
-                        if (value !== 'inherit') {
-                            break;
-                        }
-                        current = current.parentElement;
-                    }
-                    while (current);
-                }
                 let content = '',
                     tagName: Undef<string>;
                 switch (value) {
-                    case 'normal':
-                    case 'none':
                     case 'initial':
-                    case 'inherit':
                     case 'unset':
                     case 'revert':
+                        value = getStyleMap(sessionId, element, pseudoElt).content;
+                        break;
+                    case 'inherit':
+                        value = getStyleMap(sessionId, element).content;
+                        break;
+                }
+                switch (value) {
+                    case 'normal':
+                    case 'none':
                     case 'no-open-quote':
                     case 'no-close-quote':
-                    case '""':
-                        break;
+                        return;
                     case 'open-quote':
                         if (pseudoElt === '::before') {
                             content = getPseudoQuoteValue(element, pseudoElt, '“', "‘", sessionId);
@@ -1692,16 +1630,114 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            REGEXP_COUNTER ||= /(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)")/g;
-                            const getPseudoIncrement = (sibling: Element, counterName: string) => getCounterValue(getStyleMap(sessionId, sibling, pseudoElt).counterIncrement, counterName);
-                            let match: Null<RegExpExecArray>;
-                            while (match = REGEXP_COUNTER.exec(value)) {
-                                if (match[1]) {
-                                    content += getNamedItem(element, match[1].trim());
+                            if (value[0] === '"' || startsWith(value, 'attr')) {
+                                const pattern = /"((?:[^"]|(?<=\\)")+)"|attr\(([^)]+)\)/g;
+                                let match: Null<RegExpExecArray>;
+                                while (match = pattern.exec(value)) {
+                                    if (match[1]) {
+                                        content += match[1];
+                                    }
+                                    else {
+                                        content += getNamedItem(element, match[2].trim());
+                                    }
                                 }
-                                else if (match[2] || match[5]) {
-                                    const counterType = match[2] === 'counter';
-                                    const [counterName, styleName = 'decimal'] = counterType ? [match[3], match[4]] : [match[6], match[8]];
+                                if (!isString(content)) {
+                                    const checkDimension = (after?: boolean) => {
+                                        switch (style!.display) {
+                                            case 'inline':
+                                            case 'block':
+                                            case 'inherit':
+                                            case 'initial':
+                                            case 'unset':
+                                            case 'revert': {
+                                                const { width, height } = style!;
+                                                if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
+                                                    for (const attr in style) {
+                                                        const value = style[attr as CssStyleAttr]!;
+                                                        const unit = parseFloat(value);
+                                                        if (unit) {
+                                                            switch (attr) {
+                                                                case 'minHeight':
+                                                                    return true;
+                                                                case 'borderTopWidth':
+                                                                    if (getStyle(element, pseudoElt).borderTopStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderRightWidth':
+                                                                    if (getStyle(element, pseudoElt).borderRightStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderBottomWidth':
+                                                                    if (getStyle(element, pseudoElt).borderBottomStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderLeftWidth':
+                                                                    if (getStyle(element, pseudoElt).borderLeftStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                            }
+                                                            if (startsWith(attr, 'padding')) {
+                                                                return true;
+                                                            }
+                                                            else if (!absolute && startsWith(attr, 'margin')) {
+                                                                return true;
+                                                            }
+                                                        }
+                                                        else if (unit === 0 && attr === 'maxHeight') {
+                                                            break;
+                                                        }
+                                                    }
+                                                    return false;
+                                                }
+                                            }
+                                        }
+                                        return true;
+                                    };
+                                    if (pseudoElt === '::after') {
+                                        const checkLastChild = (sibling: Null<ChildNode>) => !!sibling && sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
+                                        if ((absolute || !content || !checkLastChild(element.lastChild)) && !checkDimension(true)) {
+                                            return;
+                                        }
+                                    }
+                                    else if (!checkDimension()) {
+                                        return;
+                                    }
+                                    else {
+                                        const childNodes = elementRoot.childNodes;
+                                        for (let i = 0, length = childNodes.length; i < length; ++i) {
+                                            const child = childNodes[i] as Element;
+                                            if (child.nodeName[0] === '#') {
+                                                if (child.nodeName === '#text' && isString(child.textContent)) {
+                                                    break;
+                                                }
+                                            }
+                                            else {
+                                                const { position, float } = getStyle(child);
+                                                if (hasCoords(position)) {
+                                                    continue;
+                                                }
+                                                else if (float !== 'none') {
+                                                    return;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                REGEXP_COUNTER ||= /(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)"/g;
+                                let match: Null<RegExpExecArray>;
+                                while (match = REGEXP_COUNTER.exec(value)) {
+                                    if (match[8]) {
+                                        content += match[8];
+                                        continue;
+                                    }
+                                    const [counterName, styleName = 'decimal'] = match[1] ? [match[2], match[3]] : [match[5], match[7]];
                                     const counters: number[] = [NaN];
                                     let current: Null<HTMLElement> = element,
                                         depth = 0,
@@ -1719,7 +1755,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                         }
                                     };
-                                    const cascadeSibling = (target: Element, ignoreReset?: boolean, ascending?: boolean): number => {
+                                    const cascadeSibling = (target: Element, ignoreReset?: boolean, ascending?: boolean) => {
                                         const [counterSet, counterReset] = setCounter(target, ascending);
                                         let type = 0;
                                         if (counterSet !== null) {
@@ -1768,7 +1804,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                         return wasReset ? 0 : -1;
                                     };
-                                    const setCounter = (target: Element, ascending?: boolean): [Null<number>, Null<number>] => {
+                                    const setCounter = (target: Element, ascending?: boolean) => {
                                         const { counterSet, counterReset, counterIncrement } = getStyleMap(sessionId, target);
                                         const setValue = getCounterValue(counterSet, counterName, 0);
                                         const resetValue = getCounterValue(counterReset, counterName);
@@ -1783,7 +1819,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (ascending || setValue === null && resetValue === null) {
                                                 incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
                                             }
-                                            incrementCounter(getPseudoIncrement(target, counterName), isSet);
+                                            incrementCounter(getCounterValue(getStyleMap(sessionId, target, pseudoElt).counterIncrement, counterName), isSet);
                                         }
                                         return [setValue, resetValue];
                                     };
@@ -1800,7 +1836,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                         if (counterReset !== null) {
                                             incrementCounter(counterReset, true);
-                                            if (counterType) {
+                                            if (match[1]) {
                                                 break;
                                             }
                                             else {
@@ -1832,15 +1868,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         ++depth;
                                         current = current.parentElement;
                                     }
-                                    const delimiter = match[7] ? match[7].replace(/\\"/g, '"') : '';
+                                    const delimiter = match[6] ? match[6].replace(/\\"/g, '"') : '';
                                     content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
                                 }
-                                else if (match[9]) {
-                                    content += match[9];
-                                }
+                                REGEXP_COUNTER.lastIndex = 0;
                             }
-                            content ||= value;
-                            REGEXP_COUNTER.lastIndex = 0;
                         }
                         break;
                     }

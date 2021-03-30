@@ -181,5 +181,6 @@ export function getTextMetrics(value: string, fontSize: number, fontFamily?: str
 }
 
 export function getNamedItem(element: Element, attr: string) {
-    return element.attributes.getNamedItem(attr)?.value.trim() || '';
+    const item = element.attributes.getNamedItem(attr);
+    return item ? item.value : '';
 }
