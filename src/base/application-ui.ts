@@ -396,7 +396,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public createNode(sessionId: string, options: CreateNodeUIOptions<T>) {
-        const { element, parent, children, flags = 0 } = options;
+        const { element, parent, children, childIndex, flags = 0 } = options;
         const { cache, afterInsertNode } = this.getProcessing(sessionId)!;
         const node = new this.Node(this.nextId, sessionId, element);
         this._afterInsertNode(node);
@@ -404,7 +404,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             afterInsertNode.some(item => item.afterInsertNode!(node));
         }
         if (parent) {
-            node.depth = parent.depth + 1;
+            node.unsafe('depth', parent.depth + 1);
             if (!element && parent.naturalElement) {
                 node.actualParent = parent;
             }
@@ -421,6 +421,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         if (~flags & CREATE_NODE.DEFER) {
             cache.add(node, (flags & CREATE_NODE.DELEGATE) > 0, (flags & CREATE_NODE.CASCADE) > 0);
+        }
+        if (childIndex !== undefined) {
+            node.unsafe('childIndex', childIndex);
         }
         return node;
     }
@@ -683,6 +686,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
                         const hostChild = shadowRoot || element;
+                        const beforeChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostChild);
+                        const afterChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostChild);
                         if (hostChild.childNodes.length) {
                             child = this.cascadeParentNode(
                                 processing,
@@ -692,8 +697,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 childDepth,
                                 extensions,
                                 shadowRoot || shadowParent,
-                                this.createPseduoElement(sessionId, resourceId, element, '::before', hostChild),
-                                this.createPseduoElement(sessionId, resourceId, element, '::after', hostChild),
+                                beforeChild,
+                                afterChild,
                                 cascadeAll
                             );
                             if (child.display === 'contents' && !child.excluded && !shadowRoot) {
@@ -704,7 +709,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     else if (item.plainText) {
                                         plainText = j;
                                     }
-                                    item.init(node, childDepth, j++);
+                                    item.internalSelf(node, childDepth, j++);
                                     item.actualParent = node;
                                     children.push(item);
                                 }
@@ -737,11 +742,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (shadowParent) {
                     child.shadowHost = shadowParent;
                 }
-                child.init(node, childDepth, j++);
+                child.internalSelf(node, childDepth, j++);
                 child.actualParent = node;
                 children.push(child);
             }
-            node.initCascade(children, elements);
+            node.internalCascade(children, elements);
             if (hostParent !== parentElement) {
                 node.shadowRoot = true;
             }
@@ -1375,8 +1380,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 inlineBelow[0].addAlign(NODE_ALIGNMENT.EXTENDABLE);
             }
             inlineBelow.unshift(node);
-            const wrapper = controllerHandler.createNodeGroup(node, inlineBelow, parent);
-            wrapper.childIndex = node.childIndex;
+            const wrapper = controllerHandler.createNodeGroup(node, inlineBelow, parent, { childIndex: node.childIndex });
             wrapper.containerName = node.containerName;
             boxStyle = wrapper.inherit(node, 'boxStyle');
             wrapper.innerWrapped = node;

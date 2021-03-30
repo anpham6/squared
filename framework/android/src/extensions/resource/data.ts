@@ -50,7 +50,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                                 output += indentB + '</data>\n';
                                 controller.addBeforeOutsideTemplate(node, output);
                                 controller.addAfterOutsideTemplate(node, indentA + '</layout>\n');
-                                node.depth = depth - 1;
+                                node.unsafe('depth', depth - 1);
                                 applied.delete(child);
                                 break;
                             }

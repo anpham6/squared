@@ -61,6 +61,7 @@ declare module "base" {
 
     interface AppSession<T extends Node> {
         active: Map<string, AppProcessing<T>>;
+        unusedStyles?: boolean;
     }
 
     interface AppProcessing<T extends Node> {
@@ -402,7 +403,6 @@ declare module "base" {
     class Node extends squared.lib.base.Container<Node> implements BoxModel, Dimension {
         static readonly TEXT_STYLE: string[];
         static sanitizeCss(element: DocumentElement, style: CssStyleMap, writingMode?: string): CssStyleMap;
-        depth: number;
         documentRoot: boolean;
         shadowRoot: boolean;
         sessionId: string;
@@ -410,8 +410,8 @@ declare module "base" {
         shadowHost?: ShadowRoot;
         pseudoElt?: PseudoElt;
         readonly id: number;
-        init(parent: Node, depth: number, index?: number): void;
-        initCascade(children: Node[], elements?: Node[]): void;
+        internalSelf(parent: Null<Node>, depth: number, index?: number): void;
+        internalCascade(children: Node[], elements?: Node[]): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
         data<T = unknown>(name: string, attr: string, value?: unknown, overwrite?: boolean): Undef<T>;
@@ -466,7 +466,7 @@ declare module "base" {
         get parent(): Null<Node>;
         set actualParent(value);
         get actualParent(): Null<Node>;
-        set childIndex(value);
+        get depth(): number;
         get childIndex(): number;
         get naturalChildren(): Node[];
         get naturalElements(): Node[];

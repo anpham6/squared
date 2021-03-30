@@ -163,8 +163,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 const tagName = node.tagName;
                 const options = createViewAttribute();
-                ordinal = application.createNode(node.sessionId, { parent });
-                ordinal.childIndex = node.childIndex;
+                ordinal = application.createNode(node.sessionId, { parent, childIndex: node.childIndex });
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 ordinal.inherit(node, 'textStyle');
                 if (value && !/\w/.test(value)) {

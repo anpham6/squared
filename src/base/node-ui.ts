@@ -553,16 +553,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public unsafe<U = unknown>(name: string | PlainObject, value?: unknown): Undef<U> {
-        if (arguments.length === 1) {
-            if (typeof name === 'string') {
-                return this['_' + name] as Undef<U>;
-            }
-            for (const attr in name) {
-                this['_' + attr] = name[attr];
-            }
+        if (typeof name === 'string') {
+            return arguments.length === 1 ? this['_' + name] as Undef<U> : this['_' + name] = value as Undef<U>;
         }
-        else {
-            return this['_' + name] = value as Undef<U>;
+        for (const attr in name) {
+            this['_' + attr] = name[attr];
         }
     }
 
@@ -625,8 +620,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this._bounds = node.bounds;
                     this._linear = node.linear;
                     this._box = node.box;
-                    if (this.depth === -1) {
-                        this.depth = node.depth;
+                    if (this._depth === -1) {
+                        this._depth = node.depth;
                     }
                     const actualParent = node.actualParent;
                     if (actualParent) {
@@ -833,7 +828,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     replaceWith.actualParent!.naturalChildren.splice(replaceWith.childIndex, 1);
                     this.naturalChildren.splice(childIndex = child.childIndex, 1, replaceWith);
                 }
-                replaceWith.init(this, child.depth, childIndex);
+                replaceWith.internalSelf(this, child.depth, childIndex);
                 children[i] = replaceWith;
                 return true;
             }
@@ -878,7 +873,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                             replaceWith.documentRoot = true;
                                             this.documentRoot = false;
                                         }
-                                        replaceWith.depth = this.depth;
+                                        replaceWith.unsafe('depth', this.depth);
                                         this.renderParent = null;
                                         return template;
                                     }
@@ -1268,8 +1263,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public cloneBase(node: T) {
-        node.depth = this.depth;
-        node.childIndex = this.childIndex;
+        node.internalSelf(this.parent, this.depth, this.childIndex);
         node.inlineText = this.inlineText;
         node.actualParent = this.actualParent;
         node.documentRoot = this.documentRoot;
@@ -1984,9 +1978,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    set childIndex(value) {
-        this._childIndex = value;
-    }
     get childIndex(): number {
         const result = this._childIndex;
         return result === Infinity && this.innerWrapped ? this._childIndex = this.innerMostWrapped.childIndex : result;

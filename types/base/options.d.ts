@@ -1,17 +1,19 @@
 interface CreateNodeOptions {
     element?: Element;
- }
+}
 
-interface CreateNodeUIOptions<T> extends CreateNodeOptions {
+interface CreateNodeBaseUIOptions {
     flags?: number;
+    childIndex?: number;
+}
+
+interface CreateNodeUIOptions<T> extends CreateNodeBaseUIOptions, CreateNodeOptions {
     parent?: T;
     children?: T[];
     innerWrapped?: T;
 }
 
-interface CreateNodeGroupUIOptions extends Partial<LayoutType> {
-    flags?: number;
-}
+interface CreateNodeGroupUIOptions extends CreateNodeBaseUIOptions, Partial<LayoutType> {}
 
 interface CreateNodeWrapperUIOptions<T> extends Partial<LayoutType>, ExcludeOptions {
     flags?: number;

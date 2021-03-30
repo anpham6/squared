@@ -65,7 +65,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         const length = overflow.length;
         if (length) {
             for (let i = 0; i < length; ++i) {
-                const container = this.application.createNode(node.sessionId, { parent });
+                const container = this.application.createNode(node.sessionId, { parent, childIndex: node.childIndex });
                 if (i === 0) {
                     container.inherit(node, 'base', 'initial', 'styleMap');
                     if (!parent.replaceTry({ child: node, replaceWith: container })) {
@@ -79,7 +79,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
                 container.exclude({ resource: NODE_RESOURCE.ASSET });
                 container.resetBox(BOX_STANDARD.PADDING);
-                container.childIndex = node.childIndex;
                 scrollView.push(container);
             }
             for (let i = 0; i < length; ++i) {

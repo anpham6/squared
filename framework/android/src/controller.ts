@@ -293,7 +293,7 @@ function flattenContainer(node: View) {
             lastItemOf(children)!.modifyBox(BOX_STANDARD.MARGIN_RIGHT, item.marginRight);
             renderChildren.splice(i, 0, ...children);
             renderTemplates!.splice(i, 0, ...children.map(child => {
-                child.init(node, depth);
+                child.internalSelf(node, depth);
                 child.renderParent = node;
                 return child.renderedAs!;
             }));
@@ -2037,7 +2037,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public createNodeGroup(node: T, children: T[], parent?: T, options: CreateNodeGroupUIOptions = {}) {
-        const { containerType, alignmentType, flags = 0 } = options;
+        const { containerType, alignmentType, childIndex, flags = 0 } = options;
         const container = new ViewGroup(this.application.nextId, node, children, parent) as T;
         if (containerType) {
             container.setControlType(View.getControlName(containerType, node.api), containerType);
@@ -2048,7 +2048,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         this.afterInsertNode(container);
         if (parent && !parent.contains(container)) {
             parent.add(container);
-            container.init(parent, node.depth);
+            container.internalSelf(parent, node.depth);
+        }
+        if (childIndex !== undefined) {
+            container.unsafe('childIndex', childIndex);
         }
         this.application.getProcessingCache(node.sessionId).add(container, (flags & CREATE_NODE.DELEGATE) > 0, (flags & CREATE_NODE.CASCADE) > 0);
         return container;

@@ -6,11 +6,11 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
     constructor(id: number, node: T, children: T[], parent?: T) {
         super(id, node.sessionId);
         const actualParent = node.actualParent!;
-        this.depth = node.depth;
         this.containerName = node.containerName + '_GROUP';
         this.actualParent = actualParent;
         this.documentParent = node.documentParent;
         this.dir = actualParent.dir;
+        this.unsafe('depth', node.depth);
         this.retainAs(children, node, parent);
     }
 
@@ -25,7 +25,7 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
                     parent.children.splice(index, 1);
                 }
             }
-            item.init(this, depth);
+            item.internalSelf(this, depth);
         }
         super.retainAs(children);
         this.setBounds();

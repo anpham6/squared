@@ -211,15 +211,20 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (typeof item === 'string') {
                         fetch(item)
                             .then(async result => {
-                                const mimeType = result.headers.get('content-type') || '';
-                                if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
-                                    success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() } as RawDataOptions);
-                                }
-                                else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
-                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() } as RawDataOptions);
+                                if (result.status >= 300) {
+                                    error(item + ` (${result.status}: ${result.statusText})`);
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
+                                    const mimeType = result.headers.get('content-type') || '';
+                                    if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                        success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() } as RawDataOptions);
+                                    }
+                                    else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
+                                        success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() } as RawDataOptions);
+                                    }
+                                    else {
+                                        success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
+                                    }
                                 }
                             })
                             .catch(err => error(err));
@@ -399,11 +404,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                             child = new this.Node(id--, sessionId, element);
                             this._afterInsertNode(child);
                         }
-                        child.init(parent, depth + 1, i);
+                        child.internalSelf(parent, depth + 1, i);
                         child.actualParent = parent;
                         elements[i] = child;
                     }
-                    parent.initCascade(elements, elements);
+                    parent.internalCascade(elements, elements);
                     if (currentElement === document.documentElement) {
                         processing.documentElement = parent;
                         break;
@@ -467,7 +472,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     processing.excluded.add(child);
                 }
                 if (child) {
-                    child.init(node, childDepth, j++);
+                    child.internalSelf(node, childDepth, j++);
                     child.actualParent = node;
                     if (shadowParent) {
                         child.shadowHost = shadowParent;
@@ -475,7 +480,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     children.push(child);
                 }
             }
-            node.initCascade(children, elements);
+            node.internalCascade(children, elements);
             if (hostElement !== parentElement) {
                 node.shadowRoot = true;
             }
@@ -641,7 +646,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     const length = elements.length;
                     if (length === 0) {
-                        if (resource && !hostElement) {
+                        if (resource && this.session.unusedStyles && !hostElement) {
                             ((processing ||= this.getProcessing(sessionId)!).unusedStyles ||= new Set()).add(selectorText);
                         }
                         continue;

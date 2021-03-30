@@ -833,12 +833,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public documentRoot = false;
     public shadowRoot = false;
-    public depth = -1;
     public queryMap: Null<T[][]> = null;
     public pseudoElt?: PseudoElt;
     public shadowHost?: ShadowRoot;
 
     protected _parent: Null<T> = null;
+    protected _depth = -1;
     protected _cache: CacheValue = {};
     protected _cacheState: CacheState<T> = { inlineText: false };
     protected _preferInitial = false;
@@ -883,15 +883,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._elementData = null;
     }
 
-    public init(parent: T, depth: number, index?: number) {
+    public internalSelf(parent: Null<T>, depth: number, childIndex?: number) {
         this._parent = parent;
-        this.depth = depth;
-        if (index !== undefined) {
-            this._childIndex = index;
+        this._depth = depth;
+        if (childIndex !== undefined) {
+            this._childIndex = childIndex;
         }
     }
 
-    public initCascade(children: T[], elements?: T[]) {
+    public internalCascade(children: T[], elements?: T[]) {
         this._naturalChildren = children;
         this._naturalElements = elements || children.filter((item: T) => item.naturalElement);
     }
@@ -2151,8 +2151,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             else if (!value.contains(this)) {
                 value.add(this);
             }
-            if (this.depth === -1) {
-                this.depth = value.depth + 1;
+            if (this._depth === -1) {
+                this._depth = value.depth + 1;
             }
         }
     }
@@ -2978,9 +2978,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return { width: this.actualWidth, height: this.actualHeight };
     }
 
-    set childIndex(value) {
-        this._childIndex = value;
+    get depth() {
+        return this._depth;
     }
+
     get childIndex() {
         return this._childIndex;
     }

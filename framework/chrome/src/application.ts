@@ -11,6 +11,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly extensions: Extension<T>[] = [];
     public readonly systemName = 'chrome';
 
+    public init() {
+        this.session.unusedStyles = true;
+    }
+
     public insertNode(processing: squared.base.AppProcessing<T>, element: Element) {
         if (element.nodeName[0] === '#') {
             if (this.userSettings.excludePlainText) {

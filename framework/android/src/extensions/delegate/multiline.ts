@@ -244,7 +244,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                         const container = application.createNode(sessionId, { parent: parentContainer });
                         const metrics = getTextMetrics(value, fontSize, fontFamily);
                         const bounds = { ...boxRect, width: (metrics ? metrics.width : 0) + (value.length * adjustment) } as BoxRectDimension;
-                        container.init(parentContainer, depth);
+                        container.internalSelf(parentContainer, depth);
                         container.inlineText = true;
                         container.renderExclude = false;
                         container.contentAltered = true;
