@@ -2,6 +2,7 @@ import type Extension from './extension';
 
 import File from './file';
 
+const { parseSelectorText } = squared.lib.css;
 const { UNABLE_TO_FINALIZE_DOCUMENT, reject } = squared.lib.error;
 const { escapePattern, isPlainObject } = squared.lib.util;
 
@@ -45,9 +46,17 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
         if (unusedStyles) {
-            const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles = [] } = options;
+            const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles } = options;
             if (removeUnusedClasses || removeUnusedSelectors) {
-                options.unusedStyles = Array.from(unusedStyles).filter(value => (value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && !retainUsedStyles.includes(value));
+                const styles: string[] = [];
+                for (const value of unusedStyles) {
+                    if ((value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && (!retainUsedStyles || !parseSelectorText(value).some(selector => retainUsedStyles.includes(selector)))) {
+                        styles.push(value);
+                    }
+                }
+                if (styles.length) {
+                    options.unusedStyles = styles;
+                }
             }
         }
         if (options.configUri) {
