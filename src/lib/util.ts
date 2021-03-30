@@ -522,7 +522,7 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
     return target as T extends [] ? T[] : PlainObject;
 }
 
-export function resolvePath(value: string, href?: string) {
+export function resolvePath(value: string, href?: Null<string>) {
     if ((value = value.trim()) && !FILE.PROTOCOL.test(value)) {
         const pathname = replaceAll(href ? href.replace(location.origin, '') : location.pathname, '\\', '/').split('/');
         --pathname.length;

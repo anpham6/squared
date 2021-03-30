@@ -25,7 +25,7 @@ const REGEXP_CSSHOST = /^:(host|host-context)\(([^)]+)\)/;
 const REGEXP_DATAURI = new RegExp(`url\\("(${STRING.DATAURI})"\\)`, 'g');
 let CSS_SHORTHANDNONE: Undef<ObjectMap<CssPropertyData>>;
 
-function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Resource<Node>>, resourceId: number) {
+function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number) {
     let result: Undef<string>,
         match: Null<RegExpExecArray>;
     while (match = REGEXP_DATAURI.exec(value)) {
@@ -524,7 +524,6 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     private applyStyleRule(sessionId: string, resourceId: number, item: CSSStyleRule, documentRoot: DocumentRoot, queryRoot?: QuerySelectorElement) {
         const resource = this.resourceHandler;
-        const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
@@ -575,7 +574,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case 'listStyleImage':
                         case 'content':
                             if (value !== 'initial') {
-                                value = parseImageUrl(value, styleSheetHref, resource, resourceId);
+                                value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
                             }
                             break;
                     }
@@ -679,7 +678,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             case CSSRule.FONT_FACE_RULE:
                 if (resource) {
-                    resource.parseFontFace(resourceId, cssText, styleSheetHref);
+                    resource.parseFontFace(resourceId, cssText, item.parentStyleSheet?.href);
                 }
                 break;
             case CSSRule.SUPPORTS_RULE:
@@ -704,7 +703,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             break;
                         case CSSRule.IMPORT_RULE: {
                             if (resource) {
-                                const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
+                                const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href);
                                 if (uri) {
                                     resource.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
                                 }
@@ -764,7 +763,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 case 'content': {
                                     const value: string = cssStyle[attr];
                                     if (value !== 'initial') {
-                                        parseImageUrl(value, item.parentStyleSheet?.href || location.href, resource, resourceId);
+                                        parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
                                     }
                                     break;
                                 }

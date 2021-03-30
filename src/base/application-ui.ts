@@ -86,7 +86,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
         found = 0,
         i = 0, j = -1;
     while (current && current.tagName === 'Q') {
-        const quotes = (getElementCache<CSSStyleDeclaration>(current, 'styleMap', sessionId) || getStyle(current)).quotes;
+        const quotes = getStyleMap(sessionId, current, 'styleMap').quotes;
         if (quotes) {
             const match = REGEXP_QUOTE.exec(quotes);
             if (match) {
@@ -130,8 +130,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
 
 function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
     if (value && value !== 'none') {
-        REGEXP_COUNTERVALUE ||= /([^-\d][^\s]*)(\s+([+-]?\d+))?/g;
-        REGEXP_COUNTERVALUE.lastIndex = 0;
+        (REGEXP_COUNTERVALUE ||= /([^-\d][^\s]*)(\s+([+-]?\d+))?/g).lastIndex = 0;
         let match: Null<RegExpExecArray>;
         while (match = REGEXP_COUNTERVALUE.exec(value)) {
             if (match[1] === counterName) {
@@ -172,6 +171,8 @@ function setElementState(node: NodeUI, type?: number) {
         }
     }
 }
+
+const getStyleMap = (sessionId: string, element: Element, pseudoElt = '') => getElementCache<CSSStyleDeclaration>(element, 'styleMap' + pseudoElt, sessionId) || getStyle(element, pseudoElt as PseudoElt);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
@@ -680,10 +681,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
                         const hostChild = shadowRoot || element;
-                        const beforeElementChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostChild);
-                        const afterElementChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostChild);
                         if (hostChild.childNodes.length) {
-                            child = this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent, beforeElementChild, afterElementChild, cascadeAll);
+                            child = this.cascadeParentNode(
+                                processing,
+                                sessionId,
+                                resourceId,
+                                element,
+                                childDepth,
+                                extensions,
+                                shadowRoot || shadowParent,
+                                this.createPseduoElement(sessionId, resourceId, element, '::before', hostChild),
+                                this.createPseduoElement(sessionId, resourceId, element, '::after', hostChild),
+                                cascadeAll
+                            );
                             if (child.display === 'contents' && !child.excluded && !shadowRoot) {
                                 for (const item of child.naturalChildren as T[]) {
                                     if (item.naturalElement) {
@@ -1677,8 +1687,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             REGEXP_COUNTER ||= /(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)")/g;
-                            const getStyleMap = (sibling: Element, siblingElt = '') => getElementCache<CSSStyleDeclaration>(sibling, 'styleMap' + siblingElt, sessionId) || getStyle(sibling, siblingElt as PseudoElt);
-                            const getPseudoIncrement = (sibling: Element, counterName: string) => getCounterValue(getStyleMap(sibling, pseudoElt).counterIncrement, counterName);
+                            const getPseudoIncrement = (sibling: Element, counterName: string) => getCounterValue(getStyleMap(sessionId, sibling, pseudoElt).counterIncrement, counterName);
                             let match: Null<RegExpExecArray>;
                             while (match = REGEXP_COUNTER.exec(value)) {
                                 if (match[1]) {
@@ -1754,7 +1763,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         return wasReset ? 0 : -1;
                                     };
                                     const setCounter = (target: Element, ascending?: boolean): [Null<number>, Null<number>] => {
-                                        const { counterSet, counterReset, counterIncrement } = getStyleMap(target);
+                                        const { counterSet, counterReset, counterIncrement } = getStyleMap(sessionId, target);
                                         const setValue = getCounterValue(counterSet, counterName, 0);
                                         const resetValue = getCounterValue(counterReset, counterName);
                                         if (!locked) {

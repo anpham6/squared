@@ -193,7 +193,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         return [result, images];
     }
 
-    public parseFontFace(resourceId: number, cssText: string, styleSheetHref: string) {
+    public parseFontFace(resourceId: number, cssText: string, styleSheetHref?: Null<string>) {
         const value = REGEXP_FONTFACE.exec(cssText)?.[1];
         if (value) {
             let fontFamily = REGEXP_FONTFAMILY.exec(value)?.[1].trim();

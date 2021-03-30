@@ -354,7 +354,7 @@ declare module "lib" {
         function isEmptyString(value: string): boolean;
         function isEqual(source: unknown, other: unknown): boolean;
         function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;
-        function resolvePath(value: string, href?: string): string;
+        function resolvePath(value: string, href?: Null<string>): string;
         function replaceAll(value: string, searchValue: string, replaceWith: string, replaceCount?: number): string;
         function escapePattern(value: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;

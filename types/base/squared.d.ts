@@ -223,7 +223,7 @@ declare module "base" {
         reset(): void;
         init(resourceId: number): void;
         preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[]): [(HTMLImageElement | string)[], HTMLImageElement[]];
-        parseFontFace(resourceId: number, cssText: string, styleSheetHref: string): void;
+        parseFontFace(resourceId: number, cssText: string, styleSheetHref?: Null<string>): void;
         parseKeyFrames(resourceId: number, cssRule: CSSKeyframesRule): void;
         addAsset(resourceId: number, asset: RawAsset): void;
         addImage(resourceId: number, uri: string, width?: number, height?: number): void;
