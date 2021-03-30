@@ -1621,112 +1621,111 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             content = getPseudoQuoteValue(element, pseudoElt, '”', "’", sessionId);
                         }
                         break;
-                    default: {
-                        const url = resolveURL(value);
-                        if (url) {
-                            if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
-                                tagName = 'img';
-                                content = url;
-                            }
-                        }
-                        else {
-                            if (value[0] === '"' || startsWith(value, 'attr')) {
-                                const pattern = /"((?:[^"]|(?<=\\)")+)"|attr\(([^)]+)\)/g;
-                                let match: Null<RegExpExecArray>;
-                                while (match = pattern.exec(value)) {
-                                    if (match[1]) {
-                                        content += match[1];
-                                    }
-                                    else {
-                                        content += getNamedItem(element, match[2].trim());
-                                    }
+                    default:
+                        if (value[0] === '"' || startsWith(value, 'attr')) {
+                            const pattern = /"((?:[^"]|(?<=\\)")+)"|attr\(([^)]+)\)/g;
+                            let match: Null<RegExpExecArray>;
+                            while (match = pattern.exec(value)) {
+                                if (match[1]) {
+                                    content += match[1];
                                 }
-                                if (!isString(content)) {
-                                    const checkDimension = (after?: boolean) => {
-                                        switch (style!.display) {
-                                            case 'inline':
-                                            case 'block':
-                                            case 'inherit':
-                                            case 'initial':
-                                            case 'unset':
-                                            case 'revert': {
-                                                const { width, height } = style!;
-                                                if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
-                                                    for (const attr in style) {
-                                                        const value = style[attr as CssStyleAttr]!;
-                                                        const unit = parseFloat(value);
-                                                        if (unit) {
-                                                            switch (attr) {
-                                                                case 'minHeight':
+                                else {
+                                    content += getNamedItem(element, match[2].trim());
+                                }
+                            }
+                            if (!isString(content)) {
+                                const checkDimension = (after?: boolean) => {
+                                    switch (style!.display) {
+                                        case 'inline':
+                                        case 'block':
+                                        case 'inherit':
+                                        case 'initial':
+                                        case 'unset':
+                                        case 'revert': {
+                                            const { width, height } = style!;
+                                            if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
+                                                for (const attr in style) {
+                                                    const unit = parseFloat(style[attr as CssStyleAttr]!);
+                                                    if (unit) {
+                                                        switch (attr) {
+                                                            case 'minHeight':
+                                                                return true;
+                                                            case 'borderTopWidth':
+                                                                if (getStyle(element, pseudoElt).borderTopStyle !== 'none') {
                                                                     return true;
-                                                                case 'borderTopWidth':
-                                                                    if (getStyle(element, pseudoElt).borderTopStyle !== 'none') {
-                                                                        return true;
-                                                                    }
-                                                                    continue;
-                                                                case 'borderRightWidth':
-                                                                    if (getStyle(element, pseudoElt).borderRightStyle !== 'none') {
-                                                                        return true;
-                                                                    }
-                                                                    continue;
-                                                                case 'borderBottomWidth':
-                                                                    if (getStyle(element, pseudoElt).borderBottomStyle !== 'none') {
-                                                                        return true;
-                                                                    }
-                                                                    continue;
-                                                                case 'borderLeftWidth':
-                                                                    if (getStyle(element, pseudoElt).borderLeftStyle !== 'none') {
-                                                                        return true;
-                                                                    }
-                                                                    continue;
-                                                            }
-                                                            if (startsWith(attr, 'padding')) {
-                                                                return true;
-                                                            }
-                                                            else if (!absolute && startsWith(attr, 'margin')) {
-                                                                return true;
-                                                            }
+                                                                }
+                                                                continue;
+                                                            case 'borderRightWidth':
+                                                                if (getStyle(element, pseudoElt).borderRightStyle !== 'none') {
+                                                                    return true;
+                                                                }
+                                                                continue;
+                                                            case 'borderBottomWidth':
+                                                                if (getStyle(element, pseudoElt).borderBottomStyle !== 'none') {
+                                                                    return true;
+                                                                }
+                                                                continue;
+                                                            case 'borderLeftWidth':
+                                                                if (getStyle(element, pseudoElt).borderLeftStyle !== 'none') {
+                                                                    return true;
+                                                                }
+                                                                continue;
                                                         }
-                                                        else if (unit === 0 && attr === 'maxHeight') {
-                                                            break;
+                                                        if (startsWith(attr, 'padding')) {
+                                                            return true;
+                                                        }
+                                                        else if (!absolute && startsWith(attr, 'margin')) {
+                                                            return true;
                                                         }
                                                     }
-                                                    return false;
+                                                    else if (unit === 0 && attr === 'maxHeight') {
+                                                        break;
+                                                    }
                                                 }
+                                                return false;
                                             }
                                         }
-                                        return true;
-                                    };
-                                    if (pseudoElt === '::after') {
-                                        const checkLastChild = (sibling: Null<ChildNode>) => !!sibling && sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
-                                        if ((absolute || !content || !checkLastChild(element.lastChild)) && !checkDimension(true)) {
-                                            return;
-                                        }
                                     }
-                                    else if (!checkDimension()) {
+                                    return true;
+                                };
+                                if (pseudoElt === '::after') {
+                                    const checkLastChild = (sibling: Null<ChildNode>) => !!sibling && sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
+                                    if ((absolute || !content || !checkLastChild(element.lastChild)) && !checkDimension(true)) {
                                         return;
                                     }
-                                    else {
-                                        const childNodes = elementRoot.childNodes;
-                                        for (let i = 0, length = childNodes.length; i < length; ++i) {
-                                            const child = childNodes[i] as Element;
-                                            if (child.nodeName[0] === '#') {
-                                                if (child.nodeName === '#text' && isString(child.textContent)) {
-                                                    break;
-                                                }
-                                            }
-                                            else {
-                                                const { position, float } = getStyle(child);
-                                                if (hasCoords(position)) {
-                                                    continue;
-                                                }
-                                                else if (float !== 'none') {
-                                                    return;
-                                                }
+                                }
+                                else if (!checkDimension()) {
+                                    return;
+                                }
+                                else {
+                                    const childNodes = elementRoot.childNodes;
+                                    for (let i = 0, length = childNodes.length; i < length; ++i) {
+                                        const child = childNodes[i] as Element;
+                                        if (child.nodeName[0] === '#') {
+                                            if (child.nodeName === '#text' && isString(child.textContent)) {
                                                 break;
                                             }
                                         }
+                                        else {
+                                            const { position, float } = getStyle(child);
+                                            if (hasCoords(position)) {
+                                                continue;
+                                            }
+                                            else if (float !== 'none') {
+                                                return;
+                                            }
+                                            break;
+                                        }
                                     }
+                                }
+                            }
+                        }
+                        else {
+                            const url = resolveURL(value);
+                            if (url) {
+                                if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
+                                    tagName = 'img';
+                                    content = url;
                                 }
                             }
                             else {
@@ -1875,7 +1874,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         break;
-                    }
                 }
                 if (content || value === '""') {
                     tagName ||= /^(?:inline|table)/.test(style.display ||= 'inline') ? 'span' : 'div';

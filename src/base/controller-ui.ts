@@ -149,7 +149,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     style.color ||= this._settingsStyle.anchorFontColor;
                     break;
                 case 'INPUT': {
-                    style.fontSize ||= this._settingsStyle.formFontSize;
+                    const settings = this._settingsStyle;
+                    style.fontSize ||= settings.formFontSize;
                     const { type, disabled } = element as HTMLInputElement;
                     switch (type) {
                         case 'image':
@@ -165,10 +166,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             break;
                         case 'range':
                             if (!disabled && hasEmptyStyle(style.backgroundColor)) {
-                                style.backgroundColor = this._settingsStyle.rangeBackgroundColor;
+                                style.backgroundColor = settings.rangeBackgroundColor;
                             }
                         default:
-                            this.setInputStyle(style, disabled);
+                            this.setInputStyle(style, disabled, settings.inputBorderWidth);
                             break;
                     }
                     break;
@@ -181,9 +182,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
                 case 'TEXTAREA':
                 case 'SELECT': {
-                    const disabled = (element as HTMLTextAreaElement | HTMLSelectElement).disabled;
                     style.fontSize ||= this._settingsStyle.formFontSize;
-                    this.setInputStyle(style, disabled, '1px');
+                    this.setInputStyle(style, (element as HTMLTextAreaElement | HTMLSelectElement).disabled);
                     break;
                 }
                 case 'BODY':
@@ -228,7 +228,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     style.fontSize ||= '0.67em';
                     break;
                 case 'HR':
-                    this.setBorderStyle(style, '1px', 'silver');
+                    this.setBorderStyle(style, '1px', 'inset', this._settingsStyle.hrBorderColor);
                     break;
                 case 'FORM':
                     style.marginTop ||= '0px';
@@ -751,33 +751,39 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return '<' + controlName + attributes + (content || this._innerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
-    protected setInputStyle(style: CssStyleMap, disabled: boolean, width = '2px') {
-        this.setBorderStyle(style, width, this._settingsStyle[disabled ? 'inputDisabledBorderColor' : 'inputBorderColor']);
-        if (disabled && hasEmptyStyle(style.backgroundColor)) {
-            style.backgroundColor = this._settingsStyle.inputDisabledBackgroundColor;
+    protected setInputStyle(style: CssStyleMap, disabled: boolean, width = '1px') {
+        const settings = this._settingsStyle;
+        this.setBorderStyle(style, width, settings.inputBorderStyle, settings[disabled ? 'inputDisabledBorderColor' : 'inputBorderColor']);
+        if (hasEmptyStyle(style.backgroundColor)) {
+            const backgroundColor = settings[disabled ? 'inputDisabledBackgroundColor' : 'inputBackgroundColor'];
+            if (backgroundColor) {
+                style.backgroundColor = backgroundColor;
+            }
         }
     }
 
     protected setButtonStyle(style: CssStyleMap, disabled: boolean) {
-        if ((this.setBorderStyle(style, '2px', this._settingsStyle[disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor']) || disabled) && hasEmptyStyle(style.backgroundColor)) {
-            style.backgroundColor = this._settingsStyle[disabled ? 'buttonDisabledBackgroundColor' : 'buttonBackgroundColor'];
+        const settings = this._settingsStyle;
+        this.setBorderStyle(style, settings.buttonBorderWidth, settings.buttonBorderStyle, settings[disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor']);
+        if (hasEmptyStyle(style.backgroundColor)) {
+            style.backgroundColor = settings[disabled ? 'buttonDisabledBackgroundColor' : 'buttonBackgroundColor'];
         }
         style.textAlign ||= 'center';
-        style.paddingTop ||= '1px';
-        style.paddingRight ||= '6px';
-        style.paddingBottom ||= '1px';
-        style.paddingLeft ||= '6px';
+        style.paddingTop ||= settings.buttonPaddingVertical;
+        style.paddingRight ||= settings.buttonPaddingHorizontal;
+        style.paddingBottom ||= settings.buttonPaddingVertical;
+        style.paddingLeft ||= settings.buttonPaddingHorizontal;
     }
 
-    protected setBorderStyle(style: CssStyleMap, width: string, color: string) {
+    protected setBorderStyle(style: CssStyleMap, borderWidth: string, borderStyle: string, borderColor: string) {
         let result = false;
         for (let i = 0; i < 4; ++i) {
             const border = BORDER_BOX[i];
             const attr = border[0];
             if (!style[attr]) {
-                style[attr] = width;
-                style[border[1]] = 'inset';
-                style[border[2]] = color;
+                style[attr] = borderWidth;
+                style[border[1]] = borderStyle;
+                style[border[2]] = borderColor;
                 result = true;
             }
         }
