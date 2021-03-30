@@ -1589,8 +1589,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let style = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
             if (!style) {
-                style = {};
-                setElementCache(element, 'styleMap' + pseudoElt, style, sessionId);
+                setElementCache(element, 'styleMap' + pseudoElt, style = {}, sessionId);
             }
             style.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
         }
@@ -1678,7 +1677,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             REGEXP_COUNTER ||= /(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)")/g;
-                            const getStyleMap = (target: Element, targetElt?: PseudoElt) => getElementCache<CSSStyleDeclaration>(target, 'styleMap' + targetElt, sessionId) || getStyle(target, targetElt);
+                            const getStyleMap = (sibling: Element, siblingElt = '') => getElementCache<CSSStyleDeclaration>(sibling, 'styleMap' + siblingElt, sessionId) || getStyle(sibling, siblingElt as PseudoElt);
                             const getPseudoIncrement = (sibling: Element, counterName: string) => getCounterValue(getStyleMap(sibling, pseudoElt).counterIncrement, counterName);
                             let match: Null<RegExpExecArray>;
                             while (match = REGEXP_COUNTER.exec(value)) {

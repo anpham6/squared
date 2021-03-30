@@ -64,7 +64,12 @@ export function convertCamelCase(value: string, char = '-') {
             previous = true;
         }
         else if (previous) {
-            result += ch.toUpperCase();
+            if (result) {
+                result += ch.toUpperCase();
+            }
+            else {
+                result += ch;
+            }
             previous = false;
         }
         else {

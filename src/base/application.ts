@@ -530,15 +530,11 @@ export default abstract class Application<T extends Node> implements squared.bas
             case CSSRule.STYLE_RULE: {
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
-                const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
                 const hasExactValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
-                    if (attr[0] === '-') {
-                        continue;
-                    }
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                     let value: string = cssStyle[attr];
                     switch (value) {
@@ -585,20 +581,24 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     baseMap[baseAttr] = value;
                 }
-                let match: Null<RegExpExecArray>;
-                while (match = REGEXP_IMPORTANT.exec(cssText)) {
-                    const attr = convertCamelCase(match[1]) as CssStyleAttr;
-                    const value = CSS_PROPERTIES[attr]?.value;
-                    if (Array.isArray(value)) {
-                        for (let i = 0, length = value.length; i < length; ++i) {
-                            important[value[i]] = true;
+                let important: Undef<ObjectMap<boolean>>;
+                if (cssText.includes('!important')) {
+                    important = {};
+                    let match: Null<RegExpExecArray>;
+                    while (match = REGEXP_IMPORTANT.exec(cssText)) {
+                        const attr = convertCamelCase(match[1]) as CssStyleAttr;
+                        const value = CSS_PROPERTIES[attr]?.value;
+                        if (Array.isArray(value)) {
+                            for (let i = 0, length = value.length; i < length; ++i) {
+                                important[value[i]] = true;
+                            }
+                        }
+                        else {
+                            important[attr] = true;
                         }
                     }
-                    else {
-                        important[attr] = true;
-                    }
+                    REGEXP_IMPORTANT.lastIndex = 0;
                 }
-                REGEXP_IMPORTANT.lastIndex = 0;
                 let processing: Undef<squared.base.AppProcessing<T>>;
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
@@ -656,7 +656,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const specificityData = getElementCache<ObjectMap<number>>(element, attrSpecificity, sessionId)!;
                             for (const attr in baseMap) {
                                 const previous = specificityData[attr];
-                                const revised = specificity + (important[attr] ? 1000 : 0);
+                                const revised = specificity + (important && important[attr] ? 1000 : 0);
                                 if (!previous || revised >= previous) {
                                     styleData[attr] = baseMap[attr];
                                     specificityData[attr] = revised;
@@ -667,7 +667,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const style = { ...baseMap };
                             const specificityData: ObjectMap<number> = {};
                             for (const attr in style) {
-                                specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
+                                specificityData[attr] = specificity + (important && important[attr] ? 1000 : 0);
                             }
                             setElementCache(element, 'sessionId', sessionId);
                             setElementCache(element, attrStyle, style, sessionId);
