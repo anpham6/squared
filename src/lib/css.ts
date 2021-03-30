@@ -373,7 +373,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     animation: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
             'animationDuration',
             'animationTimingFunction',
@@ -383,7 +383,8 @@ export const CSS_PROPERTIES: CssProperties = {
             'animationFillMode',
             'animationPlayState',
             'animationName'
-        ]
+        ],
+        valueOfNone: '1e-05s ease 0s 1 normal none running none'
     },
     animationDelay: {
         trait: CSS_TRAITS.CALC,
@@ -437,7 +438,8 @@ export const CSS_PROPERTIES: CssProperties = {
             'backgroundOrigin',
             'backgroundClip',
             'backgroundColor'
-        ]
+        ],
+        valueOfNone: 'rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box'
     },
     backgroundAttachment: {
         trait: 0,
@@ -775,11 +777,11 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal'
     },
     counterIncrement: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'none'
     },
     counterReset: {
-        trait: CSS_TRAITS.CALC,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
         value: 'none'
     },
     cursor: {
@@ -803,12 +805,13 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'none'
     },
     flex: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.AUTO,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
         value: [
             'flexGrow',
             'flexShrink',
             'flexBasis'
-        ]
+        ],
+        valueOfNone: '0 0 auto'
     },
     flexBasis: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -927,7 +930,7 @@ export const CSS_PROPERTIES: CssProperties = {
         ]
     },
     grid: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
         value: [
             'gridTemplateRows',
             'gridAutoColumns',
@@ -937,7 +940,8 @@ export const CSS_PROPERTIES: CssProperties = {
             'gridAutoFlow',
             'gridRowGap',
             'gridColumnGap'
-        ]
+        ],
+        valueOfNone: 'none / none / none / row / auto / auto'
     },
     gridArea: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
@@ -1009,12 +1013,13 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     gridTemplate: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
         value: [
             'gridTemplateRows',
             'gridTemplateColumns',
             'gridTemplateAreas'
-        ]
+        ],
+        valueOfNone: 'none / none / none'
     },
     gridTemplateAreas: {
         trait: CSS_TRAITS.LAYOUT,
@@ -1073,12 +1078,13 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal'
     },
     listStyle: {
-        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE,
         value: [
             'listStyleType',
             'listStylePosition',
             'listStyleImage'
-        ]
+        ],
+        valueOfNone: 'outside none none'
     },
     listStyleImage: {
         trait: CSS_TRAITS.LAYOUT,
@@ -1156,7 +1162,8 @@ export const CSS_PROPERTIES: CssProperties = {
             'offsetDistance',
             'offsetRotate',
             'offsetAnchor'
-        ]
+        ],
+        valueOfNone: 'none 0px auto 0deg'
     },
     offsetPath: {
         trait: CSS_TRAITS.CALC,
@@ -1181,6 +1188,10 @@ export const CSS_PROPERTIES: CssProperties = {
     order: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
         value: '0'
+    },
+    orphans: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '2'
     },
     outline: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
@@ -1451,25 +1462,6 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: 0,
         value: 'solid'
     },
-    textEmphasis: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
-        value: [
-           'textEmphasisStyle',
-           'textEmphasisColor'
-        ]
-    },
-    textEmphasisColor: {
-        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor'
-    },
-    textEmphasisPosition: {
-        trait: 0,
-        value: 'over right'
-    },
-    textEmphasisStyle: {
-        trait: CSS_TRAITS.NONE,
-        value: 'none'
-    },
     textIndent: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.UNIT,
         value: '0'
@@ -1477,6 +1469,10 @@ export const CSS_PROPERTIES: CssProperties = {
     textJustify: {
         trait: CSS_TRAITS.CONTAIN,
         value: 'auto'
+    },
+    textOrientation: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'mixed'
     },
     textOverflow: {
         trait: 0,
@@ -1563,6 +1559,10 @@ export const CSS_PROPERTIES: CssProperties = {
     whiteSpace: {
         trait: CSS_TRAITS.LAYOUT,
         value: 'normal'
+    },
+    widows: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '2'
     },
     width: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
