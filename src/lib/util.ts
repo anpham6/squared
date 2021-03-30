@@ -65,7 +65,12 @@ export function convertCamelCase(value: string, char = '-') {
             previous = true;
         }
         else if (previous) {
-            result += ch.toUpperCase();
+            if (result) {
+                result += ch.toUpperCase();
+            }
+            else {
+                result += ch;
+            }
             previous = false;
         }
         else {
@@ -448,7 +453,7 @@ export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
     return target as T extends [] ? T[] : PlainObject;
 }
 
-export function resolvePath(value: string, href?: string) {
+export function resolvePath(value: string, href?: Null<string>) {
     if ((value = value.trim()) && !FILE.PROTOCOL.test(value)) {
         const pathname = (href ? href.replace(location.origin, '') : location.pathname).replace(/\\/g, '/').split('/');
         --pathname.length;

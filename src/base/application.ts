@@ -25,7 +25,7 @@ const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
 
-function parseImageUrl(value: string, styleSheetHref: string, resource: Null<Resource<Node>>, resourceId: number) {
+function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number) {
     let result: Undef<string>,
         match: Null<RegExpExecArray>;
     while (match = REGEXP_DATAURI.exec(value)) {
@@ -531,21 +531,16 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     private applyStyleRule(sessionId: string, resourceId: number, item: CSSStyleRule, documentRoot: DocumentRoot, queryRoot?: QuerySelectorElement) {
         const resource = this.resourceHandler;
-        const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.STYLE_RULE: {
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
-                const important: ObjectMap<boolean> = {};
                 const cssStyle = item.style;
                 const hasExactValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
-                    if (attr[0] === '-') {
-                        continue;
-                    }
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                     let value: string = cssStyle[attr];
                     switch (value) {
@@ -579,26 +574,30 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case 'listStyleImage':
                         case 'content':
                             if (value !== 'initial') {
-                                value = parseImageUrl(value, styleSheetHref, resource, resourceId);
+                                value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
                             }
                             break;
                     }
                     baseMap[baseAttr] = value;
                 }
-                let match: Null<RegExpExecArray>;
-                while (match = REGEXP_IMPORTANT.exec(cssText)) {
-                    const attr = convertCamelCase(match[1]) as CssStyleAttr;
-                    const value = CSS_PROPERTIES[attr]?.value;
-                    if (Array.isArray(value)) {
-                        for (let i = 0, length = value.length; i < length; ++i) {
-                            important[value[i]] = true;
+                let important: Undef<ObjectMap<boolean>>;
+                if (cssText.includes('!important')) {
+                    important = {};
+                    let match: Null<RegExpExecArray>;
+                    while (match = REGEXP_IMPORTANT.exec(cssText)) {
+                        const attr = convertCamelCase(match[1]) as CssStyleAttr;
+                        const value = CSS_PROPERTIES[attr]?.value;
+                        if (Array.isArray(value)) {
+                            for (let i = 0, length = value.length; i < length; ++i) {
+                                important[value[i]] = true;
+                            }
+                        }
+                        else {
+                            important[attr] = true;
                         }
                     }
-                    else {
-                        important[attr] = true;
-                    }
+                    REGEXP_IMPORTANT.lastIndex = 0;
                 }
-                REGEXP_IMPORTANT.lastIndex = 0;
                 let processing: Undef<squared.base.AppProcessing<T>>;
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
@@ -656,7 +655,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const specificityData = getElementCache<ObjectMap<number>>(element, attrSpecificity, sessionId)!;
                             for (const attr in baseMap) {
                                 const previous = specificityData[attr];
-                                const revised = specificity + (important[attr] ? 1000 : 0);
+                                const revised = specificity + (important && important[attr] ? 1000 : 0);
                                 if (!previous || revised >= previous) {
                                     styleData[attr] = baseMap[attr];
                                     specificityData[attr] = revised;
@@ -667,7 +666,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const styleMap = { ...baseMap };
                             const specificityData: ObjectMap<number> = {};
                             for (const attr in styleMap) {
-                                specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
+                                specificityData[attr] = specificity + (important && important[attr] ? 1000 : 0);
                             }
                             setElementCache(element, 'sessionId', sessionId);
                             setElementCache(element, attrStyle, styleMap, sessionId);
@@ -679,7 +678,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             case CSSRule.FONT_FACE_RULE:
                 if (resource) {
-                    resource.parseFontFace(resourceId, cssText, styleSheetHref);
+                    resource.parseFontFace(resourceId, cssText, item.parentStyleSheet?.href);
                 }
                 break;
             case CSSRule.SUPPORTS_RULE:
@@ -702,7 +701,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             this.applyStyleRule(sessionId, resourceId, rule as CSSStyleRule, documentRoot, queryRoot);
                             break;
                         case CSSRule.IMPORT_RULE: {
-                            const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
+                            const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href);
                             if (uri) {
                                 this.resourceHandler?.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
                             }
@@ -770,7 +769,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 case 'content': {
                                     const value: string = cssStyle[attr];
                                     if (value !== 'initial') {
-                                        parseImageUrl(value, item.parentStyleSheet?.href || location.href, resource, resourceId);
+                                        parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
                                     }
                                     break;
                                 }

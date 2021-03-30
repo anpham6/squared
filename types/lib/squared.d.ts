@@ -340,7 +340,7 @@ declare module "lib" {
         function isEqual(source: unknown, other: unknown): boolean;
         function cloneInstance<T>(value: T): T;
         function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;
-        function resolvePath(value: string, href?: string): string;
+        function resolvePath(value: string, href?: Null<string>): string;
         function trimBoth(value: string, pattern: string): string;
         function trimString(value: string, pattern: string): string;
         function trimStart(value: string, pattern: string): string;
