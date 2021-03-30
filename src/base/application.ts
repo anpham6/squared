@@ -211,15 +211,20 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (typeof item === 'string') {
                         fetch(item)
                             .then(async result => {
-                                const mimeType = result.headers.get('content-type') || '';
-                                if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
-                                    success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() } as RawDataOptions);
-                                }
-                                else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
-                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() } as RawDataOptions);
+                                if (result.status >= 300) {
+                                    error(item + ` (${result.status}: ${result.statusText})`);
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
+                                    const mimeType = result.headers.get('content-type') || '';
+                                    if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                        success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() } as RawDataOptions);
+                                    }
+                                    else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
+                                        success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() } as RawDataOptions);
+                                    }
+                                    else {
+                                        success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
+                                    }
                                 }
                             })
                             .catch(err => error(err));

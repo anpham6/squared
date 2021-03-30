@@ -23,7 +23,9 @@ const TEXT_STYLE: CssStyleAttr[] = [
     'fontStretch',
     'color',
     'whiteSpace',
-    'textDecoration',
+    'textDecorationLine',
+    'textDecorationStyle',
+    'textDecorationColor',
     'textTransform',
     'letterSpacing',
     'wordSpacing'
@@ -74,9 +76,9 @@ function isFontFixedWidth(node: T) {
     return fontFirst === 'monospace' && fontSecond !== 'monospace';
 }
 
-function getFlexValue(node: T, attr: CssStyleAttr, fallback: number, parent?: Null<Node>): number {
-    const value = (parent || node).css(attr);
-    return isNumber(value) ? +value : fallback;
+function getFlexValue(node: T, attr: CssStyleAttr, fallback: number): number {
+    const value = +node.css(attr);
+    return !isNaN(value) ? value : fallback;
 }
 
 function hasTextAlign(node: T, ...values: string[]) {
