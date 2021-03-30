@@ -49,9 +49,17 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
         if (unusedStyles) {
-            const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles = [] } = options;
+            const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles } = options;
             if (removeUnusedClasses || removeUnusedSelectors) {
-                options.unusedStyles = Array.from(unusedStyles).filter(value => (value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && !retainUsedStyles.includes(value));
+                const styles: string[] = [];
+                for (const value of unusedStyles) {
+                    if ((value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.includes(value))) {
+                        styles.push(value);
+                    }
+                }
+                if (styles.length) {
+                    options.unusedStyles = styles;
+                }
             }
         }
         if (options.configUri) {

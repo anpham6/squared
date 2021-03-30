@@ -11,6 +11,7 @@
     "animationName": true,
     "animationPlayState": true,
     "animationTimingFunction": true,
+    "appearance": false,
     "backdropFilter": false,
     "backfaceVisibility": false,
     "background": true,
