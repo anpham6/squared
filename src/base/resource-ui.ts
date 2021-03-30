@@ -8,7 +8,7 @@ import type NodeList from './nodelist';
 
 import Resource from './resource';
 
-import { STRING } from './lib/regex';
+import { CSS, STRING } from './lib/regex';
 
 import { appendSeparator } from './lib/util';
 
@@ -29,7 +29,6 @@ const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${STRING.CSS_COLORSTOP})+)\\)`, 'g');
 const REGEXP_COLORSTOP = new RegExp(STRING.CSS_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 const CHAR_LEADINGSPACE = /^\s+/;
@@ -779,9 +778,10 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             }
             return fallback;
         };
+        CSS.BACKGROUNDIMAGE_G.lastIndex = 0;
         let i = 0,
             match: Null<RegExpExecArray>;
-        while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
+        while (match = CSS.BACKGROUNDIMAGE_G.exec(backgroundImage)) {
             const value = match[0];
             if (startsWith(value, 'url(') || value === 'initial') {
                 images.push(value);
@@ -952,7 +952,6 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             }
             ++i;
         }
-        REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
         if (images.length) {
             return images;
         }

@@ -523,24 +523,6 @@ export function trimEnd(value: string, pattern: string) {
     return '';
 }
 
-export function sameArray<T, U = unknown>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>) {
-    const length = list.length;
-    if (length) {
-        let baseValue: Undef<U>;
-        for (let i = 0; i < length; ++i) {
-            const value = predicate(list[i], i, list);
-            if (i === 0) {
-                baseValue = value;
-            }
-            else if (value !== baseValue) {
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 export function flatArray<T>(list: unknown[], depth = 1, current = 0): T[] {
     const result: T[] = [];
     for (let i = 0, length = list.length; i < length; ++i) {

@@ -896,6 +896,10 @@ declare module "base" {
                 CSS_COLORSTOP: RegExp;
                 CSS_QUOTE: RegExp;
             };
+
+            const CSS: {
+                BACKGROUNDIMAGE_G: RegExp;
+            };
         }
 
         namespace util {
@@ -911,7 +915,6 @@ declare module "base" {
             function trimString(value: string, pattern: string): string;
             function trimStart(value: string, pattern: string): string;
             function trimEnd(value: string, pattern: string): string;
-            function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>): boolean;
             function flatArray<T>(list: unknown[], depth?: number): T[];
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
             function parseTask(value: Undef<string>): Undef<TaskAction[]>;

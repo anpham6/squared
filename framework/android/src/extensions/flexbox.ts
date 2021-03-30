@@ -21,8 +21,6 @@ const { isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { capitalize, iterateReverseArray, lastItemOf } = squared.lib.util;
 
-const { sameArray } = squared.base.lib.util;
-
 function getBaseline(nodes: View[]) {
     for (let i = 0, length = nodes.length; i < length; ++i) {
         const node = nodes[i];
@@ -749,7 +747,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         break;
                                 }
                             }
-                            if (spreadInside || !wrap && seg.some(item => item.app(orientationWeight)) && !sameArray(seg, item => item.app(orientationWeight))) {
+                            if (spreadInside || !wrap && new Set(seg.map(item => item.app(orientationWeight))).size > 1) {
                                 segStart.anchorStyle(orientation, 0, 'spread_inside', false);
                             }
                             else if (!centered) {
