@@ -585,10 +585,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const systemName = capitalize(this.systemName);
         let layoutName = dataset['filename' + systemName] || dataset.filename;
         if (!layoutName) {
-            layoutName = elementId && convertWord(elementId, true) || 'document_' + this.length;
+            const baseName = elementId && convertWord(elementId, true) || 'document_' + this.length;
+            layoutName = baseName;
             let i = 0;
             while (this._layouts.find(item => item.filename === layoutName)) {
-                layoutName += layoutName + '_' + ++i;
+                layoutName = baseName + '_' + ++i;
             }
         }
         dataset['layoutName' + systemName] = layoutName;
@@ -628,8 +629,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             const { cache, rootElements } = processing;
             const pierceShadowRoot = this.userSettings.pierceShadowRoot;
-            const hostElement = parentElement.shadowRoot || parentElement;
-            const childNodes = hostElement.childNodes;
+            const hostParent = parentElement.shadowRoot || parentElement;
+            const childNodes = hostParent.childNodes;
             const children: T[] = [];
             const elements: T[] = [];
             const childDepth = depth + 1;
@@ -678,10 +679,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             this.replaceShadowRootSlots(shadowRoot);
                             this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
-                        const hostElementChild = shadowRoot || element;
-                        const beforeElementChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostElementChild);
-                        const afterElementChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostElementChild);
-                        if (hostElementChild.childNodes.length) {
+                        const hostChild = shadowRoot || element;
+                        const beforeElementChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostChild);
+                        const afterElementChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostChild);
+                        if (hostChild.childNodes.length) {
                             child = this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent, beforeElementChild, afterElementChild, cascadeAll);
                             if (child.display === 'contents' && !child.excluded && !shadowRoot) {
                                 for (const item of child.naturalChildren as T[]) {
@@ -728,9 +729,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 child.actualParent = node;
                 children.push(child);
             }
-            node.naturalChildren = children;
-            node.naturalElements = elements;
-            if (hostElement !== parentElement) {
+            node.initCascade(children, elements);
+            if (hostParent !== parentElement) {
                 node.shadowRoot = true;
             }
             const contents = display === 'contents';

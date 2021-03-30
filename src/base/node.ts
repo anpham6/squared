@@ -887,8 +887,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         this._parent = parent;
         this.depth = depth;
         if (index !== undefined) {
-            this.childIndex = index;
+            this._childIndex = index;
         }
+    }
+
+    public initCascade(children: T[], elements?: T[]) {
+        this._naturalChildren = children;
+        this._naturalElements = elements || children.filter((item: T) => item.naturalElement);
     }
 
     public syncWith(sessionId?: string, cache?: boolean) {
@@ -2980,16 +2985,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this._childIndex;
     }
 
-    set naturalChildren(value) {
-        this._naturalChildren = value;
-    }
     get naturalChildren() {
         return this._naturalChildren ||= this.toArray();
     }
 
-    set naturalElements(value) {
-        this._naturalElements = value;
-    }
     get naturalElements() {
         return this._naturalElements ||= this.naturalChildren.filter((item: T) => item.naturalElement);
     }

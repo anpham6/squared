@@ -411,6 +411,7 @@ declare module "base" {
         pseudoElt?: PseudoElt;
         readonly id: number;
         init(parent: Node, depth: number, index?: number): void;
+        initCascade(children: Node[], elements?: Node[]): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
         data<T = unknown>(name: string, attr: string, value?: unknown, overwrite?: boolean): Undef<T>;
@@ -467,9 +468,7 @@ declare module "base" {
         get actualParent(): Null<Node>;
         set childIndex(value);
         get childIndex(): number;
-        set naturalChildren(value);
         get naturalChildren(): Node[];
-        set naturalElements(value);
         get naturalElements(): Node[];
         set dir(value);
         get dir(): string;

@@ -403,8 +403,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         child.actualParent = parent;
                         elements[i] = child;
                     }
-                    parent.naturalChildren = elements;
-                    parent.naturalElements = elements;
+                    parent.initCascade(elements, elements);
                     if (currentElement === document.documentElement) {
                         processing.documentElement = parent;
                         break;
@@ -476,8 +475,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     children.push(child);
                 }
             }
-            node.naturalChildren = children;
-            node.naturalElements = elements;
+            node.initCascade(children, elements);
             if (hostElement !== parentElement) {
                 node.shadowRoot = true;
             }
