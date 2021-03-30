@@ -890,6 +890,14 @@ declare module "base" {
             function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
         }
 
+        namespace regex {
+            const STRING: {
+                CSS_COLOR: RegExp;
+                CSS_COLORSTOP: RegExp;
+                CSS_QUOTE: RegExp;
+            };
+        }
+
         namespace util {
             function fromMimeType(value: string): string;
             function parseMimeType(value: string): string;

@@ -8,10 +8,12 @@ import type NodeList from './nodelist';
 
 import Resource from './resource';
 
+import { STRING } from './lib/regex';
+
 import { appendSeparator } from './lib/util';
 
 const { CSS_PROPERTIES } = squared.lib.internal;
-const { STRING } = squared.lib.regex;
+const { TAG_ATTR, TAG_OPEN } = squared.lib.regex.STRING;
 
 const { isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
@@ -27,10 +29,8 @@ const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
-const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\s*\\d+\\s*,\\s*\\d+%?\\s*,\\s*\\d+%?\\s*(?:,\\s*[\\d.]+\\s*)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
-const PATTERN_COLORSTOP = `\\s*${PATTERN_COLOR}(?:\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:calc|min|max|clamp)\\((.+)\\)(?=\\s*,)|(?:calc|min|max|clamp)\\((.+)\\))\\s*,?)*\\s*,?`;
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\)`, 'g');
-const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${STRING.CSS_COLORSTOP})+)\\)`, 'g');
+const REGEXP_COLORSTOP = new RegExp(STRING.CSS_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 const CHAR_LEADINGSPACE = /^\s+/;
 const CHAR_TRAILINGSPACE = /\s+$/;
@@ -83,7 +83,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     if (isUserAgent(USER_AGENT.SAFARI)) {
         const colors: [string, number, number][] = [];
         const length = value.length;
-        const colorPattern = new RegExp(PATTERN_COLOR, 'g');
+        const colorPattern = new RegExp(STRING.CSS_COLOR, 'g');
         while (match = colorPattern.exec(value)) {
             const color = match[1];
             const lastIndex = colorPattern.lastIndex;
@@ -281,7 +281,7 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
         const attr = attrs[i++];
         tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
         const style = ' ' + attr + `="${attrs[i++]}"`;
-        const match = new RegExp(`<${tagName}(${STRING.TAG_OPEN}+?)${attr}\\s*${STRING.TAG_ATTR}(${STRING.TAG_OPEN}*)>`, 'i').exec(src);
+        const match = new RegExp(`<${tagName}(${TAG_OPEN}+?)${attr}\\s*${TAG_ATTR}(${TAG_OPEN}*)>`, 'i').exec(src);
         src = match ? replaceAll(src, match[0], '<@@' + timestamp + match[1] + match[2] + style + match[6] + '>', 1) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
     }
     return src;

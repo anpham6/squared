@@ -28,6 +28,7 @@ import WhiteSpace from './extensions/whitespace';
 
 import * as constant from './lib/constant';
 import * as dom from './lib/dom';
+import * as regex from './lib/regex';
 import * as util from './lib/util';
 
 const extensions = {
@@ -46,6 +47,7 @@ const extensions = {
 const lib = {
     constant,
     dom,
+    regex,
     util
 };
 

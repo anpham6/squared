@@ -18,6 +18,8 @@ import LayoutUI from './layout-ui';
 
 import { convertListStyle } from './extensions/list';
 
+import { STRING } from './lib/regex';
+
 import { appendSeparator, flatArray, trimBoth, trimString } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
@@ -81,7 +83,7 @@ function checkPseudoDimension(style: CssStyleMap, after: boolean, absolute: bool
 }
 
 function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside: string, inside: string, sessionId: string) {
-    REGEXP_QUOTE ||= /("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)(?:\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+))?/;
+    REGEXP_QUOTE ||= new RegExp(STRING.CSS_QUOTE + `(?:\\s+${STRING.CSS_QUOTE})?`);
     let current: Null<HTMLElement> = element,
         found = 0,
         i = 0, j = -1;

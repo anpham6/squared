@@ -97,7 +97,8 @@ declare module "lib" {
             CHROME = 1,
             SAFARI = 1 << 1,
             FIREFOX = 1 << 2,
-            EDGE = 1 << 3
+            EDGE = 1 << 3,
+            EDGE_WIN = 1 << 4
         }
         const enum CSS_UNIT {
             NONE = 0,
@@ -282,6 +283,7 @@ declare module "lib" {
             CSS_ANGLE: string;
             CSS_TIME: string;
             CSS_RESOLUTION: string;
+            CSS_CALCUNIT: string;
         };
         const FILE: {
             NAME: RegExp;

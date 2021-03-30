@@ -11,7 +11,6 @@ import { endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEncl
 
 import Pattern from './base/pattern';
 
-const PATTERN_CALCUNIT = '(?!c(?:alc|lamp)|m(?:in|ax))([^,()]+|\\([^())]+\\)\\s*)';
 const REGEXP_LENGTH = new RegExp(`^\\s*${STRING.LENGTH}\\s*$`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^\\s*${STRING.LENGTH_PERCENTAGE}\\s*$`, 'i');
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
@@ -19,7 +18,7 @@ const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
 const REGEXP_CALC = /^(?:c(?:alc|lamp)|m(?:in|ax))\((.+)\)$/i;
 const REGEXP_CALCWITHIN = /\b(?:c(?:alc|lamp)|m(?:in|ax))\(/i;
-const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${PATTERN_CALCUNIT},|(clamp)\\(\\s*${PATTERN_CALCUNIT},\\s*${PATTERN_CALCUNIT},|\\()\\s*${PATTERN_CALCUNIT}\\)(\\s*)`, 'i');
+const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${STRING.CSS_CALCUNIT},|(clamp)\\(\\s*${STRING.CSS_CALCUNIT},\\s*${STRING.CSS_CALCUNIT},|\\()\\s*${STRING.CSS_CALCUNIT}\\)(\\s*)`, 'i');
 const REGEXP_CALCENCLOSING = /c(?:alc|lamp)|m(?:in|ax)/gi;
 const REGEXP_VAR = /^var\(\s*--.+\)$/i;
 const REGEXP_VARWITHIN = /var\(\s*--[\w-]+[^)]*\)/i;

@@ -24,7 +24,8 @@ export const STRING = {
     TAG_OPEN: `(?:[^=>]|${TAG_ATTR})`,
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
-    CSS_RESOLUTION: `\\+?(${DECIMAL_PLAIN})(dpi|dpcm|dppx)`
+    CSS_RESOLUTION: `\\+?(${DECIMAL_PLAIN})(dpi|dpcm|dppx)`,
+    CSS_CALCUNIT: '(?!c(?:alc|lamp)|m(?:in|ax))([^,()]+|\\([^())]+\\)\\s*)'
 };
 
 export const FILE = {
