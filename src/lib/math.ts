@@ -1,5 +1,5 @@
-const REGEXP_DECIMALNOTAION = /^([+|-]?\d+\.\d+)e([+|-]?\d+)$/;
-const REGEXP_FRACTION = /^([+|-]?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+const REGEXP_DECIMALNOTAION = /^([+-]?\d+\.\d+)e([+-]?\d+)$/;
+const REGEXP_FRACTION = /^([+-]?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
 const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
 
 function convertDecimalNotation(value: number) {

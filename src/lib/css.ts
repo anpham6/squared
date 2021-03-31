@@ -7,7 +7,6 @@ import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
 import { convertCamelCase, convertHyphenated, convertPercent, endsWith, escapePattern, isNumber, isString, iterateArray, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
-const DOCUMENT_ELEMENT = document.documentElement;
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
 let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
@@ -24,11 +23,11 @@ const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
 const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
-const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
+const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
+const REGEXP_EMBASED = /[+-]?[\d.]+(?:em|ch|ex)\b/;
 const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
@@ -1678,12 +1677,13 @@ export function getStyle(element: Element, pseudoElt = '') {
 }
 
 export function updateDocumentFont() {
-    const documentStyle = getStyle(DOCUMENT_ELEMENT);
+    const documentElement = document.documentElement;
+    const documentStyle = getStyle(documentElement);
     DOCUMENT_FONTSIZE = parseFloat(documentStyle.fontSize);
     if (isNaN(DOCUMENT_FONTSIZE)) {
         DOCUMENT_FONTSIZE = 16;
     }
-    const style = DOCUMENT_ELEMENT.style;
+    const style = documentElement.style;
     const fontSize = style.fontSize;
     style.fontSize = 'initial';
     DOCUMENT_FONTBASE = parseFloat(documentStyle.fontSize);
@@ -2097,7 +2097,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'lineHeight':
             return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element) : undefined, min: 0 }));
         case 'fontSize':
-            return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element.parentElement || DOCUMENT_ELEMENT) : undefined, min: 0 }));
+            return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element.parentElement || document.documentElement) : undefined, min: 0 }));
         case 'margin':
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
         case 'borderBottomLeftRadius':
@@ -2307,7 +2307,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         }
         case 'boxShadow':
         case 'textShadow':
-            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-zQ]*\s+-?[\d.]+[a-zQ]*(\s+-[\d.]+[a-z]*)/ });
+            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/ });
         case 'animation':
         case 'animationDelay':
         case 'animationDuration':
@@ -3003,7 +3003,6 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
     return NaN;
 }
 
-
 export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     const result: ImageSrcSet[] = [];
     const parentElement = element.parentElement as HTMLPictureElement;
@@ -3143,7 +3142,7 @@ export function calculate(value: string, options?: CalculateOptions) {
     if (length === 0) {
         return NaN;
     }
-    else if (value[0] !== '(' || value[length - 1] !== ')') {
+    if (value[0] !== '(' || value[length - 1] !== ')') {
         value = `(${value})`;
         length += 2;
     }
@@ -3284,7 +3283,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
-                                            if (!/^\s*[+|-]?\d+\s*$/.test(partial)) {
+                                            if (!/^\s*[+-]?\d+\s*$/.test(partial)) {
                                                 return NaN;
                                             }
                                             seg.push(+partial);
@@ -3787,7 +3786,7 @@ export function isPercent(value: string, digits?: boolean) {
 }
 
 export function isPx(value: string) {
-    if (value) {
+    if (typeof value === 'string') {
         const length = value.length;
         if (length > 2 && value[length - 1] === 'x' && value[length - 2] === 'p') {
             return !isNaN(+value.substring(0, length - 2));
@@ -3801,7 +3800,7 @@ export function hasEm(value: string) {
 }
 
 export function hasCalc(value: string) {
-    return value.includes('calc(');
+    return typeof value === 'string' && value.includes('calc(');
 }
 
 export function hasCoords(value: string) {
