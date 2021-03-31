@@ -125,9 +125,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                     break;
                                 default:
                                     if (type && (type === 'replace' || type.startsWith('append/') || type.startsWith('prepend/'))) {
-                                        const items = appendMap.get(element) || [];
+                                        let items = appendMap.get(element);
+                                        if (!items) {
+                                            appendMap.set(element, items = []);
+                                        }
                                         items.push({ ...item });
-                                        appendMap.set(element, items);
                                     }
                                     else {
                                         assetMap.set(element, { ...item });
@@ -150,8 +152,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             const domAll = document.querySelectorAll('*');
             const cache: SelectorCache = {};
             const items = options.dataSource ||= [];
-            for (let i = 0, length = dataSource.length; i < length; ++i) {
-                const [element, data] = dataSource[i];
+            for (const [element, data] of dataSource) {
                 const node = File.createTagNode(element, domAll, cache);
                 node.textContent = element.textContent!;
                 data.element = node;

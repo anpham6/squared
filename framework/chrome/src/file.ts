@@ -3,7 +3,6 @@ import DIR_FUNCTIONS = internal.chrome.DIR_FUNCTIONS
 import type Application from './application';
 
 import Resource = squared.base.Resource;
-import Pattern = squared.lib.base.Pattern;
 
 type CloudStorage = unknown;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
@@ -21,12 +20,12 @@ interface FileAsData {
     format?: string;
 }
 
+const { DOM } = squared.base.lib.regex;
+
 const { createElement } = squared.lib.dom;
-const { convertWord, fromLastIndexOf, isPlainObject, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
 const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID, trimEnd } = squared.base.lib.util;
-
-const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
 
 const FILENAME_MAP = new WeakMap<ChromeAsset, string>();
 let BUNDLE_ID = 0;
@@ -646,13 +645,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             this.processImageUri(result, element, resolvePath(src), saveAsImage, preserveCrossOrigin, assetMap, mimeType, base64);
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            RE_SRCSET.matcher(element.srcset.trim());
-            while (RE_SRCSET.find()) {
-                const src = resolvePath(RE_SRCSET.group(1)!);
-                if (src !== resolvePath(element.src)) {
-                    this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, undefined, undefined, true);
+            splitSome(element.srcset, value => {
+                const match = DOM.SRCSET.exec(value);
+                if (match) {
+                    const src = resolvePath(match[1]);
+                    if (src !== resolvePath(element.src)) {
+                        this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, undefined, undefined, true);
+                    }
                 }
-            }
+            });
         });
         const assets = this.getResourceAssets(resourceId);
         if (assets) {
@@ -791,13 +792,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
                     const { socketId: id, handler = {}, secure } = reload;
-                    const port = reload.port || (secure ? this.userSettings.webSocketSecurePort! : this.userSettings.webSocketPort!);
-                    socketMap[id + '_' + port + (secure ? '_0' : '_1')] ||=
+                    const port = reload.port ?? (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
+                    if (hasValue<number>(port)) {
+                        socketMap[id + '_' + port + (secure ? '_0' : '_1')] ||=
                         'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
                         (handler.open ? `socket.onopen=${handler.open};` : '') +
                         'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${id!}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.href=c.src+c.hot;});return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.src=c.src+c.hot;});return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
                         (handler.error ? `socket.onerror=${handler.error};` : '') +
                         (handler.close ? `socket.onclose=${handler.close};` : '');
+                    }
                     delete reload.handler;
                 }
             }
@@ -946,8 +949,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private processAssets(options: FileActionOptions) {
-        const { assetMap, appendMap, useOriginalHtmlPage, preserveCrossOrigin } = options;
-        const nodeMap = options.nodeMap ||= new Map<XmlNode, HTMLElement>();
+        const { assetMap, appendMap, nodeMap = new Map<XmlNode, HTMLElement>(), useOriginalHtmlPage, preserveCrossOrigin } = options;
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));

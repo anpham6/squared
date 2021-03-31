@@ -1,9 +1,11 @@
-const { calculateVar, isCalc, isLength, parseUnit } = squared.lib.css;
+import { DOM } from './regex';
+
 const { STRING } = squared.lib.regex;
+
+const { calculateVar, isCalc, isLength, parseUnit } = squared.lib.css;
 const { isString, iterateArray, resolvePath, splitSome } = squared.lib.util;
 
 const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)(?:\\s*\\))?)+)?\\s*(.*)$`, 'i');
-const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 
 function getAspectRatio(element: HTMLImageElement | HTMLSourceElement) {
     if (element.width && element.height) {
@@ -27,7 +29,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     }
     if (srcset) {
         splitSome(srcset, value => {
-            const match = REGEXP_IMGSRCSET.exec(value);
+            const match = DOM.SRCSET.exec(value);
             if (match) {
                 let width = 0,
                     pixelRatio = 1;

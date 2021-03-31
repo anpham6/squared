@@ -900,6 +900,10 @@ declare module "base" {
             const CSS: {
                 BACKGROUNDIMAGE_G: RegExp;
             };
+
+            const DOM: {
+                SRCSET: RegExp;
+            };
         }
 
         namespace util {

@@ -11,3 +11,7 @@ export const STRING = {
 export const CSS = {
     BACKGROUNDIMAGE_G: new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${STRING.CSS_COLORSTOP})+)\\)`, 'g')
 };
+
+export const DOM = {
+    SRCSET: /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i
+};
