@@ -22,11 +22,11 @@ interface FileAsData extends OptionsData {
 }
 
 const { createElement } = squared.lib.dom;
-const { convertWord, endsWith, fromLastIndexOf, isPlainObject, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+const { convertWord, endsWith, fromLastIndexOf, hasValue, isPlainObject, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
 
 const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
 
-const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
+const RE_SRCSET = new Pattern(/([^\s,]+)(\s+[\d.]+\s*[wx])?\s*,?/gi);
 
 const FILENAME_MAP = new WeakMap<ChromeAsset, string>();
 let BUNDLE_ID = 0;
@@ -796,13 +796,15 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
                     const { socketId: id, handler = {}, secure } = reload;
-                    const port = reload.port || (secure ? this.userSettings.webSocketSecurePort! : this.userSettings.webSocketPort!);
-                    socketMap[id + '_' + port + (secure ? '_0' : '_1')] ||=
-                        'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
-                        (handler.open ? `socket.onopen=${handler.open};` : '') +
-                        'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${id!}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
-                        (handler.error ? `socket.onerror=${handler.error};` : '') +
-                        (handler.close ? `socket.onclose=${handler.close};` : '');
+                    const port = reload.port || (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
+                    if (hasValue<number>(port)) {
+                        socketMap[id + '_' + port + (secure ? '_0' : '_1')] ||=
+                            'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
+                            (handler.open ? `socket.onopen=${handler.open};` : '') +
+                            'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${id!}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
+                            (handler.error ? `socket.onerror=${handler.error};` : '') +
+                            (handler.close ? `socket.onclose=${handler.close};` : '');
+                    }
                     delete reload.handler;
                 }
             }
@@ -951,8 +953,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private processAssets(options: FileActionOptions) {
-        const { assetMap, appendMap, useOriginalHtmlPage, preserveCrossOrigin } = options;
-        const nodeMap = options.nodeMap ||= new Map<XmlNode, HTMLElement>();
+        const { assetMap, appendMap, nodeMap = new Map<XmlNode, HTMLElement>(), useOriginalHtmlPage, preserveCrossOrigin } = options;
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));

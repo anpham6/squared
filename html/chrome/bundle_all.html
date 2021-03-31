@@ -97,6 +97,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             squared.setFramework(chrome);
             const time = performance.now();
+            let filename = Date.now();
             squared
                 .copyTo('C:/Users/An/Downloads/chrome', {
                     useOriginalHtmlPage: true,
@@ -142,7 +143,7 @@
                             blob: true,
                             customize: (uri, mimeType, command) => {
                                 if (mimeType === 'image/jpeg') {
-                                    return Date.now() + '.jpg';
+                                    return filename++ + '.jpg';
                                 }
                             },
                             cloudStorage: [{
