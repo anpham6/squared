@@ -641,7 +641,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     const length = elements.length;
                     if (length === 0) {
-                        if (resource && !hostElement) {
+                        if (resource && this.session.unusedStyles && !hostElement) {
                             ((processing ||= this.getProcessing(sessionId)!).unusedStyles ||= new Set()).add(selectorText);
                         }
                         continue;

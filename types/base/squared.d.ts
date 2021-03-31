@@ -61,6 +61,7 @@ declare module "base" {
 
     interface AppSession<T extends Node> {
         active: Map<string, AppProcessing<T>>;
+        unusedStyles?: boolean;
     }
 
     interface AppProcessing<T extends Node> {
