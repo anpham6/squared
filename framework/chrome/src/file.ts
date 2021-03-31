@@ -1071,7 +1071,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 item.element = node;
                 nodeMap.set(node, element);
             }
-            item.document ||= documentHandler;
+            item.document ||= File.copyDocument(documentHandler);
         }
         for (const [node, element] of nodeMap) {
             if (element !== document.documentElement) {

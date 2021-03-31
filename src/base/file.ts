@@ -80,6 +80,10 @@ export default abstract class File<T extends Node> implements squared.base.File<
         setTimeout(() => URL.revokeObjectURL(href as string), 1);
     }
 
+    public static copyDocument(value: StringOfArray) {
+        return Array.isArray(value) ? value.slice(0) : value;
+    }
+
     public resource!: Resource<T>;
     public readonly archiveFormats = ['zip', '7z', 'tar', 'gz', 'tgz'];
 
