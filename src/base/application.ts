@@ -541,9 +541,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
+                    const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                     let value: Undef<string> = cssStyle[attr];
                     if (value) {
-                        const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                         switch (value) {
                             case 'initial':
                                 if (isUserAgent(USER_AGENT.SAFARI) && startsWith(baseAttr, 'background')) {
@@ -569,21 +569,25 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     }
                                 }
                                 break;
-                        }
-                        switch (baseAttr) {
-                            case 'backgroundImage':
-                            case 'listStyleImage':
-                            case 'content':
-                                if (value !== 'initial') {
-                                    value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
+                            default:
+                                switch (baseAttr) {
+                                    case 'backgroundImage':
+                                    case 'listStyleImage':
+                                    case 'content':
+                                        value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
+                                        break;
                                 }
                                 break;
                         }
-                        baseMap[baseAttr] = value;
                     }
+                    else {
+                        const property = CSS_PROPERTIES[baseAttr];
+                        value = property && property.valueAs && cssStyle[property.valueAs] || '';
+                    }
+                    baseMap[baseAttr] = value;
                 }
                 let important: Undef<ObjectMap<boolean>>;
-                if (cssText.includes('!important')) {
+                if (cssText.includes('!')) {
                     important = {};
                     let match: Null<RegExpExecArray>;
                     while (match = REGEXP_IMPORTANT.exec(cssText)) {
