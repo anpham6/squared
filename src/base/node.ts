@@ -2130,10 +2130,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this._preferInitial ? this.cssInitial(attr, options) : this._styleMap[attr] || options && options.computed && this.style[attr] || '';
     }
 
-    protected hasPX(attr: CssStyleAttr, options?: HasUnitOptions) {
-        return this.hasUnit(attr, options);
-    }
-
     get naturalChild() { return true; }
 
     get pseudoElement() { return false; }

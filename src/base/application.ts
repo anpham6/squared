@@ -539,51 +539,53 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hasPartialValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
-                    const baseAttr = convertCamelCase(attr) as CssStyleAttr;
-                    let value: string = cssStyle[attr];
-                    switch (value) {
-                        case 'initial': {
-                            if (isUserAgent(USER_AGENT.SAFARI) && startsWith(baseAttr, 'background')) {
-                                break;
-                            }
-                            const property = CSS_PROPERTIES[baseAttr];
-                            if (property) {
-                                if (property.valueOfSome) {
+                    let value: Undef<string> = cssStyle[attr];
+                    if (value) {
+                        const baseAttr = convertCamelCase(attr) as CssStyleAttr;
+                        switch (value) {
+                            case 'initial': {
+                                if (isUserAgent(USER_AGENT.SAFARI) && startsWith(baseAttr, 'background')) {
                                     break;
                                 }
-                                if (property.value === 'auto') {
-                                    value = 'auto';
-                                    break;
-                                }
-                            }
-                        }
-                        case 'normal':
-                            if (!hasExactValue(attr, value)) {
-                                required: {
-                                    for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE)) {
-                                        const css = CSS_SHORTHANDNONE[name];
-                                        if ((css.value as string[]).includes(baseAttr)) {
-                                            if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
-                                                break required;
-                                            }
-                                            break;
-                                        }
+                                const property = CSS_PROPERTIES[baseAttr];
+                                if (property) {
+                                    if (property.valueOfSome) {
+                                        break;
                                     }
-                                    continue;
+                                    if (property.value === 'auto') {
+                                        value = 'auto';
+                                        break;
+                                    }
                                 }
                             }
-                            break;
+                            case 'normal':
+                                if (!hasExactValue(attr, value)) {
+                                    required: {
+                                        for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE)) {
+                                            const css = CSS_SHORTHANDNONE[name];
+                                            if ((css.value as string[]).includes(baseAttr)) {
+                                                if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                                    break required;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                        continue;
+                                    }
+                                }
+                                break;
+                        }
+                        switch (baseAttr) {
+                            case 'backgroundImage':
+                            case 'listStyleImage':
+                            case 'content':
+                                if (value !== 'initial') {
+                                    value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
+                                }
+                                break;
+                        }
+                        baseMap[baseAttr] = value;
                     }
-                    switch (baseAttr) {
-                        case 'backgroundImage':
-                        case 'listStyleImage':
-                        case 'content':
-                            if (value !== 'initial') {
-                                value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
-                            }
-                            break;
-                    }
-                    baseMap[baseAttr] = value;
                 }
                 let important: Undef<ObjectMap<boolean>>;
                 if (cssText.includes('!important')) {

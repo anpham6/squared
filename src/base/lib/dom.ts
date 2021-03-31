@@ -2,7 +2,7 @@ import { DOM } from './regex';
 
 const { STRING } = squared.lib.regex;
 
-const { calculateVar, isCalc, isLength, parseUnit } = squared.lib.css;
+const { calculateVar, getFontSize, isCalc, isLength, parseUnit } = squared.lib.css;
 const { isString, iterateArray, resolvePath, splitSome } = squared.lib.util;
 
 const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)(?:\\s*\\))?)+)?\\s*(.*)$`, 'i');
@@ -68,6 +68,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
         return 0;
     });
     if (sizes) {
+        const options: UnitOptions = { fontSize: getFontSize(element) };
         let width = NaN;
         splitSome(sizes, value => {
             const match = REGEXP_SOURCESIZES.exec(value);
@@ -78,10 +79,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
                     return;
                 }
                 if (isCalc(unit)) {
-                    width = calculateVar(element, unit);
+                    width = calculateVar(element, unit, options);
                 }
                 else if (isLength(unit)) {
-                    width = parseUnit(unit);
+                    width = parseUnit(unit, options);
                 }
                 if (!isNaN(width)) {
                     return true;
