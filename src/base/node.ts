@@ -45,20 +45,14 @@ const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
-function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, styleMap: CssStyleMap, sessionId: string) {
+function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, sessionId: string) {
     let current = style[attr];
     if (value !== current) {
+        const restore = element.style[attr];
         element.style[attr] = value;
         const newValue = element.style[attr];
-        if (current !== newValue) {
-            if (isPx(current)) {
-                const styleValue = styleMap[attr];
-                if (styleValue) {
-                    current = styleValue;
-                    value = '';
-                }
-            }
-            setElementCache(element, attr, value !== 'auto' ? current : '', sessionId);
+        if (newValue && current !== newValue) {
+            setElementCache(element, attr, restore, sessionId);
             return STYLE_STATE.CHANGED;
         }
         return STYLE_STATE.FAIL;
@@ -1458,7 +1452,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssTry(attr: CssStyleAttr, value: string, callback?: FunctionSelf<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this._styleMap, this.sessionId)) {
+            if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this.sessionId)) {
                 if (callback) {
                     callback.call(this, attr);
                     this.cssFinally(attr);
@@ -1477,7 +1471,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const style = !this.pseudoElement ? this.style : getStyle(element);
             for (const attr in values) {
                 const value = values[attr]!;
-                switch (setStyleCache(element, attr as CssStyleAttr, value, style, this._styleMap, sessionId)) {
+                switch (setStyleCache(element, attr as CssStyleAttr, value, style, sessionId)) {
                     case STYLE_STATE.FAIL:
                         this.cssFinally(result);
                         return false;
@@ -1504,14 +1498,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (elementData) {
                 if (typeof attrs === 'string') {
                     const value = elementData[attrs] as Undef<string>;
-                    if (value) {
+                    if (value !== undefined) {
                         (this._element as HTMLElement).style[attrs] = value;
                     }
                 }
                 else {
                     for (const attr in attrs) {
                         const value = elementData[attr] as Undef<string>;
-                        if (value) {
+                        if (value !== undefined) {
                             (this._element as HTMLElement).style[attr] = value;
                         }
                     }
