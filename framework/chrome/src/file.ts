@@ -448,7 +448,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             else if (!data.filename) {
                 const value = getFilename(location.href);
-                data.filename = /\.html?$/i.exec(value) ? value : 'index.html';
+                data.filename = /\.(?:html?|php|jsp|aspx?)$/i.exec(value) ? value : 'index.html';
             }
             return [data];
         }
