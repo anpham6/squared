@@ -46,9 +46,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     }
                 });
                 if (open && close) {
-                    const application = this.application;
-                    const controller = this.controller as android.base.Controller<T>;
-                    const renderTemplates = node.renderTemplates!;
+                    const { application, controller } = this;
+                    const renderTemplates = node.renderTemplates as NodeTemplate<T>[];
                     const q = Math.min(open.length, close.length);
                     const excess = close.length - q;
                     if (excess) {
@@ -61,17 +60,17 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                             if (r >= index) {
                                 const templates: NodeTemplate<T>[] = [];
                                 for (let l = index; l <= r; ++l) {
-                                    templates.push(renderTemplates[l] as NodeTemplate<T>);
+                                    templates.push(renderTemplates[l]);
                                 }
                                 const merge = !include || templates.length > 1;
                                 const depth = merge ? 1 : 0;
                                 renderTemplates.splice(index, templates.length, {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name!}`, android: {} }),
+                                    content: (controller as android.base.Controller<T>).renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name!}`, android: {} }),
                                     indent: true
                                 } as NodeIncludeTemplate<T>);
-                                let content = controller.writeDocument(templates, depth, this.application.userSettings.showAttributes);
+                                let content = controller.writeDocument(templates, depth, application.userSettings.showAttributes);
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
                                 }

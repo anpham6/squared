@@ -15,8 +15,7 @@ function insertIntervalValue(intervalMap: Map<number, SvgAnimationIntervalValue<
     if (value) {
         let data = intervalMap.get(time);
         if (!data) {
-            data = [];
-            intervalMap.set(time, data);
+            intervalMap.set(time, data = []);
         }
         data.push({
             time,

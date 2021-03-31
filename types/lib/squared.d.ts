@@ -19,7 +19,7 @@ declare module "lib" {
             find(predicate: IteratorPredicate<T, unknown>, options?: ContainerFindOptions<T>): Undef<T>;
             cascade(predicate?: IteratorPredicate<T, unknown>, options?: ContainerCascadeOptions<T>): T[];
             map<U = unknown>(predicate: IteratorPredicate<T, U>): U[];
-            sortBy(...attrs: (string | boolean)[]): this;
+            sortBy(...attrs: [...string[], boolean]): this;
             contains(item: T): boolean;
             clear(): this;
             iterator(): ListIterator<T>;
@@ -330,7 +330,7 @@ declare module "lib" {
         function capitalize(value: string, upper?: boolean): string;
         function convertHyphenated(value: string, char?: string): string;
         function convertCamelCase(value: string, char?: string): string;
-        function convertWord(value: string, dash?: boolean): string;
+        function convertWord(value: string, char?: string): string;
         function convertInt(value: string, fallback?: number): number;
         function convertFloat(value: string, fallback?: number): number;
         function convertPercent(value: string, fallback?: number): number;
@@ -366,7 +366,7 @@ declare module "lib" {
         function withinRange(a: number, b: number, offset?: number): boolean;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
-        function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)[]): T[];
+        function sortByArray<T = unknown>(list: T[], ...attrs: [...string[], boolean]): T[];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string): string;

@@ -568,7 +568,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const systemName = capitalize(this.systemName);
         let layoutName = dataset['filename' + systemName] || dataset.filename;
         if (!layoutName) {
-            const baseName = elementId && convertWord(elementId, true) || 'document_' + this.length;
+            const baseName = elementId && convertWord(elementId) || 'document_' + this.length;
             layoutName = baseName;
             let i = 0;
             while (this._layouts.find(item => item.filename === layoutName)) {

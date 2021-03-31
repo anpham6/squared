@@ -279,7 +279,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         })(this, []);
     }
 
-    public sortBy(...attrs: (string | boolean)[]) {
+    public sortBy(...attrs: [...string[], boolean]) {
         sortByArray(this.children, ...attrs);
         return this;
     }

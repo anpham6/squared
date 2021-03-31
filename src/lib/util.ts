@@ -1,8 +1,6 @@
 import { FILE } from './regex';
 
 const CACHE_CAMELCASE: StringMap = {};
-const REGEXP_NONWORD = /[^\w]+/g;
-const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
 
 export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: unknown[]) => {
@@ -47,40 +45,37 @@ export function convertHyphenated(value: string, char = '-') {
 }
 
 export function convertCamelCase(value: string, char = '-') {
-    const cacheData = CACHE_CAMELCASE[value];
-    if (cacheData) {
-        return cacheData;
+    let result = CACHE_CAMELCASE[value];
+    if (result) {
+        return result;
     }
     let i = value.indexOf(char);
     if (i === -1) {
         return CACHE_CAMELCASE[value] = value;
     }
-    let result = value.substring(0, i++),
-        previous = true;
+    let previous = true;
+    result = value.substring(0, i++);
     const length = value.length;
     while (i < length) {
         const ch = value[i++];
         if (ch === char) {
             previous = true;
+            continue;
         }
         else if (previous) {
+            previous = false;
             if (result) {
                 result += ch.toUpperCase();
+                continue;
             }
-            else {
-                result += ch;
-            }
-            previous = false;
         }
-        else {
-            result += ch;
-        }
+        result += ch;
     }
     return CACHE_CAMELCASE[value] = result;
 }
 
-export function convertWord(value: string, dash?: boolean) {
-    return value.replace(dash ? REGEXP_NONWORDNUM : REGEXP_NONWORD, '_');
+export function convertWord(value: string, char = '_') {
+    return value.replace(/[^\w]+/g, char);
 }
 
 export function convertInt(value: string, fallback = 0) {
@@ -599,7 +594,7 @@ export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean
     }
 }
 
-export function sortByArray<T = unknown>(list: T[], ...attrs: (string | boolean)[]) {
+export function sortByArray<T = unknown>(list: T[], ...attrs: [...string[], boolean]) {
     let length = attrs.length,
         ascending = attrs[length - 1];
     if (typeof ascending === 'boolean') {

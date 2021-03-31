@@ -1416,7 +1416,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (tagName === 'CANVAS') {
                         const content = ((element as unknown) as HTMLCanvasElement).toDataURL();
                         if (content) {
-                            src = 'canvas_' + convertWord(node.controlId, true).toLowerCase();
+                            src = 'canvas_' + convertWord(node.controlId).toLowerCase();
                             resource.writeRawImage(resourceId, src + '.png', { mimeType: 'image/png', encoding: 'base64', content, watch, tasks });
                         }
                     }
