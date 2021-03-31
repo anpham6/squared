@@ -177,10 +177,9 @@ interface OffsetXYOptions extends CoordsXYOptions {
     offset?: number;
 }
 
-interface FormatXmlOptions {
-    closeEmptyTags?: boolean;
-    caseSensitive?: boolean;
-    indentChar?: string;
+interface BackgroundPositionOptions extends UnitOptions {
+    imageDimension?: Null<Dimension>;
+    imageSize?: string;
 }
 
 interface ParseGlobOptions {
