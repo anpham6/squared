@@ -39,7 +39,7 @@ function getFileAssets(pathname: string, items: string[], document: StringOfArra
             pathname: pathname + items[i + 1],
             filename: items[i + 2],
             content: items[i],
-            document: copyDocument(document)
+            document: File.copyDocument(document)
         };
     }
     return result;
@@ -96,7 +96,7 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
             commands,
             compress,
             uri,
-            document: copyDocument(document),
+            document: File.copyDocument(document),
             tasks: image && image.tasks
         };
     }
@@ -114,7 +114,7 @@ function getRawAssets(this: Resource<View>, resourceId: number, name: "video" | 
             filename: items[i + 1].toLowerCase(),
             mimeType: items[i + 2],
             uri,
-            document: copyDocument(document),
+            document: File.copyDocument(document),
             tasks: rawData && rawData.tasks
         };
     }
@@ -126,7 +126,6 @@ function getOutputDirectory(value: string) {
     return value + (!endsWith(value, '/') ? '/' : '');
 }
 
-const copyDocument = (value: StringOfArray) => Array.isArray(value) ? value.slice(0) : value;
 const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {

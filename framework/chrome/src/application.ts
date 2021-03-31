@@ -111,8 +111,8 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                 }
                             }
                         }
-                        dataSrc &&= { document: item.document || documentHandler, ...dataSrc, type } as DataSource;
-                        dataCloud &&= { document: item.document || documentHandler, ...dataSrc, type, source: 'cloud' } as DataSource;
+                        dataSrc &&= { document: item.document || File.copyDocument(documentHandler), ...dataSrc, type } as DataSource;
+                        dataCloud &&= { document: item.document || File.copyDocument(documentHandler), ...dataSrc, type, source: 'cloud' } as DataSource;
                         document.querySelectorAll(item.selector).forEach((element: HTMLElement) => {
                             switch (type) {
                                 case 'text':
