@@ -593,7 +593,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const iteration = dataset['iteration' + systemName];
         const prefix = isString(filename) && filename.replace(this._layoutFileExtension, '') || node.elementId || `document_${this.length}`;
         const suffix = iteration ? +iteration + 1 : 0;
-        const layoutName = convertWord(suffix ? prefix + '_' + suffix : prefix, true);
+        const layoutName = convertWord(suffix ? prefix + '_' + suffix : prefix);
         dataset['iteration' + systemName] = suffix.toString();
         dataset['layoutName' + systemName] = layoutName;
         node.data(Application.KEY_NAME, 'layoutName', layoutName);

@@ -841,7 +841,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this._animateTarget.clear();
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
-        const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
+        const templateName = (node.tagName + '_' + convertWord(node.controlId) + '_viewbox').toLowerCase();
         svg.build({ contentMap, keyframesMap, exclude, residualHandler, precision });
         svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');

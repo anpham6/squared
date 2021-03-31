@@ -314,7 +314,7 @@ declare module "lib" {
         function capitalize(value: string, upper?: boolean): string;
         function convertHyphenated(value: string, char?: string): string;
         function convertCamelCase(value: string, char?: string): string;
-        function convertWord(value: string, dash?: boolean): string;
+        function convertWord(value: string): string;
         function convertInt(value: string, fallback?: number): number;
         function convertFloat(value: string, fallback?: number): number;
         function convertPercent(value: string, fallback?: number): number;

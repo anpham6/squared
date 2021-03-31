@@ -46,7 +46,7 @@ const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
 function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, sessionId: string) {
-    let current = style[attr];
+    const current = style[attr];
     if (value !== current) {
         const restore = element.style[attr];
         element.style[attr] = value;

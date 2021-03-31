@@ -2,8 +2,6 @@ import { FILE } from './regex';
 
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_TRIMBOTH: ObjectMap<RegExp> = {};
-const REGEXP_NONWORD = /[^\w]+/g;
-const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
 
 export function promisify<T>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: unknown[]) => {
@@ -80,8 +78,8 @@ export function convertCamelCase(value: string, char = '-') {
     return CACHE_CAMELCASE[value] = result;
 }
 
-export function convertWord(value: string, dash?: boolean) {
-    return value.replace(dash ? REGEXP_NONWORDNUM : REGEXP_NONWORD, '_');
+export function convertWord(value: string) {
+    return value.replace(/[^\w]+/g, '_');
 }
 
 export function convertInt(value: string, fallback = 0) {

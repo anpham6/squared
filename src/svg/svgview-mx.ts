@@ -475,7 +475,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     value: Undef<string>,
                     tagName: Undef<string>;
                 if (id) {
-                    id = convertWord(id, true);
+                    id = convertWord(id);
                     if (!CACHE_VIEWNAME.has(id)) {
                         value = id;
                     }
