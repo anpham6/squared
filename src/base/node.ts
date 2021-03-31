@@ -196,7 +196,7 @@ function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
 }
 
 function convertPosition(node: T, attr: CssStyleAttr) {
-    if (!node.positionStatic) {
+    if (!node.positionStatic || node.valueOf('position') === 'sticky') {
         const value = node.valueOf(attr, { modified: true });
         if (value) {
             return node.parseUnit(value, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
