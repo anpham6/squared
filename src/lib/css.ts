@@ -1671,8 +1671,7 @@ export function getStyle(element: Element, pseudoElt = '') {
         return style;
     }
     if (element.nodeName[0] !== '#') {
-        style = getComputedStyle(element, pseudoElt);
-        setElementCache(element, 'style' + pseudoElt, style);
+        setElementCache(element, 'style' + pseudoElt, style = getComputedStyle(element, pseudoElt));
         return style;
     }
     return PROXY_INLINESTYLE;
