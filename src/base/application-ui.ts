@@ -887,8 +887,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (item.floating) {
-                            const float = item.float;
-                            floated.add(float);
+                            floated.add(item.float);
                             clearable.push(item);
                         }
                     }
