@@ -515,11 +515,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (items) {
                         items.push(...childMap[j] as T[]);
                     }
-                    else if (q === 1) {
-                        result[k] = childMap[j] as T[];
-                    }
                     else {
-                        result[k] = childMap[j].slice(0) as T[];
+                        result[k] = q === 1 ? childMap[j] as T[] : childMap[j].slice(0) as T[];
                     }
                 }
             }
@@ -586,8 +583,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                     }
                     else {
-                        const property = CSS_PROPERTIES[baseAttr];
-                        value = property && property.valueAs && cssStyle[property.valueAs] || '';
+                        value = baseAttr in cssStyle ? '{{@style}}' : '';
                     }
                     baseMap[baseAttr] = value;
                 }

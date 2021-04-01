@@ -261,8 +261,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderBottomColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderBottomLeftRadius: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
@@ -274,13 +273,11 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderBottomStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderBottomWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderCollapse: {
         trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
@@ -336,18 +333,15 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderLeftColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderLeftStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderLeftWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderRadius: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
@@ -368,18 +362,15 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderRightColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderRightStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderRightWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderSpacing: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT | CSS_TRAITS.INHERIT,
@@ -405,8 +396,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderTopColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderTopLeftRadius: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
@@ -418,13 +408,11 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderTopStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderTopWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,

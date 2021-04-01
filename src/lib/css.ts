@@ -12,7 +12,7 @@ import { endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEncl
 import Pattern from './base/pattern';
 
 const REGEXP_LENGTH = new RegExp(`^\\s*${STRING.LENGTH}\\s*$`, 'i');
-const REGEXP_LENGTHPERCENTAGE = new RegExp(`^\\s*${STRING.LENGTH_PERCENTAGE}\\s*$`, 'i');
+const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:\\s+|$)$`, 'i');
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
@@ -1167,6 +1167,7 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
         case 'inherit':
         case 'unset':
         case 'revert':
+        case '{{@style}}':
             switch (attr) {
                 case 'lineHeight':
                 case 'fontSize':

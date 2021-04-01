@@ -1919,7 +1919,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     for (const attr in style) {
                         if (attr !== 'display') {
-                            pseudoElement.style[attr] = style[attr];
+                            pseudoElement.style[attr] = (value = style[attr]) === '{{@style}}' ? getStyle(element, pseudoElt)[attr] : value;
                         }
                     }
                     setElementCache(pseudoElement, 'styleMap', style, sessionId);
