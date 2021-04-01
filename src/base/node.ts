@@ -1240,7 +1240,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public intersectX(rect: BoxRectDimension, options?: CoordsXYOptions) {
         if (rect.width) {
-            const { left, right } = this[options?.dimension || 'linear'];
+            const { left, right } = this[options && options.dimension || 'linear'];
             const { left: leftA, right: rightA } = rect;
             return (
                 Math.ceil(left) >= leftA && left < Math.floor(rightA) ||
@@ -1254,7 +1254,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public intersectY(rect: BoxRectDimension, options?: CoordsXYOptions) {
         if (rect.height) {
-            const { top, bottom } = this[options?.dimension || 'linear'];
+            const { top, bottom } = this[options && options.dimension || 'linear'];
             const { top: topA, bottom: bottomA } = rect;
             return (
                 Math.ceil(top) >= topA && top < Math.floor(bottomA) ||

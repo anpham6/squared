@@ -243,7 +243,12 @@ function getLineSpacingExtra(node: T, value: number) {
         }
     }
     if (!height && node.styleText) {
-        node.cssTryAll(!node.pseudoElement ? OPTIONS_LINEHEIGHT : { ...OPTIONS_LINEHEIGHT, display: 'inline-block' }, function(this: T) { height = getRangeClientRect(this.element!)?.height; });
+        node.cssTryAll(!node.pseudoElement ? OPTIONS_LINEHEIGHT : { ...OPTIONS_LINEHEIGHT, display: 'inline-block' }, function(this: T) {
+            const bounds = getRangeClientRect(this.element!);
+            if (bounds) {
+                height = bounds.height;
+            }
+        });
     }
     return height ? (value - height) / 2 : 0;
 }
@@ -776,8 +781,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     return;
                                 }
                                 else if (this.cssTry('display', 'inline-block')) {
-                                    const width = Math.ceil(getRangeClientRect(this.element!)?.width || 0);
-                                    layoutWidth = width >= actualParent.box.width ? 'wrap_content' : 'match_parent';
+                                    const bounds = getRangeClientRect(this.element!);
+                                    layoutWidth = (bounds ? bounds.width : 0) >= actualParent.box.width ? 'wrap_content' : 'match_parent';
                                     this.cssFinally('display');
                                     return;
                                 }
@@ -3069,7 +3074,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else {
                     if (this.multiline && this.cssTry('whiteSpace', 'nowrap')) {
-                        result = this.boundingClientRect?.height ?? this.bounds.height;
+                        const bounds = this.boundingClientRect;
+                        result = bounds ? bounds.height : this.bounds.height;
                         this.cssFinally('whiteSpace');
                     }
                     else if (this.hasHeight) {

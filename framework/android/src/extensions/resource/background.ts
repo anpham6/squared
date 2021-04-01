@@ -680,7 +680,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         }
         if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);
-            if (images?.length || indentWidth || borderOnly) {
+            if (images && images.length || indentWidth || borderOnly) {
                 layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined, stroke, indentOffset);
             }
             else {
@@ -898,7 +898,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         );
                         const stored = resource.getImage(resourceId, element.src);
                         if (!node.hasUnit('width')) {
-                            const offsetStart = (stored?.width || element.naturalWidth) + position.left - (node.paddingLeft + node.borderLeftWidth);
+                            const offsetStart = (stored && stored.width || element.naturalWidth) + position.left - (node.paddingLeft + node.borderLeftWidth);
                             if (offsetStart > 0) {
                                 node.modifyBox(BOX_STANDARD.PADDING_LEFT, offsetStart);
                             }

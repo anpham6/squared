@@ -269,7 +269,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
-        if (assets?.length) {
+        if (assets && assets.length) {
             const exclusions = options.exclusions;
             if (exclusions) {
                 assets = assets.filter(item => validateAsset(item, exclusions));
