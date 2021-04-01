@@ -14,7 +14,7 @@ import { trimEnd } from './lib/util';
 const { CSS_PROPERTIES } = squared.lib.internal;
 
 const { isUserAgent } = squared.lib.client;
-const { asPx, formatPX, getFontSize, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
+const { formatPX, getFontSize, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { iterateArray } = squared.lib.util;
@@ -835,8 +835,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     style[attr] = value;
                     return;
                 }
-                let unit = asPx(value);
-                if (!isNaN(unit) || !isNaN(unit = parseFloat(value))) {
+                const unit = parseFloat(value);
+                if (!isNaN(unit)) {
                     style[attr] = unit + 'px';
                     return;
                 }

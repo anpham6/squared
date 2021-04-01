@@ -23,7 +23,7 @@ interface ICssGridData<T> extends CssGridData<T> {
 
 const { asPercent, asPx, formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { endsWith, lastItemOf, startsWith } = squared.lib.util;
+const { endsWith, lastItemOf, safeFloat, startsWith } = squared.lib.util;
 
 const { flatArray } = squared.base.lib.util;
 
@@ -236,7 +236,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
         columnWeight: Undef<string>,
         rowWeight: Undef<string>;
     if (section.every(value => isPx(value))) {
-        const px = section.reduce((a, b) => a + parseFloat(b), insideGap);
+        const px = section.reduce((a, b) => a + safeFloat(b), insideGap);
         const dimension = formatPX(px);
         if (horizontal) {
             width = dimension;
@@ -246,7 +246,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
         }
     }
     else if (section.every(value => endsWith(value, 'fr'))) {
-        const fr = section.reduce((a, b) => a + parseFloat(b), 0);
+        const fr = section.reduce((a, b) => a + safeFloat(b), 0);
         const weight = truncate(fr, node.localSettings.floatPrecision);
         if (horizontal) {
             width = '0px';
@@ -258,7 +258,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
         }
     }
     else if (section.every(value => isPercent(value))) {
-        const percent = formatPercent((section.reduce((a, b) => a + parseFloat(b), 0) + insideGap / (horizontal ? node.actualWidth : node.actualHeight)) / 100);
+        const percent = formatPercent((section.reduce((a, b) => a + asPercent(b), 0) + insideGap / (horizontal ? node.actualWidth : node.actualHeight)) / 100);
         if (horizontal) {
             width = percent;
         }
@@ -386,12 +386,12 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
                 if (sizeWeight === -1) {
                     sizeWeight = 0;
                 }
-                sizeWeight += parseFloat(value);
+                sizeWeight += safeFloat(value);
                 minSize = size;
             }
             else {
                 sizeWeight = 0;
-                minSize += mainData.minCellHeight * parseFloat(value);
+                minSize += mainData.minCellHeight * safeFloat(value);
             }
             size = 0;
         }
@@ -625,8 +625,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
                 if (valid) {
-                    column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
-                    row.frTotal = row.unit.reduce((a, b) => a + (endsWith(b, 'fr') ? parseFloat(b) : 0), 0);
+                    column.frTotal = unit.reduce((a, b) => a + safeFloat(b), 0);
+                    row.frTotal = row.unit.reduce((a, b) => a + (endsWith(b, 'fr') ? safeFloat(b) : 0), 0);
                     node.setLayoutWidth('match_parent');
                     node.lockAttr('android', 'layout_width');
                     mainData.constraintData = constraintData;
@@ -933,7 +933,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     layout_constraintEnd_toEndOf: 'parent',
                                     layout_constraintVertical_bias: i === 0 ? '0' : '',
                                     layout_constraintVertical_chainStyle: i === 0 ? 'packed' : '',
-                                    layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
+                                    layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + safeFloat(b), 0) / column.frTotal).toString()
                                 }
                             } as RenderSpaceAttribute;
                             controller.addAfterInsideTemplate(node, controller.renderSpace(options), false);

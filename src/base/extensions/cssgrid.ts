@@ -31,7 +31,7 @@ interface RepeatItem {
 }
 
 const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
-const { endsWith, splitPairEnd, splitSome, startsWith, withinRange } = squared.lib.util;
+const { endsWith, safeFloat, splitPairEnd, splitSome, startsWith, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
@@ -112,7 +112,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
             filled += n;
         }
         else if (endsWith(value, 'fr')) {
-            fractional += parseFloat(value);
+            fractional += safeFloat(value);
         }
         else if (!isNaN(n = asPercent(value))) {
             percent -= n;
@@ -124,7 +124,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
             for (let i = 0; i < length; ++i) {
                 const value = unit[i];
                 if (endsWith(value, 'fr')) {
-                    unit[i] = formatPX(parseFloat(value) * ratio);
+                    unit[i] = formatPX(safeFloat(value) * ratio);
                 }
             }
         }
@@ -229,7 +229,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
                 percent -= n;
             }
             else if (endsWith(value, 'fr')) {
-                fr += parseFloat(value);
+                fr += safeFloat(value);
             }
         }
     }
@@ -240,7 +240,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
         if (fr) {
             for (let i = 0; i < length; ++i) {
                 if (endsWith(unit[i], 'fr')) {
-                    unit[i] = percent * (parseFloat(unit[i]) / fr) + 'fr';
+                    unit[i] = percent * (safeFloat(unit[i]) / fr) + 'fr';
                 }
             }
         }

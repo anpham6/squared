@@ -106,6 +106,10 @@ export function convertBase64(value: ArrayBuffer) {
     return window.btoa(result);
 }
 
+export function safeFloat(value: string, fromEnd = 2) {
+    return +value.substring(0, value.length - fromEnd);
+}
+
 export function delimitString(value: DelimitStringOptions | string, ...appending: string[]) {
     let delimiter: Undef<string>,
         trim: Undef<boolean>,

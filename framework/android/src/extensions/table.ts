@@ -9,6 +9,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 const { asPercent, formatPX } = squared.lib.css;
 const { truncateTrailingZero } = squared.lib.math;
+const { safeFloat } = squared.lib.util;
 
 function setLayoutHeight(node: View) {
     if (node.hasUnit('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
@@ -157,7 +158,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public postOptimize(node: T) {
-        const layoutWidth = parseInt(node.layoutWidth);
+        const layoutWidth = safeFloat(node.layoutWidth);
         if (layoutWidth) {
             if (node.bounds.width > layoutWidth) {
                 node.setLayoutWidth(formatPX(node.bounds.width));

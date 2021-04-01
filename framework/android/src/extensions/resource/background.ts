@@ -77,7 +77,7 @@ interface WriteDrawableBackgroundOptions extends DrawableData {
 
 const { extractURL, formatPercent, formatPX, isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { delimitString, lastItemOf, resolvePath, spliceArray, splitPair, splitPairStart } = squared.lib.util;
+const { delimitString, lastItemOf, resolvePath, safeFloat, spliceArray, splitPair, splitPairStart } = squared.lib.util;
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
@@ -86,7 +86,7 @@ function getBorderStyle(resourceId: number, border: BorderAttribute, direction =
     const createStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(resourceId, value), dashWidth: '', dashGap: '' });
     const result = createStrokeColor(color);
     if (style !== 'solid') {
-        const width = roundFloat(border.width);
+        const width = Math.round(border.width);
         switch (style) {
             case 'dotted':
                 result.dashWidth = formatPX(width);
@@ -183,13 +183,13 @@ function getBorderStyle(resourceId: number, border: BorderAttribute, direction =
 function getBorderStroke(resourceId: number, border: BorderAttribute, direction = -1, hasInset?: boolean, isInset?: boolean) {
     let result: StandardMap;
     if (isAlternatingBorder(border.style)) {
-        const width = parseFloat(border.width);
+        const width = border.width;
         result = getBorderStyle(resourceId, border, direction, isInset !== true);
         result.width = isInset ? (Math.ceil(width / 2) * 2) + 'px' : (hasInset ? Math.ceil(width / 2) : width) + 'px';
     }
     else {
         result = getBorderStyle(resourceId, border);
-        result.width = roundFloat(border.width) + 'px';
+        result.width = formatPX(border.width);
     }
     return result;
 }
@@ -240,7 +240,7 @@ function isAlternatingBorder(value: string, width = 0) {
 }
 
 function insertDoubleBorder(resourceId: number, items: StandardMap[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth = 0, corners?: StringMap) {
-    const width = roundFloat(border.width);
+    const width = Math.round(border.width);
     const borderWidth = Math.max(1, Math.floor(width / 3));
     const indentOffset = indentWidth ? formatPX(indentWidth) : '';
     let hideOffset = '-' + formatPX(borderWidth + indentWidth + 1);
@@ -378,7 +378,7 @@ function getColorValue(resourceId: number, value: ColorData | string, transparen
 function setBorderStyle(resourceId: number, layerList: LayerList, borders: Undef<BorderAttribute>[], index: number, corners: Undef<StringMap>, indentWidth: number, indentOffset: string) {
     const border = borders[index];
     if (border) {
-        const width = roundFloat(border.width);
+        const width = Math.round(border.width);
         if (border.style === 'double' && width > 1) {
             insertDoubleBorder(
                 resourceId,
@@ -393,7 +393,7 @@ function setBorderStyle(resourceId: number, layerList: LayerList, borders: Undef
             );
         }
         else {
-            const inset = width > 1 && border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
+            const inset = width > 1 && border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && Math.round(border.width) > 1;
             if (inset) {
                 const hideInsetOffset = '-' + formatPX(width + indentWidth + 1);
                 layerList.item.push({
@@ -418,7 +418,6 @@ function setBorderStyle(resourceId: number, layerList: LayerList, borders: Undef
 
 const isBorderEqual = (border: BorderAttribute, other: BorderAttribute) => border.style === border.style && border.width === other.width && border.color.rgbaAsString === other.color.rgbaAsString;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
-const roundFloat = (value: string) => Math.round(parseFloat(value));
 const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
 
 export function convertColorStops(resourceId: number, list: ColorStop[], precision?: number) {
@@ -527,7 +526,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const outline = stored.outline;
                 let indentWidth = 0;
                 if (drawOutline && outline) {
-                    const width = roundFloat(outline.width);
+                    const width = Math.round(outline.width);
                     indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                 }
                 let [shapeData, layerList] = this.getDrawableBackground(resourceId, stored, { indentWidth, images });
@@ -629,9 +628,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         corners = { radius: radius[0] };
                         break;
                     case 8: {
-                        const result = new Array(4);
+                        const result: string[] = new Array(4);
                         for (let i = 0, j = 0; i < 8; i += 2) {
-                            result[j++] = formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2);
+                            result[j++] = formatPX((safeFloat(radius[i]) + safeFloat(radius[i + 1])) / 2);
                         }
                         corners = getCornerRadius(result);
                         break;
@@ -678,7 +677,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (borderAll) {
             border = borderData;
         }
-        if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length)) {
+        if (border && !isAlternatingBorder(border.style, Math.round(border.width)) && !(border.style === 'double' && Math.floor(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);
             if (images && images.length || indentWidth || borderOnly) {
                 layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined, stroke, indentOffset);
@@ -696,7 +695,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         else if (borderData) {
             layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined);
             if (borderStyle && !isAlternatingBorder(borderData.style)) {
-                const width = roundFloat(borderData.width);
+                const width = Math.round(borderData.width);
                 if (borderData.style === 'double' && width > 1) {
                     insertDoubleBorder(
                         resourceId,

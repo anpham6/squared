@@ -335,6 +335,7 @@ declare module "lib" {
         function convertFloat(value: string, fallback?: number): number;
         function convertPercent(value: string, fallback?: number): number;
         function convertBase64(value: ArrayBuffer): string;
+        function safeFloat(value: string, fromEnd?: number): number;
         function delimitString(value: DelimitStringOptions | string, ...appending: string[]): string;
         function padStart(value: string, length: number, char: string): string;
         function spliceString(value: string, index: number, length: number, replaceWith?: string): string;

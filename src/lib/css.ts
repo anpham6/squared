@@ -7,11 +7,11 @@ import { getDeviceDPI } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
-import { endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { endsWith, escapePattern, isNumber, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 import Pattern from './base/pattern';
 
-const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:^|\\s+)`, 'i');
+const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:\\s+|$)$`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:\\s+|$)$`, 'i');
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
@@ -205,19 +205,19 @@ function getWritingMode(value?: string) {
 
 function getContentBoxWidth(style: CSSStyleDeclaration) {
     return (
-        (hasBorderStyle(style.borderLeftStyle) ? parseFloat(style.borderLeftWidth) : 0) +
-        parseFloat(style.paddingLeft) +
-        parseFloat(style.paddingRight) +
-        (hasBorderStyle(style.borderRightStyle) ? parseFloat(style.borderRightWidth) : 0)
+        (hasBorderStyle(style.borderLeftStyle) ? safeFloat(style.borderLeftWidth) : 0) +
+        safeFloat(style.paddingLeft) +
+        safeFloat(style.paddingRight) +
+        (hasBorderStyle(style.borderRightStyle) ? safeFloat(style.borderRightWidth) : 0)
     );
 }
 
 function getContentBoxHeight(style: CSSStyleDeclaration) {
     return (
-        (hasBorderStyle(style.borderTopStyle) ? parseFloat(style.borderTopWidth) : 0) +
-        parseFloat(style.paddingTop) +
-        parseFloat(style.paddingBottom) +
-        (hasBorderStyle(style.borderBottomStyle) ? parseFloat(style.borderBottomWidth) : 0)
+        (hasBorderStyle(style.borderTopStyle) ? safeFloat(style.borderTopWidth) : 0) +
+        safeFloat(style.paddingTop) +
+        safeFloat(style.paddingBottom) +
+        (hasBorderStyle(style.borderBottomStyle) ? safeFloat(style.borderBottomWidth) : 0)
     );
 }
 
@@ -308,7 +308,7 @@ export function getRemSize(fixedWidth?: boolean) {
 }
 
 export function getFontSize(element: Element) {
-    return parseFloat(getStyle(element.nodeName[0] === '#' ? element.parentElement! : element).fontSize);
+    return safeFloat(getStyle(element.nodeName[0] === '#' ? element.parentElement! : element).fontSize);
 }
 
 export function hasComputedStyle(element: Element): element is HTMLElement {

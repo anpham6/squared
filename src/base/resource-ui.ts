@@ -216,11 +216,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
             width = 1;
         }
         if (color = parseColor(color)) {
-            boxStyle[attr] = {
-                width: formatPX(width),
-                style,
-                color
-            } as BorderAttribute;
+            boxStyle[attr] = { width, style, color } as BorderAttribute;
             return true;
         }
     }

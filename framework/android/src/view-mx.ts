@@ -23,7 +23,7 @@ const { isUserAgent } = squared.lib.client;
 const { asPercent, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, splitPair, startsWith } = squared.lib.util;
+const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, safeFloat, splitPair, startsWith } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.util;
 
@@ -514,7 +514,7 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
     let current = container ? node : node.renderParent as Null<T>,
         i = 0;
     while (current && !current.inlineWidth && current.pageFlow) {
-        if (current.hasWidth || parseInt(current.layoutWidth) || (current.blockStatic || current.blockWidth) && current.innerMostWrapped.rootElement || current.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK)) {
+        if (current.hasWidth || safeFloat(current.layoutWidth) || (current.blockStatic || current.blockWidth) && current.innerMostWrapped.rootElement || current.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
         const flexRow = current.flexElement && current.flexdata.row;
@@ -669,7 +669,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else if (renderParent.layoutGrid) {
                             layoutWidth = '0px';
-                            this.android('layout_columnWeight', truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
+                            this.android('layout_columnWeight', truncate(asPercent(width) / 100, this.localSettings.floatPrecision));
                         }
                         else if (this.imageElement) {
                             if (expandable()) {
@@ -2434,10 +2434,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             if (this.alignedWithX) {
-                this.translateX(parseFloat(this.alignedWithX.android('translationX')));
+                this.translateX(safeFloat(this.alignedWithX.android('translationX')));
             }
             if (this.alignedWithY) {
-                this.translateY(parseFloat(this.alignedWithY.android('translationY')));
+                this.translateY(safeFloat(this.alignedWithY.android('translationY')));
             }
             if (this.textElement) {
                 if (this.multiline) {
@@ -2525,7 +2525,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                if (this.onlyChild && this.controlName === renderParent.controlName && !this.hasWidth && !this.hasHeight && !this.visibleStyle.borderWidth && !this.elementId && !parseFloat(this.android('translationX')) && !parseFloat(this.android('translationY'))) {
+                if (this.onlyChild && this.controlName === renderParent.controlName && !this.hasWidth && !this.hasHeight && !this.visibleStyle.borderWidth && !this.elementId && !safeFloat(this.android('translationX')) && !safeFloat(this.android('translationY'))) {
                     for (const [name, namespace] of renderParent.namespaces()) {
                         const data = this._namespaces[name];
                         if (data) {

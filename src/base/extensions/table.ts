@@ -323,10 +323,16 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             percentAll = true;
         }
         else if (mapWidth.every(value => isLength(value))) {
-            const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (hasWidth) {
+                const columnWidth = mapWidth.map(value => value !== '0px' ? node.parseWidth(value, false) : 0);
+                const width = columnWidth.reduce((a, b) => a + b, 0);
                 if (width < node.width) {
-                    replaceMap(mapWidth, value => value !== '0px' ? formatPercent(parseFloat(value) / width) : value);
+                    for (let i = 0, length = mapWidth.length; i < length; ++i) {
+                        const value = columnWidth[i];
+                        if (value > 0) {
+                            mapWidth[i] = formatPercent(columnWidth[i] / width);
+                        }
+                    }
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto');
@@ -346,7 +352,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         mainData.layoutType = (() => {
             if (mapWidth.length > 1) {
                 mapPercent = mapWidth.reduce((a, b) => a + convertPercent(b), 0);
-                if (layoutFixed && mapWidth.reduce((a, b) => a + (isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
+                if (layoutFixed && mapWidth.reduce((a, b) => a + (b !== '0px' && isLength(b) ? node.parseWidth(b, false) : 0), 0) >= node.actualWidth) {
                     return LAYOUT_TABLETYPE.COMPRESS;
                 }
                 else if (mapWidth.length > 1 && mapWidth.some(value => isPercent(value)) || mapWidth.every(value => isLength(value) && value !== '0px')) {

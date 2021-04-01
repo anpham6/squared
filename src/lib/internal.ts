@@ -3,7 +3,7 @@ import { CSS_TRAITS, PLATFORM, USER_AGENT } from './constant';
 import { CSS } from './regex';
 
 import { isPlatform, isUserAgent } from './client';
-import { convertCamelCase, convertHyphenated, replaceAll, spliceString, splitEnclosing, splitPair, splitSome, startsWith } from './util';
+import { convertCamelCase, convertHyphenated, replaceAll, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } from './util';
 
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
 let DOCUMENT_FONTMAP!: number[];
@@ -1401,14 +1401,14 @@ export const ELEMENT_BLOCK = [
 export function updateDocumentFont() {
     const documentElement = document.documentElement;
     const documentStyle = getComputedStyle(documentElement);
-    DOCUMENT_FONTSIZE = parseFloat(documentStyle.fontSize);
+    DOCUMENT_FONTSIZE = safeFloat(documentStyle.fontSize);
     if (isNaN(DOCUMENT_FONTSIZE)) {
         DOCUMENT_FONTSIZE = 16;
     }
     const style = documentElement.style;
     const fontSize = style.fontSize;
     style.fontSize = 'initial';
-    DOCUMENT_FONTBASE = parseFloat(documentStyle.fontSize);
+    DOCUMENT_FONTBASE = safeFloat(documentStyle.fontSize);
     if (isNaN(DOCUMENT_FONTBASE)) {
         DOCUMENT_FONTBASE = 16;
     }

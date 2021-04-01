@@ -14,7 +14,7 @@ const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemS
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
 
 const TEXT_STYLE: CssStyleAttr[] = [
     'fontFamily',
@@ -150,7 +150,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
         const width = node.css(border[0] as CssStyleAttr);
         let result = asPx(width);
         if (isNaN(result)) {
-            result = isLength(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+            result = isLength(width, true) ? node.parseUnit(width, { dimension }) : safeFloat(node.style[border[0]]);
         }
         if (result) {
             return Math.max(Math.round(result), 1);
@@ -3119,7 +3119,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     else {
                         let emRatio = 1;
                         if (REGEXP_EM.test(value)) {
-                            emRatio = parseFloat(value);
+                            emRatio = safeFloat(value);
                             value = 'inherit';
                         }
                         if (value === 'inherit') {
@@ -3138,7 +3138,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                                 emRatio *= n;
                                             }
                                             else if (REGEXP_EM.test(value)) {
-                                                emRatio *= parseFloat(value);
+                                                emRatio *= safeFloat(value);
                                             }
                                             else {
                                                 break;
@@ -3153,7 +3153,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 value = '1rem';
                             }
                         }
-                        result = (endsWith(value, 'rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
+                        result = (endsWith(value, 'rem') ? safeFloat(value, 3) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
                     }
                 }
                 else {

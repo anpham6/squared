@@ -12,6 +12,8 @@ interface NegativeXData {
     firstChild?: View;
 }
 
+const { safeFloat } = squared.lib.util;
+
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
         return !node.isEmpty() && node.cssValue('overflowX') !== 'hidden' && !node.rootElement;
@@ -133,8 +135,8 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 const translateX = node.android('translationX');
                 const translateY = node.android('translationY');
                 if (translateX || translateY) {
-                    const x = parseInt(translateX);
-                    const y = parseInt(translateY);
+                    const x = safeFloat(translateX);
+                    const y = safeFloat(translateY);
                     for (const item of mainData.children) {
                         if (!isNaN(x)) {
                             item.translateX(x);

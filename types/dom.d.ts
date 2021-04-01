@@ -75,7 +75,7 @@ interface FlexBox {
 }
 
 interface BorderAttribute {
-    width: string;
+    width: number;
     style: string;
     color: ColorData;
 }
