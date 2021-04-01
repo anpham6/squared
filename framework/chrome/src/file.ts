@@ -791,13 +791,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const { watch } of options.assets!) {
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
-                    const { socketId: id, handler = {}, secure } = reload;
-                    const port = reload.port ?? (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
-                    if (hasValue<number>(port)) {
-                        socketMap[id + '_' + port + (secure ? '_0' : '_1')] ||=
+                    const { socketId, handler = {}, secure } = reload;
+                    let port = reload.port ?? (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
+                    if (socketId && hasValue<number>(port) && !isNaN(port = +port)) {
+                        socketMap[socketId + `_${port}_` + (secure ? '0' : '1')] ||=
                         'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
                         (handler.open ? `socket.onopen=${handler.open};` : '') +
-                        'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${id!}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.href=c.src+c.hot;});return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.src=c.src+c.hot;});return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
+                        'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${socketId}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.href=c.src+c.hot;});return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.src=c.src+c.hot;});return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
                         (handler.error ? `socket.onerror=${handler.error};` : '') +
                         (handler.close ? `socket.onclose=${handler.close};` : '');
                     }

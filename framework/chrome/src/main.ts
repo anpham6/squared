@@ -21,10 +21,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileActionOptions,
             assets.push(...options.assets);
         }
     }
-    else {
-        options = {};
-    }
-    return Object.assign(options, { assets, filename });
+    return Object.assign(options = {}, { assets, filename });
 }
 
 const checkFileName = (value: Undef<string>, type: string) => value || `${application!.userSettings.outputArchiveName}-${type}`;

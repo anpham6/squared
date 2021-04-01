@@ -96,7 +96,7 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
     return result;
 }
 
-function getRawAssets(this: Resource<View>, resourceId: number, name: "video" | "audio", pathname: string, items: string[], document: StringOfArray) {
+function getRawAssets(this: Resource<View>, resourceId: number, name: ResourceRawAsset, pathname: string, items: string[], document: StringOfArray) {
     const length = items.length;
     const result: FileAsset[] = new Array(length / 3);
     for (let i = 0, j = 0; i < length; i += 3) {
@@ -114,12 +114,8 @@ function getRawAssets(this: Resource<View>, resourceId: number, name: "video" | 
     return result;
 }
 
-function getOutputDirectory(value: string) {
-    value = value.replace(/\\/g, '/');
-    return value + (lastItemOf(value) !== '/' ? '/' : '');
-}
-
 const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
+const getOutputDirectory = (value: string) => (value = value.replace(/\\/g, '/')) + (lastItemOf(value) !== '/' ? '/' : '');
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
@@ -620,7 +616,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return content;
     }
 
-    private resourceRawToString(assets = Resource.ASSETS[this.resourceId], name: "video" | "audio", options?: FileUniversalOptions) {
+    private resourceRawToString(assets = Resource.ASSETS[this.resourceId], name: ResourceRawAsset, options?: FileUniversalOptions) {
         const rawData = assets && assets[name];
         let length: number;
         if (!rawData || !(length = rawData.size)) {
