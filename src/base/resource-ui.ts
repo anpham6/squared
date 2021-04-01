@@ -765,7 +765,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string) {
         const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
         const images: (string | Gradient)[] = [];
-        const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.*?)at\s+(.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray : null;
+        const getGradientPosition = (value: string) => isString(value) ? value.includes('at ') ? /(.*?)at\s+(.+?)(?:\s+|$)$/.exec(value) : [value, value] as RegExpExecArray : null;
         const getAngle = (value: string, fallback = 0) => {
             if (value = value.trim()) {
                 let degree = parseAngle(value, fallback);
@@ -1366,7 +1366,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 case 'pre':
                 case 'pre-wrap': {
                     if (!node.renderParent!.layoutVertical) {
-                        value = value.replace(/^\s*\n/, '');
+                        value = value.replace(/^(?:^|\s+)\n/, '');
                     }
                     const preIndent = ResourceUI.checkPreIndent(node);
                     if (preIndent) {

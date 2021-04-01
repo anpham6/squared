@@ -10,7 +10,7 @@ const { lastItemOf, replaceMap, splitSome } = squared.lib.util;
 
 const { trimEnd } = squared.base.lib.util;
 
-const REGEXP_BEZIER = new RegExp(`^\\s*${PATTERN_CUBICBEZIER}\\s*$`);
+const REGEXP_BEZIER = new RegExp(`^(?:^|\\s+)${PATTERN_CUBICBEZIER}(?:\\s+|$)$`);
 const REGEXP_BEZIERCSS = new RegExp(`cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
 
 const invertControlPoint = (value: number) => +(1 - value).toPrecision(5);

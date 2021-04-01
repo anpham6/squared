@@ -1681,7 +1681,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         if (pattern) {
                             switch (path.element.tagName) {
                                 case 'path':
-                                    if (!/[zZ]\s*$/.test(path.value)) {
+                                    if (!/[zZ](?:\s+|$)$/.test(path.value)) {
                                         break;
                                     }
                                 case 'rect':

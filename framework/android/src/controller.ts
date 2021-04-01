@@ -2233,7 +2233,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     previous = item;
                 };
                 const relativeWrapWidth = (item: T, textWidth: number) => Math.floor(currentFloatedWidth + rowWidth + textWidth - (item.inlineStatic && item.styleElement ? item.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowsAll.length === 1 ? textIndent * -1 : 0));
-                const isMultiline = (item: T) => item.plainText && Resource.hasLineBreak(item, false, true) || item.preserveWhiteSpace && /^\s*\n+/.test(item.textContent);
+                const isMultiline = (item: T) => item.plainText && Resource.hasLineBreak(item, false, true) || item.preserveWhiteSpace && /^(?:^|\s+)\n+/.test(item.textContent);
                 if (node.naturalElement) {
                     if (node.blockDimension) {
                         textIndent = node.cssUnit('textIndent');

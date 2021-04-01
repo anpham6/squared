@@ -11,7 +11,7 @@ import { endsWith, escapePattern, isNumber, resolvePath, spliceString, splitEncl
 
 import Pattern from './base/pattern';
 
-const REGEXP_LENGTH = new RegExp(`^\\s*${STRING.LENGTH}\\s*$`, 'i');
+const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:^|\\s+)`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:\\s+|$)$`, 'i');
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');

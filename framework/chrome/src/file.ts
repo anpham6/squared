@@ -32,7 +32,7 @@ let BUNDLE_ID = 0;
 
 function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
-        const match = new RegExp(`^\\s*${attr}\\s*:(.+)$`).exec(value);
+        const match = new RegExp(`^(?:^|\\s+)${attr}(?::|\\s+:)(.+)$`).exec(value);
         if (match) {
             const [file, format] = splitPair(match[1], '::', true);
             return { file: normalizePath(file), format } as FileAsData;
@@ -683,7 +683,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             filename ||= item.filename;
                             if (startsWith(mimeType, 'image/') && (commands = command.commands)) {
                                 for (let i = 0; i < commands.length; ++i) {
-                                    const match = /^\s*(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
+                                    const match = /^(?:^|\s+)(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
                                     if (match) {
                                         commands[i] = match[1] + '@' + match[2].trim();
                                     }
