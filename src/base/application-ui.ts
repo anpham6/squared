@@ -1919,7 +1919,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     for (const attr in style) {
                         if (attr !== 'display') {
-                            pseudoElement.style[attr] = (value = style[attr]) === '{{@style}}' ? getStyle(element, pseudoElt)[attr] : value;
+                            pseudoElement.style[attr] = (value = style[attr]) === 'revert' ? getStyle(element, pseudoElt)[attr] : value;
                         }
                     }
                     setElementCache(pseudoElement, 'styleMap', style, sessionId);

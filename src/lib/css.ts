@@ -11,8 +11,8 @@ import { endsWith, escapePattern, isNumber, resolvePath, safeFloat, spliceString
 
 import Pattern from './base/pattern';
 
-const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:\\s+|$)$`, 'i');
-const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:\\s+|$)$`, 'i');
+const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:$|\\s+)$`, 'i');
+const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:$|\\s+)$`, 'i');
 const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
@@ -33,7 +33,7 @@ let RE_TRANSFORM: Undef<Pattern>;
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    for (let seg of splitEnclosing(value.trim(), REGEXP_CALCENCLOSING)) {
+    for (let seg of splitEnclosing(value, REGEXP_CALCENCLOSING)) {
         if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
@@ -932,19 +932,15 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                             else {
                                 options.dimension = ['width', 'height'];
                             }
-                            radius = calculateVarAsString(element, radius, options);
-                            if (!radius) {
+                            if (!(radius = calculateVarAsString(element, radius, options))) {
                                 return '';
                             }
                         }
                         if (radius) {
                             result.push(radius);
                         }
-                        if (hasCalc(position)) {
-                            position = calculateVarAsString(element, position, { dimension: ['width', 'height'], boundingBox, parent: true });
-                            if (!position) {
-                                return '';
-                            }
+                        if (hasCalc(position) && !(position = calculateVarAsString(element, position, { dimension: ['width', 'height'], boundingBox, parent: true }))) {
+                            return '';
                         }
                         if (position) {
                             result.push(position);
@@ -958,11 +954,8 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                     case 'polygon': {
                         const result: string[] = [];
                         for (let points of shape.split(CHAR_SEPARATOR)) {
-                            if (hasCalc(points)) {
-                                points = calculateVarAsString(element, points, { dimension: ['width', 'height'], boundingBox, parent: true });
-                                if (!points) {
-                                    return '';
-                                }
+                            if (hasCalc(points) && !(points = calculateVarAsString(element, points, { dimension: ['width', 'height'], boundingBox, parent: true }))) {
+                                return '';
                             }
                             result.push(points);
                         }
@@ -999,29 +992,22 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'offset': {
             let [offset, anchor] = splitPair(value, '/', true);
             if (hasCalc(offset)) {
-                const url = splitEnclosing(offset.trim());
+                const url = splitEnclosing(offset);
                 const length = url.length;
                 if (length < 2) {
                     return '';
                 }
                 offset = url[0] + url[1];
-                if (hasCalc(offset)) {
-                    offset = calculateStyle(element, 'offsetPath', offset, boundingBox);
-                    if (!offset) {
-                        return '';
-                    }
+                if (hasCalc(offset) && !(offset = calculateStyle(element, 'offsetPath', offset, boundingBox))) {
+                    return '';
                 }
                 if (length > 2) {
                     let distance = url.slice(2).join('');
-                    if (hasCalc(offset)) {
-                        distance = calculateStyle(element, REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox);
-                        if (!distance) {
-                            return '';
-                        }
+                    if (hasCalc(offset) && !(distance = calculateStyle(element, REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox))) {
+                        return '';
                     }
                     offset += ' ' + distance;
                 }
-
             }
             if (hasCalc(anchor)) {
                 const result = calculateStyle(element, 'offsetAnchor', anchor, boundingBox);
@@ -1108,17 +1094,17 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             }
             return value;
         }
-        case 'background':
-        case 'mask':
-        case 'gridTemplate':
-            return getStyle(element)[attr];
         default: {
             if (endsWith(attr, 'Color') || (CSS_PROPERTIES[attr]?.trait & CSS_TRAITS.COLOR)) {
-                return calculateColor(element, value.trim());
+                return calculateColor(element, value);
             }
-            const alias = checkWritingMode(attr, getStyle(element).writingMode);
+            const style = getStyle(element);
+            const alias = checkWritingMode(attr, style.writingMode);
             if (alias !== attr) {
-                return calculateStyle(element, alias as string, value, boundingBox);
+                return calculateStyle(element, typeof alias === 'string' ? alias : alias[0], value, boundingBox);
+            }
+            else if (attr in style) {
+                return style[attr] as string;
             }
         }
     }
@@ -1167,7 +1153,6 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
         case 'inherit':
         case 'unset':
         case 'revert':
-        case '{{@style}}':
             switch (attr) {
                 case 'lineHeight':
                 case 'fontSize':

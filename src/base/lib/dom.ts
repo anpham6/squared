@@ -20,7 +20,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
         aspectRatio = getAspectRatio(element);
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase()))) {
+            if (item.tagName === 'SOURCE' && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase())) && !(isString(item.media) && !window.matchMedia(item.media).matches)) {
                 ({ srcset, sizes } = item);
                 aspectRatio = getAspectRatio(item);
                 return true;

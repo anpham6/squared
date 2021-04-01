@@ -437,7 +437,7 @@ export function isBase64(value: string) {
 }
 
 export function isSpace(ch: unknown): ch is string {
-    return ch === ' ' || ch === '\n' || ch === '\t' || ch === '\f' || ch === '\r' || ch === '\v';
+    return ch === ' ' || ch === '\n' || ch === '\t' || ch === '\r' || ch === '\f' || ch === '\v';
 }
 
 export function isEmptyString(value: string) {

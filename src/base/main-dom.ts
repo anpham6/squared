@@ -9,11 +9,13 @@ import Resource from './resource';
 
 import * as constant from './lib/constant';
 import * as dom from './lib/dom';
+import * as regex from './lib/regex';
 import * as util from './lib/util';
 
 const lib = {
     constant,
     dom,
+    regex,
     util
 };
 

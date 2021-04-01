@@ -40,7 +40,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             container: Undef<T>,
             parentAs: Undef<T>;
         if (backgroundColor) {
-            if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && visibleStyle.backgroundRepeatY) || /\.(gif|png)\s*"?\)$/i.test(backgroundImage)) {
+            if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && visibleStyle.backgroundRepeatY) || /\.(?:gif|png|webp)"?\)$/i.test(backgroundImage)) {
                 container = controller.createNodeWrapper(node, renderParent, { alignmentType: NODE_ALIGNMENT.VERTICAL, resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
                 container.css('backgroundColor', backgroundColor);
                 container.setCacheValue('backgroundColor', backgroundColor);

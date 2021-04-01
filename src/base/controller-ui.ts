@@ -47,7 +47,7 @@ function pushIndentArray(values: string[], depth: number) {
     return values.join('');
 }
 
-const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial' || value === 'unset' || value === 'revert';
+const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial';
 const hasEmptyDimension = (value: Undef<string>) => !value || value === 'auto';
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {

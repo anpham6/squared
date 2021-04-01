@@ -3,9 +3,7 @@ let SESSION_MAP: ObjectMap<WeakMap<Element, ElementData>> = {};
 newSessionInit('0');
 
 export function newSessionInit(value: string) {
-    const elementMap = new WeakMap<Element, ElementData>();
-    SESSION_MAP[value] = elementMap;
-    return elementMap;
+    return SESSION_MAP[value] = new WeakMap<Element, ElementData>();
 }
 
 export function clearSessionAll() {
@@ -15,8 +13,7 @@ export function clearSessionAll() {
 export function setElementCache(element: Element, attr: string, data: unknown, sessionId = '0') {
     let elementMap = SESSION_MAP[sessionId].get(element);
     if (!elementMap) {
-        elementMap = {};
-        SESSION_MAP[sessionId].set(element, elementMap);
+        SESSION_MAP[sessionId].set(element, elementMap = {});
     }
     elementMap[attr] = data;
 }
