@@ -514,8 +514,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderBottomColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderBottomLeftRadius: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
@@ -527,13 +526,11 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderBottomStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderBottomWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderCollapse: {
         trait: CSS_TRAITS.LAYOUT,
@@ -589,18 +586,15 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderLeftColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderLeftStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderLeftWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderRadius: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
@@ -621,18 +615,15 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderRightColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderRightStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderRightWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderSpacing: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
@@ -658,8 +649,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderTopColor: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
-        value: 'currentcolor',
-        valueAs: 'borderColor'
+        value: 'currentcolor'
     },
     borderTopLeftRadius: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.UNIT,
@@ -671,13 +661,11 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     borderTopStyle: {
         trait: 0,
-        value: 'none',
-        valueAs: 'borderStyle'
+        value: 'none'
     },
     borderTopWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
-        value: 'medium',
-        valueAs: 'borderWidth'
+        value: 'medium'
     },
     borderWidth: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
@@ -2359,7 +2347,6 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'borderTop':
         case 'columnRule':
         case 'outline':
-        case 'textEmphasis':
         case 'textDecoration': {
             const border = splitEnclosing(value);
             const length = border.length;
@@ -2659,12 +2646,6 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
 
 export function checkStyleValue(element: StyleElement, attr: string, value: string) {
     switch (value) {
-        case 'unset':
-            switch (attr) {
-                case 'lineHeight':
-                case 'fontSize':
-                    return 'inherit';
-            }
         case 'initial':
             switch (attr) {
                 case 'position':
@@ -2703,9 +2684,12 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                     return '';
             }
         case 'inherit':
+        case 'unset':
+        case 'revert':
+        case '{{@style}}':
             switch (attr) {
-                case 'fontSize':
                 case 'lineHeight':
+                case 'fontSize':
                     return 'inherit';
                 default:
                     return getStyle(element)[attr] as string;
@@ -3799,9 +3783,9 @@ export function isPercent(value: string, digits?: boolean) {
 
 export function isPx(value: string) {
     if (typeof value === 'string') {
-        const length = value.length;
-        if (length > 2 && value[length - 1] === 'x' && value[length - 2] === 'p') {
-            return !isNaN(+value.substring(0, length - 2));
+        const index = value.lastIndexOf('x');
+        if (index !== -1 && value[index - 1] === 'p') {
+            return !isNaN(+value.substring(0, index - 1));
         }
     }
     return false;

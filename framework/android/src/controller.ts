@@ -538,7 +538,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         style: {
             anchorFontColor: 'rgb(0, 0, 238)',
             formFontSize: '13.3333px',
-            inputBorderColor: 'rgb(0, 0, 0)',
+            inputBorderColor: 'rgb(118, 118, 118)',
             inputBackgroundColor: isPlatform(PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(221, 221, 221)',
             inputColorBorderColor: 'rgb(119, 119, 199)',
             meterForegroundColor: 'rgb(99, 206, 68)',

@@ -787,7 +787,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 value = boundsData ? boundsData[dimension] : size;
                             }
                             if (value === size) {
-                                if (grow > 0 && item.blockStatic) {
+                                if (horizontal && grow > 0 && item.blockStatic) {
                                     percentage.push(item);
                                 }
                                 continue;

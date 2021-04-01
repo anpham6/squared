@@ -33,7 +33,7 @@ let BUNDLE_ID = 0;
 
 function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
-        const match = new RegExp(`^\\s*${attr}\\s*:(.+)$`).exec(value);
+        const match = new RegExp(`^(?:^|\\s+)${attr}(?:\\s+:|:)(.+)$`).exec(value);
         if (match) {
             const segments = match[1].split('::').map(item => item.trim());
             return { file: normalizePath(segments[0]), format: segments[1] } as FileAsData;
