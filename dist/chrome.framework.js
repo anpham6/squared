@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.3
+/* chrome-framework 2.5.4
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -7,14 +7,14 @@ var chrome = (function () {
     var Resource = squared.base.Resource;
     var Pattern = squared.lib.base.Pattern;
     const { createElement } = squared.lib.dom;
-    const { convertWord, endsWith, fromLastIndexOf, isPlainObject: isPlainObject$2, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
+    const { convertWord, endsWith, fromLastIndexOf, hasValue, isPlainObject: isPlainObject$2, resolvePath, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnd } = squared.lib.util;
     const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID } = squared.base.lib.util;
-    const RE_SRCSET = new Pattern(/\s*(.+?\.[^\s,]+)(\s+[\d.]+[wx])?\s*,?/g);
+    const RE_SRCSET = new Pattern(/([^\s,]+)(\s+[\d.]+\s*[wx])?\s*,?/gi);
     const FILENAME_MAP = new WeakMap();
     let BUNDLE_ID = 0;
     function parseFileAs(attr, value) {
         if (value) {
-            const match = new RegExp(`^\\s*${attr}\\s*:(.+)$`).exec(value);
+            const match = new RegExp(`^(?:^|\\s+)${attr}(?:\\s+:|:)(.+)$`).exec(value);
             if (match) {
                 const segments = match[1].split('::').map(item => item.trim());
                 return { file: normalizePath(segments[0]), format: segments[1] };
@@ -224,9 +224,17 @@ var chrome = (function () {
         const id = (_a = element.dataset)[_b = name + 'Id'] || (_a[_b] = randomUUID());
         (node.id || (node.id = {}))[name] = id;
     }
+    function createFile(mimeType) {
+        return {
+            pathname: '',
+            filename: '',
+            mimeType,
+            format: 'crossorigin'
+        };
+    }
     const assignFilename = (value, ext) => "__assign__" /* ASSIGN */ + '.' + (ext || value && getFileExt(value) || 'unknown');
     const isCrossOrigin = (download, preserveCrossOrigin) => typeof download === 'boolean' ? !download : !!preserveCrossOrigin;
-    const getContentType = (element) => element.tagName === 'LINK' ? 'style' : element.tagName.toLowerCase();
+    const getContentType = (element) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
     const getTagNode = (node, attributes, append) => (Object.assign(Object.assign({}, node), { attributes, append }));
     const getFilename = (value) => value.split('?')[0].split('/').pop();
     const hasSamePath = (item, other, bundle) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, "__assign__" /* ASSIGN */)) && (item.moveTo || '') === (other.moveTo || '');
@@ -271,12 +279,7 @@ var chrome = (function () {
             let value = trimEnd(uri, '/'), file;
             const local = startsWith(value, location.origin);
             if (!local && preserveCrossOrigin) {
-                return {
-                    pathname: '',
-                    filename: '',
-                    mimeType,
-                    format: 'crossorigin'
-                };
+                return createFile(mimeType);
             }
             if (saveAs) {
                 saveAs = trimEnd(normalizePath(saveAs), '/');
@@ -388,7 +391,7 @@ var chrome = (function () {
                 }
                 else if (!data.filename) {
                     const value = getFilename(location.href);
-                    data.filename = /\.html?$/i.exec(value) ? value : 'index.html';
+                    data.filename = /\.(?:html?|php|jsp|aspx?)$/i.exec(value) ? value : 'index.html';
                 }
                 return [data];
             }
@@ -468,49 +471,49 @@ var chrome = (function () {
             const result = [];
             const bundleIndex = {};
             document.querySelectorAll('link, style').forEach((element) => {
-                let mimeType = '', href;
+                let mimeType = 'text/css', href;
+                const checkMimeType = () => {
+                    const filename = fromLastIndexOf(href, '/');
+                    if (filename.includes('.')) {
+                        mimeType = getMimeType(element, filename);
+                        return true;
+                    }
+                    return false;
+                };
                 if (element instanceof HTMLLinkElement) {
-                    if (href = element.href) {
+                    href = element.href;
+                    if (assetMap && assetMap.get(element)) {
+                        checkMimeType();
+                    }
+                    else if (href) {
                         const rel = element.rel.trim().toLowerCase();
-                        const checkMimeType = () => {
-                            const filename = fromLastIndexOf(href, '/');
-                            if (filename.includes('.')) {
-                                mimeType = getMimeType(element, filename);
-                                return true;
+                        if (rel !== 'stylesheet') {
+                            switch (rel) {
+                                case 'alternate':
+                                case 'help':
+                                case 'license':
+                                case 'manifest':
+                                case 'modulepreload':
+                                case 'prefetch':
+                                case 'preload':
+                                case 'prerender':
+                                    if (!checkMimeType()) {
+                                        return;
+                                    }
+                                    break;
+                                default:
+                                    if (!rel.includes('icon') || !checkMimeType()) {
+                                        return;
+                                    }
+                                    break;
                             }
-                            return false;
-                        };
-                        switch (rel) {
-                            case 'stylesheet':
-                                mimeType = 'text/css';
-                                break;
-                            case 'alternate':
-                            case 'help':
-                            case 'license':
-                            case 'manifest':
-                            case 'modulepreload':
-                            case 'prefetch':
-                            case 'preload':
-                            case 'prerender':
-                                if (!checkMimeType()) {
-                                    return;
-                                }
-                                break;
-                            default:
-                                if (!rel.includes('icon') || !checkMimeType()) {
-                                    return;
-                                }
-                                break;
                         }
                     }
                     else {
                         return;
                     }
                 }
-                else {
-                    mimeType = 'text/css';
-                }
-                this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css' || element instanceof HTMLStyleElement);
+                this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css');
             });
             const assets = this.getResourceAssets(resourceId);
             if (assets) {
@@ -696,6 +699,7 @@ var chrome = (function () {
         }
         finalizeRequestBody(data, options) {
             var _a;
+            var _b;
             const productionRelease = options.productionRelease;
             data.baseUrl = options.baseUrl;
             data.dataSource = options.dataSource;
@@ -709,13 +713,15 @@ var chrome = (function () {
                 for (const { watch } of options.assets) {
                     if (isPlainObject$2(watch) && watch.reload) {
                         const reload = watch.reload;
-                        const { socketId: id, handler = {}, secure } = reload;
-                        const port = reload.port || (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
-                        socketMap[_a = id + '_' + port + (secure ? '_0' : '_1')] || (socketMap[_a] = 'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
-                            (handler.open ? `socket.onopen=${handler.open};` : '') +
-                            'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${id}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(b=>b.href=c.src+c.hot);return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(b=>b.src=c.src+c.hot);return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
-                            (handler.error ? `socket.onerror=${handler.error};` : '') +
-                            (handler.close ? `socket.onclose=${handler.close};` : ''));
+                        const { socketId, handler = {}, secure } = reload;
+                        let port = (_a = reload.port) !== null && _a !== void 0 ? _a : (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
+                        if (socketId && hasValue(port) && !isNaN(port = +port)) {
+                            socketMap[_b = socketId + `_${port}_` + (secure ? '0' : '1')] || (socketMap[_b] = 'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
+                                (handler.open ? `socket.onopen=${handler.open};` : '') +
+                                'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${socketId}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.href=c.src+c.hot;});return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.src=c.src+c.hot;});return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
+                                (handler.error ? `socket.onerror=${handler.error};` : '') +
+                                (handler.close ? `socket.onclose=${handler.close};` : ''));
+                        }
                         delete reload.handler;
                     }
                 }
@@ -789,7 +795,7 @@ var chrome = (function () {
             document.querySelectorAll(tagName).forEach(element => {
                 const items = new Map();
                 let mimeType = '';
-                switch (element.tagName) {
+                switch (element.tagName.toUpperCase()) {
                     case 'VIDEO':
                     case 'AUDIO':
                         element.querySelectorAll('source, track').forEach((source) => resolveAssetSource(source, items));
@@ -850,8 +856,7 @@ var chrome = (function () {
             return result;
         }
         processAssets(options) {
-            const { assetMap, appendMap, useOriginalHtmlPage, preserveCrossOrigin } = options;
-            const nodeMap = options.nodeMap || (options.nodeMap = new Map());
+            const { assetMap, appendMap, nodeMap = new Map(), useOriginalHtmlPage, preserveCrossOrigin } = options;
             const domAll = document.querySelectorAll('*');
             const cache = {};
             const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
@@ -962,7 +967,7 @@ var chrome = (function () {
                     item.element = node;
                     nodeMap.set(node, element);
                 }
-                item.document || (item.document = documentHandler);
+                item.document || (item.document = File.copyDocument(documentHandler));
             }
             for (const [node, element] of nodeMap) {
                 if (element !== document.documentElement) {
@@ -1071,6 +1076,9 @@ var chrome = (function () {
                 if (data = createBundleAsset(assets, element, file, mimeType, format, preserve, inline, documentData)) {
                     data.bundleIndex = -1;
                 }
+            }
+            else if (!(element instanceof HTMLScriptElement)) {
+                data = createFile(mimeType);
             }
             if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, !assetCommand ? element : undefined, watch)) {
                 if (filename) {
@@ -1240,6 +1248,9 @@ var chrome = (function () {
             this.extensions = [];
             this.systemName = 'chrome';
         }
+        init() {
+            this.session.unusedStyles = true;
+        }
         insertNode(processing, element) {
             if (element.nodeName[0] === '#') {
                 if (this.userSettings.excludePlainText) {
@@ -1270,9 +1281,17 @@ var chrome = (function () {
             const appendMap = new Map();
             options = Object.assign(Object.assign({}, options), { saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap });
             if (unusedStyles) {
-                const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles = [] } = options;
+                const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles } = options;
                 if (removeUnusedClasses || removeUnusedSelectors) {
-                    options.unusedStyles = Array.from(unusedStyles).filter(value => (value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && !retainUsedStyles.includes(value));
+                    const styles = [];
+                    for (const value of unusedStyles) {
+                        if ((value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.includes(value))) {
+                            styles.push(value);
+                        }
+                    }
+                    if (styles.length) {
+                        options.unusedStyles = styles;
+                    }
                 }
             }
             if (options.configUri) {
@@ -1323,8 +1342,8 @@ var chrome = (function () {
                                     }
                                 }
                             }
-                            dataSrc && (dataSrc = Object.assign(Object.assign({ document: item.document || documentHandler }, dataSrc), { type }));
-                            dataCloud && (dataCloud = Object.assign(Object.assign({ document: item.document || documentHandler }, dataSrc), { type, source: 'cloud' }));
+                            dataSrc && (dataSrc = Object.assign(Object.assign({ document: item.document || File.copyDocument(documentHandler) }, dataSrc), { type }));
+                            dataCloud && (dataCloud = Object.assign(Object.assign({ document: item.document || File.copyDocument(documentHandler) }, dataSrc), { type, source: 'cloud' }));
                             document.querySelectorAll(item.selector).forEach((element) => {
                                 switch (type) {
                                     case 'text':

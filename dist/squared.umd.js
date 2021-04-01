@@ -1,4 +1,4 @@
-/* squared 2.5.3
+/* squared 2.5.4
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -52,8 +52,8 @@
         getDeviceDPI: getDeviceDPI
     });
 
-    const REGEXP_DECIMALNOTAION = /^([+|-]?\d+\.\d+)e([+|-]?\d+)$/;
-    const REGEXP_FRACTION = /^([+|-]?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+    const REGEXP_DECIMALNOTAION = /^([+-]?\d+\.\d+)e([+-]?\d+)$/;
+    const REGEXP_FRACTION = /^([+-]?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
     const REGEXP_TRAILINGZERO = /\.(\d*?)(0+)$/;
     function convertDecimalNotation(value) {
         const match = REGEXP_DECIMALNOTAION.exec(value.toString());
@@ -231,8 +231,8 @@
     });
 
     const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
-    const DECIMAL = '[+|-]?' + DECIMAL_UN;
-    const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|Q';
+    const DECIMAL = '[+-]?' + DECIMAL_UN;
+    const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|q';
     const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
     const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
     const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
@@ -240,7 +240,7 @@
     const TAG_ATTR = `=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]*))`;
     const STRING = {
         DECIMAL,
-        PERCENT: '[+|-]?\\d+(?:\\.\\d+)?%',
+        PERCENT: '[+-]?\\d+(?:\\.\\d+)?%',
         LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
         LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
         UNIT_LENGTH,
@@ -855,8 +855,6 @@
 
     const CACHE_CAMELCASE = {};
     const CACHE_TRIMBOTH = {};
-    const REGEXP_NONWORD = /[^\w]+/g;
-    const REGEXP_NONWORDNUM = /[^A-Za-z\d]+/g;
     function promisify(fn) {
         return (...args) => {
             return new Promise((resolve, reject) => {
@@ -910,7 +908,12 @@
                 previous = true;
             }
             else if (previous) {
-                result += ch.toUpperCase();
+                if (result) {
+                    result += ch.toUpperCase();
+                }
+                else {
+                    result += ch;
+                }
                 previous = false;
             }
             else {
@@ -919,8 +922,8 @@
         }
         return CACHE_CAMELCASE[value] = result;
     }
-    function convertWord(value, dash) {
-        return value.replace(dash ? REGEXP_NONWORDNUM : REGEXP_NONWORD, '_');
+    function convertWord(value) {
+        return value.replace(/[^\w]+/g, '_');
     }
     function convertInt(value, fallback = 0) {
         const result = parseInt(value);
@@ -1301,36 +1304,34 @@
         return match ? match[1] : value;
     }
     function trimStart(value, pattern) {
-        if (value) {
-            if (pattern.length === 1) {
-                for (let i = 0, length = value.length; i < length; ++i) {
-                    if (value[i] !== pattern) {
-                        return i > 0 ? value.substring(i) : value;
+        if (pattern.length === 1) {
+            for (let i = 0, length = value.length; i < length; ++i) {
+                if (value[i] !== pattern) {
+                    if (i > 0) {
+                        return value.substring(i);
                     }
+                    break;
                 }
             }
-            else {
-                const match = new RegExp(`^(?:${pattern})+`).exec(value);
-                return match ? value.substring(match[0].length) : value;
-            }
+            return value;
         }
-        return '';
+        const match = new RegExp(`^(?:${escapePattern(pattern)})+`).exec(value);
+        return match ? value.substring(match[0].length) : value;
     }
     function trimEnd(value, pattern) {
-        if (value) {
-            if (pattern.length === 1) {
-                for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
-                    if (value[i] !== pattern) {
-                        return j > 0 ? value.substring(0, value.length - j) : value;
+        if (pattern.length === 1) {
+            for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
+                if (value[i] !== pattern) {
+                    if (j > 0) {
+                        return value.substring(0, value.length - j);
                     }
+                    break;
                 }
             }
-            else {
-                const match = new RegExp(`(?:${pattern})+$`).exec(value);
-                return match ? value.substring(0, value.length - match[0].length) : value;
-            }
+            return value;
         }
-        return '';
+        const match = new RegExp(`(?:${escapePattern(pattern)})+$`).exec(value);
+        return match ? value.substring(0, value.length - match[0].length) : value;
     }
     function escapePattern(value) {
         return value.replace(/[-|\\{}()[\]^$+*?.]/g, capture => capture === '-' ? '\\x2d' : capture);
@@ -1618,7 +1619,6 @@
         plainMap: plainMap
     });
 
-    const DOCUMENT_ELEMENT = document.documentElement;
     const DOCUMENT_FIXEDMAP = [9 / 13, 10 / 13, 12 / 13, 16 / 13, 20 / 13, 2, 3];
     let DOCUMENT_FONTMAP;
     let DOCUMENT_FONTBASE;
@@ -1630,21 +1630,21 @@
     const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
     const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
     const REGEXP_CALC = /^calc\((.+)\)$/i;
-    const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))+)?\\s*(.*)$`, 'i');
     const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
     const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
-    const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xXwW]))?$/;
+    const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
     const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
     const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
     const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-    const REGEXP_EMBASED = /\s*[+|-]?[\d.]+(?:em|ch|ex)\s*/;
+    const REGEXP_EMBASED = /[+-]?[\d.]+(?:em|ch|ex)\b/;
     const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
     const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
     const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
     const CHAR_SPACE = /\s+/;
     const CHAR_SEPARATOR = /\s*,\s*/;
     const CHAR_DIVIDER = /\s*\/\s*/;
+    let REGEXP_SOURCESIZES;
     updateDocumentFont();
     function calculatePosition(element, value, boundingBox) {
         const alignment = [];
@@ -1961,7 +1961,7 @@
             value: 'auto'
         },
         animation: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
             value: [
                 'animationDuration',
                 'animationTimingFunction',
@@ -1971,7 +1971,8 @@
                 'animationFillMode',
                 'animationPlayState',
                 'animationName'
-            ]
+            ],
+            valueOfNone: '1e-05s ease 0s 1 normal none running none'
         },
         animationDelay: {
             trait: 1 /* CALC */,
@@ -2025,7 +2026,8 @@
                 'backgroundOrigin',
                 'backgroundClip',
                 'backgroundColor'
-            ]
+            ],
+            valueOfNone: 'rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box'
         },
         backgroundAttachment: {
             trait: 0,
@@ -2363,11 +2365,11 @@
             value: 'normal'
         },
         counterIncrement: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none'
         },
         counterReset: {
-            trait: 1 /* CALC */,
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
             value: 'none'
         },
         cursor: {
@@ -2391,12 +2393,13 @@
             value: 'none'
         },
         flex: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 128 /* AUTO */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */ | 128 /* AUTO */,
             value: [
                 'flexGrow',
                 'flexShrink',
                 'flexBasis'
-            ]
+            ],
+            valueOfNone: '0 0 auto'
         },
         flexBasis: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
@@ -2515,7 +2518,7 @@
             ]
         },
         grid: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */,
             value: [
                 'gridTemplateRows',
                 'gridAutoColumns',
@@ -2525,7 +2528,8 @@
                 'gridAutoFlow',
                 'gridRowGap',
                 'gridColumnGap'
-            ]
+            ],
+            valueOfNone: 'none / none / none / row / auto / auto'
         },
         gridArea: {
             trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */ | 128 /* AUTO */,
@@ -2597,12 +2601,13 @@
             value: 'auto'
         },
         gridTemplate: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */,
             value: [
                 'gridTemplateRows',
                 'gridTemplateColumns',
                 'gridTemplateAreas'
-            ]
+            ],
+            valueOfNone: 'none / none / none'
         },
         gridTemplateAreas: {
             trait: 4 /* LAYOUT */,
@@ -2661,12 +2666,13 @@
             value: 'normal'
         },
         listStyle: {
-            trait: 2 /* SHORTHAND */ | 4 /* LAYOUT */,
+            trait: 2 /* SHORTHAND */ | 4 /* LAYOUT */ | 64 /* NONE */,
             value: [
                 'listStyleType',
                 'listStylePosition',
                 'listStyleImage'
-            ]
+            ],
+            valueOfNone: 'outside none none'
         },
         listStyleImage: {
             trait: 4 /* LAYOUT */,
@@ -2744,7 +2750,8 @@
                 'offsetDistance',
                 'offsetRotate',
                 'offsetAnchor'
-            ]
+            ],
+            valueOfNone: 'none 0px auto 0deg'
         },
         offsetPath: {
             trait: 1 /* CALC */,
@@ -2769,6 +2776,10 @@
         order: {
             trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 4 /* LAYOUT */,
             value: '0'
+        },
+        orphans: {
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            value: '2'
         },
         outline: {
             trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
@@ -3039,25 +3050,6 @@
             trait: 0,
             value: 'solid'
         },
-        textEmphasis: {
-            trait: 1 /* CALC */ | 2 /* SHORTHAND */ | 64 /* NONE */,
-            value: [
-                'textEmphasisStyle',
-                'textEmphasisColor'
-            ]
-        },
-        textEmphasisColor: {
-            trait: 1 /* CALC */ | 16 /* COLOR */,
-            value: 'currentcolor'
-        },
-        textEmphasisPosition: {
-            trait: 0,
-            value: 'over right'
-        },
-        textEmphasisStyle: {
-            trait: 64 /* NONE */,
-            value: 'none'
-        },
         textIndent: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */ | 256 /* UNIT */,
             value: '0'
@@ -3065,6 +3057,10 @@
         textJustify: {
             trait: 8 /* CONTAIN */,
             value: 'auto'
+        },
+        textOrientation: {
+            trait: 4 /* LAYOUT */,
+            value: 'mixed'
         },
         textOverflow: {
             trait: 0,
@@ -3151,6 +3147,10 @@
         whiteSpace: {
             trait: 4 /* LAYOUT */,
             value: 'normal'
+        },
+        widows: {
+            trait: 1 /* CALC */ | 4 /* LAYOUT */,
+            value: '2'
         },
         width: {
             trait: 1 /* CALC */ | 4 /* LAYOUT */,
@@ -3251,19 +3251,19 @@
             return style;
         }
         if (element.nodeName[0] !== '#') {
-            style = getComputedStyle(element, pseudoElt);
-            setElementCache(element, 'style' + pseudoElt, style);
+            setElementCache(element, 'style' + pseudoElt, style = getComputedStyle(element, pseudoElt));
             return style;
         }
         return PROXY_INLINESTYLE;
     }
     function updateDocumentFont() {
-        const documentStyle = getStyle(DOCUMENT_ELEMENT);
+        const documentElement = document.documentElement;
+        const documentStyle = getStyle(documentElement);
         DOCUMENT_FONTSIZE = parseFloat(documentStyle.fontSize);
         if (isNaN(DOCUMENT_FONTSIZE)) {
             DOCUMENT_FONTSIZE = 16;
         }
-        const style = DOCUMENT_ELEMENT.style;
+        const style = documentElement.style;
         const fontSize = style.fontSize;
         style.fontSize = 'initial';
         DOCUMENT_FONTBASE = parseFloat(documentStyle.fontSize);
@@ -3666,7 +3666,7 @@
             case 'lineHeight':
                 return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element) : undefined, min: 0 }));
             case 'fontSize':
-                return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element.parentElement || DOCUMENT_ELEMENT) : undefined, min: 0 }));
+                return formatVar(calculateVar(element, value, { boundingSize: hasEm(value) ? getFontSize(element.parentElement || document.documentElement) : undefined, min: 0 }));
             case 'margin':
                 return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
             case 'borderBottomLeftRadius':
@@ -3876,7 +3876,7 @@
             }
             case 'boxShadow':
             case 'textShadow':
-                return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-zQ]*\s+-?[\d.]+[a-zQ]*(\s+-[\d.]+[a-z]*)/ });
+                return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/ });
             case 'animation':
             case 'animationDelay':
             case 'animationDuration':
@@ -3916,7 +3916,6 @@
             case 'borderTop':
             case 'columnRule':
             case 'outline':
-            case 'textEmphasis':
             case 'textDecoration': {
                 const border = splitEnclosing(value);
                 const length = border.length;
@@ -4195,17 +4194,17 @@
                 }
                 return value;
             }
-            case 'background':
-            case 'mask':
-            case 'gridTemplate':
-                return getStyle(element)[attr];
             default: {
                 if (endsWith(attr, 'Color') || (((_a = CSS_PROPERTIES[attr]) === null || _a === void 0 ? void 0 : _a.trait) & 16 /* COLOR */)) {
-                    return calculateColor(element, value.trim());
+                    return calculateColor(element, value);
                 }
-                const alias = checkWritingMode(attr, getStyle(element).writingMode);
+                const style = getStyle(element);
+                const alias = checkWritingMode(attr, style.writingMode);
                 if (alias !== attr) {
-                    return calculateStyle(element, alias, value, boundingBox);
+                    return calculateStyle(element, typeof alias === 'string' ? alias : alias[0], value, boundingBox);
+                }
+                else if (attr in style) {
+                    return style[attr];
                 }
             }
         }
@@ -4213,12 +4212,6 @@
     }
     function checkStyleValue(element, attr, value) {
         switch (value) {
-            case 'unset':
-                switch (attr) {
-                    case 'lineHeight':
-                    case 'fontSize':
-                        return 'inherit';
-                }
             case 'initial':
                 switch (attr) {
                     case 'position':
@@ -4257,9 +4250,11 @@
                         return '';
                 }
             case 'inherit':
+            case 'unset':
+            case 'revert':
                 switch (attr) {
-                    case 'fontSize':
                     case 'lineHeight':
+                    case 'fontSize':
                         return 'inherit';
                     default:
                         return getStyle(element)[attr];
@@ -4556,12 +4551,13 @@
         return NaN;
     }
     function getSrcSet(element, mimeType) {
+        var _a;
         const result = [];
         const parentElement = element.parentElement;
         let { srcset, sizes } = element;
         if (parentElement && parentElement.tagName === 'PICTURE') {
             iterateArray(parentElement.children, (item) => {
-                if (item.tagName === 'SOURCE' && isString(item.srcset) && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!mimeType || mimeType === '*' || !isString(item.type) || mimeType.includes(item.type.trim().toLowerCase()))) {
+                if (item.tagName === 'SOURCE' && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase())) && !(isString(item.media) && !window.matchMedia(item.media).matches)) {
                     ({ srcset, sizes } = item);
                     return true;
                 }
@@ -4589,45 +4585,47 @@
         if (length === 0) {
             return;
         }
-        else if (length > 1) {
-            result.sort((a, b) => {
-                const pxA = a.pixelRatio;
-                const pxB = b.pixelRatio;
-                if (pxA && pxB) {
-                    if (pxA !== pxB) {
-                        return pxA - pxB;
+        result.sort((a, b) => {
+            const pxA = a.pixelRatio;
+            const pxB = b.pixelRatio;
+            if (pxA && pxB) {
+                if (pxA !== pxB) {
+                    return pxA - pxB;
+                }
+            }
+            else {
+                const widthA = a.width;
+                const widthB = b.width;
+                if (widthA !== widthB && widthA && widthB) {
+                    return widthA - widthB;
+                }
+            }
+            return 0;
+        });
+        if (sizes) {
+            (REGEXP_SOURCESIZES || (REGEXP_SOURCESIZES = new RegExp(`^((?:\\(\\s*)?(?:\\s*(?:(?:and|or|not)\\s+)?(?:\\(\\s*)?(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})(?:\\s*\\))?)+(?:\\s*\\))?)?\\s*(.*)$`, 'i'))).lastIndex = 0;
+            const options = { fontSize: getFontSize(element), min: 0 };
+            let width = NaN, match;
+            for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
+                if (match = REGEXP_SOURCESIZES.exec(value)) {
+                    const query = match[1];
+                    const unit = match[3];
+                    if (!unit || query && !window.matchMedia(((_a = /^\(\s*(\(.+\))\s*\)$/.exec(query)) === null || _a === void 0 ? void 0 : _a[1]) || query).matches) {
+                        continue;
+                    }
+                    if (isCalc(unit)) {
+                        width = calculateVar(element, unit, options);
+                    }
+                    else if (isLength(unit)) {
+                        width = parseUnit(unit, options);
+                    }
+                    if (!isNaN(width)) {
+                        break;
                     }
                 }
-                else {
-                    const widthA = a.width;
-                    const widthB = b.width;
-                    if (widthA !== widthB && widthA && widthB) {
-                        return widthA - widthB;
-                    }
-                }
-                return 0;
-            });
-            if (isString(sizes)) {
-                let width = NaN, match;
-                for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
-                    if (match = REGEXP_SOURCESIZES.exec(value)) {
-                        const query = match[1];
-                        const unit = match[2];
-                        if (!unit || query && !window.matchMedia(query).matches) {
-                            continue;
-                        }
-                        if (isCalc(unit)) {
-                            width = calculate(unit, unit.includes('%') && element.parentElement ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
-                        }
-                        else if (isLength(unit)) {
-                            width = parseUnit(unit);
-                        }
-                        if (!isNaN(width)) {
-                            break;
-                        }
-                    }
-                }
-                if (!isNaN(width)) {
+            }
+            if (!isNaN(width)) {
+                if (length > 1) {
                     const resolution = width * window.devicePixelRatio;
                     let index = -1;
                     for (let i = 0; i < length; ++i) {
@@ -4636,16 +4634,8 @@
                             index = i;
                         }
                     }
-                    if (index === 0) {
-                        const item = result[0];
-                        item.pixelRatio = 1;
-                        item.actualWidth = width;
-                    }
-                    else if (index > 0) {
-                        const selected = result.splice(index, 1)[0];
-                        selected.pixelRatio = 1;
-                        selected.actualWidth = width;
-                        result.unshift(selected);
+                    if (index > 0) {
+                        result.unshift(result.splice(index, 1)[0]);
                     }
                     for (let i = 1; i < length; ++i) {
                         const item = result[i];
@@ -4654,6 +4644,9 @@
                         }
                     }
                 }
+                const item = result[0];
+                item.pixelRatio = 1;
+                item.actualWidth = width;
             }
         }
         return result;
@@ -4692,7 +4685,7 @@
         if (length === 0) {
             return NaN;
         }
-        else if (value[0] !== '(' || value[length - 1] !== ')') {
+        if (value[0] !== '(' || value[length - 1] !== ')') {
             value = `(${value})`;
             length += 2;
         }
@@ -4826,7 +4819,7 @@
                                                 }
                                                 break;
                                             case 16 /* INTEGER */:
-                                                if (!/^\s*[+|-]?\d+\s*$/.test(partial)) {
+                                                if (!/^\s*[+-]?\d+\s*$/.test(partial)) {
                                                     return NaN;
                                                 }
                                                 seg.push(+partial);
@@ -5301,10 +5294,10 @@
         return !digits ? value[value.length - 1] === '%' : REGEXP_PERCENT.test(value);
     }
     function isPx(value) {
-        if (value) {
-            const length = value.length;
-            if (length > 2 && value[length - 1] === 'x' && value[length - 2] === 'p') {
-                return !isNaN(+value.substring(0, length - 2));
+        if (typeof value === 'string') {
+            const index = value.lastIndexOf('x');
+            if (index !== -1 && value[index - 1] === 'p') {
+                return !isNaN(+value.substring(0, index - 1));
             }
         }
         return false;
@@ -5313,7 +5306,7 @@
         return REGEXP_EMBASED.test(value);
     }
     function hasCalc(value) {
-        return value.includes('calc(');
+        return typeof value === 'string' && value.includes('calc(');
     }
     function hasCoords(value) {
         return value === 'absolute' || value === 'fixed';

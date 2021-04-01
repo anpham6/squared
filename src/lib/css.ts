@@ -19,7 +19,6 @@ const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
 const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
 const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
 const REGEXP_CALC = /^calc\((.+)\)$/i;
-const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)(?:\\s*\\))?)+)?\\s*(.*)$`, 'i');
 const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
 const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
@@ -34,6 +33,7 @@ const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
+let REGEXP_SOURCESIZES: RegExp;
 
 updateDocumentFont();
 
@@ -3004,7 +3004,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
     let { srcset, sizes } = element;
     if (parentElement && parentElement.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
-            if (item.tagName === 'SOURCE' && !(isString(item.media) && !window.matchMedia(item.media).matches) && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase()))) {
+            if (item.tagName === 'SOURCE' && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase())) && !(isString(item.media) && !window.matchMedia(item.media).matches)) {
                 ({ srcset, sizes } = item);
                 return true;
             }
@@ -3051,7 +3051,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
         return 0;
     });
     if (sizes) {
-        const options: UnitOptions = { fontSize: getFontSize(element) };
+        (REGEXP_SOURCESIZES ||= new RegExp(`^((?:\\(\\s*)?(?:\\s*(?:(?:and|or|not)\\s+)?(?:\\(\\s*)?(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})(?:\\s*\\))?)+(?:\\s*\\))?)?\\s*(.*)$`, 'i')).lastIndex = 0;
+        const options: CalculateVarOptions = { fontSize: getFontSize(element), min: 0 };
         let width = NaN,
             match: Null<RegExpExecArray>;
         for (const value of sizes.trim().split(CHAR_SEPARATOR)) {

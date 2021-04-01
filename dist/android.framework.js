@@ -1,4 +1,4 @@
-/* android-framework 2.5.3
+/* android-framework 2.5.4
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -4495,7 +4495,7 @@ var android = (function () {
                             result = this.bounds.height === 0;
                         }
                         else if (!this.pageFlow) {
-                            result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*,\s*0[a-zQ]*\)$/.test(this.cssValue('clip'));
+                            result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-z]*,\s*0[a-z]*,\s*0[a-z]*,\s*0[a-z]*\)$/.test(this.cssValue('clip'));
                         }
                         else {
                             const parent = this.renderParent || this.parent;
@@ -5218,7 +5218,7 @@ var android = (function () {
                 style: {
                     anchorFontColor: 'rgb(0, 0, 238)',
                     formFontSize: '13.3333px',
-                    inputBorderColor: 'rgb(0, 0, 0)',
+                    inputBorderColor: 'rgb(118, 118, 118)',
                     inputBackgroundColor: isPlatform(2 /* MAC */) ? 'rgb(255, 255, 255)' : 'rgb(221, 221, 221)',
                     inputColorBorderColor: 'rgb(119, 119, 199)',
                     meterForegroundColor: 'rgb(99, 206, 68)',
@@ -6045,7 +6045,7 @@ var android = (function () {
                         if (tagName === 'CANVAS') {
                             const content = element.toDataURL();
                             if (content) {
-                                src = 'canvas_' + convertWord$2(node.controlId, true).toLowerCase();
+                                src = 'canvas_' + convertWord$2(node.controlId).toLowerCase();
                                 resource.writeRawImage(resourceId, src + '.png', { mimeType: 'image/png', encoding: 'base64', content, watch, tasks });
                             }
                         }
@@ -6363,7 +6363,7 @@ var android = (function () {
                     }
                     const textShadow = node.cssValue('textShadow');
                     if (textShadow) {
-                        const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+(?:[a-zQ]+)?)\s+(-?[\d.]+(?:[a-zQ]+)?)\s*([\d.]+(?:[a-zQ]+)?)?/.exec(textShadow);
+                        const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+(?:[a-z]+)?)\s+(-?[\d.]+(?:[a-z]+)?)\s*([\d.]+(?:[a-z]+)?)?/.exec(textShadow);
                         if (match) {
                             const colorData = parseColor(match[1] || node.css('color'));
                             if (colorData) {
@@ -8513,7 +8513,7 @@ var android = (function () {
                 pathname: pathname + items[i + 1],
                 filename: items[i + 2],
                 content: items[i],
-                document: copyDocument(document)
+                document: File.copyDocument(document)
             };
         }
         return result;
@@ -8567,7 +8567,7 @@ var android = (function () {
                 commands,
                 compress,
                 uri,
-                document: copyDocument(document),
+                document: File.copyDocument(document),
                 tasks: image && image.tasks
             };
         }
@@ -8584,7 +8584,7 @@ var android = (function () {
                 filename: items[i + 1].toLowerCase(),
                 mimeType: items[i + 2],
                 uri,
-                document: copyDocument(document),
+                document: File.copyDocument(document),
                 tasks: rawData && rawData.tasks
             };
         }
@@ -8594,7 +8594,6 @@ var android = (function () {
         value = value.replace(/\\/g, '/');
         return value + (!endsWith$1(value, '/') ? '/' : '');
     }
-    const copyDocument = (value) => Array.isArray(value) ? value.slice(0) : value;
     const hasFileAction = (options) => !!(options && (options.directory || options.filename));
     class File extends squared.base.File {
         async copyTo(pathname, options) {
@@ -8972,15 +8971,17 @@ var android = (function () {
                                 document.querySelectorAll(selector).forEach((element) => {
                                     let src;
                                     switch (element.tagName) {
+                                        case 'VIDEO':
+                                            if (item.type === 'image') {
+                                                src = element.poster;
+                                                break;
+                                            }
                                         case 'IMG':
                                         case 'AUDIO':
                                         case 'SOURCE':
                                         case 'EMBED':
                                         case 'IFRAME':
                                             src = element.src;
-                                            break;
-                                        case 'VIDEO':
-                                            src = element[item.type === 'image' ? 'poster' : 'src'];
                                             break;
                                         case 'OBJECT':
                                             src = element.data;
@@ -9868,7 +9869,7 @@ var android = (function () {
                     minSize += cellSize;
                 }
             }
-            if (node.textElement && /^0[a-zQ]*$/.test(min)) {
+            if (node.textElement && /^0[a-z]*$/.test(min)) {
                 fitContent = true;
             }
         }
@@ -11275,7 +11276,7 @@ var android = (function () {
                                     value = boundsData ? boundsData[dimension] : size;
                                 }
                                 if (value === size) {
-                                    if (grow > 0 && item.blockStatic) {
+                                    if (horizontal && grow > 0 && item.blockStatic) {
                                         percentage.push(item);
                                     }
                                     continue;
@@ -12036,7 +12037,7 @@ var android = (function () {
             const fixed = node.cssValue('backgroundAttachment') === 'fixed';
             let renderParent = parent, container, parentAs;
             if (backgroundColor) {
-                if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && visibleStyle.backgroundRepeatY) || /\.(gif|png)\s*"?\)$/i.test(backgroundImage)) {
+                if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && visibleStyle.backgroundRepeatY) || /\.(?:gif|png|webp)"?\)$/i.test(backgroundImage)) {
                     container = controller.createNodeWrapper(node, renderParent, { alignmentType: 8 /* VERTICAL */, resource: 2 /* BOX_SPACING */ | 4 /* FONT_STYLE */ | 8 /* VALUE_STRING */ });
                     container.css('backgroundColor', backgroundColor);
                     container.setCacheValue('backgroundColor', backgroundColor);
@@ -15809,7 +15810,7 @@ var android = (function () {
     const { clamp } = squared.lib.math;
     const { delimitString } = squared.lib.util;
     const { lowerCaseString, upperCaseString } = squared.base.lib.util;
-    const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+(?:[a-zQ]+)?))?/;
+    const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+(?:[a-z]+)?))?/;
     function getFontVariationStyle(value) {
         if (value === 'italic') {
             return "'ital' 1";
@@ -16927,7 +16928,7 @@ var android = (function () {
             this._animateTarget.clear();
             this._namespaceAapt = false;
             this._synchronizeMode = keyTimeMode;
-            const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
+            const templateName = (node.tagName + '_' + convertWord(node.controlId) + '_viewbox').toLowerCase();
             svg.build({ contentMap, keyframesMap, exclude, residualHandler, precision });
             svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
             this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');

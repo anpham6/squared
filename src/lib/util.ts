@@ -498,37 +498,35 @@ export function trimString(value: string, pattern: string) {
 }
 
 export function trimStart(value: string, pattern: string) {
-    if (value) {
-        if (pattern.length === 1) {
-            for (let i = 0, length = value.length; i < length; ++i) {
-                if (value[i] !== pattern) {
-                    return i > 0 ? value.substring(i) : value;
+    if (pattern.length === 1) {
+        for (let i = 0, length = value.length; i < length; ++i) {
+            if (value[i] !== pattern) {
+                if (i > 0) {
+                    return value.substring(i);
                 }
+                break;
             }
         }
-        else {
-            const match = new RegExp(`^(?:${pattern})+`).exec(value);
-            return match ? value.substring(match[0].length) : value;
-        }
+        return value;
     }
-    return '';
+    const match = new RegExp(`^(?:${escapePattern(pattern)})+`).exec(value);
+    return match ? value.substring(match[0].length) : value;
 }
 
 export function trimEnd(value: string, pattern: string) {
-    if (value) {
-        if (pattern.length === 1) {
-            for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
-                if (value[i] !== pattern) {
-                    return j > 0 ? value.substring(0, value.length - j) : value;
+    if (pattern.length === 1) {
+        for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
+            if (value[i] !== pattern) {
+                if (j > 0) {
+                    return value.substring(0, value.length - j);
                 }
+                break;
             }
         }
-        else {
-            const match = new RegExp(`(?:${pattern})+$`).exec(value);
-            return match ? value.substring(0, value.length - match[0].length) : value;
-        }
+        return value;
     }
-    return '';
+    const match = new RegExp(`(?:${escapePattern(pattern)})+$`).exec(value);
+    return match ? value.substring(0, value.length - match[0].length) : value;
 }
 
 export function escapePattern(value: string) {

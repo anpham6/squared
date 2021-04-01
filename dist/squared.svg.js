@@ -1,4 +1,4 @@
-/* squared.svg 2.5.3
+/* squared.svg 2.5.4
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -969,22 +969,20 @@ this.squared.svg = (function (exports) {
                 width += x;
                 height += y;
             }
-            return `M${x},${y} ${width},${y} ${width},${height} ${x},${height} Z`;
+            return `M${x},${y} ${width},${y} ${width},${height} ${x},${height}Z`;
         }
         static drawEllipse(cx, cy, rx, ry, precision) {
             if (ry === undefined) {
                 ry = rx;
             }
             let radius = rx * 2;
+            cx -= rx;
             if (precision) {
-                cx = truncate$1(cx - rx, precision);
+                cx = truncate$1(cx, precision);
                 cy = truncate$1(cy, precision);
                 rx = truncate$1(rx, precision);
                 ry = truncate$1(ry, precision);
                 radius = truncate$1(radius, precision);
-            }
-            else {
-                cx -= rx;
             }
             return `M${cx},${cy} a${rx},${ry},0,0,1,${radius},0 a${rx},${ry},0,0,1,-${radius},0`;
         }
@@ -5956,7 +5954,7 @@ this.squared.svg = (function (exports) {
                     const element = this.element;
                     let id = element.id.trim(), value, tagName;
                     if (id) {
-                        id = convertWord(id, true);
+                        id = convertWord(id);
                         if (!CACHE_VIEWNAME.has(id)) {
                             value = id;
                         }
