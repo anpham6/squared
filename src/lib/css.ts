@@ -2627,17 +2627,17 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             }
             return value;
         }
-        case 'background':
-        case 'mask':
-        case 'gridTemplate':
-            return getStyle(element)[attr];
         default: {
             if (endsWith(attr, 'Color') || (CSS_PROPERTIES[attr]?.trait & CSS_TRAITS.COLOR)) {
-                return calculateColor(element, value.trim());
+                return calculateColor(element, value);
             }
-            const alias = checkWritingMode(attr, getStyle(element).writingMode);
+            const style = getStyle(element);
+            const alias = checkWritingMode(attr, style.writingMode);
             if (alias !== attr) {
-                return calculateStyle(element, alias as string, value, boundingBox);
+                return calculateStyle(element, typeof alias === 'string' ? alias : alias[0], value, boundingBox);
+            }
+            else if (attr in style) {
+                return style[attr] as string;
             }
         }
     }
@@ -2686,7 +2686,6 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
         case 'inherit':
         case 'unset':
         case 'revert':
-        case '{{@style}}':
             switch (attr) {
                 case 'lineHeight':
                 case 'fontSize':

@@ -578,7 +578,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                     }
                     else {
-                        value = baseAttr in cssStyle ? '{{@style}}' : '';
+                        value = baseAttr in cssStyle ? 'revert' : '';
                     }
                     baseMap[baseAttr] = value;
                 }

@@ -23,22 +23,23 @@ const BORDER_BOX = [
 ];
 
 function setBorderStyle(styleMap: CssStyleMap, defaultColor: string) {
-    if (!BORDER_BOX.some(item => item[0] in styleMap)) {
-        for (let i = 0; i < 4; ++i) {
-            const border = BORDER_BOX[i];
-            styleMap[border[0]] = '1px';
+    let result = false;
+    for (let i = 0; i < 4; ++i) {
+        const border = BORDER_BOX[i];
+        const attr = border[0];
+        if (!styleMap[attr]) {
+            styleMap[attr] = '1px';
             styleMap[border[1]] = 'outset';
             styleMap[border[2]] = defaultColor;
+            result = true;
         }
-        return true;
     }
-    return false;
+    return result;
 }
 
 function setButtonStyle(styleMap: CssStyleMap, applied: boolean, defaultColor: string) {
     if (applied) {
-        const backgroundColor = styleMap.backgroundColor;
-        if (!backgroundColor || backgroundColor === 'initial') {
+        if (hasEmptyStyle(styleMap.backgroundColor)) {
             styleMap.backgroundColor = defaultColor;
         }
     }
@@ -68,6 +69,8 @@ function pushIndentArray(values: string[], depth: number, char = '\t', separator
     }
     return values.join(separator);
 }
+
+const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial';
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerSettingsUI;
@@ -197,13 +200,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;
                     setBorderStyle(styleMap, this._settingsStyle.inputBorderColor);
                     break;
-                case 'BODY': {
-                    const backgroundColor = styleMap.backgroundColor;
-                    if ((!backgroundColor || backgroundColor === 'initial') && (getComputedStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
+                case 'BODY':
+                    if (hasEmptyStyle(styleMap.backgroundColor) && (getComputedStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
                         styleMap.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
-                }
                 case 'H1':
                     if (!styleMap.fontSize) {
                         let parent = element.parentElement;
