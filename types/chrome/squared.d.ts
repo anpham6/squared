@@ -9,7 +9,6 @@ declare namespace base {
         userSettings: UserResourceSettings;
         builtInExtensions: Map<string, Extension<T>>;
         readonly extensions: Extension<T>[];
-        createNode(sessionId: string, options: CreateNodeOptions): T;
     }
 
     class Controller<T extends Node> extends squared.base.Controller<T> {}

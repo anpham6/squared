@@ -34,9 +34,10 @@ const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith } = squared.lib.util;
 
-let REGEXP_COUNTER: Undef<RegExp>;
-let REGEXP_COUNTERVALUE: Undef<RegExp>;
-let REGEXP_QUOTE: Undef<RegExp>;
+let REGEXP_COUNTER: RegExp;
+let REGEXP_COUNTERVALUE: RegExp;
+let REGEXP_ATTRVALUE: RegExp;
+let REGEXP_QUOTE: RegExp;
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
     let right: Undef<boolean>,
@@ -1623,9 +1624,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     default:
                         if (value[0] === '"' || startsWith(value, 'attr')) {
-                            const pattern = /"((?:[^"]|(?<=\\)")+)"|attr\(([^)]+)\)/g;
+                            (REGEXP_ATTRVALUE ||= /"((?:[^"]|(?<=\\)")+)"|attr\(([^)]+)\)/g).lastIndex = 0;
                             let match: Null<RegExpExecArray>;
-                            while (match = pattern.exec(value)) {
+                            while (match = REGEXP_ATTRVALUE.exec(value)) {
                                 if (match[1]) {
                                     content += match[1];
                                 }
@@ -1729,14 +1730,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                             else {
-                                REGEXP_COUNTER ||= /(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)"/g;
+                                (REGEXP_COUNTER ||= /counter\(([^,)]+)(?:,\s*([a-z-]+))?\)|counters\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)"/g).lastIndex = 0;
                                 let match: Null<RegExpExecArray>;
                                 while (match = REGEXP_COUNTER.exec(value)) {
-                                    if (match[8]) {
-                                        content += match[8];
+                                    if (match[6]) {
+                                        content += match[6];
                                         continue;
                                     }
-                                    const [counterName, styleName = 'decimal'] = match[1] ? [match[2], match[3]] : [match[5], match[7]];
+                                    const [counterName, styleName = 'decimal'] = match[1] ? [match[1], match[2]] : [match[3], match[5]];
                                     const counters: number[] = [NaN];
                                     let current: Null<HTMLElement> = element,
                                         depth = 0,
@@ -1867,10 +1868,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         ++depth;
                                         current = current.parentElement;
                                     }
-                                    const delimiter = match[6] ? match[6].replace(/\\"/g, '"') : '';
+                                    const delimiter = match[4] ? match[4].replace(/\\"/g, '"') : '';
                                     content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
                                 }
-                                REGEXP_COUNTER.lastIndex = 0;
                             }
                         }
                         break;

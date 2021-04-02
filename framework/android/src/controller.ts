@@ -1350,7 +1350,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const element = node.element as HTMLImageElement;
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
-                    if (imageSet = getSrcSet(element, this.localSettings.mimeType.image)) {
+                    if (imageSet = getSrcSet(element, this.localSettings.mimeType.image, node.fontSize)) {
                         const setImageDimension = (width: number, image: Undef<number | ImageAsset>) => {
                             let height: Undef<number>;
                             if (typeof image === 'number') {

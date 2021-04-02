@@ -486,41 +486,35 @@ export function trimString(value: string, pattern: string) {
 }
 
 export function trimStart(value: string, pattern: string) {
-    if (value) {
-        if (pattern.length === 1) {
-            for (let i = 0, length = value.length; i < length; ++i) {
-                if (value[i] !== pattern) {
-                    if (i > 0) {
-                        return value.substring(i);
-                    }
-                    break;
+    if (pattern.length === 1) {
+        for (let i = 0, length = value.length; i < length; ++i) {
+            if (value[i] !== pattern) {
+                if (i > 0) {
+                    return value.substring(i);
                 }
+                break;
             }
-            return value;
         }
-        const match = new RegExp(`^(?:${escapePattern(pattern)})+`).exec(value);
-        return match ? value.substring(match[0].length) : value;
+        return value;
     }
-    return '';
+    const match = new RegExp(`^(?:${escapePattern(pattern)})+`).exec(value);
+    return match ? value.substring(match[0].length) : value;
 }
 
 export function trimEnd(value: string, pattern: string) {
-    if (value) {
-        if (pattern.length === 1) {
-            for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
-                if (value[i] !== pattern) {
-                    if (j > 0) {
-                        return value.substring(0, value.length - j);
-                    }
-                    break;
+    if (pattern.length === 1) {
+        for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
+            if (value[i] !== pattern) {
+                if (j > 0) {
+                    return value.substring(0, value.length - j);
                 }
+                break;
             }
-            return value;
         }
-        const match = new RegExp(`(?:${escapePattern(pattern)})+$`).exec(value);
-        return match ? value.substring(0, value.length - match[0].length) : value;
+        return value;
     }
-    return '';
+    const match = new RegExp(`(?:${escapePattern(pattern)})+$`).exec(value);
+    return match ? value.substring(0, value.length - match[0].length) : value;
 }
 
 export function flatArray<T>(list: unknown[], depth = 1, current = 0): T[] {
@@ -540,7 +534,6 @@ export function flatArray<T>(list: unknown[], depth = 1, current = 0): T[] {
 }
 
 export function parseGlob(value: string, options?: ParseGlobOptions) {
-    value = value.trim();
     let flags = '',
         fromEnd: Undef<boolean>;
     if (options) {
@@ -550,7 +543,7 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
         fromEnd = options.fromEnd;
     }
     const trimCurrent = (cwd: string) => fromEnd && startsWith(cwd, './') ? cwd.substring(2) : cwd;
-    const source = ((!fromEnd ? '^' : '') + trimCurrent(value))
+    const source = ((!fromEnd ? '^' : '') + trimCurrent(value = value.trim()))
         .replace(/\\\\([^\\])/g, (...match: string[]) => ':' + match[1].charCodeAt(0))
         .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
         .replace(/\{([^}]+)\}/g, (...match: string[]) => {

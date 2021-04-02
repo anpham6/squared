@@ -5,7 +5,7 @@ const { STRING } = squared.lib.regex;
 const { calculateVar, getFontSize, isCalc, isLength, parseUnit } = squared.lib.css;
 const { isString, iterateArray, resolvePath, splitSome } = squared.lib.util;
 
-const REGEXP_SOURCESIZES = new RegExp(`^((?:\\s*(?:and\\s+)?(?:\\(\\s*)?\\(\\s*(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\)(?:\\s*\\))?)+)?\\s*(.*)$`, 'i');
+let REGEXP_SOURCESIZES: RegExp;
 
 function getAspectRatio(element: HTMLImageElement | HTMLSourceElement) {
     if (element.width && element.height) {
@@ -13,7 +13,7 @@ function getAspectRatio(element: HTMLImageElement | HTMLSourceElement) {
     }
 }
 
-export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
+export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontSize?: number) {
     const result: ImageSrcSet[] = [];
     const parentElement = element.parentElement as HTMLPictureElement;
     let { srcset, sizes } = element,
@@ -68,10 +68,11 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll) {
         return 0;
     });
     if (sizes) {
-        const options: UnitOptions = { fontSize: getFontSize(element) };
+        REGEXP_SOURCESIZES ||= new RegExp(`^((?:\\(\\s*)?(?:\\s*(?:(?:and|or|not)\\s+)?(?:\\(\\s*)?(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})(?:\\s*\\))?)+(?:\\s*\\))?)?\\s*(.*)$`, 'i');
+        const options: CalculateVarOptions = { fontSize: fontSize ?? getFontSize(element), min: 0 };
         let width = NaN;
         splitSome(sizes, value => {
-            const match = REGEXP_SOURCESIZES.exec(value);
+            const match = REGEXP_SOURCESIZES!.exec(value);
             if (match) {
                 const query = match[1];
                 const unit = match[3];

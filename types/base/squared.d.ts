@@ -888,7 +888,7 @@ declare module "base" {
         }
 
         namespace dom {
-            function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll): Undef<ImageSrcSet[]>;
+            function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontSize?: number): Undef<ImageSrcSet[]>;
         }
 
         namespace regex {
