@@ -15,7 +15,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
 
     public resolveTarget(sessionId: string, target: Null<HTMLElement | string>) {
         if (target) {
-            const isTargeted = (node: View) => node.element === target || node.elementId === target || node.controlId === target;
+            const isTargeted = (node: View) => node.element === target || node.elementId.trim() === target || node.controlId === target;
             for (const node of this.getProcessingCache(sessionId)) {
                 if (isTargeted(node)) {
                     return node;

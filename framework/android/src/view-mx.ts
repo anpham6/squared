@@ -2504,7 +2504,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                if (this.onlyChild && this.controlName === renderParent.controlName && !this.hasWidth && !this.hasHeight && !this.visibleStyle.borderWidth && !this.elementId && !parseFloat(this.android('translationX')) && !parseFloat(this.android('translationY'))) {
+                if (this.onlyChild && this.controlName === renderParent.controlName && !this.hasWidth && !this.hasHeight && !this.visibleStyle.borderWidth && !this.elementId.trim() && !parseFloat(this.android('translationX')) && !parseFloat(this.android('translationY'))) {
                     for (const [name, namespace] of renderParent.namespaces()) {
                         const data = this._namespaces[name];
                         if (data) {
@@ -2957,7 +2957,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (controlName) {
                     let name: Undef<string>;
                     if (this.styleElement) {
-                        const value = this.elementId || getNamedItem(this.element as HTMLElement, 'name');
+                        const value = this.elementId.trim() || getNamedItem(this.element as HTMLElement, 'name');
                         if (value) {
                             name = value === 'parent' || RESERVED_JAVA.includes(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
                         }

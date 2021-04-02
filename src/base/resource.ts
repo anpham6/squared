@@ -84,10 +84,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const images: HTMLImageElement[] = [];
         const preloadMap: string[] = [];
         const parseSrcSet = (value: string) => {
-            if (value) {
-                for (const uri of value.split(',')) {
-                    this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
-                }
+            for (const uri of value.split(',')) {
+                this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
             }
         };
         for (const element of elements) {

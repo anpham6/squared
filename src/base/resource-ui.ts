@@ -276,10 +276,10 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
     let i = 0;
     while (i < length) {
         const attr = attrs[i++];
-        tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
+        tagName = (i === 0 && start ? '' : '!' + timestamp) + `(${tagName})`;
         const style = ' ' + attr + `="${attrs[i++]}"`;
         const match = new RegExp(`<${tagName}(${STRING.TAG_OPEN}+?)${attr}\\s*${STRING.TAG_ATTR}(${STRING.TAG_OPEN}*)>`, 'i').exec(src);
-        src = match ? src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[6] + '>') : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+        src = match ? src.replace(match[0], '<!' + timestamp + match[1] + match[2] + style + match[6] + '>') : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<!' + timestamp + capture[1] + style);
     }
     return src;
 }
@@ -1111,7 +1111,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     public writeRawSvg(resourceId: number, element: SVGSVGElement, dimension?: Dimension) {
         const content = replaceSvgValues(element.outerHTML.trim().replace(/\s+/g, ' '), [element], dimension)
             .replace(/["']/g, (...capture) => '\\' + capture[0])
-            .replace(/<@@\d+/g, '<');
+            .replace(/<!\d+/g, '<');
         const uri = 'data:image/svg+xml,' + content;
         this.addRawData(resourceId, uri, { mimeType: 'image/svg+xml', content });
         return uri;

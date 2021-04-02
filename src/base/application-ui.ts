@@ -509,11 +509,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             if (pseudoElements.length) {
-                const pseudoMap: [item: T, id: string, styleElement: Undef<HTMLStyleElement>][] = [];
+                const pseudoMap: [item: T, previousId: Null<string>, styleElement: Undef<HTMLStyleElement>][] = [];
                 for (let i = 0, length = pseudoElements.length; i < length; ++i) {
                     const item = pseudoElements[i];
                     const parentElement = item.parentElement!;
-                    let id = '',
+                    let previousId: Null<string> = null,
                         styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
                         let tagName: string;
@@ -521,9 +521,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             tagName = ':host';
                         }
                         else {
-                            id = parentElement.id.trim();
-                            if (!id) {
-                                id = '__squared_' + Math.round(Math.random() * new Date().getTime());
+                            let id = parentElement.id;
+                            if (!startsWith(id, 'sqd__') && (!id || id !== id.trim())) {
+                                previousId = id;
+                                id = 'sqd__' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                                 parentElement.id = id;
                             }
                             tagName = '#' + id;
@@ -531,7 +532,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, 0, item.shadowHost);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap.push([item, id, styleElement]);
+                        pseudoMap.push([item, previousId, styleElement]);
                     }
                 }
                 const length = pseudoMap.length;
@@ -539,14 +540,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoMap[i][0].setBounds(false);
                 }
                 for (let i = 0; i < length; ++i) {
-                    const data = pseudoMap[i];
-                    const item = data[0];
-                    if (startsWith(data[1], '__squared_')) {
-                        item.parentElement!.id = '';
+                    const [item, previousId, styleElement] = pseudoMap[i];
+                    if (previousId !== null) {
+                        item.parentElement!.id = previousId;
                     }
-                    if (data[2]) {
+                    if (styleElement) {
                         try {
-                            (item.shadowHost || document.head).removeChild(data[2]);
+                            (item.shadowHost || document.head).removeChild(styleElement);
                         }
                         catch {
                         }

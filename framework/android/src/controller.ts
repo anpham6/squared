@@ -879,12 +879,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.bounds.height === 0 &&
             node.naturalChild &&
             node.naturalElements.length === 0 &&
-            !node.elementId &&
             node.marginTop === 0 &&
             node.marginRight === 0 &&
             node.marginBottom === 0 &&
             node.marginLeft === 0 &&
             !background &&
+            !node.elementId.trim() &&
             !node.rootElement &&
             !node.use)
         {
@@ -1772,7 +1772,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling && sibling.visible && sibling.pageFlow) {
                             const id = node.elementId;
-                            if (id && id === sibling.toElementString('htmlFor').trim()) {
+                            if (id && id === sibling.toElementString('htmlFor')) {
                                 sibling.android('labelFor', node.documentId);
                                 return true;
                             }
