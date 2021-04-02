@@ -208,11 +208,8 @@ declare module "lib" {
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): Null<BoxRectDimension>;
         function getParentElement(element: Element): Null<HTMLElement>;
-        function removeElementsByClassName(className: string): void;
-        function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];
         function getNamedItem(element: Element, attr: string): string;
         function createElement(tagName: string, options: CreateElementOptions): HTMLElement;
-        function getTextMetrics(value: string, fontSize: number, fontFamily?: string): Undef<TextMetrics>;
     }
 
     namespace error {

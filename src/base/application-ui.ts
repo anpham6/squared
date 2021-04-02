@@ -30,9 +30,11 @@ type RenderNodeMethod<T extends NodeUI> = (layout: ContentUI<T>) => Undef<NodeTe
 const { insertStyleSheetRule } = squared.lib.internal;
 
 const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared.lib.css;
-const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
+const { getNamedItem } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith } = squared.lib.util;
+
+const { removeElementsByClassName } = squared.base.lib.dom;
 
 let REGEXP_COUNTER: RegExp;
 let REGEXP_COUNTERVALUE: RegExp;

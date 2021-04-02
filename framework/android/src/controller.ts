@@ -26,12 +26,12 @@ import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor
 
 const { isPlatform, isUserAgent } = squared.lib.client;
 const { asPercent, formatPX, hasCoords, parseTransform } = squared.lib.css;
-const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
+const { getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
 
-const { getSrcSet } = squared.base.lib.dom;
+const { getElementsBetweenSiblings, getSrcSet } = squared.base.lib.dom;
 const { assignEmptyValue, parseMimeType } = squared.base.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;

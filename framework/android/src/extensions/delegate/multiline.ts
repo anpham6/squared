@@ -13,7 +13,7 @@ import { concatString } from '../../lib/util';
 
 type MultilineData<T> = [number, T][];
 
-const { getTextMetrics } = squared.lib.dom;
+const { getTextMetrics } = squared.base.lib.dom;
 
 const REGEXP_WORD = /[^\w\s]+\s+|(?:&#?[A-Za-z0-9]{2};[^\w]*|[^\w]+|\b)*\w+?(?:'[A-Za-z]\s*|[^\w]*&#?[A-Za-z0-9]{2};|[^\w]+|\b)/g;
 

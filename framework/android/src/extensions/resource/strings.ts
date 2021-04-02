@@ -9,10 +9,10 @@ import Resource from '../../resource';
 import { replaceCharacterData, sanitizeString } from '../../lib/util';
 
 const { asPercent, parseAngle } = squared.lib.css;
-const { getTextMetrics } = squared.lib.dom;
 const { clamp } = squared.lib.math;
 const { delimitString, splitSome } = squared.lib.util;
 
+const { getTextMetrics } = squared.base.lib.dom;
 const { lowerCaseString, upperCaseString } = squared.base.lib.util;
 
 const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+(?:[a-z]+)?))?/;

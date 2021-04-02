@@ -104,50 +104,6 @@ export function getParentElement(element: Element) {
     return parentNode && parentNode instanceof ShadowRoot ? parentNode.host as HTMLElement : null;
 }
 
-export function removeElementsByClassName(className: string) {
-    const elements = Array.from(document.getElementsByClassName(className));
-    for (let i = 0, length = elements.length; i < length; ++i) {
-        const element = elements[i];
-        const parentElement = element.parentElement;
-        if (parentElement) {
-            parentElement.removeChild(element);
-        }
-    }
-}
-
-export function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element) {
-    const parentNode = elementEnd.parentNode;
-    const result: Element[] = [];
-    if (parentNode && (!elementStart || parentNode === elementStart.parentNode)) {
-        let startIndex = elementStart ? -1 : 0,
-            endIndex = -1;
-        iterateArray(parentNode.childNodes, (element: Element, index: number) => {
-            if (element === elementEnd) {
-                endIndex = index;
-                if (startIndex !== -1) {
-                    return true;
-                }
-            }
-            else if (element === elementStart) {
-                startIndex = index;
-                if (endIndex !== -1) {
-                    return true;
-                }
-            }
-        });
-        if (startIndex !== -1 && endIndex !== -1) {
-            iterateArray(parentNode.childNodes, (element: Element) => {
-                const nodeName = element.nodeName;
-                if (nodeName[0] !== '#' || nodeName === '#text') {
-                    result.push(element);
-                }
-            },
-            Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
-        }
-    }
-    return result;
-}
-
 export function createElement(tagName: string, options: CreateElementOptions) {
     const { parent, style, attributes, children } = options;
     const element = document.createElement(tagName);
@@ -173,14 +129,6 @@ export function createElement(tagName: string, options: CreateElementOptions) {
         children.forEach(child => element.appendChild(child));
     }
     return element;
-}
-
-export function getTextMetrics(value: string, fontSize: number, fontFamily?: string) {
-    const context = document.createElement('canvas').getContext('2d');
-    if (context) {
-        context.font = fontSize + 'px' + (fontFamily ? ' ' + fontFamily : '');
-        return context.measureText(value);
-    }
 }
 
 export function getNamedItem(element: Element, attr: string) {
