@@ -3,7 +3,7 @@ import { CSS_TRAITS, PLATFORM, USER_AGENT } from './constant';
 import { CSS } from './regex';
 
 import { isPlatform, isUserAgent } from './client';
-import { convertCamelCase, convertHyphenated, replaceAll, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } from './util';
+import { convertCamelCase, convertHyphenated, replaceAll, safeFloat, spliceString, splitEnclosing, startsWith } from './util';
 
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
 let DOCUMENT_FONTMAP!: number[];
@@ -1362,42 +1362,6 @@ export const PROXY_INLINESTYLE = Object.freeze(
     })
 );
 
-export const ELEMENT_BLOCK = [
-    'ADDRESS',
-    'ARTICLE',
-    'ASIDE',
-    'BLOCKQUOTE',
-    'DD',
-    'DETAILS',
-    'DIALOG',
-    'DIV',
-    'DL',
-    'DT',
-    'FIELDSET',
-    'FIGCAPTION',
-    'FIGURE',
-    'FOOTER',
-    'FORM',
-    'H1',
-    'H2',
-    'H3',
-    'H4',
-    'H5',
-    'H6',
-    'HEADER',
-    'HGROUP',
-    'HR',
-    'LI',
-    'MAIN',
-    'NAV',
-    'OL',
-    'P',
-    'PRE',
-    'SECTION',
-    'TABLE',
-    'UL'
-];
-
 export function updateDocumentFont() {
     const documentElement = document.documentElement;
     const documentStyle = getComputedStyle(documentElement);
@@ -1446,7 +1410,7 @@ export function getDocumentFontSize() {
     return DOCUMENT_FONTSIZE;
 }
 
-export function getFontSizeValue(value: string, fixedWidth?: boolean) {
+export function convertFontSize(value: string, fixedWidth?: boolean) {
     switch (value) {
         case '':
             return 'inherit';
@@ -1584,74 +1548,6 @@ export function parseSelectorText(value: string) {
         return result;
     }
     return [value];
-}
-
-export function getKeyframesRules(documentRoot: DocumentOrShadowRoot = document): KeyframesMap {
-    const result = new Map<string, KeyframeData>();
-    const styleSheets = documentRoot.styleSheets;
-    for (let i = 0, length = styleSheets.length; i < length; ++i) {
-        try {
-            const cssRules = styleSheets[i].cssRules;
-            if (cssRules) {
-                for (let j = 0, q = cssRules.length; j < q; ++j) {
-                    try {
-                        const item = cssRules[j] as CSSKeyframesRule;
-                        if (item.type === CSSRule.KEYFRAMES_RULE) {
-                            const value = parseKeyframes(item.cssRules);
-                            if (value) {
-                                const data = result.get(item.name);
-                                if (data) {
-                                    Object.assign(data, value);
-                                }
-                                else {
-                                    result.set(item.name, value);
-                                }
-                            }
-                        }
-                    }
-                    catch {
-                    }
-                }
-            }
-        }
-        catch {
-        }
-    }
-    return result;
-}
-
-export function parseKeyframes(rules: CSSRuleList) {
-    const result: KeyframeData = {};
-    const pattern = /((?:[\d.]+%\s*,?\s*)+|from|to)\s*{([^}]+)}/;
-    let valid: Undef<boolean>;
-    for (let i = 0, length = rules.length; i < length; ++i) {
-        const item = rules[i] as CSSKeyframeRule;
-        const match = pattern.exec(item.cssText);
-        if (match) {
-            const items = match[2].trim().split(/\s*;\s*/);
-            const q = items.length;
-            splitSome(item.keyText || match[1], percent => {
-                switch (percent) {
-                    case 'from':
-                        percent = '0%';
-                        break;
-                    case 'to':
-                        percent = '100%';
-                        break;
-                }
-                const keyframe: StringMap = {};
-                for (let j = 0; j < q; ++j) {
-                    const [attr, value] = splitPair(items[j], ':', true);
-                    if (value) {
-                        keyframe[attr] = value;
-                    }
-                }
-                result[percent] = keyframe;
-                valid = true;
-            });
-        }
-    }
-    return valid ? result : null;
 }
 
 export function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot) {

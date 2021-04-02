@@ -2,11 +2,11 @@ import type Application from './application';
 import type File from './file';
 import type Node from './node';
 
+import { parseKeyframes } from './lib/css';
 import { fromMimeType, parseMimeType, randomUUID, trimBoth } from './lib/util';
 
 type PreloadItem = HTMLImageElement | string;
 
-const { parseKeyframes } = squared.lib.internal;
 const { FILE, STRING } = squared.lib.regex;
 
 const { extractURL, resolveURL } = squared.lib.css;

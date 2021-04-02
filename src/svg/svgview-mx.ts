@@ -16,11 +16,11 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const { getKeyframesRules } = squared.lib.internal;
-
 const { asPercent, hasCalc, isAngle, hasCustomProperty, isPercent, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { convertCamelCase, convertWord, iterateArray, splitPairEnd, startsWith } = squared.lib.util;
+
+const { getKeyframesRules } = squared.base.lib.css;
 
 const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
 

@@ -228,16 +228,13 @@ declare module "lib" {
     namespace internal {
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;
-        const ELEMENT_BLOCK: string[];
         function updateDocumentFont(): void;
         function getDocumentFontSize(): number;
-        function getFontSizeValue(value: string, fixedWidth?: boolean): string;
+        function convertFontSize(value: string, fixedWidth?: boolean): string;
         function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
         function getInitialValue(element: Element, attr: string): string;
         function parseSelectorText(value: string): string[];
         function getSpecificity(value: string): number;
-        function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
-        function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
         function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot): Null<VoidFunction>;
     }
 

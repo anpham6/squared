@@ -887,6 +887,11 @@ declare module "base" {
             }
         }
 
+        namespace css {
+            function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
+            function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
+        }
+
         namespace dom {
             function getTextMetrics(value: string, fontSize: number, fontFamily?: string): Undef<TextMetrics>;
             function removeElementsByClassName(className: string): void;

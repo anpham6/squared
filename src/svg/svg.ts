@@ -6,12 +6,12 @@ import SvgContainer from './svgcontainer';
 
 import { SVG, getParentAttribute, getTargetElement } from './lib/util';
 
-const { getKeyframesRules } = squared.lib.internal;
-
 const { parseColor } = squared.lib.color;
 const { extractURL } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cloneObject } = squared.lib.util;
+
+const { getKeyframesRules } = squared.base.lib.css;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];

@@ -1,6 +1,6 @@
 import { CSS_TRAITS, CSS_UNIT } from './constant';
 
-import { CSS_PROPERTIES, ELEMENT_BLOCK, PROXY_INLINESTYLE, getDocumentFontSize, getInitialValue } from './internal';
+import { CSS_PROPERTIES, PROXY_INLINESTYLE, getDocumentFontSize, getInitialValue } from './internal';
 import { CSS, STRING, TRANSFORM } from './regex';
 
 import { getDeviceDPI } from './client';
@@ -10,6 +10,42 @@ import { getElementCache, setElementCache } from './session';
 import { endsWith, escapePattern, isNumber, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 import Pattern from './base/pattern';
+
+const ELEMENT_BLOCK = [
+    'ADDRESS',
+    'ARTICLE',
+    'ASIDE',
+    'BLOCKQUOTE',
+    'DD',
+    'DETAILS',
+    'DIALOG',
+    'DIV',
+    'DL',
+    'DT',
+    'FIELDSET',
+    'FIGCAPTION',
+    'FIGURE',
+    'FOOTER',
+    'FORM',
+    'H1',
+    'H2',
+    'H3',
+    'H4',
+    'H5',
+    'H6',
+    'HEADER',
+    'HGROUP',
+    'HR',
+    'LI',
+    'MAIN',
+    'NAV',
+    'OL',
+    'P',
+    'PRE',
+    'SECTION',
+    'TABLE',
+    'UL'
+];
 
 const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:$|\\s+)$`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:$|\\s+)$`, 'i');

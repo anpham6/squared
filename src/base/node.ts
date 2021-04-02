@@ -5,7 +5,7 @@ import STYLE_STATE = squared.lib.internal.STYLE_STATE;
 
 type T = Node;
 
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, getFontSizeValue, getInitialValue, parseSelectorText } = squared.lib.internal;
+const { CSS_PROPERTIES, PROXY_INLINESTYLE, convertFontSize, getInitialValue, parseSelectorText } = squared.lib.internal;
 const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
@@ -3103,7 +3103,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (this.naturalChild) {
                 if (this.styleElement) {
                     const fixedWidth = isFontFixedWidth(this);
-                    let value = getFontSizeValue(this.valueOf('fontSize'), fixedWidth);
+                    let value = convertFontSize(this.valueOf('fontSize'), fixedWidth);
                     if (isNaN(result = asPx(value)) && !isNaN(result = asPercent(value))) {
                         const parent = this.actualParent;
                         if (parent) {
@@ -3133,7 +3133,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     else {
                                         const fontSize = parent.valueOf('fontSize');
                                         if (fontSize && fontSize !== 'inherit') {
-                                            const n = asPercent(value = getFontSizeValue(fontSize));
+                                            const n = asPercent(value = convertFontSize(fontSize));
                                             if (!isNaN(n)) {
                                                 emRatio *= n;
                                             }

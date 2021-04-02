@@ -8,12 +8,14 @@ import NodeList from './nodelist';
 import Resource from './resource';
 
 import * as constant from './lib/constant';
+import * as css from './lib/css';
 import * as dom from './lib/dom';
 import * as regex from './lib/regex';
 import * as util from './lib/util';
 
 const lib = {
     constant,
+    css,
     dom,
     regex,
     util

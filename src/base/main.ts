@@ -27,6 +27,7 @@ import Table from './extensions/table';
 import WhiteSpace from './extensions/whitespace';
 
 import * as constant from './lib/constant';
+import * as css from './lib/css';
 import * as dom from './lib/dom';
 import * as regex from './lib/regex';
 import * as util from './lib/util';
@@ -46,6 +47,7 @@ const extensions = {
 
 const lib = {
     constant,
+    css,
     dom,
     regex,
     util
