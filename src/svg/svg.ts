@@ -161,28 +161,26 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     protected setDefinitions(item: SVGSVGElement | SVGDefsElement) {
         const definitions = this.definitions;
-        item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
-            const id = `#${element.id.trim()}`;
-            if (id !== '#') {
-                if (SVG.clipPath(element)) {
-                    if (!definitions.clipPath.has(id)) {
-                        definitions.clipPath.set(id, element);
-                    }
+        item.querySelectorAll('clipPath[id], pattern[id], linearGradient[id], radialGradient[id]').forEach((element: SVGElement) => {
+            const id = '#' + element.id;
+            if (SVG.clipPath(element)) {
+                if (!definitions.clipPath.has(id)) {
+                    definitions.clipPath.set(id, element);
                 }
-                else if (SVG.pattern(element)) {
-                    if (!definitions.pattern.has(id)) {
-                        definitions.pattern.set(id, element);
-                    }
+            }
+            else if (SVG.pattern(element)) {
+                if (!definitions.pattern.has(id)) {
+                    definitions.pattern.set(id, element);
                 }
-                else if (SVG.linearGradient(element)) {
-                    if (!definitions.gradient.has(id)) {
-                        definitions.gradient.set(id, createLinearGradient(element));
-                    }
+            }
+            else if (SVG.linearGradient(element)) {
+                if (!definitions.gradient.has(id)) {
+                    definitions.gradient.set(id, createLinearGradient(element));
                 }
-                else if (SVG.radialGradient(element)) {
-                    if (!definitions.gradient.has(id)) {
-                        definitions.gradient.set(id, createRadialGradient(element));
-                    }
+            }
+            else if (SVG.radialGradient(element)) {
+                if (!definitions.gradient.has(id)) {
+                    definitions.gradient.set(id, createRadialGradient(element));
                 }
             }
         });

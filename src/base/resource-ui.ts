@@ -204,7 +204,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     return result;
 }
 
-function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
+function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: "borderTop" | "borderRight" | "borderBottom" | "borderLeft" | "outline", border: string[]) {
     let width = node[border[0]] as number;
     if (width > 0) {
         const style = node.css(border[1] as CssStyleAttr) || 'solid';
@@ -274,10 +274,10 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
     let i = 0;
     while (i < length) {
         const attr = attrs[i++];
-        tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
+        tagName = (i === 0 && start ? '' : '!' + timestamp) + `(${tagName})`;
         const style = ' ' + attr + `="${attrs[i++]}"`;
         const match = new RegExp(`<${tagName}(${TAG_OPEN}+?)${attr}\\s*${TAG_ATTR}(${TAG_OPEN}*)>`, 'i').exec(src);
-        src = match ? replaceAll(src, match[0], '<@@' + timestamp + match[1] + match[2] + style + match[6] + '>', 1) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+        src = match ? replaceAll(src, match[0], '<!' + timestamp + match[1] + match[2] + style + match[6] + '>', 1) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<!' + timestamp + capture[1] + style);
     }
     return src;
 }
@@ -1115,7 +1115,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     public writeRawSvg(resourceId: number, element: SVGSVGElement, dimension?: Dimension) {
         const content = replaceSvgValues(element.outerHTML.trim().replace(/\s+/g, ' '), [element], dimension)
             .replace(/["']/g, (...capture) => '\\' + capture[0])
-            .replace(/<@@\d+/g, '<');
+            .replace(/<!\d+/g, '<');
         const uri = 'data:image/svg+xml,' + content;
         this.addRawData(resourceId, uri, { mimeType: 'image/svg+xml', content });
         return uri;

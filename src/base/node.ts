@@ -2170,7 +2170,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get elementId() {
-        return (this._element?.id || '').trim();
+        return this._element?.id || '';
     }
 
     get htmlElement() {

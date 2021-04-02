@@ -80,15 +80,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const result: PreloadItem[] = [];
         const images: HTMLImageElement[] = [];
         const preloadMap: string[] = [];
-        const parseSrcSet = (value: string) => {
-            if (value) {
-                splitSome(value, uri => {
-                    this.addImage(resourceId, resolvePath(splitPairStart(uri, ' ', false, true)));
-                });
-            }
-        };
         for (const element of elements) {
-            element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source: HTMLImageElement | HTMLSourceElement) => parseSrcSet(source.srcset));
+            element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source: HTMLImageElement | HTMLSourceElement) => splitSome(source.srcset, uri => this.addImage(resourceId, resolvePath(splitPairStart(uri, ' ', false, true)))));
             element.querySelectorAll('video').forEach((source: HTMLVideoElement) => this.addImage(resourceId, source.poster));
             element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => this.addImage(resourceId, image.src, image.width, image.height));
             element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {

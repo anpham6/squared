@@ -20,6 +20,7 @@ import { convertListStyle } from './extensions/list';
 
 import { STRING } from './lib/regex';
 
+import { removeElementsByClassName } from './lib/dom';
 import { appendSeparator, flatArray, trimBoth, trimString } from './lib/util';
 
 type FileActionOptions = squared.FileActionOptions;
@@ -33,8 +34,6 @@ const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared
 const { getNamedItem } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith } = squared.lib.util;
-
-const { removeElementsByClassName } = squared.base.lib.dom;
 
 let REGEXP_COUNTER: RegExp;
 let REGEXP_COUNTERVALUE: RegExp;
@@ -494,11 +493,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             if (pseudoElements.length) {
-                const pseudoMap: [item: T, id: string, removeStyle: Null<VoidFunction>][] = [];
+                const pseudoMap: [item: T, id: string, previousId: string, removeStyle: Null<VoidFunction>][] = [];
                 for (let i = 0, length = pseudoElements.length; i < length; ++i) {
                     const item = pseudoElements[i];
                     const parentElement = item.parentElement!;
                     let id = '',
+                        previousId = '',
                         removeStyle: Null<VoidFunction> = null;
                     if (item.pageFlow) {
                         let tagName: string;
@@ -506,7 +506,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             tagName = ':host';
                         }
                         else {
-                            id = parentElement.id.trim();
+                            previousId = parentElement.id;
+                            id = previousId.trim();
                             if (!id) {
                                 id = 'sqd__' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                                 parentElement.id = id;
@@ -516,7 +517,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         removeStyle = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, item.shadowHost);
                     }
                     if (item.cssTry('display', item.display)) {
-                        pseudoMap.push([item, id, removeStyle]);
+                        pseudoMap.push([item, id, previousId, removeStyle]);
                     }
                 }
                 const length = pseudoMap.length;
@@ -524,9 +525,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     pseudoMap[i][0].setBounds(false);
                 }
                 for (let i = 0; i < length; ++i) {
-                    const [item, id, removeStyle] = pseudoMap[i];
+                    const [item, id, previousId, removeStyle] = pseudoMap[i];
                     if (startsWith(id, 'sqd__')) {
-                        item.parentElement!.id = '';
+                        item.parentElement!.id = previousId;
                     }
                     if (removeStyle) {
                         removeStyle();
