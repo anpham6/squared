@@ -846,15 +846,15 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _box: Null<BoxRectDimension> = null;
     protected _linear: Null<BoxRectDimension> = null;
     protected _initial: Null<InitialData<T>> = null;
-    protected _styleMap!: CssStyleMap;
+    protected _styleMap: CssStyleMap = {};
     protected _naturalChildren: Null<T[]> = null;
     protected _naturalElements: Null<T[]> = null;
     protected _childIndex = Infinity;
     protected _textBounds?: Null<BoxRectDimension>;
-    protected readonly _element: Null<Element> = null;
+    protected readonly _element: Null<Element>;
 
     private _style: Null<CSSStyleDeclaration> = null;
-    private _elementData: Null<ElementData>;
+    private _elementData: Null<ElementData> = null;
     private _dataset?: DOMStringMap;
     private _data?: StandardMap;
 
@@ -865,22 +865,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         children?: T[])
     {
         super(children);
-        if (element) {
-            this._element = element;
-            if (sessionId !== '0') {
-                setElementCache(element, 'node', this, sessionId);
-                const elementData = getElementData(element, sessionId);
-                if (elementData) {
-                    this._elementData = elementData;
-                    if (!this.syncWith(sessionId)) {
-                        this._styleMap = {};
-                    }
-                    return;
-                }
-            }
+        this._element = element || null;
+        if (element && sessionId !== '0') {
+            this.syncWith(sessionId);
+            setElementCache(element, 'node', this, sessionId);
         }
-        this._styleMap = {};
-        this._elementData = null;
     }
 
     public internalSelf(parent: Null<T>, depth: number, childIndex?: number) {
@@ -900,27 +889,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const element = this._element as HTMLElement;
         if (element) {
             let elementData: Optional<ElementData>;
-            if (!sessionId) {
-                sessionId = getElementCache(element, 'sessionId', '0');
-                if (sessionId === this.sessionId) {
-                    if (cache) {
-                        this._cache = {};
-                    }
-                    return true;
-                }
-                else if (sessionId) {
-                    if (elementData = getElementData(element, sessionId)) {
-                        this._elementData = elementData;
-                    }
-                }
-                else {
-                    return false;
-                }
-            }
-            else {
-                elementData = this._elementData;
-            }
-            if (elementData) {
+            if ((sessionId ||= getElementCache(element, 'sessionId', '0')) && (elementData = getElementData(element, sessionId))) {
+                this._elementData = elementData;
                 const styleMap = elementData.styleMap;
                 if (styleMap) {
                     if (!this.plainText && this.naturalChild) {

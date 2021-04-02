@@ -127,7 +127,7 @@ function applyBoxAdjustment(node: T, start: number, region: number, other: T, bo
     }
 }
 
-function getBoxSpacing(value: number) {
+function getBoxSpacing(value: BOX_STANDARD) {
     switch (value) {
         case BOX_STANDARD.MARGIN_TOP:
             return 0;

@@ -3,6 +3,7 @@ import { CSS_TRAITS, PLATFORM, USER_AGENT } from './constant';
 import { CSS } from './regex';
 
 import { isPlatform, isUserAgent } from './client';
+import { setElementCache } from './session';
 import { convertCamelCase, convertHyphenated, replaceAll, safeFloat, spliceString, splitEnclosing, startsWith } from './util';
 
 const DOCUMENT_FIXEDMAP = [9/13, 10/13, 12/13, 16/13, 20/13, 2, 3];
@@ -1363,20 +1364,14 @@ export const PROXY_INLINESTYLE = Object.freeze(
 );
 
 export function updateDocumentFont() {
-    const documentElement = document.documentElement;
-    const documentStyle = getComputedStyle(documentElement);
-    DOCUMENT_FONTSIZE = safeFloat(documentStyle.fontSize);
-    if (isNaN(DOCUMENT_FONTSIZE)) {
-        DOCUMENT_FONTSIZE = 16;
-    }
-    const style = documentElement.style;
-    const fontSize = style.fontSize;
-    style.fontSize = 'initial';
-    DOCUMENT_FONTBASE = safeFloat(documentStyle.fontSize);
-    if (isNaN(DOCUMENT_FONTBASE)) {
-        DOCUMENT_FONTBASE = 16;
-    }
-    style.fontSize = fontSize;
+    const element = document.documentElement;
+    const style = getComputedStyle(element);
+    DOCUMENT_FONTSIZE = safeFloat(style.fontSize) || 16;
+    const elementStyle = element.style;
+    const fontSize = elementStyle.fontSize;
+    elementStyle.fontSize = 'initial';
+    DOCUMENT_FONTBASE = safeFloat(style.fontSize) || 16;
+    elementStyle.fontSize = fontSize;
     const index = 16 - Math.floor(DOCUMENT_FONTBASE);
     switch (index) {
         case 0:
@@ -1404,6 +1399,7 @@ export function updateDocumentFont() {
             DOCUMENT_FONTMAP = index < 0 ? [0.6, 0.75, 0.89, 1.2, 1.5, 2, 3] : [1, 1, 1, 11/9, 14/9, 2, 3];
             break;
     }
+    setElementCache(element, 'style', style);
 }
 
 export function getDocumentFontSize() {

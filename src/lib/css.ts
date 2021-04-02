@@ -1281,10 +1281,8 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
                 }
                 else {
                     partial += output;
-                    if (dimension) {
-                        if ((output = output.trim()) && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
-                            ++j;
-                        }
+                    if (dimension && (output = output.trim()) && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
+                        ++j;
                     }
                 }
             }
