@@ -37,6 +37,12 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         };
     }
 
+    public reset() {
+        this._cssUsedVariables = {};
+        this._cssUnusedSelectors = {};
+        super.reset();
+    }
+
     public insertNode(processing: squared.base.AppProcessing<T>, element: Element) {
         if (element.nodeName[0] === '#') {
             if (this.userSettings.excludePlainText) {
@@ -71,17 +77,18 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const nodeMap = new Map<XmlNode, HTMLElement>();
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
+        const retainUsedStyles = options.retainUsedStyles;
         const usedVariables = options.removeUnusedVariables && this._cssUsedVariables[sessionId];
         const unusedSelectors = this._cssUnusedSelectors[sessionId];
         if (usedVariables) {
-            options.usedVariables = Array.from(usedVariables).concat(options.retainUsedStyles?.filter(value => value.startsWith('--')) || []);
+            options.usedVariables = Array.from(usedVariables).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('--')) as string[] : []);
         }
         if (unusedSelectors) {
-            const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles } = options;
+            const { removeUnusedClasses, removeUnusedSelectors } = options;
             if (removeUnusedClasses || removeUnusedSelectors) {
                 const styles: string[] = [];
                 for (const value of unusedSelectors) {
-                    if ((value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.includes(value))) {
+                    if ((value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.find(pattern => typeof pattern === 'string' ? pattern === value : pattern.test(value)))) {
                         styles.push(value);
                     }
                 }

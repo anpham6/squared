@@ -9,7 +9,7 @@ interface FileUniversalAttribute extends PlainObject {
     productionRelease?: boolean | string;
     useOriginalHtmlPage?: boolean;
     removeInlineStyles?: boolean;
-    retainUsedStyles?: string[];
+    retainUsedStyles?: (string | RegExp)[];
     removeUnusedClasses?: boolean;
     removeUnusedSelectors?: boolean;
     removeUnusedVariables?: boolean;
