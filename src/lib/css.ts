@@ -7,7 +7,7 @@ import { getDeviceDPI } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
-import { endsWith, escapePattern, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { endsWith, escapePattern, isSpace, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } from './util';
 
 import Pattern from './base/pattern';
 
@@ -58,7 +58,7 @@ const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${STRING.
 const REGEXP_CALCENCLOSING = /c(?:alc|lamp)|m(?:in|ax)/gi;
 const REGEXP_VAR = /^(?:^|\s+)var\(\s*--[^\d\s].*\)(?:$|\s+)$/i;
 const REGEXP_VARWITHIN = /var\(\s*--[^\d\s][^)]*\)/i;
-const REGEXP_VARNESTED = /(.*?)var\(\s*(--[^\d\s][^\s,)]*)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/i;
+const REGEXP_VARNESTED = /(.*?)var\(\s*(--[^\d\s][^\s,)]*)(?:\s*\)|((?:\s*,(?!\s*(?:var\(|--))(?:\s*[a-z]+\([^)]+\))?[^,)]*)+)\))(.*)/i;
 const REGEXP_EMBASED = /[+-]?[\d.]+(?:em|ch|ex)\b/i;
 const CALC_OPERATION = /\s+([+-]\s+|\s*[*/])/;
 const CALC_PLACEHOLDER = /{(\d+)}/;
@@ -317,6 +317,18 @@ function getContentBoxDimension(element: StyleElement) {
     const { width, height } = element.getBoundingClientRect();
     const style = getStyle(element);
     return { width: Math.max(0, width - getContentBoxWidth(style)), height: Math.max(0, height - getContentBoxHeight(style)) } as Dimension;
+}
+
+function checkSpaceEnd(value: string, index: number) {
+    const length = value.length;
+    if (index < length - 1) {
+        for (let i = index + 1; i < length; ++i) {
+            if (!isSpace(value[i])) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 const getFallbackResult = (options: Undef<UnitOptions>, value: number) => options && options.fallback !== undefined ? options.fallback : value;
@@ -1214,12 +1226,36 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
 }
 
 export function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration) {
-    let match: Null<RegExpMatchArray>;
+    let match: Null<RegExpExecArray>;
     while (match = REGEXP_VARNESTED.exec(value)) {
-        let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
-        const fallback = match[3];
-        if (fallback && (!propertyValue || isLength(fallback, true) && !isLength(propertyValue, true) || !isNaN(+fallback) && isNaN(+propertyValue) || parseColor(fallback) && !parseColor(propertyValue))) {
-            propertyValue = fallback.trim();
+        let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim(),
+            fallback = match[3];
+        if (fallback) {
+            const segments = splitEnclosing(fallback);
+            const length = segments.length;
+            let template: Undef<string[]>;
+            if (length > 1) {
+                for (let i = 1, j = 0; i < length; i += 2) {
+                    (template ||= []).push(segments[i]);
+                    segments[i] = `{{${j++}}}`;
+                }
+                fallback = segments.join('');
+            }
+            splitSome(fallback, other => {
+                if (template) {
+                    const index = /{{(\d+)}}/.exec(other);
+                    if (index) {
+                        other = other.replace(`{{${index[1]}}}`, template[+index[1]]);
+                    }
+                }
+                if (!propertyValue) {
+                    propertyValue = other;
+                }
+                else if (!isNaN(+other) && isNaN(+propertyValue) || isLength(other, true) && !isLength(propertyValue, true) || parseColor(other) && !parseColor(propertyValue)) {
+                    propertyValue = other;
+                    return true;
+                }
+            });
         }
         if (!propertyValue) {
             return '';
@@ -2089,7 +2125,7 @@ export function isTime(value: string) {
 export function asPercent(value: unknown) {
     if (typeof value === 'string') {
         const index = value.lastIndexOf('%');
-        if (index !== -1) {
+        if (index !== -1 && checkSpaceEnd(value, index)) {
             return +value.substring(0, index) / 100;
         }
     }
@@ -2103,7 +2139,7 @@ export function isPercent(value: unknown) {
 export function asPx(value: unknown) {
     if (typeof value === 'string') {
         const index = value.lastIndexOf('x');
-        if (index !== -1 && value[index - 1] === 'p') {
+        if (index !== -1 && value[index - 1] === 'p' && checkSpaceEnd(value, index)) {
             return +value.substring(0, index - 1);
         }
     }

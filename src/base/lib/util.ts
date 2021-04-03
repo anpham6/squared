@@ -429,7 +429,7 @@ export function randomUUID(separator = '-') {
 export function upperCaseString(value: string) {
     const pattern = /\b([a-z])/g;
     let result: Undef<string[]>,
-        match: Null<RegExpMatchArray>;
+        match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
         (result ||= value.split(''))[match.index!] = match[1][0].toUpperCase();
     }
@@ -439,7 +439,7 @@ export function upperCaseString(value: string) {
 export function lowerCaseString(value: string) {
     const entities: string[] = [];
     const pattern = /&#?[A-Za-z\d]+?;/g;
-    let match: Null<RegExpMatchArray>;
+    let match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
         entities.push(match[0]);
     }

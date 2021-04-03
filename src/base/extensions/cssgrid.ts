@@ -346,7 +346,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const direction = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = direction;
                 let i = 1,
-                    match: Null<RegExpMatchArray>;
+                    match: Null<RegExpExecArray>;
                 while (match = REGEXP_NAMED.exec(value)) {
                     const command = match[1];
                     switch (index) {
@@ -372,8 +372,8 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                                 if (iterations) {
                                     const repeating: RepeatItem[] = [];
-                                    let subMatch: Null<RegExpMatchArray>,
-                                        namedMatch: Null<RegExpMatchArray>;
+                                    let subMatch: Null<RegExpExecArray>,
+                                        namedMatch: Null<RegExpExecArray>;
                                     while (subMatch = REGEXP_REPEAT.exec(match[3])) {
                                         if (namedMatch = REGEXP_CELL_NAMED.exec(subMatch[1])) {
                                             const subName = namedMatch[1];

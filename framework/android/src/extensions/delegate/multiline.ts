@@ -214,7 +214,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 textContent = seg.textContent;
             }
             const words: string[] = [];
-            let match: Null<RegExpMatchArray>;
+            let match: Null<RegExpExecArray>;
             while (match = REGEXP_WORD.exec(textContent)) {
                 words.push(match[0]);
             }

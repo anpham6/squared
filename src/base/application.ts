@@ -532,8 +532,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
                 const cssStyle = item.style;
-                const hasExactValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                const hasPartialValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
+                const hasExactValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*[;}]`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
@@ -561,7 +560,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                         for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE)) {
                                             const css = CSS_SHORTHANDNONE[name];
                                             if ((css.value as string[]).includes(baseAttr)) {
-                                                if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                                if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && new RegExp(`[^-]${css.name!}\\s*:[^;}]*?initial\\b`).test(cssText) || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
                                                     break required;
                                                 }
                                                 break;

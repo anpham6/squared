@@ -16,9 +16,11 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const { asPercent, hasCalc, isAngle, hasCustomProperty, isPercent, parseAngle, parseVar } = squared.lib.css;
+const { STRING } = squared.lib.regex;
+
+const { asPercent, hasCalc, isAngle, hasCustomProperty, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertCamelCase, convertWord, iterateArray, splitPairEnd, startsWith } = squared.lib.util;
+const { convertCamelCase, convertWord, iterateArray, splitEnclosing, splitPairEnd, startsWith } = squared.lib.util;
 
 const { getKeyframesRules } = squared.base.lib.css;
 
@@ -33,6 +35,8 @@ const ANIMATION_DEFAULT = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
+
+const REGEXP_PERCENT = new RegExp(STRING.PERCENT, 'g');
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
@@ -194,8 +198,18 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         const data = keyframes[percent];
                         for (const attr in data) {
                             let value = data[attr]!;
-                            if (isPercent(value)) {
-                                value = `calc(${value})`;
+                            if (value.includes('%')) {
+                                const segments = splitEnclosing(value);
+                                let match: Null<RegExpExecArray>;
+                                for (let j = 0; j < segments.length; j += 2) {
+                                    let current = segments[j];
+                                    while (match = REGEXP_PERCENT.exec(segments[j])) {
+                                        current = current.replace(match[0], `calc(${match[0]})`);
+                                    }
+                                    segments[j] = current;
+                                    REGEXP_PERCENT.lastIndex = 0;
+                                }
+                                value = segments.join('');
                             }
                             if (hasCalc(value)) {
                                 value = calculateStyle(element, convertCamelCase(attr), value);
