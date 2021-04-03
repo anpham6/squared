@@ -1813,9 +1813,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             case CONTAINER_TAGNAME.EDIT:
                 if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                    const id = node.elementId;
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling && sibling.visible && sibling.pageFlow) {
-                            const id = node.elementId;
                             if (id && id === sibling.toElementString('htmlFor')) {
                                 sibling.android('labelFor', node.documentId);
                                 return true;

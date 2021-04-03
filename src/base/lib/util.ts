@@ -1,4 +1,4 @@
-const { endsWith, escapePattern, hasValue, isObject, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
+const { endsWith, escapePattern, hasValue, isObject, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
     constructor(source: string, flags: string, public negate: boolean) {
@@ -587,51 +587,4 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
             return '\\\\' + String.fromCharCode(+match[1]);
         }) + '$';
     return new GlobExp(source, flags, value[0] === '!') as IGlobExp;
-}
-
-export function parseTask(value: Undef<string>) {
-    if (value) {
-        const result: TaskAction[] = [];
-        splitSome(value, item => {
-            const [handler, command] = splitPair(item, ':', true);
-            if (handler && command) {
-                const [task, preceding] = splitPair(command, ':', true);
-                result.push({ handler, task, preceding: preceding === 'true' });
-            }
-        }, '+');
-        return result;
-    }
-}
-
-export function parseWatchInterval(value: Undef<string>) {
-    if (value && (value = value.trim())) {
-        if (value === 'true') {
-            return true;
-        }
-        const match = /^(?:^|\s+)(~|\d+)(?:\s*::\s*(~|.+?)(?:\s*::\s*(.+?)(?:\[([^\]]+)\])?)?)?(?:\s+|$)$/.exec(value);
-        if (match) {
-            let interval: Undef<number>,
-                expires: Undef<string>,
-                reload: Undef<WatchReload>;
-            if (match[1] !== '~' && !isNaN(+match[1])) {
-                interval = +match[1];
-            }
-            if (match[2]) {
-                if (match[2] !== '~') {
-                    expires = match[2].trim();
-                }
-                if (match[3]) {
-                    const [socketId, port] = splitPair(match[3], ':', true, true);
-                    let secure: Undef<boolean>,
-                        module: Undef<boolean>;
-                    if (match[4]) {
-                        secure = match[4].includes('secure');
-                        module = match[4].includes('module');
-                    }
-                    reload = { socketId: socketId !== '~' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
-                }
-            }
-            return { interval, expires, reload } as WatchInterval;
-        }
-    }
 }

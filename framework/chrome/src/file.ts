@@ -25,7 +25,8 @@ const { DOM } = squared.base.lib.regex;
 const { createElement } = squared.lib.dom;
 const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
-const { appendSeparator, fromMimeType, parseMimeType, parseTask, parseWatchInterval, randomUUID, trimEnd } = squared.base.lib.util;
+const { parseTask, parseWatchInterval } = squared.base.lib.internal;
+const { appendSeparator, fromMimeType, parseMimeType, randomUUID, trimEnd } = squared.base.lib.util;
 
 const FILENAME_MAP = new WeakMap<ChromeAsset, string>();
 let BUNDLE_ID = 0;

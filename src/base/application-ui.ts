@@ -512,7 +512,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                             tagName = '#' + id;
                         }
-                        removeStyle = insertStyleSheetRule(`${tagName + item.pseudoElt!} { display: none !important; }`, item.shadowHost);
+                        removeStyle = insertStyleSheetRule(tagName + item.pseudoElt + ' { display: none !important; }', item.shadowHost);
                     }
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.push([item, previousId, removeStyle]);

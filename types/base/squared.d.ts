@@ -899,6 +899,11 @@ declare module "base" {
             function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontSize?: number): Undef<ImageSrcSet[]>;
         }
 
+        namespace internal {
+            function parseTask(value: Undef<string>): Undef<TaskAction[]>;
+            function parseWatchInterval(value: Undef<string>): Undef<WatchInterval>;
+        }
+
         namespace regex {
             const STRING: {
                 CSS_COLOR: RegExp;
@@ -930,8 +935,6 @@ declare module "base" {
             function trimEnd(value: string, pattern: string): string;
             function flatArray<T>(list: unknown[], depth?: number): T[];
             function parseGlob(value: string, options?: ParseGlobOptions): IGlobExp;
-            function parseTask(value: Undef<string>): Undef<TaskAction[]>;
-            function parseWatchInterval(value: Undef<string>): Undef<WatchInterval>;
         }
     }
 }

@@ -29,6 +29,7 @@ import WhiteSpace from './extensions/whitespace';
 import * as constant from './lib/constant';
 import * as css from './lib/css';
 import * as dom from './lib/dom';
+import * as internal from './lib/internal';
 import * as regex from './lib/regex';
 import * as util from './lib/util';
 
@@ -49,6 +50,7 @@ const lib = {
     constant,
     css,
     dom,
+    internal,
     regex,
     util
 };
