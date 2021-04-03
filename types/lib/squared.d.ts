@@ -341,7 +341,7 @@ declare module "lib" {
         function lastItemOf<T>(value: ArrayLike<T>): Undef<T>;
         function minMaxOf<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, number>, operator: ">" | "<" | ">=" | "<=", limiter?: number): [Null<T>, number];
         function hasBit(value: number, offset: number): boolean;
-        function isNumber(value: string): boolean;
+        function isNumber(value: unknown): boolean;
         function isString(value: unknown): value is string;
         function isArray<T>(value: unknown): value is Array<T>;
         function isObject<T = PlainObject>(value: unknown): value is T;

@@ -8,7 +8,7 @@ import { concatString, parseColor } from './lib/util';
 const { PROTOCOL } = squared.lib.regex.FILE;
 
 const { extractURL } = squared.lib.css;
-const { endsWith, fromLastIndexOf, isNumber, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith } = squared.lib.util;
+const { endsWith, fromLastIndexOf, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith } = squared.lib.util;
 
 const { getSrcSet } = squared.base.lib.dom;
 const { trimString } = squared.base.lib.util;
@@ -132,7 +132,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public static addString(resourceId: number, value: string, name?: string, numberAlias?: boolean) {
         const stored = this.STORED[resourceId];
         if (stored && value) {
-            const numeric = isNumber(value);
+            const numeric = !isNaN(+value);
             if (!numeric || numberAlias) {
                 for (const data of stored.strings) {
                     if (data[1] === value) {

@@ -417,7 +417,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 }
                 if (!result) {
-                    if (isNumber(name)) {
+                    if (!isNaN(+name)) {
                         name = '__' + name;
                     }
                     let i = 0;
@@ -735,7 +735,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 case 'OPTION': {
                     const value = item.text.trim() || item.value.trim();
                     if (value) {
-                        if (numberArray && !isNumber(value)) {
+                        if (numberArray && isNaN(+value)) {
                             numberArray = false;
                         }
                         result.push(value);

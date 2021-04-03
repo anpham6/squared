@@ -7,7 +7,7 @@ import { getDeviceDPI } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
-import { endsWith, escapePattern, isNumber, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, startsWith } from './util';
+import { endsWith, escapePattern, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, startsWith } from './util';
 
 import Pattern from './base/pattern';
 
@@ -56,9 +56,9 @@ const REGEXP_CALC = /^(?:c(?:alc|lamp)|m(?:in|ax))\((.+)\)$/i;
 const REGEXP_CALCWITHIN = /\b(?:c(?:alc|lamp)|m(?:in|ax))\(/i;
 const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${STRING.CSS_CALCUNIT},|(clamp)\\(\\s*${STRING.CSS_CALCUNIT},\\s*${STRING.CSS_CALCUNIT},|\\()\\s*${STRING.CSS_CALCUNIT}\\)(\\s*)`, 'i');
 const REGEXP_CALCENCLOSING = /c(?:alc|lamp)|m(?:in|ax)/gi;
-const REGEXP_VAR = /^var\(\s*--.+\)$/i;
-const REGEXP_VARWITHIN = /var\(\s*--[\w-]+[^)]*\)/i;
-const REGEXP_VARNESTED = /(.*?)var\(\s*(--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/i;
+const REGEXP_VAR = /^(?:^|\s+)var\(\s*--[^\d\s][^\s]*\s*\)(?:$|\s+)$/i;
+const REGEXP_VARWITHIN = /var\(\s*--[^\d\s][^)]*\)/i;
+const REGEXP_VARNESTED = /(.*?)var\(\s*(--[^\d\s][^\s]*)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/i;
 const REGEXP_EMBASED = /[+-]?[\d.]+(?:em|ch|ex)\b/i;
 const CALC_OPERATION = /\s+([+-]\s+|\s*[*/])/;
 const CALC_PLACEHOLDER = /{(\d+)}/;
@@ -262,13 +262,13 @@ function checkCalculateNumber(operand: Undef<string>, operator: Undef<string>) {
         switch (operator) {
             case '+':
             case '-':
-                if (isNumber(operand)) {
+                if (!isNaN(+operand)) {
                     return false;
                 }
                 break;
             case '*':
             case '/':
-                if (!isNumber(operand)) {
+                if (isNaN(+operand)) {
                     return false;
                 }
                 break;
@@ -1218,7 +1218,7 @@ export function parseVar(element: StyleElement, value: string, style?: CSSStyleD
     while (match = REGEXP_VARNESTED.exec(value)) {
         let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
         const fallback = match[3];
-        if (fallback && (!propertyValue || isLength(fallback, true) && !isLength(propertyValue, true) || isNumber(fallback) && !isNumber(propertyValue) || parseColor(fallback) && !parseColor(propertyValue))) {
+        if (fallback && (!propertyValue || isLength(fallback, true) && !isLength(propertyValue, true) || !isNaN(+fallback) && isNaN(+propertyValue) || parseColor(fallback) && !parseColor(propertyValue))) {
             propertyValue = fallback.trim();
         }
         if (!propertyValue) {

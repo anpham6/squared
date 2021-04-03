@@ -14,7 +14,7 @@ const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemS
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
+const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
 
 const TEXT_STYLE: CssStyleAttr[] = [
     'fontFamily',
@@ -513,7 +513,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                                     }
                                     break;
                                 default:
-                                    if (isNumber(placement)) {
+                                    if (!isNaN(+placement)) {
                                         if (placement !== index.toString()) {
                                             return false;
                                         }

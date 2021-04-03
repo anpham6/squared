@@ -405,10 +405,10 @@ export function hasBit(value: number, offset: number) {
     return (value & offset) === offset;
 }
 
-export function isNumber(value: string) {
+export function isNumber(value: unknown) {
     switch (typeof value) {
         case 'string':
-            return !isNaN(+value);
+            return value !== '' && !isNaN(+value);
         case 'number':
             return true;
         default:
