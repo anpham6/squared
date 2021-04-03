@@ -1,6 +1,7 @@
 /* eslint no-shadow: "off" */
 
 type FileActionResult = Promise<Void<ResponseData>>;
+type AppSessionSelectorCallback = (sessionId: string, cssText: string, selector: string, hostElement?: Element) => void;
 
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
@@ -61,7 +62,8 @@ declare module "base" {
 
     interface AppSession<T extends Node> {
         active: Map<string, AppProcessing<T>>;
-        unusedStyles?: boolean;
+        usedSelector?: AppSessionSelectorCallback;
+        unusedSelector?: AppSessionSelectorCallback;
     }
 
     interface AppProcessing<T extends Node> {
@@ -76,7 +78,6 @@ declare module "base" {
         node: Null<T>;
         documentElement: Null<T>;
         afterInsertNode?: Extension<T>[];
-        unusedStyles?: Set<string>;
     }
 
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {

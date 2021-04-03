@@ -6,6 +6,13 @@
     <title>https://github.com/anpham6/squared-apache</title>
     <link rel="stylesheet" type="text/css" href="/common/css/dev.css">
     <style data-chrome-file="exportAs:common/dev1.css::minify">
+        :root {
+            --transparency1: 1;
+            --transparency2: 0;
+            --color1: darkgrey;
+            --color2: blue1;
+            --color3: yellow;
+        }
         section {
             display: block;
         }
@@ -20,7 +27,7 @@
             display: block;
         }
         .data-uri, section {
-            background-color: darkgrey;
+            background-color: var(--color2, var(--color1));
         }
         section, .data-uri {
             background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAmVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjHWqVAAAAMnRSTlMADe6qwJnHFORZVBEJloOAUQX2ZsSfaQLMmhzp0ib689zOu3lyQjEs8KKJ5tWxkF46B8fHT9kAAAHVSURBVEjH3ZbZkqowEIZ/ICwCsi8Coo6jjnpmO/3+D3cOFhMgYZmquZvvwlR16quk204Cfjmm7Wlss2GaF5j4BkpmUI8kVpYE70oCqj8r2X9oBMvGFG5KExTuRNYGTWI4o8aWZtiakHANmsWQ95bSAgUEVrSIUDdlUF2LafqD10FUQR+PONF7ffbjEAjiNxrgDxZReXx3xgcRsRCXSOyD/jIZcdZwq2Y8Ac8kEKOjV+BPXB7jATBFJQGnP6egpgcvgCo6TteN1GEi3FNDgDx6LLep+GQg1ItHdWpY4dKOaz7pcUXrN0aIOmoq95IfJUXjCqMemoKzRdUqT0lSGFeehuUvTlkJ3EhWniSls4CyrVpLJihMVPYhQjaiMCn9jgwI10RXVVVt3P//RkL6HvXYvZ3OJRpOUi7+6F+plWF2rGj3DEAXlWCsYW5wk9b9i1JUHHASnrfS9a8OWES0PVojbYmYb6tXiyhEJTW/fMRSdKvs88vMEYPfRg85lNcvPT/OHGQoVhd23q/NtgrzRjRyXch1Tksgrz9r5+NAQwIIFHxqk97vBYtIQP/5Bbt8jTsYwVl8LGRcfcrQXUxhW0sPn4ziq4vPqyzFifSIL+ME/FPBwe/mH3xs3y1ExMGAAAAAAElFTkSuQmCC");
@@ -44,7 +51,7 @@
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {
             squared.setFramework(chrome);
-            squared.saveAs('index.zip', { removeUnusedClasses: true, removeUnusedSelectors: true, retainUsedStyles: ['a:visited'], saveAs: { image: { pathname: 'images', blob: true } } });
+            squared.saveAs('index.zip', { removeUnusedClasses: true, removeUnusedSelectors: true, removeUnusedVariables: true, retainUsedStyles: ['a:visited', '--transparency2'], saveAs: { image: { pathname: 'images', blob: true } } });
         });
     </script>
 </head>

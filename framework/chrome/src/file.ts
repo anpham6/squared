@@ -783,6 +783,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         data.baseUrl = options.baseUrl;
         data.dataSource = options.dataSource;
         data.templateMap = options.templateMap;
+        data.usedVariables = options.usedVariables;
         data.unusedStyles = options.unusedStyles;
         data.productionRelease = productionRelease;
         let watchElement: Undef<HTMLElement>;

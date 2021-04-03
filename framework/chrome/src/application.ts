@@ -2,8 +2,12 @@ import type Extension from './extension';
 
 import File from './file';
 
+type CssValueMap = ObjectMap<Undef<Set<string>>>;
+
 const { UNABLE_TO_FINALIZE_DOCUMENT, reject } = squared.lib.error;
 const { escapePattern, isPlainObject } = squared.lib.util;
+
+const REGEXP_VARNAME = /var\(\s*(--[^\d\s][^\s,)]*)/g;
 
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public userSettings!: UserResourceSettings;
@@ -11,8 +15,26 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly extensions: Extension<T>[] = [];
     public readonly systemName = 'chrome';
 
+    private _cssUsedVariables: CssValueMap = {};
+    private _cssUnusedSelectors: CssValueMap = {};
+
     public init() {
-        this.session.unusedStyles = true;
+        this.session.usedSelector = function(this: Application<T>, sessionId: string, cssText: string) {
+            let usedVariables: Undef<Set<string>>,
+                match: Null<RegExpExecArray>;
+            while (match = REGEXP_VARNAME.exec(cssText)) {
+                if (!usedVariables) {
+                    usedVariables = this._cssUsedVariables[sessionId] ||= new Set();
+                }
+                usedVariables.add(match[1]);
+            }
+            REGEXP_VARNAME.lastIndex = 0;
+        };
+        this.session.unusedSelector = function(this: Application<T>, sessionId: string, cssText: string, selector: string, hostElement?: Element) {
+            if (!hostElement) {
+                (this._cssUnusedSelectors[sessionId] ||= new Set()).add(selector);
+            }
+        };
     }
 
     public insertNode(processing: squared.base.AppProcessing<T>, element: Element) {
@@ -42,17 +64,23 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (!result) {
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
-        const { resourceId, unusedStyles } = this.getProcessing(result.sessionId)!;
+        const sessionId = result.sessionId;
+        const resourceId = this.getProcessing(sessionId)!.resourceId;
         const dataSource: [HTMLElement, DataSource][] = [];
         const assetMap = new Map<HTMLElement, AssetCommand>();
         const nodeMap = new Map<XmlNode, HTMLElement>();
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
-        if (unusedStyles) {
+        const usedVariables = options.removeUnusedVariables && this._cssUsedVariables[sessionId];
+        const unusedSelectors = this._cssUnusedSelectors[sessionId];
+        if (usedVariables) {
+            options.usedVariables = Array.from(usedVariables).concat(options.retainUsedStyles?.filter(value => value.startsWith('--')) || []);
+        }
+        if (unusedSelectors) {
             const { removeUnusedClasses, removeUnusedSelectors, retainUsedStyles } = options;
             if (removeUnusedClasses || removeUnusedSelectors) {
                 const styles: string[] = [];
-                for (const value of unusedStyles) {
+                for (const value of unusedSelectors) {
                     if ((value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.includes(value))) {
                         styles.push(value);
                     }

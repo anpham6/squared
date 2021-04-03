@@ -606,7 +606,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     REGEXP_IMPORTANT.lastIndex = 0;
                 }
-                let processing: Undef<squared.base.AppProcessing<T>>;
+                const { usedSelector, unusedSelector } = this.session;
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = splitPair(selectorText, '::');
@@ -649,10 +649,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     const length = elements.length;
                     if (length === 0) {
-                        if (resource && this.session.unusedStyles && !hostElement) {
-                            ((processing ||= this.getProcessing(sessionId)!).unusedStyles ||= new Set()).add(selectorText);
+                        if (unusedSelector) {
+                            unusedSelector.call(this, sessionId, cssText, selectorText, hostElement);
                         }
                         continue;
+                    }
+                    else if (usedSelector) {
+                        usedSelector.call(this, sessionId, cssText, selectorText, hostElement);
                     }
                     const attrStyle = 'styleMap' + targetElt;
                     const attrSpecificity = 'styleSpecificity' + targetElt;
