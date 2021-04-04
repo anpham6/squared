@@ -19,12 +19,14 @@ export default class Application<T extends squared.base.Node> extends squared.ba
 
     private _cssUsedVariables: CssValueMap = {};
     private _cssUsedFonts: CssValueMap = {};
+    private _cssUsedKeyframes: CssValueMap = {};
     private _cssUnusedSelectors: CssValueMap = {};
 
     public init() {
         this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
             let usedVariables: Undef<Set<string>>,
                 usedFonts: Undef<Set<string>>,
+                usedKeyframes: Undef<Set<string>>,
                 match: Null<RegExpExecArray>;
             while (match = REGEXP_VARNAME.exec(rule.cssText)) {
                 if (!usedVariables) {
@@ -34,8 +36,20 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             }
             const fontFamily = rule.style.fontFamily;
             if (fontFamily) {
+                if (!usedFonts) {
+                    usedFonts = this._cssUsedFonts[sessionId] ||= new Set();
+                }
                 splitSome(fontFamily, value => {
                     usedFonts!.add(trimBoth(value));
+                });
+            }
+            const animationName = rule.style.animationName;
+            if (animationName) {
+                if (!usedKeyframes) {
+                    usedKeyframes = this._cssUsedKeyframes[sessionId] ||= new Set();
+                }
+                splitSome(animationName, value => {
+                    usedKeyframes!.add(value);
                 });
             }
             REGEXP_VARNAME.lastIndex = 0;
@@ -94,7 +108,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             options.usedVariables = Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('--')) as string[] : []);
         }
         if (options.removeUnusedFonts) {
-            options.usedFonts = Array.from(this._cssUsedFonts[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('|') && value.endsWith('|')).map((value: string) => trimBoth(value, '|')) : []);
+            options.usedFonts = Array.from(this._cssUsedFonts[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('|font:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(5).trim()) : []);
+        }
+        if (options.removeUnusedKeyframes) {
+            options.usedKeyframes = Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('|keyframe:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(9).trim()) : []);
         }
         if (unusedSelectors) {
             const { removeUnusedClasses, removeUnusedSelectors } = options;

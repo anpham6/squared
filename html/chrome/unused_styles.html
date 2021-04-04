@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
-    <title>https://github.com/anpham6/squared-apache</title>
+    <title></title>
     <link rel="stylesheet" type="text/css" href="/common/css/dev.css">
     <style data-chrome-file="exportAs:common/dev1.css::minify">
         :root {
@@ -59,7 +59,33 @@
             src: url('/common/fonts/AlegreyaSansSC-Regular.ttf') format('truetype');
         }
         body {
-            font-family: AlegreyaSansSC, 'Times New Roman';
+            font: 16px AlegreyaSansSC, 'Times New Roman';
+            animation-name: zorro1;
+        }
+        @keyframes zorro1 {
+            from {
+                x: 150;
+            }
+            to {
+                x: 0;
+                y: 150;
+            }
+        }
+        @keyframes zorro2 {
+            from {
+                x: 50%;
+                y: 75;
+            }
+            33% {
+                x: calc(50% + 100px);
+            }
+            66% {
+                x: 0%;
+            }
+            to {
+                x: 50%;
+                y: 75;
+            }
         }
     </style>
     <script src="/dist/squared.js"></script>
@@ -73,7 +99,8 @@
                 removeUnusedSelectors: true,
                 removeUnusedVariables: true,
                 removeUnusedFonts: true,
-                retainUsedStyles: ['a:visited', '--transparency2', '|AlegreyaSans2|'],
+                removeUnusedKeyframes: true,
+                retainUsedStyles: ['a:visited', '--transparency2', '|font:AlegreyaSans2|', '|keyframe:AlegreyaSans2|'],
                 saveAs: { image: { pathname: 'images', blob: true } } }
             );
         });

@@ -7,6 +7,7 @@ interface RequestData extends CssSelectorData {
 interface CssSelectorData {
     usedVariables?: string[];
     usedFonts?: string[];
+    usedKeyframes?: string[];
     unusedStyles?: string[];
 }
 
