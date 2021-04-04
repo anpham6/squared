@@ -59,8 +59,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 (this._cssUnusedSelectors[sessionId] ||= new Set()).add(selector);
             }
         };
-        this.session.unusedMediaQuery = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, conditionText: string) {
-            (this._cssUnusedMediaQueries[sessionId] ||= new Set()).add(conditionText);
+        this.session.unusedMediaQuery = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) {
+            if (!hostElement) {
+                (this._cssUnusedMediaQueries[sessionId] ||= new Set()).add(condition);
+            }
         };
     }
 

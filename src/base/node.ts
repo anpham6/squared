@@ -1644,8 +1644,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public parseUnit(value: unknown, options?: NodeParseUnitOptions) {
-        if (typeof value !== 'string') {
-            return options && options.fallback !== undefined ? options.fallback : 0;
+        switch (typeof value) {
+            case 'string':
+                break;
+            case 'number':
+                return value;
+            default:
+                return options && options.fallback !== undefined ? options.fallback : 0;
         }
         let n = asPx(value);
         if (!isNaN(n)) {
@@ -1663,9 +1668,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return parseUnit(value, options);
     }
 
-    public convertUnit(value: unknown, unit: string, options?: NodeConvertUnitOptions) {
-        let result = typeof value === 'number' ? value : this.parseUnit(value, options);
-        if (unit === 'percent' || unit === '%') {
+    public convertUnit(value: unknown, unit = 'px', options?: NodeConvertUnitOptions) {
+        let result = this.parseUnit(value, options);
+        if (unit === '%' || unit === 'percent') {
             result *= 100 / getBoundsSize(this, options);
             return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
         }

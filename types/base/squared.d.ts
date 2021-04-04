@@ -2,7 +2,7 @@
 
 type FileActionResult = Promise<Void<ResponseData>>;
 type AppSessionSelectorCallback = (sessionId: string, rule: CSSStyleRule, selector: string, hostElement?: Element) => void;
-type AppSessionConditionCallback = (sessionId: string, rule: CSSConditionRule, conditionText: string) => void;
+type AppSessionConditionCallback = (sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) => void;
 
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
@@ -448,7 +448,7 @@ declare module "base" {
         cssTryAll(attrs: CssStyleMap, callback?: FunctionSelf<this>): CssStyleMap | boolean;
         cssFinally(attrs: CssStyleAttr | CssStyleMap): void;
         parseUnit(value: unknown, options?: NodeParseUnitOptions): number;
-        convertUnit(value: unknown, unit: string, options?: NodeConvertUnitOptions): string;
+        convertUnit(value: unknown, unit?: string, options?: NodeConvertUnitOptions): string;
         has(attr: CssStyleAttr, options?: HasOptions): boolean;
         hasUnit(attr: CssStyleAttr, options?: HasUnitOptions): boolean;
         toInt(attr: CssStyleAttr, fallback?: number, options?: CssInitialOptions): number;

@@ -178,7 +178,7 @@ declare module "lib" {
         function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration): string;
         function calculateUnit(value: string, options?: CalculateOptions): number;
         function parseUnit(value: string, options?: ParseUnitOptions): number;
-        function convertUnit(value: NumString, unit: string, options?: ConvertUnitOptions): string;
+        function convertUnit(value: NumString, unit?: string, options?: ConvertUnitOptions): string;
         function parseTransform(value: string, options?: TransformOptions): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
         function convertAngle(value: string, unit?: string, fallback?: number): number;

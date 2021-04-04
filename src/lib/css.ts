@@ -1760,7 +1760,7 @@ export function parseUnit(value: string, options?: ParseUnitOptions) {
     return getFallbackResult(options, 0);
 }
 
-export function convertUnit(value: NumString, unit: string, options?: ConvertUnitOptions) {
+export function convertUnit(value: NumString, unit = 'px', options?: ConvertUnitOptions) {
     let result = parseUnit('1' + unit, options);
     if (result) {
         result = (typeof value === 'string' ? parseUnit(value, options) : value) / result;

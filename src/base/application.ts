@@ -729,7 +729,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
                                 const unusedMediaQuery = this.session.unusedMediaQuery;
                                 if (unusedMediaQuery) {
-                                    unusedMediaQuery.call(this, sessionId, rule as CSSConditionRule, conditionText);
+                                    unusedMediaQuery.call(this, sessionId, rule as CSSConditionRule, conditionText, (documentRoot as ShadowRoot).host);
                                 }
                             }
                             break;
@@ -743,7 +743,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
                                 const unusedSupportedCss = this.session.unusedSupportedCss;
                                 if (unusedSupportedCss) {
-                                    unusedSupportedCss.call(this, sessionId, rule as CSSConditionRule, conditionText);
+                                    unusedSupportedCss.call(this, sessionId, rule as CSSConditionRule, conditionText, (documentRoot as ShadowRoot).host);
                                 }
                             }
                             break;
