@@ -2,6 +2,7 @@
 
 type FileActionResult = Promise<Void<ResponseData>>;
 type AppSessionSelectorCallback = (sessionId: string, rule: CSSStyleRule, selector: string, hostElement?: Element) => void;
+type AppSessionConditionCallback = (sessionId: string, rule: CSSConditionRule, conditionText: string) => void;
 
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {
@@ -64,6 +65,8 @@ declare module "base" {
         active: Map<string, AppProcessing<T>>;
         usedSelector?: AppSessionSelectorCallback;
         unusedSelector?: AppSessionSelectorCallback;
+        unusedMediaQuery?: AppSessionConditionCallback;
+        unusedSupportedCss?: AppSessionConditionCallback;
     }
 
     interface AppProcessing<T extends Node> {

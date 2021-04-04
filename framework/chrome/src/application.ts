@@ -24,6 +24,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
 
     public init() {
         this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
+            const { fontFamily, animationName } = rule.style;
             let usedVariables: Undef<Set<string>>,
                 usedFonts: Undef<Set<string>>,
                 usedKeyframes: Undef<Set<string>>,
@@ -34,7 +35,6 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 }
                 usedVariables.add(match[1]);
             }
-            const fontFamily = rule.style.fontFamily;
             if (fontFamily) {
                 if (!usedFonts) {
                     usedFonts = this._cssUsedFonts[sessionId] ||= new Set();
@@ -43,7 +43,6 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     usedFonts!.add(trimBoth(value));
                 });
             }
-            const animationName = rule.style.animationName;
             if (animationName) {
                 if (!usedKeyframes) {
                     usedKeyframes = this._cssUsedKeyframes[sessionId] ||= new Set();

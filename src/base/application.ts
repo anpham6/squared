@@ -711,7 +711,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.FONT_FACE_RULE:
                             this.applyStyleRule(sessionId, resourceId, rule as CSSStyleRule, documentRoot, queryRoot);
                             break;
-                        case CSSRule.IMPORT_RULE: {
+                        case CSSRule.IMPORT_RULE:
                             if (resource) {
                                 const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href);
                                 if (uri) {
@@ -720,23 +720,34 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                             this.applyStyleSheet(sessionId, resourceId, (rule as CSSImportRule).styleSheet, documentRoot, queryRoot);
                             break;
+                        case CSSRule.MEDIA_RULE: {
+                            const conditionText = (rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText);
+                            if (window.matchMedia(conditionText).matches) {
+                                this.applyCssRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules, documentRoot, queryRoot);
+                            }
+                            else {
+                                this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
+                                const unusedMediaQuery = this.session.unusedMediaQuery;
+                                if (unusedMediaQuery) {
+                                    unusedMediaQuery.call(this, sessionId, rule as CSSConditionRule, conditionText);
+                                }
+                            }
+                            break;
                         }
-                        case CSSRule.MEDIA_RULE:
-                            if (window.matchMedia((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText)).matches) {
+                        case CSSRule.SUPPORTS_RULE: {
+                            const conditionText = (rule as CSSConditionRule).conditionText || parseConditionText('supports', rule.cssText);
+                            if (CSS.supports(conditionText)) {
                                 this.applyCssRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules, documentRoot, queryRoot);
                             }
                             else {
                                 this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
+                                const unusedSupportedCss = this.session.unusedSupportedCss;
+                                if (unusedSupportedCss) {
+                                    unusedSupportedCss.call(this, sessionId, rule as CSSConditionRule, conditionText);
+                                }
                             }
                             break;
-                        case CSSRule.SUPPORTS_RULE:
-                            if (CSS.supports((rule as CSSConditionRule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCssRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules, documentRoot, queryRoot);
-                            }
-                            else {
-                                this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
-                            }
-                            break;
+                        }
                         case CSSRule.KEYFRAMES_RULE:
                             if (resource) {
                                 resource.parseKeyFrames(resourceId, rule as CSSKeyframesRule);
