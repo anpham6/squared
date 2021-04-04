@@ -628,7 +628,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             saveAsImage = options.saveAs?.image;
         }
         const result: ChromeAsset[] = [];
-        document.querySelectorAll('img, input[type=image], picture > source[src]').forEach((element: HTMLImageElement | HTMLSourceElement | HTMLVideoElement) => {
+        document.querySelectorAll('img, input[type=image], picture > source[src], video[poster]').forEach((element: HTMLImageElement | HTMLSourceElement | HTMLVideoElement) => {
             let src = element instanceof HTMLVideoElement ? element.poster : element.src,
                 mimeType: Undef<string>,
                 base64: Undef<string>;
