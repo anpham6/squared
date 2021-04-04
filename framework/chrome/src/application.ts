@@ -10,7 +10,6 @@ const { escapePattern, isPlainObject, splitSome } = squared.lib.util;
 const { trimBoth } = squared.base.lib.util;
 
 const REGEXP_VARNAME = /var\(\s*(--[^\d\s][^\s,)]*)/g;
-const REGEXP_FONTFAMILY = /font-family:\s*([^;]+);/g;
 
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public userSettings!: UserResourceSettings;
@@ -23,28 +22,25 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     private _cssUnusedSelectors: CssValueMap = {};
 
     public init() {
-        this.session.usedSelector = function(this: Application<T>, sessionId: string, cssText: string) {
+        this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
             let usedVariables: Undef<Set<string>>,
                 usedFonts: Undef<Set<string>>,
                 match: Null<RegExpExecArray>;
-            while (match = REGEXP_VARNAME.exec(cssText)) {
+            while (match = REGEXP_VARNAME.exec(rule.cssText)) {
                 if (!usedVariables) {
                     usedVariables = this._cssUsedVariables[sessionId] ||= new Set();
                 }
                 usedVariables.add(match[1]);
             }
-            while (match = REGEXP_FONTFAMILY.exec(cssText)) {
-                if (!usedFonts) {
-                    usedFonts = this._cssUsedFonts[sessionId] ||= new Set();
-                }
-                splitSome(match[1], value => {
+            const fontFamily = rule.style.fontFamily;
+            if (fontFamily) {
+                splitSome(fontFamily, value => {
                     usedFonts!.add(trimBoth(value));
                 });
             }
             REGEXP_VARNAME.lastIndex = 0;
-            REGEXP_FONTFAMILY.lastIndex = 0;
         };
-        this.session.unusedSelector = function(this: Application<T>, sessionId: string, cssText: string, selector: string, hostElement?: Element) {
+        this.session.unusedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule, selector: string, hostElement?: Element) {
             if (!hostElement) {
                 (this._cssUnusedSelectors[sessionId] ||= new Set()).add(selector);
             }

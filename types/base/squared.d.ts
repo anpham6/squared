@@ -1,7 +1,7 @@
 /* eslint no-shadow: "off" */
 
 type FileActionResult = Promise<Void<ResponseData>>;
-type AppSessionSelectorCallback = (sessionId: string, cssText: string, selector: string, hostElement?: Element) => void;
+type AppSessionSelectorCallback = (sessionId: string, rule: CSSStyleRule, selector: string, hostElement?: Element) => void;
 
 declare module "base" {
     interface FileCopyingOptions extends squared.FileActionOptions {

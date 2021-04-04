@@ -649,12 +649,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const length = elements.length;
                     if (length === 0) {
                         if (unusedSelector) {
-                            unusedSelector.call(this, sessionId, cssText, selectorText, hostElement);
+                            unusedSelector.call(this, sessionId, item, selectorText, hostElement);
                         }
                         continue;
                     }
                     else if (usedSelector) {
-                        usedSelector.call(this, sessionId, cssText, selectorText, hostElement);
+                        usedSelector.call(this, sessionId, item, selectorText, hostElement);
                     }
                     const attrStyle = 'styleMap' + targetElt;
                     const attrSpecificity = 'styleSpecificity' + targetElt;
