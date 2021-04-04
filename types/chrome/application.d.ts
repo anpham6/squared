@@ -15,6 +15,7 @@ interface FileUniversalAttribute extends PlainObject {
     removeUnusedVariables?: boolean;
     removeUnusedFonts?: boolean;
     removeUnusedKeyframes?: boolean;
+    removeUnusedMediaQueries?: boolean;
 }
 
 interface FileActionAttribute extends PlainObject {

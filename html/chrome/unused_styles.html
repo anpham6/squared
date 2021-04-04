@@ -62,6 +62,22 @@
             font: 16px AlegreyaSansSC, 'Times New Roman';
             animation-name: zorro1;
         }
+        @media only screen and (min-width: 100em) {
+            .row-quartet > * {
+                width: 50%;
+            }
+            .subcategory-featured {
+                width: 100%;
+            }
+        }
+        @media only screen and (min-width: 200em) {
+            .row-quartet > * {
+                width: 25%;
+            }
+            .subcategory-featured {
+                width: 50%;
+            }
+        }
         @keyframes zorro1 {
             from {
                 x: 150;
@@ -100,9 +116,10 @@
                 removeUnusedVariables: true,
                 removeUnusedFonts: true,
                 removeUnusedKeyframes: true,
-                retainUsedStyles: ['a:visited', '--transparency2', '|font:AlegreyaSans2|', '|keyframe:AlegreyaSans2|'],
-                saveAs: { image: { pathname: 'images', blob: true } } }
-            );
+                removeUnusedMediaQueries: true,
+                retainUsedStyles: ['a:visited', '--transparency2', '|font-face:AlegreyaSans2|', '|keyframes:zorro1|', '|media:only screen and (min-width: 100em)|'],
+                saveAs: { image: { pathname: 'images', blob: true } }
+            });
         });
     </script>
 </head>

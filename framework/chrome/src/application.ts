@@ -21,6 +21,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     private _cssUsedFonts: CssValueMap = {};
     private _cssUsedKeyframes: CssValueMap = {};
     private _cssUnusedSelectors: CssValueMap = {};
+    private _cssUnusedMediaQueries: CssValueMap = {};
 
     public init() {
         this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
@@ -57,6 +58,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             if (!hostElement) {
                 (this._cssUnusedSelectors[sessionId] ||= new Set()).add(selector);
             }
+        };
+        this.session.unusedMediaQuery = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, conditionText: string) {
+            (this._cssUnusedMediaQueries[sessionId] ||= new Set()).add(conditionText);
         };
     }
 
@@ -102,22 +106,37 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
         const retainUsedStyles = options.retainUsedStyles;
-        const unusedSelectors = this._cssUnusedSelectors[sessionId];
+        const retainUsedStylesValue = retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string') as string[] : [];
         if (options.removeUnusedVariables) {
-            options.usedVariables = Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('--')) as string[] : []);
+            options.usedVariables = Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('--')));
         }
         if (options.removeUnusedFonts) {
-            options.usedFonts = Array.from(this._cssUsedFonts[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('|font:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(5).trim()) : []);
+            options.usedFonts = Array.from(this._cssUsedFonts[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
         }
         if (options.removeUnusedKeyframes) {
-            options.usedKeyframes = Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('|keyframe:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(9).trim()) : []);
+            options.usedKeyframes = Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|keyframes:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
         }
-        if (unusedSelectors) {
-            const { removeUnusedClasses, removeUnusedSelectors } = options;
-            if (removeUnusedClasses || removeUnusedSelectors) {
+        if (options.removeUnusedMediaQueries) {
+            const unusedMediaQueries = this._cssUnusedMediaQueries[sessionId];
+            if (unusedMediaQueries) {
+                const queries: string[] = [];
+                const exclusions = retainUsedStylesValue.filter(value => value.startsWith('|media:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(6).trim());
+                for (const value of unusedMediaQueries) {
+                    if (!exclusions.includes(value)) {
+                        queries.push(value);
+                    }
+                }
+                if (queries.length) {
+                    options.unusedMediaQueries = queries;
+                }
+            }
+        }
+        if (options.removeUnusedClasses || options.removeUnusedSelectors) {
+            const unusedSelectors = this._cssUnusedSelectors[sessionId];
+            if (unusedSelectors) {
                 const styles: string[] = [];
                 for (const value of unusedSelectors) {
-                    if ((value.includes(':') ? removeUnusedSelectors : removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.find(pattern => typeof pattern === 'string' ? pattern === value : pattern.test(value)))) {
+                    if ((value.includes(':') ? options.removeUnusedSelectors : options.removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.find(pattern => typeof pattern === 'string' ? pattern === value : pattern.test(value)))) {
                         styles.push(value);
                     }
                 }
