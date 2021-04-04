@@ -629,7 +629,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             saveAsImage = options.saveAs?.image;
         }
         const result: ChromeAsset[] = [];
-        document.querySelectorAll('img, input[type=image], picture > source[src]').forEach((element: HTMLImageElement | HTMLSourceElement | HTMLVideoElement) => {
+        document.querySelectorAll('img, input[type=image], picture > source[src], video[poster]').forEach((element: HTMLImageElement | HTMLSourceElement | HTMLVideoElement) => {
             let src = element instanceof HTMLVideoElement ? element.poster : element.src,
                 mimeType: Undef<string>,
                 base64: Undef<string>;
@@ -784,6 +784,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         data.dataSource = options.dataSource;
         data.templateMap = options.templateMap;
         data.usedVariables = options.usedVariables;
+        data.usedFonts = options.usedFonts;
         data.unusedStyles = options.unusedStyles;
         data.productionRelease = productionRelease;
         let watchElement: Undef<HTMLElement>;
@@ -986,8 +987,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             };
             for (const [element, siblings] of appendMap) {
                 const node = File.createTagNode(element, domAll, cache);
-                const command = assetMap?.get(element);
-                const documentData = command?.document;
+                const documentData = assetMap && assetMap.get(element)?.document;
                 const getNextSibling = () => node.index + element.querySelectorAll('*').length + 1;
                 if (!useOriginalHtmlPage) {
                     File.setDocumentId(node, element, documentData);

@@ -431,7 +431,7 @@ export function upperCaseString(value: string) {
     let result: Undef<string[]>,
         match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
-        (result ||= value.split(''))[match.index!] = match[1][0].toUpperCase();
+        (result ||= value.split(''))[match.index] = match[1][0].toUpperCase();
     }
     return result ? result.join('') : value;
 }

@@ -1,9 +1,13 @@
-interface RequestData {
+interface RequestData extends CssSelectorData {
     baseUrl?: string;
     templateMap?: TemplateMap;
-    usedVariables?: string[];
-    unusedStyles?: string[];
     productionRelease?: boolean | string;
+}
+
+interface CssSelectorData {
+    usedVariables?: string[];
+    usedFonts?: string[];
+    unusedStyles?: string[];
 }
 
 interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction, StorageAction {

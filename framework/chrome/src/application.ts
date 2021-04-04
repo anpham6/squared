@@ -5,9 +5,12 @@ import File from './file';
 type CssValueMap = ObjectMap<Undef<Set<string>>>;
 
 const { UNABLE_TO_FINALIZE_DOCUMENT, reject } = squared.lib.error;
-const { escapePattern, isPlainObject } = squared.lib.util;
+const { escapePattern, isPlainObject, splitSome } = squared.lib.util;
+
+const { trimBoth } = squared.base.lib.util;
 
 const REGEXP_VARNAME = /var\(\s*(--[^\d\s][^\s,)]*)/g;
+const REGEXP_FONTFAMILY = /font-family:\s*([^;]+);/g;
 
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public userSettings!: UserResourceSettings;
@@ -16,11 +19,13 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly systemName = 'chrome';
 
     private _cssUsedVariables: CssValueMap = {};
+    private _cssUsedFonts: CssValueMap = {};
     private _cssUnusedSelectors: CssValueMap = {};
 
     public init() {
         this.session.usedSelector = function(this: Application<T>, sessionId: string, cssText: string) {
             let usedVariables: Undef<Set<string>>,
+                usedFonts: Undef<Set<string>>,
                 match: Null<RegExpExecArray>;
             while (match = REGEXP_VARNAME.exec(cssText)) {
                 if (!usedVariables) {
@@ -28,7 +33,16 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 }
                 usedVariables.add(match[1]);
             }
+            while (match = REGEXP_FONTFAMILY.exec(cssText)) {
+                if (!usedFonts) {
+                    usedFonts = this._cssUsedFonts[sessionId] ||= new Set();
+                }
+                splitSome(match[1], value => {
+                    usedFonts!.add(trimBoth(value));
+                });
+            }
             REGEXP_VARNAME.lastIndex = 0;
+            REGEXP_FONTFAMILY.lastIndex = 0;
         };
         this.session.unusedSelector = function(this: Application<T>, sessionId: string, cssText: string, selector: string, hostElement?: Element) {
             if (!hostElement) {
@@ -39,6 +53,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
 
     public reset() {
         this._cssUsedVariables = {};
+        this._cssUsedFonts = {};
         this._cssUnusedSelectors = {};
         super.reset();
     }
@@ -78,10 +93,12 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
         options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
         const retainUsedStyles = options.retainUsedStyles;
-        const usedVariables = options.removeUnusedVariables && this._cssUsedVariables[sessionId];
         const unusedSelectors = this._cssUnusedSelectors[sessionId];
-        if (usedVariables) {
-            options.usedVariables = Array.from(usedVariables).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('--')) as string[] : []);
+        if (options.removeUnusedVariables) {
+            options.usedVariables = Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('--')) as string[] : []);
+        }
+        if (options.removeUnusedFonts) {
+            options.usedFonts = Array.from(this._cssUsedFonts[sessionId] || []).concat(retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string' && value.startsWith('|') && value.endsWith('|')).map((value: string) => trimBoth(value, '|')) : []);
         }
         if (unusedSelectors) {
             const { removeUnusedClasses, removeUnusedSelectors } = options;

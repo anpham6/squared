@@ -13,6 +13,7 @@ interface FileUniversalAttribute extends PlainObject {
     removeUnusedClasses?: boolean;
     removeUnusedSelectors?: boolean;
     removeUnusedVariables?: boolean;
+    removeUnusedFonts?: boolean;
 }
 
 interface FileActionAttribute extends PlainObject {
