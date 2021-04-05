@@ -790,6 +790,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         data.unusedMediaQueries = options.unusedMediaQueries;
         data.unusedSupports = options.unusedSupports;
         data.productionRelease = productionRelease;
+        data.normalizeHtmlOutput = options.normalizeHtmlOutput;
         let watchElement: Undef<HTMLElement>;
         if (!productionRelease && options.watch) {
             const socketMap: ObjectMap<string> = {};

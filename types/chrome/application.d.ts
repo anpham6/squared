@@ -4,9 +4,8 @@ interface UserResourceSettings {
     webSocketSecurePort?: number;
 }
 
-interface FileUniversalAttribute extends PlainObject {
+interface FileUniversalAttribute extends PlainObject, DocumentOutput {
     saveAsWebPage?: boolean;
-    productionRelease?: boolean | string;
     useOriginalHtmlPage?: boolean;
     removeInlineStyles?: boolean;
     retainUsedStyles?: (string | RegExp)[];

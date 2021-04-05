@@ -1,7 +1,11 @@
-interface RequestData extends CssSelectorData {
+interface RequestData extends DocumentOutput, CssSelectorData {
     baseUrl?: string;
     templateMap?: TemplateMap;
+}
+
+interface DocumentOutput {
     productionRelease?: boolean | string;
+    normalizeHtmlOutput?: boolean;
 }
 
 interface CssSelectorData {
