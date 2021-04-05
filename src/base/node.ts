@@ -39,10 +39,11 @@ const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const REGEXP_EM = /\dem$/i;
-const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
+const REGEXP_NOT = /^:not\((.+)\)$/i;
+const REGEXP_ENCLOSING = /^:(not|is|where)\((.+)\)$/i;
 const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
 const REGEXP_NOTINDEX = /:not-(x+)/;
-const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
+const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 
@@ -1746,9 +1747,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const checkNot = (condition: string) => {
                 return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
                     if (b[0] === ':') {
-                        const match = REGEXP_ENCLOSING.exec(b);
-                        if (match && match[1].toLowerCase() === 'not') {
-                            b = parseNot(match[2].trim());
+                        const match = REGEXP_NOT.exec(b);
+                        if (match) {
+                            b = parseNot(match[1].trim());
                         }
                     }
                     return a + b;
