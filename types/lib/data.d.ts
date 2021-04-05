@@ -28,15 +28,15 @@ interface ElementData {
     node?: unknown;
     style?: CSSStyleDeclaration;
     styleMap?: CssStyleMap;
-    styleSpecificity?: ObjectMap<number>;
+    styleSpecificity?: ObjectMap<Undef<number>>;
     'style::before'?: CSSStyleDeclaration;
     'style::after'?: CSSStyleDeclaration;
     'styleMap::before'?: CssStyleMap;
     'styleMap::after'?: CssStyleMap;
     'styleMap::first-letter'?: CssStyleMap;
     'styleMap::first-line'?: CssStyleMap;
-    'styleSpecificity::before'?: ObjectMap<number>;
-    'styleSpecificity::after'?: ObjectMap<number>;
-    'styleSpecificity::first-letter'?: ObjectMap<number>;
-    'styleSpecificity::first-line'?: ObjectMap<number>;
+    'styleSpecificity::before'?: ObjectMap<Undef<number>>;
+    'styleSpecificity::after'?: ObjectMap<Undef<number>>;
+    'styleSpecificity::first-letter'?: ObjectMap<Undef<number>>;
+    'styleSpecificity::first-line'?: ObjectMap<Undef<number>>;
 }

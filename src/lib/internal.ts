@@ -11,6 +11,7 @@ let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
+const SELECTOR_GROUP = /^:(?:not|is|where)\(/i;
 const SPEC_GROUP = /:(?:is|where)/;
 const SPEC_IS = /^:is\((.+)\)$/;
 const SPEC_NOT = /^:not\((.+)\)$/;
@@ -1486,7 +1487,7 @@ export function parseSelectorText(value: string) {
         const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
         for (let i = 0; i < segments.length; ++i) {
             const seg = segments[i];
-            if (seg[0] === ':' && seg.indexOf(',') !== -1 && /^:(not|is|where)\(/i.test(seg)) {
+            if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
                 timestamp ||= Date.now();
                 (removed ||= []).push(seg);
                 segments[i] = timestamp + '-' + (removed.length - 1);
