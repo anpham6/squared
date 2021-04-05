@@ -1,16 +1,16 @@
 import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
 
 import Application from './application';
+import Node from './node';
 
 import SETTINGS from './settings';
-
-type Node = squared.base.Node;
 
 let application: Null<Application<Node>> = null;
 
 const appBase: squared.base.AppFramework<Node> = {
     base: {
-        Application
+        Application,
+        Node
     },
     lib: {},
     extensions: {},
@@ -18,7 +18,7 @@ const appBase: squared.base.AppFramework<Node> = {
     create() {
         application = new Application<Node>(
             APP_FRAMEWORK.VDOM,
-            squared.base.Node,
+            Node,
             squared.base.Controller,
             squared.base.ExtensionManager
         );

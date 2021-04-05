@@ -3,10 +3,10 @@ import APP_FRAMEWORK = squared.base.lib.constant.APP_FRAMEWORK;
 import Application from './application';
 import Extension from './extension';
 import File from './file';
+import Node from './node';
 
 import SETTINGS from './settings';
 
-type Node = squared.base.Node;
 type FileActionOptions = FileCopyingOptions & FileArchivingOptions;
 
 const { DIRECTORY_NOT_PROVIDED, FRAMEWORK_NOT_INSTALLED, reject } = squared.lib.error;
@@ -30,7 +30,8 @@ const appBase: squared.base.AppFramework<Node> = {
     base: {
         Application,
         Extension,
-        File
+        File,
+        Node
     },
     lib: {},
     extensions: {},
@@ -102,7 +103,7 @@ const appBase: squared.base.AppFramework<Node> = {
     create() {
         application = new Application<Node>(
             APP_FRAMEWORK.CHROME,
-            squared.base.Node,
+            Node,
             squared.base.Controller,
             squared.base.ExtensionManager,
             squared.base.Resource
