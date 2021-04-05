@@ -784,10 +784,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         data.dataSource = options.dataSource;
         data.templateMap = options.templateMap;
         data.usedVariables = options.usedVariables;
-        data.usedFonts = options.usedFonts;
+        data.usedFontFace = options.usedFontFace;
         data.usedKeyframes = options.usedKeyframes;
         data.unusedStyles = options.unusedStyles;
-        data.unusedMediaQueries = options.unusedMediaQueries;
+        data.unusedMedia = options.unusedMedia;
         data.unusedSupports = options.unusedSupports;
         data.productionRelease = productionRelease;
         data.normalizeHtmlOutput = options.normalizeHtmlOutput;

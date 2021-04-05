@@ -18,17 +18,17 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     public readonly systemName = 'chrome';
 
     private _cssUsedVariables: CssValueMap = {};
-    private _cssUsedFonts: CssValueMap = {};
+    private _cssUsedFontFace: CssValueMap = {};
     private _cssUsedKeyframes: CssValueMap = {};
     private _cssUnusedSelectors: CssValueMap = {};
-    private _cssUnusedMediaQueries: CssValueMap = {};
+    private _cssUnusedMedia: CssValueMap = {};
     private _cssUnusedSupports: CssValueMap = {};
 
     public init() {
         this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
             const { fontFamily, animationName } = rule.style;
             let usedVariables: Undef<Set<string>>,
-                usedFonts: Undef<Set<string>>,
+                usedFontFace: Undef<Set<string>>,
                 usedKeyframes: Undef<Set<string>>,
                 match: Null<RegExpExecArray>;
             while (match = REGEXP_VARNAME.exec(rule.cssText)) {
@@ -38,11 +38,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 usedVariables.add(match[1]);
             }
             if (fontFamily) {
-                if (!usedFonts) {
-                    usedFonts = this._cssUsedFonts[sessionId] ||= new Set();
+                if (!usedFontFace) {
+                    usedFontFace = this._cssUsedFontFace[sessionId] ||= new Set();
                 }
                 splitSome(fontFamily, value => {
-                    usedFonts!.add(trimBoth(value));
+                    usedFontFace!.add(trimBoth(value));
                 });
             }
             if (animationName) {
@@ -62,7 +62,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         };
         this.session.unusedMediaQuery = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) {
             if (!hostElement) {
-                (this._cssUnusedMediaQueries[sessionId] ||= new Set()).add(condition);
+                (this._cssUnusedMedia[sessionId] ||= new Set()).add(condition);
             }
         };
         this.session.unusedSupports = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) {
@@ -74,10 +74,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
 
     public reset() {
         this._cssUsedVariables = {};
-        this._cssUsedFonts = {};
+        this._cssUsedFontFace = {};
         this._cssUsedKeyframes = {};
         this._cssUnusedSelectors = {};
-        this._cssUnusedMediaQueries = {};
+        this._cssUnusedMedia = {};
         this._cssUnusedSupports = {};
         super.reset();
     }
@@ -121,24 +121,24 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (options.removeUnusedVariables) {
             options.usedVariables = Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('--')));
         }
-        if (options.removeUnusedFonts) {
-            options.usedFonts = Array.from(this._cssUsedFonts[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
+        if (options.removeUnusedFontFace) {
+            options.usedFontFace = Array.from(this._cssUsedFontFace[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
         }
         if (options.removeUnusedKeyframes) {
             options.usedKeyframes = Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|keyframes:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
         }
-        if (options.removeUnusedMediaQueries) {
-            const unusedMediaQueries = this._cssUnusedMediaQueries[sessionId];
-            if (unusedMediaQueries) {
+        if (options.removeUnusedMedia) {
+            const unusedMedia = this._cssUnusedMedia[sessionId];
+            if (unusedMedia) {
                 const queries: string[] = [];
                 const exclusions = retainUsedStylesValue.filter(value => value.startsWith('|media:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(6).trim());
-                for (const value of unusedMediaQueries) {
+                for (const value of unusedMedia) {
                     if (!exclusions.includes(value)) {
                         queries.push(value);
                     }
                 }
                 if (queries.length) {
-                    options.unusedMediaQueries = queries;
+                    options.unusedMedia = queries;
                 }
             }
         }

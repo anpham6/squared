@@ -12,9 +12,9 @@ interface FileUniversalAttribute extends PlainObject, DocumentOutput {
     removeUnusedClasses?: boolean;
     removeUnusedSelectors?: boolean;
     removeUnusedVariables?: boolean;
-    removeUnusedFonts?: boolean;
+    removeUnusedFontFace?: boolean;
     removeUnusedKeyframes?: boolean;
-    removeUnusedMediaQueries?: boolean;
+    removeUnusedMedia?: boolean;
     removeUnusedSupports?: boolean;
 }
 
