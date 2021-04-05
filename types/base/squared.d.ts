@@ -66,7 +66,7 @@ declare module "base" {
         usedSelector?: AppSessionSelectorCallback;
         unusedSelector?: AppSessionSelectorCallback;
         unusedMediaQuery?: AppSessionConditionCallback;
-        unusedSupportedCss?: AppSessionConditionCallback;
+        unusedSupports?: AppSessionConditionCallback;
     }
 
     interface AppProcessing<T extends Node> {

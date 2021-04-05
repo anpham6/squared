@@ -78,6 +78,19 @@
                 width: 50%;
             }
         }
+        @supports (display: block) {
+            .row-quartet > * {
+                width: 25%;
+            }
+            img {
+                border: solid 1px black;
+            }
+        }
+        @supports (display: invalid) {
+            img {
+                border: none;
+            }
+        }
         @keyframes zorro1 {
             from {
                 x: 150;
@@ -117,7 +130,8 @@
                 removeUnusedFonts: true,
                 removeUnusedKeyframes: true,
                 removeUnusedMediaQueries: true,
-                retainUsedStyles: ['a:visited', '--transparency2', '|font-face:AlegreyaSans2|', '|keyframes:zorro1|', '|media:only screen and (min-width: 100em)|'],
+                removeUnusedSupports: true,
+                retainUsedStyles: ['a:visited', '--transparency2', '|font-face:AlegreyaSans2|', '|keyframes:zorro1|', '|media:only screen and (min-width: 100em)|', '|supports:(display: block)|'],
                 saveAs: { image: { pathname: 'images', blob: true } }
             });
         });

@@ -786,8 +786,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         data.usedVariables = options.usedVariables;
         data.usedFonts = options.usedFonts;
         data.usedKeyframes = options.usedKeyframes;
-        data.unusedMediaQueries = options.unusedMediaQueries;
         data.unusedStyles = options.unusedStyles;
+        data.unusedMediaQueries = options.unusedMediaQueries;
+        data.unusedSupports = options.unusedSupports;
         data.productionRelease = productionRelease;
         let watchElement: Undef<HTMLElement>;
         if (!productionRelease && options.watch) {

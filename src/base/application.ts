@@ -741,9 +741,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                             else {
                                 this.parseStyleRules(sessionId, resourceId, (rule as CSSConditionRule).cssRules);
-                                const unusedSupportedCss = this.session.unusedSupportedCss;
-                                if (unusedSupportedCss) {
-                                    unusedSupportedCss.call(this, sessionId, rule as CSSConditionRule, conditionText, (documentRoot as ShadowRoot).host);
+                                const unusedSupports = this.session.unusedSupports;
+                                if (unusedSupports) {
+                                    unusedSupports.call(this, sessionId, rule as CSSConditionRule, conditionText, (documentRoot as ShadowRoot).host);
                                 }
                             }
                             break;

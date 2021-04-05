@@ -22,6 +22,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     private _cssUsedKeyframes: CssValueMap = {};
     private _cssUnusedSelectors: CssValueMap = {};
     private _cssUnusedMediaQueries: CssValueMap = {};
+    private _cssUnusedSupports: CssValueMap = {};
 
     public init() {
         this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
@@ -64,12 +65,20 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 (this._cssUnusedMediaQueries[sessionId] ||= new Set()).add(condition);
             }
         };
+        this.session.unusedSupports = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) {
+            if (!hostElement) {
+                (this._cssUnusedSupports[sessionId] ||= new Set()).add(condition);
+            }
+        };
     }
 
     public reset() {
         this._cssUsedVariables = {};
         this._cssUsedFonts = {};
+        this._cssUsedKeyframes = {};
         this._cssUnusedSelectors = {};
+        this._cssUnusedMediaQueries = {};
+        this._cssUnusedSupports = {};
         super.reset();
     }
 
@@ -130,6 +139,21 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 }
                 if (queries.length) {
                     options.unusedMediaQueries = queries;
+                }
+            }
+        }
+        if (options.removeUnusedSupports) {
+            const unusedSupports = this._cssUnusedSupports[sessionId];
+            if (unusedSupports) {
+                const supports: string[] = [];
+                const exclusions = retainUsedStylesValue.filter(value => value.startsWith('|supports:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(9).trim());
+                for (const value of unusedSupports) {
+                    if (!exclusions.includes(value)) {
+                        supports.push(value);
+                    }
+                }
+                if (supports.length) {
+                    options.unusedSupports = supports;
                 }
             }
         }

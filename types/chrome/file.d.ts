@@ -10,6 +10,7 @@ interface CssSelectorData {
     usedKeyframes?: string[];
     unusedStyles?: string[];
     unusedMediaQueries?: string[];
+    unusedSupports?: string[];
 }
 
 interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction, StorageAction {
