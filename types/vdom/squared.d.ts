@@ -1,9 +1,8 @@
 import * as squared from '../squared';
 
-type Node = squared.base.Node;
-
 declare namespace base {
     class Application<T extends Node> extends squared.base.Application<T> {}
+    class Node extends squared.base.Node {}
 }
 
 export as namespace vdom;

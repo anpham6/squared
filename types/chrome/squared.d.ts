@@ -2,8 +2,6 @@
 
 import * as squared from '../squared';
 
-type Node = squared.base.Node;
-
 declare namespace base {
     class Application<T extends Node> extends squared.base.Application<T> {
         userSettings: UserResourceSettings;
@@ -37,6 +35,8 @@ declare namespace base {
     class Extension<T extends Node> extends squared.base.Extension<T> {
         processFile(data: ChromeAsset): boolean;
     }
+
+    class Node extends squared.base.Node {}
 }
 
 export as namespace chrome;
