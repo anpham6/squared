@@ -531,7 +531,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (obj) {
             for (let i = 0, length = attrs.length; i < length; ++i) {
                 const attr = attrs[i];
-                if (attr.includes('*')) {
+                if (attr.indexOf('*') !== -1) {
                     for (const item of searchObject(obj, attr, true)) {
                         delete obj[item[0]];
                     }
@@ -1571,7 +1571,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (result === 'INPUT') {
                         result += '_' + (element as HTMLInputElement).type.toUpperCase();
                     }
-                    if (result.includes('-')) {
+                    if (result.indexOf('-') !== -1) {
                         result = result.replace(/-/g, '_');
                     }
                 }

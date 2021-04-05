@@ -41,7 +41,7 @@ function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource
                 else {
                     content = match[5];
                 }
-                resource.addRawData(resourceId, match[1], { mimeType: leading && leading.includes('/') ? leading : 'image/unknown', encoding, content, base64 });
+                resource.addRawData(resourceId, match[1], { mimeType: leading && leading.indexOf('/') !== -1 ? leading : 'image/unknown', encoding, content, base64 });
             }
         }
         else {
@@ -587,7 +587,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     baseMap[baseAttr] = value;
                 }
                 let important: Undef<ObjectMap<boolean>>;
-                if (cssText.includes('!')) {
+                if (cssText.indexOf('!') !== -1) {
                     important = {};
                     let match: Null<RegExpExecArray>;
                     while (match = REGEXP_IMPORTANT.exec(cssText)) {

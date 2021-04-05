@@ -146,7 +146,7 @@ export default class Pattern implements squared.lib.base.Pattern {
     }
 
     public usePattern(expression: string | RegExp, flags?: string) {
-        this._matcher = typeof expression === 'string' ? new RegExp(expression, flags ?? 'g') : flags ? new RegExp(expression, expression.flags ? flags.split('').reduce((a, b) => a + (!a.includes(b) ? b : ''), expression.flags) : flags) : expression;
+        this._matcher = typeof expression === 'string' ? new RegExp(expression, flags ?? 'g') : flags ? new RegExp(expression, expression.flags ? flags.split('').reduce((a, b) => a + (a.indexOf(b) === -1 ? b : ''), expression.flags) : flags) : expression;
     }
 
     public pattern() {

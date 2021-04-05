@@ -42,7 +42,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 encoding = trailing.trim();
             }
             else if (leading) {
-                if (leading.includes('/')) {
+                if (leading.indexOf('/') !== -1) {
                     mimeType = leading;
                     if (!encoding && isBase64(data)) {
                         encoding = 'base64';
@@ -235,7 +235,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                         if (startsWith(url, 'data:')) {
                             let mime: string;
                             [mime, srcBase64] = splitPair(url, ',', true);
-                            if (!mime.includes('base64') && !isBase64(srcBase64)) {
+                            if (mime.indexOf('base64') === -1 && !isBase64(srcBase64)) {
                                 continue;
                             }
                             mimeType ||= mime.toLowerCase();
@@ -245,22 +245,22 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                             mimeType ||= parseMimeType(srcUrl);
                         }
                         if (!srcFormat) {
-                            if (mimeType.includes('/ttf')) {
+                            if (mimeType.indexOf('/ttf') !== -1) {
                                 srcFormat = 'truetype';
                             }
-                            else if (mimeType.includes('/otf')) {
+                            else if (mimeType.indexOf('/otf') !== -1) {
                                 srcFormat = 'opentype';
                             }
-                            else if (mimeType.includes('/woff2')) {
+                            else if (mimeType.indexOf('/woff2') !== -1) {
                                 srcFormat = 'woff2';
                             }
-                            else if (mimeType.includes('/woff')) {
+                            else if (mimeType.indexOf('/woff') !== -1) {
                                 srcFormat = 'woff';
                             }
-                            else if (mimeType.includes('/svg+xml')) {
+                            else if (mimeType.indexOf('/svg+xml') !== -1) {
                                 srcFormat = 'svg';
                             }
-                            else if (mimeType.includes('/vnd.ms-fontobject')) {
+                            else if (mimeType.indexOf('/vnd.ms-fontobject') !== -1) {
                                 srcFormat = 'embedded-opentype';
                             }
                             else {

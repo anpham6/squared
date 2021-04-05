@@ -198,7 +198,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         const data = keyframes[percent];
                         for (const attr in data) {
                             let value = data[attr]!;
-                            if (value.includes('%')) {
+                            if (value.indexOf('%') !== -1) {
                                 const segments = splitEnclosing(value);
                                 let match: Null<RegExpExecArray>;
                                 for (let j = 0; j < segments.length; j += 2) {
@@ -435,7 +435,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                     }
                                                     keyTimesData.push(keyTime);
                                                     valuesData.push(stepValue[k]);
-                                                    keySplinesData.push(SvgAnimate.KEYSPLINE_NAME[keySpline.includes('start') ? 'step-start' : 'step-end']);
+                                                    keySplinesData.push(SvgAnimate.KEYSPLINE_NAME[keySpline.indexOf('start') !== -1 ? 'step-start' : 'step-end']);
                                                 }
                                                 continue;
                                             }

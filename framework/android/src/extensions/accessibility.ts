@@ -12,7 +12,7 @@ function addTextDecorationLine(node: View, attr: string) {
     node.cascade(item => {
         if (item.textElement) {
             let value = item.css('textDecorationLine');
-            if (!value.includes(attr)) {
+            if (value.indexOf(attr) === -1) {
                 value += (value ? ' ' : '') + attr;
                 item.css('textDecorationLine', value);
             }

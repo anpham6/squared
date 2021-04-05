@@ -1,6 +1,6 @@
 import { CSS_TRAITS, CSS_UNIT } from './constant';
 
-import { CSS_PROPERTIES, PROXY_INLINESTYLE, getDocumentFontSize, getInitialValue } from './internal';
+import { CSS_PROPERTIES, PROXY_INLINESTYLE, getDocumentFontSize } from './internal';
 import { CSS, STRING, TRANSFORM } from './regex';
 
 import { getDeviceDPI } from './client';
@@ -70,7 +70,7 @@ let RE_TRANSFORM: Undef<Pattern>;
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
     for (let seg of splitEnclosing(value, REGEXP_CALCENCLOSING)) {
-        if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
+        if ((seg = seg.trim()).indexOf(' ') !== -1 && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
         else {
@@ -161,7 +161,7 @@ function calculateColor(element: StyleElement, value: string) {
                                     component[j] = clamp(result, 0, 100) + '%';
                                 }
                                 else if (j === 3) {
-                                    const percent = rgb.includes('%');
+                                    const percent = rgb.indexOf('%') !== -1;
                                     let result = calculateVar(element, rgb, percent ? { unitType: CSS_UNIT.PERCENT } : { unitType: CSS_UNIT.DECIMAL });
                                     if (isNaN(result)) {
                                         return '';
@@ -216,7 +216,7 @@ function calculateAngle(element: StyleElement, value: string) {
 }
 
 function calculatePercent(element: StyleElement, value: string, clampRange: boolean) {
-    const percent = value.includes('%');
+    const percent = value.indexOf('%') !== -1;
     let result = calculateVar(element, value, { unitType: percent ? CSS_UNIT.PERCENT : CSS_UNIT.DECIMAL });
     if (!isNaN(result)) {
         if (percent) {
@@ -596,7 +596,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'rowGap':
             return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox, min: 0, parent: false }));
         case 'flexBasis':
-            return formatVar(calculateVar(element, value, { dimension: element.parentElement && getStyle(element.parentElement).flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
+            return formatVar(calculateVar(element, value, { dimension: element.parentElement && getStyle(element.parentElement).flexDirection.indexOf('column') !== -1 ? 'height' : 'width', boundingBox, min: 0 }));
         case 'borderBottomWidth':
         case 'borderLeftWidth':
         case 'borderRightWidth':
@@ -610,7 +610,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return calculateLength(element, value);
         case 'offsetDistance': {
             let boundingSize = 0;
-            if (value.includes('%')) {
+            if (value.indexOf('%') !== -1) {
                 const path = getStyle(element).getPropertyValue('offset-path');
                 if (path !== 'none') {
                     const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -969,7 +969,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         if (hasCalc(radius)) {
                             const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
                             if (prefix === 'circle') {
-                                if (radius.includes('%')) {
+                                if (radius.indexOf('%') !== -1) {
                                     boundingBox ||= element.parentElement && getContentBoxDimension(element.parentElement);
                                     if (!boundingBox) {
                                         return '';
@@ -1209,18 +1209,20 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                     if (value === 'unset') {
                         const property = CSS_PROPERTIES[attr];
                         if (property && (property.trait & CSS_TRAITS.INHERIT) === 0 && typeof property.value === 'string') {
-                            return getInitialValue(element, attr);
+                            return '';
                         }
                     }
                     break;
             }
             return getStyle(element)[attr] as string;
     }
-    if (hasCalc(value)) {
-        return calculateStyle(element, attr, value) || getStyle(element)[attr] as string;
-    }
-    else if (hasCustomProperty(value)) {
-        return parseVar(element, value) || getStyle(element)[attr] as string;
+    if (value.indexOf('(') !== -1) {
+        if (hasCalc(value)) {
+            return calculateStyle(element, attr, value) || getStyle(element)[attr] as string;
+        }
+        else if (hasCustomProperty(value)) {
+            return parseVar(element, value) || getStyle(element)[attr] as string;
+        }
     }
     return value;
 }
@@ -1350,7 +1352,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
     if (value = parseVar(element, value)) {
         const unitType = options.unitType || CSS_UNIT.LENGTH;
         const boundingSize = unitType === CSS_UNIT.LENGTH;
-        if (value.includes('%')) {
+        if (value.indexOf('%') !== -1) {
             if (options.supportPercent === false || unitType === CSS_UNIT.INTEGER) {
                 return getFallbackResult(options, NaN);
             }

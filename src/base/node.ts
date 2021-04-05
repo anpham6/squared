@@ -1743,7 +1743,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 (notIndex ||= []).push(part);
                 return ':not-' + 'x'.repeat(notIndex.length);
             };
-            const parseNot = (condition: string) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
+            const parseNot = (condition: string) => condition.indexOf(',') !== -1 ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
             const checkNot = (condition: string) => {
                 return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
                     if (b[0] === ':') {
@@ -1772,7 +1772,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     if (selector && !isSpace(lastItemOf(selector))) {
                                         break invalid;
                                     }
-                                    if (condition.includes(',')) {
+                                    if (condition.indexOf(',') !== -1) {
                                         seg = parseSelectorText(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
                                         expand = true;
                                     }
@@ -1902,7 +1902,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 });
                                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
                             }
-                            if (segment.includes('::')) {
+                            if (segment.indexOf('::') !== -1) {
                                 break invalid;
                             }
                             let notList: Undef<string[]>,

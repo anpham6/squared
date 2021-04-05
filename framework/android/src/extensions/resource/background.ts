@@ -418,7 +418,7 @@ function setBorderStyle(resourceId: number, layerList: LayerList, borders: Undef
 
 const isBorderEqual = (border: BorderAttribute, other: BorderAttribute) => border.style === border.style && border.width === other.width && border.color.rgbaAsString === other.color.rgbaAsString;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
-const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && !value.includes(' ') && adjacent.includes(' ') ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
+const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1 ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
 
 export function convertColorStops(resourceId: number, list: ColorStop[], precision?: number) {
     return list.map(item => ({ color: getColorValue(resourceId, item.color), offset: truncate(item.offset, precision) }));
@@ -961,7 +961,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         dimenHeight = dimension.height;
                     }
                 }
-                if (repeat.includes(' ')) {
+                if (repeat.indexOf(' ') !== -1) {
                     const [x, y] = splitPair(repeat, ' ');
                     if (x === 'no-repeat') {
                         repeat = y === 'no-repeat' ? 'no-repeat' : 'repeat-y';

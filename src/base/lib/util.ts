@@ -451,7 +451,7 @@ export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?
     const end = endsWith(value, '*');
     const search =
         start && end
-            ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
+            ? (a: string) => a.indexOf(value.replace(/^\*/, '').replace(/\*$/, '')) !== -1
         : start
             ? (a: string) => endsWith(a, value.replace(/^\*/, ''))
         : end

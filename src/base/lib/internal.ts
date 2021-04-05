@@ -36,8 +36,8 @@ export function parseWatchInterval(value: Undef<string>) {
                     let secure: Undef<boolean>,
                         module: Undef<boolean>;
                     if (match[4]) {
-                        secure = match[4].includes('secure');
-                        module = match[4].includes('module');
+                        secure = match[4].indexOf('secure') !== -1;
+                        module = match[4].indexOf('module') !== -1;
                     }
                     reload = { socketId: socketId !== '~' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
                 }

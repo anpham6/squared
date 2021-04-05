@@ -331,7 +331,7 @@ export function getXmlNs(value: string) {
 export function getRootNs(value: string) {
     let output = '';
     for (const namespace in XML_NAMESPACE) {
-        if (namespace === 'android' || namespace !== 'aapt' && value.includes(namespace + ':')) {
+        if (namespace === 'android' || namespace !== 'aapt' && value.indexOf(namespace + ':') !== -1) {
             output += '\n\t' + getXmlNs(namespace);
         }
     }

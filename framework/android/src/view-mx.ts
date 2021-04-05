@@ -420,7 +420,7 @@ function transferLayoutAlignment(node: T, target: T) {
                 case 'layout_height':
                     break;
                 default:
-                    if (startsWith(attr, 'layout_') && !attr.includes('margin')) {
+                    if (startsWith(attr, 'layout_') && attr.indexOf('margin') === -1) {
                         target.attr(name, attr, item[attr], true);
                     }
                     break;
@@ -968,7 +968,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         width = this.parseUnit(maxWidth);
                     }
                 }
-                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasUnit('width') }).length || !this.textContent.includes('\n'))) {
+                else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasUnit('width') }).length || this.textContent.indexOf('\n') === -1)) {
                     const maxLines = this.textBounds?.numberOfLines;
                     if (maxLines && maxLines > 1) {
                         this.android('maxLines', maxLines.toString());

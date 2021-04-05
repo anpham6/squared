@@ -3,7 +3,7 @@ import { PLATFORM, USER_AGENT } from './constant';
 let CLIENT_BROWSER = USER_AGENT.CHROME;
 let CLIENT_VERSION: string | number[] = '';
 
-if (navigator.userAgent.includes('Chrom')) {
+if (navigator.userAgent.indexOf('Chrom') !== -1) {
     const match = /(Chrom(?:e|ium)|Edg)\/([^ ]+)/.exec(navigator.userAgent);
     if (match) {
         if (match[1] === 'Edg') {
@@ -32,23 +32,23 @@ else {
 
 export function isPlatform(value: NumString) {
     const platform = navigator.platform.toLowerCase();
-    return typeof value === 'string' ? platform.includes(value.toLowerCase()) : (value & PLATFORM.WINDOWS) > 0 && platform.includes('win') || (value & PLATFORM.MAC) > 0 && /mac|iphone|ipad|ipod/.test(platform) || (value & PLATFORM.LINUX) > 0 && platform.includes('linux');
+    return typeof value === 'string' ? platform.indexOf(value.toLowerCase()) !== -1 : (value & PLATFORM.WINDOWS) > 0 && platform.indexOf('win') !== -1 || (value & PLATFORM.MAC) > 0 && /mac|iphone|ipad|ipod/.test(platform) || (value & PLATFORM.LINUX) > 0 && platform.indexOf('linux') !== -1;
 }
 
 export function isUserAgent(value: NumString, version?: unknown) {
     if (typeof value === 'string') {
         const name = value.toLowerCase();
         value = 0;
-        if (name.includes('chrome')) {
+        if (name.indexOf('chrome') !== -1) {
             value |= USER_AGENT.CHROME;
         }
-        if (name.includes('safari')) {
+        if (name.indexOf('safari') !== -1) {
             value |= USER_AGENT.SAFARI;
         }
-        if (name.includes('firefox')) {
+        if (name.indexOf('firefox') !== -1) {
             value |= USER_AGENT.FIREFOX;
         }
-        if (name.includes('edge')) {
+        if (name.indexOf('edge') !== -1) {
             value |= USER_AGENT.EDGE;
         }
     }

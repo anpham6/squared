@@ -341,7 +341,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     const index = keyPoints.findIndex((pt: Point) => {
                         const x = pt.x.toString();
                         const y = pt.y.toString();
-                        return x === nextPoint.x.toPrecision(x.length - (x.includes('.') ? 1 : 0)) && y === nextPoint.y.toPrecision(y.length - (y.includes('.') ? 1 : 0));
+                        return x === nextPoint.x.toPrecision(x.length - (x.indexOf('.') !== -1 ? 1 : 0)) && y === nextPoint.y.toPrecision(y.length - (y.indexOf('.') !== -1 ? 1 : 0));
                     });
                     if (index !== -1) {
                         const endPoint = keyPoints[index + 1];

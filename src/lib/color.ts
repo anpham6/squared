@@ -320,7 +320,7 @@ function hex6(value: string, a = 255): RGBA {
     };
 }
 
-const convertOpacity = (value: string) => +value / (value.includes('%') ? 100 : 1);
+const convertOpacity = (value: string) => +value / (value.indexOf('%') !== -1 ? 100 : 1);
 const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function parseColor(value: string, opacity = 1) {

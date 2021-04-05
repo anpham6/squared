@@ -1480,13 +1480,13 @@ export function getSpecificity(value: string) {
 }
 
 export function parseSelectorText(value: string) {
-    if ((value = value.trim()).includes(',')) {
+    if ((value = value.trim()).indexOf(',') !== -1) {
         let timestamp: Undef<number>,
             removed: Undef<string[]>;
         const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
         for (let i = 0; i < segments.length; ++i) {
             const seg = segments[i];
-            if (seg[0] === ':' && seg.includes(',') && /^:(not|is|where)\(/i.test(seg)) {
+            if (seg[0] === ':' && seg.indexOf(',') !== -1 && /^:(not|is|where)\(/i.test(seg)) {
                 timestamp ||= Date.now();
                 (removed ||= []).push(seg);
                 segments[i] = timestamp + '-' + (removed.length - 1);
@@ -1501,7 +1501,7 @@ export function parseSelectorText(value: string) {
             found: Undef<boolean>,
             match: Null<RegExpExecArray>;
         while (match = CSS.SELECTOR_ATTR_G.exec(normalized)) {
-            if (match[0].includes(',')) {
+            if (match[0].indexOf(',') !== -1) {
                 const index = match.index;
                 const length = match[0].length;
                 normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);

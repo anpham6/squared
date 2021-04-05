@@ -3839,7 +3839,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     private hasClippedBackground(node: T) {
-        if (node.css('backgroundSize').includes('cover')) {
+        if (node.css('backgroundSize').indexOf('cover') !== -1) {
             for (const image of this.application.resourceHandler.fromImageUrl(node.localSettings.resourceId, node.backgroundImage)) {
                 if (image.height > node.bounds.height) {
                     return true;

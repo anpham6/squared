@@ -162,7 +162,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             if (unusedSelectors) {
                 const styles: string[] = [];
                 for (const value of unusedSelectors) {
-                    if ((value.includes(':') ? options.removeUnusedSelectors : options.removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.find(pattern => typeof pattern === 'string' ? pattern === value : pattern.test(value)))) {
+                    if ((value.indexOf(':') !== -1 ? options.removeUnusedSelectors : options.removeUnusedClasses) && (!retainUsedStyles || !retainUsedStyles.find(pattern => typeof pattern === 'string' ? pattern === value : pattern.test(value)))) {
                         styles.push(value);
                     }
                 }
@@ -199,7 +199,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     }
                     return param;
                 };
-                if (location.href.includes('?')) {
+                if (location.href.indexOf('?') !== -1) {
                     new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${escapePattern(key)}\\s*\\}\\}`, 'g'), value]));
                 }
                 for (const item of commands) {
