@@ -100,7 +100,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public finalizeRequestBody(data: RequestData, options: FileCopyingOptions & FileArchivingOptions) {}
+    public finalizeRequestBody(body: RequestData) {}
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 
@@ -163,7 +163,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public copying(pathname = '', options: FileCopyingOptions) {
         if (this.hasHttpProtocol()) {
             if (pathname = pathname.trim()) {
-                const body = this.createRequestBody(options.assets, options);
+                const body = this.createRequestBody(options);
                 if (body) {
                     return fetch(
                         getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
@@ -196,7 +196,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public archiving(target = '', options: FileArchivingOptions) {
         if (this.hasHttpProtocol()) {
-            const body = this.createRequestBody(options.assets, options);
+            const body = this.createRequestBody(options);
             if (body) {
                 let { filename, format } = options;
                 const setFilename = () => {
@@ -268,17 +268,19 @@ export default abstract class File<T extends Node> implements squared.base.File<
         (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
     }
 
-    protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
+    protected createRequestBody(body: FileCopyingOptions & FileArchivingOptions) {
+        let assets = body.assets;
         if (assets && assets.length) {
-            const exclusions = options.exclusions;
+            const exclusions = body.exclusions;
             if (exclusions) {
                 assets = assets.filter(item => validateAsset(item, exclusions));
                 if (!assets.length) {
                     return;
                 }
+                body.assets = assets;
             }
             let socketId: Undef<string>;
-            const documentName = new Set(options.document);
+            const documentName = new Set(body.document);
             const taskName = new Set<string>();
             const setSocketId = (watch: WatchInterval) => {
                 socketId ||= randomUUID();
@@ -294,7 +296,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 if (tasks) {
                     tasks.forEach(item => taskName.add(item.handler));
                 }
-                if (options.watch && isPlainObject<WatchInterval>(watch)) {
+                if (body.watch && isPlainObject<WatchInterval>(watch)) {
                     setSocketId(watch);
                 }
                 if (document) {
@@ -308,7 +310,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             }
             const { outputTasks, outputWatch } = this.userSettings;
             for (let i = 0; i < 2; ++i) {
-                if (i === 1 && !options.watch) {
+                if (i === 1 && !body.watch) {
                     break;
                 }
                 const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
@@ -359,12 +361,12 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     }
                 }
             }
-            const data: RequestData = { assets, document: Array.from(documentName) };
+            body.document = Array.from(documentName);
             if (taskName.size) {
-                data.task = Array.from(taskName);
+                body.task = Array.from(taskName);
             }
-            this.finalizeRequestBody(data, options);
-            return data;
+            this.finalizeRequestBody(body);
+            return body;
         }
     }
 

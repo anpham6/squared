@@ -484,9 +484,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return options.watch ? '&watch=1' : '';
     }
 
-    public finalizeRequestBody(data: RequestData, options: FileUniversalOptions) {
-        if (options.watch) {
-            for (const item of data.assets!) {
+    public finalizeRequestBody(body: RequestData & FileUniversalOptions) {
+        if (body.watch) {
+            for (const item of body.assets!) {
                 if (isPlainObject<WatchInterval>(item.watch)) {
                     delete item.watch.reload;
                 }

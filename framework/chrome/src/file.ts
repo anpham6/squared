@@ -778,24 +778,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(data: RequestData, options: FileCopyingOptions & FileArchivingOptions) {
-        const productionRelease = options.productionRelease;
-        data.baseUrl = options.baseUrl;
-        data.dataSource = options.dataSource;
-        data.templateMap = options.templateMap;
-        data.usedVariables = options.usedVariables;
-        data.usedFontFace = options.usedFontFace;
-        data.usedKeyframes = options.usedKeyframes;
-        data.unusedStyles = options.unusedStyles;
-        data.unusedMedia = options.unusedMedia;
-        data.unusedSupports = options.unusedSupports;
-        data.productionRelease = productionRelease;
-        data.normalizeHtmlOutput = options.normalizeHtmlOutput;
+    public finalizeRequestBody(body: RequestData & FileCopyingOptions & FileArchivingOptions) {
+        const productionRelease = body.productionRelease;
         let watchElement: Undef<HTMLElement>;
-        if (!productionRelease && options.watch) {
+        if (!productionRelease && body.watch) {
             const socketMap: ObjectMap<string> = {};
             const hostname = new URL(this.hostname).hostname;
-            for (const { watch } of options.assets!) {
+            for (const { watch } of body.assets!) {
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
                     const { socketId, handler = {}, secure } = reload;
@@ -817,19 +806,19 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     textContent += socketMap[id];
                 }
                 textContent += '});';
-                if (!options.useOriginalHtmlPage) {
+                if (!body.useOriginalHtmlPage) {
                     watchElement = createElement('script', { parent: document.body, attributes: { textContent } });
                 }
                 else {
-                    const html = (options.assets as ChromeAsset[]).find(item => item.mimeType === '@text/html');
+                    const html = (body.assets as ChromeAsset[]).find(item => item.mimeType === '@text/html');
                     if (html) {
                         html.element!.textContent = `<script>${textContent}</script>`;
                     }
                 }
             }
         }
-        if (!options.useOriginalHtmlPage) {
-            for (const item of options.assets as ChromeAsset[]) {
+        if (!body.useOriginalHtmlPage) {
+            for (const item of body.assets as ChromeAsset[]) {
                 const element = item.element as Undef<XmlTagNode>;
                 if (element) {
                     switch (element.tagName) {
@@ -856,13 +845,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (watchElement) {
                 document.body.removeChild(watchElement);
             }
-            if (data.document) {
-                for (const name of data.document) {
+            if (body.document) {
+                for (const name of body.document) {
                     const attr = name + 'Id';
                     document.querySelectorAll(`[data-${name}-id]`).forEach((element: HTMLElement) => delete element.dataset[attr]);
                 }
             }
-            if (options.removeInlineStyles) {
+            if (body.removeInlineStyles) {
                 document.querySelectorAll(`[style]`).forEach(element => element.removeAttribute('style'));
             }
         }
