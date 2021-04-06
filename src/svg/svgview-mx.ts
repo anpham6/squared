@@ -10,7 +10,7 @@ import { CACHE_VIEWNAME, PATTERN_CUBICBEZIER, TRANSFORM, calculateStyle, getAttr
 
 import Pattern = squared.lib.base.Pattern;
 
-type AttributeMap = ObjectMap<AttributeData[]>;
+type AttributeMap = ObjectMap<Undef<AttributeData[]>>;
 
 interface AttributeData extends NumberValue {
     transformOrigin?: Point;
@@ -223,8 +223,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             }
                         }
                     }
-                    if (attrData['transform']) {
-                        const transforms = sortAttribute(attrData['transform']);
+                    if (attrData.transform) {
+                        const transforms = sortAttribute(attrData.transform);
                         for (let j = 0, q = transforms.length; j < q; ++j) {
                             const transform = transforms[j];
                             const key = transform.key;
@@ -292,7 +292,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 }
                             });
                         }
-                        delete attrData['transform'];
+                        delete attrData.transform;
                         delete attrData['transform-origin'];
                     }
                     if (getAttribute(element, 'offset-path') === 'none') {
@@ -301,7 +301,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     }
                     else if (attrData['offset-rotate']) {
                         const offsetRotate = attrData['offset-rotate'];
-                        if (attrData['offset-distance'] || !attrData['rotate']) {
+                        if (attrData['offset-distance'] || !attrData.rotate) {
                             let rotate = getAttribute(element, 'offset-rotate');
                             if (!rotate || rotate === 'auto') {
                                 rotate = 'auto 0deg';
@@ -343,7 +343,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const item = offsetRotate[j];
                                     item.value = (parseAngle(splitPairEnd(item.value, ' '), 0) + (startsWith(item.value, 'auto') ? 90 : 0)) + ' 0 0';
                                 }
-                                attrData['rotate'] = offsetRotate;
+                                attrData.rotate = offsetRotate;
                                 delete attrData['offset-rotate'];
                                 includeKeySplines = false;
                             }
@@ -375,7 +375,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 break;
                         }
                         addAnimation(animate, delay, keyframeIndex);
-                        const animation = attrData[name];
+                        const animation = attrData[name]!;
                         const direction = cssData['animation-direction'][i];
                         const timingFunction = cssData['animation-timing-function'][i];
                         const q = animation.length;

@@ -599,7 +599,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (depth === 0) {
             processing.cache.add(node);
             for (const name of node.extensions) {
-                if ((this.extensionManager.get(name) as ExtensionUI<T>)?.cascadeAll) {
+                if ((this.extensionManager.get(name) as Undef<ExtensionUI<T>>)?.cascadeAll) {
                     cascadeAll = true;
                     break;
                 }
@@ -608,7 +608,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             afterElement = this.createPseduoElement(sessionId, resourceId, parentElement, '::after');
         }
         const display = node.display;
-        if (display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as ExtensionUI<T>)?.documentBase)) {
+        if (display !== 'none' || depth === 0 || cascadeAll || node.extensions.some(name => (this.extensionManager.get(name) as Undef<ExtensionUI<T>>)?.documentBase)) {
             if (node.excluded || this._preventNodeCascade(node)) {
                 return node;
             }

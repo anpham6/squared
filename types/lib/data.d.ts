@@ -1,5 +1,5 @@
 interface CssProperties {
-    [key: string]: CssPropertyData;
+    [key: string]: Undef<CssPropertyData>;
 }
 
 interface CssPropertyData {

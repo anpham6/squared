@@ -428,7 +428,7 @@ declare module "svg" {
         transformed: Null<SvgTransform[]>;
         useParent?: SvgUse;
         patternParent?: SvgShapePattern;
-        readonly symbolElement: SVGSymbolElement
+        readonly symbolElement: SVGSymbolElement;
         readonly useElement: SVGUseElement;
         setPaint(d?: string[], precision?: number): void;
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;

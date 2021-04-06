@@ -232,7 +232,7 @@ declare module "lib" {
         function getDocumentFontSize(): number;
         function convertFontSize(value: string, fixedWidth?: boolean): string;
         function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
-        function getInitialValue(element: Element, attr: string): string;
+        function getInitialValue(element: Element, attr: CssStyleAttr): string;
         function parseSelectorText(value: string): string[];
         function getSpecificity(value: string): number;
         function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot): Null<VoidFunction>;

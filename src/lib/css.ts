@@ -1143,7 +1143,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return value;
         }
         default: {
-            if (endsWith(attr, 'Color') || (CSS_PROPERTIES[attr]?.trait & CSS_TRAITS.COLOR)) {
+            if (endsWith(attr, 'Color') || (CSS_PROPERTIES[attr] && (CSS_PROPERTIES[attr]!.trait & CSS_TRAITS.COLOR))) {
                 return calculateColor(element, value);
             }
             const style = getStyle(element);
@@ -1195,7 +1195,7 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
                 case 'borderCollapse':
                     return 'separate';
                 case 'appearance':
-                    return CSS_PROPERTIES.appearance.valueOfSome!(element);
+                    return CSS_PROPERTIES.appearance!.valueOfSome!(element);
             }
             return '';
         case 'inherit':

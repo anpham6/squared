@@ -125,9 +125,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                         item.anchor('top', 'true');
                         continue;
                     }
-                    else {
-                        bottomAligned = false;
-                    }
+                    bottomAligned = false;
                 }
                 const verticalAlign = item.verticalAlign;
                 if (verticalAlign !== 0 && item.rendering) {
@@ -153,7 +151,7 @@ function setBaselineItems(parent: View, baseline: View, items: View[], index: nu
                     item.anchor('top', documentId);
                 }
                 else {
-                    item.anchor(bottomAligned ? 'bottom' : 'baseline', documentId);
+                    item.anchor('baseline', documentId);
                 }
             }
         }
@@ -3774,7 +3772,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         const guideline = parent.constraint.guideline || {};
         if (!percent) {
-            const anchors = guideline[axis]?.[attr]?.[LT] as Undef<StringMap>;
+            const anchors = guideline[axis]?.[attr]?.[LT];
             if (anchors) {
                 for (const id in anchors) {
                     if (withinRange(+anchors[id]!, location)) {

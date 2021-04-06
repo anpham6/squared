@@ -567,7 +567,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public unlockAttr(name: string, attr: string) {
         const locked = this._locked;
         if (locked) {
-            const data: Undef<ObjectMap<boolean>> = locked[name];
+            const data = locked[name];
             if (data) {
                 data[attr] = false;
             }
@@ -663,26 +663,26 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (this.naturalElement) {
                         const properties: CssStyleAttr[] = [];
                         if (!this.backgroundImage) {
-                            properties.push(...CSS_PROPERTIES.background.value as CssStyleAttr[]);
+                            properties.push(...CSS_PROPERTIES.background!.value as CssStyleAttr[]);
                             --properties.length;
                         }
                         if (this.borderTopWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderTop.value as CssStyleAttr[]);
+                            properties.push(...CSS_PROPERTIES.borderTop!.value as CssStyleAttr[]);
                         }
                         if (this.borderRightWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderRight.value as CssStyleAttr[]);
+                            properties.push(...CSS_PROPERTIES.borderRight!.value as CssStyleAttr[]);
                         }
                         if (this.borderBottomWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderBottom.value as CssStyleAttr[]);
+                            properties.push(...CSS_PROPERTIES.borderBottom!.value as CssStyleAttr[]);
                         }
                         if (this.borderLeftWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderLeft.value as CssStyleAttr[]);
+                            properties.push(...CSS_PROPERTIES.borderLeft!.value as CssStyleAttr[]);
                         }
                         if (this.cssAny('backgroundColor', ['none', 'transparent', 'rgba(0, 0, 0, 0)'])) {
                             properties.push('backgroundColor');
                         }
                         if (this.css('borderRadius') === '0px') {
-                            properties.push(...CSS_PROPERTIES.borderRadius.value as CssStyleAttr[]);
+                            properties.push(...CSS_PROPERTIES.borderRadius!.value as CssStyleAttr[]);
                         }
                         this.cssCopy(node, ...properties);
                     }

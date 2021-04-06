@@ -20,10 +20,10 @@ const { getElementCache, setElementCache } = squared.lib.session;
 const { iterateArray } = squared.lib.util;
 
 const BORDER_BOX = [
-    CSS_PROPERTIES.borderTop.value as string[],
-    CSS_PROPERTIES.borderRight.value as string[],
-    CSS_PROPERTIES.borderBottom.value as string[],
-    CSS_PROPERTIES.borderLeft.value as string[]
+    CSS_PROPERTIES.borderTop!.value as string[],
+    CSS_PROPERTIES.borderRight!.value as string[],
+    CSS_PROPERTIES.borderBottom!.value as string[],
+    CSS_PROPERTIES.borderLeft!.value as string[]
 ];
 const CACHE_INDENT: StringMap = {};
 

@@ -8,16 +8,20 @@ module.exports = {
         "@typescript-eslint"
     ],
     "rules": {
+        "keyword-spacing": "off",
         "no-cond-assign": "off",
         "no-constant-condition": "off",
         "no-empty": "off",
         "no-fallthrough": "off",
         "no-unused-vars": "off",
+        "object-curly-spacing": "off",
+        "semi": "off",
         "arrow-parens": ["error", "as-needed"],
         "block-scoped-var": "error",
         "comma-dangle": "error",
         "comma-spacing": "error",
         "comma-style": "error",
+        "dot-notation": "error",
         "eqeqeq": "error",
         "id-match": "error",
         "multiline-ternary": ["error", "always-multiline"],
@@ -33,6 +37,7 @@ module.exports = {
         "no-loss-of-precision": "error",
         "no-multi-spaces": "error",
         "no-new-wrappers": "error",
+        "no-unsafe-optional-chaining": "error",
         "no-shadow": "error",
         "no-throw-literal": "error",
         "no-trailing-spaces": "error",
@@ -52,7 +57,6 @@ module.exports = {
         "prefer-regex-literals": "error",
         "prefer-spread": "error",
         "require-atomic-updates": "error",
-        "semi": "error",
         "semi-spacing": "error",
         "semi-style": "error",
         "sort-imports": ["error", {
@@ -60,6 +64,7 @@ module.exports = {
             "memberSyntaxSortOrder": ["none", "single", "all", "multiple"]
         }],
         "@typescript-eslint/explicit-module-boundary-types": "off",
+        "@typescript-eslint/indent": "off",
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-explicit-any": "off",
@@ -70,10 +75,12 @@ module.exports = {
         "@typescript-eslint/no-unused-vars": "off",
         "@typescript-eslint/restrict-plus-operands": "off",
         "@typescript-eslint/triple-slash-reference": "off",
+        "@typescript-eslint/comma-spacing": "error",
         "@typescript-eslint/unbound-method": "error",
         "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/consistent-type-imports": "error",
+        "@typescript-eslint/keyword-spacing": "error",
         "@typescript-eslint/member-delimiter-style": "error",
         "@typescript-eslint/member-ordering": ["error", {
             "default": [
@@ -100,6 +107,7 @@ module.exports = {
         "@typescript-eslint/prefer-for-of": "error",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/return-await": "error",
+        "@typescript-eslint/semi": "error",
         "@typescript-eslint/unified-signatures": "error"
     }
 };

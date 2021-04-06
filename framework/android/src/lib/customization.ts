@@ -417,8 +417,8 @@ export const API_VERSION: Customizations<View> = {
             spotShadowAlpha: false,
             src(this: View, result: StandardMap) {
                 if (this.svgElement) {
-                    result['obj'] = 'app';
-                    result['attr'] = 'srcCompat';
+                    result.obj = 'app';
+                    result.attr = 'srcCompat';
                 }
                 return true;
             },

@@ -144,7 +144,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 else {
                     if (ordered && item.tagName === 'LI') {
-                        const n = +item.attributes['value']!;
+                        const n = +item.attributes.value!;
                         if (!isNaN(n)) {
                             i = Math.floor(n);
                         }

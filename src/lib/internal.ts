@@ -1438,7 +1438,7 @@ export function convertFontSize(value: string, fixedWidth?: boolean) {
 export function getPropertiesAsTraits(value: number) {
     const result: ObjectMap<CssPropertyData> = {};
     for (const attr in CSS_PROPERTIES) {
-        const item = CSS_PROPERTIES[attr];
+        const item = CSS_PROPERTIES[attr]!;
         if (item.trait & value) {
             item.name = convertHyphenated(attr);
             result[attr] = item;
@@ -1447,7 +1447,7 @@ export function getPropertiesAsTraits(value: number) {
     return result;
 }
 
-export function getInitialValue(element: Element, attr: string) {
+export function getInitialValue(element: Element, attr: CssStyleAttr) {
     const property = CSS_PROPERTIES[attr];
     if (property) {
         if (property.valueOfSome) {

@@ -29,8 +29,8 @@ const { parseTask, parseWatchInterval } = squared.base.lib.internal;
 
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
 
-const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
-const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
+const BOX_MARGIN = CSS_PROPERTIES.margin!.value as string[];
+const BOX_PADDING = CSS_PROPERTIES.padding!.value as string[];
 
 const REGEXP_CONTROLID = /[^\w$\-_.]/g;
 const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
@@ -572,7 +572,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public api = BUILD_VERSION.LATEST;
         public renderChildren!: T[];
         public renderParent!: Null<T>;
-        public companion!: T;
+        public companion?: T;
         public horizontalRows!: T[][];
         public alignedWithX?: T;
         public alignedWithY?: T;
@@ -1483,7 +1483,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     node.unsafe('boxAdjustment', this._boxAdjustment.slice(0));
                 }
                 for (const name in this._namespaces) {
-                    const obj: StringMap = this._namespaces[name];
+                    const obj = this._namespaces[name];
                     for (const attr in obj) {
                         node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
                     }
@@ -1860,7 +1860,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.delete('android', attr);
                 return '';
             }
-            return this._namespaces['android']![attr] || '';
+            return this._namespaces.android![attr] || '';
         }
 
         public app(attr: string, value?: string, overwrite = true) {
@@ -1873,7 +1873,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.delete('app', attr);
                 return '';
             }
-            const app = this._namespaces['app'];
+            const app = this._namespaces.app;
             return app && app[attr] || '';
         }
 
@@ -2561,7 +2561,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public applyCustomizations(overwrite = true) {
             const { tagName, controlName } = this;
-            const setCustomization = (obj: Undef<ObjectMap<StringMap>>) => {
+            const setCustomization = (obj: Undef<ObjectMap<Undef<StringMap>>>) => {
                 if (obj) {
                     for (const name in obj) {
                         const data = obj[name];

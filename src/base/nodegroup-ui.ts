@@ -131,11 +131,11 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get firstChild() {
-        return this.item(0) as NodeUI || null;
+        return this.item(0) as Null<NodeUI> || null;
     }
 
     get lastChild() {
-        return this.item(-1) as NodeUI || null;
+        return this.item(-1) as Null<NodeUI> || null;
     }
 
     get childIndex() {

@@ -23,7 +23,7 @@ const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, repla
 const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
 const REGEXP_CSSHOST = /^:(host|host-context)\(([^)]+)\)/;
 const REGEXP_DATAURI = new RegExp(`url\\("(${STRING.DATAURI})"\\)`, 'g');
-let CSS_SHORTHANDNONE: Undef<ObjectMap<CssPropertyData>>;
+let CSS_SHORTHANDNONE: ObjectMap<CssPropertyData>;
 
 function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number) {
     let result: Undef<string>,

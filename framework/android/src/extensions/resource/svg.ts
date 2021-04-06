@@ -176,7 +176,7 @@ if (KEYSPLINE_NAME) {
         [KEYSPLINE_NAME['ease-in']]: INTERPOLATOR_NAME.accelerate,
         [KEYSPLINE_NAME['ease-out']]: INTERPOLATOR_NAME.decelerate,
         [KEYSPLINE_NAME['ease-in-out']]: INTERPOLATOR_NAME.accelerate_decelerate,
-        [KEYSPLINE_NAME['linear']]: INTERPOLATOR_NAME.linear
+        [KEYSPLINE_NAME.linear]: INTERPOLATOR_NAME.linear
     });
 }
 
@@ -254,13 +254,13 @@ function createTransformData(transform: SvgTransform[]) {
 
 function getOuterOpacity(target: SvgView) {
     let value = +target.opacity,
-        current = target.parent;
+        current = target.parent as Null<SvgView>;
     while (current) {
-        const opacity = +(current['opacity'] || '1');
+        const opacity = +(current.opacity || '1');
         if (!isNaN(opacity) && opacity < 1) {
             value *= opacity;
         }
-        current = current.parent;
+        current = current.parent as Null<SvgView>;
     }
     return value;
 }
@@ -1053,7 +1053,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (propertyNames) {
                                             const values = isColorType(item.attributeName) ? getColorValue(resourceId, item.to, true) : item.to.trim().split(/\s+/);
                                             if (values && values.length === propertyNames.length && !values.some(value => !value)) {
-                                                const baseItems = requireBefore && item.baseValue?.trim().split(/\s+/);
+                                                const baseItems = requireBefore && item.baseValue.trim().split(/\s+/);
                                                 let companionBefore: Undef<PropertyValue[]>,
                                                     companionAfter: Undef<PropertyValue[]>;
                                                 for (let k = 0, q = propertyNames.length; k < q; ++k) {

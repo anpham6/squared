@@ -23,11 +23,11 @@ const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, 
 const { getElementAsNode } = squared.lib.session;
 const { convertBase64, convertCamelCase, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, replaceAll, splitPair, startsWith } = squared.lib.util;
 
-const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
-const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
-const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
-const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
-const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
+const BORDER_TOP = CSS_PROPERTIES.borderTop!.value as string[];
+const BORDER_RIGHT = CSS_PROPERTIES.borderRight!.value as string[];
+const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom!.value as string[];
+const BORDER_LEFT = CSS_PROPERTIES.borderLeft!.value as string[];
+const BORDER_OUTLINE = CSS_PROPERTIES.outline!.value as string[];
 
 const REGEXP_COLORSTOP = new RegExp(STRING.CSS_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;

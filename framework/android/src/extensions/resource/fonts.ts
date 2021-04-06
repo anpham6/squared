@@ -308,7 +308,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                         }
                         if (hasKeys(filtered)) {
-                            const combined: ObjectMap<Set<string>> = {};
+                            const combined: ObjectMap<Undef<Set<string>>> = {};
                             const deleteKeys: string[] = [];
                             const joinedMap: ObjectMap<T[]> = {};
                             const joinedIndex: StringMap = {};
@@ -341,7 +341,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 styleTag[attr] = filtered[attr];
                             }
                             for (const attr in combined) {
-                                const items = Array.from(combined[attr]);
+                                const items = Array.from(combined[attr]!);
                                 deleteStyleAttribute(sorted, items, joinedMap[attr]);
                                 styleTag[items.join(';')] = joinedMap[attr];
                             }

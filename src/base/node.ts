@@ -32,11 +32,11 @@ const TEXT_STYLE: CssStyleAttr[] = [
     'wordSpacing'
 ];
 
-const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
-const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
-const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
-const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
-const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
+const BORDER_TOP = CSS_PROPERTIES.borderTop!.value as string[];
+const BORDER_RIGHT = CSS_PROPERTIES.borderRight!.value as string[];
+const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom!.value as string[];
+const BORDER_LEFT = CSS_PROPERTIES.borderLeft!.value as string[];
+const BORDER_OUTLINE = CSS_PROPERTIES.outline!.value as string[];
 
 const REGEXP_EM = /\dem$/i;
 const REGEXP_NOT = /^:not\((.+)\)$/i;
@@ -1072,10 +1072,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         if (!this._preferInitial && this.naturalChild) {
             let parent: T;
-            if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.LAYOUT)) {
+            if (attrs.some(value => !!CSS_PROPERTIES[value] && (CSS_PROPERTIES[value]!.trait & CSS_TRAITS.LAYOUT))) {
                 parent = this.pageFlow && this.ascend({ condition: item => item.hasUnit('width') && item.hasUnit('height') || item.documentRoot })[0] || this;
             }
-            else if (attrs.some(value => CSS_PROPERTIES[value].trait & CSS_TRAITS.CONTAIN)) {
+            else if (attrs.some(value => !!CSS_PROPERTIES[value] && (CSS_PROPERTIES[value]!.trait & CSS_TRAITS.CONTAIN))) {
                 parent = this;
             }
             else {
@@ -1299,7 +1299,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (this.styleElement && attr in style) {
             if (value === '') {
                 style[attr] = 'initial';
-                const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
+                const property = CSS_PROPERTIES[attr];
                 if (property && typeof property.value === 'string') {
                     this._styleMap[attr] = getInitialValue(this._element!, attr) + (property.trait & CSS_TRAITS.UNIT ? 'px' : '');
                 }
@@ -1625,7 +1625,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 ({ not, type, ignoreDefault } = options);
             }
             if (ignoreDefault !== true) {
-                const property = CSS_PROPERTIES[attr] as Undef<CssPropertyData>;
+                const property = CSS_PROPERTIES[attr];
                 if (property) {
                     const propValue = this.styleElement ? getInitialValue(this._element!, attr) : property.value;
                     if (typeof propValue === 'string' && (value === propValue || (property.trait & CSS_TRAITS.UNIT) && this.parseUnit(value) === parseFloat(propValue))) {
