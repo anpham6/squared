@@ -7,7 +7,7 @@ import SvgBuild from './svgbuild';
 
 import { TRANSFORM } from './lib/util';
 
-type IntervalMap = ObjectMap<Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>>;
+type IntervalMap = ObjectMapSafe<Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>>;
 
 const { sortNumber, splitPairStart } = squared.lib.util;
 
@@ -58,38 +58,41 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => b.group.id - a.group.id)[0] as SvgAnimate;
             if (backwards) {
                 const delay = backwards.delay;
-                insertIntervalValue(intervalMap[keyName], 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
+                insertIntervalValue(intervalMap[keyName]!, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
             }
         }
         for (let i = 0; i < length; ++i) {
             const item = animations[i];
             const keyName = SvgAnimationIntervalMap.getKeyName(item);
-            const mapData = intervalMap[keyName];
-            if (item.baseValue && !intervalMap[keyName][-1]) {
-                insertIntervalValue(mapData, -1, item.baseValue);
-            }
-            if (item.setterType) {
-                const { delay, duration } = item;
-                const fillReplace = item.fillReplace && duration > 0;
-                insertIntervalValue(mapData, delay, item.to, fillReplace ? delay + duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
-                if (fillReplace) {
-                    insertIntervalValue(mapData, delay + duration, '', 0, item, false, true, FILL_MODE.FREEZE);
+            const data = intervalMap[keyName];
+            if (data) {
+                if (item.baseValue && !data[-1]) {
+                    insertIntervalValue(data, -1, item.baseValue);
                 }
-            }
-            else if (SvgBuild.isAnimate(item) && item.duration > 0) {
-                const infinite = item.iterationCount === -1;
-                const timeEnd = item.getTotalDuration();
-                insertIntervalValue(mapData, item.delay, item.valueTo, timeEnd, item, true, false, 0, infinite, item.valueFrom);
-                if (!infinite && !item.fillReplace) {
-                    insertIntervalValue(mapData, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
+                if (item.setterType) {
+                    const { delay, duration } = item;
+                    const fillReplace = item.fillReplace && duration > 0;
+                    insertIntervalValue(data, delay, item.to, fillReplace ? delay + duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
+                    if (fillReplace) {
+                        insertIntervalValue(data, delay + duration, '', 0, item, false, true, FILL_MODE.FREEZE);
+                    }
+                }
+                else if (SvgBuild.isAnimate(item) && item.duration > 0) {
+                    const infinite = item.iterationCount === -1;
+                    const timeEnd = item.getTotalDuration();
+                    insertIntervalValue(data, item.delay, item.valueTo, timeEnd, item, true, false, 0, infinite, item.valueFrom);
+                    if (!infinite && !item.fillReplace) {
+                        insertIntervalValue(data, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
+                    }
                 }
             }
         }
         for (const keyName in intervalMap) {
-            const keyTimes = sortNumber(Array.from(intervalMap[keyName].keys()));
+            const data = intervalMap[keyName];
+            const keyTimes = sortNumber(Array.from(data.keys()));
             for (let i = 0, q = keyTimes.length; i < q; ++i) {
                 const time = keyTimes[i];
-                const values = intervalMap[keyName].get(time)!;
+                const values = data.get(time)!;
                 for (let j = 0; j < values.length; ++j) {
                     const interval = values[j];
                     const animation = interval.animation;

@@ -11,28 +11,30 @@ export function clearSessionAll() {
 }
 
 export function setElementCache(element: Element, attr: string, data: unknown, sessionId = '0') {
-    let elementMap = SESSION_MAP[sessionId].get(element);
-    if (!elementMap) {
-        SESSION_MAP[sessionId].set(element, elementMap = {});
+    const map = SESSION_MAP[sessionId];
+    if (map) {
+        let elementMap = map.get(element);
+        if (!elementMap) {
+            map.set(element, elementMap = {});
+        }
+        elementMap[attr] = data;
     }
-    elementMap[attr] = data;
 }
 
 export function getElementCache<T = unknown>(element: Element, attr: string, sessionId?: string) {
-    const elementMap = getElementData(element, sessionId);
-    if (elementMap) {
-        return elementMap[attr] as Undef<T>;
-    }
+    const map = getElementData(element, sessionId);
+    return map && map[attr] as Undef<T>;
 }
 
 export function getElementData(element: Element, sessionId?: string) {
     if (!sessionId) {
-        const data = SESSION_MAP['0'].get(element);
+        const data = SESSION_MAP['0']!.get(element);
         if (!(sessionId = data && data.sessionId)) {
             return;
         }
     }
-    return SESSION_MAP[sessionId].get(element);
+    const map = SESSION_MAP[sessionId];
+    return map && map.get(element);
 }
 
 export function getElementAsNode<T>(element: Element, sessionId?: string) {

@@ -1518,7 +1518,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 }
                 else if (item.nodeName[0] !== '#') {
-                    value = replaceAll(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getComputedStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '', 1);
+                    value = replaceAll(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '', 1);
                 }
                 if (!preserveWhiteSpace) {
                     if (index === 0) {

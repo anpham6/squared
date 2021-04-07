@@ -459,7 +459,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _cacheState!: CacheStateUI<T>;
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
-    protected abstract _namespaces: ObjectMap<StringMap>;
+    protected abstract _namespaces: Record<string, StringMap>;
 
     private _locked: Null<ObjectMapNested<boolean>> = null;
     private _siblingsLeading: Null<T[]> = null;
@@ -517,11 +517,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (overwrite && this.lockedAttr(name, attr)) {
                 overwrite = false;
             }
-            if (!overwrite && obj[attr]) {
-                return obj[attr]!;
+            if (overwrite || !obj[attr]) {
+                return obj[attr] = value;
             }
-            obj[attr] = value;
-            return value;
         }
         return obj[attr] || '';
     }

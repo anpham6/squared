@@ -57,10 +57,10 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         for (const containerName in groups) {
             const group = groups[containerName];
             for (const name in group) {
+                const items = group[name]!;
                 const [namespace, attr, value] = name.split(',');
                 CACHE_UNDERSCORE[attr] ||= convertHyphenated(attr, '_');
                 const key = getResourceName(resourceId, dimens, fromLastIndexOf(containerName, '.') + '_' + CACHE_UNDERSCORE[attr], value);
-                const items = group[name];
                 for (let i = 0, length = items.length; i < length; ++i) {
                     items[i].attr(namespace, attr, `@dimen/${key}`);
                 }

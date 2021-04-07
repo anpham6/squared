@@ -2093,7 +2093,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public supported(attr: string, value: string, result: PlainObject): boolean {
             const api = this.api;
             if (DEPRECATED_ATTRIBUTE.android[attr]) {
-                const valid = DEPRECATED_ATTRIBUTE.android[attr].call(this, result, api, value);
+                const valid = DEPRECATED_ATTRIBUTE.android[attr]!.call(this, result, api, value);
                 if (!valid || hasKeys(result)) {
                     return valid;
                 }
@@ -2561,7 +2561,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public applyCustomizations(overwrite = true) {
             const { tagName, controlName } = this;
-            const setCustomization = (obj: Undef<ObjectMap<Undef<StringMap>>>) => {
+            const setCustomization = (obj: Undef<ObjectMap<StringMap>>) => {
                 if (obj) {
                     for (const name in obj) {
                         const data = obj[name];

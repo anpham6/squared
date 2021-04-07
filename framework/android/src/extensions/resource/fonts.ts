@@ -124,7 +124,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const convertPixels = userSettings.convertPixels === 'dp';
         const { resourceId, cache } = this.application.getProcessing(sessionId)!;
         const { fonts, styles } = Resource.STORED[resourceId]!;
-        const nameMap: ObjectMap<T[]> = {};
+        const nameMap: ObjectMapSafe<T[]> = {};
         const groupMap: ObjectMap<StyleList<T>[]> = {};
         const fontItems: T[] = [];
         cache.each(node => {
@@ -226,13 +226,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in groupMap) {
             const styleTag: ObjectMap<T[]> = {};
             style[tag] = styleTag;
-            const sorted = groupMap[tag].filter(item => item).sort((a, b) => {
+            const sorted = groupMap[tag]!.filter(item => item).sort((a, b) => {
                 let maxA = 0,
                     maxB = 0,
                     countA = 0,
                     countB = 0;
                 for (const attr in a) {
-                    const lenA = a[attr].length;
+                    const lenA = a[attr]!.length;
                     maxA = Math.max(lenA, maxA);
                     countA += lenA;
                 }
@@ -257,7 +257,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (length === 1) {
                     const data = sorted[0];
                     for (const attr in data) {
-                        const item = data[attr];
+                        const item = data[attr]!;
                         if (item.length) {
                             styleTag[attr] = item;
                         }
@@ -270,11 +270,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         const dataA = sorted[i];
                         const filtered: AttributeMap<T> = {};
                         for (const attrA in dataA) {
-                            const ids = dataA[attrA];
+                            const ids = dataA[attrA]!;
                             if (ids.length === 0) {
                                 continue;
                             }
-                            else if (ids.length === nameMap[tag].length) {
+                            else if (ids.length === nameMap[tag]!.length) {
                                 styleKey[attrA] = ids;
                                 sorted[i] = {};
                                 break;
@@ -285,7 +285,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 if (i !== j) {
                                     const dataB = sorted[j];
                                     for (const attr in dataB) {
-                                        const compare = dataB[attr];
+                                        const compare = dataB[attr]!;
                                         if (compare.length) {
                                             for (let k = 0, q = ids.length; k < q; ++k) {
                                                 if (compare.includes(ids[k])) {
@@ -297,7 +297,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 }
                             }
                             for (const attrB in found) {
-                                const dataB = found[attrB];
+                                const dataB = found[attrB]!;
                                 if (dataB.length > 1) {
                                     filtered[attrA < attrB ? `${attrA};${attrB}` : `${attrB};${attrA}`] = dataB;
                                     merged = true;
@@ -308,12 +308,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                         }
                         if (hasKeys(filtered)) {
-                            const combined: ObjectMap<Undef<Set<string>>> = {};
+                            const combined: ObjectMap<Set<string>> = {};
                             const deleteKeys: string[] = [];
                             const joinedMap: ObjectMap<T[]> = {};
                             const joinedIndex: StringMap = {};
                             for (const attr in filtered) {
-                                const ids = joinArray(filtered[attr], item => item.id.toString(), ',');
+                                const ids = joinArray(filtered[attr]!, item => item.id.toString(), ',');
                                 joinedIndex[attr] = ids;
                                 joinedMap[ids] = filtered[attr];
                             }
@@ -337,12 +337,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 if (deleteKeys.includes(attr)) {
                                     continue;
                                 }
-                                deleteStyleAttribute(sorted, attr.split(';'), filtered[attr]);
+                                deleteStyleAttribute(sorted, attr.split(';'), filtered[attr]!);
                                 styleTag[attr] = filtered[attr];
                             }
                             for (const attr in combined) {
                                 const items = Array.from(combined[attr]!);
-                                deleteStyleAttribute(sorted, items, joinedMap[attr]);
+                                deleteStyleAttribute(sorted, items, joinedMap[attr]!);
                                 styleTag[items.join(';')] = joinedMap[attr];
                             }
                         }
@@ -353,7 +353,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     spliceArray(sorted, item => {
                         for (const attr in item) {
-                            if (item[attr].length) {
+                            if (item[attr]!.length) {
                                 return false;
                             }
                         }
@@ -381,7 +381,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     name: '',
                     parent: '',
                     items,
-                    nodes: styleTag[attrs]
+                    nodes: styleTag[attrs]!
                 });
             }
             styleData.sort((a, b) => {
@@ -399,7 +399,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             resourceMap[tag] = styleData;
         }
         for (const tag in resourceMap) {
-            for (const group of resourceMap[tag]) {
+            for (const group of resourceMap[tag]!) {
                 const nodes = group.nodes;
                 if (nodes) {
                     for (let i = 0, length = nodes.length; i < length; ++i) {
@@ -436,7 +436,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const name = values[i];
                 const match = REGEXP_FONTNAME.exec(name);
                 if (match) {
-                    const styleData = resourceMap[match[1].toUpperCase()][+match[2] || 0];
+                    const styleData = resourceMap[match[1].toUpperCase()]![+match[2] || 0];
                     if (styleData) {
                         if (i === 0) {
                             parent = name;

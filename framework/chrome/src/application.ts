@@ -2,7 +2,7 @@ import type Extension from './extension';
 
 import File from './file';
 
-type CssValueMap = ObjectMap<Undef<Set<string>>>;
+type CssValueMap = ObjectMap<Set<string>>;
 
 const { UNABLE_TO_FINALIZE_DOCUMENT, reject } = squared.lib.error;
 const { escapePattern, isPlainObject, splitSome } = squared.lib.util;

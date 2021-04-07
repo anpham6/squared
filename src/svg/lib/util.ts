@@ -36,7 +36,7 @@ function getDataSetValue(element: SVGElement, attr: string) {
         try {
             const obj: SvgDataSet = JSON.parse(data);
             if (obj) {
-                return obj[attr]?.toString().trim() as string || '';
+                return obj[attr]?.toString().trim() || '';
             }
         }
         catch {

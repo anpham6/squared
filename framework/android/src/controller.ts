@@ -25,7 +25,7 @@ import NodeUI = squared.base.NodeUI;
 import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor, replaceTab } from './lib/util';
 
 const { isPlatform, isUserAgent } = squared.lib.client;
-const { asPercent, formatPX, hasCoords, parseTransform } = squared.lib.css;
+const { asPercent, formatPX, getStyle, hasCoords, parseTransform } = squared.lib.css;
 const { getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -342,7 +342,7 @@ function causesLineBreak(element: Element) {
         return true;
     }
     else if (element.nodeName[0] !== '#') {
-        const style = getComputedStyle(element);
+        const style = getStyle(element);
         const hasWidth = () => (style.width === '100%' || style.minWidth === '100%') && (style.maxWidth === 'none' || style.maxWidth === '100%');
         if (!hasCoords(style.position)) {
             const display = style.display;
@@ -1791,8 +1791,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const item = keyFrames.get(name);
                         if (item) {
                             for (const attr in item) {
-                                const data = item[attr];
-                                if (data.transform?.includes('rotate')) {
+                                const transform = item[attr]!.transform;
+                                if (transform && transform.includes('rotate')) {
                                     circular = true;
                                     return true;
                                 }
@@ -2018,7 +2018,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const current = constraint.current;
             if (!constraint.horizontal) {
                 for (const attr in current) {
-                    const { documentId, horizontal } = current[attr];
+                    const { documentId, horizontal } = current[attr]!;
                     if (horizontal && horizontalAligned.some(item => item.documentId === documentId)) {
                         constraint.horizontal = true;
                         horizontalAligned.push(node);
@@ -2029,7 +2029,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             if (!constraint.vertical) {
                 for (const attr in current) {
-                    const { documentId, horizontal } = current[attr];
+                    const { documentId, horizontal } = current[attr]!;
                     if (!horizontal && verticalAligned.some(item => item.documentId === documentId)) {
                         constraint.vertical = true;
                         verticalAligned.push(node);

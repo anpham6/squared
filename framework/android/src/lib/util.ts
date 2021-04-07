@@ -8,12 +8,11 @@ const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
 
 export function parseColor(value: string, opacity = 1, transparency?: boolean) {
     if (value && (value !== 'transparent' || transparency)) {
-        let result: Null<ColorData> = CACHE_COLORDATA[value];
+        let result: Optional<ColorData> = CACHE_COLORDATA[value];
         if (result) {
             return result;
         }
-        result = __parseColor(value, opacity);
-        if (result && (result.opacity > 0 || transparency)) {
+        if ((result = __parseColor(value, opacity)) && (result.opacity > 0 || transparency)) {
             CACHE_COLORDATA[result.opacity === 1 ? value : result.valueAsRGBA] = result;
             return result;
         }

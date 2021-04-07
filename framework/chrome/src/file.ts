@@ -5,7 +5,7 @@ import type Application from './application';
 import Resource = squared.base.Resource;
 
 type CloudStorage = unknown;
-type BundleIndex = ObjectMap<ChromeAsset[]>;
+type BundleIndex = ObjectMapSafe<ChromeAsset[]>;
 
 interface OptionsData {
     preserve?: boolean;

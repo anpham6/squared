@@ -15,9 +15,9 @@ type SvgContainer = squared.svg.SvgContainer;
 type AnimateValue = NumString | Point[];
 type TimelineValue = Map<string | number, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;
-type TimelineMap = ObjectMap<TimelineIndex>;
+type TimelineMap = ObjectMapSafe<TimelineIndex>;
 type KeyTimeMap = Map<number, TimelineValue>;
-type ForwardMap = ObjectMap<Undef<ForwardValue[]>>;
+type ForwardMap = ObjectMap<ForwardValue[]>;
 type InterpolatorMap = Map<number, string>;
 type TransformOriginMap = Map<number, Point>;
 type TimelineEntries = [number, TimelineValue][];
@@ -102,11 +102,9 @@ function convertToAnimateValue(value: AnimateValue, fromString?: boolean) {
             if (!isNaN(n)) {
                 return n;
             }
-            else {
-                value = SvgBuild.parsePoints(value);
-                if (value.length === 0) {
-                    return '';
-                }
+            value = SvgBuild.parsePoints(value);
+            if (value.length === 0) {
+                return '';
             }
         }
     }
@@ -235,7 +233,7 @@ function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: Forw
         const keyTime = keyTimes[i];
         const values = new Map<string, AnimateValue>();
         for (const attr in map) {
-            const value: Undef<AnimateValue> = map[attr].get(keyTime) ?? getForwardValue(forwardMap[attr], keyTime);
+            const value: Undef<AnimateValue> = map[attr]!.get(keyTime) ?? getForwardValue(forwardMap[attr], keyTime);
             if (value !== undefined) {
                 values.set(attr, value);
             }
@@ -397,7 +395,7 @@ function getIntermediateSplitValue(subTime: number, splitTime: number, item: Svg
     }
 }
 
-function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<Undef<AnimateValue>>, interval: number, item: SvgAnimate, keyTimes: number[], values: string[], keySplines: Null<string[]>, baseValue: Undef<AnimateValue>, queued: SvgAnimate[], evaluateStart: boolean): [number[], string[], string[]] {
+function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<AnimateValue>, interval: number, item: SvgAnimate, keyTimes: number[], values: string[], keySplines: Null<string[]>, baseValue: Undef<AnimateValue>, queued: SvgAnimate[], evaluateStart: boolean): [number[], string[], string[]] {
     let length = values.length;
     keySplines ||= new Array(length - 1).fill('');
     const { delay, duration } = item;
@@ -558,7 +556,7 @@ function insertInterpolator(item: SvgAnimate, time: number, keySplines: Null<str
     }
 }
 
-function setStartItemValues(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<Undef<AnimateValue>>, item: SvgAnimate, baseValue: Undef<AnimateValue>, keyTimes: number[], values: string[], keySplines?: Null<string[]>) {
+function setStartItemValues(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<AnimateValue>, item: SvgAnimate, baseValue: Undef<AnimateValue>, keyTimes: number[], values: string[], keySplines?: Null<string[]>) {
     if (keyTimes[0] !== 0) {
         let value: string;
         if (item.additiveSum) {
@@ -885,18 +883,18 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     removeAnimations(animationsBase, removeable);
                 }
                 if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
-                    const groupName: ObjectMap<Map<number, SvgAnimate[]>> = {};
-                    const groupAttributeMap: ObjectMap<SvgAnimate[]> = {};
+                    const groupName: ObjectMapSafe<Map<number, SvgAnimate[]>> = {};
+                    const groupAttributeMap: ObjectMapSafe<SvgAnimate[]> = {};
                     const intervalMap = new SvgAnimationIntervalMap(mergeable);
                     const repeatingMap: TimelineMap = {};
                     const repeatingInterpolatorMap = new Map<number, string>();
                     const repeatingTransformOriginMap = transforming ? new Map<number, Point>() : null;
-                    const repeatingMaxTime: ObjectMap<number> = {};
+                    const repeatingMaxTime: ObjectMapSafe<number> = {};
                     const repeatingAnimations = new Set<SvgAnimate>();
-                    const infiniteMap: ObjectMap<Undef<SvgAnimate>> = {};
+                    const infiniteMap: ObjectMap<SvgAnimate> = {};
                     const infiniteInterpolatorMap = new Map<number, string>();
                     const infiniteTransformOriginMap = transforming ? new Map<number, Point>() : null;
-                    const baseValueMap: ObjectMap<Undef<AnimateValue>> = {};
+                    const baseValueMap: ObjectMap<AnimateValue> = {};
                     const forwardMap: ForwardMap = {};
                     const animateTimeRangeMap = new Map<number, number>();
                     let repeatingDuration = 0,
@@ -1845,7 +1843,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         --time;
                                     }
                                     baseValue = getItemValue(item, values, j, k, baseValue);
-                                    maxTime = setTimelineValue(timelineMap[attr], time, baseValue);
+                                    maxTime = setTimelineValue(timelineMap[attr]!, time, baseValue);
                                     insertInterpolator(item, maxTime, keySplines, k, keyTimeMode, infiniteInterpolatorMap, infiniteTransformOriginMap);
                                     if (!keyTimes.includes(maxTime)) {
                                         keyTimes.push(maxTime);

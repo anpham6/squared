@@ -149,7 +149,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 rawAudio: this.resourceRawAudioToString(assets)
             };
             for (const name in result) {
-                if (result[name].length === 0) {
+                if (result[name]!.length === 0) {
                     delete result[name];
                 }
             }
@@ -170,7 +170,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                             rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name], outputDocumentHandler));
                             break;
                         default:
-                            rawAssets.push(...getFileAssets(outputDirectory, result[name], outputDocumentHandler));
+                            rawAssets.push(...getFileAssets(outputDirectory, result[name]!, outputDocumentHandler));
                             break;
                     }
                 }

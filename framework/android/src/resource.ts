@@ -20,7 +20,7 @@ let CACHE_IMAGE: StringMap = {};
 let COUNTER_UUID = 0;
 let COUNTER_SYMBOL = 0;
 
-function formatObject(resourceId: number, obj: ObjectMap<Undef<string | StringMap>>, numberAlias?: boolean) {
+function formatObject(resourceId: number, obj: ObjectMap<string | StringMap>, numberAlias?: boolean) {
     for (const attr in obj) {
         const value = obj[attr];
         if (isString(value)) {

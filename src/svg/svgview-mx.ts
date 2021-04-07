@@ -10,7 +10,7 @@ import { CACHE_VIEWNAME, PATTERN_CUBICBEZIER, TRANSFORM, calculateStyle, getAttr
 
 import Pattern = squared.lib.base.Pattern;
 
-type AttributeMap = ObjectMap<Undef<AttributeData[]>>;
+type AttributeMap = ObjectMap<AttributeData[]>;
 
 interface AttributeData extends NumberValue {
     transformOrigin?: Point;
@@ -156,7 +156,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 return result;
             }
             const keyframesMap = this.viewport?.keyframesMap || getKeyframesRules();
-            const cssData: ObjectMap<string[]> = {};
+            const cssData: Record<string, string[]> = {};
             const groupName: SvgAnimate[] = [];
             const groupOrdering: SvgAnimationAttribute[] = [];
             for (const name in ANIMATION_DEFAULT) {

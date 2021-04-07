@@ -23,7 +23,7 @@ interface Customizations<T> {
 interface CustomizationsData<T> {
     android: ObjectMap<boolean | CustomizationResult<T>>;
     assign: {
-        [namespace: string]: Undef<ObjectMap<Undef<StringMap>>>;
+        [namespace: string]: Undef<ObjectMap<StringMap>>;
     };
 }
 
