@@ -910,9 +910,11 @@ declare module "base" {
 
         namespace regex {
             const STRING: {
-                CSS_COLOR: RegExp;
-                CSS_COLORSTOP: RegExp;
-                CSS_QUOTE: RegExp;
+                CSS_COLOR: string;
+                CSS_COLORSTOP: string;
+                CSS_VARNAME: string;
+                CSS_VARVALUE: string;
+                CSS_QUOTE: string;
             };
 
             const CSS: {
