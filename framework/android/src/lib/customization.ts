@@ -4,7 +4,7 @@ import { BUILD_VERSION } from './constant';
 
 import type View from '../view';
 
-function substitute(result: PlainObject, attr: string, api?: number, minApi = 0, value?: string) {
+function substitute(result: PlainObject, attr: string, api?: BUILD_VERSION, minApi: BUILD_VERSION = 0, value?: string) {
     if (!api || api >= minApi) {
         result.attr = attr;
         if (value) {
@@ -696,9 +696,9 @@ export const DEPRECATED_ATTRIBUTE: Deprecations<View> = {
     }
 };
 
-export function getValue(api: number, tagName: string, obj: string, attr: string) {
+export function getValue(api: BUILD_VERSION, tagName: string, namespace: string, attr: string) {
     for (const build of [API_VERSION[api], API_VERSION[0]]) {
-        const value = build.assign[tagName]?.[obj]?.[attr];
+        const value = build.assign[tagName]?.[namespace]?.[attr];
         if (value) {
             return value;
         }

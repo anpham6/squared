@@ -13,6 +13,7 @@ class GlobExp extends RegExp implements IGlobExp {
     }
 }
 
+const REGEXP_LOWERCASE = /&#?[A-Za-z\d]+?;/g;
 const HEX_STRING = '0123456789abcdef';
 const EXT_DATA = {
     '3gp': 'video/3gpp',
@@ -437,13 +438,8 @@ export function upperCaseString(value: string) {
 }
 
 export function lowerCaseString(value: string) {
-    const entities: string[] = [];
-    const pattern = /&#?[A-Za-z\d]+?;/g;
-    let match: Null<RegExpExecArray>;
-    while (match = pattern.exec(value)) {
-        entities.push(match[0]);
-    }
-    return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
+    const entities: Null<string[]> = value.match(REGEXP_LOWERCASE);
+    return entities ? value.split(REGEXP_LOWERCASE).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
 }
 
 export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void> {

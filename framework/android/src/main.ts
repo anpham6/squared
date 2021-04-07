@@ -109,7 +109,6 @@ const appBase: android.AppFramework<View> = {
         },
         copyResourceAllXml(pathname: string, options?: FileCopyingOptions) {
             if (checkApplication()) {
-
                 file!.resourceAllToXml(undefined, { ...options, pathname });
             }
         },

@@ -213,155 +213,151 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
             else {
                 textContent = seg.textContent;
             }
-            const words: string[] = [];
-            let match: Null<RegExpExecArray>;
-            while (match = REGEXP_WORD.exec(textContent)) {
-                words.push(match[0]);
-            }
-            REGEXP_WORD.lastIndex = 0;
-            if (partition && words.length <= 1) {
+            const words: Null<string[]> = textContent.match(REGEXP_WORD);
+            const q = words ? words.length : 0;
+            if (partition && q <= 1) {
                 wrapperContainer.push(seg);
             }
-            else {
-                const q = words.length;
-                if (q > 1) {
-                    const { fontSize, lineHeight, naturalElement, elementData } = seg;
-                    const depth = seg.depth + (seg === node ? 1 : 0);
-                    const fontFamily = seg.textStyle.fontFamily!;
-                    const styleMap: CssStyleMap = { ...seg.unsafe<CssStyleMap>('styleMap') };
-                    delete styleMap.lineHeight;
-                    const initial: InitialData<T> = Object.freeze({ styleMap });
-                    const cssData: CssStyleMap = {
-                        position: 'static',
-                        display: partition ? seg.display : 'inline',
-                        verticalAlign: 'baseline',
-                        ...seg.textStyle
-                    };
-                    const boxRect: Partial<BoxRectDimension> = { ...!seg.hasUnit('width') && seg.textBounds || seg.bounds };
-                    boxRect.height = Math.floor(seg.bounds.height / (boxRect.numberOfLines || 1));
-                    boxRect.numberOfLines = 1;
-                    const createContainer = (tagName: string, value: string) => {
-                        const container = application.createNode(sessionId, { parent: parentContainer });
-                        const metrics = getTextMetrics(value, fontSize, fontFamily);
-                        const bounds = { ...boxRect, width: (metrics ? metrics.width : 0) + (value.length * adjustment) } as BoxRectDimension;
-                        container.internalSelf(parentContainer, depth);
-                        container.inlineText = true;
-                        container.renderExclude = false;
-                        container.contentAltered = true;
-                        container.textContent = value;
-                        container.actualParent = parentContainer;
-                        container.textBounds = bounds;
-                        container.unsafe({ element, initial, elementData, preferInitial: false, bounds });
-                        container.setCacheState('naturalChild', false);
-                        container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
-                        container.setCacheState('htmlElement', naturalElement);
-                        container.setCacheState('styleElement', naturalElement);
-                        container.setCacheValue('tagName', tagName);
-                        container.setCacheValue('fontSize', fontSize);
-                        container.setCacheValue('lineHeight', lineHeight);
-                        container.cssApply(cssData);
-                        container.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.TEXT);
-                        container.exclude({ resource: NODE_RESOURCE.BOX_STYLE, section: APP_SECTION.DOM_TRAVERSE | APP_SECTION.EXTENSION });
-                        return container;
-                    };
-                    let previous!: T;
-                    if (partition) {
-                        const { marginLeft, marginRight } = seg;
-                        for (let j = 0, k = 0, l = q, r: number; j < columns; ++j, l -= r, k += r) {
-                            r = j === columns - 1 ? l : Math.floor(q / columns);
-                            const container = createContainer(seg.tagName, concatString(words.slice(k, k + r)));
-                            container.multiline = true;
-                            if (j === 0) {
+            else if (q > 1) {
+                const { fontSize, lineHeight, naturalElement, elementData } = seg;
+                const depth = seg.depth + (seg === node ? 1 : 0);
+                const fontFamily = seg.textStyle.fontFamily!;
+                const styleMap: CssStyleMap = { ...seg.unsafe<CssStyleMap>('styleMap') };
+                delete styleMap.lineHeight;
+                const initial: InitialData<T> = Object.freeze({ styleMap });
+                const cssData: CssStyleMap = {
+                    position: 'static',
+                    display: partition ? seg.display : 'inline',
+                    verticalAlign: 'baseline',
+                    ...seg.textStyle
+                };
+                const boxRect: Partial<BoxRectDimension> = { ...!seg.hasUnit('width') && seg.textBounds || seg.bounds };
+                boxRect.height = Math.floor(seg.bounds.height / (boxRect.numberOfLines || 1));
+                boxRect.numberOfLines = 1;
+                const createContainer = (tagName: string, value: string) => {
+                    const container = application.createNode(sessionId, { parent: parentContainer });
+                    const metrics = getTextMetrics(value, fontSize, fontFamily);
+                    const bounds = { ...boxRect, width: (metrics ? metrics.width : 0) + (value.length * adjustment) } as BoxRectDimension;
+                    container.internalSelf(parentContainer, depth);
+                    container.inlineText = true;
+                    container.renderExclude = false;
+                    container.contentAltered = true;
+                    container.textContent = value;
+                    container.actualParent = parentContainer;
+                    container.textBounds = bounds;
+                    container.unsafe({ element, initial, elementData, preferInitial: false, bounds });
+                    container.setCacheState('naturalChild', false);
+                    container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
+                    container.setCacheState('htmlElement', naturalElement);
+                    container.setCacheState('styleElement', naturalElement);
+                    container.setCacheValue('tagName', tagName);
+                    container.setCacheValue('fontSize', fontSize);
+                    container.setCacheValue('lineHeight', lineHeight);
+                    container.cssApply(cssData);
+                    container.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.TEXT);
+                    container.exclude({ resource: NODE_RESOURCE.BOX_STYLE, section: APP_SECTION.DOM_TRAVERSE | APP_SECTION.EXTENSION });
+                    return container;
+                };
+                let previous!: T;
+                if (partition) {
+                    const { marginLeft, marginRight } = seg;
+                    for (let j = 0, k = 0, l = q, r: number; j < columns; ++j, l -= r, k += r) {
+                        r = j === columns - 1 ? l : Math.floor(q / columns);
+                        const container = createContainer(seg.tagName, concatString(words!.slice(k, k + r)));
+                        container.multiline = true;
+                        if (j === 0) {
+                            container.siblingsLeading = seg.siblingsLeading;
+                            container.lineBreakLeading = seg.lineBreakLeading;
+                            container.textIndent = seg.textIndent;
+                            container.setCacheValue('marginTop', seg.marginTop);
+                            seg.registerBox(BOX_STANDARD.MARGIN_TOP, container);
+                        }
+                        else {
+                            previous.siblingsTrailing = [container];
+                            container.siblingsLeading = [previous];
+                        }
+                        if (j === q - 1) {
+                            container.siblingsTrailing = seg.siblingsTrailing;
+                            container.lineBreakTrailing = seg.lineBreakTrailing;
+                            container.setCacheValue('marginBottom', seg.marginBottom);
+                            seg.registerBox(BOX_STANDARD.MARGIN_BOTTOM, container);
+                        }
+                        container.setCacheValue('marginLeft', marginLeft);
+                        container.setCacheValue('marginRight', marginRight);
+                        wrapperContainer.push(container);
+                        previous = container;
+                    }
+                }
+                else {
+                    const items: Null<T[]> = mainData ? new Array(q) : null;
+                    for (let j = 0; j < q; ++j) {
+                        const container = createContainer('#text', words![j]);
+                        if (items) {
+                            items[j] = container;
+                        }
+                        else {
+                            container.render(parentContainer);
+                            application.addLayoutTemplate(
+                                parentContainer,
+                                container,
+                                {
+                                    type: NODE_TEMPLATE.XML,
+                                    node: container,
+                                    controlName: CONTAINER_TAGNAME.TEXT
+                                } as NodeXmlTemplate<T>
+                            );
+                        }
+                        if (j === 0) {
+                            if (seg !== node || !mainData) {
+                                container.setCacheValue('marginLeft', seg.marginLeft);
                                 container.siblingsLeading = seg.siblingsLeading;
                                 container.lineBreakLeading = seg.lineBreakLeading;
                                 container.textIndent = seg.textIndent;
-                                container.setCacheValue('marginTop', seg.marginTop);
                                 seg.registerBox(BOX_STANDARD.MARGIN_TOP, container);
                             }
                             else {
-                                previous.siblingsTrailing = [container];
-                                container.siblingsLeading = [previous];
-                            }
-                            if (j === q - 1) {
-                                container.siblingsTrailing = seg.siblingsTrailing;
-                                container.lineBreakTrailing = seg.lineBreakTrailing;
-                                container.setCacheValue('marginBottom', seg.marginBottom);
-                                seg.registerBox(BOX_STANDARD.MARGIN_BOTTOM, container);
-                            }
-                            container.setCacheValue('marginLeft', marginLeft);
-                            container.setCacheValue('marginRight', marginRight);
-                            wrapperContainer.push(container);
-                            previous = container;
-                        }
-                    }
-                    else {
-                        const items: Null<T[]> = mainData ? new Array(q) : null;
-                        for (let j = 0; j < q; ++j) {
-                            const container = createContainer('#text', words[j]);
-                            if (items) {
-                                items[j] = container;
-                            }
-                            else {
-                                container.render(parentContainer);
-                                application.addLayoutTemplate(
-                                    parentContainer,
-                                    container,
-                                    {
-                                        type: NODE_TEMPLATE.XML,
-                                        node: container,
-                                        controlName: CONTAINER_TAGNAME.TEXT
-                                    } as NodeXmlTemplate<T>
-                                );
-                            }
-                            if (j === 0) {
-                                if (seg !== node || !mainData) {
-                                    container.setCacheValue('marginLeft', seg.marginLeft);
-                                    container.siblingsLeading = seg.siblingsLeading;
-                                    container.lineBreakLeading = seg.lineBreakLeading;
-                                    container.textIndent = seg.textIndent;
-                                    seg.registerBox(BOX_STANDARD.MARGIN_TOP, container);
-                                }
-                                else {
-                                    container.siblingsLeading = [];
-                                }
-                            }
-                            else {
-                                previous.siblingsTrailing = [container];
-                                container.siblingsLeading = [previous];
-                            }
-                            if (j === q - 1) {
-                                if (seg !== node || !mainData) {
-                                    container.setCacheValue('marginRight', seg.marginRight);
-                                    container.siblingsTrailing = seg.siblingsTrailing;
-                                    container.lineBreakTrailing = seg.lineBreakTrailing;
-                                    seg.registerBox(BOX_STANDARD.MARGIN_BOTTOM, container);
-                                }
-                                else {
-                                    container.siblingsTrailing = [];
-                                }
-                            }
-                            previous = container;
-                        }
-                        if (items) {
-                            if (seg === node) {
-                                node.each((item: T) => item.hide());
-                                node.retainAs(items);
-                            }
-                            else {
-                                const index = children.findIndex(item => item === seg);
-                                if (index === -1) {
-                                    continue;
-                                }
-                                children.splice(index, 1, ...items);
-                                seg.hide();
+                                container.siblingsLeading = [];
                             }
                         }
                         else {
-                            setContentAltered(seg, false);
+                            previous.siblingsTrailing = [container];
+                            container.siblingsLeading = [previous];
                         }
-                        modified = true;
+                        if (j === q - 1) {
+                            if (seg !== node || !mainData) {
+                                container.setCacheValue('marginRight', seg.marginRight);
+                                container.siblingsTrailing = seg.siblingsTrailing;
+                                container.lineBreakTrailing = seg.lineBreakTrailing;
+                                seg.registerBox(BOX_STANDARD.MARGIN_BOTTOM, container);
+                            }
+                            else {
+                                container.siblingsTrailing = [];
+                            }
+                        }
+                        previous = container;
                     }
+                    if (items) {
+                        if (seg === node) {
+                            node.each((item: T) => item.hide());
+                            node.retainAs(items);
+                        }
+                        else {
+                            const index = children.findIndex(item => item === seg);
+                            if (index === -1) {
+                                continue;
+                            }
+                            children.splice(index, 1, ...items);
+                            seg.hide();
+                        }
+                    }
+                    else {
+                        setContentAltered(seg, false);
+                    }
+                    modified = true;
                 }
+            }
+            else {
+                continue;
             }
             if (wrapperContainer.length) {
                 const index = children.findIndex(item => item === seg);
