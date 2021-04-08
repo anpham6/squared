@@ -509,6 +509,14 @@ export function checkWritingMode(attr: string, value?: string) {
                     return 'paddingRight';
             }
             return 'paddingLeft';
+        case 'borderStartStartRadius':
+            return getWritingMode(value) === 1 ? 'borderBottomLeftRadius' : 'borderTopLeftRadius';
+        case 'borderStartEndRadius':
+            return getWritingMode(value) === 1 ? 'borderBottomRightRadius' : 'borderTopRightRadius';
+        case 'borderEndStartRadius':
+            return getWritingMode(value) === 1 ? 'borderTopLeftRadius' : 'borderBottomLeftRadius';
+        case 'borderEndEndRadius':
+            return getWritingMode(value) === 1 ? 'borderTopRightRadius' : 'borderBottomRightRadius';
         case 'scrollMarginBlockStart':
             switch (getWritingMode(value)) {
                 case 0:
