@@ -539,40 +539,19 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (element instanceof HTMLLinkElement) {
                 const rel = element.rel.trim().toLowerCase();
                 href = element.href;
-                const checkMimeType = () => {
-                    const filename = fromLastIndexOf(href, '/');
-                    if (filename.includes('.')) {
-                        mimeType = getMimeType(element, filename);
-                        return true;
-                    }
-                    return false;
-                };
                 if (rel !== 'stylesheet') {
+                    const checkMimeType = () => {
+                        const filename = fromLastIndexOf(href, '/');
+                        if (filename.includes('.')) {
+                            mimeType = getMimeType(element, filename);
+                            return true;
+                        }
+                        return false;
+                    };
                     if (assetMap && assetMap.get(element)) {
                         checkMimeType();
                     }
-                    else if (href) {
-                        switch (rel) {
-                            case 'alternate':
-                            case 'help':
-                            case 'license':
-                            case 'manifest':
-                            case 'modulepreload':
-                            case 'prefetch':
-                            case 'preload':
-                            case 'prerender':
-                                if (!checkMimeType()) {
-                                    return;
-                                }
-                                break;
-                            default:
-                                if (!rel.includes('icon') || !checkMimeType()) {
-                                    return;
-                                }
-                                break;
-                        }
-                    }
-                    else {
+                    else if (!href || !rel.includes('icon') || !checkMimeType()) {
                         return;
                     }
                 }
