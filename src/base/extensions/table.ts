@@ -71,6 +71,12 @@ function getInheritedStyle(element: Element, attr: string, exclude: RegExp) {
 const setBoundsWidth = (node: NodeUI) => node.css('width', formatPX(node.bounds.width), true);
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
+    public is(node: T) {
+        return node.tableElement;
+    }
+
+    public condition() { return true; }
+
     public processNode(node: T) {
         const mainData = createDataAttribute(node);
         let table: T[] = [],

@@ -2431,9 +2431,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const [currentFloated, rows, floating] = rowsAll[i];
                     if (currentFloated) {
                         node.floatContainer = true;
-                        currentFloated.anchor(currentFloated.float as AnchorPositionAttr, 'true');
+                        currentFloated.anchor(float = currentFloated.float as AnchorPositionAttr, 'true');
                         setLayoutBelow(currentFloated);
-                        float = currentFloated.float;
                     }
                     else {
                         float = '';

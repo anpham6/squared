@@ -17,7 +17,7 @@ interface GradientTemplate {
 }
 
 interface Customizations<T> {
-    [index: number]: CustomizationsData<T>;
+    [index: number]: Undef<CustomizationsData<T>>;
 }
 
 interface CustomizationsData<T> {

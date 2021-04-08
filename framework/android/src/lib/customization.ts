@@ -698,7 +698,7 @@ export const DEPRECATED_ATTRIBUTE: Deprecations<View> = {
 
 export function getValue(api: BUILD_VERSION, tagName: string, namespace: string, attr: string) {
     for (const build of [API_VERSION[api], API_VERSION[0]]) {
-        const value = build.assign[tagName]?.[namespace]?.[attr];
+        const value = build!.assign[tagName]?.[namespace]?.[attr];
         if (value) {
             return value;
         }

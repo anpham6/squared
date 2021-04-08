@@ -295,7 +295,7 @@ const appBase: android.AppFramework<View> = {
             [EXT_NAME.RELATIVE, new Relative(EXT_NAME.RELATIVE, APP_FRAMEWORK.ANDROID)],
             [EXT_NAME.CSS_GRID, new CssGrid(EXT_NAME.CSS_GRID, APP_FRAMEWORK.ANDROID)],
             [EXT_NAME.FLEXBOX, new Flexbox(EXT_NAME.FLEXBOX, APP_FRAMEWORK.ANDROID)],
-            [EXT_NAME.TABLE, new Table(EXT_NAME.TABLE, APP_FRAMEWORK.ANDROID, { tagNames: ['TABLE'] })],
+            [EXT_NAME.TABLE, new Table(EXT_NAME.TABLE, APP_FRAMEWORK.ANDROID)],
             [EXT_NAME.COLUMN, new Column(EXT_NAME.COLUMN, APP_FRAMEWORK.ANDROID)],
             [EXT_NAME.LIST, new List(EXT_NAME.LIST, APP_FRAMEWORK.ANDROID)],
             [EXT_NAME.GRID, new Grid(EXT_NAME.GRID, APP_FRAMEWORK.ANDROID, { tagNames: ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET'] })],

@@ -2099,7 +2099,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             for (let i = api; i <= BUILD_VERSION.LATEST; ++i) {
-                const callback = API_VERSION[i].android[attr];
+                const callback = API_VERSION[i]!.android[attr];
                 switch (typeof callback) {
                     case 'boolean':
                         return callback;
@@ -2571,7 +2571,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             };
-            let assign = API_VERSION[0].assign;
+            let assign = API_VERSION[0]!.assign;
             setCustomization(assign[tagName]);
             setCustomization(assign[controlName]);
             const api = API_VERSION[this.api];

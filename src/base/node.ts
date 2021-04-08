@@ -176,7 +176,7 @@ function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
                     case 'TH':
                         return 0;
                     default: {
-                        const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
+                        const parent = node.ascend({ condition: item => item.tableElement })[0];
                         if (parent) {
                             const [horizontal, vertical] = splitPair(parent.css('borderSpacing'), ' ');
                             switch (attr) {
@@ -2195,7 +2195,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get tableElement() {
-        return this.tagName === 'TABLE' || this.display === 'table';
+        return this.tagName === 'TABLE';
     }
 
     get inputElement() {
