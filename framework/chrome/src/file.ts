@@ -531,47 +531,26 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         document.querySelectorAll('link, style').forEach((element: HTMLLinkElement | HTMLStyleElement) => {
-            let mimeType = 'text/css',
-                href: Undef<string>;
-            const checkMimeType = () => {
-                const filename = fromLastIndexOf(href!, '/');
-                if (filename.includes('.')) {
-                    mimeType = getMimeType(element, filename);
-                    return true;
-                }
-                return false;
-            };
+            let href = '',
+                mimeType = 'text/css';
             if (element instanceof HTMLLinkElement) {
+                const rel = element.rel.trim().toLowerCase();
                 href = element.href;
-                if (assetMap && assetMap.get(element)) {
-                    checkMimeType();
-                }
-                else if (href) {
-                    const rel = element.rel.trim().toLowerCase();
-                    if (rel !== 'stylesheet') {
-                        switch (rel) {
-                            case 'alternate':
-                            case 'help':
-                            case 'license':
-                            case 'manifest':
-                            case 'modulepreload':
-                            case 'prefetch':
-                            case 'preload':
-                            case 'prerender':
-                                if (!checkMimeType()) {
-                                    return;
-                                }
-                                break;
-                            default:
-                                if (!rel.includes('icon') || !checkMimeType()) {
-                                    return;
-                                }
-                                break;
+                if (rel !== 'stylesheet') {
+                    const checkMimeType = () => {
+                        const filename = fromLastIndexOf(href, '/');
+                        if (filename.includes('.')) {
+                            mimeType = getMimeType(element, filename);
+                            return true;
                         }
+                        return false;
+                    };
+                    if (assetMap && assetMap.get(element)) {
+                        checkMimeType();
                     }
-                }
-                else {
-                    return;
+                    else if (!href || !rel.includes('icon') || !checkMimeType()) {
+                        return;
+                    }
                 }
             }
             this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css');
