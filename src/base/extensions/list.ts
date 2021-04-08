@@ -4,24 +4,19 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
-function isListItem(node: NodeUI) {
+function getItemType(node: NodeUI, checked?: boolean) {
     if (node.display === 'list-item') {
-        return true;
+        const value = node.css('listStyleType');
+        if (value !== 'none') {
+            node.css('listStyleType', value);
+            return 1;
+        }
     }
-    switch (node.tagName) {
-        case 'DT':
-        case 'DD':
-            return true;
-    }
-    return false;
+    return node.marginLeft < 0 && node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat && (checked || node.actualParent!.every(item => item.blockStatic)) ? 2 : 0;
 }
 
 const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const NUMERALS = [
-    '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
-    '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
-    '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
-];
+let NUMERALS: string[];
 
 function convertAlpha(value: number) {
     if (value >= 0) {
@@ -49,6 +44,11 @@ function convertAlpha(value: number) {
 }
 
 function convertRoman(value: number) {
+    NUMERALS ||= [
+        '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
+        '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
+        '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
+    ];
     const digits = value.toString().split('');
     let result = '',
         i = 3;
@@ -57,8 +57,6 @@ function convertRoman(value: number) {
     }
     return 'M'.repeat(+digits.join('')) + result;
 }
-
-const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
 
 export function convertListStyle(name: string, value: number, fallback?: boolean) {
     switch (name) {
@@ -88,48 +86,10 @@ export function convertListStyle(name: string, value: number, fallback?: boolean
 
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return !node.isEmpty() && !!node.find((item: T) => {
-            const type = item.css('listStyleType') !== 'none';
-            return (type || item.innerBefore?.pageFlow) && isListItem(item) || !type && item.marginLeft < 0 && hasSingleImage(item.visibleStyle);
-        });
+        return !node.isEmpty() && !!node.find((item: T) => getItemType(item) > 0);
     }
 
-    public condition(node: T) {
-        let blockStatic = true,
-            inlineVertical = true,
-            floating = true,
-            blockAlternate = true,
-            floated: Undef<Set<string>>;
-        const children = node.children;
-        for (let i = 0, length = children.length; i < length; ++i) {
-            const item = children[i] as T;
-            if (floating || blockAlternate) {
-                if (item.floating) {
-                    (floated ||= new Set<string>()).add(item.float);
-                    blockAlternate = false;
-                }
-                else {
-                    floating = false;
-                    if (i > 0 && i < length - 1 && !item.blockStatic && !(children[i - 1]!.blockStatic && children[i + 1]!.blockStatic)) {
-                        blockAlternate = false;
-                    }
-                }
-            }
-            if (item.blockStatic) {
-                floating = false;
-            }
-            else {
-                blockStatic = false;
-            }
-            if (!item.inlineVertical) {
-                inlineVertical = false;
-            }
-            if (!blockStatic && !inlineVertical && !blockAlternate && !floating) {
-                return false;
-            }
-        }
-        return blockStatic || inlineVertical || blockAlternate || !!floated && floated.size === 1;
-    }
+    public condition() { return true; }
 
     public processNode(node: T) {
         const ordered = node.tagName === 'OL';
@@ -137,48 +97,47 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
         node.each((item: T) => {
             const mainData: ListData = {};
             this.data.set(item, mainData);
-            if (isListItem(item) || hasSingleImage(item.visibleStyle)) {
-                const type = item.display === 'list-item' ? item.css('listStyleType') : 'none';
-                if (item.has('listStyleImage')) {
-                    mainData.imageSrc = item.css('listStyleImage');
-                }
-                else {
-                    if (ordered && item.tagName === 'LI') {
-                        const n = +item.attributes.value!;
-                        if (!isNaN(n)) {
-                            i = Math.floor(n);
-                        }
-                    }
-                    let ordinal = convertListStyle(type, i);
-                    if (ordinal) {
-                        ordinal += '.';
+            switch (getItemType(item, true)) {
+                case 1: {
+                    const listStyleImage = item.css('listStyleImage');
+                    if (listStyleImage !== 'none') {
+                        mainData.imageSrc = listStyleImage;
                     }
                     else {
-                        switch (type) {
-                            case 'disc':
-                                ordinal = '●';
-                                break;
-                            case 'square':
-                                ordinal = '■';
-                                break;
-                            case 'none':
-                                if (!item.visibleStyle.backgroundRepeat) {
-                                    const src = item.backgroundImage;
-                                    if (src) {
-                                        mainData.imageSrc = src;
-                                        mainData.imagePosition = item.css('backgroundPosition');
-                                        item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
-                                    }
-                                }
-                                return;
-                            default:
-                                ordinal = '○';
-                                break;
+                        const type = item.css('listStyleType');
+                        if (ordered) {
+                            const n = +item.attributes.value!;
+                            if (!isNaN(n)) {
+                                i = Math.floor(n);
+                            }
                         }
+                        let ordinal = convertListStyle(type, i);
+                        if (ordinal) {
+                            ordinal += '.';
+                        }
+                        else {
+                            switch (type) {
+                                case 'disc':
+                                    ordinal = '●';
+                                    break;
+                                case 'square':
+                                    ordinal = '■';
+                                    break;
+                                default:
+                                    ordinal = '○';
+                                    break;
+                            }
+                        }
+                        mainData.ordinal = ordinal;
                     }
-                    mainData.ordinal = ordinal;
+                    ++i;
+                    break;
                 }
-                ++i;
+                case 2:
+                    mainData.imageSrc = item.backgroundImage;
+                    mainData.imagePosition = item.css('backgroundPosition');
+                    item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
+                    break;
             }
         });
     }

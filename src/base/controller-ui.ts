@@ -233,9 +233,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'FORM':
                     style.marginTop ||= '0px';
                     break;
-                case 'LI':
-                    style.listStyleImage ||= 'inherit';
-                    break;
                 case 'SUP':
                 case 'SUB':
                 case 'SMALL':
