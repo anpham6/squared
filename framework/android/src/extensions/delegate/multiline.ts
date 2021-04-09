@@ -342,7 +342,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                             node.retainAs(items);
                         }
                         else {
-                            const index = children.findIndex(item => item === seg);
+                            const index = children.indexOf(seg);
                             if (index === -1) {
                                 continue;
                             }
@@ -360,7 +360,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                 continue;
             }
             if (wrapperContainer.length) {
-                const index = children.findIndex(item => item === seg);
+                const index = children.indexOf(seg);
                 if (index !== -1) {
                     children.splice(index, 1, ...wrapperContainer);
                     seg.hide();

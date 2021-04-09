@@ -67,7 +67,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 target.baselineAltered = true;
                 this.application.getProcessingCache(node.sessionId).add(target);
                 const layout = new ContentUI(renderParent, target, target.containerType, target.alignmentType);
-                const index = renderParent.renderChildren.findIndex(item => item === node);
+                const index = renderParent.renderChildren.indexOf(node);
                 if (index !== -1) {
                     layout.renderIndex = index + 1;
                 }

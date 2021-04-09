@@ -529,7 +529,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             for (const [floated, data] of escaped) {
                 const { parent, appending } = data;
                 const children = parent.children;
-                const containerIndex = children.findIndex(item => item === floated);
+                const containerIndex = children.indexOf(floated);
                 if (containerIndex !== -1) {
                     const childIndex = floated.childIndex;
                     const documentChildren = parent.naturalChildren.slice(0);
@@ -611,7 +611,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     parent.floatContainer = true;
                     for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
                         const item = appending[i];
-                        const index = documentChildren.findIndex(child => child === item);
+                        const index = documentChildren.indexOf(item);
                         if (index !== -1) {
                             const siblingsLeading: T[] = [];
                             const siblingsTrailing: T[] = [];

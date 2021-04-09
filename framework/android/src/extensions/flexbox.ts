@@ -112,7 +112,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         else if (node.autoMargin.horizontal || parent.hasHeight && node.autoMargin.vertical) {
             const mainData = this.data.get(parent) as Undef<FlexboxData<T>>;
             if (mainData) {
-                const index = mainData.children.findIndex(item => item === node);
+                const index = mainData.children.indexOf(node);
                 if (index !== -1) {
                     const container = this.controller.createNodeWrapper(node, parent);
                     container.cssApply({

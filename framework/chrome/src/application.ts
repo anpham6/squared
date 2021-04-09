@@ -37,7 +37,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             }
             REGEXP_VARVALUE.lastIndex = 0;
         };
-        this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
+        this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule, selector: string) {
             const { fontFamily, animationName } = rule.style;
             let usedVariables: Undef<Set<string>>,
                 usedFontFace: Undef<Set<string>>,
@@ -301,11 +301,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         }
         if (dataSource.length) {
             const useOriginalHtmlPage = options.useOriginalHtmlPage;
-            const domAll = document.querySelectorAll('*');
+            const elements = document.querySelectorAll('*');
             const cache: SelectorCache = {};
             const items = options.dataSource ||= [];
             for (const [element, data] of dataSource) {
-                const node = File.createTagNode(element, domAll, cache);
+                const node = File.createTagNode(element, elements, cache);
                 node.textContent = element.textContent!;
                 data.element = node;
                 if (!useOriginalHtmlPage) {

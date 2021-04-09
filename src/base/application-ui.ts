@@ -846,7 +846,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const deleteNode = (depth: number, node: T) => {
             const data = mapData.get(depth + 1);
             if (data) {
-                const index = data.findIndex(item => item === node);
+                const index = data.indexOf(node);
                 if (index !== -1) {
                     data.splice(index, 1);
                 }

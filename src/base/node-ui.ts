@@ -842,7 +842,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (renderParent) {
             const { renderTemplates, renderChildren } = renderParent;
             if (renderTemplates) {
-                const index = renderChildren.findIndex(node => node === this);
+                const index = renderChildren.indexOf(this);
                 if (index !== -1) {
                     const template = renderTemplates[index];
                     if (template.node === this) {

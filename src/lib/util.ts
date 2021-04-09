@@ -130,7 +130,7 @@ export function delimitString(value: DelimitStringOptions | string, ...appending
         if (!append || not && values.includes(append)) {
             continue;
         }
-        const index = values.findIndex(item => item === append);
+        const index = values.indexOf(append);
         if (index === -1) {
             values.push(append);
         }

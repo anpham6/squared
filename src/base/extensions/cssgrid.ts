@@ -237,7 +237,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
             }
         }
         else if (auto === 1) {
-            const j = unit.findIndex(value => value === 'auto');
+            const j = unit.indexOf('auto');
             if (j !== -1) {
                 unit[j] = formatPercent(percent);
             }
