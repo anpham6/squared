@@ -20,12 +20,11 @@ export default class Extension<T extends Node> implements squared.base.Extension
         options?: ExtensionOptions)
     {
         if (options) {
-            const dependencies = options.dependencies;
-            if (dependencies) {
-                for (const item of dependencies) {
+            const items = options.dependencies;
+            if (items) {
+                for (const item of items) {
                     this.dependencies.push(item);
                 }
-                delete options.dependencies;
             }
             Object.assign(this.options, options);
         }

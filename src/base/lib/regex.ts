@@ -6,8 +6,8 @@ export const STRING = {
     CSS_COLOR,
     CSS_COLORSTOP: `\\s*${CSS_COLOR}(?:\\s*(${LENGTH_PERCENTAGE}|${CSS_ANGLE}|(?:calc|min|max|clamp)\\((.+)\\)(?=\\s*,)|(?:calc|min|max|clamp)\\((.+)\\))\\s*,?)*\\s*,?`,
     CSS_QUOTE: '("(?:[^"]|(?<=\\\\)")+"|[^\\s]+)\\s+("(?:[^"]|(?<=\\\\)")+"|[^\\s]+)',
-    CSS_VARNAME: 'var\\(\\s*(--[^\\d\\s][^\\s,:)]*)(?!\\s*:)',
-    CSS_VARVALUE: '(--[^\\d\\s][^\\s:]*)\\s*:([^;}]+)'
+    CSS_VARNAME: 'var\\(\\s*(--[^\\s:,)]*)\\s*(?!:)',
+    CSS_VARVALUE: '(--[^\\s:]*)\\s*:([^;}]+)'
 };
 
 export const CSS = {

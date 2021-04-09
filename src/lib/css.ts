@@ -56,13 +56,11 @@ const REGEXP_CALC = /^(?:c(?:alc|lamp)|m(?:in|ax))\((.+)\)$/i;
 const REGEXP_CALCWITHIN = /\b(?:c(?:alc|lamp)|m(?:in|ax))\(/i;
 const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${STRING.CSS_CALCUNIT},|(clamp)\\(\\s*${STRING.CSS_CALCUNIT},\\s*${STRING.CSS_CALCUNIT},|\\()\\s*${STRING.CSS_CALCUNIT}\\)(\\s*)`, 'i');
 const REGEXP_CALCENCLOSING = /c(?:alc|lamp)|m(?:in|ax)/gi;
-const REGEXP_VAR = /^(?:^|\s+)var\(\s*--[^\d\s].*\)(?:$|\s+)$/i;
-const REGEXP_VARWITHIN = /var\(\s*--[^\d\s][^)]*\)/i;
-const REGEXP_VARNESTED = /(.*?)var\(\s*(--[^\d\s][^\s,)]*)(?:\s*\)|((?:\s*,(?!\s*(?:var\(|--))(?:\s*[a-z]+\([^)]+\))?[^,)]*)+)\))(.*)/i;
+const REGEXP_VAR = /^(?:^|\s+)var\(\s*--.*\)(?:$|\s+)$/i;
+const REGEXP_VARWITHIN = /var\(\s*--[^)]*\)/i;
+const REGEXP_VARNESTED = /(.*?)var\(\s*(--[^\s,)]*)(?:\s*\)|((?:\s*,(?!\s*(?:var\(|--))(?:\s*[a-z]+\([^)]+\))?[^,)]*)+)\))(.*)/i;
 const REGEXP_EMBASED = /[+-]?[\d.]+(?:em|ch|ex)\b/i;
 const CALC_OPERATION = /\s+([+-]\s+|\s*[*/])/;
-const CALC_PLACEHOLDER = /{(\d+)}/;
-const CALC_INTEGER = /^-?\d+$/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 let RE_TRANSFORM: Undef<Pattern>;
@@ -1538,7 +1536,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                 operator = partial;
                                 break;
                             default: {
-                                const match = CALC_PLACEHOLDER.exec(partial);
+                                const match = /{(\d+)}/.exec(partial);
                                 if (match) {
                                     switch (unitType) {
                                         case CSS_UNIT.INTEGER:
@@ -1619,7 +1617,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
-                                            if (!CALC_INTEGER.test(partial)) {
+                                            if (!/^-?\d+$/.test(partial)) {
                                                 return getFallbackResult(options, NaN);
                                             }
                                             seg.push(n);

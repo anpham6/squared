@@ -31,19 +31,11 @@ interface RepeatItem {
 }
 
 const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
-const { endsWith, safeFloat, splitPairEnd, splitSome, startsWith, withinRange } = squared.lib.util;
+const { endsWith, safeFloat, splitEnclosing, splitPairEnd, splitSome, startsWith, withinRange } = squared.lib.util;
 
-const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
-const PATTERN_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
-const PATTERN_NAMED = '\\[([\\w\\s\\-]+)\\]';
-const REGEXP_UNIT = new RegExp(`^${PATTERN_UNIT}$`);
-const REGEXP_NAMED = new RegExp(`(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s*(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
-const REGEXP_REPEAT = new RegExp(`(${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
-const REGEXP_CELL_UNIT = new RegExp(PATTERN_UNIT);
-const REGEXP_CELL_MINMAX = new RegExp(PATTERN_MINMAX);
-const REGEXP_CELL_FIT_CONTENT = new RegExp(PATTERN_FIT_CONTENT);
-const REGEXP_CELL_NAMED = new RegExp(PATTERN_NAMED);
+const PATTERN_SIZE = '\\[([\\w\\s\\-]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(([\\d.]+[a-z%]+)\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
+const REGEXP_SIZE = new RegExp(PATTERN_SIZE, 'g');
+const REGEXP_REPEAT = /repeat\((auto-fit|auto-fill|\d+)[^,]*,/;
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
@@ -253,7 +245,7 @@ function applyLayout(node: NodeUI, data: CssGridDirectionData, dataCount: number
     }
 }
 
-const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
+const convertLength = (node: NodeUI, value: string, index: number) => isLength(value = value.trim()) ? formatPX(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
 
 export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isAligned(node: NodeUI) {
@@ -347,97 +339,98 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const { name, repeat, unit, unitMin } = direction;
                 let i = 1,
                     match: Null<RegExpExecArray>;
-                while (match = REGEXP_NAMED.exec(value)) {
-                    const command = match[1];
-                    switch (index) {
-                        case 0:
-                        case 1:
-                            if (command[0] === '[') {
-                                splitSome(match[4], attr => {
-                                    (name[attr] ||= []).push(i);
-                                }, /\s+/g);
+                for (const seg of splitEnclosing(value, 'repeat')) {
+                    if (startsWith(seg, 'repeat')) {
+                        if (match = REGEXP_REPEAT.exec(seg)) {
+                            let iterations = 1;
+                            switch (match[1]) {
+                                case 'auto-fit':
+                                    direction.flags |= LAYOUT_CSSGRID.AUTO_FIT;
+                                    break;
+                                case 'auto-fill':
+                                    direction.flags |= LAYOUT_CSSGRID.AUTO_FILL;
+                                    break;
+                                default:
+                                    iterations = +match[1] || 1;
+                                    break;
                             }
-                            else if (startsWith(command, 'repeat')) {
-                                let iterations = 1;
-                                switch (match[2]) {
-                                    case 'auto-fit':
-                                        direction.flags |= LAYOUT_CSSGRID.AUTO_FIT;
-                                        break;
-                                    case 'auto-fill':
-                                        direction.flags |= LAYOUT_CSSGRID.AUTO_FILL;
-                                        break;
-                                    default:
-                                        iterations = +match[2] || 1;
-                                        break;
-                                }
-                                if (iterations) {
-                                    const repeating: RepeatItem[] = [];
-                                    let subMatch: Null<RegExpExecArray>,
-                                        namedMatch: Null<RegExpExecArray>;
-                                    while (subMatch = REGEXP_REPEAT.exec(match[3])) {
-                                        if (namedMatch = REGEXP_CELL_NAMED.exec(subMatch[1])) {
-                                            const subName = namedMatch[1];
-                                            if (!name[subName]) {
-                                                name[subName] = [];
-                                            }
-                                            repeating.push({ name: subName });
-                                        }
-                                        else if (namedMatch = REGEXP_CELL_MINMAX.exec(subMatch[1])) {
-                                            repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
-                                        }
-                                        else if (namedMatch = REGEXP_CELL_FIT_CONTENT.exec(subMatch[1])) {
-                                            repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
-                                        }
-                                        else if (namedMatch = REGEXP_CELL_UNIT.exec(subMatch[1])) {
-                                            repeating.push({ unit: convertLength(node, namedMatch[0], index) });
-                                        }
+                            if (iterations) {
+                                const repeating: RepeatItem[] = [];
+                                const size = seg.substring(match[0].length);
+                                while (match = REGEXP_SIZE.exec(size)) {
+                                    if (match[1]) {
+                                        name[match[1]] ||= [];
+                                        repeating.push({ name: match[1] });
                                     }
-                                    const q = repeating.length;
-                                    if (q) {
-                                        for (let j = 0; j < iterations; ++j) {
-                                            for (let k = 0; k < q; ++k) {
-                                                const item = repeating[k];
-                                                if (item.name) {
-                                                    name[item.name]!.push(i);
-                                                }
-                                                else if (item.unit) {
-                                                    unit.push(item.unit);
-                                                    unitMin.push(item.unitMin || '');
-                                                    repeat.push(true);
-                                                    ++i;
-                                                }
+                                    else if (match[2]) {
+                                        repeating.push({ unitMin: convertLength(node, match[2], index), unit: convertLength(node, match[3], index) });
+                                    }
+                                    else if (match[4]) {
+                                        repeating.push({ unitMin: '0px', unit: convertLength(node, match[4], index) });
+                                    }
+                                    else if (match[5]) {
+                                        repeating.push({ unit: convertLength(node, match[5], index) });
+                                    }
+                                }
+                                const q = repeating.length;
+                                if (q) {
+                                    for (let j = 0; j < iterations; ++j) {
+                                        for (let k = 0; k < q; ++k) {
+                                            const item = repeating[k];
+                                            if (item.name) {
+                                                name[item.name]!.push(i);
+                                            }
+                                            else if (item.unit) {
+                                                unit.push(item.unit);
+                                                unitMin.push(item.unitMin || '');
+                                                repeat.push(true);
+                                                ++i;
                                             }
                                         }
                                     }
-                                    REGEXP_REPEAT.lastIndex = 0;
                                 }
+                                REGEXP_SIZE.lastIndex = 0;
                             }
-                            else if (startsWith(command, 'minmax')) {
-                                unit.push(convertLength(node, match[6], index));
-                                unitMin.push(convertLength(node, match[5], index));
-                                repeat.push(false);
-                                ++i;
+                        }
+                    }
+                    else {
+                        while (match = REGEXP_SIZE.exec(seg)) {
+                            switch (index) {
+                                case 0:
+                                case 1:
+                                    if (match[1]) {
+                                        splitSome(match[1], attr => {
+                                            (name[attr] ||= []).push(i);
+                                        }, /\s+/g);
+                                    }
+                                    else if (match[2]) {
+                                        unitMin.push(convertLength(node, match[2], index));
+                                        unit.push(convertLength(node, match[3], index));
+                                        repeat.push(false);
+                                        ++i;
+                                    }
+                                    else if (match[4]) {
+                                        unit.push(convertLength(node, match[4], index));
+                                        unitMin.push('0px');
+                                        repeat.push(false);
+                                        ++i;
+                                    }
+                                    else if (match[5]) {
+                                        unit.push(convertLength(node, match[5], index));
+                                        unitMin.push('');
+                                        repeat.push(false);
+                                        ++i;
+                                    }
+                                    break;
+                                case 2:
+                                case 3:
+                                    (index === 2 ? row : column).auto.push(isLength(match[0]) ? formatPX(node.parseUnit(match[0], { dimension: index !== 2 ? 'width' : 'height' })) : match[0]);
+                                    break;
                             }
-                            else if (startsWith(command, 'fit-content')) {
-                                unit.push(convertLength(node, match[7], index));
-                                unitMin.push('0px');
-                                repeat.push(false);
-                                ++i;
-                            }
-                            else if (REGEXP_UNIT.test(command)) {
-                                unit.push(convertLength(node, command, index));
-                                unitMin.push('');
-                                repeat.push(false);
-                                ++i;
-                            }
-                            break;
-                        case 2:
-                        case 3:
-                            (index === 2 ? row : column).auto.push(isLength(command) ? formatPX(node.parseUnit(command, { dimension: index !== 2 ? 'width' : 'height' })) : command);
-                            break;
+                        }
+                        REGEXP_SIZE.lastIndex = 0;
                     }
                 }
-                REGEXP_NAMED.lastIndex = 0;
             }
         }
         if (horizontal) {

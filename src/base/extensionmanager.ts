@@ -10,12 +10,8 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
     constructor(public readonly application: Application<T>) {}
 
     public add(ext: Extension<T> | string) {
-        if (typeof ext === 'string') {
-            const item = this.get(ext, true);
-            if (!item) {
-                return false;
-            }
-            ext = item;
+        if (typeof ext === 'string' && !(ext = this.get(ext, true) as Extension<T>)) {
+            return false;
         }
         const { application, extensions } = this;
         if (ext.framework === 0 || ext.framework & application.framework) {
@@ -29,11 +25,8 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
     }
 
     public remove(ext: Extension<T> | string) {
-        if (typeof ext === 'string') {
-            ext = this.get(ext, true) as Extension<T>;
-            if (!ext) {
-                return false;
-            }
+        if (typeof ext === 'string' && !(ext = this.get(ext, true) as Extension<T>)) {
+            return false;
         }
         const name = ext.name;
         const index = this.extensions.findIndex(item => item.name === name);
@@ -49,26 +42,22 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
     }
 
     public checkDependencies() {
-        const extensions = this.extensions;
+        const { application, extensions } = this;
         let result: Undef<string[]>;
         for (let i = 0; i < extensions.length; ++i) {
-            const dependencies = extensions[i].dependencies;
-            const q = dependencies.length;
-            if (q === 0) {
-                continue;
-            }
-            for (let j = 0, k = 1; j < q; ++j) {
-                const dependency = dependencies[j];
-                const name = dependency.name;
-                const index = extensions.findIndex(item => item.name === name);
+            const items = extensions[i].dependencies;
+            for (let j = 0, k = 1, q = items.length; j < q; ++j) {
+                const item = items[j];
+                const name = item.name;
+                const index = extensions.findIndex(ext => ext.name === name);
                 if (index === -1) {
-                    const ext = this.application.builtInExtensions.get(name);
+                    const ext = application.builtInExtensions.get(name);
                     if (ext) {
-                        ext.application = this.application;
-                        if (dependency.leading) {
+                        ext.application = application;
+                        if (item.leading) {
                             extensions.splice(i - 1, 0, ext);
                         }
-                        else if (dependency.trailing) {
+                        else if (item.trailing) {
                             extensions.splice(i + k++, 0, ext);
                         }
                         else {
@@ -78,12 +67,12 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
                     }
                 }
                 if (index !== -1) {
-                    if (dependency.leading) {
+                    if (item.leading) {
                         if (index > i) {
                             extensions.splice(i - 1, 0, extensions.splice(index, 1)[0]);
                         }
                     }
-                    else if (dependency.trailing) {
+                    else if (item.trailing) {
                         if (index < i) {
                             extensions.splice(i + 1 + k++, 0, extensions.splice(index, 1)[0]);
                         }

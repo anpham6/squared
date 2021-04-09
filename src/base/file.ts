@@ -273,8 +273,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         if (assets && assets.length) {
             const exclusions = body.exclusions;
             if (exclusions) {
-                assets = assets.filter(item => validateAsset(item, exclusions));
-                if (!assets.length) {
+                if ((assets = assets.filter(item => validateAsset(item, exclusions))).length === 0) {
                     return;
                 }
                 body.assets = assets;
