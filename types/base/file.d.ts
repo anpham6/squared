@@ -145,6 +145,11 @@ interface CompressFormat extends CompressLevel {
     options?: PlainObject;
 }
 
+interface FileInfo {
+    name: string;
+    size: string;
+}
+
 interface RequestData extends PlainObject {
     assets?: FileAsset[];
     dataSource?: DataSource[];
@@ -159,7 +164,7 @@ interface ResponseData {
     downloadKey?: string;
     downloadUrl?: string;
     bytes?: number;
-    files?: string[];
+    files?: FileInfo[];
     error?: ResponseError;
 }
 

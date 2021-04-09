@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             parent: document.body,
                             attributes: {
                                 id: 'md5_complete',
-                                innerHTML: response.files.join('\n')
+                                innerHTML: response.files.map(item => item.name).join('\n')
                             },
                             style: {
                                 whiteSpace: 'pre',
