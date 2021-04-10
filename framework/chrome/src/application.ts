@@ -76,7 +76,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 addVariablesAll(sessionId, rule.cssText);
             }
         };
-        this.session.unusedMediaQuery = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) {
+        this.session.unusedMedia = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) {
             if (!hostElement) {
                 (this._cssUnusedMedia[sessionId] ||= new Set()).add(condition);
             }

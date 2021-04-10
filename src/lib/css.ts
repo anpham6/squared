@@ -49,17 +49,17 @@ const ELEMENT_BLOCK = [
 
 const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:$|\\s+)$`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:$|\\s+)$`, 'i');
-const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`, 'i');
-const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`, 'i');
-const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`, 'i');
+const REGEXP_ANGLE = new RegExp(`^(?:^|\\s+)${STRING.CSS_ANGLE}(?:$|\\s+)$`, 'i');
+const REGEXP_TIME = new RegExp(`^(?:^|\\s+)${STRING.CSS_TIME}(?:$|\\s+)$`, 'i');
+const REGEXP_RESOLUTION = new RegExp(`^(?:^|\\s+)${STRING.CSS_RESOLUTION}(?:$|\\s+)$`, 'i');
 const REGEXP_CALC = /^(?:c(?:alc|lamp)|m(?:in|ax))\((.+)\)$/i;
-const REGEXP_CALCWITHIN = /\b(?:c(?:alc|lamp)|m(?:in|ax))\(/i;
 const REGEXP_CALCNESTED = new RegExp(`(\\s*)(?:calc\\(|(min|max)\\(\\s*${STRING.CSS_CALCUNIT},|(clamp)\\(\\s*${STRING.CSS_CALCUNIT},\\s*${STRING.CSS_CALCUNIT},|\\()\\s*${STRING.CSS_CALCUNIT}\\)(\\s*)`, 'i');
 const REGEXP_CALCENCLOSING = /c(?:alc|lamp)|m(?:in|ax)/gi;
 const REGEXP_VAR = /^(?:^|\s+)var\(\s*--.*\)(?:$|\s+)$/i;
-const REGEXP_VARWITHIN = /var\(\s*--[^)]*\)/i;
 const REGEXP_VARNESTED = /(.*?)var\(\s*(--[^\s,)]*)(?:\s*\)|((?:\s*,(?!\s*(?:var\(|--))(?:\s*[a-z]+\([^)]+\))?[^,)]*)+)\))(.*)/i;
-const REGEXP_EMBASED = /[+-]?[\d.]+(?:em|ch|ex)\b/i;
+const REGEXP_CALCWITHIN = /\b(?:c(?:alc|lamp)|m(?:in|ax))\(/i;
+const REGEXP_VARWITHIN = /\bvar\(\s*--[^)]*\)/i;
+const REGEXP_EMWITHIN = /[\d.]+(?:em|ch|ex)\b/i;
 const CALC_OPERATION = /\s+([+-]\s+|\s*[*/])/;
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
@@ -2159,7 +2159,7 @@ export function isPx(value: unknown) {
 }
 
 export function hasEm(value: string) {
-    return REGEXP_EMBASED.test(value);
+    return REGEXP_EMWITHIN.test(value);
 }
 
 export function hasCalc(value: string) {

@@ -4,7 +4,7 @@ const DECIMAL_SIGNED = '[+-]?' + DECIMAL_PLAIN;
 const DECIMAL_EXPONENT = DECIMAL_SIGNED + EXPONENT;
 const DECIMAL = DECIMAL_EXPONENT + '?';
 const UNIT_LENGTH = 'px|rem|e(?:m|x)|v(?:w|h|min|max)|p(?:t|c)|c(?:m|h)|mm|in|q';
-const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
+const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*([is])?)?\\s*\\]`;
 const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
 const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
 const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';

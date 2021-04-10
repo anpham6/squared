@@ -143,7 +143,7 @@ interface QueryData {
 }
 
 interface QueryAttribute extends StringValue<Undef<string>> {
-    caseInsensitive: boolean;
+    ignoreCase: boolean;
     symbol?: string;
     trailing?: boolean;
 }

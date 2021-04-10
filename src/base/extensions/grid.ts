@@ -91,8 +91,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     const index = Math.floor(column.linear.left);
                     let mapX = nextMapX.get(index);
                     if (!mapX) {
-                        mapX = [];
-                        nextMapX.set(index, mapX);
+                        nextMapX.set(index, mapX = []);
                     }
                     mapX.push(column);
                 }
@@ -202,10 +201,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
             for (let l = 0, q = columns.reduce((a, b) => Math.max(a, b.length), 0); l < q; ++l) {
                 for (let m = 0, r = columns.length; m < r; ++m) {
-                    const row = columns[m];
-                    if (!row[l]) {
-                        row[l] = { spacer: 1 } as Node;
-                    }
+                    columns[m][l] ||= { spacer: 1 } as Node;
                 }
             }
             columnEnd.push(node.box.right);

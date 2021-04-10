@@ -156,7 +156,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 return result;
             }
             const keyframesMap = this.viewport?.keyframesMap || getKeyframesRules();
-            const cssData: Record<string, string[]> = {};
+            const cssData: ObjectMapSafe<string[]> = {};
             const groupName: SvgAnimate[] = [];
             const groupOrdering: SvgAnimationAttribute[] = [];
             for (const name in ANIMATION_DEFAULT) {

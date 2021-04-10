@@ -33,9 +33,9 @@ interface RepeatItem {
 const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
 const { endsWith, safeFloat, splitEnclosing, splitPairEnd, splitSome, startsWith, withinRange } = squared.lib.util;
 
-const PATTERN_SIZE = '\\[([\\w\\s\\-]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(([\\d.]+[a-z%]+)\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
+const PATTERN_SIZE = '\\[([^]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
 const REGEXP_SIZE = new RegExp(PATTERN_SIZE, 'g');
-const REGEXP_REPEAT = /repeat\((auto-fit|auto-fill|\d+)[^,]*,/;
+const REGEXP_REPEAT = /repeat\(\s*(auto-fit|auto-fill|\d+)/;
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
@@ -756,12 +756,8 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 if (!previousPlacement) {
-                    if (!placement[0]) {
-                        placement[0] = 1;
-                    }
-                    if (!placement[1]) {
-                        placement[1] = 1;
-                    }
+                    placement[0] ||= 1;
+                    placement[1] ||= 1;
                 }
                 const [a, b, c, d] = placement;
                 if (rowSpan === -1) {
@@ -855,14 +851,10 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!PLACEMENT[rowA]) {
                     placement[rowA] = rowData.length + 1;
-                    if (!placement[colA]) {
-                        placement[colA] = 1;
-                    }
+                    placement[colA] ||= 1;
                 }
                 else if (!PLACEMENT[colA]) {
-                    if (!PLACEMENT[rowB]) {
-                        PLACEMENT[rowB] = PLACEMENT[rowA] + ROW_SPAN;
-                    }
+                    PLACEMENT[rowB] ||= PLACEMENT[rowA] + ROW_SPAN;
                     const available: [number, number][][] = [];
                     const l = PLACEMENT[rowA] - 1;
                     const m = PLACEMENT[rowB] - 1;
@@ -933,20 +925,13 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                const indexA = PLACEMENT[rowA];
-                if (indexA) {
-                    if (PLACEMENT[colA]) {
-                        placement[rowA] = indexA;
-                        placement[colA] = PLACEMENT[colA];
-                    }
+                if (PLACEMENT[rowA] && PLACEMENT[colA]) {
+                    placement[rowA] = PLACEMENT[rowA];
+                    placement[colA] = PLACEMENT[colA];
                 }
             }
-            if (!placement[rowB]) {
-                placement[rowB] = placement[rowA] + ROW_SPAN;
-            }
-            if (!placement[colB]) {
-                placement[colB] = placement[colA] + COLUMN_SPAN;
-            }
+            placement[rowB] ||= placement[rowA] + ROW_SPAN;
+            placement[colB] ||= placement[colA] + COLUMN_SPAN;
             if (setDataRows(item, placement)) {
                 const [a, b, c, d] = placement;
                 const rowStart = a - 1;

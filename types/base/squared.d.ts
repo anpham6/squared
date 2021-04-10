@@ -65,7 +65,7 @@ declare module "base" {
         active: Map<string, AppProcessing<T>>;
         usedSelector?: AppSessionSelectorCallback;
         unusedSelector?: AppSessionSelectorCallback;
-        unusedMediaQuery?: AppSessionConditionCallback;
+        unusedMedia?: AppSessionConditionCallback;
         unusedSupports?: AppSessionConditionCallback;
     }
 

@@ -459,7 +459,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _cacheState!: CacheStateUI<T>;
     protected _boxReset?: number[];
     protected _boxAdjustment?: number[];
-    protected abstract _namespaces: Record<string, StringMap>;
+    protected abstract _namespaces: ObjectMapSafe<StringMap>;
 
     private _locked: Null<ObjectMapNested<boolean>> = null;
     private _siblingsLeading: Null<T[]> = null;

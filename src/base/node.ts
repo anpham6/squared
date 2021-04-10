@@ -272,7 +272,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
             }
             const other = attr.value;
             if (other) {
-                if (attr.caseInsensitive) {
+                if (attr.ignoreCase) {
                     value = value.toLowerCase();
                 }
                 switch (attr.symbol) {
@@ -614,13 +614,13 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                 case '[':
                     if ((match = CSS.SELECTOR_ATTR.exec(not)) && match[0] === not) {
                         const value = match[3] || match[4] || match[5];
-                        const caseInsensitive = match[6] === 'i';
+                        const ignoreCase = match[6] === 'i';
                         notData = {
                             attrList: [{
                                 key: match[1],
                                 symbol: match[2],
-                                value: caseInsensitive && value ? value.toLowerCase() : value,
-                                caseInsensitive
+                                value: ignoreCase && value ? value.toLowerCase() : value,
+                                ignoreCase
                             }]
                         };
                     }
@@ -1893,9 +1893,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     default:
                                         break invalid;
                                 }
-                                const caseInsensitive = subMatch[6] === 'i';
+                                const ignoreCase = subMatch[6] === 'i';
                                 let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
-                                if (caseInsensitive) {
+                                if (ignoreCase) {
                                     attrValue = attrValue.toLowerCase();
                                 }
                                 (attrList ||= []).push({
@@ -1903,7 +1903,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     symbol: subMatch[2],
                                     value: attrValue,
                                     trailing,
-                                    caseInsensitive
+                                    ignoreCase
                                 });
                                 segment = spliceString(segment, subMatch.index, subMatch[0].length);
                             }
