@@ -1650,7 +1650,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return parseUnit(value, options);
     }
 
-    public convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions) {
+    public convertUnit(value: NumString, unit = 'px', options?: NodeConvertUnitOptions) {
         let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
         if (unit === 'percent' || unit === '%') {
             result *= 100 / getBoundsSize(this, options);

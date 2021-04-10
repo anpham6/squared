@@ -443,7 +443,7 @@ declare module "base" {
         cssTryAll(attrs: CssStyleMap, callback?: FunctionSelf<this>): CssStyleMap | boolean;
         cssFinally(attrs: CssStyleAttr | CssStyleMap): void;
         parseUnit(value: string, options?: NodeParseUnitOptions): number;
-        convertUnit(value: NumString, unit: string, options?: NodeConvertUnitOptions): string;
+        convertUnit(value: NumString, unit?: string, options?: NodeConvertUnitOptions): string;
         has(attr: CssStyleAttr, options?: HasOptions): boolean;
         hasPX(attr: CssStyleAttr, options?: HasPXOptions): boolean;
         toInt(attr: CssStyleAttr, fallback?: number, initial?: boolean): number;

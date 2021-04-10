@@ -29,19 +29,11 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
-const { convertPercent, endsWith, isNumber, splitPairEnd, startsWith, trimString, withinRange } = squared.lib.util;
+const { convertPercent, endsWith, splitEnclosing, splitPairEnd, startsWith, trimString, withinRange } = squared.lib.util;
 
-const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
-const PATTERN_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
-const PATTERN_NAMED = '\\[([\\w\\s\\-]+)\\]';
-const REGEXP_UNIT = new RegExp(`^${PATTERN_UNIT}$`);
-const REGEXP_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s*(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT}\\s*)`, 'g');
-const REGEXP_REPEAT = new RegExp(`\\s*(${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
-const REGEXP_CELL_UNIT = new RegExp(PATTERN_UNIT);
-const REGEXP_CELL_MINMAX = new RegExp(PATTERN_MINMAX);
-const REGEXP_CELL_FIT_CONTENT = new RegExp(PATTERN_FIT_CONTENT);
-const REGEXP_CELL_NAMED = new RegExp(PATTERN_NAMED);
+const PATTERN_SIZE = '\\[([^]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
+const REGEXP_SIZE = new RegExp(PATTERN_SIZE, 'g');
+const REGEXP_REPEAT = /repeat\(\s*(auto-fit|auto-fill|\d+)/;
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
@@ -157,10 +149,8 @@ function getOpenCellIndex(iteration: number, length: number, available: Undef<nu
 
 function getOpenRowIndex(cells: number[][]) {
     for (let i = 0, length = cells.length; i < length; ++i) {
-        for (const value of cells[i]) {
-            if (value === 0) {
-                return i;
-            }
+        if (cells[i].some(value => value === 0)) {
+            return i;
         }
     }
     return Math.max(0, length - 1);
@@ -341,98 +331,99 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const direction = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = direction;
                 let i = 1,
-                    match: Null<RegExpMatchArray>;
-                while (match = REGEXP_NAMED.exec(value)) {
-                    const command = match[1].trim();
-                    switch (index) {
-                        case 0:
-                        case 1:
-                            if (command[0] === '[') {
-                                for (const attr of match[4].split(/\s+/)) {
-                                    (name[attr] ||= []).push(i);
-                                }
+                    match: Null<RegExpExecArray>;
+                for (const seg of splitEnclosing(value, 'repeat')) {
+                    if (startsWith(seg, 'repeat')) {
+                        if (match = REGEXP_REPEAT.exec(seg)) {
+                            let iterations = 1;
+                            switch (match[1]) {
+                                case 'auto-fit':
+                                    direction.flags |= LAYOUT_CSSGRID.AUTO_FIT;
+                                    break;
+                                case 'auto-fill':
+                                    direction.flags |= LAYOUT_CSSGRID.AUTO_FILL;
+                                    break;
+                                default:
+                                    iterations = +match[1] || 1;
+                                    break;
                             }
-                            else if (startsWith(command, 'repeat')) {
-                                let iterations = 1;
-                                switch (match[2]) {
-                                    case 'auto-fit':
-                                        direction.flags |= LAYOUT_CSSGRID.AUTO_FIT;
-                                        break;
-                                    case 'auto-fill':
-                                        direction.flags |= LAYOUT_CSSGRID.AUTO_FILL;
-                                        break;
-                                    default:
-                                        iterations = +match[2] || 1;
-                                        break;
-                                }
-                                if (iterations) {
-                                    const repeating: RepeatItem[] = [];
-                                    let subMatch: Null<RegExpMatchArray>,
-                                        namedMatch: Null<RegExpMatchArray>;
-                                    while (subMatch = REGEXP_REPEAT.exec(match[3])) {
-                                        if (namedMatch = REGEXP_CELL_NAMED.exec(subMatch[1])) {
-                                            const subName = namedMatch[1];
-                                            if (!name[subName]) {
-                                                name[subName] = [];
-                                            }
-                                            repeating.push({ name: subName });
-                                        }
-                                        else if (namedMatch = REGEXP_CELL_MINMAX.exec(subMatch[1])) {
-                                            repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
-                                        }
-                                        else if (namedMatch = REGEXP_CELL_FIT_CONTENT.exec(subMatch[1])) {
-                                            repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
-                                        }
-                                        else if (namedMatch = REGEXP_CELL_UNIT.exec(subMatch[1])) {
-                                            repeating.push({ unit: convertLength(node, namedMatch[0], index) });
-                                        }
+                            if (iterations) {
+                                const repeating: RepeatItem[] = [];
+                                const size = seg.substring(match[0].length);
+                                while (match = REGEXP_SIZE.exec(size)) {
+                                    if (match[1]) {
+                                        name[match[1]] ||= [];
+                                        repeating.push({ name: match[1] });
                                     }
-                                    const q = repeating.length;
-                                    if (q) {
-                                        for (let j = 0; j < iterations; ++j) {
-                                            for (let k = 0; k < q; ++k) {
-                                                const item = repeating[k];
-                                                if (item.name) {
-                                                    name[item.name].push(i);
-                                                }
-                                                else if (item.unit) {
-                                                    unit.push(item.unit);
-                                                    unitMin.push(item.unitMin || '');
-                                                    repeat.push(true);
-                                                    ++i;
-                                                }
+                                    else if (match[2]) {
+                                        repeating.push({ unitMin: convertLength(node, match[2], index), unit: convertLength(node, match[3], index) });
+                                    }
+                                    else if (match[4]) {
+                                        repeating.push({ unitMin: '0px', unit: convertLength(node, match[4], index) });
+                                    }
+                                    else if (match[5]) {
+                                        repeating.push({ unit: convertLength(node, match[5], index) });
+                                    }
+                                }
+                                const q = repeating.length;
+                                if (q) {
+                                    for (let j = 0; j < iterations; ++j) {
+                                        for (let k = 0; k < q; ++k) {
+                                            const item = repeating[k];
+                                            if (item.name) {
+                                                name[item.name]!.push(i);
+                                            }
+                                            else if (item.unit) {
+                                                unit.push(item.unit);
+                                                unitMin.push(item.unitMin || '');
+                                                repeat.push(true);
+                                                ++i;
                                             }
                                         }
                                     }
-                                    REGEXP_REPEAT.lastIndex = 0;
                                 }
+                                REGEXP_SIZE.lastIndex = 0;
                             }
-                            else if (startsWith(command, 'minmax')) {
-                                unit.push(convertLength(node, match[6], index));
-                                unitMin.push(convertLength(node, match[5], index));
-                                repeat.push(false);
-                                ++i;
+                        }
+                    }
+                    else {
+                        while (match = REGEXP_SIZE.exec(seg)) {
+                            switch (index) {
+                                case 0:
+                                case 1:
+                                    if (match[1]) {
+                                       for (const attr of match[1].split(/\s+/)) {
+                                            (name[attr] ||= []).push(i);
+                                        }
+                                    }
+                                    else if (match[2]) {
+                                        unitMin.push(convertLength(node, match[2], index));
+                                        unit.push(convertLength(node, match[3], index));
+                                        repeat.push(false);
+                                        ++i;
+                                    }
+                                    else if (match[4]) {
+                                        unit.push(convertLength(node, match[4], index));
+                                        unitMin.push('0px');
+                                        repeat.push(false);
+                                        ++i;
+                                    }
+                                    else if (match[5]) {
+                                        unit.push(convertLength(node, match[5], index));
+                                        unitMin.push('');
+                                        repeat.push(false);
+                                        ++i;
+                                    }
+                                    break;
+                                case 2:
+                                case 3:
+                                    (index === 2 ? row : column).auto.push(isLength(match[0]) ? formatPX(node.parseUnit(match[0], { dimension: index !== 2 ? 'width' : 'height' })) : match[0]);
+                                    break;
                             }
-                            else if (startsWith(command, 'fit-content')) {
-                                unit.push(convertLength(node, match[7], index));
-                                unitMin.push('0px');
-                                repeat.push(false);
-                                ++i;
-                            }
-                            else if (REGEXP_UNIT.test(command)) {
-                                unit.push(convertLength(node, command, index));
-                                unitMin.push('');
-                                repeat.push(false);
-                                ++i;
-                            }
-                            break;
-                        case 2:
-                        case 3:
-                            (index === 2 ? row : column).auto.push(isLength(command) ? formatPX(node.parseUnit(command, { dimension: index !== 2 ? 'width' : 'height' })) : command);
-                            break;
+                        }
+                        REGEXP_SIZE.lastIndex = 0;
                     }
                 }
-                REGEXP_NAMED.lastIndex = 0;
             }
         }
         if (horizontal) {
@@ -501,18 +492,19 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const [gridRowEnd, gridColumnEnd] = item.cssAsTuple('gridRowEnd', 'gridColumnEnd');
                 let rowSpan = 1,
-                    columnSpan = 1;
+                    columnSpan = 1,
+                    n: number;
                 if (startsWith(gridRowEnd, 'span')) {
                     rowSpan = +splitPairEnd(gridRowEnd, ' ');
                 }
-                else if (isNumber(gridRowEnd)) {
-                    rowSpan = +gridRowEnd - rowIndex;
+                else if (!isNaN(n = +gridRowEnd)) {
+                    rowSpan = n - rowIndex;
                 }
                 if (startsWith(gridColumnEnd, 'span')) {
                     columnSpan = +splitPairEnd(gridColumnEnd, ' ');
                 }
-                else if (isNumber(gridColumnEnd)) {
-                    columnSpan = +gridColumnEnd - columnIndex;
+                else if (!isNaN(n = +gridColumnEnd)) {
+                    columnSpan = n - columnIndex;
                 }
                 if (columnIndex === 1 && columnMax) {
                     found: {
@@ -648,8 +640,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                     const setPlacement = (value: string, position: number, vertical: boolean, length: number) => {
-                        if (isNumber(value)) {
-                            const cellIndex = +value;
+                        let n: number;
+                        if (!isNaN(n = +value)) {
+                            const cellIndex = n;
                             if (cellIndex > 0) {
                                 placement[position] = cellIndex;
                                 return true;
@@ -682,19 +675,17 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             switch (position) {
                                 case 0: {
                                     const rowIndex = positions[2];
-                                    if (isNumber(rowIndex)) {
-                                        const pos = +rowIndex;
-                                        placement[0] = pos - span;
-                                        placement[2] = pos;
+                                    if (!isNaN(n = +rowIndex)) {
+                                        placement[0] = n - span;
+                                        placement[2] = n;
                                     }
                                     break;
                                 }
                                 case 1: {
                                     const colIndex = positions[3];
-                                    if (isNumber(colIndex)) {
-                                        const pos = +colIndex;
-                                        placement[1] = pos - span;
-                                        placement[3] = pos;
+                                    if (!isNaN(n = +colIndex)) {
+                                        placement[1] = n - span;
+                                        placement[3] = n;
                                     }
                                     break;
                                 }
@@ -719,7 +710,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     };
                     let rowStart: Undef<string[]>,
                         colStart: Undef<string[]>;
-                    for (let i = 0; i < 4; ++i) {
+                    for (let i = 0, n: number; i < 4; ++i) {
                         const value = positions[i];
                         if (value !== 'auto' && !placement[i]) {
                             const vertical = i % 2 === 0;
@@ -730,17 +721,17 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     alias[1] = alias[0];
                                     alias[0] = '1';
                                 }
-                                else if (isNumber(alias[0])) {
+                                else if (!isNaN(n = +alias[0])) {
                                     if (vertical) {
                                         if (rowStart) {
-                                            rowSpan = +alias[0] - +rowStart[0];
+                                            rowSpan = n - +rowStart[0];
                                         }
                                         else {
                                             rowStart = alias;
                                         }
                                     }
                                     else if (colStart) {
-                                        columnSpan = +alias[0] - +colStart[0];
+                                        columnSpan = n - +colStart[0];
                                     }
                                     else {
                                         colStart = alias;
@@ -748,9 +739,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                                 const named = direction.name[alias[1]];
                                 if (named) {
-                                    const nameIndex = +alias[0];
-                                    if (nameIndex <= named.length) {
-                                        placement[i] = named[nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
+                                    n = +alias[0];
+                                    if (n <= named.length) {
+                                        placement[i] = named[n - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
                                     }
                                 }
                             }
@@ -1089,8 +1080,9 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        if (isNumber(unitHeight)) {
-                            rowMax[i] = +unitHeight;
+                        const n = +unitHeight;
+                        if (!isNaN(n)) {
+                            rowMax[i] = n;
                         }
                         if (horizontal) {
                             mainData.emptyRows[i] = [Infinity];
