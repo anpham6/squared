@@ -725,7 +725,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 child.actualParent = node;
                 children.push(child);
             }
-            node.internalCascade(children, elements);
+            node.internalNodes(children, elements);
             if (hostParent !== parentElement) {
                 node.shadowRoot = true;
             }

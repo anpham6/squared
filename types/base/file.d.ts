@@ -24,6 +24,7 @@ interface LayoutAsset extends TextAsset {
 }
 
 interface FileAsset extends TextAsset, OutputAction {
+    format?: string;
     base64?: string;
 }
 

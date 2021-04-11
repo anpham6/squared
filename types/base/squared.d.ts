@@ -416,7 +416,7 @@ declare module "base" {
         pseudoElt?: PseudoElt;
         readonly id: number;
         internalSelf(parent: Null<Node>, depth: number, index?: number): void;
-        internalCascade(children: Node[], elements?: Node[]): void;
+        internalNodes(children: Node[], elements?: Node[]): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
         data<T = unknown>(name: string, attr: string, value?: unknown, overwrite?: boolean): Undef<T>;

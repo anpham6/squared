@@ -881,7 +881,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public internalCascade(children: T[], elements?: T[]) {
+    public internalNodes(children: T[], elements?: T[]) {
         this._naturalChildren = children;
         this._naturalElements = elements || children.filter((item: T) => item.naturalElement);
     }

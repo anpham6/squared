@@ -18,7 +18,6 @@ interface CssSelectorData {
 }
 
 interface ChromeAsset extends FileAsset, BundleAction, ElementAction, AttributeAction, StorageAction {
-    format?: string;
     preserve?: boolean;
     exclude?: boolean;
     inlineContent?: string;

@@ -30,16 +30,10 @@ export default class Application<T extends squared.base.Node> extends squared.ba
     private _cssUnusedSupports: CssValueMap = {};
 
     public init() {
-        const addVariablesAll = (sessionId: string, cssText: string) => {
-            let match: Null<RegExpExecArray>;
-            while (match = REGEXP_VARVALUE.exec(cssText)) {
-                ((this._cssVariables[sessionId] ||= {})[match[1]] ||= new Set()).add(match[2].trim());
-            }
-            REGEXP_VARVALUE.lastIndex = 0;
-        };
-        this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule, selector: string) {
+        this.session.usedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule) {
             const { fontFamily, animationName } = rule.style;
-            let usedVariables: Undef<Set<string>>,
+            let variables: Undef<ObjectMap<Set<string>>>,
+                usedVariables: Undef<Set<string>>,
                 usedFontFace: Undef<Set<string>>,
                 usedKeyframes: Undef<Set<string>>,
                 match: Null<RegExpExecArray>;
@@ -51,7 +45,12 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     usedVariables.add(match[1]);
                 }
             }
-            addVariablesAll(sessionId, rule.cssText);
+            while (match = REGEXP_VARVALUE.exec(rule.cssText)) {
+                if (!variables) {
+                    variables = this._cssVariables[sessionId] ||= {};
+                }
+                (variables[match[1]] ||= new Set()).add(match[2].trim());
+            }
             if (fontFamily) {
                 if (!usedFontFace) {
                     usedFontFace = this._cssUsedFontFace[sessionId] ||= new Set();
@@ -69,11 +68,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 });
             }
             REGEXP_VAR.lastIndex = 0;
+            REGEXP_VARVALUE.lastIndex = 0;
         };
         this.session.unusedSelector = function(this: Application<T>, sessionId: string, rule: CSSStyleRule, selector: string, hostElement?: Element) {
             if (!hostElement) {
                 (this._cssUnusedSelectors[sessionId] ||= new Set()).add(selector);
-                addVariablesAll(sessionId, rule.cssText);
             }
         };
         this.session.unusedMedia = function(this: Application<T>, sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) {
