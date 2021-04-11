@@ -912,9 +912,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             const length = element.style.length;
                             if (length) {
                                 const style = element.style;
+                                const specificity = elementData.styleSpecificity ||= {};
                                 for (let i = 0; i < length; ++i) {
                                     const attr = style[i];
-                                    styleMap[convertCamelCase(attr)] = style.getPropertyValue(attr);
+                                    const baseAttr = convertCamelCase(attr);
+                                    if ((specificity[baseAttr]! | 0) <= 1000) {
+                                        styleMap[baseAttr] = style.getPropertyValue(attr);
+                                        specificity[baseAttr] = 1000;
+                                    }
                                 }
                             }
                         }
