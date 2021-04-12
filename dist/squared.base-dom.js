@@ -1,4 +1,4 @@
-/* squared.base 2.5.4
+/* squared.base 2.5.6
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -614,7 +614,7 @@ this.squared.base = (function (exports) {
                                 const specificityData = getElementCache$1(element, attrSpecificity, sessionId);
                                 for (const attr in baseMap) {
                                     const previous = specificityData[attr];
-                                    const revised = specificity + (important && important[attr] ? 1000 : 0);
+                                    const revised = specificity + (important && important[attr] ? 2000 : 0);
                                     if (!previous || revised >= previous) {
                                         styleData[attr] = baseMap[attr];
                                         specificityData[attr] = revised;
@@ -625,7 +625,7 @@ this.squared.base = (function (exports) {
                                 const styleMap = Object.assign({}, baseMap);
                                 const specificityData = {};
                                 for (const attr in styleMap) {
-                                    specificityData[attr] = specificity + (important && important[attr] ? 1000 : 0);
+                                    specificityData[attr] = specificity + (important && important[attr] ? 2000 : 0);
                                 }
                                 setElementCache$1(element, 'sessionId', sessionId);
                                 setElementCache$1(element, attrStyle, styleMap, sessionId);
@@ -2864,9 +2864,14 @@ this.squared.base = (function (exports) {
                                 const length = element.style.length;
                                 if (length) {
                                     const style = element.style;
+                                    const specificity = elementData.styleSpecificity || (elementData.styleSpecificity = {});
                                     for (let i = 0; i < length; ++i) {
                                         const attr = style[i];
-                                        styleMap[convertCamelCase(attr)] = style.getPropertyValue(attr);
+                                        const baseAttr = convertCamelCase(attr);
+                                        if ((specificity[baseAttr] | 0) <= 1000) {
+                                            styleMap[baseAttr] = style.getPropertyValue(attr);
+                                            specificity[baseAttr] = 1000;
+                                        }
                                     }
                                 }
                             }
@@ -3544,7 +3549,7 @@ this.squared.base = (function (exports) {
             }
             return parseUnit(value, options);
         }
-        convertUnit(value, unit, options) {
+        convertUnit(value, unit = 'px', options) {
             let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
             if (unit === 'percent' || unit === '%') {
                 result *= 100 / getBoundsSize(this, options);
@@ -4015,7 +4020,7 @@ this.squared.base = (function (exports) {
         }
         get elementId() {
             var _a;
-            return (((_a = this._element) === null || _a === void 0 ? void 0 : _a.id) || '').trim();
+            return ((_a = this._element) === null || _a === void 0 ? void 0 : _a.id) || '';
         }
         get htmlElement() {
             const result = this._cacheState.htmlElement;
@@ -5095,10 +5100,8 @@ this.squared.base = (function (exports) {
             const images = [];
             const preloadMap = [];
             const parseSrcSet = (value) => {
-                if (value) {
-                    for (const uri of value.split(',')) {
-                        this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
-                    }
+                for (const uri of value.split(',')) {
+                    this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
                 }
             };
             for (const element of elements) {

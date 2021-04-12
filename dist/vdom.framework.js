@@ -1,4 +1,4 @@
-/* vdom-framework 2.5.4
+/* vdom-framework 2.5.6
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -16,6 +16,9 @@ var vdom = (function () {
         }
     }
 
+    class Node extends squared.base.Node {
+    }
+
     const settings = {
         builtInExtensions: [],
         createElementMap: true,
@@ -27,13 +30,14 @@ var vdom = (function () {
     let application = null;
     const appBase = {
         base: {
-            Application
+            Application,
+            Node
         },
         lib: {},
         extensions: {},
         system: {},
         create() {
-            application = new Application(1 /* VDOM */, squared.base.Node, squared.base.Controller, squared.base.ExtensionManager);
+            application = new Application(1 /* VDOM */, Node, squared.base.Controller, squared.base.ExtensionManager);
             return {
                 application,
                 framework: 1 /* VDOM */,

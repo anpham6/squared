@@ -1,4 +1,4 @@
-/* squared 2.5.4
+/* squared 2.5.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1631,13 +1631,13 @@
     const REGEXP_RESOLUTION = new RegExp(`^${STRING.CSS_RESOLUTION}$`);
     const REGEXP_CALC = /^calc\((.+)\)$/i;
     const REGEXP_KEYFRAMES = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-    const REGEXP_VAR = /\s*(.*)var\((--[\w-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
-    const REGEXP_CUSTOMPROPERTY = /var\(--.+\)/;
+    const REGEXP_VAR = /(.*?)var\(\s*(--[^\s,)]*)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)(.*)/;
+    const REGEXP_CUSTOMPROPERTY = /\bvar\(\s*--[^)]*\)/;
     const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
     const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
     const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
     const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-    const REGEXP_EMBASED = /[+-]?[\d.]+(?:em|ch|ex)\b/;
+    const REGEXP_EMBASED = /[\d.]+(?:em|ch|ex)\b/;
     const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
     const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
     const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
@@ -3257,20 +3257,14 @@
         return PROXY_INLINESTYLE;
     }
     function updateDocumentFont() {
-        const documentElement = document.documentElement;
-        const documentStyle = getStyle(documentElement);
-        DOCUMENT_FONTSIZE = parseFloat(documentStyle.fontSize);
-        if (isNaN(DOCUMENT_FONTSIZE)) {
-            DOCUMENT_FONTSIZE = 16;
-        }
-        const style = documentElement.style;
-        const fontSize = style.fontSize;
-        style.fontSize = 'initial';
-        DOCUMENT_FONTBASE = parseFloat(documentStyle.fontSize);
-        if (isNaN(DOCUMENT_FONTBASE)) {
-            DOCUMENT_FONTBASE = 16;
-        }
-        style.fontSize = fontSize;
+        const element = document.documentElement;
+        const style = getComputedStyle(element);
+        DOCUMENT_FONTSIZE = parseFloat(style.fontSize) || 16;
+        const elementStyle = element.style;
+        const fontSize = elementStyle.fontSize;
+        elementStyle.fontSize = 'initial';
+        DOCUMENT_FONTBASE = parseFloat(style.fontSize) || 16;
+        elementStyle.fontSize = fontSize;
         const index = 16 - Math.floor(DOCUMENT_FONTBASE);
         switch (index) {
             case 0:
@@ -3314,7 +3308,7 @@
             const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING);
             for (let i = 0; i < segments.length; ++i) {
                 const seg = segments[i];
-                if (seg[0] === ':' && seg.includes(',') && /^:(not|is|where)\(/i.test(seg)) {
+                if (seg[0] === ':' && seg.includes(',') && /^:(?:not|is|where)\(/i.test(seg)) {
                     timestamp || (timestamp = Date.now());
                     (removed || (removed = [])).push(seg);
                     segments[i] = timestamp + '-' + (removed.length - 1);
@@ -4445,10 +4439,8 @@
                     }
                     else {
                         partial += output;
-                        if (dimension) {
-                            if ((output = output.trim()) && (!checkUnit || unitType === 1 /* LENGTH */ && (isLength(output, true) || output === 'auto'))) {
-                                ++j;
-                            }
+                        if (dimension && (output = output.trim()) && (!checkUnit || unitType === 1 /* LENGTH */ && (isLength(output, true) || output === 'auto'))) {
+                            ++j;
                         }
                     }
                 }
@@ -4949,7 +4941,7 @@
         }
         return 0;
     }
-    function convertUnit(value, unit, options) {
+    function convertUnit(value, unit = 'px', options) {
         let result = parseUnit('1' + unit, options);
         if (result !== 0) {
             if (typeof value === 'string') {

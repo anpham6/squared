@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.4
+/* chrome-framework 2.5.6
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -471,46 +471,25 @@ var chrome = (function () {
             const result = [];
             const bundleIndex = {};
             document.querySelectorAll('link, style').forEach((element) => {
-                let mimeType = 'text/css', href;
-                const checkMimeType = () => {
-                    const filename = fromLastIndexOf(href, '/');
-                    if (filename.includes('.')) {
-                        mimeType = getMimeType(element, filename);
-                        return true;
-                    }
-                    return false;
-                };
+                let href = '', mimeType = 'text/css';
                 if (element instanceof HTMLLinkElement) {
+                    const rel = element.rel.trim().toLowerCase();
                     href = element.href;
-                    if (assetMap && assetMap.get(element)) {
-                        checkMimeType();
-                    }
-                    else if (href) {
-                        const rel = element.rel.trim().toLowerCase();
-                        if (rel !== 'stylesheet') {
-                            switch (rel) {
-                                case 'alternate':
-                                case 'help':
-                                case 'license':
-                                case 'manifest':
-                                case 'modulepreload':
-                                case 'prefetch':
-                                case 'preload':
-                                case 'prerender':
-                                    if (!checkMimeType()) {
-                                        return;
-                                    }
-                                    break;
-                                default:
-                                    if (!rel.includes('icon') || !checkMimeType()) {
-                                        return;
-                                    }
-                                    break;
+                    if (rel !== 'stylesheet') {
+                        const checkMimeType = () => {
+                            const filename = fromLastIndexOf(href, '/');
+                            if (filename.includes('.')) {
+                                mimeType = getMimeType(element, filename);
+                                return true;
                             }
+                            return false;
+                        };
+                        if (assetMap && assetMap.get(element)) {
+                            checkMimeType();
                         }
-                    }
-                    else {
-                        return;
+                        else if (!href || !rel.includes('icon') || !checkMimeType()) {
+                            return;
+                        }
                     }
                 }
                 this.createBundle(result, element, href, mimeType, preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink, mimeType === 'text/css');
@@ -556,7 +535,7 @@ var chrome = (function () {
                 saveAsImage = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.image;
             }
             const result = [];
-            document.querySelectorAll('img, input[type=image], picture > source[src]').forEach((element) => {
+            document.querySelectorAll('img, input[type=image], picture > source[src], video[poster]').forEach((element) => {
                 let src = element instanceof HTMLVideoElement ? element.poster : element.src, mimeType, base64;
                 const image = Resource.parseDataURI(src);
                 if (image) {
@@ -1411,6 +1390,9 @@ var chrome = (function () {
         }
     }
 
+    class Node extends squared.base.Node {
+    }
+
     const settings = {
         builtInExtensions: [],
         preloadImages: false,
@@ -1452,7 +1434,8 @@ var chrome = (function () {
         base: {
             Application,
             Extension,
-            File
+            File,
+            Node
         },
         lib: {},
         extensions: {},
@@ -1522,7 +1505,7 @@ var chrome = (function () {
             }
         },
         create() {
-            application = new Application(4 /* CHROME */, squared.base.Node, squared.base.Controller, squared.base.ExtensionManager, squared.base.Resource);
+            application = new Application(4 /* CHROME */, Node, squared.base.Controller, squared.base.ExtensionManager, squared.base.Resource);
             file = new File();
             application.resourceHandler.fileHandler = file;
             return {

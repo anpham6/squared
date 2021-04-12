@@ -1,4 +1,4 @@
-/* android-framework 2.5.4
+/* android-framework 2.5.6
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -16,7 +16,7 @@ var android = (function () {
         }
         resolveTarget(sessionId, target) {
             if (target) {
-                const isTargeted = (node) => node.element === target || node.elementId === target || node.controlId === target;
+                const isTargeted = (node) => node.element === target || node.elementId.trim() === target || node.controlId === target;
                 for (const node of this.getProcessingCache(sessionId)) {
                     if (isTargeted(node)) {
                         return node;
@@ -4024,7 +4024,7 @@ var android = (function () {
                             }
                         }
                     }
-                    if (this.onlyChild && this.controlName === renderParent.controlName && !this.hasWidth && !this.hasHeight && !this.visibleStyle.borderWidth && !this.elementId && !parseFloat(this.android('translationX')) && !parseFloat(this.android('translationY'))) {
+                    if (this.onlyChild && this.controlName === renderParent.controlName && !this.hasWidth && !this.hasHeight && !this.visibleStyle.borderWidth && !this.elementId.trim() && !parseFloat(this.android('translationX')) && !parseFloat(this.android('translationY'))) {
                         for (const [name, namespace] of renderParent.namespaces()) {
                             const data = this._namespaces[name];
                             if (data) {
@@ -4451,7 +4451,7 @@ var android = (function () {
                     if (controlName) {
                         let name;
                         if (this.styleElement) {
-                            const value = this.elementId || getNamedItem(this.element, 'name');
+                            const value = this.elementId.trim() || getNamedItem(this.element, 'name');
                             if (value) {
                                 name = value === 'parent' || RESERVED_JAVA.includes(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
                             }
@@ -5543,12 +5543,12 @@ var android = (function () {
             else if (node.bounds.height === 0 &&
                 node.naturalChild &&
                 node.naturalElements.length === 0 &&
-                !node.elementId &&
                 node.marginTop === 0 &&
                 node.marginRight === 0 &&
                 node.marginBottom === 0 &&
                 node.marginLeft === 0 &&
                 !background &&
+                !node.elementId.trim() &&
                 !node.rootElement &&
                 !node.use) {
                 node.hide();
@@ -6413,10 +6413,10 @@ var android = (function () {
                     break;
                 case CONTAINER_TAGNAME.EDIT:
                     if (!node.companion && node.hasProcedure(8 /* ACCESSIBILITY */)) {
+                        const id = node.elementId;
                         [node.previousSibling, node.nextSibling].some((sibling) => {
                             if (sibling && sibling.visible && sibling.pageFlow) {
-                                const id = node.elementId;
-                                if (id && id === sibling.toElementString('htmlFor').trim()) {
+                                if (id && id === sibling.toElementString('htmlFor')) {
                                     sibling.android('labelFor', node.documentId);
                                     return true;
                                 }

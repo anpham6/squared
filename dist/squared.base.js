@@ -1,4 +1,4 @@
-/* squared.base 2.5.4
+/* squared.base 2.5.6
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -614,7 +614,7 @@ this.squared.base = (function (exports) {
                                 const specificityData = getElementCache$3(element, attrSpecificity, sessionId);
                                 for (const attr in baseMap) {
                                     const previous = specificityData[attr];
-                                    const revised = specificity + (important && important[attr] ? 1000 : 0);
+                                    const revised = specificity + (important && important[attr] ? 2000 : 0);
                                     if (!previous || revised >= previous) {
                                         styleData[attr] = baseMap[attr];
                                         specificityData[attr] = revised;
@@ -625,7 +625,7 @@ this.squared.base = (function (exports) {
                                 const styleMap = Object.assign({}, baseMap);
                                 const specificityData = {};
                                 for (const attr in styleMap) {
-                                    specificityData[attr] = specificity + (important && important[attr] ? 1000 : 0);
+                                    specificityData[attr] = specificity + (important && important[attr] ? 2000 : 0);
                                 }
                                 setElementCache$3(element, 'sessionId', sessionId);
                                 setElementCache$3(element, attrStyle, styleMap, sessionId);
@@ -2006,7 +2006,7 @@ this.squared.base = (function (exports) {
     const { assignRect, getNamedItem: getNamedItem$3, getParentElement: getParentElement$1, getRangeClientRect: getRangeClientRect$1, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$2, getElementCache: getElementCache$2, getElementData, setElementCache: setElementCache$2 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent: convertPercent$3, endsWith: endsWith$2, escapePattern: escapePattern$1, hasValue: hasValue$1, isNumber: isNumber$4, isObject, isSpace, iterateArray: iterateArray$3, iterateReverseArray: iterateReverseArray$1, spliceString, splitEnclosing, splitPair: splitPair$1, startsWith: startsWith$5 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent: convertPercent$3, endsWith: endsWith$2, escapePattern: escapePattern$1, hasValue: hasValue$1, isNumber: isNumber$3, isObject, isSpace, iterateArray: iterateArray$3, iterateReverseArray: iterateReverseArray$1, spliceString, splitEnclosing: splitEnclosing$1, splitPair: splitPair$1, startsWith: startsWith$5 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -2088,7 +2088,7 @@ this.squared.base = (function (exports) {
                 case 'OBJECT':
                 case 'EMBED': {
                     const size = getNamedItem$3(element, dimension);
-                    if (size && (result = isNumber$4(size) ? +size : node.parseUnit(size, options))) {
+                    if (size && (result = isNumber$3(size) ? +size : node.parseUnit(size, options))) {
                         node.css(dimension, isPercent$4(size) ? size : size + 'px');
                     }
                     break;
@@ -2485,7 +2485,7 @@ this.squared.base = (function (exports) {
                                         }
                                         break;
                                     default:
-                                        if (isNumber$4(placement)) {
+                                        if (isNumber$3(placement)) {
                                             if (placement !== index.toString()) {
                                                 return false;
                                             }
@@ -2864,9 +2864,14 @@ this.squared.base = (function (exports) {
                                 const length = element.style.length;
                                 if (length) {
                                     const style = element.style;
+                                    const specificity = elementData.styleSpecificity || (elementData.styleSpecificity = {});
                                     for (let i = 0; i < length; ++i) {
                                         const attr = style[i];
-                                        styleMap[convertCamelCase$1(attr)] = style.getPropertyValue(attr);
+                                        const baseAttr = convertCamelCase$1(attr);
+                                        if ((specificity[baseAttr] | 0) <= 1000) {
+                                            styleMap[baseAttr] = style.getPropertyValue(attr);
+                                            specificity[baseAttr] = 1000;
+                                        }
                                     }
                                 }
                             }
@@ -3544,7 +3549,7 @@ this.squared.base = (function (exports) {
             }
             return parseUnit$2(value, options);
         }
-        convertUnit(value, unit, options) {
+        convertUnit(value, unit = 'px', options) {
             let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
             if (unit === 'percent' || unit === '%') {
                 result *= 100 / getBoundsSize(this, options);
@@ -3639,7 +3644,7 @@ this.squared.base = (function (exports) {
                 };
                 const parseNot = (condition) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
                 const checkNot = (condition) => {
-                    return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
+                    return splitEnclosing$1(condition, /:not/gi).reduce((a, b) => {
                         if (b[0] === ':') {
                             const match = REGEXP_ENCLOSING.exec(b);
                             if (match && match[1].toLowerCase() === 'not') {
@@ -3653,7 +3658,7 @@ this.squared.base = (function (exports) {
                     let selector = '', expand;
                     invalid: {
                         let match;
-                        for (let seg of splitEnclosing(query, CSS$1.SELECTOR_ENCLOSING)) {
+                        for (let seg of splitEnclosing$1(query, CSS$1.SELECTOR_ENCLOSING)) {
                             if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
                                 const condition = match[2].trim();
                                 switch (match[1].toLowerCase()) {
@@ -4015,7 +4020,7 @@ this.squared.base = (function (exports) {
         }
         get elementId() {
             var _a;
-            return (((_a = this._element) === null || _a === void 0 ? void 0 : _a.id) || '').trim();
+            return ((_a = this._element) === null || _a === void 0 ? void 0 : _a.id) || '';
         }
         get htmlElement() {
             const result = this._cacheState.htmlElement;
@@ -5095,10 +5100,8 @@ this.squared.base = (function (exports) {
             const images = [];
             const preloadMap = [];
             const parseSrcSet = (value) => {
-                if (value) {
-                    for (const uri of value.split(',')) {
-                        this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
-                    }
+                for (const uri of value.split(',')) {
+                    this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
                 }
             };
             for (const element of elements) {
@@ -5493,7 +5496,7 @@ this.squared.base = (function (exports) {
     const { getNamedItem: getNamedItem$2 } = squared.lib.dom;
     const { cos, equal: equal$1, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { convertBase64, convertCamelCase, convertPercent: convertPercent$2, escapePattern, hasValue, isEqual, isNumber: isNumber$3, isString: isString$1, iterateArray: iterateArray$2, splitPair, startsWith: startsWith$3 } = squared.lib.util;
+    const { convertBase64, convertCamelCase, convertPercent: convertPercent$2, escapePattern, hasValue, isEqual, isNumber: isNumber$2, isString: isString$1, iterateArray: iterateArray$2, splitPair, startsWith: startsWith$3 } = squared.lib.util;
     const BORDER_TOP = CSS_PROPERTIES$2.borderTop.value;
     const BORDER_RIGHT = CSS_PROPERTIES$2.borderRight.value;
     const BORDER_BOTTOM = CSS_PROPERTIES$2.borderBottom.value;
@@ -5739,10 +5742,10 @@ this.squared.base = (function (exports) {
         let i = 0;
         while (i < length) {
             const attr = attrs[i++];
-            tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
+            tagName = (i === 0 && start ? '' : '!' + timestamp) + `(${tagName})`;
             const style = ' ' + attr + `="${attrs[i++]}"`;
             const match = new RegExp(`<${tagName}(${STRING.TAG_OPEN}+?)${attr}\\s*${STRING.TAG_ATTR}(${STRING.TAG_OPEN}*)>`, 'i').exec(src);
-            src = match ? src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[6] + '>') : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+            src = match ? src.replace(match[0], '<!' + timestamp + match[1] + match[2] + style + match[6] + '>') : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<!' + timestamp + capture[1] + style);
         }
         return src;
     }
@@ -5852,7 +5855,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                     if (!result) {
-                        if (isNumber$3(name)) {
+                        if (isNumber$2(name)) {
                             name = '__' + name;
                         }
                         let i = 0;
@@ -6166,7 +6169,7 @@ this.squared.base = (function (exports) {
                     case 'OPTION': {
                         const value = item.text.trim() || item.value.trim();
                         if (value) {
-                            if (numberArray && !isNumber$3(value)) {
+                            if (numberArray && !isNumber$2(value)) {
                                 numberArray = false;
                             }
                             result.push(value);
@@ -6525,7 +6528,7 @@ this.squared.base = (function (exports) {
         writeRawSvg(resourceId, element, dimension) {
             const content = replaceSvgValues(element.outerHTML.trim().replace(/\s+/g, ' '), [element], dimension)
                 .replace(/["']/g, (...capture) => '\\' + capture[0])
-                .replace(/<@@\d+/g, '<');
+                .replace(/<!\d+/g, '<');
             const uri = 'data:image/svg+xml,' + content;
             this.addRawData(resourceId, uri, { mimeType: 'image/svg+xml', content });
             return uri;
@@ -6597,7 +6600,7 @@ this.squared.base = (function (exports) {
         setFontStyle(node) {
             if ((node.textElement || node.inlineText) && (!node.textEmpty || node.pseudoElement || node.visibleStyle.background) || node.inputElement && !node.controlElement) {
                 let fontWeight = node.css('fontWeight');
-                if (!isNumber$3(fontWeight)) {
+                if (!isNumber$2(fontWeight)) {
                     switch (fontWeight) {
                         case 'lighter':
                             fontWeight = '200';
@@ -9147,7 +9150,7 @@ this.squared.base = (function (exports) {
         beforeFinalize(data) { }
     }
 
-    const { isNumber: isNumber$2 } = squared.lib.util;
+    const { isNumber: isNumber$1 } = squared.lib.util;
     function isListItem(node) {
         if (node.display === 'list-item') {
             return true;
@@ -9278,7 +9281,7 @@ this.squared.base = (function (exports) {
                     else {
                         if (ordered && item.tagName === 'LI') {
                             const value = item.attributes['value'];
-                            if (value && isNumber$2(value)) {
+                            if (value && isNumber$1(value)) {
                                 i = parseInt(value);
                             }
                         }
@@ -9759,16 +9762,17 @@ this.squared.base = (function (exports) {
                     for (let i = 0, length = pseudoElements.length; i < length; ++i) {
                         const item = pseudoElements[i];
                         const parentElement = item.parentElement;
-                        let id = '', styleElement;
+                        let previousId = null, styleElement;
                         if (item.pageFlow) {
                             let tagName;
                             if (parentElement.shadowRoot) {
                                 tagName = ':host';
                             }
                             else {
-                                id = parentElement.id.trim();
-                                if (!id) {
-                                    id = '__squared_' + Math.round(Math.random() * new Date().getTime());
+                                let id = parentElement.id;
+                                if (!startsWith$1(id, 'sqd__') && (!id || id !== id.trim())) {
+                                    previousId = id;
+                                    id = 'sqd__' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                                     parentElement.id = id;
                                 }
                                 tagName = '#' + id;
@@ -9776,7 +9780,7 @@ this.squared.base = (function (exports) {
                             styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt} { display: none !important; }`, 0, item.shadowHost);
                         }
                         if (item.cssTry('display', item.display)) {
-                            pseudoMap.push([item, id, styleElement]);
+                            pseudoMap.push([item, previousId, styleElement]);
                         }
                     }
                     const length = pseudoMap.length;
@@ -9784,14 +9788,13 @@ this.squared.base = (function (exports) {
                         pseudoMap[i][0].setBounds(false);
                     }
                     for (let i = 0; i < length; ++i) {
-                        const data = pseudoMap[i];
-                        const item = data[0];
-                        if (startsWith$1(data[1], '__squared_')) {
-                            item.parentElement.id = '';
+                        const [item, previousId, styleElement] = pseudoMap[i];
+                        if (previousId !== null) {
+                            item.parentElement.id = previousId;
                         }
-                        if (data[2]) {
+                        if (styleElement) {
                             try {
-                                (item.shadowHost || document.head).removeChild(data[2]);
+                                (item.shadowHost || document.head).removeChild(styleElement);
                             }
                             catch (_a) {
                             }
@@ -12114,18 +12117,10 @@ this.squared.base = (function (exports) {
     }
 
     const { formatPercent: formatPercent$1, formatPX: formatPX$2, isLength: isLength$2, isPercent: isPercent$1, isPx } = squared.lib.css;
-    const { convertPercent: convertPercent$1, endsWith, isNumber: isNumber$1, splitPairEnd, startsWith, trimString, withinRange: withinRange$2 } = squared.lib.util;
-    const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-    const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
-    const PATTERN_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
-    const PATTERN_NAMED = '\\[([\\w\\s\\-]+)\\]';
-    const REGEXP_UNIT = new RegExp(`^${PATTERN_UNIT}$`);
-    const REGEXP_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s*(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT}\\s*)`, 'g');
-    const REGEXP_REPEAT = new RegExp(`\\s*(${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
-    const REGEXP_CELL_UNIT = new RegExp(PATTERN_UNIT);
-    const REGEXP_CELL_MINMAX = new RegExp(PATTERN_MINMAX);
-    const REGEXP_CELL_FIT_CONTENT = new RegExp(PATTERN_FIT_CONTENT);
-    const REGEXP_CELL_NAMED = new RegExp(PATTERN_NAMED);
+    const { convertPercent: convertPercent$1, endsWith, splitEnclosing, splitPairEnd, startsWith, trimString, withinRange: withinRange$2 } = squared.lib.util;
+    const PATTERN_SIZE = '\\[([^]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
+    const REGEXP_SIZE = new RegExp(PATTERN_SIZE, 'g');
+    const REGEXP_REPEAT = /repeat\(\s*(auto-fit|auto-fill|\d+)/;
     function repeatUnit(data, sizes) {
         const repeat = data.repeat;
         const unitPX = [];
@@ -12233,10 +12228,8 @@ this.squared.base = (function (exports) {
     }
     function getOpenRowIndex(cells) {
         for (let i = 0, length = cells.length; i < length; ++i) {
-            for (const value of cells[i]) {
-                if (value === 0) {
-                    return i;
-                }
+            if (cells[i].some(value => value === 0)) {
+                return i;
             }
         }
         return Math.max(0, length - 1);
@@ -12336,6 +12329,7 @@ this.squared.base = (function (exports) {
             return !node.isEmpty();
         }
         processNode(node) {
+            var _a;
             const data = this.data;
             const mainData = createDataAttribute$2(node);
             const { column, dense, row, rowDirection: horizontal } = mainData;
@@ -12385,96 +12379,98 @@ this.squared.base = (function (exports) {
                     const direction = index === 0 ? row : column;
                     const { name, repeat, unit, unitMin } = direction;
                     let i = 1, match;
-                    while (match = REGEXP_NAMED.exec(value)) {
-                        const command = match[1].trim();
-                        switch (index) {
-                            case 0:
-                            case 1:
-                                if (command[0] === '[') {
-                                    for (const attr of match[4].split(/\s+/)) {
-                                        (name[attr] || (name[attr] = [])).push(i);
-                                    }
+                    for (const seg of splitEnclosing(value, 'repeat')) {
+                        if (startsWith(seg, 'repeat')) {
+                            if (match = REGEXP_REPEAT.exec(seg)) {
+                                let iterations = 1;
+                                switch (match[1]) {
+                                    case 'auto-fit':
+                                        direction.flags |= 1 /* AUTO_FIT */;
+                                        break;
+                                    case 'auto-fill':
+                                        direction.flags |= 2 /* AUTO_FILL */;
+                                        break;
+                                    default:
+                                        iterations = +match[1] || 1;
+                                        break;
                                 }
-                                else if (startsWith(command, 'repeat')) {
-                                    let iterations = 1;
-                                    switch (match[2]) {
-                                        case 'auto-fit':
-                                            direction.flags |= 1 /* AUTO_FIT */;
-                                            break;
-                                        case 'auto-fill':
-                                            direction.flags |= 2 /* AUTO_FILL */;
-                                            break;
-                                        default:
-                                            iterations = +match[2] || 1;
-                                            break;
-                                    }
-                                    if (iterations) {
-                                        const repeating = [];
-                                        let subMatch, namedMatch;
-                                        while (subMatch = REGEXP_REPEAT.exec(match[3])) {
-                                            if (namedMatch = REGEXP_CELL_NAMED.exec(subMatch[1])) {
-                                                const subName = namedMatch[1];
-                                                if (!name[subName]) {
-                                                    name[subName] = [];
-                                                }
-                                                repeating.push({ name: subName });
-                                            }
-                                            else if (namedMatch = REGEXP_CELL_MINMAX.exec(subMatch[1])) {
-                                                repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
-                                            }
-                                            else if (namedMatch = REGEXP_CELL_FIT_CONTENT.exec(subMatch[1])) {
-                                                repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
-                                            }
-                                            else if (namedMatch = REGEXP_CELL_UNIT.exec(subMatch[1])) {
-                                                repeating.push({ unit: convertLength(node, namedMatch[0], index) });
-                                            }
+                                if (iterations) {
+                                    const repeating = [];
+                                    const size = seg.substring(match[0].length);
+                                    while (match = REGEXP_SIZE.exec(size)) {
+                                        if (match[1]) {
+                                            name[_a = match[1]] || (name[_a] = []);
+                                            repeating.push({ name: match[1] });
                                         }
-                                        const q = repeating.length;
-                                        if (q) {
-                                            for (let j = 0; j < iterations; ++j) {
-                                                for (let k = 0; k < q; ++k) {
-                                                    const item = repeating[k];
-                                                    if (item.name) {
-                                                        name[item.name].push(i);
-                                                    }
-                                                    else if (item.unit) {
-                                                        unit.push(item.unit);
-                                                        unitMin.push(item.unitMin || '');
-                                                        repeat.push(true);
-                                                        ++i;
-                                                    }
+                                        else if (match[2]) {
+                                            repeating.push({ unitMin: convertLength(node, match[2], index), unit: convertLength(node, match[3], index) });
+                                        }
+                                        else if (match[4]) {
+                                            repeating.push({ unitMin: '0px', unit: convertLength(node, match[4], index) });
+                                        }
+                                        else if (match[5]) {
+                                            repeating.push({ unit: convertLength(node, match[5], index) });
+                                        }
+                                    }
+                                    const q = repeating.length;
+                                    if (q) {
+                                        for (let j = 0; j < iterations; ++j) {
+                                            for (let k = 0; k < q; ++k) {
+                                                const item = repeating[k];
+                                                if (item.name) {
+                                                    name[item.name].push(i);
+                                                }
+                                                else if (item.unit) {
+                                                    unit.push(item.unit);
+                                                    unitMin.push(item.unitMin || '');
+                                                    repeat.push(true);
+                                                    ++i;
                                                 }
                                             }
                                         }
-                                        REGEXP_REPEAT.lastIndex = 0;
                                     }
+                                    REGEXP_SIZE.lastIndex = 0;
                                 }
-                                else if (startsWith(command, 'minmax')) {
-                                    unit.push(convertLength(node, match[6], index));
-                                    unitMin.push(convertLength(node, match[5], index));
-                                    repeat.push(false);
-                                    ++i;
+                            }
+                        }
+                        else {
+                            while (match = REGEXP_SIZE.exec(seg)) {
+                                switch (index) {
+                                    case 0:
+                                    case 1:
+                                        if (match[1]) {
+                                            for (const attr of match[1].split(/\s+/)) {
+                                                (name[attr] || (name[attr] = [])).push(i);
+                                            }
+                                        }
+                                        else if (match[2]) {
+                                            unitMin.push(convertLength(node, match[2], index));
+                                            unit.push(convertLength(node, match[3], index));
+                                            repeat.push(false);
+                                            ++i;
+                                        }
+                                        else if (match[4]) {
+                                            unit.push(convertLength(node, match[4], index));
+                                            unitMin.push('0px');
+                                            repeat.push(false);
+                                            ++i;
+                                        }
+                                        else if (match[5]) {
+                                            unit.push(convertLength(node, match[5], index));
+                                            unitMin.push('');
+                                            repeat.push(false);
+                                            ++i;
+                                        }
+                                        break;
+                                    case 2:
+                                    case 3:
+                                        (index === 2 ? row : column).auto.push(isLength$2(match[0]) ? formatPX$2(node.parseUnit(match[0], { dimension: index !== 2 ? 'width' : 'height' })) : match[0]);
+                                        break;
                                 }
-                                else if (startsWith(command, 'fit-content')) {
-                                    unit.push(convertLength(node, match[7], index));
-                                    unitMin.push('0px');
-                                    repeat.push(false);
-                                    ++i;
-                                }
-                                else if (REGEXP_UNIT.test(command)) {
-                                    unit.push(convertLength(node, command, index));
-                                    unitMin.push('');
-                                    repeat.push(false);
-                                    ++i;
-                                }
-                                break;
-                            case 2:
-                            case 3:
-                                (index === 2 ? row : column).auto.push(isLength$2(command) ? formatPX$2(node.parseUnit(command, { dimension: index !== 2 ? 'width' : 'height' })) : command);
-                                break;
+                            }
+                            REGEXP_SIZE.lastIndex = 0;
                         }
                     }
-                    REGEXP_NAMED.lastIndex = 0;
                 }
             }
             if (horizontal) {
@@ -12534,18 +12530,18 @@ this.squared.base = (function (exports) {
                         columnIndex = 1;
                     }
                     const [gridRowEnd, gridColumnEnd] = item.cssAsTuple('gridRowEnd', 'gridColumnEnd');
-                    let rowSpan = 1, columnSpan = 1;
+                    let rowSpan = 1, columnSpan = 1, n;
                     if (startsWith(gridRowEnd, 'span')) {
                         rowSpan = +splitPairEnd(gridRowEnd, ' ');
                     }
-                    else if (isNumber$1(gridRowEnd)) {
-                        rowSpan = +gridRowEnd - rowIndex;
+                    else if (!isNaN(n = +gridRowEnd)) {
+                        rowSpan = n - rowIndex;
                     }
                     if (startsWith(gridColumnEnd, 'span')) {
                         columnSpan = +splitPairEnd(gridColumnEnd, ' ');
                     }
-                    else if (isNumber$1(gridColumnEnd)) {
-                        columnSpan = +gridColumnEnd - columnIndex;
+                    else if (!isNaN(n = +gridColumnEnd)) {
+                        columnSpan = n - columnIndex;
                     }
                     if (columnIndex === 1 && columnMax) {
                         found: {
@@ -12679,8 +12675,9 @@ this.squared.base = (function (exports) {
                     }
                     if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                         const setPlacement = (value, position, vertical, length) => {
-                            if (isNumber$1(value)) {
-                                const cellIndex = +value;
+                            let n;
+                            if (!isNaN(n = +value)) {
+                                const cellIndex = n;
                                 if (cellIndex > 0) {
                                     placement[position] = cellIndex;
                                     return true;
@@ -12713,19 +12710,17 @@ this.squared.base = (function (exports) {
                                 switch (position) {
                                     case 0: {
                                         const rowIndex = positions[2];
-                                        if (isNumber$1(rowIndex)) {
-                                            const pos = +rowIndex;
-                                            placement[0] = pos - span;
-                                            placement[2] = pos;
+                                        if (!isNaN(n = +rowIndex)) {
+                                            placement[0] = n - span;
+                                            placement[2] = n;
                                         }
                                         break;
                                     }
                                     case 1: {
                                         const colIndex = positions[3];
-                                        if (isNumber$1(colIndex)) {
-                                            const pos = +colIndex;
-                                            placement[1] = pos - span;
-                                            placement[3] = pos;
+                                        if (!isNaN(n = +colIndex)) {
+                                            placement[1] = n - span;
+                                            placement[3] = n;
                                         }
                                         break;
                                     }
@@ -12749,7 +12744,7 @@ this.squared.base = (function (exports) {
                             return false;
                         };
                         let rowStart, colStart;
-                        for (let i = 0; i < 4; ++i) {
+                        for (let i = 0, n; i < 4; ++i) {
                             const value = positions[i];
                             if (value !== 'auto' && !placement[i]) {
                                 const vertical = i % 2 === 0;
@@ -12760,17 +12755,17 @@ this.squared.base = (function (exports) {
                                         alias[1] = alias[0];
                                         alias[0] = '1';
                                     }
-                                    else if (isNumber$1(alias[0])) {
+                                    else if (!isNaN(n = +alias[0])) {
                                         if (vertical) {
                                             if (rowStart) {
-                                                rowSpan = +alias[0] - +rowStart[0];
+                                                rowSpan = n - +rowStart[0];
                                             }
                                             else {
                                                 rowStart = alias;
                                             }
                                         }
                                         else if (colStart) {
-                                            columnSpan = +alias[0] - +colStart[0];
+                                            columnSpan = n - +colStart[0];
                                         }
                                         else {
                                             colStart = alias;
@@ -12778,9 +12773,9 @@ this.squared.base = (function (exports) {
                                     }
                                     const named = direction.name[alias[1]];
                                     if (named) {
-                                        const nameIndex = +alias[0];
-                                        if (nameIndex <= named.length) {
-                                            placement[i] = named[nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
+                                        n = +alias[0];
+                                        if (n <= named.length) {
+                                            placement[i] = named[n - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
                                         }
                                     }
                                 }
@@ -13115,8 +13110,9 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else {
-                            if (isNumber$1(unitHeight)) {
-                                rowMax[i] = +unitHeight;
+                            const n = +unitHeight;
+                            if (!isNaN(n)) {
+                                rowMax[i] = n;
                             }
                             if (horizontal) {
                                 mainData.emptyRows[i] = [Infinity];
