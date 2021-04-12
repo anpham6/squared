@@ -21,6 +21,7 @@ type FileActionOptions = squared.FileActionOptions;
 type FrameworkOptions = squared.FrameworkOptions;
 type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
+type File = squared.base.File<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
@@ -34,9 +35,10 @@ let addQueue: ExtensionRequest[] = [];
 let removeQueue: ExtensionRequest[] = [];
 
 let main: Null<Main> = null;
+let file: Null<File> = null;
 let framework: Null<Framework> = null;
 let extensionManager: Null<ExtensionManager> = null;
-let extensionCheck = false;
+let modified = false;
 
 function extendPrototype(id: number) {
     const proto = main!.Node.prototype;
@@ -75,7 +77,7 @@ function loadExtensions() {
             for (const item of addQueue) {
                 if (!extensionManager.add(item)) {
                     console.log('FAIL: ' + (typeof item === 'string' ? item : item.name)); // eslint-disable-line no-console
-                    extensionCheck = true;
+                    modified = true;
                 }
             }
             addQueue = [];
@@ -92,17 +94,17 @@ function loadExtensions() {
         if (removeQueue.length) {
             for (const item of removeQueue) {
                 if (extensionManager.remove(item)) {
-                    extensionCheck = true;
+                    modified = true;
                 }
             }
             removeQueue = [];
         }
-        if (extensionCheck) {
+        if (modified) {
             const errors = extensionManager.checkDependencies();
             if (errors) {
                 console.log('FAIL: ' + errors.join(', ')); // eslint-disable-line no-console
             }
-            extensionCheck = false;
+            modified = false;
         }
     }
 }
@@ -167,20 +169,14 @@ const findExtension = (value: string) => extensionManager!.get(value, true) || u
 const frameworkNotInstalled = () => error.reject(error.FRAMEWORK_NOT_INSTALLED);
 
 export function setHostname(value: string) {
-    if (main) {
-        const fileHandler = main.fileHandler;
-        if (fileHandler) {
-            fileHandler.hostname = value;
-        }
+    if (file) {
+        file.hostname = value;
     }
 }
 
 export function setEndpoint(name: string, value: string) {
-    if (main) {
-        const fileHandler = main.fileHandler;
-        if (fileHandler) {
-            fileHandler.setEndpoint(name, value);
-        }
+    if (file) {
+        file.setEndpoint(name, value);
     }
 }
 
@@ -240,6 +236,7 @@ export function setFramework(value: Framework, options?: FrameworkOptions | stri
         }
         const appBase = cacheValue ? value.cached() : value.create();
         main = appBase.application;
+        file = main.fileHandler;
         extensionManager = main.extensionManager;
         mergeSettings(appBase.userSettings, main.systemName);
         Object.assign(settings, appBase.userSettings);
@@ -317,7 +314,7 @@ export function add(...values: ExtensionRequestObject[]) {
             if (options) {
                 apply(value, options);
             }
-            extensionCheck = true;
+            modified = true;
             ++success;
         }
     }
@@ -341,7 +338,7 @@ export function remove(...values: ExtensionRequest[]) {
             else {
                 util.spliceArray(addQueue, item => item === value);
                 removeQueue.push(value);
-                extensionCheck = true;
+                modified = true;
                 ++success;
                 continue;
             }
@@ -351,7 +348,7 @@ export function remove(...values: ExtensionRequest[]) {
             if (!(extensionManager && extensionManager.remove(value))) {
                 removeQueue.push(value);
             }
-            extensionCheck = true;
+            modified = true;
             ++success;
         }
     }

@@ -254,8 +254,8 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: Un
     return pathname && filename ? appendSeparator(pathname, filename) : '';
 }
 
-function setUUID(node: XmlTagNode, element: HTMLElement, name: string) {
-    const id = element.dataset[name + 'Id'] ||= randomUUID();
+function setUUID(node: XmlTagNode, element: HTMLElement, name: string, format?: string) {
+    const id = element.dataset[name + 'Id'] ||= randomUUID(format);
     (node.id ||= {})[name] = id;
 }
 
@@ -299,14 +299,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return { index, tagName, tagIndex, tagCount, ignoreCase: true };
     }
 
-    public static setDocumentId(node: XmlTagNode, element: HTMLElement, document: Undef<StringOfArray>) {
+    public static setDocumentId(node: XmlTagNode, element: HTMLElement, document: Undef<StringOfArray>, format?: string) {
         if (Array.isArray(document)) {
             for (const name of document) {
-                setUUID(node, element, name);
+                setUUID(node, element, name, format);
             }
         }
         else if (document) {
-            setUUID(node, element, document);
+            setUUID(node, element, document, format);
         }
     }
 
@@ -925,6 +925,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     private processAssets(options: FileActionOptions) {
         const { assetMap, appendMap, nodeMap = new Map<XmlNode, HTMLElement>(), useOriginalHtmlPage, preserveCrossOrigin } = options;
+        const formatUUID = this.userSettings.formatUUID;
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
@@ -962,7 +963,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 const documentData = assetMap && assetMap.get(element)?.document;
                 const getNextSibling = () => node.index + element.querySelectorAll('*').length + 1;
                 if (!useOriginalHtmlPage) {
-                    File.setDocumentId(node, element, documentData);
+                    File.setDocumentId(node, element, documentData, formatUUID);
                 }
                 node.outerXml = element.outerHTML.trim();
                 let i = 0;
@@ -1040,7 +1041,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (element instanceof Element) {
                 const node = File.createTagNode(element, domAll, cache);
                 if (!useOriginalHtmlPage) {
-                    File.setDocumentId(node, element, item.document);
+                    File.setDocumentId(node, element, item.document, formatUUID);
                 }
                 item.element = node;
                 nodeMap.set(node, element);
@@ -1108,7 +1109,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     return;
                 }
                 if (!saveAsOptions.filename) {
-                    saveAsOptions.filename = filename || (randomUUID() + '.' + ext);
+                    saveAsOptions.filename = filename || (randomUUID(this.userSettings.formatUUID) + '.' + ext);
                 }
                 filename ||= saveAsOptions.filename;
                 if (src) {

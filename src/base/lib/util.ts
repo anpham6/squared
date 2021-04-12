@@ -13,8 +13,6 @@ class GlobExp extends RegExp implements IGlobExp {
     }
 }
 
-const REGEXP_LOWERCASE = /&#?[A-Za-z\d]+?;/g;
-const HEX_STRING = '0123456789abcdef';
 const EXT_DATA = {
     '3gp': 'video/3gpp',
     '3g2': 'video/3gpp2',
@@ -143,6 +141,10 @@ const EXT_DATA = {
     yml: 'text/yaml',
     zip: 'application/zip'
 };
+
+const CACHE_UUID: ObjectMap<RegExpMatchArray> = {};
+const HEX_STRING = '0123456789abcdef';
+const REGEXP_LOWERCASE = /&#?[A-Za-z\d]+?;/g;
 
 export function fromMimeType(value: string) {
     const [type, name] = value.split('/');
@@ -415,15 +417,16 @@ export function assignEmptyValue(dest: PlainObject, ...attrs: string[]) {
     }
 }
 
-export function randomUUID(separator = '-') {
-    return [8, 4, 4, 4, 12].reduce((a, b, index) => {
-        if (index > 0) {
-            a += separator;
+export function randomUUID(format = '8-4-4-4-12') {
+    return (CACHE_UUID[format] || format.match(/(\d+|[^\d]+)/g)!).reduce((a: string, b: NumString) => {
+        const length = +b;
+        if (!isNaN(length)) {
+            for (let i = 0; i < length; ++i) {
+                a += HEX_STRING[Math.floor(Math.random() * 16)];
+            }
+            return a;
         }
-        for (let i = 0; i < b; ++i) {
-            a += HEX_STRING[Math.floor(Math.random() * 16)];
-        }
-        return a;
+        return a + b;
     }, '');
 }
 

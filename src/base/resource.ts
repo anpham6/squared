@@ -489,7 +489,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
-        return randomUUID() + '.' + ext;
+        return randomUUID(this.userSettings.formatUUID) + '.' + ext;
     }
 
     set fileHandler(value) {

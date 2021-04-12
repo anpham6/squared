@@ -504,7 +504,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
                             const placement = match[3].trim();
                             switch (placement) {
                                 case 'even':
-                                    if (index % 2 !== 0) {
+                                    if (index % 2) {
                                         return false;
                                     }
                                     break;

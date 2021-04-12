@@ -50,6 +50,7 @@ const settings: UserResourceSettingsUI = {
     convertPixels: 'dp',
     insertSpaces: 4,
     showErrorMessages: true,
+    formatUUID: '8-4-4-4-12',
     manifestLabelAppName: 'android',
     manifestThemeName: 'AppTheme',
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
