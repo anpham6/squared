@@ -21,7 +21,7 @@ const { getElementCache, newSessionInit, setElementCache } = squared.lib.session
 const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, replaceAll, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
-const REGEXP_CSSHOST = /^:(host|host-context)\(([^)]+)\)/;
+const REGEXP_CSSHOST = /^:(?:host|host-context)\(([^)]+)\)/;
 const REGEXP_DATAURI = new RegExp(`url\\("(${STRING.DATAURI})"\\)`, 'g');
 let CSS_SHORTHANDNONE: ObjectMap<CssPropertyData>;
 
@@ -581,8 +581,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 break;
                         }
                     }
+                    else if (baseAttr in cssStyle) {
+                        value = 'revert';
+                    }
                     else {
-                        value = baseAttr in cssStyle ? 'revert' : '';
+                        continue;
                     }
                     baseMap[baseAttr] = value;
                 }
@@ -620,13 +623,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                             valid = true;
                         }
                         else {
-                            const matchHost = REGEXP_CSSHOST.exec(selector);
-                            if (matchHost) {
-                                if (matchHost[2] === '*') {
+                            const host = REGEXP_CSSHOST.exec(selector);
+                            if (host) {
+                                if (host[1] === '*') {
                                     valid = true;
                                 }
                                 else {
-                                    const result = document.querySelectorAll(matchHost[1] === 'host' ? hostElement.tagName + matchHost[2] : matchHost[2] + ' ' + hostElement.tagName);
+                                    const result = document.querySelectorAll(host[1] === 'host' ? hostElement.tagName + host[1] : host[1] + ' ' + hostElement.tagName);
                                     for (let i = 0, length = result.length; i < length; ++i) {
                                         if (result[i] === hostElement) {
                                             valid = true;

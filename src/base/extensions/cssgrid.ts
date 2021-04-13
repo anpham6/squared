@@ -33,7 +33,7 @@ interface RepeatItem {
 const { asPercent, asPx, formatPercent, formatPX, isLength } = squared.lib.css;
 const { endsWith, safeFloat, splitEnclosing, splitPairEnd, splitSome, startsWith, withinRange } = squared.lib.util;
 
-const PATTERN_SIZE = '\\[([^]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
+const PATTERN_SIZE = '\\[([^\\]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
 const REGEXP_SIZE = new RegExp(PATTERN_SIZE, 'g');
 const REGEXP_REPEAT = /repeat\(\s*(auto-fit|auto-fill|\d+)/;
 

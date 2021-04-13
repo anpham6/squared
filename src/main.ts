@@ -561,8 +561,8 @@ export function clearCache() {
         main.elementMap = null;
         main.session.active.clear();
         main.resourceHandler?.clear();
-        session.clearSessionAll();
     }
+    session.clearSessionAll();
 }
 
 export function toString() {

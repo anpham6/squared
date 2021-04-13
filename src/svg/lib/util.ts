@@ -13,7 +13,7 @@ const { getElementCache } = squared.lib.session;
 const { convertCamelCase, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
-const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)(?:\s*,?\s+(-?[\d.]+))?(?:\s*,?\s+(-?[\d.]+))?\)/g);
+const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)\s*(?:,?\s+(-?[\d.]+))?\s*(?:,?\s+(-?[\d.]+))?\)/g);
 
 const REGEXP_EXPONENT = new RegExp(STRING.DECIMAL_EXPONENT, 'g');
 const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();

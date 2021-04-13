@@ -16,7 +16,7 @@ const REGEXP_FONTFACE = /@font-face\s*{([^}]+)}/;
 const REGEXP_FONTFAMILY = /font-family:\s*([^;]+);/;
 const REGEXP_FONTSTYLE = /font-style:\s*(\w+)\s*;/;
 const REGEXP_FONTWEIGHT = /font-weight:\s*(\d+)\s*;/;
-const REGEXP_FONTURL = /(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
+const REGEXP_FONTURL = /(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)\s*(?:format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
 const REGEXP_DATAURI = new RegExp(`^(?:^|\\s+)${STRING.DATAURI}(?:$|\\s+)$`);
 
 export default class Resource<T extends Node> implements squared.base.Resource<T> {

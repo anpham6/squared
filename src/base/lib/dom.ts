@@ -120,7 +120,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontS
         return 0;
     });
     if (sizes) {
-        REGEXP_SOURCESIZES ||= new RegExp(`^((?:\\(\\s*)?(?:\\s*(?:(?:and|or|not)\\s+)?(?:\\(\\s*)?(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})(?:\\s*\\))?)+(?:\\s*\\))?)?\\s*(.*)$`, 'i');
+        REGEXP_SOURCESIZES ||= new RegExp(`^((?:\\(\\s*)?(?:\\s*(?:(?:and|or|not)\\s+)?(?:\\(\\s*)?(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*(?:\\))?)+\\s*(?:\\))?)?\\s*(.*)$`, 'i');
         const options: CalculateVarOptions = { fontSize: fontSize ?? getFontSize(element), min: 0 };
         let width = NaN;
         splitSome(sizes, value => {
