@@ -10,7 +10,7 @@ import Resource from './resource';
 
 import { CSS, STRING } from './lib/regex';
 
-import { appendSeparator, randomUUID } from './lib/util';
+import { appendSeparator, generateUUID } from './lib/util';
 
 const { CSS_PROPERTIES } = squared.lib.internal;
 const { TAG_ATTR, TAG_OPEN } = squared.lib.regex.STRING;
@@ -285,7 +285,7 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], u
 function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], dimension?: Dimension) {
     for (let i = 0, length = children.length; i < length; ++i) {
         const item = children[i];
-        const uuid = randomUUID('10');
+        const uuid = generateUUID('10');
         const tagName = item.tagName.toLowerCase();
         let start = true;
         switch (tagName) {

@@ -107,7 +107,7 @@
     "@types/puppeteer": "^5.4.3",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
-    "aws-sdk": "^2.885.0",
+    "aws-sdk": "^2.886.0",
     "clean-css": "^5.1.2",
     "csv-parse": "^4.15.3",
     "cwebp-bin": "^6.1.1",

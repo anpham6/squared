@@ -3,7 +3,7 @@ import type File from './file';
 import type Node from './node';
 
 import { parseKeyframes } from './lib/css';
-import { fromMimeType, parseMimeType, randomUUID, trimBoth } from './lib/util';
+import { fromMimeType, generateUUID, parseMimeType, trimBoth } from './lib/util';
 
 type PreloadItem = HTMLImageElement | string;
 
@@ -489,7 +489,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
-        return randomUUID(this.userSettings.formatUUID) + '.' + ext;
+        return generateUUID(this.userSettings.formatUUID) + '.' + ext;
     }
 
     set fileHandler(value) {

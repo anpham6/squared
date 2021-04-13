@@ -1,7 +1,7 @@
 import type Resource from './resource';
 import type Node from './node';
 
-import { appendSeparator, parseGlob, randomUUID, trimEnd } from './lib/util';
+import { appendSeparator, generateUUID, parseGlob, trimEnd } from './lib/util';
 
 type FileActionResult = Promise<Void<ResponseData>>;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
@@ -282,7 +282,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             const documentName = new Set(body.document);
             const taskName = new Set<string>();
             const setSocketId = (watch: WatchInterval) => {
-                socketId ||= randomUUID(this.userSettings.formatUUID);
+                socketId ||= generateUUID(this.userSettings.formatUUID);
                 if (watch.reload === true) {
                     watch.reload = { socketId };
                 }

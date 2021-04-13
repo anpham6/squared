@@ -26,7 +26,7 @@ const { createElement } = squared.lib.dom;
 const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.internal;
-const { appendSeparator, fromMimeType, parseMimeType, randomUUID, trimEnd } = squared.base.lib.util;
+const { appendSeparator, fromMimeType, parseMimeType, generateUUID, trimEnd } = squared.base.lib.util;
 
 const FILENAME_MAP = new WeakMap<ChromeAsset, string>();
 let BUNDLE_ID = 0;
@@ -96,7 +96,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
     return [moveTo, ...result];
 }
 
-function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement | HTMLTrackElement | HTMLIFrameElement, data: Map<HTMLElement, string>) {
+function resolveAssetSource(element: SrcElement | HTMLObjectElement, data: Map<HTMLElement, string>) {
     const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
     if (value) {
         data.set(element, value);
@@ -255,7 +255,7 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: Un
 }
 
 function setUUID(node: XmlTagNode, element: HTMLElement, name: string, format?: string) {
-    const id = element.dataset[name + 'Id'] ||= randomUUID(format);
+    const id = element.dataset[name + 'Id'] ||= generateUUID(format);
     (node.id ||= {})[name] = id;
 }
 
@@ -619,8 +619,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const image = Resource.parseDataURI(src);
             if (image) {
                 if (base64 = image.base64) {
-                    mimeType = image.mimeType;
-                    src = assignFilename('', mimeType && fromMimeType(mimeType));
+                    src = assignFilename('', (mimeType = image.mimeType) && fromMimeType(mimeType));
                 }
                 else {
                     return;
@@ -801,6 +800,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         if (!body.useOriginalHtmlPage) {
+            let append: Undef<TagAppend>;
             for (const item of body.assets as ChromeAsset[]) {
                 const element = item.element as Undef<XmlTagNode>;
                 if (element) {
@@ -814,11 +814,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             }
                             break;
                     }
-                    if (watchElement) {
-                        const append = element.append;
-                        if (append?.tagName === 'script') {
-                            ++append.tagCount!;
-                        }
+                    if (watchElement && (append = element.append) && append.tagName === 'script') {
+                        ++append.tagCount!;
                     }
                 }
                 if (productionRelease && item.watch) {
@@ -855,7 +852,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach(element => {
             const items = new Map<HTMLElement, string>();
-            let mimeType = '';
             switch (element.tagName.toUpperCase()) {
                 case 'VIDEO':
                 case 'AUDIO':
@@ -868,7 +864,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 case 'OBJECT':
                 case 'EMBED': {
                     const src = element instanceof HTMLObjectElement ? element.data : element.src;
-                    mimeType = (element as HTMLObjectElement | HTMLEmbedElement).type || parseMimeType(src);
+                    const mimeType = (element as HTMLObjectElement | HTMLEmbedElement).type || parseMimeType(src);
                     if (mimeType.startsWith('image/')) {
                         this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, mimeType);
                         return;
@@ -960,7 +956,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (!(tagName in tagCount)) {
                     tagCount[tagName] = document.querySelectorAll(tagName).length;
                 }
-                return { tagName, tagCount: tagCount[tagName], textContent, order, prepend };
+                return { tagName, tagCount: tagCount[tagName], order, textContent, prepend };
             };
             for (const [element, siblings] of appendMap) {
                 const node = File.createTagNode(element, domAll, cache);
@@ -1113,7 +1109,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     return;
                 }
                 if (!saveAsOptions.filename) {
-                    saveAsOptions.filename = filename || (randomUUID(this.userSettings.formatUUID) + '.' + ext);
+                    saveAsOptions.filename = filename || (generateUUID(this.userSettings.formatUUID) + '.' + ext);
                 }
                 filename ||= saveAsOptions.filename;
                 if (src) {
