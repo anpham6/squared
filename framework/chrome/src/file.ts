@@ -33,7 +33,7 @@ let BUNDLE_ID = 0;
 
 function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
-        const match = new RegExp(`^(?:^|\\s+)${attr}(?:\\s+:|:)(.+)$`).exec(value);
+        const match = new RegExp(`^(?:^|\\s+)${attr}\\s*:(.+)$`).exec(value);
         if (match) {
             const segments = match[1].split('::').map(item => item.trim());
             return { file: normalizePath(segments[0]), format: segments[1] } as FileAsData;
@@ -43,11 +43,11 @@ function parseFileAs(attr: string, value: Undef<string>) {
 
 function parseOptions(value: Undef<string>): OptionsData {
     if (value) {
-        const pattern = /\bcompress\[\s*([a-z\d]+)\s*\]/g;
+        const pattern = /\bcompress\[([^\]]+)\]/g;
         let compress: Undef<CompressFormat[]>,
             match: Null<RegExpExecArray>;
         while (match = pattern.exec(value)) {
-            (compress ||= []).push({ format: match[1] });
+            (compress ||= []).push({ format: match[1].trim() });
         }
         return {
             inline: value.includes('inline'),
@@ -235,20 +235,20 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: Un
     if (pathname === '~') {
         pathname = '';
     }
-    if (uri && !pathname) {
-        const asset = new URL(uri);
-        if (location.origin === asset.origin) {
-            const length = location.origin.length;
-            const seg = uri.substring(length + 1).split('/');
-            for (const dir of location.href.substring(length + 1).split('/')) {
-                if (dir !== seg.shift()) {
-                    return '';
-                }
+    if (uri && !pathname && filename) {
+        try {
+            const asset = new URL(uri);
+            if (location.origin === asset.origin && asset.pathname.startsWith(pathname = splitPairStart(location.pathname, '/', false, true))) {
+                pathname = splitPairStart(asset.pathname.substring(pathname.length + 1), '/', false, true);
             }
-            pathname = seg.join('/');
+            else {
+                return '';
+            }
+        }
+        catch {
         }
     }
-    return pathname && filename ? appendSeparator(pathname, filename) : '';
+    return pathname && filename && appendSeparator(pathname, filename);
 }
 
 function setUUID(node: XmlTagNode, element: HTMLElement, name: string) {
@@ -464,6 +464,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         let templateMap: Undef<TemplateMap>;
+        const addTemplate = (type: string, module: string, identifier: string, value: string) => ((templateMap ||= { html: {}, js: {}, css: {} })[type][module] ||= {})[identifier] = value;
         if (assetMap) {
             for (const { selector, type, template } of assetMap.values()) {
                 if (template && type && !selector) {
@@ -474,7 +475,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             const { module, identifier } = template;
                             let value = template.value;
                             if (module && identifier && value && (value = value.trim()) && value.includes('function')) {
-                                ((templateMap ||= { html: {}, js: {}, css: {} })[type][module] ||= {})[identifier] = value;
+                                addTemplate(type, module, identifier, value);
                             }
                             break;
                         }
@@ -486,28 +487,30 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             const template = element.dataset.chromeTemplate;
             if (template || element.type === 'text/template') {
                 const command = assetMap?.get(element);
-                let category: Undef<string>,
+                let type: Undef<string>,
                     module: Undef<string>,
                     identifier: Undef<string>;
                 if (command) {
-                    category = command.type;
+                    type = command.type;
                     if (command.template) {
                         ({ module, identifier } = command.template);
                     }
-                    excludeAsset(result, command, element);
                 }
                 else if (template) {
-                    [category, module, identifier] = template.split('::').map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
+                    [type, module, identifier] = template.split('::').map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
                 }
-                if (category && module && identifier) {
-                    switch (category) {
+                if (type && module && identifier) {
+                    switch (type) {
                         case 'html':
                         case 'js':
                         case 'css':
-                            ((templateMap ||= { html: {}, js: {}, css: {} })[category][module] ||= {})[identifier] = element.textContent!.trim();
-                            element.dataset.chromeFile = 'exclude';
-                            break;
+                            addTemplate(type, module, identifier, element.textContent!.trim());
+                            excludeAsset(result, { exclude: true }, element);
+                            return;
                     }
+                }
+                if (command) {
+                    excludeAsset(result, command, element);
                 }
             }
             else {
@@ -866,7 +869,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
                     break;
                 case 'IFRAME':
-                    if (!assetMap?.get(element) && !startsWith(element.dataset.chromeFile, 'saveTo')) {
+                    if (!(assetMap?.get(element) || startsWith(element.dataset.chromeFile, 'saveTo'))) {
                         return;
                     }
                 case 'OBJECT':
