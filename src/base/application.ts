@@ -577,8 +577,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 break;
                         }
                     }
+                    else if (baseAttr in cssStyle) {
+                        value = 'revert';
+                    }
                     else {
-                        value = baseAttr in cssStyle ? 'revert' : '';
+                        continue;
                     }
                     baseMap[baseAttr] = value;
                 }
