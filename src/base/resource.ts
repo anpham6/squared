@@ -315,9 +315,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public addImage(resourceId: number, uri: string, width = NaN, height = NaN) {
-        const image = Resource.ASSETS[resourceId]?.image;
-        if (image && uri && (width && height || !this.getImage(resourceId, uri))) {
-            image.set(uri, { width, height, uri });
+        const assets = Resource.ASSETS[resourceId];
+        if (assets && uri && (width && height || !this.getImage(resourceId, uri))) {
+            assets.image.set(uri, { width, height, uri });
         }
     }
 
@@ -410,9 +410,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public getImage(resourceId: number, uri: string) {
-        const image = Resource.ASSETS[resourceId]?.image;
-        if (image) {
-            return image.get(uri);
+        const assets = Resource.ASSETS[resourceId];
+        if (assets) {
+            return assets.image.get(uri);
         }
     }
 
@@ -431,9 +431,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public getFonts(resourceId: number, fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
-        const fonts = Resource.ASSETS[resourceId]?.fonts;
-        if (fonts) {
-            const font = fonts.get(fontFamily.trim().toLowerCase());
+        const assets = Resource.ASSETS[resourceId];
+        if (assets) {
+            const font = assets.fonts.get(fontFamily.trim().toLowerCase());
             if (font) {
                 const mimeType = this.mimeTypeMap.font;
                 return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));

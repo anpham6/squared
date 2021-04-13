@@ -10,7 +10,7 @@ import Resource from './resource';
 
 import { CSS, STRING } from './lib/regex';
 
-import { appendSeparator } from './lib/util';
+import { appendSeparator, randomUUID } from './lib/util';
 
 const { CSS_PROPERTIES } = squared.lib.internal;
 const { TAG_ATTR, TAG_OPEN } = squared.lib.regex.STRING;
@@ -269,15 +269,15 @@ function newBoxRectPosition(orientation = ['left', 'top']): BoxRectPosition {
     };
 }
 
-function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], timestamp: string, start?: boolean) {
+function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], uuid: string, start?: boolean) {
     const length = attrs.length;
     let i = 0;
     while (i < length) {
         const attr = attrs[i++];
-        tagName = (i === 0 && start ? '' : '!' + timestamp) + `(${tagName})`;
+        tagName = (i === 0 && start ? '' : '!' + uuid) + `(${tagName})`;
         const style = ' ' + attr + `="${attrs[i++]}"`;
         const match = new RegExp(`<${tagName}(${TAG_OPEN}+?)${attr}\\s*${TAG_ATTR}(${TAG_OPEN}*)>`, 'i').exec(src);
-        src = match ? replaceAll(src, match[0], '<!' + timestamp + match[1] + match[2] + style + match[6] + '>', 1) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<!' + timestamp + capture[1] + style);
+        src = match ? replaceAll(src, match[0], '<!' + uuid + match[1] + match[2] + style + match[6] + '>', 1) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<!' + uuid + capture[1] + style);
     }
     return src;
 }
@@ -285,7 +285,7 @@ function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], t
 function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], dimension?: Dimension) {
     for (let i = 0, length = children.length; i < length; ++i) {
         const item = children[i];
-        const timestamp = replaceAll(performance.now().toString(), '.', '', 1);
+        const uuid = randomUUID('10');
         const tagName = item.tagName.toLowerCase();
         let start = true;
         switch (tagName) {
@@ -300,7 +300,7 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
                             'width', dimension && dimension.width || (item as SVGSVGElement).width.baseVal.value,
                             'height', dimension && dimension.height || (item as SVGSVGElement).height.baseVal.value
                         ],
-                        timestamp,
+                        uuid,
                         true
                     );
                     start = false;
@@ -336,7 +336,7 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
                         'clip-path', clipPath,
                         'clip-rule', clipRule
                     ],
-                    timestamp,
+                    uuid,
                     start
                 );
                 src = replaceSvgValues(src, item.children);
@@ -352,7 +352,7 @@ function replaceSvgValues(src: string, children: HTMLCollection | SVGElement[], 
                         'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none',
                         'stop-opacity', stopOpacity
                     ],
-                    timestamp,
+                    uuid,
                     true
                 );
                 break;

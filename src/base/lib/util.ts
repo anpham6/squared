@@ -418,7 +418,7 @@ export function assignEmptyValue(dest: PlainObject, ...attrs: string[]) {
 }
 
 export function randomUUID(format = '8-4-4-4-12') {
-    return (CACHE_UUID[format] || format.match(/(\d+|[^\d]+)/g)!).reduce((a: string, b: NumString) => {
+    return (CACHE_UUID[format] || format.match(/(\d+|[^\d]+)/g)!).reduce((a, b) => {
         const length = +b;
         if (!isNaN(length)) {
             for (let i = 0; i < length; ++i) {
