@@ -597,9 +597,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (containerType) {
                 this._containerType = containerType;
             }
-            else if (this._containerType === 0) {
-                this._containerType = CONTAINER_NODE.UNKNOWN;
-            }
         }
 
         public setExclusions() {
@@ -3153,7 +3150,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get layoutFrame() {
-            return this._containerType === CONTAINER_NODE.FRAME;
+            switch (this._containerType) {
+                case CONTAINER_NODE.FRAME:
+                case CONTAINER_NODE.FRAGMENT:
+                    return true;
+            }
+            return false;
         }
         get layoutLinear() {
             return this._containerType === CONTAINER_NODE.LINEAR;

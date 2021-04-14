@@ -25,7 +25,8 @@ export const enum BUILD_VERSION {
 }
 
 export enum CONTAINER_NODE {
-    RADIO = 1,
+    UNKNOWN,
+    RADIO,
     CHECKBOX,
     SELECT,
     SVG,
@@ -46,7 +47,7 @@ export enum CONTAINER_NODE {
     CONSTRAINT,
     WEBVIEW,
     VIDEOVIEW,
-    UNKNOWN
+    FRAGMENT
 }
 
 export const SCREEN_DENSITY = {
@@ -116,6 +117,7 @@ export const CONTAINER_TAGNAME = {
     WEBVIEW: 'WebView',
     VIDEOVIEW: 'VideoView',
     RADIOGROUP: 'RadioGroup',
+    FRAGMENT: 'fragment',
     HORIZONTAL_SCROLL: 'HorizontalScrollView',
     VERTICAL_SCROLL: 'android.support.v4.widget.NestedScrollView',
     CONSTRAINT: 'android.support.constraint.ConstraintLayout',
@@ -124,6 +126,7 @@ export const CONTAINER_TAGNAME = {
 };
 
 export const CONTAINER_TAGNAME_X = {
+    FRAGMENT: 'androidx.fragment.app.FragmentContainerView',
     VERTICAL_SCROLL: 'androidx.core.widget.NestedScrollView',
     CONSTRAINT: 'androidx.constraintlayout.widget.ConstraintLayout',
     GUIDELINE: 'androidx.constraintlayout.widget.Guideline',

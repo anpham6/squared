@@ -308,7 +308,7 @@ function getBoxWidth(node: View) {
         return parent.box.width - (node.linear.left - parent.box.left);
     }
     else if (parent.floatContainer) {
-        const container = node.ascend({ condition: (item: View) => item.of(CONTAINER_NODE.FRAME, NODE_ALIGNMENT.COLUMN), including: parent, attr: 'renderParent' });
+        const container = node.ascend({ condition: (item: View) => item.layoutFrame && item.hasAlign(NODE_ALIGNMENT.COLUMN), including: parent, attr: 'renderParent' });
         if (container.length) {
             const { left, right, width } = node.box;
             let offsetLeft = 0,
@@ -1283,9 +1283,33 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderNodeGroup(layout: LayoutUI<T>) {
-        const { node, containerType } = layout;
+        const node = layout.node;
+        let containerType = layout.containerType;
+        if (node.depth === 0 && this.userSettings.baseLayoutAsFragment) {
+            if (containerType === CONTAINER_NODE.FRAME) {
+                containerType = CONTAINER_NODE.FRAGMENT;
+            }
+            else {
+                const parent = layout.parent;
+                const container = this.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.FRAGMENT, alignmentType: NODE_ALIGNMENT.SINGLE });
+                container.setLayoutWidth('match_parent');
+                container.setLayoutHeight('match_parent');
+                container.render(parent);
+                this.application.addLayoutTemplate(
+                    parent,
+                    container,
+                    {
+                        type: NODE_TEMPLATE.XML,
+                        node: container,
+                        controlName: View.getControlName(CONTAINER_NODE.FRAGMENT, node.api)
+                    } as NodeXmlTemplate<T>
+                );
+                layout.parent = container;
+            }
+        }
         switch (containerType) {
             case CONTAINER_NODE.FRAME:
+            case CONTAINER_NODE.FRAGMENT:
             case CONTAINER_NODE.RELATIVE:
             case CONTAINER_NODE.CONSTRAINT:
                 break;
@@ -2071,10 +2095,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             flags: CREATE_NODE.DELEGATE | (flags & CREATE_NODE.CASCADE || children && children.length > 0 && !node.rootElement ? CREATE_NODE.CASCADE : 0)
         });
         container.inherit(node, 'base', 'alignment');
-        if (node.documentRoot) {
-            container.documentRoot = true;
-            node.documentRoot = false;
-        }
         container.actualParent = parent.naturalElement ? parent : node.actualParent;
         if (containerType) {
             container.setControlType(View.getControlName(containerType, node.api), containerType);
@@ -2116,25 +2136,31 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if ((flags & CREATE_NODE.INHERIT_DATASET) && node.naturalElement) {
             Object.assign(container.dataset, node.dataset);
         }
-        const renderParent = node.renderParent;
-        if ((renderParent || node.documentParent as T).layoutGrid) {
-            const layout = (node.layoutWidth === '0px' && +node.android('layout_columnWeight') > 0 ? 1 : 0) | (node.layoutHeight === '0px' && +node.android('layout_rowWeight') > 0 ? 2 : 0);
-            const android = node.namespace('android');
-            for (const attr in android) {
-                if (/^layout_(?:(?:row|column)(?:Span|Weight)?|width|height|gravity)$/.test(attr)) {
-                    container.android(attr, android[attr]);
-                    delete android[attr];
+        if (node.documentRoot) {
+            container.documentRoot = true;
+            node.documentRoot = false;
+        }
+        else {
+            const renderParent = node.renderParent;
+            if ((renderParent || node.documentParent as T).layoutGrid) {
+                const layout = (node.layoutWidth === '0px' && +node.android('layout_columnWeight') > 0 ? 1 : 0) | (node.layoutHeight === '0px' && +node.android('layout_rowWeight') > 0 ? 2 : 0);
+                const android = node.namespace('android');
+                for (const attr in android) {
+                    if (/^layout_(?:(?:row|column)(?:Span|Weight)?|width|height|gravity)$/.test(attr)) {
+                        container.android(attr, android[attr]);
+                        delete android[attr];
+                    }
+                }
+                if (layout & 1) {
+                    node.setLayoutWidth('match_parent');
+                }
+                if (layout & 2) {
+                    node.setLayoutHeight('match_parent');
                 }
             }
-            if (layout & 1) {
-                node.setLayoutWidth('match_parent');
+            if (renderParent && node.removeTry({ alignSiblings: true })) {
+                node.rendered = false;
             }
-            if (layout & 2) {
-                node.setLayoutHeight('match_parent');
-            }
-        }
-        if (renderParent && node.removeTry({ alignSiblings: true })) {
-            node.rendered = false;
         }
         return container;
     }

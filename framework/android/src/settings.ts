@@ -42,6 +42,7 @@ const settings: UserResourceSettingsUI = {
     fontMeasureWrap: true,
     fontMeasureAdjust: 0.75,
     lineHeightAdjust: 1.1,
+    baseLayoutAsFragment: false,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createElementMap: false,

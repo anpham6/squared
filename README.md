@@ -187,6 +187,7 @@ squared.settings = {
     fontMeasureWrap: true, // Slower rendering performance (android.delegate.multiline)
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
     lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
+    baseLayoutAsFragment: false, // FragmentContainerView
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createElementMap: false,

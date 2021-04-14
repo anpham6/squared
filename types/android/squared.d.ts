@@ -199,7 +199,8 @@ declare namespace lib {
             LATEST = 30
         }
         const enum CONTAINER_NODE {
-            RADIO = 1,
+            UNKNOWN,
+            RADIO,
             CHECKBOX,
             SELECT,
             SVG,
@@ -220,7 +221,7 @@ declare namespace lib {
             CONSTRAINT,
             WEBVIEW,
             VIDEOVIEW,
-            UNKNOWN
+            FRAGMENT
         }
         const SCREEN_DENSITY: {
             LDPI: number;

@@ -4,6 +4,7 @@ interface UserResourceSettingsUI {
     supportRTL: boolean;
     compressImages: boolean;
     convertImages: string;
+    baseLayoutAsFragment: boolean;
     customizationsOverwritePrivilege: boolean;
     convertPixels: string;
     fontMeasureWrap: boolean;
