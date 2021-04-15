@@ -280,8 +280,7 @@ const appBase: android.AppFramework<View> = {
             squared.base.ExtensionManager,
             Resource
         );
-        file = new File();
-        application.resourceHandler.fileHandler = file;
+        file = new File(application.resourceHandler);
         application.builtInExtensions = new Map<string, squared.base.ExtensionUI<View>>([
             [EXT_NAME.ACCESSIBILITY, new Accessibility(EXT_NAME.ACCESSIBILITY, APP_FRAMEWORK.ANDROID)],
             [EXT_ANDROID.DELEGATE_BACKGROUND, new DelegateBackground(EXT_ANDROID.DELEGATE_BACKGROUND, APP_FRAMEWORK.ANDROID)],

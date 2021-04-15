@@ -254,7 +254,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         ext: Undef<string>,
                         data = fonts.find(item => item.srcUrl);
                     if (data && (uri = data.srcUrl)) {
-                        const rawData = this.resource.getRawData(resourceId, uri);
+                        const rawData = resource.getRawData(resourceId, uri);
                         if (rawData) {
                             base64 = rawData.base64;
                             if (!base64 && rawData.buffer) {
@@ -274,7 +274,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     else {
                         continue;
                     }
-                    this.resource.addAsset(resourceId, {
+                    resource.addAsset(resourceId, {
                         pathname: directory + pathname,
                         filename: fontName + '.' + (ext || 'ttf'),
                         uri: !base64 ? uri : undefined,

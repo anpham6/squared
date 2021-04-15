@@ -22,9 +22,7 @@ export default class Extension<T extends Node> implements squared.base.Extension
         if (options) {
             const items = options.dependencies;
             if (items) {
-                for (const item of items) {
-                    this.dependencies.push(item);
-                }
+                this.dependencies.push(...items);
             }
             Object.assign(this.options, options);
         }

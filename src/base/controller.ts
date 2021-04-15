@@ -20,10 +20,10 @@ export default class Controller<T extends Node> implements squared.base.Controll
     constructor(public readonly application: Application<T>) {}
 
     public init(resourceId: number) {}
+    public reset() {}
     public resolveUserSettings(processing: squared.base.AppProcessing<T>) {}
     public sortInitialCache(cache: NodeList<T>) {}
     public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element, pseudoElt?: PseudoElt) {}
-    public reset() {}
     public includeElement(element: HTMLElement) { return true; }
     public preventNodeCascade(node: T) { return false; }
     public afterInsertNode(node: T, sessionId: string) {}

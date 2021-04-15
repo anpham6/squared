@@ -364,6 +364,7 @@ declare module "base" {
         get userSettings(): UserResourceSettings;
         set hostname(value);
         get hostname(): string;
+        constructor(resource: Resource<T>);
     }
 
     class ContentUI<T extends NodeUI> implements LayoutType {

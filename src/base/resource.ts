@@ -493,9 +493,6 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     set fileHandler(value) {
-        if (value) {
-            value.resource = this;
-        }
         this._fileHandler = value;
     }
     get fileHandler() {

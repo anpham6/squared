@@ -108,8 +108,7 @@ const appBase: squared.base.AppFramework<Node> = {
             squared.base.ExtensionManager,
             squared.base.Resource
         );
-        file = new File();
-        application.resourceHandler!.fileHandler = file;
+        file = new File(application.resourceHandler!);
         return {
             application,
             framework: APP_FRAMEWORK.CHROME,

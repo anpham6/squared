@@ -78,7 +78,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract optimize(rendered: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
 
-    public abstract get userSettings(): UserResourceSettingsUI;
     public abstract get screenDimension(): Dimension;
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;

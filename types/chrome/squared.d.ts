@@ -27,7 +27,6 @@ declare namespace base {
         getAudioAssets(options?: FileActionAttribute): ChromeAsset[];
         getFontAssets(options?: FileActionAttribute): ChromeAsset[];
         get application(): Application<T>;
-        get userSettings(): UserResourceSettings;
     }
 
     class Extension<T extends Node> extends squared.base.Extension<T> {

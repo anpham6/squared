@@ -84,7 +84,6 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return Array.isArray(value) ? value.slice(0) : value;
     }
 
-    public resource!: Resource<T>;
     public readonly archiveFormats = ['zip', '7z', 'tar', 'gz', 'tgz'];
 
     private _hostname = '';
@@ -93,6 +92,10 @@ export default abstract class File<T extends Node> implements squared.base.File<
         ASSETS_ARCHIVE: '/api/v1/assets/archive',
         LOADER_DATA: '/api/v1/loader/data'
     };
+
+    constructor(public resource: Resource<T>) {
+        resource.fileHandler = this;
+    }
 
     public abstract copyTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
     public abstract appendTo(uri: string, options?: FileArchivingOptions): FileActionResult;
