@@ -8,7 +8,7 @@ import { concatString, parseColor } from './lib/util';
 const { PROTOCOL } = squared.lib.regex.FILE;
 
 const { extractURL } = squared.lib.css;
-const { endsWith, fromLastIndexOf, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith } = squared.lib.util;
+const { fromLastIndexOf, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith } = squared.lib.util;
 
 const { getSrcSet } = squared.base.lib.dom;
 const { trimString } = squared.base.lib.util;
@@ -217,10 +217,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             return colorName;
         }
         return '';
-    }
-
-    public static canCompressImage(filename: string, mimeType?: string) {
-        return /\.(png|jpg|jpeg)$/i.test(filename) || endsWith(mimeType, 'png') || endsWith(mimeType, 'jpeg');
     }
 
     public static formatName(value: string) {

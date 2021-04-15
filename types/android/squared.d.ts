@@ -45,7 +45,6 @@ declare namespace base {
         static addString(resourceId: number, value: string, name?: string, numberAlias?: boolean): string;
         static addImage(resourceId: number, images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         static addColor(resourceId: number, value: ColorData | string, transparency?: boolean): string;
-        static canCompressImage(filename: string, mimeType?: string): boolean;
         static formatName(value: string): string;
         readonly application: Application<T>;
         addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;

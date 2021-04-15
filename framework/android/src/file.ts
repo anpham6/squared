@@ -52,13 +52,9 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
         const uri = items[i];
         const filename = items[i + 2];
         let mimeType: Undef<string>,
-            commands: Undef<string[]>,
-            compress: Undef<CompressFormat[]>;
+            commands: Undef<string[]>;
         if (endsWith(filename, '.unknown')) {
             mimeType = 'image/unknown';
-            if (compressing) {
-                compress = [{ format: 'png' }];
-            }
         }
         else if (convertImages) {
             switch (mimeType = parseMimeType(filename)) {
@@ -70,12 +66,8 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
                 case 'image/tiff':
                 case 'image/unknown':
                     splitSome(convertImages.toLowerCase(), value => {
-                        const match = /^(png|jpeg|webp|bmp)/.exec(value);
-                        if (match) {
+                        if (/^(?:png|jpeg|webp|bmp)/i.test(value)) {
                             (commands ||= []).push(value);
-                            if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
-                                compress = [{ format: 'png' }];
-                            }
                         }
                     }, '::');
                     break;
@@ -87,7 +79,7 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
             filename,
             mimeType,
             commands,
-            compress,
+            compress: compressing ? [{ format: 'png' }] : undefined,
             uri,
             document: File.copyDocument(document),
             tasks: image && image.tasks
