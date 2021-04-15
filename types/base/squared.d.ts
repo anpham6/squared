@@ -138,7 +138,8 @@ declare module "base" {
             nodeConstructor: Constructor<T>,
             ControllerConstructor: Constructor<Controller<T>>,
             ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>,
-            ResourceConstructor?: Constructor<Resource<T>>
+            ResourceConstructor?: Constructor<Resource<T>>,
+            builtInExtensions?: Map<string, Extension<T>>
         );
     }
 

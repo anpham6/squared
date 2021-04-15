@@ -98,7 +98,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     public extensions: Extension<T>[] = [];
     public userSettings = {} as UserSettings;
     public closed = false;
-    public builtInExtensions!: Map<string, Extension<T>>;
     public elementMap: Null<WeakMap<Element, T>> = null;
     public readonly Node: Constructor<T>;
     public readonly session: squared.base.AppSession<T> = { active: new Map() };
@@ -119,7 +118,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<Controller<T>>,
         ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>,
-        ResourceConstructor?: Constructor<Resource<T>>)
+        ResourceConstructor?: Constructor<Resource<T>>,
+        public builtInExtensions: Map<string, Extension<T>> = new Map())
     {
         this.Node = nodeConstructor;
         const controller = new ControllerConstructor(this);
