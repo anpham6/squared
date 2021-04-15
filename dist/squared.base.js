@@ -1,4 +1,4 @@
-/* squared.base 2.5.6
+/* squared.base 2.5.7
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -534,8 +534,11 @@ this.squared.base = (function (exports) {
                                     break;
                             }
                         }
+                        else if (baseAttr in cssStyle) {
+                            value = 'revert';
+                        }
                         else {
-                            value = baseAttr in cssStyle ? 'revert' : '';
+                            continue;
                         }
                         baseMap[baseAttr] = value;
                     }
@@ -9325,9 +9328,9 @@ this.squared.base = (function (exports) {
     const { getNamedItem: getNamedItem$1, removeElementsByClassName } = squared.lib.dom;
     const { getElementCache: getElementCache$1, setElementCache: setElementCache$1 } = squared.lib.session;
     const { capitalize: capitalize$1, convertWord, flatArray, isString, iterateArray: iterateArray$1, partitionArray: partitionArray$1, startsWith: startsWith$1, trimBoth, trimString: trimString$1 } = squared.lib.util;
-    const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
+    const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)")/g;
     const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
-    const REGEXP_PSEUDOQUOTE = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/;
+    const REGEXP_PSEUDOQUOTE = /("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)(?:\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+))?/;
     function getFloatAlignmentType(nodes) {
         let right, floating;
         for (let i = 0, length = nodes.length; i < length; ++i) {
@@ -12118,7 +12121,7 @@ this.squared.base = (function (exports) {
 
     const { formatPercent: formatPercent$1, formatPX: formatPX$2, isLength: isLength$2, isPercent: isPercent$1, isPx } = squared.lib.css;
     const { convertPercent: convertPercent$1, endsWith, splitEnclosing, splitPairEnd, startsWith, trimString, withinRange: withinRange$2 } = squared.lib.util;
-    const PATTERN_SIZE = '\\[([^]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
+    const PATTERN_SIZE = '\\[([^\\]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
     const REGEXP_SIZE = new RegExp(PATTERN_SIZE, 'g');
     const REGEXP_REPEAT = /repeat\(\s*(auto-fit|auto-fill|\d+)/;
     function repeatUnit(data, sizes) {

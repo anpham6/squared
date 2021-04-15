@@ -1,4 +1,4 @@
-/* squared.base 2.5.6
+/* squared.base 2.5.7
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -534,8 +534,11 @@ this.squared.base = (function (exports) {
                                     break;
                             }
                         }
+                        else if (baseAttr in cssStyle) {
+                            value = 'revert';
+                        }
                         else {
-                            value = baseAttr in cssStyle ? 'revert' : '';
+                            continue;
                         }
                         baseMap[baseAttr] = value;
                     }

@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.6
+/* chrome-framework 2.5.7
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -14,7 +14,7 @@ var chrome = (function () {
     let BUNDLE_ID = 0;
     function parseFileAs(attr, value) {
         if (value) {
-            const match = new RegExp(`^(?:^|\\s+)${attr}(?:\\s+:|:)(.+)$`).exec(value);
+            const match = new RegExp(`^(?:^|\\s+)${attr}\\s*:(.+)$`).exec(value);
             if (match) {
                 const segments = match[1].split('::').map(item => item.trim());
                 return { file: normalizePath(segments[0]), format: segments[1] };
@@ -23,10 +23,10 @@ var chrome = (function () {
     }
     function parseOptions(value) {
         if (value) {
-            const pattern = /\bcompress\[\s*([a-z\d]+)\s*\]/g;
+            const pattern = /\bcompress\[([^\]]+)\]/g;
             let compress, match;
             while (match = pattern.exec(value)) {
-                (compress || (compress = [])).push({ format: match[1] });
+                (compress || (compress = [])).push({ format: match[1].trim() });
             }
             return {
                 inline: value.includes('inline'),
@@ -204,20 +204,20 @@ var chrome = (function () {
         if (pathname === '~') {
             pathname = '';
         }
-        if (uri && !pathname) {
-            const asset = new URL(uri);
-            if (location.origin === asset.origin) {
-                const length = location.origin.length;
-                const seg = uri.substring(length + 1).split('/');
-                for (const dir of location.href.substring(length + 1).split('/')) {
-                    if (dir !== seg.shift()) {
-                        return '';
-                    }
+        if (uri && !pathname && filename) {
+            try {
+                const asset = new URL(uri);
+                if (location.origin === asset.origin && asset.pathname.startsWith(pathname = splitPairStart(location.pathname, '/', false, true))) {
+                    pathname = splitPairStart(asset.pathname.substring(pathname.length + 1), '/', false, true);
                 }
-                pathname = seg.join('/');
+                else {
+                    return '';
+                }
+            }
+            catch (_a) {
             }
         }
-        return pathname && filename ? appendSeparator(pathname, filename) : '';
+        return pathname && filename && appendSeparator(pathname, filename);
     }
     function setUUID(node, element, name) {
         var _a, _b;
@@ -399,7 +399,6 @@ var chrome = (function () {
         }
         getScriptAssets(options) {
             var _a;
-            var _b;
             let assetMap, preserveCrossOrigin, saveAsScript;
             if (options) {
                 ({ assetMap, preserveCrossOrigin } = options);
@@ -408,6 +407,7 @@ var chrome = (function () {
             const result = [];
             const bundleIndex = {};
             let templateMap;
+            const addTemplate = (type, module, identifier, value) => { var _a; return ((_a = (templateMap || (templateMap = { html: {}, js: {}, css: {} }))[type])[module] || (_a[module] = {}))[identifier] = value; };
             if (assetMap) {
                 for (const { selector, type, template } of assetMap.values()) {
                     if (template && type && !selector) {
@@ -418,7 +418,7 @@ var chrome = (function () {
                                 const { module, identifier } = template;
                                 let value = template.value;
                                 if (module && identifier && value && (value = value.trim()) && value.includes('function')) {
-                                    ((_b = (templateMap || (templateMap = { html: {}, js: {}, css: {} }))[type])[module] || (_b[module] = {}))[identifier] = value;
+                                    addTemplate(type, module, identifier, value);
                                 }
                                 break;
                             }
@@ -427,30 +427,31 @@ var chrome = (function () {
                 }
             }
             document.querySelectorAll('script').forEach(element => {
-                var _a;
                 const template = element.dataset.chromeTemplate;
                 if (template || element.type === 'text/template') {
                     const command = assetMap === null || assetMap === void 0 ? void 0 : assetMap.get(element);
-                    let category, module, identifier;
+                    let type, module, identifier;
                     if (command) {
-                        category = command.type;
+                        type = command.type;
                         if (command.template) {
                             ({ module, identifier } = command.template);
                         }
-                        excludeAsset(result, command, element);
                     }
                     else if (template) {
-                        [category, module, identifier] = template.split('::').map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
+                        [type, module, identifier] = template.split('::').map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
                     }
-                    if (category && module && identifier) {
-                        switch (category) {
+                    if (type && module && identifier) {
+                        switch (type) {
                             case 'html':
                             case 'js':
                             case 'css':
-                                ((_a = (templateMap || (templateMap = { html: {}, js: {}, css: {} }))[category])[module] || (_a[module] = {}))[identifier] = element.textContent.trim();
-                                element.dataset.chromeFile = 'exclude';
-                                break;
+                                addTemplate(type, module, identifier, element.textContent.trim());
+                                excludeAsset(result, { exclude: true }, element);
+                                return;
                         }
+                    }
+                    if (command) {
+                        excludeAsset(result, command, element);
                     }
                 }
                 else {
@@ -780,7 +781,7 @@ var chrome = (function () {
                         element.querySelectorAll('source, track').forEach((source) => resolveAssetSource(source, items));
                         break;
                     case 'IFRAME':
-                        if (!(assetMap === null || assetMap === void 0 ? void 0 : assetMap.get(element)) && !startsWith(element.dataset.chromeFile, 'saveTo')) {
+                        if (!((assetMap === null || assetMap === void 0 ? void 0 : assetMap.get(element)) || startsWith(element.dataset.chromeFile, 'saveTo'))) {
                             return;
                         }
                     case 'OBJECT':

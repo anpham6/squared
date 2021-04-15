@@ -1,4 +1,4 @@
-/* android-framework 2.5.6
+/* android-framework 2.5.7
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -8524,12 +8524,9 @@ var android = (function () {
         for (let i = 0, j = 0; i < length; i += 3) {
             const uri = items[i];
             const filename = items[i + 2];
-            let mimeType, commands, compress;
+            let mimeType, commands;
             if (endsWith$1(filename, '.unknown')) {
                 mimeType = 'image/unknown';
-                if (compressing) {
-                    compress = [{ format: 'png' }];
-                }
             }
             else if (convertImages) {
                 switch (mimeType = parseMimeType(filename)) {
@@ -8541,19 +8538,8 @@ var android = (function () {
                     case 'image/tiff':
                     case 'image/unknown':
                         for (const value of convertImages.trim().toLowerCase().split(/\s*::\s*/)) {
-                            const match = /^[a-z]+/.exec(value);
-                            if (match) {
-                                switch (match[0]) {
-                                    case 'png':
-                                    case 'jpeg':
-                                    case 'webp':
-                                    case 'bmp':
-                                        (commands || (commands = [])).push(value);
-                                        if (compressing && !compress && Resource.canCompressImage(filename, match[0])) {
-                                            compress = [{ format: 'png' }];
-                                        }
-                                        break;
-                                }
+                            if (/^(?:png|jpeg|webp|bmp)/.test(value)) {
+                                (commands || (commands = [])).push(value);
                             }
                         }
                         break;
@@ -8565,7 +8551,7 @@ var android = (function () {
                 filename,
                 mimeType,
                 commands,
-                compress,
+                compress: compressing ? [{ format: 'png' }] : undefined,
                 uri,
                 document: File.copyDocument(document),
                 tasks: image && image.tasks

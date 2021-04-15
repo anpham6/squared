@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.5.6
+/* vdom-lite-framework 2.5.7
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -533,8 +533,11 @@ var vdom = (function () {
                                     break;
                             }
                         }
+                        else if (baseAttr in cssStyle) {
+                            value = 'revert';
+                        }
                         else {
-                            value = baseAttr in cssStyle ? 'revert' : '';
+                            continue;
                         }
                         baseMap[baseAttr] = value;
                     }

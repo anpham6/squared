@@ -1,6 +1,6 @@
 {
   "name": "squared",
-  "version": "2.5.6",
+  "version": "2.5.7",
   "description": "Virtual DOM and CSS framework for parsing usable browser data.",
   "main": "dist/squared.umd.js",
   "types": "types/index.d.ts",
