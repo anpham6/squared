@@ -5,6 +5,12 @@ type AppSessionSelectorCallback = (sessionId: string, rule: CSSStyleRule, select
 type AppSessionConditionCallback = (sessionId: string, rule: CSSConditionRule, condition: string, hostElement?: Element) => void;
 
 declare module "base" {
+    type RootElement = string | HTMLElement | ElementSettings;
+
+    interface ElementSettings extends Partial<UserResourceSettingsUI> {
+        element?: string | HTMLElement;
+    }
+
     interface FileCopyingOptions extends squared.FileActionOptions {
         watch?: boolean;
         emptyDir?: boolean;
@@ -29,18 +35,6 @@ declare module "base" {
         writeError(message: string, hint?: string): void;
     }
 
-    interface LayoutRoot<T extends NodeUI> {
-        node: T;
-        layoutName: string;
-        renderTemplates: NodeTemplate<T>[];
-    }
-
-    interface FinalizeDataExtensionUI<T extends NodeUI> {
-        resourceId: number;
-        rendered: T[];
-        documentRoot: LayoutRoot<T>[];
-    }
-
     interface AppBase<T extends Node> {
         application: Application<T>;
         framework: number;
@@ -49,7 +43,6 @@ declare module "base" {
 
     interface AppHandler<T extends Node> {
         readonly application: Application<T>;
-        readonly userSettings: UserSettings;
     }
 
     interface AppFramework<T extends Node> {
@@ -76,6 +69,8 @@ declare module "base" {
         cache: NodeList<T>;
         excluded: NodeList<T>;
         rootElements: HTMLElement[];
+        settings: Null<UserSettings>;
+        customSettings: Null<UserSettings>[];
         extensions: Extension<T>[];
         elementMap: Map<Element, ElementData>;
         node: Null<T>;
@@ -91,7 +86,6 @@ declare module "base" {
     class Application<T extends Node> implements FileActionAsync, ErrorAction {
         static readonly KEY_NAME: string;
         static prioritizeExtensions<U extends Node>(value: string, extensions: Extension<U>[]): Extension<U>[];
-        userSettings: UserSettings;
         builtInExtensions: Map<string, Extension<T>>;
         closed: boolean;
         elementMap: Null<WeakMap<Element, T>>;
@@ -104,8 +98,8 @@ declare module "base" {
         finalize(): boolean;
         reset(): void;
         setExtensions(namespaces?: string[]): void;
-        parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<T | T[]>>;
-        parseDocumentSync(...elements: (string | HTMLElement)[]): Void<T | T[]>;
+        parseDocument(...elements: RootElement[]): Promise<Void<T | T[]>>;
+        parseDocumentSync(...elements: RootElement[]): Void<T | T[]>;
         createCache(processing: AppProcessing<T>, documentRoot: HTMLElement): Undef<T>;
         setStyleMap(sessionId: string, resourceId: number, documentRoot?: DocumentRoot, queryRoot?: QuerySelectorElement): void;
         replaceShadowRootSlots(shadowRoot: ShadowRoot): void;
@@ -115,6 +109,7 @@ declare module "base" {
         afterCreateCache(processing: AppProcessing<T>, node: T): void;
         getProcessing(sessionId: string): Undef<AppProcessing<T>>;
         getProcessingCache(sessionId: string): NodeList<T>;
+        getUserSetting<U = unknown>(sessionId: Undef<string | squared.base.AppProcessing<T>>, name: keyof UserResourceSettingsUI): U;
         getDatasetName(attr: string, element: DocumentElement): Undef<string>;
         setDatasetName(attr: string, element: DocumentElement, value: string): void;
         copyTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
@@ -125,12 +120,13 @@ declare module "base" {
         copyFiles(pathname: string, options: FileCopyingOptions): FileActionResult;
         writeError(message: string, hint?: string): void;
         toString(): string;
+        set userSettings(value);
+        get userSettings(): UserSettings;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Null<Resource<T>>;
         get fileHandler(): Null<File<T>>;
         get extensionManager(): Null<ExtensionManager<T>>;
-        get extensionsAll(): Extension<T>[];
         get sessionAll(): [Extension<T>[], T[]];
         get resourceId(): number;
         get nextId(): number;
@@ -147,7 +143,6 @@ declare module "base" {
 
     class ApplicationUI<T extends NodeUI> extends Application<T> {
         resource: ResourceUI<T>;
-        userSettings: UserResourceSettingsUI;
         builtInExtensions: Map<string, ExtensionUI<T>>;
         readonly session: AppSessionUI<T>;
         readonly extensions: ExtensionUI<T>[];
@@ -159,6 +154,8 @@ declare module "base" {
         addLayout(layout: ContentUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
+        set userSettings(value);
+        get userSettings(): UserResourceSettingsUI;
         get controllerHandler(): ControllerUI<T>;
         get resourceHandler(): ResourceUI<T>;
         get extensionManager(): ExtensionManager<T>;
@@ -172,12 +169,12 @@ declare module "base" {
         readonly localSettings: ControllerSettings;
         init(resourceId: number): void;
         reset(): void;
+        resolveUserSettings(processing: squared.base.AppProcessing<T>): void;
+        sortInitialCache(cache: NodeList<T>): void;
         includeElement(element: HTMLElement): boolean;
         applyDefaultStyles(processing: AppProcessing<T>, element: Element, pseudoElt?: PseudoElt): void;
         preventNodeCascade(node: T): boolean;
-        sortInitialCache(cache: NodeList<T>): void;
-        get afterInsertNode(): BindGeneric<T, void>;
-        get userSettings(): UserSettings;
+        afterInsertNode(node: T, sessionId: string): void;
         get generateSessionId(): string;
     }
 
@@ -208,7 +205,6 @@ declare module "base" {
         getAfterOutsideTemplate(node: T, depth: number): string;
         writeDocument(templates: NodeTemplate<T>[], depth: number, showAttributes: boolean): string;
         getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
-        get userSettings(): UserResourceSettingsUI;
         get screenDimension(): Dimension;
         get containerTypeHorizontal(): LayoutType;
         get containerTypeVertical(): LayoutType;
@@ -247,7 +243,6 @@ declare module "base" {
         set fileHandler(value);
         get fileHandler(): Null<File<T>>;
         get controllerSettings(): ControllerSettings;
-        get userSettings(): UserResourceSettings;
         get mimeTypeMap(): ObjectMap<MIMEOrAll>;
         get mapOfAssets(): ResourceSessionAsset;
     }
@@ -293,6 +288,7 @@ declare module "base" {
         beforeInsertNode?(element: HTMLElement, sessionId: string): boolean;
         afterInsertNode?(node: T): boolean;
         beforeParseDocument(sessionId: string): void;
+        beforeCascadeRoot(processing: squared.base.AppProcessing<T>): void;
         afterParseDocument(sessionId: string): void;
         set application(value);
         get application(): Application<T>;

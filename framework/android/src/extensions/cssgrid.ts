@@ -761,7 +761,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             const wrapped = mainData.unsetContentBox;
             const insertNode = lastItemOf(children)!;
             if (CssGrid.isJustified(node)) {
-                setContentSpacing(mainData, column, node, true, controller.userSettings.resolutionScreenWidth! - node.bounds.left, 0);
+                setContentSpacing(mainData, column, node, true, this.application.getUserSetting<number>(node.sessionId, 'resolutionScreenWidth') - node.bounds.left, 0);
                 switch (mainData.justifyContent) {
                     case 'center':
                     case 'space-around':
@@ -797,7 +797,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         if (percent > 0) {
                             controller.addAfterOutsideTemplate(
                                 insertNode,
-                                controller.renderSpace({
+                                controller.renderSpace(node.sessionId, {
                                     width: formatPercent((100 - percent) / 100),
                                     height: 'match_parent',
                                     rowSpan: row.length,
@@ -825,7 +825,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
             }
             if (CssGrid.isAligned(node)) {
-                setContentSpacing(mainData, row, node, false, 0, controller.userSettings.resolutionScreenHeight!);
+                setContentSpacing(mainData, row, node, false, 0, this.application.getUserSetting<number>(node.sessionId, 'resolutionScreenHeight'));
                 if (wrapped) {
                     switch (mainData.alignContent) {
                         case 'center':
@@ -847,7 +847,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         if (percent > 0) {
                             controller.addAfterOutsideTemplate(
                                 insertNode,
-                                controller.renderSpace({
+                                controller.renderSpace(node.sessionId, {
                                     width: 'match_parent',
                                     height: formatPercent((100 - percent) / 100),
                                     columnSpan: column.length,
@@ -936,7 +936,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + safeFloat(b), 0) / column.frTotal).toString()
                                 }
                             } as RenderSpaceAttribute;
-                            controller.addAfterInsideTemplate(node, controller.renderSpace(options), false);
+                            controller.addAfterInsideTemplate(node, controller.renderSpace(node.sessionId, options), false);
                             previousItem.anchor('rightLeft', options.documentId);
                             break;
                         }
@@ -1004,7 +1004,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         }
                         controller.addAfterOutsideTemplate(
                             insertNode,
-                            controller.renderSpace({
+                            controller.renderSpace(node.sessionId, {
                                 width,
                                 height,
                                 rowSpan,

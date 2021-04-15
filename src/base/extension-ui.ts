@@ -78,8 +78,8 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public afterBaseLayout(sessionId: string) {}
     public afterConstraints(sessionId: string) {}
     public afterResources(sessionId: string, resourceId: number) {}
-    public afterFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {}
+    public afterFinalize(data: FinalizeDataExtensionUI<T>) {}
 
     public beforeBaseLayout(sessionId: string) {}
-    public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {}
+    public beforeFinalize(data: FinalizeDataExtensionUI<T>) {}
 }

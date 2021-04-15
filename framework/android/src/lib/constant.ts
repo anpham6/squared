@@ -47,7 +47,9 @@ export enum CONTAINER_NODE {
     CONSTRAINT,
     WEBVIEW,
     VIDEOVIEW,
-    FRAGMENT
+    FRAGMENT,
+    GUIDELINE,
+    BARRIER
 }
 
 export const SCREEN_DENSITY = {

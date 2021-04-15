@@ -142,7 +142,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 const controller = this.controller as android.base.Controller<T>;
                 controller.addAfterOutsideTemplate(
                     node,
-                    controller.renderSpace({
+                    controller.renderSpace(node.sessionId, {
                         width: 'wrap_content',
                         height: 'wrap_content',
                         columnSpan: cellData.spaceSpan,

@@ -42,7 +42,7 @@ interface RenderSpaceAttribute extends ViewAttribute, Partial<Dimension<string>>
 
 interface RenderNodeStaticAttribute extends Partial<Dimension<string>> {
     controlName?: string;
-    controlType?: number;
+    containerType?: number;
     content?: string;
 }
 

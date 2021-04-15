@@ -451,8 +451,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     }
 
     public afterResources(sessionId: string, resourceId: number) {
-        const settings = this.application.userSettings;
-        const drawOutline = this.options.outlineAsInsetBorder;
+        const application = this.application;
+        const { manifestThemeName, manifestParentThemeName } = application.userSettings;
         let themeBackground: Undef<boolean>;
         const deleteBodyWrapper = (body: T, wrapper: T) => {
             if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
@@ -486,12 +486,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let drawable = this.saveDrawable(resourceId, node, value);
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
-                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                        setBodyBackground(manifestThemeName, manifestParentThemeName, drawable);
                         return;
                     }
                     const innerWrapped = node.innerMostWrapped as T;
                     if (innerWrapped.documentBody && (node.backgroundColor || node.visibleStyle.backgroundRepeatY)) {
-                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                        setBodyBackground(manifestThemeName, manifestParentThemeName, drawable);
                         deleteBodyWrapper(innerWrapped, node);
                         return;
                     }
@@ -502,7 +502,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 node.android('background', drawable, false);
             }
         };
-        this.application.getProcessingCache(sessionId).each(node => {
+        application.getProcessingCache(sessionId).each(node => {
             let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle'),
                 boxImage: Undef<T[]>;
             if (node.inputElement) {
@@ -525,13 +525,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 const outline = stored.outline;
                 let indentWidth = 0;
-                if (drawOutline && outline) {
+                if (outline && this.options.outlineAsInsetBorder) {
                     const width = Math.round(outline.width);
                     indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                 }
                 let [shapeData, layerList] = this.getDrawableBackground(resourceId, stored, { indentWidth, images });
                 const emptyBackground = !shapeData && !layerList;
-                if (outline && (drawOutline || emptyBackground)) {
+                if (outline && (this.options.outlineAsInsetBorder || emptyBackground)) {
                     const [outlineShapeData, outlineLayerList] = this.getDrawableBackground(resourceId, stored, { images: emptyBackground ? images : undefined, borderOnly: !emptyBackground, outline });
                     if (outlineShapeData) {
                         shapeData ||= outlineShapeData;
@@ -558,12 +558,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (color) {
                             if (!themeBackground) {
                                 if (node.tagName === 'HTML') {
-                                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                                    setBodyBackground(manifestThemeName, manifestParentThemeName, color);
                                     return;
                                 }
                                 const innerWrapped = node.innerMostWrapped as T;
                                 if (innerWrapped.documentBody) {
-                                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                                    setBodyBackground(manifestThemeName, manifestParentThemeName, color);
                                     deleteBodyWrapper(innerWrapped, node);
                                     return;
                                 }

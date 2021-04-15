@@ -165,7 +165,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly extensions: ExtensionUI<T>[] = [];
 
     public abstract resource: ResourceUI<T>;
-    public abstract userSettings: UserResourceSettingsUI;
 
     private _controllerSettings!: ControllerSettingsUI;
     private _excludedElements!: string[];
@@ -177,6 +176,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _renderNode!: RenderNodeMethod<T>;
     private _renderNodeGroup!: RenderNodeMethod<T>;
 
+    public abstract set userSettings(value);
+    public abstract get userSettings(): UserResourceSettingsUI;
     public abstract get controllerHandler(): ControllerUI<T>;
     public abstract get resourceHandler(): ResourceUI<T>;
     public abstract get extensionManager(): ExtensionManager<T>;
@@ -201,7 +202,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const [extensions, children] = this.sessionAll as [ExtensionUI<T>[], T[]];
         let itemCount = 0,
             length = children.length;
-        const rendered: T[] = new Array(length);
+        const rendered: T[] = new Array(length - 1);
         for (let i = 0; i < length; ++i) {
             const node = children[i];
             if (node.renderParent && node.visible) {
@@ -214,7 +215,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 rendered[itemCount++] = node;
             }
         }
-        if (itemCount < length) {
+        if (itemCount < rendered.length) {
             rendered.length = itemCount;
         }
         controller.optimize(rendered);
@@ -228,8 +229,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        const documentRoot: squared.base.LayoutRoot<T>[] = [];
-        const finalizeData: squared.base.FinalizeDataExtensionUI<T> = { resourceId: this.resourceId, rendered, documentRoot };
+        const documentRoot: LayoutRoot<T>[] = [];
+        const finalizeData: FinalizeDataExtensionUI<T> = { resourceId: this.resourceId, rendered, documentRoot };
         itemCount = rendered.length;
         for (let i = 0; i < itemCount; ++i) {
             const node = rendered[i];
@@ -378,7 +379,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { element, parent, children, childIndex, flags = 0 } = options;
         const { cache, afterInsertNode } = this.getProcessing(sessionId)!;
         const node = new this.Node(this.nextId, sessionId, element);
-        this._afterInsertNode(node);
+        this._afterInsertNode(node, sessionId);
         if (afterInsertNode) {
             afterInsertNode.some(item => item.afterInsertNode!(node));
         }
@@ -593,7 +594,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, createQuerySelectorMap: boolean, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
         const node = this.insertNode(processing, parentElement, cascadeAll);
         setElementState(node);
         if (depth === 0) {
@@ -613,7 +614,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 return node;
             }
             const { cache, rootElements } = processing;
-            const pierceShadowRoot = this.userSettings.pierceShadowRoot;
             const hostParent = parentElement.shadowRoot || parentElement;
             const childNodes = hostParent.childNodes;
             const children: T[] = [];
@@ -674,6 +674,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 resourceId,
                                 element,
                                 childDepth,
+                                pierceShadowRoot,
+                                createQuerySelectorMap,
                                 extensions,
                                 shadowRoot || shadowParent,
                                 beforeChild,
@@ -816,7 +818,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
-            if (elements.length && this.userSettings.createQuerySelectorMap) {
+            if (elements.length && createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements);
             }
         }

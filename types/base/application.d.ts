@@ -1,4 +1,4 @@
-interface UserSettings extends StandardMap {
+interface UserSettings {
     builtInExtensions: string[];
     showErrorMessages: boolean;
     pierceShadowRoot: boolean;
@@ -31,6 +31,7 @@ interface UserResourceSettingsUI extends UserResourceSettings {
 }
 
 interface ControllerSettings {
+    adoptedStyleSheet?: string;
     mimeType: {
         font: MIMEOrAll;
         image: MIMEOrAll;
@@ -143,6 +144,18 @@ interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
 interface LayoutType {
     containerType: number;
     alignmentType: number;
+}
+
+interface LayoutRoot<T> {
+    node: T;
+    layoutName: string;
+    renderTemplates: NodeTemplate<T>[];
+}
+
+interface FinalizeDataExtensionUI<T> {
+    resourceId: number;
+    rendered: T[];
+    documentRoot: LayoutRoot<T>[];
 }
 
 interface ResourceMap extends ObjectMap<Map<string, unknown> | unknown[]> {}

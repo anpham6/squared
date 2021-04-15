@@ -44,6 +44,7 @@ export default class Extension<T extends Node> implements squared.base.Extension
     }
 
     public beforeParseDocument(sessionId: string) {}
+    public beforeCascadeRoot(processing: squared.base.AppProcessing<T>) {}
     public afterParseDocument(sessionId: string) {}
 
     set application(value) {

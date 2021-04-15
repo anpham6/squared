@@ -26,6 +26,7 @@ type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
 type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: unknown) => void; get?: () => unknown }>;
+type RootElement = squared.base.RootElement;
 
 const optionsQueue = new Map<string, PlainObject>();
 const prototypeMap = new Map<number, ExtendPrototypeMap>();
@@ -253,7 +254,7 @@ export function setFramework(value: Framework, options?: FrameworkOptions | stri
     }
 }
 
-export function parseDocument(...elements: (HTMLElement | string)[]) {
+export function parseDocument(...elements: RootElement[]) {
     if (main) {
         loadExtensions();
         if (!main.closed) {
@@ -267,7 +268,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
     return frameworkNotInstalled();
 }
 
-export function parseDocumentSync(...elements: (HTMLElement | string)[]) {
+export function parseDocumentSync(...elements: RootElement[]) {
     if (main) {
         loadExtensions();
         if (!main.closed) {

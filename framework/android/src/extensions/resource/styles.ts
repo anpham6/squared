@@ -9,7 +9,7 @@ const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
+    public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
         const styles = Resource.STORED[data.resourceId]!.styles;
         const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {

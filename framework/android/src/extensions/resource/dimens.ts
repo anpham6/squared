@@ -41,7 +41,7 @@ function createNamespaceData(namespace: string, node: View, group: GroupData) {
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
+    public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
         const { rendered, resourceId } = data;
         const dimens = Resource.STORED[resourceId]!.dimens;
         const groups: ObjectMapNested<T[]> = {};
@@ -69,7 +69,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         }
     }
 
-    public afterFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
+    public afterFinalize(data: FinalizeDataExtensionUI<T>) {
         if (this.controller.requireFormat) {
             const resourceId = data.resourceId;
             const dimens = Resource.STORED[resourceId]!.dimens;

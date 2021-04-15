@@ -182,7 +182,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         }
         const application = this.application as android.base.Application<T>;
         if (isNaN(fontAdjust)) {
-            fontAdjust = application.userSettings.fontMeasureAdjust;
+            fontAdjust = application.getUserSetting<number>(node.sessionId, 'fontMeasureAdjust');
         }
         const mainData = this.data.get(node) as MultilineData<T>;
         const parentContainer = mainData ? node : parent;
@@ -384,7 +384,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         }
     }
 
-    public beforeParseDocument() {
-        this.enabled = (this.application as android.base.Application<T>).userSettings.fontMeasureWrap;
+    public beforeCascadeRoot(processing: squared.base.AppProcessing<T>) {
+        this.enabled = this.application.getUserSetting<boolean>(processing, 'fontMeasureWrap');
     }
 }

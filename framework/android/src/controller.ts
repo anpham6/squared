@@ -610,37 +610,41 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             textMarginBoundarySize: 8,
             legendBottomOffset: 0.25
         },
+        adoptedStyleSheet: 'html > body { overflow: hidden !important; }',
         floatPrecision: 3
     };
 
     public readonly application!: Application<T>;
 
-    protected _screenDimension!: Dimension;
+    private _targetAPI: ObjectMap<number> = {};
+    private _viewSettings: ObjectMap<LocalSettingsUI> = {};
 
-    private _targetAPI!: number;
-    private _viewSettings!: LocalSettingsUI;
+    public reset() {
+        this._targetAPI = {};
+        this._viewSettings = {};
+        super.reset();
+    }
 
-    public init(resourceId: number) {
-        const userSettings = this.userSettings;
-        const dpiRatio = 160 / userSettings.resolutionDPI;
-        this._targetAPI = userSettings.targetAPI || BUILD_VERSION.LATEST;
-        this._screenDimension = {
-            width: userSettings.resolutionScreenWidth! * dpiRatio,
-            height: userSettings.resolutionScreenHeight! * dpiRatio
-        };
-        this._viewSettings = {
-            resourceId,
+    public resolveUserSettings(processing: squared.base.AppProcessing<T>) {
+        const application = this.application;
+        const dpiRatio = 160 / application.getUserSetting<number>(processing, 'resolutionDPI');
+        this._targetAPI[processing.sessionId] = application.getUserSetting<number>(processing, 'targetAPI') || BUILD_VERSION.LATEST;
+        this._viewSettings[processing.sessionId] = {
+            resourceId: processing.resourceId,
             systemName: capitalize(this.application.systemName),
-            screenDimension: this._screenDimension,
-            supportRTL: userSettings.supportRTL,
-            lineHeightAdjust: userSettings.lineHeightAdjust,
+            screenDimension: {
+                width: application.getUserSetting<number>(processing, 'resolutionScreenWidth') * dpiRatio,
+                height: application.getUserSetting<number>(processing, 'resolutionScreenHeight') * dpiRatio
+            },
+            supportRTL: application.getUserSetting<boolean>(processing, 'supportRTL'),
+            lineHeightAdjust: application.getUserSetting<number>(processing, 'lineHeightAdjust'),
             floatPrecision: this.localSettings.floatPrecision
         };
-        super.init(resourceId);
     }
 
     public optimize(rendered: T[]) {
-        for (let i = 0, length = rendered.length; i < length; ++i) {
+        const overwritePrivilege = this.application.userSettings.customizationsOverwritePrivilege;
+        for (let i = 0, length = rendered.length, target: Optional<HTMLElement>; i < length; ++i) {
             const node = rendered[i];
             if (!node.applyOptimizations()) {
                 rendered.splice(i--, 1);
@@ -648,10 +652,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 continue;
             }
             if (node.hasProcedure(NODE_PROCEDURE.CUSTOMIZATION)) {
-                node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
+                node.applyCustomizations(overwritePrivilege);
             }
-            const target = node.target;
-            if (target) {
+            if (target = node.target) {
                 const outerWrapper = node.outerMostWrapper as T;
                 if (node !== outerWrapper && target === outerWrapper.target) {
                     continue;
@@ -679,7 +682,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public finalize(layouts: FileAsset[]) {
-        const insertSpaces = this.userSettings.insertSpaces;
+        const insertSpaces = this.application.userSettings.insertSpaces;
         for (const layout of layouts) {
             layout.content = replaceTab(replaceAll(layout.content!, '{#0}', getRootNs(layout.content!), 1), insertSpaces, '', '\n');
         }
@@ -1285,7 +1288,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public renderNodeGroup(layout: LayoutUI<T>) {
         const node = layout.node;
         let containerType = layout.containerType;
-        if (node.depth === 0 && this.userSettings.baseLayoutAsFragment) {
+        if (node.depth === 0 && this.application.getUserSetting(node.sessionId, 'baseLayoutAsFragment')) {
             if (containerType === CONTAINER_NODE.FRAME) {
                 containerType = CONTAINER_NODE.FRAGMENT;
             }
@@ -1879,13 +1882,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         };
     }
 
-    public renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute) {
-        const controlName = attrs.controlName || attrs.controlType && View.getControlName(attrs.controlType, this.userSettings.targetAPI);
+    public renderNodeStatic(sessionId: string, attrs: RenderNodeStaticAttribute, options?: ViewAttribute) {
+        const controlName = attrs.controlName || attrs.containerType && View.getControlName(attrs.containerType, this._targetAPI[sessionId]);
         if (!controlName) {
             return '';
         }
         const node = new View();
-        this.afterInsertNode(node as T);
+        this.afterInsertNode(node as T, sessionId);
         node.setControlType(controlName);
         node.setLayoutWidth(attrs.width || 'wrap_content');
         node.setLayoutHeight(attrs.height || 'wrap_content');
@@ -1893,10 +1896,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.apply(options);
             options.documentId = node.documentId;
         }
-        return this.getEnclosingXmlTag(controlName, this.userSettings.showAttributes ? node.extractAttributes(1) : '', attrs.content);
+        return this.getEnclosingXmlTag(controlName, this.application.userSettings.showAttributes ? node.extractAttributes(1) : '', attrs.content);
     }
 
-    public renderSpace(attrs: RenderSpaceAttribute) {
+    public renderSpace(sessionId: string, attrs: RenderSpaceAttribute) {
         const android = attrs.android;
         let { width, height } = attrs,
             n: number;
@@ -1931,7 +1934,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             android.layout_rowSpan = attrs.rowSpan.toString();
         }
         const result: ViewAttribute = { android, app: attrs.app };
-        const output = this.renderNodeStatic({ controlName: CONTAINER_TAGNAME.SPACE, width, height }, result);
+        const output = this.renderNodeStatic(sessionId, { controlName: CONTAINER_TAGNAME.SPACE, width, height }, result);
         attrs.documentId = result.documentId;
         return output;
     }
@@ -1963,8 +1966,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     constraint_referenced_ids: concatString(unbound.map(item => getDocumentId(item.anchorTarget.documentId)), ',')
                 }
             };
-            const { api, anchorTarget } = lastItemOf(unbound)!;
-            const content = this.renderNodeStatic({ controlName: api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.BARRIER : CONTAINER_TAGNAME_X.BARRIER }, options);
+            const { sessionId, anchorTarget } = lastItemOf(unbound)!;
+            const content = this.renderNodeStatic(sessionId, { containerType: CONTAINER_NODE.BARRIER }, options);
             switch (barrierDirection) {
                 case 'top':
                 case 'left':
@@ -2074,7 +2077,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (alignmentType) {
             container.addAlign(alignmentType);
         }
-        this.afterInsertNode(container);
+        this.afterInsertNode(container, node.sessionId);
         if (parent && !parent.contains(container)) {
             parent.add(container);
             container.internalSelf(parent, node.depth);
@@ -2163,6 +2166,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         return container;
+    }
+
+    public afterInsertNode(node: T, sessionId: string) {
+        node.localSettings = this._viewSettings[sessionId]!;
+        node.api = this._targetAPI[sessionId]!;
     }
 
     protected processRelativeHorizontal(node: T) {
@@ -3816,7 +3824,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 [attr]: percent ? location.toString() : `@dimen/${Resource.insertStoredAsset(node.localSettings.resourceId, 'dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))}`
             }
         };
-        this.addAfterOutsideTemplate(node, this.renderNodeStatic({ controlName: node.api < BUILD_VERSION.Q ? CONTAINER_TAGNAME.GUIDELINE : CONTAINER_TAGNAME_X.GUIDELINE }, templateOptions), false);
+        this.addAfterOutsideTemplate(node, this.renderNodeStatic(node.sessionId, { containerType: CONTAINER_NODE.GUIDELINE }, templateOptions), false);
         const documentId = templateOptions.documentId;
         if (documentId) {
             node.anchor(LT, documentId, true);
@@ -3916,18 +3924,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         };
     }
 
-    get afterInsertNode() {
-        return (node: T) => {
-            node.localSettings = this._viewSettings;
-            node.api = this._targetAPI;
-        };
-    }
-
-    get userSettings() {
-        return this.application.userSettings;
-    }
-
     get screenDimension() {
-        return this._screenDimension;
+        const { resolutionDPI, resolutionScreenWidth, resolutionScreenHeight } = this.application.userSettings;
+        const dpiRatio = 160 / resolutionDPI;
+        return {
+            width: resolutionScreenWidth! * dpiRatio,
+            height: resolutionScreenHeight! * dpiRatio
+        };
     }
 }

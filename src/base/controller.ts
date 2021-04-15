@@ -20,21 +20,15 @@ export default class Controller<T extends Node> implements squared.base.Controll
     constructor(public readonly application: Application<T>) {}
 
     public init(resourceId: number) {}
+    public resolveUserSettings(processing: squared.base.AppProcessing<T>) {}
     public sortInitialCache(cache: NodeList<T>) {}
     public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element, pseudoElt?: PseudoElt) {}
     public reset() {}
     public includeElement(element: HTMLElement) { return true; }
     public preventNodeCascade(node: T) { return false; }
+    public afterInsertNode(node: T, sessionId: string) {}
 
     get generateSessionId() {
         return padStart((++this._sessionId).toString(), 5, '0');
-    }
-
-    get afterInsertNode(): BindGeneric<T, void> {
-        return (node: T) => {};
-    }
-
-    get userSettings() {
-        return this.application.userSettings;
     }
 }

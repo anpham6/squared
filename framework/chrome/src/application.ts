@@ -16,7 +16,6 @@ const REGEXP_VARNAME = new RegExp(STRING.CSS_VARNAME, 'g');
 const REGEXP_VARVALUE = new RegExp(STRING.CSS_VARVALUE, 'g');
 
 export default class Application<T extends squared.base.Node> extends squared.base.Application<T> implements chrome.base.Application<T> {
-    public userSettings!: UserResourceSettings;
     public builtInExtensions!: Map<string, Extension<T>>;
     public readonly extensions: Extension<T>[] = [];
     public readonly systemName = 'chrome';
@@ -100,7 +99,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
 
     public insertNode(processing: squared.base.AppProcessing<T>, element: Element) {
         if (element.nodeName[0] === '#') {
-            if (this.userSettings.excludePlainText) {
+            if (this.getUserSetting(processing, 'excludePlainText')) {
                 return;
             }
             this.controllerHandler.applyDefaultStyles(processing, element);
@@ -126,12 +125,13 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             return reject(UNABLE_TO_FINALIZE_DOCUMENT);
         }
         const sessionId = result.sessionId;
-        const resourceId = this.getProcessing(sessionId)!.resourceId;
+        const processing = this.getProcessing(sessionId)!;
+        const resourceId = processing.resourceId;
         const dataSource: [HTMLElement, DataSource][] = [];
         const assetMap = new Map<HTMLElement, AssetCommand>();
         const nodeMap = new Map<XmlNode, HTMLElement>();
         const appendMap = new Map<HTMLElement, AssetCommand[]>();
-        options = { ...options, saveAsWebPage: true, resourceId, assetMap, nodeMap, appendMap };
+        options = { ...options, saveAsWebPage: true, sessionId, resourceId, assetMap, nodeMap, appendMap };
         const retainUsedStyles = options.retainUsedStyles;
         const retainUsedStylesValue = retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string') as string[] : [];
         if (options.removeUnusedVariables) {
@@ -216,7 +216,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (options.configUri) {
             const commands = await this.fileHandler!.loadConfig(options.configUri, options) as Undef<AssetCommand[]>;
             if (commands) {
-                const documentHandler = this.userSettings.outputDocumentHandler;
+                const documentHandler = this.getUserSetting<StringOfArray>(processing, 'outputDocumentHandler');
                 const paramMap = new Map<string, [RegExp, string]>();
                 const replaceParams = (param: unknown): unknown => {
                     const type = typeof param;
@@ -300,7 +300,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         }
         if (dataSource.length) {
             const useOriginalHtmlPage = options.useOriginalHtmlPage;
-            const formatUUID = this.userSettings.formatUUID;
+            const formatUUID = this.getUserSetting<string>(processing, 'formatUUID');
             const elements = document.querySelectorAll('*');
             const cache: SelectorCache = {};
             const items = options.dataSource ||= [];

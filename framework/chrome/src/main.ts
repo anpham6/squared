@@ -24,7 +24,7 @@ function createAssetsOptions(assets: ChromeAsset[], options?: FileActionOptions,
     return Object.assign(options = {}, { assets, filename });
 }
 
-const checkFileName = (value: Undef<string>, type: string) => value || `${application!.userSettings.outputArchiveName}-${type}`;
+const checkFileName = (value: Undef<string>, type: string) => value || `${(application!.userSettings as UserResourceSettings).outputArchiveName}-${type}`;
 
 const appBase: squared.base.AppFramework<Node> = {
     base: {

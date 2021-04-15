@@ -519,7 +519,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
             else {
                 const src = element.src;
-                this.createBundle(true, result, element, src, getMimeType(element, src, 'text/javascript'), 'js', preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsScript);
+                this.createBundle(options ? options.sessionId! : '', true, result, element, src, getMimeType(element, src, 'text/javascript'), 'js', preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsScript);
             }
         });
         setBundleIndex(bundleIndex);
@@ -560,7 +560,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                 }
             }
-            this.createBundle(mimeType === 'text/css', result, element, href, mimeType, 'css', preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink);
+            this.createBundle(options ? options.sessionId! : '', mimeType === 'text/css', result, element, href, mimeType, 'css', preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink);
         });
         const rawData = this.getResourceAssets(resourceId)?.rawData;
         if (rawData) {
@@ -766,11 +766,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (!productionRelease && body.watch) {
             const socketMap: ObjectMap<string> = {};
             const hostname = new URL(this.hostname).hostname;
+            const settings = this.application.userSettings as UserResourceSettings;
             for (const { watch } of body.assets!) {
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
                     const { socketId, handler = {}, secure } = reload;
-                    let port = reload.port ?? (secure ? this.userSettings.webSocketSecurePort : this.userSettings.webSocketPort);
+                    let port = reload.port ?? (secure ? settings.webSocketSecurePort : settings.webSocketPort);
                     if (socketId && hasValue<number>(port) && !isNaN(port = +port)) {
                         socketMap[socketId + `_${port}_` + (secure ? '0' : '1')] ||=
                         'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
@@ -924,8 +925,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private processAssets(options: FileActionOptions) {
-        const { assetMap, appendMap, nodeMap = new Map<XmlNode, HTMLElement>(), useOriginalHtmlPage, preserveCrossOrigin } = options;
-        const formatUUID = this.userSettings.formatUUID;
+        const { sessionId, assetMap, appendMap, nodeMap = new Map<XmlNode, HTMLElement>(), useOriginalHtmlPage, preserveCrossOrigin } = options;
+        const formatUUID = this.application.getUserSetting<string>(sessionId, 'formatUUID');
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
@@ -1019,7 +1020,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         if (url && attributes) {
                             sibling.document ||= documentData;
                             delete sibling.download;
-                            const data = this.createBundle(false, assets, element, url, attributes.type!, '', undefined, undefined, undefined, sibling);
+                            const data = this.createBundle(sessionId!, false, assets, element, url, attributes.type!, '', undefined, undefined, undefined, sibling);
                             if (data) {
                                 if (isCrossOrigin(download, preserveCrossOrigin)) {
                                     delete data.uri;
@@ -1035,7 +1036,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             }
         }
-        const documentHandler = this.userSettings.outputDocumentHandler;
+        const documentHandler = this.application.getUserSetting<string>(sessionId, 'outputDocumentHandler');
         for (const item of assets) {
             const element = item.element;
             if (element instanceof Element) {
@@ -1065,10 +1066,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         delete options.indexMap;
         delete options.nodeMap;
         delete options.appendMap;
+        delete options.sessionId;
+        delete options.resourceId;
         return options;
     }
 
-    private createBundle(bundling: boolean, assets: ChromeAsset[], element: HTMLElement, src: Undef<string>, mimeType: string, ext: string, preserveCrossOrigin: Undef<boolean>, bundleIndex: Undef<BundleIndex>, assetMap: Undef<ElementAssetMap>, assetCommand: Undef<AssetCommand>, saveAsOptions?: SaveAsOptions) {
+    private createBundle(sessionId: string, bundling: boolean, assets: ChromeAsset[], element: HTMLElement, src: Undef<string>, mimeType: string, ext: string, preserveCrossOrigin: Undef<boolean>, bundleIndex: Undef<BundleIndex>, assetMap: Undef<ElementAssetMap>, assetCommand: Undef<AssetCommand>, saveAsOptions?: SaveAsOptions) {
         let file = !assetCommand ? element.dataset.chromeFile : '';
         if (file === 'exclude' || file === 'ignore') {
             return;
@@ -1109,7 +1112,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     return;
                 }
                 if (!saveAsOptions.filename) {
-                    saveAsOptions.filename = filename || (generateUUID(this.userSettings.formatUUID) + '.' + ext);
+                    saveAsOptions.filename = filename || (generateUUID(this.application.getUserSetting<string>(sessionId, 'formatUUID')) + '.' + ext);
                 }
                 filename ||= saveAsOptions.filename;
                 if (src) {
@@ -1346,9 +1349,5 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     get application() {
         return this.resource.application as Application<T>;
-    }
-
-    get userSettings() {
-        return this.resource.userSettings;
     }
 }

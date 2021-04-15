@@ -403,6 +403,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
         const altered: T[] = [];
+        const supportNegativeLeftTop = this.application.getUserSetting<boolean>(documentRoot.sessionId, 'supportNegativeLeftTop');
         let escaped: Undef<Map<T, { parent: T; appending: T[] }>>;
         cache.each(node => {
             if (node.floating) {
@@ -444,7 +445,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             node.autoPosition = false;
                         }
                         parent = absoluteParent;
-                        if (this.userSettings.supportNegativeLeftTop && !(node.hasUnit('top') && node.hasUnit('bottom') || node.hasUnit('left') && node.hasUnit('right'))) {
+                        if (supportNegativeLeftTop && !(node.hasUnit('top') && node.hasUnit('bottom') || node.hasUnit('left') && node.hasUnit('right'))) {
                             let outside: Undef<boolean>;
                             while (parent && parent.bounds.height) {
                                 if (parent.layoutElement) {

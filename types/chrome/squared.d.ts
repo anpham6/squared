@@ -4,7 +4,6 @@ import * as squared from '../squared';
 
 declare namespace base {
     class Application<T extends Node> extends squared.base.Application<T> {
-        userSettings: UserResourceSettings;
         builtInExtensions: Map<string, Extension<T>>;
         readonly extensions: Extension<T>[];
     }

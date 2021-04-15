@@ -321,8 +321,4 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
         return '__' + padStart((++COUNTER_UUID).toString(), 5, '0') + '.' + ext;
     }
-
-    get userSettings() {
-        return this.application.userSettings;
-    }
 }

@@ -648,7 +648,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     get userSettings() {
-        return this.resource.userSettings;
+        return this.resource.application.userSettings;
     }
 
     get directory() {

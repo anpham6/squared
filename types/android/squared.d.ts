@@ -17,17 +17,18 @@ declare namespace base {
     }
 
     class Application<T extends View> extends squared.base.ApplicationUI<T> {
-        readonly userSettings: UserResourceSettingsUI;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
-        resolveTarget(sessionId: string, target: Null<HTMLElement | string>): Null<T>;
+        resolveTarget(sessionId: string, target: Null<squared.base.RootElement>): Null<T>;
+        set userSettings(value);
+        get userSettings(): UserResourceSettingsUI;
         get viewModel(): Map<string, AppViewModel>;
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
         readonly application: Application<T>;
-        renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
-        renderSpace(attrs: RenderSpaceAttribute): string;
+        renderNodeStatic(sessionId: string, attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
+        renderSpace(sessionId: string, attrs: RenderSpaceAttribute): string;
         checkFrameHorizontal(data: LayoutUI<T>): boolean;
         checkConstraintFloat(data: LayoutUI<T>): boolean;
         checkConstraintHorizontal(data: LayoutUI<T>): boolean;
@@ -35,8 +36,6 @@ declare namespace base {
         addGuideline(options: GuidelineOptions<T>): void;
         addBarrier(nodes: T[], barrierDirection: PositionAllAttr): string;
         evaluateAnchors(nodes: T[]): void;
-        get userSettings(): UserResourceSettingsUI;
-        get screenDimension(): Dimension;
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
@@ -51,7 +50,6 @@ declare namespace base {
         readonly application: Application<T>;
         addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(resourceId: number, images: StringMap, prefix?: string): string;
-        get userSettings(): UserResourceSettingsUI;
     }
 
     class File<T extends View> extends squared.base.File<T> {
@@ -221,7 +219,9 @@ declare namespace lib {
             CONSTRAINT,
             WEBVIEW,
             VIDEOVIEW,
-            FRAGMENT
+            FRAGMENT,
+            GUIDELINE,
+            BARRIER
         }
         const SCREEN_DENSITY: {
             LDPI: number;

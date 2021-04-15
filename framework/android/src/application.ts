@@ -3,7 +3,6 @@ import type View from './view';
 type AppViewModel = android.base.AppViewModel;
 
 export default class Application<T extends View> extends squared.base.ApplicationUI<T> implements android.base.Application<T> {
-    public userSettings!: UserResourceSettingsUI;
     public readonly systemName = 'android';
 
     private _viewModel = new Map<string, AppViewModel>();
@@ -13,7 +12,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
         super.reset();
     }
 
-    public resolveTarget(sessionId: string, target: Null<HTMLElement | string>) {
+    public resolveTarget(sessionId: string, target: Null<squared.base.RootElement>) {
         if (target) {
             const isTargeted = (node: View) => node.element === target || node.elementId.trim() === target || node.controlId === target;
             for (const node of this.getProcessingCache(sessionId)) {

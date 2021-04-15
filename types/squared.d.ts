@@ -1,4 +1,6 @@
 type Node = squared.base.Node;
+type RootElement = squared.base.RootElement;
+
 type PromiseResult = Promise<Void<PlainObject>>;
 
 export interface FrameworkOptions {
@@ -29,8 +31,8 @@ export function remove(...values: ExtensionRequest[]): number;
 export function get(...values: string[]): Undef<PlainObject | PlainObject[]>;
 export function apply(value: ExtensionRequest, options: FrameworkOptions | string, saveAs?: string): boolean;
 export function extend(functionMap: PlainObject, framework?: number): void;
-export function parseDocument(...elements: (string | HTMLElement)[]): Promise<Void<Node | Node[]>>;
-export function parseDocumentSync(...elements: (string | HTMLElement)[]): Void<Node | Node[]>;
+export function parseDocument(...elements: RootElement[]): Promise<Void<Node | Node[]>>;
+export function parseDocumentSync(...elements: RootElement[]): Void<Node | Node[]>;
 export function latest(value: 1 | -1): string;
 export function latest(value: number): string[];
 export function latest(value?: Undef<number>): string;

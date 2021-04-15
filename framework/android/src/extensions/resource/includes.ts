@@ -16,7 +16,7 @@ interface NodeIndex {
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public beforeFinalize(data: squared.base.FinalizeDataExtensionUI<T>) {
+    public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
         const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
             const node = rendered[i];
@@ -67,7 +67,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 renderTemplates.splice(index, templates.length, {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: (controller as android.base.Controller<T>).renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name!}`, android: {} }),
+                                    content: (controller as android.base.Controller<T>).renderNodeStatic(node.sessionId, { controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name!}`, android: {} }),
                                     indent: true
                                 } as NodeIncludeTemplate<T>);
                                 let content = controller.writeDocument(templates, depth, application.userSettings.showAttributes);
@@ -77,7 +77,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 else {
                                     item.documentRoot = true;
                                 }
-                                application.saveDocument(name!, content, '', Infinity);
+                                application.saveDocument(name!, content);
                                 close.splice(k, 1);
                                 break;
                             }

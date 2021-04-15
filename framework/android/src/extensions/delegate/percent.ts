@@ -148,7 +148,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             [node.localizeString(constraint.rightLeft)]: node.documentId
                         }
                     } as RenderSpaceAttribute;
-                    const output = controller.renderSpace(options);
+                    const output = controller.renderSpace(node.sessionId, options);
                     if (options.documentId) {
                         node.anchorDelete('left');
                         node.anchor('leftRight', options.documentId);
@@ -183,7 +183,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             [node.localizeString(constraint.leftRight)]: node.documentId
                         }
                     } as RenderSpaceAttribute;
-                    const output = controller.renderSpace(options);
+                    const output = controller.renderSpace(node.sessionId, options);
                     if (options.documentId) {
                         node.anchorDelete('right');
                         node.anchor('rightLeft', options.documentId);
@@ -262,7 +262,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             [constraint.bottomTop]: node.documentId
                         }
                     } as RenderSpaceAttribute;
-                    const output = controller.renderSpace(options);
+                    const output = controller.renderSpace(node.sessionId, options);
                     if (options.documentId) {
                         node.anchorDelete('top');
                         node.anchor('topBottom', options.documentId);
@@ -297,7 +297,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                             [constraint.topBottom]: node.documentId
                         }
                     } as RenderSpaceAttribute;
-                    const output = controller.renderSpace(options);
+                    const output = controller.renderSpace(node.sessionId, options);
                     if (options.documentId) {
                         node.anchorDelete('bottom');
                         node.anchor('bottomTop', options.documentId);

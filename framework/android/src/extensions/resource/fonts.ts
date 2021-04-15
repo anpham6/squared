@@ -119,9 +119,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public afterParseDocument(sessionId: string) {
         const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const resource = this.resource as android.base.Resource<T>;
-        const userSettings = resource.userSettings;
-        const api = userSettings.targetAPI;
-        const convertPixels = userSettings.convertPixels === 'dp';
+        const convertPixels = this.application.userSettings.convertPixels === 'dp';
         const { resourceId, cache } = this.application.getProcessing(sessionId)!;
         const { fonts, styles } = Resource.STORED[resourceId]!;
         const nameMap: ObjectMapSafe<T[]> = {};
@@ -146,6 +144,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             fontItems.push(...data);
             for (let i = 0, length = data.length; i < length; ++i) {
                 const node = data[i];
+                const api = node.api;
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
                 let { backgroundColor, fontFamily, fontStyle, fontWeight } = stored;
                 const companion = node.companion;

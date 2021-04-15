@@ -75,7 +75,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public reset() {}
 
     public preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[]): [PreloadItem[], HTMLImageElement[]] {
-        const { preloadImages, preloadFonts } = this.userSettings;
+        const { preloadImages, preloadFonts } = this.application.userSettings as UserResourceSettings;
         const assets = Resource.ASSETS[resourceId]!;
         const result: PreloadItem[] = [];
         const images: HTMLImageElement[] = [];
@@ -489,7 +489,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
-        return generateUUID(this.userSettings.formatUUID) + '.' + ext;
+        return generateUUID((this.application.userSettings as UserResourceSettings).formatUUID) + '.' + ext;
     }
 
     set fileHandler(value) {
@@ -504,10 +504,6 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     get controllerSettings() {
         return this.application.controllerHandler.localSettings;
-    }
-
-    get userSettings() {
-        return this.application.userSettings as UserResourceSettings;
     }
 
     get mimeTypeMap() {

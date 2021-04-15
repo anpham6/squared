@@ -1078,7 +1078,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             else {
                 content = undefined;
             }
-            const pathname = appendSeparator((this.userSettings as UserResourceSettingsUI).outputDirectory, this.controllerSettings.directory.image);
+            const pathname = appendSeparator(this.application.userSettings.outputDirectory, this.controllerSettings.directory.image);
             const other = ResourceUI.ASSETS[resourceId]!.other;
             let result: Undef<RawAsset>;
             if (other) {

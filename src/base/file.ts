@@ -282,7 +282,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             const documentName = new Set(body.document);
             const taskName = new Set<string>();
             const setSocketId = (watch: WatchInterval) => {
-                socketId ||= generateUUID(this.userSettings.formatUUID);
+                socketId ||= generateUUID();
                 if (watch.reload === true) {
                     watch.reload = { socketId };
                 }

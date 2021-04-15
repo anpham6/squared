@@ -122,7 +122,7 @@ export default class Grid <T extends View> extends squared.base.extensions.Grid<
                                     const controller = this.controller as android.base.Controller<T>;
                                     controller.addAfterOutsideTemplate(
                                         item,
-                                        controller.renderSpace({
+                                        controller.renderSpace(node.sessionId, {
                                             width: 'match_parent',
                                             height: `@dimen/${Resource.insertStoredAsset(node.localSettings.resourceId, 'dimens', node.controlId.toLowerCase() + '_grid_space', formatPX(heightBottom))}`,
                                             columnSpan: columnCount,

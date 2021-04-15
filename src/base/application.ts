@@ -10,6 +10,7 @@ import type Node from './node';
 import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;
+type RootElement = squared.base.RootElement;
 type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
@@ -18,7 +19,7 @@ const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, replaceAll, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, isPlainObject, replaceAll, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
 const REGEXP_CSSHOST = /^:(?:host|host-context)\(([^)]+)\)/;
@@ -100,11 +101,11 @@ export default abstract class Application<T extends Node> implements squared.bas
     public readonly Node: Constructor<T>;
     public readonly session: squared.base.AppSession<T> = { active: new Map() };
 
-    public abstract userSettings: UserSettings;
     public abstract readonly systemName: string;
 
+    protected _userSettings = {} as UserSettings;
     protected _nextId = 0;
-    protected readonly _afterInsertNode: BindGeneric<T, void>;
+    protected readonly _afterInsertNode: (node: T, sessionid: string) => void;
     protected readonly _includeElement: (element: HTMLElement) => boolean;
     protected readonly _preventNodeCascade: (node: T) => boolean;
 
@@ -144,8 +145,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public createNodeStatic(processing: squared.base.AppProcessing<T>, element?: Element) {
-        const node = new this.Node(this.nextId, processing.sessionId, element);
-        this._afterInsertNode(node);
+        const sessionId = processing.sessionId;
+        const node = new this.Node(this.nextId, sessionId, element);
+        this._afterInsertNode(node, sessionId);
         if (processing.afterInsertNode) {
             processing.afterInsertNode.some(item => item.afterInsertNode!(node));
         }
@@ -153,7 +155,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public afterCreateCache(processing: squared.base.AppProcessing<T>, node: T) {
-        if (this.userSettings.createElementMap) {
+        if (this.getUserSetting(processing, 'createElementMap')) {
             const elementMap = this.elementMap ||= new WeakMap();
             processing.cache.each(item => elementMap.set(item.element as Element, item));
         }
@@ -192,9 +194,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: (string | HTMLElement)[]) {
+    public parseDocument(...elements: RootElement[]) {
         const resource = this.resourceHandler;
-        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && resource ? resource.userSettings.preloadCustomElements : false);
+        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements);
         if (rootElements.length === 0) {
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
@@ -269,8 +271,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
     }
 
-    public parseDocumentSync(...elements: (string | HTMLElement)[]): Undef<T | T[]> {
-        const sessionData = this.createSessionThread(elements, false);
+    public parseDocumentSync(...elements: RootElement[]): Undef<T | T[]> {
+        const sessionData = this.createSessionThread(elements, true);
         return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
     }
 
@@ -356,6 +358,19 @@ export default abstract class Application<T extends Node> implements squared.bas
         return processing ? processing.cache : new NodeList();
     }
 
+    public getUserSetting<U = unknown>(processing: Undef<string | squared.base.AppProcessing<T>>, name: keyof UserResourceSettingsUI): U {
+        if (typeof processing === 'string') {
+            processing = this.getProcessing(processing);
+        }
+        if (processing) {
+            const settings = processing.settings;
+            if (settings && name in settings) {
+                return settings[name] as U;
+            }
+        }
+        return this._userSettings[name] as U;
+    }
+
     public getDatasetName(attr: string, element: DocumentElement) {
         return element.dataset[attr + capitalize(this.systemName)] || element.dataset[attr];
     }
@@ -375,7 +390,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected createRootNode(processing: squared.base.AppProcessing<T>, rootElement: HTMLElement) {
         const { sessionId, resourceId } = processing;
         const extensions = processing.extensions.filter(item => !!item.beforeInsertNode) as Extension<T>[];
-        const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, extensions.length ? extensions : null);
+        const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, this.getUserSetting<boolean>(processing, 'pierceShadowRoot'), this.getUserSetting<boolean>(processing, 'createQuerySelectorMap'), extensions.length ? extensions : null);
         if (node) {
             node.documentRoot = true;
             processing.node = node;
@@ -393,7 +408,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const length = children.length;
                     const elements: T[] = new Array(length);
                     const parent = new this.Node(id--, sessionId, currentElement, [previousNode]);
-                    this._afterInsertNode(parent);
+                    this._afterInsertNode(parent, sessionId);
                     for (let i = 0; i < length; ++i) {
                         const element = children[i] as HTMLElement;
                         let child: T;
@@ -402,7 +417,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                         else {
                             child = new this.Node(id--, sessionId, element);
-                            this._afterInsertNode(child);
+                            this._afterInsertNode(child, sessionId);
                         }
                         child.internalSelf(parent, depth + 1, i);
                         child.actualParent = parent;
@@ -424,7 +439,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, createQuerySelectorMap: boolean, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
         const node = this.insertNode(processing, parentElement);
         if (node) {
             if (depth === 0) {
@@ -439,7 +454,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             const length = childNodes.length;
             const children: T[] = [];
             const elements: T[] = [];
-            const pierceShadowRoot = this.userSettings.pierceShadowRoot;
             let inlineText = true,
                 plainText = false,
                 j = 0;
@@ -463,7 +477,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                         this.setStyleMap(sessionId, resourceId, shadowRoot);
                     }
-                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
+                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                         elements.push(child);
                         inlineText = false;
                     }
@@ -494,7 +508,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     processing.cache.add(children[0]);
                 }
             }
-            if (elements.length && this.userSettings.createQuerySelectorMap) {
+            if (elements.length && createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements);
             }
         }
@@ -803,27 +817,51 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    private createSessionThread(elements: (string | HTMLElement)[], pierceShadowRoot: boolean): SessionThreadData<T> {
+    private createSessionThread(elements: RootElement[], sync?: boolean): SessionThreadData<T> {
+        const { controllerHandler, resourceHandler, resourceId } = this;
         const rootElements: HTMLElement[] = [];
-        const length = elements.length;
+        const customSettings: Null<UserSettings>[] = [];
+        const isEnabled = <U extends UserSettings>(settings: Null<U>, name: keyof U) => settings && name in settings ? settings[name] : (this._userSettings as U)[name];
+        let length = elements.length,
+            shadowElements: Undef<ShadowRoot[]>,
+            styleSheets: Undef<string[]>;
         if (length === 0) {
-            rootElements.push(this.mainElement);
+            elements.push(this.mainElement);
+            length = 1;
         }
-        else {
-            for (let i = 0; i < length; ++i) {
-                let element: Null<HTMLElement | string> = elements[i];
-                if (typeof element === 'string') {
-                    element = document.getElementById(element);
+        for (let i = 0; i < length; ++i) {
+            let item: Null<RootElement> = elements[i],
+                settings: Null<UserSettings> = null;
+            if (isPlainObject<squared.base.ElementSettings>(item)) {
+                if (item.element) {
+                    settings = { ...item } as UserSettings;
+                    item = item.element;
+                    delete settings['element']; // eslint-disable-line dot-notation
                 }
-                if (element && !rootElements.includes(element)) {
-                    rootElements.push(element);
+                else {
+                    continue;
                 }
             }
-            if (rootElements.length === 0) {
-                return ([rootElements] as unknown) as SessionThreadData<T>;
+            if (typeof item === 'string') {
+                item = document.getElementById(item);
+            }
+            if (item && !rootElements.includes(item)) {
+                rootElements.push(item);
+                customSettings.push(settings);
+                if (!sync && resourceHandler && isEnabled(settings, 'pierceShadowRoot') && isEnabled(settings as UserResourceSettings, 'preloadCustomElements')) {
+                    item.querySelectorAll('*').forEach(host => {
+                        const shadowRoot = host.shadowRoot;
+                        if (shadowRoot) {
+                            shadowRoot.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child: HTMLLinkElement) => (styleSheets ||= []).push(child.href));
+                            (shadowElements ||= []).push(shadowRoot);
+                        }
+                    });
+                }
             }
         }
-        const { controllerHandler, resourceHandler, resourceId, extensionsAll: extensions } = this;
+        if (rootElements.length === 0) {
+            return ([rootElements] as unknown) as SessionThreadData<T>;
+        }
         const sessionId = controllerHandler.generateSessionId;
         const processing: squared.base.AppProcessing<T> = {
             sessionId,
@@ -832,15 +870,13 @@ export default abstract class Application<T extends Node> implements squared.bas
             cache: new NodeList<T>(undefined, sessionId),
             excluded: new NodeList<T>(undefined, sessionId),
             rootElements,
+            settings: customSettings[0],
+            customSettings,
             node: null,
             documentElement: null,
             elementMap: newSessionInit(sessionId),
-            extensions
+            extensions: []
         };
-        const afterInsertNode = extensions.filter(item => item.afterInsertNode);
-        if (afterInsertNode.length) {
-            processing.afterInsertNode = afterInsertNode;
-        }
         this.session.active.set(sessionId, processing);
         if (resourceHandler) {
             resourceHandler.init(resourceId);
@@ -852,23 +888,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         else {
             this.setStyleMap(sessionId, resourceId);
-        }
-        let shadowElements: Undef<ShadowRoot[]>,
-            styleSheets: Undef<string[]>;
-        if (pierceShadowRoot) {
-            for (const element of rootElements) {
-                element.querySelectorAll('*').forEach(child => {
-                    const shadowRoot = child.shadowRoot;
-                    if (shadowRoot) {
-                        (shadowElements ||= []).push(shadowRoot);
-                    }
-                });
-            }
-            if (shadowElements) {
-                for (const element of shadowElements) {
-                    element.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child: HTMLLinkElement) => (styleSheets ||= []).push(child.href));
-                }
-            }
         }
         if (resourceHandler) {
             const queryElements: QuerySelectorElement[] = [queryRoot || document];
@@ -892,8 +911,10 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: HTMLElement[], multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
-        const { sessionId, extensions } = processing;
-        const removeStyle = this.resourceHandler && insertStyleSheetRule('html > body { overflow: hidden !important; }');
+        const controller = this.controllerHandler;
+        const sessionId = processing.sessionId;
+        const success: T[] = [];
+        const removeStyle = controller.localSettings.adoptedStyleSheet && insertStyleSheetRule(controller.localSettings.adoptedStyleSheet);
         if (preloaded) {
             for (let i = 0, length = preloaded.length; i < length; ++i) {
                 const image = preloaded[i];
@@ -902,25 +923,65 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
+        const extensions = this.extensions;
         const length = extensions.length;
-        for (let i = 0; i < length; ++i) {
-            extensions[i].beforeParseDocument(sessionId);
+        let enabled: Undef<Extension<T>[]>,
+            disabled: Undef<Extension<T>[]>;
+        if (length) {
+            enabled = [];
+            for (let i = 0, ext: Extension<T>; i < length; ++i) {
+                if ((ext = extensions[i]).enabled) {
+                    ext.beforeParseDocument(sessionId);
+                    enabled.push(ext);
+                }
+                else {
+                    (disabled ||= []).push(ext);
+                }
+            }
         }
-        const success: T[] = [];
-        for (const element of rootElements) {
-            const node = this.createCache(processing, element);
+        for (let i = 0; i < rootElements.length; ++i) {
+            processing.settings = processing.customSettings[i];
+            controller.resolveUserSettings(processing);
+            if (length) {
+                const current: Extension<T>[] = [];
+                for (let j = 0; j < length; ++j) {
+                    const ext = extensions[j];
+                    ext.beforeCascadeRoot(processing);
+                    if (ext.enabled) {
+                        current.push(ext);
+                    }
+                }
+                processing.extensions = current;
+            }
+            const node = this.createCache(processing, rootElements[i]);
             if (node) {
                 this.afterCreateCache(processing, node);
                 success.push(node);
             }
         }
-        for (let i = 0; i < length; ++i) {
-            extensions[i].afterParseDocument(sessionId);
+        if (length) {
+            for (let i = 0, q = enabled!.length; i < q; ++i) {
+                const ext = extensions[i];
+                ext.afterParseDocument(sessionId);
+                ext.enabled = true;
+            }
+            if (disabled) {
+                for (const ext of disabled) {
+                    ext.enabled = false;
+                }
+            }
         }
         if (removeStyle) {
             removeStyle();
         }
         return multipleRequest > 1 ? success : success[0];
+    }
+
+    set userSettings(value) {
+        this._userSettings = value;
+    }
+    get userSettings() {
+        return this._userSettings;
     }
 
     get mainElement() {
@@ -950,10 +1011,6 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     get extensionManager() {
         return this._extensionManager;
-    }
-
-    get extensionsAll(): Extension<T>[] {
-        return this.extensions.filter(item => item.enabled);
     }
 
     get sessionAll(): [Extension<T>[], T[]] {
