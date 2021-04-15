@@ -444,10 +444,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     };
     public readonly eventOnly = true;
 
-    private _resourceSvgInstance: Null<ResourceSvg<T>> = null;
+    private _resourceSvgInstance: Optional<ResourceSvg<T>> = null;
 
     public beforeParseDocument() {
-        this._resourceSvgInstance = this.controller.localSettings.use.svg ? this.application.builtInExtensions.get(internal.android.EXT_ANDROID.RESOURCE_SVG) as ResourceSvg<T> : null;
+        this._resourceSvgInstance = this.application.builtInExtensions.get(internal.android.EXT_ANDROID.RESOURCE_SVG) as Undef<ResourceSvg<T>>;
     }
 
     public afterResources(sessionId: string, resourceId: number) {
@@ -769,7 +769,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         valid: Undef<boolean>;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
-                            if (svgInstance) {
+                            if (svgInstance && svgInstance.enabled) {
                                 const [parentElement, element] = svgInstance.createSvgElement(node, value);
                                 if (parentElement && element) {
                                     const drawable = svgInstance.createSvgDrawable(node, element);

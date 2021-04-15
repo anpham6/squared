@@ -734,8 +734,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public beforeParseDocument() {
         if (SvgBuild) {
             CACHE_VIEWNAME.clear();
-            this.controller.localSettings.use.svg = true;
         }
+    }
+
+    public beforeCascadeRoot(processing: squared.base.AppProcessing<T>) {
+        this.enabled = this.application.getUserSetting<boolean>(processing, 'supportSVG');
     }
 
     public afterResources(sessionId: string, resourceId: number) {
@@ -796,12 +799,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     addSvgElement(node, node.element as SVGSVGElement);
                 }
             });
-        }
-    }
-
-    public afterFinalize() {
-        if (SvgBuild) {
-            this.controller.localSettings.use.svg = false;
         }
     }
 

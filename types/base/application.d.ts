@@ -22,6 +22,7 @@ interface UserResourceSettings extends UserSettings {
 
 interface UserResourceSettingsUI extends UserResourceSettings {
     framesPerSecond: number;
+    supportSVG: boolean;
     supportNegativeLeftTop: boolean;
     showAttributes: boolean;
     insertSpaces: number;
@@ -45,7 +46,6 @@ interface ControllerSettingsUI extends ControllerSettings {
     directory: ControllerSettingsDirectoryUI;
     style: ControllerSettingsStyleUI;
     unsupported: ControllerSettingsUnsupportedUI;
-    use: ControllerSettingsUseUI;
     deviations: ControllerSettingsDeviationsUI;
     floatPrecision: number;
 }
@@ -96,10 +96,6 @@ interface ControllerSettingsUnsupportedUI {
     cascade: string[];
     excluded: string[];
     tagName: string[];
-}
-
-interface ControllerSettingsUseUI {
-    svg: boolean;
 }
 
 interface ControllerSettingsDeviationsUI {

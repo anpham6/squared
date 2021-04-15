@@ -178,12 +178,13 @@ squared.settings = {
     resolutionScreenHeight: 900,
     framesPerSecond: 60,
     supportRTL: true,
+    supportSVG: true,
+    supportNegativeLeftTop: true,
     preloadImages: true,
     compressImages: false, // TinyPNG API Key <https://tinypng.com/developers>
     convertImages: '', // png | jpeg | bmp
     preloadFonts: true,
     preloadCustomElements: true,
-    supportNegativeLeftTop: true,
     fontMeasureWrap: true,
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
     lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
@@ -429,7 +430,7 @@ Two additional output parameters are required with the "data-viewmodel" prefix.
 data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 
 ```xml
-<div data-filename-android="activity_sub.xml"> <!-- optional -->
+<div data-pathname-android="app/src/main" data-filename-android="activity_sub.xml"> <!-- optional -->
     <label>Name:</label>
     <input type="text" data-viewmodel-android-text="user.firstName" />
     <input type="text" data-viewmodel-android-text="user.lastName" />

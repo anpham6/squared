@@ -533,9 +533,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             animation: 'res/anim',
             theme: 'res/values'
         },
-        use: {
-            svg: false
-        },
         style: {
             anchorFontColor: 'rgb(0, 0, 238)',
             formFontSize: '13.3333px',
