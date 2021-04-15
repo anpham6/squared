@@ -1,10 +1,11 @@
 import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
+const { DOM } = squared.base.lib.regex;
+
 const { parseColor: __parseColor } = squared.lib.color;
 const { capitalize, isPlainObject, replaceAll, startsWith } = squared.lib.util;
 
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
-const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
 
 export function parseColor(value: string, opacity = 1, transparency?: boolean) {
     if (value && (value !== 'transparent' || transparency)) {
@@ -301,7 +302,7 @@ export function replaceCharacterData(value: string, tab?: number, quote?: boolea
                 break;
         }
     }
-    return output.replace(REGEXP_AMPERSAND, '&amp;');
+    return output.replace(DOM.AMPERSAND_G, '&amp;');
 }
 
 export function concatString(list: (string | number)[], char = '') {

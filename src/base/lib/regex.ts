@@ -15,5 +15,6 @@ export const CSS = {
 };
 
 export const DOM = {
-    SRCSET: /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i
+    SRCSET: /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i,
+    AMPERSAND_G: /&(?!(?:#(?:[\d]+|x[A-Za-z\d]{5});?|[A-Za-z]{2,};))/g
 };

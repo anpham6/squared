@@ -918,6 +918,7 @@ declare module "base" {
 
             const DOM: {
                 SRCSET: RegExp;
+                AMPERSAND_G: RegExp;
             };
         }
 
