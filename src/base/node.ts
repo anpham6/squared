@@ -2207,7 +2207,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get tableElement() {
-        return this.tagName === 'TABLE' || this.display === 'table';
+        return this.tagName === 'TABLE';
     }
 
     get inputElement() {
