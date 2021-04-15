@@ -944,11 +944,14 @@ export default abstract class Application<T extends Node> implements squared.bas
             controller.resolveUserSettings(processing);
             if (length) {
                 const current: Extension<T>[] = [];
+                const exclude = processing.settings?.exclude;
                 for (let j = 0; j < length; ++j) {
                     const ext = extensions[j];
-                    ext.beforeCascadeRoot(processing);
-                    if (ext.enabled) {
-                        current.push(ext);
+                    if (!(exclude === ext.name || Array.isArray(exclude) && exclude.find(name => name === ext.name))) {
+                        ext.beforeCascadeRoot(processing);
+                        if (ext.enabled) {
+                            current.push(ext);
+                        }
                     }
                 }
                 processing.extensions = current;

@@ -92,8 +92,8 @@ The primary function "parseDocument" can be called on multiple elements and mult
         await squared.parseDocument(/* HTMLElement */, /* "fragment-id" */, /* ...etc */);
         // OR
         await squared.parseDocument( // squared 3.0
-            { element: document.body, enabledMultiline: false }, // Custom settings do not affect other layouts (except when prefixed with "enabled")
-            { element: "fragment-id", pathname: "app/src/main/res/layout", filename: "fragment.xml", enabledMultiline: true, baseLayoutAsFragment: true } // Only "element" is required
+            { element: document.body, enabledMultiline: false, exclude: ["squared.list", "squared.grid"] }, // Custom settings do not affect other layouts
+            { element: "fragment-id", pathname: "app/src/main/res/layout", filename: "fragment.xml", baseLayoutAsFragment: true } // Only "element" is required
         );
 
         await squared.save(); // Uses defaults from settings

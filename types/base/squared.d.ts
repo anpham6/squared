@@ -9,6 +9,7 @@ declare module "base" {
 
     interface ElementSettings extends Partial<UserResourceSettingsUI>, Partial<LocationUri> {
         element?: string | HTMLElement;
+        exclude?: StringOfArray;
     }
 
     interface FileCopyingOptions extends squared.FileActionOptions {
