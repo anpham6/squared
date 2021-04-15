@@ -114,6 +114,7 @@ declare module "base" {
         getUserSetting<U = unknown>(sessionId: Undef<string | squared.base.AppProcessing<T>>, name: keyof UserResourceSettingsUI): U;
         getDatasetName(attr: string, element: DocumentElement): Undef<string>;
         setDatasetName(attr: string, element: DocumentElement, value: string): void;
+        addRootElement(sessionId: string, element: HTMLElement): void;
         copyTo(pathname: string, options?: FileCopyingOptions): FileActionResult;
         appendTo(target: string, options?: FileArchivingOptions): FileActionResult;
         saveAs(filename: string, options?: FileArchivingOptions): FileActionResult;

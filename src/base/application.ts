@@ -380,6 +380,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         element.dataset[attr + capitalize(this.systemName)] = value;
     }
 
+    public addRootElement(sessionId: string, element: HTMLElement) {
+        const rootElements = this.getProcessing(sessionId)?.rootElements;
+        if (rootElements && !rootElements.includes(element)) {
+            rootElements.push(element);
+        }
+    }
+
     public writeError(message: string, hint?: string) {
         (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
     }
