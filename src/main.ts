@@ -164,10 +164,10 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
     return !incomplete ? result : result.filter(item => item);
 }
 
+const errorReject = (type: 1 | 2 | 3) => error.reject(type === 1 ? error.FRAMEWORK_NOT_INSTALLED : type === 2 ? error.UNABLE_TO_FINALIZE_DOCUMENT : error.INVALID_ASSET_REQUEST);
 const checkWritable = (app: Null<Main>): app is Main => !!app && !app.initializing && app.length > 0;
 const checkFrom = (value: string, options: FileActionOptions) => util.isPlainObject<FileActionOptions>(options) && !!options.assets && checkWritable(main) && util.isString(value) && options.assets.length > 0;
 const findExtension = (value: string) => extensionManager!.get(value, true) || util.findSet(extensionManager!.cache, item => item.name === value) || extensionCache.find(item => item.name === value);
-const frameworkNotInstalled = () => error.reject(error.FRAMEWORK_NOT_INSTALLED);
 
 export function setHostname(value: string) {
     if (file) {
@@ -264,7 +264,7 @@ export function parseDocument(...elements: RootElement[]) {
             return main.parseDocument(...elements);
         }
     }
-    return frameworkNotInstalled();
+    return errorReject(1);
 }
 
 export function parseDocumentSync(...elements: RootElement[]) {
@@ -463,44 +463,44 @@ export function reset() {
 
 export function saveAs(value: string, options?: FileActionOptions) {
     if (main) {
-        return close() ? main.saveAs(value, options) : error.reject(error.UNABLE_TO_FINALIZE_DOCUMENT);
+        return close() ? main.saveAs(value, options) : errorReject(2);
     }
-    return frameworkNotInstalled();
+    return errorReject(1);
 }
 
 export function appendTo(value: string, options?: FileActionOptions) {
     if (main) {
-        return util.isString(value) && close() ? main.appendTo(value, options) : error.reject(error.UNABLE_TO_FINALIZE_DOCUMENT);
+        return util.isString(value) && close() ? main.appendTo(value, options) : errorReject(2);
     }
-    return frameworkNotInstalled();
+    return errorReject(1);
 }
 
 export function copyTo(value: string, options?: FileActionOptions) {
     if (main) {
-        return util.isString(value) && close() ? main.copyTo(value, options) : error.reject(error.UNABLE_TO_FINALIZE_DOCUMENT);
+        return util.isString(value) && close() ? main.copyTo(value, options) : errorReject(2);
     }
-    return frameworkNotInstalled();
+    return errorReject(1);
 }
 
 export function saveFiles(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.saveFiles(value, options) : error.reject(error.INVALID_ASSET_REQUEST);
+        return checkFrom(value, options) ? main.saveFiles(value, options) : errorReject(1);
     }
-    return frameworkNotInstalled();
+    return errorReject(1);
 }
 
 export function appendFiles(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.appendFiles(value, options) : error.reject(error.INVALID_ASSET_REQUEST);
+        return checkFrom(value, options) ? main.appendFiles(value, options) : errorReject(3);
     }
-    return frameworkNotInstalled();
+    return errorReject(1);
 }
 
 export function copyFiles(value: string, options: FileActionOptions) {
     if (main) {
-        return checkFrom(value, options) ? main.copyFiles(value, options) : error.reject(error.INVALID_ASSET_REQUEST);
+        return checkFrom(value, options) ? main.copyFiles(value, options) : errorReject(3);
     }
-    return frameworkNotInstalled();
+    return errorReject(1);
 }
 
 export function getElementById(value: string, sync?: boolean, cache = true) {

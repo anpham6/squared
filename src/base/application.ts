@@ -11,6 +11,7 @@ import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;
 type RootElement = squared.base.RootElement;
+type ElementSettings = squared.base.ElementSettings;
 type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
@@ -363,7 +364,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             processing = this.getProcessing(processing);
         }
         if (processing) {
-            const settings = processing.settings;
+            const settings = processing.settings as UserSettings;
             if (settings && name in settings) {
                 return settings[name] as U;
             }
@@ -820,7 +821,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     private createSessionThread(elements: RootElement[], sync?: boolean): SessionThreadData<T> {
         const { controllerHandler, resourceHandler, resourceId } = this;
         const rootElements: HTMLElement[] = [];
-        const customSettings: Null<UserSettings>[] = [];
+        const customSettings: Null<ElementSettings>[] = [];
         const isEnabled = <U extends UserSettings>(settings: Null<U>, name: keyof U) => settings && name in settings ? settings[name] : (this._userSettings as U)[name];
         let length = elements.length,
             shadowElements: Undef<ShadowRoot[]>,
@@ -831,12 +832,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (let i = 0; i < length; ++i) {
             let item: Null<RootElement> = elements[i],
-                settings: Null<UserSettings> = null;
-            if (isPlainObject<squared.base.ElementSettings>(item)) {
+                settings: Null<ElementSettings> = null;
+            if (isPlainObject<ElementSettings>(item)) {
                 if (item.element) {
-                    settings = { ...item } as UserSettings;
+                    settings = item;
                     item = item.element;
-                    delete settings['element']; // eslint-disable-line dot-notation
                 }
                 else {
                     continue;
@@ -848,7 +848,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (item && !rootElements.includes(item)) {
                 rootElements.push(item);
                 customSettings.push(settings);
-                if (!sync && resourceHandler && isEnabled(settings, 'pierceShadowRoot') && isEnabled(settings as UserResourceSettings, 'preloadCustomElements')) {
+                if (!sync && resourceHandler && isEnabled(settings as UserSettings, 'pierceShadowRoot') && isEnabled(settings as UserResourceSettings, 'preloadCustomElements')) {
                     item.querySelectorAll('*').forEach(host => {
                         const shadowRoot = host.shadowRoot;
                         if (shadowRoot) {

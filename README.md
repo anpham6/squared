@@ -204,7 +204,7 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputDocumentHandler: 'android',
     outputEmptyCopyDirectory: false, // Sub directories within target directory
-    outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify"} }
+    outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify" } }
     outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (NOTE: Only applicabale to raw assets)
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip', // zip | 7z | gz | tar

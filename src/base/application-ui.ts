@@ -153,6 +153,11 @@ function setElementState(node: NodeUI, type?: number) {
     }
 }
 
+function isDocumentBase(node: NodeUI) {
+    const renderExtension = node.renderExtension;
+    return !!renderExtension && renderExtension.some(item => item.documentBase);
+}
+
 const getStyleMap = (sessionId: string, element: Element, pseudoElt = '') => getElementCache<CSSStyleDeclaration>(element, 'styleMap' + pseudoElt, sessionId) || getStyle(element, pseudoElt as PseudoElt);
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
@@ -237,11 +242,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
-            if (node.documentRoot && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
-                const layoutName = node.innerMostWrapped.data<string>(Application.KEY_NAME, 'layoutName');
-                const renderTemplates = node.renderParent?.renderTemplates as Undef<NodeTemplate<T>[]>;
-                if (layoutName && renderTemplates) {
-                    documentRoot.push({ node, layoutName, renderTemplates });
+            if (node.documentRoot && node.renderParent && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
+                const host = node.innerMostWrapped as T;
+                const filename = host.data<string>(Application.KEY_NAME, 'filename');
+                const renderTemplates = node.renderParent.renderTemplates as Undef<NodeTemplate<T>[]>;
+                if (filename && renderTemplates) {
+                    documentRoot.push({ node, pathname: host.data<string>(Application.KEY_NAME, 'pathname'), filename, documentBase: isDocumentBase(host) || isDocumentBase(node), renderTemplates });
                 }
             }
         }
@@ -256,12 +262,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             ext.beforeFinalize(finalizeData);
         }
         for (let i = 0, q = documentRoot.length; i < q; ++i) {
-            const { node, layoutName, renderTemplates } = documentRoot[i];
+            const { node, pathname, filename, documentBase, renderTemplates } = documentRoot[i];
             this.saveDocument(
-                layoutName,
+                filename!,
                 this._controllerSettings.layout.baseTemplate + controller.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes),
-                node.dataset['pathname' + capitalize(this.systemName)],
-                node.renderExtension?.some(item => item.documentBase) ? 0 : -1
+                pathname,
+                documentBase ? 0 : -1
             );
         }
         controller.finalize(this._layouts);
@@ -569,17 +575,24 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         super.afterCreateCache(processing, node);
         const { elementId, dataset } = node;
         const systemName = capitalize(this.systemName);
-        let layoutName = dataset['filename' + systemName] || dataset.filename;
-        if (!layoutName) {
+        const settings = processing.settings;
+        let pathname = settings && settings.pathname || dataset['pathname' + systemName] || dataset.pathname,
+            filename = settings && settings.filename || dataset['filename' + systemName] || dataset.filename;
+        if (!filename) {
             const baseName = elementId && convertWord(elementId) || 'document_' + this.length;
-            layoutName = baseName;
+            filename = baseName;
             let i = 0;
-            while (this._layouts.find(item => item.filename === layoutName)) {
-                layoutName = baseName + '_' + ++i;
+            while (this._layouts.find(item => item.filename === filename)) {
+                filename = baseName + '_' + ++i;
             }
         }
-        dataset['layoutName' + systemName] = layoutName;
-        node.data(Application.KEY_NAME, 'layoutName', layoutName);
+        if (pathname) {
+            pathname = trimString(pathname.replace(/\\/g, '/'), '/');
+            dataset['pathname' + systemName] = pathname;
+            node.data(Application.KEY_NAME, 'pathname', pathname);
+        }
+        dataset['filename' + systemName] = filename;
+        node.data(Application.KEY_NAME, 'filename', filename);
         this.setBaseLayout(processing);
         this.setConstraints(processing);
         this.setResources(processing);

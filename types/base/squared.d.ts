@@ -7,7 +7,7 @@ type AppSessionConditionCallback = (sessionId: string, rule: CSSConditionRule, c
 declare module "base" {
     type RootElement = string | HTMLElement | ElementSettings;
 
-    interface ElementSettings extends Partial<UserResourceSettingsUI> {
+    interface ElementSettings extends Partial<UserResourceSettingsUI>, Partial<LocationUri> {
         element?: string | HTMLElement;
     }
 
@@ -69,8 +69,8 @@ declare module "base" {
         cache: NodeList<T>;
         excluded: NodeList<T>;
         rootElements: HTMLElement[];
-        settings: Null<UserSettings>;
-        customSettings: Null<UserSettings>[];
+        settings: Null<ElementSettings>;
+        customSettings: Null<ElementSettings>[];
         extensions: Extension<T>[];
         elementMap: Map<Element, ElementData>;
         node: Null<T>;

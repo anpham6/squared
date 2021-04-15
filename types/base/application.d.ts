@@ -142,10 +142,10 @@ interface LayoutType {
     alignmentType: number;
 }
 
-interface LayoutRoot<T> {
+interface LayoutRoot<T> extends Partial<LocationUri> {
     node: T;
-    layoutName: string;
     renderTemplates: NodeTemplate<T>[];
+    documentBase?: boolean;
 }
 
 interface FinalizeDataExtensionUI<T> {
