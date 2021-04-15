@@ -21,8 +21,8 @@ interface UserResourceSettings extends UserSettings {
 }
 
 interface UserResourceSettingsUI extends UserResourceSettings {
+    enabledSVG: boolean;
     framesPerSecond: number;
-    supportSVG: boolean;
     supportNegativeLeftTop: boolean;
     showAttributes: boolean;
     insertSpaces: number;

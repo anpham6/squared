@@ -385,6 +385,6 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public beforeCascadeRoot(processing: squared.base.AppProcessing<T>) {
-        this.enabled = this.application.getUserSetting<boolean>(processing, 'fontMeasureWrap');
+        this.enabled = this.application.getUserSetting<boolean>(processing, 'enabledMultiline');
     }
 }

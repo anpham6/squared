@@ -87,6 +87,7 @@ declare module "base" {
         static readonly KEY_NAME: string;
         static prioritizeExtensions<U extends Node>(value: string, extensions: Extension<U>[]): Extension<U>[];
         builtInExtensions: Map<string, Extension<T>>;
+        userSettings: UserSettings;
         closed: boolean;
         elementMap: Null<WeakMap<Element, T>>;
         readonly systemName: string;
@@ -120,8 +121,6 @@ declare module "base" {
         copyFiles(pathname: string, options: FileCopyingOptions): FileActionResult;
         writeError(message: string, hint?: string): void;
         toString(): string;
-        set userSettings(value);
-        get userSettings(): UserSettings;
         get mainElement(): Element;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Null<Resource<T>>;
@@ -144,6 +143,7 @@ declare module "base" {
     class ApplicationUI<T extends NodeUI> extends Application<T> {
         resource: ResourceUI<T>;
         builtInExtensions: Map<string, ExtensionUI<T>>;
+        userSettings: UserResourceSettingsUI;
         readonly session: AppSessionUI<T>;
         readonly extensions: ExtensionUI<T>[];
         conditionElement(element: HTMLElement, sessionId: string, cacadeAll?: boolean, pseudoElt?: string): boolean;
@@ -154,8 +154,6 @@ declare module "base" {
         addLayout(layout: ContentUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
-        set userSettings(value);
-        get userSettings(): UserResourceSettingsUI;
         get controllerHandler(): ControllerUI<T>;
         get resourceHandler(): ResourceUI<T>;
         get extensionManager(): ExtensionManager<T>;

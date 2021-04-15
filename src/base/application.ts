@@ -96,6 +96,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public extensions: Extension<T>[] = [];
+    public userSettings = {} as UserSettings;
     public closed = false;
     public builtInExtensions!: Map<string, Extension<T>>;
     public elementMap: Null<WeakMap<Element, T>> = null;
@@ -104,7 +105,6 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public abstract readonly systemName: string;
 
-    protected _userSettings = {} as UserSettings;
     protected _nextId = 0;
     protected readonly _afterInsertNode: (node: T, sessionid: string) => void;
     protected readonly _includeElement: (element: HTMLElement) => boolean;
@@ -369,7 +369,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 return settings[name] as U;
             }
         }
-        return this._userSettings[name] as U;
+        return this.userSettings[name] as U;
     }
 
     public getDatasetName(attr: string, element: DocumentElement) {
@@ -822,7 +822,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const { controllerHandler, resourceHandler, resourceId } = this;
         const rootElements: HTMLElement[] = [];
         const customSettings: Null<ElementSettings>[] = [];
-        const isEnabled = <U extends UserSettings>(settings: Null<U>, name: keyof U) => settings && name in settings ? settings[name] : (this._userSettings as U)[name];
+        const isEnabled = <U extends UserSettings>(settings: Null<U>, name: keyof U) => settings && name in settings ? settings[name] : (this.userSettings as U)[name];
         let length = elements.length,
             shadowElements: Undef<ShadowRoot[]>,
             styleSheets: Undef<string[]>;
@@ -975,13 +975,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             removeStyle();
         }
         return multipleRequest > 1 ? success : success[0];
-    }
-
-    set userSettings(value) {
-        this._userSettings = value;
-    }
-    get userSettings() {
-        return this._userSettings;
     }
 
     get mainElement() {

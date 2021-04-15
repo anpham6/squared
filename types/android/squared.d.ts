@@ -20,8 +20,6 @@ declare namespace base {
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
         resolveTarget(sessionId: string, target: Null<squared.base.RootElement>): Null<T>;
-        set userSettings(value);
-        get userSettings(): UserResourceSettingsUI;
         get viewModel(): Map<string, AppViewModel>;
     }
 

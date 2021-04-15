@@ -10,13 +10,13 @@ const settings: UserResourceSettings = {
     showErrorMessages: false,
     webSocketPort: 80,
     webSocketSecurePort: 443,
-    formatUUID: '8-4-4-4-12',
-    outputDocumentHandler: 'chrome',
+    formatUUID: "8-4-4-4-12",
+    outputDocumentHandler: "chrome",
     outputEmptyCopyDirectory: false,
     outputTasks: {},
     outputWatch: {},
-    outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip',
+    outputArchiveName: "chrome-data",
+    outputArchiveFormat: "zip",
     outputArchiveCache: false
 };
 

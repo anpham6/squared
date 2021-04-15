@@ -181,8 +181,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _renderNode!: RenderNodeMethod<T>;
     private _renderNodeGroup!: RenderNodeMethod<T>;
 
-    public abstract set userSettings(value);
-    public abstract get userSettings(): UserResourceSettingsUI;
+    public abstract userSettings: UserResourceSettingsUI;
     public abstract get controllerHandler(): ControllerUI<T>;
     public abstract get resourceHandler(): ResourceUI<T>;
     public abstract get extensionManager(): ExtensionManager<T>;

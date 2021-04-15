@@ -84,12 +84,17 @@ The primary function "parseDocument" can be called on multiple elements and mult
 <script>
     squared.settings.targetAPI = 30; // optional
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener("DOMContentLoaded", async () => {
         squared.setFramework(android, /* optional: FrameworkOptions */);
 
-        await squared.parseDocument(); // document.body 'BODY' (default)
+        await squared.parseDocument(); // document.body "BODY" (default)
         // OR
-        await squared.parseDocument(/* HTMLElement */, /* 'subview-id' */, /* ...etc */);
+        await squared.parseDocument(/* HTMLElement */, /* "fragment-id" */, /* ...etc */);
+        // OR
+        await squared.parseDocument( // squared 3.0
+            { element: document.body, enabledMultiline: false }, // Custom settings do not affect other layouts (except when prefixed with "enabled")
+            { element: "fragment-id", pathname: "app/src/main/res/layout", filename: "fragment.xml", enabledMultiline: true, baseLayoutAsFragment: true } // Only "element" is required
+        );
 
         await squared.save(); // Uses defaults from settings
         // OR
@@ -113,12 +118,12 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
 <script src="/dist/squared.base-dom.min.js"></script>
 <script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener("DOMContentLoaded", async () => {
         squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
 
-        const element = await squared.parseDocument(/* HTMLElement */); // document.documentElement 'HTML' (default)
+        const element = await squared.parseDocument(/* HTMLElement */); // document.documentElement "HTML" (default)
         // OR
-        const elements = squared.parseDocumentSync(/* HTMLElement */, /* 'elementId' */, /* ...etc */); // Multiple elements
+        const elements = squared.parseDocumentSync(/* HTMLElement */, /* "elementId" */, /* ...etc */); // Multiple elements
 
         squared.reset(); // Start new "parseDocument" session (optional)
     });
@@ -145,32 +150,32 @@ Gulp installation is required in order to use "outputTasks". Further instruction
 ```javascript
 squared.settings = {
     builtInExtensions: [
-        'squared.accessibility',
-        'android.delegate.background',
-        'android.delegate.negative-x',
-        'android.delegate.positive-x',
-        'android.delegate.max-width-height',
-        'android.delegate.percent',
-        'android.delegate.scrollbar',
-        'android.delegate.radiogroup',
-        'android.delegate.multiline',
-        'squared.relative',
-        'squared.css-grid',
-        'squared.flexbox',
-        'squared.table',
-        'squared.column',
-        'squared.list',
-        'squared.grid',
-        'squared.sprite',
-        'squared.whitespace',
-        'android.resource.svg',
-        'android.resource.background',
-        'android.resource.strings',
-        'android.resource.fonts',
-        'android.resource.dimens',
-        'android.resource.styles',
-        'android.resource.data',
-        'android.resource.includes'
+        "squared.accessibility",
+        "android.delegate.background",
+        "android.delegate.negative-x",
+        "android.delegate.positive-x",
+        "android.delegate.max-width-height",
+        "android.delegate.percent",
+        "android.delegate.scrollbar",
+        "android.delegate.radiogroup",
+        "android.delegate.multiline",
+        "squared.relative",
+        "squared.css-grid",
+        "squared.flexbox",
+        "squared.table",
+        "squared.column",
+        "squared.list",
+        "squared.grid",
+        "squared.sprite",
+        "squared.whitespace",
+        "android.resource.svg",
+        "android.resource.background",
+        "android.resource.strings",
+        "android.resource.fonts",
+        "android.resource.dimens",
+        "android.resource.styles",
+        "android.resource.data",
+        "android.resource.includes"
     ],
     targetAPI: 30,
     resolutionDPI: 160, // Pixel C: 320dpi 2560x1800
@@ -178,14 +183,14 @@ squared.settings = {
     resolutionScreenHeight: 900,
     framesPerSecond: 60,
     supportRTL: true,
-    supportSVG: true,
     supportNegativeLeftTop: true,
     preloadImages: true,
     compressImages: false, // TinyPNG API Key <https://tinypng.com/developers>
-    convertImages: '', // png | jpeg | bmp
+    convertImages: "", // png | jpeg | webp | bmp
     preloadFonts: true,
     preloadCustomElements: true,
-    fontMeasureWrap: true,
+    enabledSVG: true,
+    enabledMultiline: true, // fontMeasureWrap (squared 2.5)
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
     lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
     baseLayoutAsFragment: false, // FragmentContainerView
@@ -194,20 +199,20 @@ squared.settings = {
     createElementMap: false,
     createQuerySelectorMap: false,
     pierceShadowRoot: true,
-    convertPixels: 'dp',
+    convertPixels: "dp",
     insertSpaces: 4,
     showErrorMessages: true,
-    manifestLabelAppName: 'android',
-    manifestThemeName: 'AppTheme',
-    manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
-    outputMainFileName: 'activity_main.xml',
-    outputDirectory: 'app/src/main',
-    outputDocumentHandler: 'android',
+    manifestLabelAppName: "android",
+    manifestThemeName: "AppTheme",
+    manifestParentThemeName: "Theme.AppCompat.Light.NoActionBar",
+    outputMainFileName: "activity_main.xml",
+    outputDirectory: "app/src/main",
+    outputDocumentHandler: "android",
     outputEmptyCopyDirectory: false, // Sub directories within target directory
     outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify" } }
     outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (NOTE: Only applicabale to raw assets)
-    outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip', // zip | 7z | gz | tar
+    outputArchiveName: "android-xml",
+    outputArchiveFormat: "zip", // zip | 7z | gz | tar
     outputArchiveCache: false // Downloadable URL in ResponseData<downloadUrl>
 };
 ```
@@ -227,12 +232,12 @@ squared.settings = {
     showErrorMessages: false,
     webSocketPort: 80,
     webSocketSecurePort: 443,
-    outputDocumentHandler: 'chrome',
+    outputDocumentHandler: "chrome",
     outputEmptyCopyDirectory: false,
     outputTasks: {} // { "*.js": [{ handler: "gulp", task: "minify" }, { handler: "gulp", task: "beautify" }] }
     outputWatch: {} // { "*": true }
-    outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip',
+    outputArchiveName: "chrome-data",
+    outputArchiveFormat: "zip",
     outputArchiveCache: false
 };
 ```
@@ -264,21 +269,21 @@ interface FrameworkOptions {
 // Initial save (required)
 squared.setFramework(android, {
     settings: { compressImages: true, createQuerySelectorMap: true },
-    saveAs: 'android-example',
+    saveAs: "android-example",
     cache: true
 });
 
-squared.setFramework(android, { loadAs: 'android-example' });
+squared.setFramework(android, { loadAs: "android-example" });
 ```
 
 ```javascript
 // NOTE: squared 2.2.0
 
 // saveAs
-squared.setFramework(android, { compressImages: true, createQuerySelectorMap: true }, 'android-example');
+squared.setFramework(android, { compressImages: true, createQuerySelectorMap: true }, "android-example");
 
 // loadAs
-squared.setFramework(android, 'android-example', true); // "cache" can also be used as the last argument
+squared.setFramework(android, "android-example", true); // "cache" can also be used as the last argument
 ```
 
 ### ALL: Public Properties and Methods
@@ -363,7 +368,7 @@ squared.extend({
 
 const body = await squared.fromElement(document.body);
 body.altId = 2; // body.altId: 3
-body.addEvent('click', event => body.element.classList.toggle('example'));
+body.addEvent("click", event => body.element.classList.toggle("example"));
 ```
 
 ### ANDROID: Public Methods
@@ -377,16 +382,16 @@ android.setViewModel(data: {}, sessionId?: string) // Object data for layout bin
 ```javascript
 // targetAPI: 0 - ALL, 30 - Android 11
 
-android.customize(squared.settings.targetAPI, 'Button', {
+android.customize(squared.settings.targetAPI, "Button", {
     android: {
-        minWidth: '35px',
-        minHeight: '25px'
+        minWidth: "35px",
+        minHeight: "25px"
     }
 });
 ```
 
 ```javascript
-android.addXmlNs('tools', 'http://schemas.android.com/tools');
+android.addXmlNs("tools", "http://schemas.android.com/tools");
 ```
 
 View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session.
@@ -396,26 +401,26 @@ Leaving the sessionId empty sets the default view model for the entire project.
 ```javascript
 // NOTE: latest(1 | -1 | undefined): string
 
-await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
+await squared.parseDocument(/* "mainview" */, /* "subview" */).then(() => {
     const sessions = squared.latest(2);
     android.setViewModel(
         {
-            import: ['java.util.Map', 'java.util.List'],
+            import: ["java.util.Map", "java.util.List"],
             variable: [
-                { name: 'user', type: 'com.example.User' },
-                { name: 'list', type: 'List&lt;String>' },
-                { name: 'map', type: 'Map&lt;String, String>' },
-                { name: 'index', type: 'int' },
-                { name: 'key', type: 'String' }
+                { name: "user", type: "com.example.User" },
+                { name: "list", type: "List&lt;String>" },
+                { name: "map", type: "Map&lt;String, String>" },
+                { name: "index", type: "int" },
+                { name: "key", type: "String" }
             ]
         },
         sessions[1] // Used when there are multiple layouts (optional)
     );
     android.setViewModel(
         {
-            import: ['java.util.Map'],
+            import: ["java.util.Map"],
             variable: [
-                { name: 'map', type: 'Map&lt;String, String>' }
+                { name: "map", type: "Map&lt;String, String>" }
             ]
         },
         sessions[0]
@@ -589,7 +594,7 @@ class Sample extends squared.base.Extension {
 }
 
 // Install an extension
-const sample = new Sample('your.namespace.sample', 0, {/* same as configure */});
+const sample = new Sample("your.namespace.sample", 0, {/* same as configure */});
 squared.add(sample);
 // OR
 squared.add([sample, {/* config */}]);

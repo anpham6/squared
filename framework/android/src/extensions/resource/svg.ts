@@ -738,7 +738,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public beforeCascadeRoot(processing: squared.base.AppProcessing<T>) {
-        this.enabled = this.application.getUserSetting<boolean>(processing, 'supportSVG');
+        this.enabled = this.application.getUserSetting<boolean>(processing, 'enabledSVG');
     }
 
     public afterResources(sessionId: string, resourceId: number) {

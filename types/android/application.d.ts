@@ -2,12 +2,12 @@ interface UserResourceSettingsUI {
     targetAPI: number;
     resolutionDPI: number;
     supportRTL: boolean;
+    enabledMultiline: boolean;
     compressImages: boolean;
     convertImages: string;
     baseLayoutAsFragment: boolean;
     customizationsOverwritePrivilege: boolean;
     convertPixels: string;
-    fontMeasureWrap: boolean;
     fontMeasureAdjust: number;
     lineHeightAdjust: number;
     manifestLabelAppName: string;
