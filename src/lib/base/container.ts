@@ -146,7 +146,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     public removeIf(predicate: IteratorPredicate<T, unknown>, options?: ContainerRemoveIfOptions<T>): T[] {
         let count: Undef<number>,
             cascade: Undef<boolean | IteratorPredicate<T, boolean>>,
-            also: Undef<BindGeneric<T, unknown>>,
+            also: Undef<FunctionSelf<T, unknown>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ count, cascade, also, error } = options);
@@ -240,7 +240,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
 
     public cascade(predicate?: IteratorPredicate<T, unknown>, options?: ContainerCascadeOptions<T>) {
         let count: Undef<number>,
-            also: Undef<BindGeneric<T, unknown>>,
+            also: Undef<FunctionSelf<T, unknown>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ count, also, error } = options);

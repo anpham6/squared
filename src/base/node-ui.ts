@@ -847,7 +847,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const template = renderTemplates[index];
                     if (template.node === this) {
                         let replaceWith: Undef<T>,
-                            beforeReplace: Undef<BindGeneric<Undef<T>, void>>;
+                            beforeReplace: Undef<FunctionBind<T>>;
                         if (options) {
                             ({ replaceWith, beforeReplace } = options);
                         }
@@ -859,7 +859,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                     const replaceIndex = replaceTemplates.findIndex(item => item.node === replaceWith);
                                     if (replaceIndex !== -1) {
                                         if (beforeReplace) {
-                                            beforeReplace(this, replaceWith);
+                                            beforeReplace.call(this, replaceWith);
                                         }
                                         renderChildren[index] = replaceWith;
                                         renderTemplates[index] = replaceTemplates[replaceIndex];
@@ -879,7 +879,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         else {
                             if (beforeReplace) {
-                                beforeReplace(this);
+                                beforeReplace.call(this);
                             }
                             renderChildren.splice(index, 1);
                             this.renderParent = null;

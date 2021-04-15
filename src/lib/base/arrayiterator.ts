@@ -28,10 +28,10 @@ export default class Iterator<T = any> implements squared.lib.base.ArrayIterator
         }
     }
 
-    public forEachRemaining(predicate: BindGeneric<T, void>) {
+    public forEachRemaining(predicate: FunctionSelf<T, void>) {
         const children = this.children;
         while (this.hasNext()) {
-            predicate(children[++this._index]);
+            predicate.call(this, children[++this._index]);
         }
     }
 }

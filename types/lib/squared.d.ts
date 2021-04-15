@@ -33,7 +33,7 @@ declare module "lib" {
             next(): Undef<T>;
             hasNext(): boolean;
             remove(): void;
-            forEachRemaining(predicate: BindGeneric<T, void>): void;
+            forEachRemaining(predicate: FunctionSelf<T, void>): void;
             constructor(children: T[]);
         }
 

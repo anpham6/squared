@@ -1756,7 +1756,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (options && !options.beforeReplace) {
                 const updating = options.replaceWith || options.alignSiblings;
                 if (updating) {
-                    options.beforeReplace = () => this.anchorClear(updating);
+                    options.beforeReplace = function(this: T) {
+                        this.anchorClear(updating);
+                    };
                 }
             }
             return super.removeTry(options);

@@ -1436,7 +1436,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return 0;
     }
 
-    public cssTry(attr: CssStyleAttr, value: string, callback?: FunctionSelf<this>) {
+    public cssTry(attr: CssStyleAttr, value: string, callback?: FunctionBind<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
             if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this.sessionId)) {
@@ -1450,7 +1450,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return false;
     }
 
-    public cssTryAll(values: CssStyleMap, callback?: FunctionSelf<this>) {
+    public cssTryAll(values: CssStyleMap, callback?: FunctionBind<this>) {
         if (this.styleElement) {
             const result: CssStyleMap = {};
             const sessionId = this.sessionId;

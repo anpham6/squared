@@ -155,7 +155,7 @@ interface ReplaceTryOptions<T> {
 interface RemoveTryOptions<T> {
     replaceWith?: T;
     alignSiblings?: boolean;
-    beforeReplace?: BindGeneric<Undef<T>, void>;
+    beforeReplace?: FunctionBind<T>;
 }
 
 interface HideOptions<T> extends RemoveTryOptions<T> {

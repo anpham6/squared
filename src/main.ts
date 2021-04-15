@@ -25,7 +25,7 @@ type File = squared.base.File<Node>;
 type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
-type ExtendPrototypeMap = ObjectMap<FunctionType<any> | { set?: (value: unknown) => void; get?: () => unknown }>;
+type ExtendPrototypeMap = ObjectMap<FunctionType | { set?: (value: unknown) => void; get?: () => unknown }>;
 type RootElement = squared.base.RootElement;
 
 const optionsQueue = new Map<string, PlainObject>();
@@ -48,7 +48,7 @@ function extendPrototype(id: number) {
             for (const method in functionMap) {
                 const item = functionMap[method];
                 if (util.isPlainObject(item)) {
-                    let property: Undef<ObjectMap<FunctionType<unknown>>>;
+                    let property: Undef<ObjectMap<FunctionType>>;
                     if (typeof item.set === 'function') {
                         (property ||= {}).set = item.set;
                     }
@@ -240,8 +240,7 @@ export function setFramework(value: Framework, options?: FrameworkOptions | stri
         file = main.fileHandler;
         extensionManager = main.extensionManager;
         mergeSettings(appBase.userSettings, main.systemName);
-        Object.assign(settings, appBase.userSettings);
-        main.userSettings = settings;
+        main.userSettings = Object.assign(settings, appBase.userSettings);
         main.setExtensions();
         extendPrototype(main.framework);
         framework = value;

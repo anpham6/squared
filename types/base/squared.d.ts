@@ -49,7 +49,7 @@ declare module "base" {
         base?: PlainObject;
         extensions?: PlainObject;
         lib?: PlainObject;
-        system?: ObjectMap<FunctionType<unknown>>;
+        system?: ObjectMap<FunctionType>;
         create(): AppBase<T>;
         cached(): AppBase<T>;
     }
@@ -441,8 +441,8 @@ declare module "base" {
         cssCopy(node: Node, ...attrs: CssStyleAttr[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: CssStyleAttr[]): void;
         cssPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
-        cssTry(attr: CssStyleAttr, value: string, callback?: FunctionSelf<this>): boolean;
-        cssTryAll(attrs: CssStyleMap, callback?: FunctionSelf<this>): CssStyleMap | boolean;
+        cssTry(attr: CssStyleAttr, value: string, callback?: FunctionBind<this>): boolean;
+        cssTryAll(attrs: CssStyleMap, callback?: FunctionBind<this>): CssStyleMap | boolean;
         cssFinally(attrs: CssStyleAttr | CssStyleMap): void;
         parseUnit(value: unknown, options?: NodeParseUnitOptions): number;
         convertUnit(value: unknown, unit?: string, options?: NodeConvertUnitOptions): string;

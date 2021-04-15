@@ -9,10 +9,10 @@ type MapOfType<T, U = any, V = any> = { [K in KeyOfType<T, U, V>]: K extends U ?
 type Constructor<T> = new(...args: any[]) => T;
 
 type IteratorPredicate<T, U, V = ArrayLike<T>> = (item: T, index: number, array: V) => U;
-type BindGeneric<T, U> = (item: T, ...args: unknown[]) => U;
 
-type FunctionType<T> = (...args: unknown[]) => T;
-type FunctionSelf<T, U = void> = (this: T, ...args: unknown[]) => U;
+type FunctionType<T = unknown> = (...args: unknown[]) => T;
+type FunctionBind<T, U = void> = (this: T, ...args: unknown[]) => U;
+type FunctionSelf<T, U> = (item: T, ...args: unknown[]) => U;
 type FunctionSort<T = unknown> = (a: T, b: T) => number;
 
 type NumString = number | string;
