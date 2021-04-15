@@ -483,7 +483,7 @@ export function isEqual(source: unknown, other: unknown) {
 }
 
 export function cloneObject<T>(data: T, options?: CloneObjectOptions<T>) {
-    let target: Undef<PlainObject | any[]>,
+    let target: Undef<PlainObject | unknown[]>,
         deep: Undef<boolean>;
     if (options) {
         ({ target, deep } = options);

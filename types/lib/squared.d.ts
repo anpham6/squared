@@ -2,7 +2,7 @@
 
 declare module "lib" {
     namespace base {
-        class Container<T = any> implements Iterable<T> {
+        class Container<T = unknown> implements Iterable<T> {
             children: T[];
             [Symbol.iterator](): Iterator<T>;
             item(index: number, value?: T): Undef<T>;
@@ -29,7 +29,7 @@ declare module "lib" {
             constructor(children?: T[]);
         }
 
-        class ArrayIterator<T = any> {
+        class ArrayIterator<T = unknown> {
             next(): Undef<T>;
             hasNext(): boolean;
             remove(): void;
@@ -37,14 +37,13 @@ declare module "lib" {
             constructor(children: T[]);
         }
 
-        class ListIterator<T = any> extends ArrayIterator<T> {
+        class ListIterator<T = unknown> extends ArrayIterator<T> {
             add(item: T): void;
             set(item: T): void;
             nextIndex(): number;
             hasPrevious(): boolean;
             previous(): Undef<T>;
             previousIndex(): number;
-            constructor(children: T[]);
         }
 
         class Pattern {

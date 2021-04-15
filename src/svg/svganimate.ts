@@ -49,8 +49,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const valueA = values[index];
         const valueB = values[index + 1];
         const checkOptions = (value: string) => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
-        let currentValue: Undef<any[]>,
-            nextValue: Undef<any[]>;
+        let currentValue: Undef<unknown[]>,
+            nextValue: Undef<unknown[]>;
         switch (attributeName) {
             case 'fill':
             case 'stroke': {

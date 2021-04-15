@@ -17,7 +17,7 @@ class Iter<T> implements Iterator<T> {
     }
 }
 
-export default class Container<T = any> implements squared.lib.base.Container<T>, Iterable<T> {
+export default class Container<T = unknown> implements squared.lib.base.Container<T>, Iterable<T> {
     constructor(public children: T[] = []) {}
 
     public [Symbol.iterator]() {
@@ -50,7 +50,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
     }
 
     public addAll(list: T[] | Container) {
-        this.children.push(...Array.isArray(list) ? list : list.children);
+        this.children.push(...Array.isArray(list) ? list : list.children as T[]);
         return this;
     }
 
@@ -78,7 +78,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
 
     public removeAll(list: T[] | Container) {
         if (!Array.isArray(list)) {
-            list = list.children;
+            list = list.children as T[];
         }
         const result: T[] = [];
         const children = this.children;
