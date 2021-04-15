@@ -195,3 +195,8 @@ interface LoadDataOptions {
     accept?: string;
     cache?: boolean;
 }
+
+interface NodeListAddOptions {
+    cascade?: boolean;
+    remove?: boolean;
+}

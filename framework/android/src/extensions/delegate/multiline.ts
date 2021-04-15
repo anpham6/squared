@@ -374,7 +374,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     parentContainer.setControlType(View.getControlName(CONTAINER_NODE.RELATIVE), CONTAINER_NODE.RELATIVE);
                     parentContainer.alignmentType = NODE_ALIGNMENT.HORIZONTAL;
                     if (hasTextIndent(node) || isNaN(breakable[0][0])) {
-                        application.getProcessingCache(sessionId).afterAdd!(parentContainer, true, true);
+                        application.getProcessingCache(sessionId).afterAdd!.call(parentContainer, { cascade: true });
                     }
                 }
             }

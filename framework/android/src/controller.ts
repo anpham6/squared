@@ -2082,7 +2082,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (childIndex !== undefined) {
             container.unsafe('childIndex', childIndex);
         }
-        this.application.getProcessingCache(node.sessionId).add(container, (flags & CREATE_NODE.DELEGATE) > 0, (flags & CREATE_NODE.CASCADE) > 0);
+        this.application.getProcessingCache(node.sessionId).add(container, flags & CREATE_NODE.DELEGATE ? { cascade: (flags & CREATE_NODE.CASCADE) > 0 } : undefined);
         return container;
     }
 

@@ -405,7 +405,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (~flags & CREATE_NODE.DEFER) {
-            cache.add(node, (flags & CREATE_NODE.DELEGATE) > 0, (flags & CREATE_NODE.CASCADE) > 0);
+            cache.add(node, flags & CREATE_NODE.DELEGATE ? { cascade: (flags & CREATE_NODE.CASCADE) > 0 } : undefined);
         }
         if (childIndex !== undefined) {
             node.unsafe('childIndex', childIndex);
@@ -900,13 +900,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         });
-        cache.afterAdd = (node: T, cascade?: boolean, remove?: boolean) => {
-            if (remove) {
-                deleteNode(node.depth, node);
+        cache.afterAdd = function(this: T, options: NodeListAddOptions) {
+            if (options.remove) {
+                deleteNode(this.depth, this);
             }
-            setMapDepth(-(node.depth + 2), node);
-            if (cascade && !node.isEmpty()) {
-                node.cascade((item: T) => {
+            setMapDepth(-(this.depth + 2), this);
+            if (options.cascade && !this.isEmpty()) {
+                this.cascade((item: T) => {
                     if (!item.isEmpty()) {
                         const depth = item.depth;
                         deleteNode(depth, item);

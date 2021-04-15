@@ -757,10 +757,11 @@ declare module "base" {
 
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
         sessionId: string;
-        afterAdd?: (node: T, cascade?: boolean, remove?: boolean) => void;
-        add(node: T, delegate?: boolean, cascade?: boolean, remove?: boolean): this;
+        resourceId: number;
+        afterAdd?: (this: T, options: NodeListAddOptions) => void;
+        add(node: T, options?: NodeListAddOptions): this;
         sort(predicate: FunctionSort<T>): this;
-        constructor(children?: T[], sessionId?: string);
+        constructor(children?: T[], sessionId?: string, resourceId?: number);
     }
 
     namespace extensions {

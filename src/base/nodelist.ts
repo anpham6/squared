@@ -1,18 +1,19 @@
 import type Node from './node';
 
 export default class NodeList<T extends Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
-    public afterAdd?: (node: T, cascade?: boolean, remove?: boolean) => void;
+    public afterAdd?: (this: T, options: NodeListAddOptions) => void;
 
     constructor(
         children?: T[],
-        public sessionId = '') {
+        public sessionId = '0',
+        public resourceId = -1) {
         super(children);
     }
 
-    public add(node: T, delegate?: boolean, cascade?: boolean, remove?: boolean) {
+    public add(node: T, options?: NodeListAddOptions) {
         super.add(node);
-        if (delegate && this.afterAdd) {
-            this.afterAdd(node, cascade, remove);
+        if (options && this.afterAdd) {
+            this.afterAdd.call(node, options);
         }
         return this;
     }
