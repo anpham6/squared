@@ -155,9 +155,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     })(values[name]);
                 }
                 if (nested.size) {
-                    for (const name of variables) {
-                        nested.add(name);
-                    }
+                    variables.forEach(name => nested.add(name));
                     variables = Array.from(nested);
                 }
             }

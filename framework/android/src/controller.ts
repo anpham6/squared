@@ -35,7 +35,7 @@ const { getElementsBetweenSiblings, getSrcSet } = squared.base.lib.dom;
 const { assignEmptyValue, parseMimeType } = squared.base.lib.util;
 
 const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
-const REGEXP_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+(?:[a-z]+)?)\s+(-?[\d.]+(?:[a-z]+)?)\s*([\d.]+(?:[a-z]+)?)?/;
+let REGEXP_TEXTSHADOW: RegExp;
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
@@ -507,9 +507,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 CONTAINER_TAGNAME.LINEAR,
                 CONTAINER_TAGNAME.GRID,
                 CONTAINER_TAGNAME.RELATIVE,
+                CONTAINER_TAGNAME.CONSTRAINT,
+                CONTAINER_TAGNAME.FRAGMENT,
                 CONTAINER_TAGNAME.HORIZONTAL_SCROLL,
                 CONTAINER_TAGNAME.VERTICAL_SCROLL,
-                CONTAINER_TAGNAME.CONSTRAINT,
+                CONTAINER_TAGNAME_X.FRAGMENT,
                 CONTAINER_TAGNAME_X.VERTICAL_SCROLL,
                 CONTAINER_TAGNAME_X.CONSTRAINT,
                 SUPPORT_TAGNAME.DRAWER,
@@ -680,9 +682,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public finalize(layouts: FileAsset[]) {
         const insertSpaces = this.application.userSettings.insertSpaces;
-        for (const layout of layouts) {
-            layout.content = replaceTab(replaceAll(layout.content!, '{#0}', getRootNs(layout.content!), 1), insertSpaces, '', '\n');
-        }
+        layouts.forEach(layout => layout.content = replaceTab(replaceAll(layout.content!, '{#0}', getRootNs(layout.content!), 1), insertSpaces, '', '\n'));
     }
 
     public processUnknownParent(layout: LayoutUI<T>) {
@@ -1713,7 +1713,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const textShadow = node.cssValue('textShadow');
                 if (textShadow) {
-                    const match = REGEXP_TEXTSHADOW.exec(textShadow);
+                    const match = (REGEXP_TEXTSHADOW ||= /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]*)\s+(-?[\d.]+[a-z]*)\s*([\d.]+[a-z]*)?/).exec(textShadow);
                     if (match) {
                         const colorData = parseColor(match[1] || node.css('color'));
                         if (colorData) {
@@ -1836,19 +1836,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case CONTAINER_TAGNAME.EDIT:
                 if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     const id = node.elementId;
-                    [node.previousSibling, node.nextSibling].some((sibling: T) => {
+                    for (const sibling of [node.previousSibling, node.nextSibling] as Null<T>[]) {
                         if (sibling && sibling.visible && sibling.pageFlow) {
                             if (id && id === sibling.toElementString('htmlFor')) {
                                 sibling.android('labelFor', node.documentId);
-                                return true;
+                                break;
                             }
                             else if (sibling.textElement && sibling.documentParent.tagName === 'LABEL') {
                                 (sibling.documentParent as T).android('labelFor', node.documentId);
-                                return true;
+                                break;
                             }
                         }
-                        return false;
-                    });
+                    }
                 }
                 if ((node.element as HTMLInputElement).list?.children.length) {
                     controlName = CONTAINER_TAGNAME.EDIT_LIST;
@@ -2092,7 +2091,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             parent,
             children,
             innerWrapped: node,
-            flags: CREATE_NODE.DELEGATE | (flags & CREATE_NODE.CASCADE || children && children.length > 0 && !node.rootElement ? CREATE_NODE.CASCADE : 0)
+            flags: CREATE_NODE.DELEGATE | (flags & CREATE_NODE.CASCADE || children && children.length && !node.rootElement ? CREATE_NODE.CASCADE : 0)
         });
         container.inherit(node, 'base', 'alignment');
         container.actualParent = parent.naturalElement ? parent : node.actualParent;
@@ -2235,19 +2234,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 };
                 const createNewRow = (item: T, floating: boolean) => {
                     if (currentFloated) {
-                        items = [item];
-                        rows.push(items);
+                        rows.push(items = [item]);
                     }
                     else if (floating) {
-                        items = [];
-                        rows = [items];
-                        rowsAll.push([item, rows, true]);
+                        rowsAll.push([item, rows = [items = []], true]);
                         setCurrentFloated(item);
                     }
                     else {
                         items = [item];
-                        rows = [items];
-                        rowsAll.push([undefined, rows, false]);
+                        rowsAll.push([undefined, rows = [items], false]);
                     }
                     rowWidth = baseWidth;
                 };
@@ -3400,18 +3395,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (k > 0) {
                             const previous = seg[k - 1];
                             if (!previous.pageFlow && previous.autoPosition) {
-                                let found: Undef<T>;
-                                for (let l = k - 2; l >= 0; --l) {
+                                let l = k - 2;
+                                for ( ; l >= 0; --l) {
                                     const item = seg[l];
                                     if (item.pageFlow) {
-                                        found = item;
+                                        chain.anchor(chainStart, item.documentId);
                                         break;
                                     }
                                 }
-                                if (found) {
-                                    chain.anchor(chainStart, found.documentId);
-                                }
-                                else if (!chain.constraint.horizontal) {
+                                if (l === -1 && !chain.constraint.horizontal) {
                                     chain.anchor(anchorStart, 'parent');
                                 }
                             }

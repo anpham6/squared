@@ -15,7 +15,7 @@ const { delimitString, splitSome } = squared.lib.util;
 const { getTextMetrics } = squared.base.lib.dom;
 const { lowerCaseString, upperCaseString } = squared.base.lib.util;
 
-const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+(?:[a-z]+)?))?/;
+const REGEXP_FONTVARIATION = /oblique(?:\s+(-?[\d.]+[a-z]*))?/;
 
 function getFontVariationStyle(value: string) {
     if (value === 'italic') {

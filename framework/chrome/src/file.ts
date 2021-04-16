@@ -302,9 +302,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     public static setDocumentId(node: XmlTagNode, element: HTMLElement, document: Undef<StringOfArray>, format?: string) {
         if (Array.isArray(document)) {
-            for (const name of document) {
-                setUUID(node, element, name, format);
-            }
+            document.forEach(name => setUUID(node, element, name, format));
         }
         else if (document) {
             setUUID(node, element, document, format);

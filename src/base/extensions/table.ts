@@ -343,11 +343,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 else if (width > node.width) {
                     node.css('width', 'auto');
                     if (!layoutFixed) {
-                        for (const tr of table) {
-                            for (const td of tr) {
-                                td.css('width', 'auto');
-                            }
-                        }
+                        table.forEach(tr => tr.each(td => td.css('width', 'auto')));
                     }
                 }
             }

@@ -50,10 +50,6 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     }
                     const r = keys.length;
                     if (r > 1) {
-                        style &&= style.substring(style.indexOf('/') + 1, style.length - 1);
-                        if (style) {
-                            style += '.';
-                        }
                         const items: StringValue[] = [];
                         const attrs: string[] = [];
                         for (let j = 0; j < r; ++j) {
@@ -63,6 +59,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 attrs.push(match[2]);
                             }
                         }
+                        style &&= style.substring(style.indexOf('/') + 1, style.length - 1) + '.';
                         const name = style + capitalize(rendered[i].controlId || 'unknown');
                         items.sort((a, b) => a.key < b.key ? -1 : 1);
                         styles.set(name, { name, parent: '', items } as StyleAttribute);

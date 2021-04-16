@@ -119,14 +119,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     const precision = this.viewport?.precision;
                     switch (item.tagName.toLowerCase()) {
                         case 'set':
-                            for (const time of times) {
-                                addAnimation(new SvgAnimation(element, item), time);
-                            }
+                            times.forEach(time => addAnimation(new SvgAnimation(element, item), time));
                             break;
                         case 'animate':
-                            for (const time of times) {
-                                addAnimation(new SvgAnimate(element, item as SVGAnimateElement), time);
-                            }
+                            times.forEach(time => addAnimation(new SvgAnimate(element, item as SVGAnimateElement), time));
                             break;
                         case 'animatetransform':
                             for (const time of times) {

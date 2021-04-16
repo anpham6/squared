@@ -189,9 +189,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public reset() {
         this.controllerHandler.reset();
         this.resourceHandler?.reset();
-        for (const ext of this.extensions) {
-            ext.reset();
-        }
+        this.extensions.forEach(ext => ext.reset());
         this.closed = false;
     }
 
@@ -976,9 +974,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 ext.enabled = true;
             }
             if (disabled) {
-                for (const ext of disabled) {
-                    ext.enabled = false;
-                }
+                disabled.forEach(ext => ext.enabled = false);
             }
         }
         if (removeStyle) {

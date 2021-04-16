@@ -333,9 +333,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                                     };
                                     item.tasks ||= [];
                                     if (Array.isArray(value)) {
-                                        for (const task of value) {
-                                            addTask(task);
-                                        }
+                                        value.forEach(task => addTask(task));
                                     }
                                     else if (isPlainObject(value)) {
                                         addTask(value);

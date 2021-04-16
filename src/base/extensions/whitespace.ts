@@ -311,9 +311,7 @@ function resetBox(node: NodeUI, region: number, register?: NodeUI, wrapper?: Nod
         node.registerBox(region, register);
     }
     if (wrapper) {
-        for (const parent of wrapper) {
-            parent.setBox(region, { reset: 1 });
-        }
+        wrapper.forEach(parent => parent.setBox(region, { reset: 1 }));
     }
 }
 
@@ -377,9 +375,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
                                                     if (nearest!.marginBottom > 0 && current.bounds.top < previousBottom) {
                                                         if (nearest!.marginBottom < current.marginTop) {
-                                                            for (const sibling of aboveFloating) {
-                                                                resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
-                                                            }
+                                                            aboveFloating.forEach(sibling => resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM));
                                                         }
                                                         else if (current.marginTop > 0) {
                                                             resetBox(current, BOX_STANDARD.MARGIN_TOP);

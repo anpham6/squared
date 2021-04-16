@@ -69,9 +69,7 @@ function extendPrototype(id: number) {
 function loadExtensions() {
     if (extensionManager) {
         if (extensionCache.length) {
-            for (const item of extensionCache) {
-                extensionManager.cache.add(item);
-            }
+            extensionCache.forEach(item => extensionManager!.cache.add(item));
             extensionCache = [];
         }
         if (addQueue.length) {

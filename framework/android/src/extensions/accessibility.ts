@@ -49,7 +49,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                             case 'checkbox':
                                 if (!node.rightAligned && !node.centerAligned) {
                                     const id = node.elementId;
-                                    [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
+                                    for (const sibling of [node.previousSibling, node.nextSibling] as Null<T>[]) {
                                         if (sibling && sibling.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
                                             let valid: Undef<boolean>;
                                             if (id && id === sibling.toElementString('htmlFor')) {
@@ -76,11 +76,10 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                                         node.css('width', 'auto', true);
                                                     }
                                                 }
-                                                return true;
+                                                break;
                                             }
                                         }
-                                        return false;
-                                    });
+                                    }
                                 }
                                 break;
                         }
