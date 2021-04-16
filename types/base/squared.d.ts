@@ -893,6 +893,7 @@ declare module "base" {
         namespace css {
             function parseKeyframes(rules: CSSRuleList): Null<KeyframeData>;
             function getKeyframesRules(documentRoot?: DocumentOrShadowRoot): KeyframesMap;
+            function parseTransform(value: string, options?: TransformOptions): TransformData[];
         }
 
         namespace dom {

@@ -166,7 +166,6 @@ declare module "lib" {
         function getStyle(element: Element, pseudoElt?: PseudoElt): CSSStyleDeclaration;
         function getRemSize(fixedWidth?: boolean): number;
         function getFontSize(element: Element): number;
-        function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value?: string): StringOfArray;
         function checkStyleValue(element: StyleElement, attr: string, value: string): string;
         function calculateAll(value: string, options?: CalculateOptions): number;
@@ -178,7 +177,6 @@ declare module "lib" {
         function calculateUnit(value: string, options?: CalculateOptions): number;
         function parseUnit(value: string, options?: ParseUnitOptions): number;
         function convertUnit(value: NumString, unit?: string, options?: ConvertUnitOptions): string;
-        function parseTransform(value: string, options?: TransformOptions): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
         function convertAngle(value: string, unit?: string, fallback?: number): number;
         function parseTime(value: string): number;

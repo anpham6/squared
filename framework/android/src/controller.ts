@@ -25,12 +25,13 @@ import NodeUI = squared.base.NodeUI;
 import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor, replaceTab } from './lib/util';
 
 const { isPlatform, isUserAgent } = squared.lib.client;
-const { asPercent, formatPX, getStyle, hasCoords, parseTransform } = squared.lib.css;
+const { asPercent, formatPX, getStyle, hasCoords } = squared.lib.css;
 const { getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
 
+const { parseTransform } = squared.base.lib.css;
 const { getElementsBetweenSiblings, getSrcSet } = squared.base.lib.dom;
 const { assignEmptyValue, parseMimeType } = squared.base.lib.util;
 

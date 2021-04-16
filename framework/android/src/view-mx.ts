@@ -20,11 +20,12 @@ const { CSS_PROPERTIES } = squared.lib.internal;
 const { NODE_PROCEDURE } = squared.base.lib.constant;
 
 const { isUserAgent } = squared.lib.client;
-const { asPercent, formatPX, isLength, isPercent, parseTransform } = squared.lib.css;
+const { asPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, safeFloat, splitPair, startsWith } = squared.lib.util;
 
+const { parseTransform } = squared.base.lib.css;
 const { parseTask, parseWatchInterval } = squared.base.lib.internal;
 
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
