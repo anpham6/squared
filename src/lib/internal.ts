@@ -1364,6 +1364,14 @@ export const PROXY_INLINESTYLE = Object.freeze(
     })
 );
 
+export const CSS_BORDER_SET = [
+    CSS_PROPERTIES.borderTop!.value as string[],
+    CSS_PROPERTIES.borderRight!.value as string[],
+    CSS_PROPERTIES.borderBottom!.value as string[],
+    CSS_PROPERTIES.borderLeft!.value as string[],
+    CSS_PROPERTIES.outline!.value as string[]
+];
+
 export function updateDocumentFont() {
     const element = document.documentElement;
     const style = getComputedStyle(element);

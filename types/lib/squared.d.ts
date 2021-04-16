@@ -225,6 +225,7 @@ declare module "lib" {
     namespace internal {
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;
+        const CSS_BORDER_SET: CssStyleAttr[][];
         function updateDocumentFont(): void;
         function getDocumentFontSize(): number;
         function convertFontSize(value: string, fixedWidth?: boolean): string;

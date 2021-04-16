@@ -5,7 +5,7 @@ import STYLE_STATE = squared.lib.internal.STYLE_STATE;
 
 type T = Node;
 
-const { CSS_PROPERTIES, PROXY_INLINESTYLE, convertFontSize, getInitialValue, parseSelectorText } = squared.lib.internal;
+const { CSS_BORDER_SET, CSS_PROPERTIES, PROXY_INLINESTYLE, convertFontSize, getInitialValue, parseSelectorText } = squared.lib.internal;
 const { CSS, FILE } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
@@ -32,11 +32,7 @@ const TEXT_STYLE: CssStyleAttr[] = [
     'wordSpacing'
 ];
 
-const BORDER_TOP = CSS_PROPERTIES.borderTop!.value as string[];
-const BORDER_RIGHT = CSS_PROPERTIES.borderRight!.value as string[];
-const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom!.value as string[];
-const BORDER_LEFT = CSS_PROPERTIES.borderLeft!.value as string[];
-const BORDER_OUTLINE = CSS_PROPERTIES.outline!.value as string[];
+const [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT, BORDER_OUTLINE] = CSS_BORDER_SET;
 
 const REGEXP_EM = /\dem$/i;
 const REGEXP_NOT = /^:not\((.+)\)$/i;

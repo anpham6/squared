@@ -291,22 +291,22 @@ export function parseTransform(value: string, options?: TransformOptions) {
         else if (startsWith(method, 'matrix')) {
             const matrix = TRANSFORM.MATRIX.exec(transform);
             if (matrix) {
-                let length: number;
+                let args: number;
                 if (method === 'matrix') {
                     if (matrix[8]) {
                         continue;
                     }
-                    length = 6;
+                    args = 6;
                 }
                 else {
                     if (!matrix[17]) {
                         continue;
                     }
-                    length = 16;
+                    args = 16;
                 }
-                const values = new Array(length);
-                for (let i = 0; i < length; ++i) {
-                    values[i] = +matrix[i + 2];
+                const values = new Array(args);
+                for (let j = 0; j < args; ++j) {
+                    values[j] = +matrix[j + 2];
                 }
                 result.push({ group: method, method, values });
             }

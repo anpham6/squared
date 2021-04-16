@@ -13,7 +13,7 @@ import { searchObject } from './lib/util';
 
 type T = NodeUI;
 
-const { CSS_PROPERTIES } = squared.lib.internal;
+const { CSS_BORDER_SET, CSS_PROPERTIES } = squared.lib.internal;
 
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
@@ -665,16 +665,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             --properties.length;
                         }
                         if (this.borderTopWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderTop!.value as CssStyleAttr[]);
+                            properties.push(...CSS_BORDER_SET[0]);
                         }
                         if (this.borderRightWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderRight!.value as CssStyleAttr[]);
+                            properties.push(...CSS_BORDER_SET[1]);
                         }
                         if (this.borderBottomWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderBottom!.value as CssStyleAttr[]);
+                            properties.push(...CSS_BORDER_SET[2]);
                         }
                         if (this.borderLeftWidth === 0) {
-                            properties.push(...CSS_PROPERTIES.borderLeft!.value as CssStyleAttr[]);
+                            properties.push(...CSS_BORDER_SET[3]);
                         }
                         if (this.cssAny('backgroundColor', ['none', 'transparent', 'rgba(0, 0, 0, 0)'])) {
                             properties.push('backgroundColor');

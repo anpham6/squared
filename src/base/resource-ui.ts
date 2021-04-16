@@ -12,7 +12,7 @@ import { CSS, STRING } from './lib/regex';
 
 import { appendSeparator, generateUUID } from './lib/util';
 
-const { CSS_PROPERTIES } = squared.lib.internal;
+const { CSS_BORDER_SET } = squared.lib.internal;
 const { TAG_ATTR, TAG_OPEN } = squared.lib.regex.STRING;
 
 const { isUserAgent } = squared.lib.client;
@@ -23,11 +23,7 @@ const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, 
 const { getElementAsNode } = squared.lib.session;
 const { convertBase64, convertCamelCase, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, replaceAll, splitPair, startsWith } = squared.lib.util;
 
-const BORDER_TOP = CSS_PROPERTIES.borderTop!.value as string[];
-const BORDER_RIGHT = CSS_PROPERTIES.borderRight!.value as string[];
-const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom!.value as string[];
-const BORDER_LEFT = CSS_PROPERTIES.borderLeft!.value as string[];
-const BORDER_OUTLINE = CSS_PROPERTIES.outline!.value as string[];
+const [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT, BORDER_OUTLINE] = CSS_BORDER_SET;
 
 const REGEXP_COLORSTOP = new RegExp(STRING.CSS_COLORSTOP, 'g');
 const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
@@ -204,7 +200,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     return result;
 }
 
-function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: "borderTop" | "borderRight" | "borderBottom" | "borderLeft" | "outline", border: string[]) {
+function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: "borderTop" | "borderRight" | "borderBottom" | "borderLeft" | "outline", border: CssStyleAttr[]) {
     let width = node[border[0]] as number;
     if (width > 0) {
         const style = node.css(border[1] as CssStyleAttr) || 'solid';

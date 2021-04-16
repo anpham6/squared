@@ -11,7 +11,7 @@ import Controller from './controller';
 
 import { trimEnd } from './lib/util';
 
-const { CSS_PROPERTIES } = squared.lib.internal;
+const { CSS_BORDER_SET } = squared.lib.internal;
 
 const { isUserAgent } = squared.lib.client;
 const { formatPX, getFontSize, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
@@ -19,12 +19,6 @@ const { getParentElement, withinViewport } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { iterateArray } = squared.lib.util;
 
-const BORDER_BOX = [
-    CSS_PROPERTIES.borderTop!.value as string[],
-    CSS_PROPERTIES.borderRight!.value as string[],
-    CSS_PROPERTIES.borderBottom!.value as string[],
-    CSS_PROPERTIES.borderLeft!.value as string[]
-];
 const CACHE_INDENT: StringMap = {};
 
 function pushIndent(value: string, depth: number, indent = '\t'.repeat(depth)) {
@@ -775,7 +769,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     protected setBorderStyle(style: CssStyleMap, borderWidth: string, borderStyle: string, borderColor: string) {
         let result = false;
         for (let i = 0; i < 4; ++i) {
-            const border = BORDER_BOX[i];
+            const border = CSS_BORDER_SET[i];
             const attr = border[0];
             if (!style[attr]) {
                 style[attr] = borderWidth;
