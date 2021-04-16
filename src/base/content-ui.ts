@@ -9,8 +9,7 @@ export default class ContentUI<T extends NodeUI> implements squared.base.Content
         public parent: T,
         public node: T,
         public containerType = 0,
-        public alignmentType = 0)
-    {
+        public alignmentType = 0) {
     }
 
     set itemCount(value) {}

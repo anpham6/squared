@@ -282,6 +282,7 @@ declare namespace lib {
             WEBVIEW: string;
             VIDEOVIEW: string;
             RADIOGROUP: string;
+            FRAGMENT: string;
             HORIZONTAL_SCROLL: string;
             VERTICAL_SCROLL: string;
             CONSTRAINT: string;
@@ -289,6 +290,7 @@ declare namespace lib {
             BARRIER: string;
         };
         const CONTAINER_TAGNAME_X: {
+            FRAGMENT: string;
             VERTICAL_SCROLL: string;
             CONSTRAINT: string;
             GUIDELINE: string;

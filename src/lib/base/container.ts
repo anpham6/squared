@@ -7,8 +7,7 @@ class Iter<T> implements Iterator<T> {
 
     constructor(
         public readonly children: T[],
-        public readonly length = children.length)
-    {
+        public readonly length = children.length) {
     }
 
     public next() {
