@@ -12,10 +12,6 @@ const { FILE, STRING } = squared.lib.regex;
 const { extractURL, resolveURL } = squared.lib.css;
 const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
-const REGEXP_FONTFACE = /@font-face\s*{([^}]+)}/;
-const REGEXP_FONTFAMILY = /font-family:\s*([^;]+);/;
-const REGEXP_FONTSTYLE = /font-style:\s*(\w+)\s*;/;
-const REGEXP_FONTWEIGHT = /font-weight:\s*(\d+)\s*;/;
 const REGEXP_FONTURL = /(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)\s*(?:format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
 const REGEXP_DATAURI = new RegExp(`^(?:^|\\s+)${STRING.DATAURI}(?:$|\\s+)$`);
 
@@ -187,17 +183,41 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public parseFontFace(resourceId: number, cssText: string, styleSheetHref?: Null<string>) {
-        const value = REGEXP_FONTFACE.exec(cssText)?.[1];
-        if (value) {
-            let fontFamily = REGEXP_FONTFAMILY.exec(value)?.[1].trim();
-            if (fontFamily) {
-                const fontStyle = REGEXP_FONTSTYLE.exec(value)?.[1].toLowerCase() || 'normal';
-                const fontWeight = +(REGEXP_FONTWEIGHT.exec(value)?.[1] || '400');
+        const fontFace = splitEnclosing(cssText, '', '', '{', '}')[1];
+        if (fontFace) {
+            const fontMap: StringMap = {};
+            const items = fontFace.substring(1, fontFace.length - 1).trim().split(';');
+            for (let i = 0, length = items.length - 1; i < length; ++i) {
+                const [attr, value] = splitPair(items[i], ':', true);
+                fontMap[attr] = value;
+            }
+            let fontFamily = fontMap['font-family'];
+            if (fontMap.src && fontFamily) {
+                const style = fontMap['font-style'];
+                const weight = fontMap['font-weight'];
+                const fontStyle = style || 'normal';
+                let fontWeight = 400;
+                if (weight) {
+                    switch (weight) {
+                        case 'normal':
+                            break;
+                        case 'lighter':
+                            fontWeight = 100;
+                            break;
+                        case 'bold':
+                        case 'bolder':
+                            fontWeight = 700;
+                            break;
+                        default:
+                            fontWeight = +weight || 400;
+                            break;
+                    }
+                }
                 fontFamily = trimBoth(fontFamily);
                 let match: Null<RegExpExecArray>;
-                while (match = REGEXP_FONTURL.exec(value)) {
+                while (match = REGEXP_FONTURL.exec(fontFace)) {
                     const url = (match[2] || match[3] || match[4]).trim();
-                    let srcFormat = match[5] ? match[5].toLowerCase() : '',
+                    let srcFormat = match[5],
                         mimeType = '',
                         srcLocal: Undef<string>,
                         srcUrl: Undef<string>,

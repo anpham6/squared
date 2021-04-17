@@ -1190,13 +1190,11 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             if (!isNumber(fontWeight)) {
                 switch (fontWeight) {
                     case 'lighter':
-                        fontWeight = '200';
+                    case 'bolder':
+                        fontWeight = node.style.fontWeight;
                         break;
                     case 'bold':
                         fontWeight = '700';
-                        break;
-                    case 'bolder':
-                        fontWeight = '900';
                         break;
                     default:
                         fontWeight = '400';
