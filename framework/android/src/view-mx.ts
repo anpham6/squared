@@ -2110,7 +2110,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return true;
         }
 
-        public combine(...objs: string[]) {
+        public combine(...objs: [boolean?, ...string[]]) {
             const all = objs.length === 0;
             const result: string[] = [];
             let id: Undef<string>,
@@ -2166,7 +2166,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
-            result.sort((a, b) => a > b ? 1 : -1);
+            if (objs[0] !== false) {
+                result.sort((a, b) => a > b ? 1 : -1);
+            }
             if (requireId) {
                 result.unshift(`android:id="${id || `@+id/${this.controlId}`}"`);
             }

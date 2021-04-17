@@ -2,9 +2,7 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
-const { capitalize, startsWith } = squared.lib.util;
-
-const REGEXP_STYLEATTR = /(\w+:(\w+))="([^"]+)"/;
+const { capitalize, splitPair, splitPairEnd, startsWith } = squared.lib.util;
 
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -17,57 +15,57 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                 const children = rendered[i].renderChildren;
                 const q = children.length;
                 if (q > 1) {
-                    const attrMap: ObjectMap<number> = {};
-                    let style = '';
+                    let keys!: string[],
+                        r = 0,
+                        style = '';
                     for (let j = 0; j < q; ++j) {
                         const item = children[j] as T;
-                        const combined = item.combine('_', 'android');
-                        let found: Undef<boolean>;
-                        for (let k = 0, r = combined.length; k < r; ++k) {
-                            const value = combined[k];
-                            if (!found && startsWith(value, 'style=')) {
-                                if (j === 0) {
-                                    style = value;
-                                }
-                                else if (!style || value !== style) {
-                                    break next;
-                                }
-                                found = true;
+                        const unnamed = item.combine(false, '_').find(attr => startsWith(attr, 'style='));
+                        if (unnamed) {
+                            if (j === 0) {
+                                style = unnamed;
                             }
-                            else {
-                                attrMap[value] = (attrMap[value] || 0) + 1;
+                            else if (!style || unnamed !== style) {
+                                break next;
                             }
                         }
-                        if (!found && style) {
+                        else if (style) {
                             break next;
                         }
-                    }
-                    const keys: string[] = [];
-                    for (const attr in attrMap) {
-                        if (attrMap[attr] === q) {
-                            keys.push(attr);
+                        const items = item.combine(false, 'android');
+                        if (j === 0) {
+                            keys = items;
                         }
-                    }
-                    const r = keys.length;
-                    if (r > 1) {
-                        const items: StringValue[] = [];
-                        const attrs: string[] = [];
-                        for (let j = 0; j < r; ++j) {
-                            const match = REGEXP_STYLEATTR.exec(keys[j]);
-                            if (match) {
-                                items.push({ key: match[1], value: match[3] });
-                                attrs.push(match[2]);
+                        else {
+                            r = keys.length;
+                            for (let k = 0; k < r; ++k) {
+                                if (!items.includes(keys[k])) {
+                                    keys.splice(k--, 1);
+                                    if (--r <= 1) {
+                                        break next;
+                                    }
+                                }
                             }
                         }
-                        style &&= style.substring(style.indexOf('/') + 1, style.length - 1) + '.';
-                        const name = style + capitalize(rendered[i].controlId || 'unknown');
-                        items.sort((a, b) => a.key < b.key ? -1 : 1);
-                        styles.set(name, { name, parent: '', items } as StyleAttribute);
-                        for (let j = 0; j < q; ++j) {
-                            const item = children[j];
-                            item.attr('_', 'style', `@style/${name}`);
-                            item.delete('android', ...attrs);
+                    }
+                    const items: StringValue[] = [];
+                    const attrs: string[] = [];
+                    for (let j = 0; j < r; ++j) {
+                        const [key, trailing] = splitPair(keys[j], '=');
+                        const attr = splitPairEnd(key, ':');
+                        if (attr) {
+                            items.push({ key, value: trailing.substring(1, trailing.length - 1) });
+                            attrs.push(attr);
                         }
+                    }
+                    style &&= style.substring(style.indexOf('/') + 1, style.length - 1) + '.';
+                    const name = style + capitalize(rendered[i].controlId || 'unknown');
+                    items.sort((a, b) => a.key < b.key ? -1 : 1);
+                    styles.set(name, { name, parent: '', items } as StyleAttribute);
+                    for (let j = 0; j < q; ++j) {
+                        const item = children[j];
+                        item.attr('_', 'style', `@style/${name}`);
+                        item.delete('android', ...attrs);
                     }
                 }
             }

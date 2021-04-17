@@ -88,7 +88,7 @@ declare namespace base {
         anchorDelete(...position: AnchorPositionAttr[]): void;
         anchorClear(update?: View | true): void;
         supported(attr: string, value: string, result: PlainObject): boolean;
-        combine(...objs: string[]): string[];
+        combine(...objs: [boolean?, ...string[]]): string[];
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;
         setSingleLine(maxLines: boolean, ellipsize?: boolean): void;
