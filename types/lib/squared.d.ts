@@ -351,6 +351,7 @@ declare module "lib" {
         function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;
         function resolvePath(value: string, href?: Null<string>): string;
         function replaceAll(value: string, searchValue: string, replaceWith: string, replaceCount?: number): string;
+        function replaceChar(value: string, char: string, charAs: string): string;
         function escapePattern(value: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function startsWith(value: unknown, leading: string): boolean;

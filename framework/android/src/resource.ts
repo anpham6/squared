@@ -8,7 +8,7 @@ import { concatString, parseColor } from './lib/util';
 const { PROTOCOL } = squared.lib.regex.FILE;
 
 const { extractURL } = squared.lib.css;
-const { fromLastIndexOf, isPlainObject, isString, padStart, resolvePath, splitPairStart, startsWith } = squared.lib.util;
+const { fromLastIndexOf, isPlainObject, isString, padStart, replaceChar, resolvePath, splitPairStart, startsWith } = squared.lib.util;
 
 const { getSrcSet } = squared.base.lib.dom;
 const { trimString } = squared.base.lib.util;
@@ -85,7 +85,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             appTheme = '';
         if (output) {
             if (output.pathname) {
-                pathname = trimString(output.pathname.replace(/\\/g, '/'), '/');
+                pathname = trimString(replaceChar(output.pathname, '\\', '/'), '/');
             }
             if (output.filename) {
                 filename = output.filename;

@@ -41,6 +41,8 @@ Option #1 - [Node.js](http://www.nodejs.org)
 #### GitHub &amp; NPM
 
 ```xml
+<!-- npm run express-rw (read/write) -->
+
 > squared.settings.[json|yml] (configure)  
 > node serve.js [--help]
 

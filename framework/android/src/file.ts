@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, splitSome, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, replaceAll, replaceChar, splitSome, resolvePath } = squared.lib.util;
 
 const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
@@ -107,7 +107,7 @@ function getRawAssets(this: Resource<View>, resourceId: number, name: ResourceRa
 }
 
 const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
-const getOutputDirectory = (value: string) => (value = value.replace(/\\/g, '/')) + (lastItemOf(value) !== '/' ? '/' : '');
+const getOutputDirectory = (value: string) => (value = replaceChar(value, '\\', '/')) + (lastItemOf(value) !== '/' ? '/' : '');
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
@@ -335,7 +335,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     }
                     if (itemArray.length) {
                         const value = applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]);
-                        result.push(replaceTab(convertPixels === 'dp' ? value.replace(/>(-?[\d.]+)px</g, (...capture: string[]) => `>${capture[1]}dp<`) : value, insertSpaces), match[1], match[2]);
+                        result.push(replaceTab(convertPixels === 'dp' ? replaceAll(value, 'px<', 'dp<') : value, insertSpaces), match[1], match[2]);
                     }
                 }
             }
@@ -369,7 +369,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = new Array(length * 3);
         let i = 0;
         for (const data of stored.drawables) {
-            result[i++] = replaceTab(convertPixels === 'dp' ? data[1].replace(/"(-?[\d.]+)px"/g, (...match: string[]) => `"${match[1]}dp"`) : data[1], insertSpaces);
+            result[i++] = replaceTab(convertPixels === 'dp' ? replaceAll(data[1], 'px"', 'dp"') : data[1], insertSpaces);
             result[i++] = directory;
             result[i++] = data[0] + '.xml';
         }

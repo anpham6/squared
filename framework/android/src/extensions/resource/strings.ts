@@ -10,7 +10,7 @@ import { replaceCharacterData, sanitizeString } from '../../lib/util';
 
 const { asPercent, parseAngle } = squared.lib.css;
 const { clamp } = squared.lib.math;
-const { delimitString, splitSome } = squared.lib.util;
+const { delimitString, replaceChar, splitSome } = squared.lib.util;
 
 const { getTextMetrics } = squared.base.lib.dom;
 const { lowerCaseString, upperCaseString } = squared.base.lib.util;
@@ -296,12 +296,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }, fontFeature);
                             }
                             if (node.has('fontVariationSettings' as CssStyleAttr)) {
-                                splitSome(node.cssValue('fontVariationSettings' as CssStyleAttr).replace(/"/g, "'"), variant => {
+                                splitSome(replaceChar(node.cssValue('fontVariationSettings' as CssStyleAttr), '"', "'"), variant => {
                                     fontVariation = delimitString(fontVariation, variant);
                                 });
                             }
                             if (node.has('fontFeatureSettings')) {
-                                splitSome(node.cssValue('fontFeatureSettings').replace(/"/g, "'"), feature => {
+                                splitSome(replaceChar(node.cssValue('fontFeatureSettings'), '"', "'"), feature => {
                                     fontFeature = delimitString(fontFeature, feature);
                                 });
                             }

@@ -49,7 +49,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                             case 'checkbox':
                                 if (!node.rightAligned && !node.centerAligned) {
                                     const id = node.elementId;
-                                    for (const sibling of [node.previousSibling, node.nextSibling] as Null<T>[]) {
+                                    for (const sibling of [node.nextSibling, node.previousSibling] as Null<T>[]) {
                                         if (sibling && sibling.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
                                             let valid: Undef<boolean>;
                                             if (id && id === sibling.toElementString('htmlFor')) {

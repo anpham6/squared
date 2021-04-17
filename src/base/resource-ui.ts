@@ -203,8 +203,8 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
 function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: "borderTop" | "borderRight" | "borderBottom" | "borderLeft" | "outline", border: CssStyleAttr[]) {
     let width = node[border[0]] as number;
     if (width > 0) {
-        const style = node.css(border[1] as CssStyleAttr) || 'solid';
-        let color: Null<string | ColorData> = node.css(border[2] as CssStyleAttr) || 'rgb(0, 0, 0)';
+        const style = node.css(border[1]) || 'solid';
+        let color: Null<string | ColorData> = node.css(border[2]) || 'rgb(0, 0, 0)';
         if (startsWith(color, 'current')) {
             color = node.css('color');
         }

@@ -18,7 +18,7 @@ const { CSS_BORDER_SET, CSS_PROPERTIES } = squared.lib.internal;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { cloneObject, hasKeys, isArray, isEmptyString, startsWith, withinRange } = squared.lib.util;
+const { cloneObject, hasKeys, isArray, isEmptyString, replaceChar, startsWith, withinRange } = squared.lib.util;
 
 const CSS_SPACINGINDEX = [BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_RIGHT, BOX_STANDARD.PADDING_BOTTOM, BOX_STANDARD.PADDING_LEFT];
 
@@ -1569,9 +1569,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (result === 'INPUT') {
                         result += '_' + (element as HTMLInputElement).type.toUpperCase();
                     }
-                    if (result.indexOf('-') !== -1) {
-                        result = result.replace(/-/g, '_');
-                    }
+                    result = replaceChar(result, '-', '_');
                 }
             }
             return this._cacheState.containerName = result || 'UNKNOWN';

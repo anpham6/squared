@@ -131,7 +131,7 @@ function setMultiline(node: T, value: number, overwrite: boolean) {
 }
 
 function setLineHeight(node: T, value: number, inlineStyle: boolean, top: boolean, bottom: boolean, overwrite?: boolean, parent?: T) {
-    if (value === 0 || node.imageContainer || node.rendering && !overwrite || node.cssInitial('lineHeight') === 'normal' || node.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
+    if (value === 0 || node.imageContainer || node.naturalElement && node.box.height === 0 || node.rendering && !overwrite || node.cssInitial('lineHeight') === 'normal' || node.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
         return;
     }
     if (node.multiline) {

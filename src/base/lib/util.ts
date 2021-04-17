@@ -1,4 +1,4 @@
-const { endsWith, escapePattern, hasValue, isObject, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
+const { endsWith, escapePattern, hasValue, isObject, replaceChar, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
     constructor(source: string, flags: string, public negate: boolean) {
@@ -372,12 +372,12 @@ export function appendSeparator(preceding = '', value = '', separator = '/') {
     value = value.trim();
     switch (separator) {
         case '\\':
-            preceding &&= preceding.replace(/\/+/g, '\\');
-            value &&= value.replace(/\/+/g, '\\');
+            preceding &&= replaceChar(preceding, '/', '\\');
+            value &&= replaceChar(value, '/', '\\');
             break;
         case '/':
-            preceding &&= preceding.replace(/\\+/g, '/');
-            value &&= value.replace(/\\+/g, '/');
+            preceding &&= replaceChar(preceding, '\\', '/');
+            value &&= replaceChar(value, '\\', '/');
             break;
     }
     return preceding + (preceding && value && !endsWith(preceding, separator) && !startsWith(value, separator) ? separator : '') + value;

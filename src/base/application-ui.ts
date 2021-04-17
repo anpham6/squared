@@ -33,7 +33,7 @@ const { insertStyleSheetRule } = squared.lib.internal;
 const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, isString, iterateArray, partitionArray, splitSome, startsWith } = squared.lib.util;
+const { capitalize, convertWord, isString, iterateArray, partitionArray, replaceAll, replaceChar, splitSome, startsWith } = squared.lib.util;
 
 let REGEXP_COUNTER: RegExp;
 let REGEXP_COUNTERVALUE: RegExp;
@@ -328,7 +328,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public saveDocument(filename: string, content: string, pathname?: string, index = -1) {
         const layout: LayoutAsset = {
-            pathname: pathname ? trimString(pathname.replace(/\\/g, '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.baseDirectory),
+            pathname: pathname ? trimString(replaceChar(pathname, '\\', '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.baseDirectory),
             filename,
             content,
             index
@@ -586,7 +586,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (pathname) {
-            pathname = trimString(pathname.replace(/\\/g, '/'), '/');
+            pathname = trimString(replaceChar(pathname, '\\', '/'), '/');
             dataset['pathname' + systemName] = pathname;
             node.data(Application.KEY_NAME, 'pathname', pathname);
         }
@@ -1883,7 +1883,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         ++depth;
                                         current = current.parentElement;
                                     }
-                                    const delimiter = match[4] ? match[4].replace(/\\"/g, '"') : '';
+                                    const delimiter = match[4] ? replaceAll(match[4], '\\"', '"') : '';
                                     content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
                                 }
                             }

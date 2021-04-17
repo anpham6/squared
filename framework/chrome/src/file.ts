@@ -23,7 +23,7 @@ interface FileAsData {
 const { DOM } = squared.base.lib.regex;
 
 const { createElement } = squared.lib.dom;
-const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceChar, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.internal;
 const { appendSeparator, fromMimeType, parseMimeType, generateUUID, trimEnd } = squared.base.lib.util;
@@ -36,7 +36,7 @@ function parseFileAs(attr: string, value: Undef<string>) {
         const match = new RegExp(`^(?:^|\\s+)${attr}\\s*:(.+)$`).exec(value);
         if (match) {
             const [file, format] = splitPair(match[1], '::', true);
-            return { file: normalizePath(file), format } as FileAsData;
+            return { file: replaceChar(file, '\\', '/'), format } as FileAsData;
         }
     }
 }
@@ -276,7 +276,6 @@ const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
-const normalizePath = (value: string) => value.replace(/\\+/g, '/');
 const getBaseUrl = () => location.origin + location.pathname;
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
@@ -326,7 +325,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             return createFile(mimeType);
         }
         if (saveAs) {
-            saveAs = trimEnd(normalizePath(saveAs), '/');
+            saveAs = trimEnd(replaceChar(saveAs, '\\', '/'), '/');
             if (saveTo || fromConfig) {
                 file = saveAs;
             }
@@ -1347,5 +1346,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
 
     get application() {
         return this.resource.application as Application<T>;
+    }
+
+    get userSettings() {
+        return this.resource.application.userSettings as UserResourceSettings;
     }
 }

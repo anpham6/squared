@@ -163,6 +163,18 @@ export function replaceAll(value: string, searchValue: string, replaceWith: stri
     return j ? result + value.substring(k) : value;
 }
 
+export function replaceChar(value: string, char: string, charAs: string) {
+    let i = value.indexOf(char);
+    if (i !== -1) {
+        let result = value.substring(0, i++) + charAs;
+        for (const length = value.length; i < length; ++i) {
+            result += value[i] === char ? charAs : value[i];
+        }
+        return result;
+    }
+    return value;
+}
+
 export function spliceString(value: string, index: number, length: number, replaceWith = '') {
     return index === 0 ? replaceWith + value.substring(length) : value.substring(0, index) + replaceWith + value.substring(index + length);
 }
