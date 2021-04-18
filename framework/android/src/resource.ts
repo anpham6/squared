@@ -201,8 +201,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const stored = this.STORED[resourceId];
             let colorName: Undef<string>;
             if (stored) {
-                colorName = stored.colors.get(keyName);
-                if (colorName) {
+                if (colorName = stored.colors.get(keyName)) {
                     return colorName;
                 }
                 if (color.key) {
@@ -257,8 +256,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         const result: StringMap = {};
         let mdpi: Undef<string>;
         if (typeof element === 'string') {
-            mdpi = extractURL(element);
-            if (mdpi && !startsWith(mdpi, 'data:image/')) {
+            if ((mdpi = extractURL(element)) && !startsWith(mdpi, 'data:image/')) {
                 return this.addImageSet(resourceId, { mdpi: resolvePath(mdpi) }, prefix);
             }
         }

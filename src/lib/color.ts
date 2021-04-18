@@ -324,13 +324,11 @@ const convertOpacity = (value: string) => +value / (value.indexOf('%') !== -1 ? 
 const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function parseColor(value: string, opacity = 1) {
+    value = value.trim().toLowerCase();
     let key: Undef<string>,
         rgba: Null<RGBA>;
     if (value[0] === '#') {
-        rgba = parseRGBA(value = value.toLowerCase());
-        if (value.length !== 7) {
-            value = '';
-        }
+        [rgba, value] = parseRGBA(value);
     }
     else if (isTransparent(value)) {
         return new Color();
@@ -372,10 +370,10 @@ export function parseColor(value: string, opacity = 1) {
             }
         }
     }
-    return rgba ? new Color(key, value, rgba) as ColorData : null;
+    return rgba && new Color(key, value, rgba) as ColorData;
 }
 
-export function parseRGBA(value: string) {
+export function parseRGBA(value: string): [Null<RGBA>, string] {
     if (CSS.HEX.test(value)) {
         if (value[0] !== '#') {
             value = '#' + value;
@@ -391,15 +389,15 @@ export function parseRGBA(value: string) {
                 break;
             case 6:
             case 8:
-                return null;
+                return [null, ''];
             default:
                 a = +('0x' + value[7] + value[8]);
                 value = value.substring(0, 7);
                 break;
         }
-        return hex6(value, a);
+        return [hex6(value, a), value];
     }
-    return null;
+    return [null, ''];
 }
 
 export function getHex(value: number) {

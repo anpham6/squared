@@ -70,7 +70,7 @@ declare module "lib" {
 
     namespace color {
         function parseColor(value: string, opacity?: number): Null<ColorData>;
-        function parseRGBA(value: string): Null<RGBA>;
+        function parseRGBA(value: string): [Null<RGBA>, string];
         function getHex(value: number): string;
         function convertHex(value: RGBA, ignoreAlpha?: boolean): string;
         function convertHSLA(value: RGBA): HSLA;
