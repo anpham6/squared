@@ -1,5 +1,6 @@
-import { clamp } from './math';
 import { CSS } from './regex';
+
+import { clamp } from './math';
 
 class Color implements ColorData {
     public key: string;
@@ -323,6 +324,7 @@ const convertOpacity = (value: string) => +value / (value.includes('%') ? 100 : 
 const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function parseColor(value: string, opacity = 1) {
+    value = value.trim().toLowerCase();
     let key: Undef<string>,
         rgba: Null<RGBA>;
     if (value[0] === '#') {
@@ -371,7 +373,7 @@ export function parseColor(value: string, opacity = 1) {
             }
         }
     }
-    return rgba ? new Color(key, value, rgba) as ColorData : null;
+    return rgba && new Color(key, value, rgba) as ColorData;
 }
 
 export function parseRGBA(value: string) {
