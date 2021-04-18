@@ -23,7 +23,7 @@ interface FileAsData {
 const { DOM } = squared.base.lib.regex;
 
 const { createElement } = squared.lib.dom;
-const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceChar, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.internal;
 const { appendSeparator, fromMimeType, parseMimeType, generateUUID, trimEnd } = squared.base.lib.util;
@@ -36,7 +36,7 @@ function parseFileAs(attr: string, value: Undef<string>) {
         const match = new RegExp(`^(?:^|\\s+)${attr}\\s*:(.+)$`).exec(value);
         if (match) {
             const [file, format] = splitPair(match[1], '::', true);
-            return { file: replaceChar(file, '\\', '/'), format } as FileAsData;
+            return { file: replaceAll(file, '\\', '/'), format } as FileAsData;
         }
     }
 }
@@ -325,7 +325,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             return createFile(mimeType);
         }
         if (saveAs) {
-            saveAs = trimEnd(replaceChar(saveAs, '\\', '/'), '/');
+            saveAs = trimEnd(replaceAll(saveAs, '\\', '/'), '/');
             if (saveTo || fromConfig) {
                 file = saveAs;
             }

@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, replaceAll, replaceChar, splitSome, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, replaceAll, splitSome, resolvePath } = squared.lib.util;
 
 const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
@@ -107,7 +107,7 @@ function getRawAssets(this: Resource<View>, resourceId: number, name: ResourceRa
 }
 
 const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
-const getOutputDirectory = (value: string) => (value = replaceChar(value, '\\', '/')) + (lastItemOf(value) !== '/' ? '/' : '');
+const getOutputDirectory = (value: string) => (value = replaceAll(value, '\\', '/')) + (lastItemOf(value) !== '/' ? '/' : '');
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public resource!: Resource<T>;
