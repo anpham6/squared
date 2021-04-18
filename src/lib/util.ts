@@ -243,7 +243,7 @@ export function splitPairEnd(value: string, char: string, trim?: boolean, last?:
     return '';
 }
 
-export function splitEnclosing(value: string, prefix?: string | RegExp, separator = '', opening = '(', closing = ')') {
+export function splitEnclosing(value: string, prefix?: string | RegExp, trimOuter?: boolean, opening = '(', closing = ')', separator = '') {
     prefix ||= opening;
     let position = 0,
         offset = 0,
@@ -313,6 +313,9 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, separato
                     break;
             }
             if (open === close) {
+                if (trimOuter) {
+                    ++index;
+                }
                 if (separator) {
                     for ( ; i < length; ++i) {
                         if (value[i] === separator) {
@@ -320,11 +323,11 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, separato
                         }
                     }
                     position = i + 1;
-                    result.push(preceding + value.substring(index, i).trim());
+                    result.push(preceding + value.substring(index, i + (trimOuter ? -1 : 0)).trim());
                 }
                 else {
                     position = i + 1;
-                    result.push(value.substring(index, position));
+                    result.push(value.substring(index, position + (trimOuter ? -1 : 0)));
                 }
                 if (position === length) {
                     return result;
@@ -353,6 +356,10 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, separato
         }
     }
     return result;
+}
+
+export function trimEnclosing(value: string) {
+    return value.substring(1, value.length - 1);
 }
 
 export function lastItemOf<T>(value: ArrayLike<T>): Undef<T> {

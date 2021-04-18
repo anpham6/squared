@@ -2,7 +2,7 @@ import type View from '../../view';
 
 import Resource from '../../resource';
 
-const { capitalize, splitPair, splitPairEnd, startsWith } = squared.lib.util;
+const { capitalize, splitPair, splitPairEnd, startsWith, trimEnclosing } = squared.lib.util;
 
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -54,7 +54,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         const [key, trailing] = splitPair(keys[j], '=');
                         const attr = splitPairEnd(key, ':');
                         if (attr) {
-                            items.push({ key, value: trailing.substring(1, trailing.length - 1) });
+                            items.push({ key, value: trimEnclosing(trailing) });
                             attrs.push(attr);
                         }
                     }

@@ -335,7 +335,8 @@ declare module "lib" {
         function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string];
         function splitPairStart(value: string, char: string, trim?: boolean, last?: boolean): string;
         function splitPairEnd(value: string, char: string, trim?: boolean, last?: boolean): string;
-        function splitEnclosing(value: string, prefix?: string | RegExp, separator?: string, opening?: string, closing?: string): string[];
+        function splitEnclosing(value: string, prefix?: string | RegExp, trimOuter?: boolean, opening?: string, closing?: string, separator?: string): string[];
+        function trimEnclosing(value: string): string;
         function lastItemOf<T>(value: ArrayLike<T>): Undef<T>;
         function minMaxOf<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, number>, operator: ">" | "<" | ">=" | "<=", limiter?: number): [Null<T>, number];
         function hasBit(value: number, offset: number): boolean;

@@ -183,10 +183,10 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public parseFontFace(resourceId: number, cssText: string, styleSheetHref?: Null<string>) {
-        const fontFace = splitEnclosing(cssText, '', '', '{', '}')[1];
+        const fontFace = splitEnclosing(cssText, '', true, '{', '}')[1];
         if (fontFace) {
             const fontMap: StringMap = {};
-            const items = fontFace.substring(1, fontFace.length - 1).trim().split(';');
+            const items = fontFace.trim().split(';');
             for (let i = 0, length = items.length - 1; i < length; ++i) {
                 const [attr, value] = splitPair(items[i], ':', true);
                 fontMap[attr] = value;

@@ -1,4 +1,4 @@
-const { endsWith, escapePattern, hasValue, isObject, replaceAll, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
+const { endsWith, escapePattern, hasValue, isObject, replaceAll, splitPairEnd, splitPairStart, startsWith, trimEnclosing } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
     constructor(source: string, flags: string, public negate: boolean) {
@@ -473,7 +473,7 @@ export function trimBoth(value: string, char = '"', trim?: boolean) {
         value = value.trim();
     }
     const length = value.length;
-    return value[0] === char && value[length - 1] === char ? value.substring(1, value.length - 1) : value;
+    return value[0] === char && value[length - 1] === char ? trimEnclosing(value) : value;
 }
 
 export function trimString(value: string, pattern: string) {

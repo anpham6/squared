@@ -7,7 +7,7 @@ import { getDeviceDPI } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
-import { endsWith, escapePattern, isSpace, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } from './util';
+import { endsWith, escapePattern, isSpace, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith, trimEnclosing } from './util';
 
 const ELEMENT_BLOCK = [
     'ADDRESS',
@@ -332,7 +332,6 @@ const calculateLength = (element: StyleElement, value: string) => formatVar(calc
 const isColor = (value: string) => /(?:rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
-const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
 
 export function getStyle(element: Element, pseudoElt = '') {
     let style = getElementCache<CSSStyleDeclaration>(element, 'style' + pseudoElt, '0');

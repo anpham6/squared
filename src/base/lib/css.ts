@@ -39,34 +39,31 @@ export function getKeyframesRules(documentRoot: DocumentOrShadowRoot = document)
 
 export function parseKeyframes(rules: CSSRuleList) {
     const result: KeyframeData = {};
-    const pattern = /((?:[\d.]+%\s*,?\s*)+|from|to)\s*{([^}]+)}/;
     let valid: Undef<boolean>;
     for (let i = 0, length = rules.length; i < length; ++i) {
         const item = rules[i] as CSSKeyframeRule;
-        const match = pattern.exec(item.cssText);
-        if (match) {
-            const items = match[2].trim().split(/\s*;\s*/);
-            const q = items.length;
-            splitSome(item.keyText || match[1], percent => {
-                switch (percent) {
-                    case 'from':
-                        percent = '0%';
-                        break;
-                    case 'to':
-                        percent = '100%';
-                        break;
+        const values = splitEnclosing(item.cssText, '', true, '{', '}');
+        const items = values[1].trim().split(';');
+        items.pop();
+        splitSome(item.keyText || values[0], percent => {
+            switch (percent) {
+                case 'from':
+                    percent = '0%';
+                    break;
+                case 'to':
+                    percent = '100%';
+                    break;
+            }
+            const keyframe: StringMap = {};
+            items.forEach(frame => {
+                const [attr, value] = splitPair(frame, ':', true);
+                if (value) {
+                    keyframe[attr] = value;
                 }
-                const keyframe: StringMap = {};
-                for (let j = 0; j < q; ++j) {
-                    const [attr, value] = splitPair(items[j], ':', true);
-                    if (value) {
-                        keyframe[attr] = value;
-                    }
-                }
-                result[percent] = keyframe;
-                valid = true;
             });
-        }
+            result[percent] = keyframe;
+            valid = true;
+        });
     }
     return valid ? result : null;
 }
