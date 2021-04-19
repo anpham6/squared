@@ -73,7 +73,6 @@ declare module "base" {
         settings: Null<ElementSettings>;
         customSettings: Null<ElementSettings>[];
         extensions: Extension<T>[];
-        elementMap: Map<Element, ElementData>;
         node: Null<T>;
         documentElement: Null<T>;
         afterInsertNode?: Extension<T>[];
@@ -90,7 +89,7 @@ declare module "base" {
         builtInExtensions: Map<string, Extension<T>>;
         userSettings: UserSettings;
         closed: boolean;
-        elementMap: Null<WeakMap<Element, T>>;
+        elementMap: WeakMap<Element, T>;
         readonly systemName: string;
         readonly framework: number;
         readonly session: AppSession<T>;
@@ -224,7 +223,7 @@ declare module "base" {
         clear(): void;
         reset(): void;
         init(resourceId: number): void;
-        preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[]): [(HTMLImageElement | string)[], HTMLImageElement[]];
+        preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[], preloadImages?: boolean, preloadFonts?: boolean): [(HTMLImageElement | string)[], HTMLImageElement[]];
         parseFontFace(resourceId: number, cssText: string, styleSheetHref?: Null<string>): void;
         parseKeyFrames(resourceId: number, cssRule: CSSKeyframesRule): void;
         addAsset(resourceId: number, asset: RawAsset): void;

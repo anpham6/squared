@@ -70,8 +70,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     public reset() {}
 
-    public preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[]): [PreloadItem[], HTMLImageElement[]] {
-        const { preloadImages, preloadFonts } = this.application.userSettings as UserResourceSettings;
+    public preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[], preloadImages?: boolean, preloadFonts?: boolean): [PreloadItem[], HTMLImageElement[]] {
         const assets = Resource.ASSETS[resourceId]!;
         const result: PreloadItem[] = [];
         const images: HTMLImageElement[] = [];

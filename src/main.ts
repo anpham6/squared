@@ -110,7 +110,7 @@ function loadExtensions() {
 
 function findElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
     if (cache) {
-        const result = main!.elementMap?.get(element);
+        const result = main!.elementMap.get(element);
         if (result) {
             return sync ? result : Promise.resolve(result);
         }
@@ -137,7 +137,7 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
 
 async function findElementAsync(element: HTMLElement, cache?: boolean) {
     if (cache) {
-        const result = main!.elementMap?.get(element);
+        const result = main!.elementMap.get(element);
         if (result) {
             return Promise.resolve([result]);
         }
@@ -151,7 +151,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
     const result: Node[] = new Array(length);
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
-        const item = elementMap && elementMap.get(element) || await main!.parseDocument(element) as Node;
+        const item = elementMap.get(element) || await main!.parseDocument(element) as Node;
         if (item) {
             result[i] = item;
         }
@@ -556,7 +556,7 @@ export function fromElement(element: HTMLElement, sync?: boolean, cache?: boolea
 
 export function clearCache() {
     if (main) {
-        main.elementMap = null;
+        main.elementMap = new WeakMap();
         main.session.active.clear();
         main.resourceHandler?.clear();
     }

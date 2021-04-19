@@ -83,8 +83,7 @@ const CHAR_SEPARATOR = /\s*,\s*/;
 
 function getBorderStyle(resourceId: number, border: BorderAttribute, direction = -1, halfSize = false) {
     const { style, color } = border;
-    const createStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(resourceId, value), dashWidth: '', dashGap: '' });
-    const result = createStrokeColor(color);
+    const result = createStrokeColor(resourceId, color);
     if (style !== 'solid') {
         const width = Math.round(border.width);
         switch (style) {
@@ -170,7 +169,7 @@ function getBorderStyle(resourceId: number, border: BorderAttribute, direction =
                 if (percent) {
                     const reduced = color.lighten(percent);
                     if (reduced) {
-                        return createStrokeColor(reduced);
+                        return createStrokeColor(resourceId, reduced);
                     }
                 }
                 break;
@@ -416,6 +415,7 @@ function setBorderStyle(resourceId: number, layerList: LayerList, borders: Undef
     }
 }
 
+const createStrokeColor = (resourceId: number, value: ColorData): ShapeStrokeData => ({ color: getColorValue(resourceId, value), dashWidth: '', dashGap: '' });
 const isBorderEqual = (border: BorderAttribute, other: BorderAttribute) => border.style === border.style && border.width === other.width && border.color.rgbaAsString === other.color.rgbaAsString;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1 ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
@@ -435,7 +435,7 @@ export function drawRect(width: number, height: number, x = 0, y = 0, precision?
         width += x;
         height += y;
     }
-    return `M${x},${y} ${width},${y} ${width},${height} ${x},${height} Z`;
+    return `M${x},${y} ${width},${y} ${width},${height} ${x},${height}Z`;
 }
 
 export default class ResourceBackground<T extends View> extends squared.base.ExtensionUI<T> {
@@ -452,7 +452,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public afterResources(sessionId: string, resourceId: number) {
         const application = this.application;
-        const { manifestThemeName, manifestParentThemeName } = application.userSettings;
         let themeBackground: Undef<boolean>;
         const deleteBodyWrapper = (body: T, wrapper: T) => {
             if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
@@ -469,7 +468,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
         };
-        const setBodyBackground = (name: string, parent: string, value: string) => {
+        const setBodyBackground = (value: string) => {
+            const { manifestThemeName: name, manifestParentThemeName: parent } = application.userSettings;
             Resource.addTheme(resourceId, {
                 name,
                 parent,
@@ -486,12 +486,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let drawable = this.saveDrawable(resourceId, node, value);
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
-                        setBodyBackground(manifestThemeName, manifestParentThemeName, drawable);
+                        setBodyBackground(drawable);
                         return;
                     }
                     const innerWrapped = node.innerMostWrapped as T;
                     if (innerWrapped.documentBody && (node.backgroundColor || node.visibleStyle.backgroundRepeatY)) {
-                        setBodyBackground(manifestThemeName, manifestParentThemeName, drawable);
+                        setBodyBackground(drawable);
                         deleteBodyWrapper(innerWrapped, node);
                         return;
                     }
@@ -558,12 +558,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (color) {
                             if (!themeBackground) {
                                 if (node.tagName === 'HTML') {
-                                    setBodyBackground(manifestThemeName, manifestParentThemeName, color);
+                                    setBodyBackground(color);
                                     return;
                                 }
                                 const innerWrapped = node.innerMostWrapped as T;
                                 if (innerWrapped.documentBody) {
-                                    setBodyBackground(manifestThemeName, manifestParentThemeName, color);
+                                    setBodyBackground(color);
                                     deleteBodyWrapper(innerWrapped, node);
                                     return;
                                 }

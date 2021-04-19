@@ -98,7 +98,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public extensions: Extension<T>[] = [];
     public userSettings = {} as UserSettings;
     public closed = false;
-    public elementMap: Null<WeakMap<Element, T>> = null;
+    public elementMap: WeakMap<Element, T> = new WeakMap();
     public readonly Node: Constructor<T>;
     public readonly session: squared.base.AppSession<T> = { active: new Map() };
 
@@ -157,7 +157,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public afterCreateCache(processing: squared.base.AppProcessing<T>, node: T) {
         if (this.getUserSetting(processing, 'createElementMap')) {
-            const elementMap = this.elementMap ||= new WeakMap();
+            const elementMap = this.elementMap;
             processing.cache.each(item => elementMap.set(item.element as Element, item));
         }
     }
@@ -190,6 +190,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.controllerHandler.reset();
         this.resourceHandler?.reset();
         this.extensions.forEach(ext => ext.reset());
+        this.elementMap = new WeakMap();
         this.closed = false;
     }
 
@@ -201,7 +202,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const resourceId = processing.resourceId;
         const documentRoot: HTMLElement = rootElements[0];
-        const [preloadItems, preloaded] = resource ? resource.preloadAssets(resourceId, documentRoot, shadowElements) : [[], []];
+        const [preloadItems, preloaded] = resource ? resource.preloadAssets(resourceId, documentRoot, shadowElements, this.getUserSetting<boolean>(processing, 'preloadImages'), this.getUserSetting<boolean>(processing, 'preloadFonts')) : [[], []];
         if (styleSheets) {
             preloadItems.push(...styleSheets);
         }
@@ -879,9 +880,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             customSettings,
             node: null,
             documentElement: null,
-            elementMap: newSessionInit(sessionId),
             extensions: []
         };
+        newSessionInit(sessionId);
         this.session.active.set(sessionId, processing);
         if (resourceHandler) {
             resourceHandler.init(resourceId);

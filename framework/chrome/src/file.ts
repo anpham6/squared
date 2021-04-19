@@ -273,10 +273,11 @@ const isCrossOrigin = (download: Undef<boolean>, preserveCrossOrigin: Undef<bool
 const getContentType = (element: HTMLElement) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
 const getTagNode = (node: XmlTagNode, attributes: Undef<AttributeMap>, append?: TagAppend): XmlTagNode => ({ ...node, attributes, append });
 const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
-const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
+const getAssetCommand = (assetMap: Undef<ElementAssetMap>, element: HTMLElement) => assetMap && assetMap.get(element);
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
 const getBaseUrl = () => location.origin + location.pathname;
+const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static createTagNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlTagNode {
@@ -414,7 +415,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             assetMap = options.assetMap;
             saveAsHtml = options.saveAs?.html;
         }
-        const command = assetMap?.get(element) || saveAsHtml;
+        const command = getAssetCommand(assetMap, element) || saveAsHtml;
         let filename: Undef<string>,
             format: Undef<string>,
             compress: Undef<CompressFormat[]>,
@@ -487,7 +488,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         document.querySelectorAll('script').forEach(element => {
             const template = element.dataset.chromeTemplate;
             if (template || element.type === 'text/template') {
-                const command = assetMap?.get(element);
+                const command = getAssetCommand(assetMap, element);
                 let type: Undef<string>,
                     module: Undef<string>,
                     identifier: Undef<string>;
@@ -549,7 +550,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         }
                         return false;
                     };
-                    if (assetMap && assetMap.get(element)) {
+                    if (getAssetCommand(assetMap, element)) {
                         checkMimeType();
                     }
                     else if (!href || !rel.includes('icon') || !checkMimeType()) {
@@ -770,11 +771,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const { watch } of body.assets!) {
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
-                    const { socketId, handler = {}, secure } = reload;
+                    const { socketId, secure, handler = {} } = reload;
                     let port = reload.port ?? (secure ? settings.webSocketSecurePort : settings.webSocketPort);
                     if (socketId && hasValue<number>(port) && !isNaN(port = +port)) {
                         socketMap[socketId + `_${port}_` + (secure ? '0' : '1')] ||=
-                        'socket=new WebSocket("' + (secure ? 'wss' : 'ws') + `://${hostname}:${port}");` +
+                        `socket=new WebSocket("${secure ? 'wss' : 'ws'}://${hostname}:${port}");` +
                         (handler.open ? `socket.onopen=${handler.open};` : '') +
                         'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${socketId}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.href=c.src+c.hot;});return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.src=c.src+c.hot;});return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
                         (handler.error ? `socket.onerror=${handler.error};` : '') +
@@ -859,7 +860,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
                     break;
                 case 'IFRAME':
-                    if (!(assetMap?.get(element) || element.dataset.chromeFile?.startsWith('saveTo'))) {
+                    if (!(getAssetCommand(assetMap, element) || element.dataset.chromeFile?.startsWith('saveTo'))) {
                         return;
                     }
                 case 'OBJECT':
@@ -879,7 +880,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (file === 'ignore') {
                     continue;
                 }
-                const command = assetMap?.get(item);
+                const command = getAssetCommand(assetMap, item);
                 let saveAs: Undef<string>,
                     saveTo: Undef<boolean>,
                     filename: Undef<string>,
@@ -961,7 +962,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             };
             for (const [element, siblings] of appendMap) {
                 const node = File.createTagNode(element, domAll, cache);
-                const documentData = assetMap && assetMap.get(element)?.document;
+                const documentData = getAssetCommand(assetMap, element)?.document;
                 const getNextSibling = () => node.index + element.querySelectorAll('*').length + 1;
                 if (!useOriginalHtmlPage) {
                     File.setDocumentId(node, element, documentData, formatUUID);
@@ -1076,7 +1077,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (file === 'exclude' || file === 'ignore') {
             return;
         }
-        const command = assetMap?.get(element) || assetCommand;
+        const command = getAssetCommand(assetMap, element) || assetCommand;
         let filename: Undef<string>,
             format: Undef<string>,
             inline: Undef<boolean>,
@@ -1220,7 +1221,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (file === 'ignore') {
                     return;
                 }
-                if (command = assetMap?.get(element)) {
+                if (command = getAssetCommand(assetMap, element)) {
                     ({ pathname, filename, inline, compress, download, blob, commands, tasks, watch, attributes, cloudStorage, document: documentData } = command);
                     if (excludeAsset(assets, command, element, documentData)) {
                         return;
