@@ -440,7 +440,6 @@ declare module "base" {
         cssApply(values: CssStyleMap, overwrite?: boolean, cache?: boolean): this;
         cssCopy(node: Node, ...attrs: CssStyleAttr[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: CssStyleAttr[]): void;
-        cssPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
         cssTry(attr: CssStyleAttr, value: string, callback?: FunctionBind<this>): boolean;
         cssTryAll(attrs: CssStyleMap, callback?: FunctionBind<this>): CssStyleMap | boolean;
         cssFinally(attrs: CssStyleAttr | CssStyleMap): void;
@@ -665,6 +664,7 @@ declare module "base" {
         translateX(value: number, options?: TranslateOptions): boolean;
         translateY(value: number, options?: TranslateOptions): boolean;
         getBoxSpacing(): [number, number, number, number];
+        getPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
         fitToScreen(value: Dimension): Dimension;
         cssValue(attr: CssStyleAttr): string;
         cssValues(...attrs: CssStyleAttr[]): string[];

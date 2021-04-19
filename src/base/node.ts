@@ -847,11 +847,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _naturalChildren: Null<T[]> = null;
     protected _naturalElements: Null<T[]> = null;
     protected _childIndex = Infinity;
+    protected _elementData: Null<ElementData> = null;
     protected _textBounds?: Null<BoxRectDimension>;
     protected readonly _element: Null<Element>;
 
     private _style: Null<CSSStyleDeclaration> = null;
-    private _elementData: Null<ElementData> = null;
     private _dataset?: DOMStringMap;
     private _data?: StandardMap;
 
@@ -1528,33 +1528,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             result[attr = attrs[i]] = this.css(attr);
         }
         return result;
-    }
-
-    public cssPseudoElement(name: PseudoElt, attr?: CssStyleAttr) {
-        if (this.naturalElement) {
-            if (attr) {
-                return getStyle(this._element!, name)[attr] as Undef<string>;
-            }
-            const style = this._elementData!['styleMap' + name] as Undef<CssStyleMap>;
-            if (style) {
-                switch (name) {
-                    case '::first-letter':
-                    case '::first-line':
-                        switch (this.display) {
-                            case 'block':
-                            case 'inline-block':
-                            case 'list-item':
-                            case 'table-cell':
-                                break;
-                            default:
-                                return;
-                        }
-                    case '::before':
-                    case '::after':
-                        return Node.sanitizeCss(this._element as HTMLElement, style, style.writingMode || this.valueOf('writingMode'));
-                }
-            }
-        }
     }
 
     public toInt(attr: CssStyleAttr, fallback = NaN, options?: CssInitialOptions) {

@@ -15,6 +15,7 @@ type T = NodeUI;
 
 const { CSS_BORDER_SET, CSS_PROPERTIES } = squared.lib.internal;
 
+const { getStyle } = squared.lib.css;
 const { createElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
@@ -1391,6 +1392,33 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         ];
     }
 
+    public getPseudoElement(name: PseudoElt, attr?: CssStyleAttr) {
+        if (this.naturalElement) {
+            if (attr) {
+                return getStyle(this._element!, name)[attr] as Undef<string>;
+            }
+            const style = this._elementData!['styleMap' + name] as Undef<CssStyleMap>;
+            if (style) {
+                switch (name) {
+                    case '::first-letter':
+                    case '::first-line':
+                        switch (this.display) {
+                            case 'block':
+                            case 'inline-block':
+                            case 'list-item':
+                            case 'table-cell':
+                                break;
+                            default:
+                                return;
+                        }
+                    case '::before':
+                    case '::after':
+                        return Node.sanitizeCss(this._element as HTMLElement, style, style.writingMode || this.valueOf('writingMode'));
+                }
+            }
+        }
+    }
+
     public fitToScreen(value: Dimension): Dimension {
         const { width, height } = this.localSettings.screenDimension;
         if (value.width > width) {
@@ -2015,12 +2043,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get firstLetterStyle() {
         const result = this._cacheState.firstLetterStyle;
-        return result === undefined ? this._cacheState.firstLetterStyle = this.cssPseudoElement('::first-letter') as Undef<CssStyleMap> || null : result;
+        return result === undefined ? this._cacheState.firstLetterStyle = this.getPseudoElement('::first-letter') as Undef<CssStyleMap> || null : result;
     }
 
     get firstLineStyle() {
         const result = this._cacheState.firstLineStyle;
-        return result === undefined ? this._cacheState.firstLineStyle = this.cssPseudoElement('::first-line') as Undef<CssStyleMap> || null : result;
+        return result === undefined ? this._cacheState.firstLineStyle = this.getPseudoElement('::first-line') as Undef<CssStyleMap> || null : result;
     }
 
     get textAlignLast() {
