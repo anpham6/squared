@@ -37,11 +37,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 usedKeyframes: Undef<Set<string>>,
                 match: Null<RegExpExecArray>;
             while (match = REGEXP_VAR.exec(rule.cssText)) {
-                if (match[1]) {
+                if (match[3]) {
                     if (!usedVariables) {
                         usedVariables = this._cssUsedVariables[sessionId] ||= new Set();
                     }
-                    usedVariables.add(match[1]);
+                    usedVariables.add(match[3]);
                 }
             }
             while (match = REGEXP_VARVALUE.exec(rule.cssText)) {

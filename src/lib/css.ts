@@ -315,12 +315,9 @@ function getContentBoxDimension(element: StyleElement) {
 }
 
 function checkSpaceEnd(value: string, index: number) {
-    const length = value.length;
-    if (index < length - 1) {
-        for (let i = index + 1; i < length; ++i) {
-            if (!isSpace(value[i])) {
-                return false;
-            }
+    for (let i = index + 1; i < value.length; ++i) {
+        if (!isSpace(value[i])) {
+            return false;
         }
     }
     return true;
@@ -1858,7 +1855,7 @@ export function isTime(value: string) {
 export function asPercent(value: unknown) {
     if (typeof value === 'string') {
         const index = value.lastIndexOf('%');
-        if (index !== -1 && checkSpaceEnd(value, index)) {
+        if (index !== -1 && (index + 1 === value.length || checkSpaceEnd(value, index))) {
             return +value.substring(0, index) / 100;
         }
     }
@@ -1872,7 +1869,7 @@ export function isPercent(value: unknown) {
 export function asPx(value: unknown) {
     if (typeof value === 'string') {
         const index = value.lastIndexOf('x');
-        if (index !== -1 && value[index - 1] === 'p' && checkSpaceEnd(value, index)) {
+        if (index !== -1 && value[index - 1] === 'p' && (index + 1 === value.length || checkSpaceEnd(value, index))) {
             return +value.substring(0, index - 1);
         }
     }

@@ -27,7 +27,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, replaceAll, splitSome, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, replaceAll, splitPair, splitSome, resolvePath } = squared.lib.util;
 
 const { fromMimeType, parseMimeType } = squared.base.lib.util;
 
@@ -315,28 +315,24 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (stored.themes.size) {
             const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
-            for (const data of stored.themes) {
-                const filename = data[0];
-                const match = /^(.+)\/(.+?\.\w+)$/.exec(filename);
-                if (match) {
-                    const itemArray: ItemData[] = [];
-                    for (const [themeName, themeData] of data[1]) {
-                        if (!appTheme[filename] || themeName !== manifestThemeName) {
-                            const themeArray: ItemValue[] = [];
-                            const items = themeData.items;
-                            for (const name in items) {
-                                themeArray.push({ name, innerText: items[name]! });
-                            }
-                            itemArray.push({ name: themeName, parent: themeData.parent, item: themeArray });
+            for (const [filename, themes] of stored.themes) {
+                const itemArray: ItemData[] = [];
+                for (const [themeName, themeData] of themes) {
+                    if (!appTheme[filename] || themeName !== manifestThemeName) {
+                        const themeArray: ItemValue[] = [];
+                        const items = themeData.items;
+                        for (const name in items) {
+                            themeArray.push({ name, innerText: items[name]! });
                         }
-                        if (themeName === manifestThemeName) {
-                            appTheme[filename] = true;
-                        }
+                        itemArray.push({ name: themeName, parent: themeData.parent, item: themeArray });
                     }
-                    if (itemArray.length) {
-                        const value = applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]);
-                        result.push(replaceTab(convertPixels === 'dp' ? replaceAll(value, 'px<', 'dp<') : value, insertSpaces), match[1], match[2]);
+                    if (themeName === manifestThemeName) {
+                        appTheme[filename] = true;
                     }
+                }
+                if (itemArray.length) {
+                    const value = applyTemplate('resources', STYLE_TMPL, [{ style: itemArray }]);
+                    result.push(replaceTab(convertPixels === 'dp' ? replaceAll(value, 'px<', 'dp<') : value, insertSpaces), ...splitPair(filename, '/', false, true));
                 }
             }
         }
@@ -397,15 +393,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (stored && stored.images.size) {
             const imageDirectory = this.directory.image;
             const result: string[] = [];
-            for (const data of stored.images) {
-                const images = data[1];
+            for (const [filename, images] of stored.images) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
                         const value = images[dpi]!;
                         result.push(
                             value,
                             imageDirectory + '-' + dpi,
-                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
+                            filename + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }
@@ -415,7 +410,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         result.push(
                             value,
                             imageDirectory,
-                            data[0] + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
+                            filename + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }
@@ -616,11 +611,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
         const result: string[] = new Array(length * 3);
         let i = 0;
-        for (const item of rawData.values()) {
-            const uri = item.uri!;
-            result[i++] = uri;
-            result[i++] = fromLastIndexOf(uri.split('?')[0], '/');
-            result[i++] = item.mimeType || '';
+        for (const { uri, mimeType = '' } of rawData.values()) {
+            result[i++] = uri!;
+            result[i++] = fromLastIndexOf(uri!.split('?')[0], '/');
+            result[i++] = mimeType;
         }
         if (hasFileAction(options)) {
             const { resource, resourceId, userSettings } = this;

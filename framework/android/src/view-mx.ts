@@ -1513,9 +1513,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.styleElement || this.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
                 const dataset = getDataSet(this.dataset, 'android');
                 if (dataset) {
-                    const pattern = /^attr[A-Z]/;
                     for (const namespace in dataset) {
-                        const name = namespace === 'attr' ? 'android' : pattern.test(namespace) ? capitalize(namespace.substring(4), false) : '';
+                        const name = namespace === 'attr' ? 'android' : /^attr[A-Z]/.test(namespace) ? capitalize(namespace.substring(4), false) : '';
                         if (name) {
                             for (const values of dataset[namespace]!.split(';')) {
                                 const [key, value] = splitPair(values, '::', true);
