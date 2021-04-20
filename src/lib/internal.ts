@@ -203,7 +203,8 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     backgroundColor: {
         trait: CSS_TRAITS.CALC,
-        value: 'transparent'
+        value: 'transparent',
+        valueOfNone: 'transparent'
     },
     backgroundImage: {
         trait: CSS_TRAITS.CALC,

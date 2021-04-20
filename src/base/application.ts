@@ -581,7 +581,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                                         for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE)) {
                                             const css = CSS_SHORTHANDNONE[name]!;
                                             if ((css.value as string[]).includes(baseAttr)) {
-                                                if (hasExactValue(css.name!, '(?:none|initial)') || value === 'initial' && new RegExp(`[^-]${css.name!}\\s*:[^;}]*?initial\\b`).test(cssText) || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                                if (hasExactValue(css.name!, 'none')) {
+                                                    const property = CSS_PROPERTIES[baseAttr];
+                                                    if (property && property.valueOfNone) {
+                                                        value = property.valueOfNone;
+                                                    }
+                                                    break required;
+                                                }
+                                                else if (hasExactValue(css.name!, 'initial') || value === 'initial' && new RegExp(`[^-]${css.name!}\\s*:[^;}]*?initial\\b`).test(cssText) || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
                                                     break required;
                                                 }
                                                 break;

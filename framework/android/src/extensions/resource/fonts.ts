@@ -1,6 +1,6 @@
 import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 
-import { BUILD_VERSION } from '../../lib/constant';
+import { BUILD_VERSION, CONTAINER_NODE } from '../../lib/constant';
 
 import type View from '../../view';
 
@@ -16,11 +16,10 @@ interface IStyleAttribute<T> extends StyleAttribute {
 }
 
 const { truncate } = squared.lib.math;
-const { capitalize, convertWord, hasKeys, joinArray, replaceAll, spliceArray, startsWith } = squared.lib.util;
+const { capitalize, convertWord, hasKeys, joinArray, replaceAll, spliceArray, splitPair, startsWith, trimEnclosing } = squared.lib.util;
 
 const { trimBoth } = squared.base.lib.util;
 
-const REGEXP_FONTATTRIBUTE = /([^\s]+)="((?:[^"]|(?<=\\)")+)"/;
 const REGEXP_FONTNAME = /^(\w*?)(?:_(\d+))?$/;
 
 const FONT_NAME = {
@@ -80,12 +79,12 @@ const FONT_WEIGHT = {
 };
 
 const FONT_STYLE = {
-    'fontFamily': 'android:fontFamily="',
-    'fontStyle': 'android:textStyle="',
-    'fontWeight': 'android:fontWeight="',
-    'fontSize': 'android:textSize="',
-    'color': 'android:textColor="@color/',
-    'backgroundColor': 'android:background="@color/'
+    'fontFamily': 'fontFamily="',
+    'fontStyle': 'textStyle="',
+    'fontWeight': 'fontWeight="',
+    'fontSize': 'textSize="',
+    'color': 'textColor="@color/',
+    'backgroundColor': 'background="@color/'
 };
 
 function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], nodes: View[]) {
@@ -123,6 +122,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const { resourceId, cache } = this.application.getProcessing(sessionId)!;
         const { fonts, styles } = Resource.STORED[resourceId]!;
         const nameMap: ObjectMapSafe<T[]> = {};
+        const textMap: ObjectMapSafe<T[]> = {};
         const groupMap: ObjectMap<StyleList<T>[]> = {};
         const fontItems: T[] = [];
         cache.each(node => {
@@ -144,10 +144,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             fontItems.push(...data);
             for (let i = 0, length = data.length; i < length; ++i) {
                 const node = data[i];
-                const api = node.api;
+                const { api, companion } = node;
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
-                let { backgroundColor, fontFamily, fontStyle, fontWeight } = stored;
-                const companion = node.companion;
+                let { fontFamily, fontStyle, fontWeight, backgroundColor } = stored,
+                    closest: Undef<boolean>;
                 if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     const fontData = companion.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
                     if (fontData) {
@@ -173,9 +173,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         else {
                             const items = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
                             if (items.length) {
-                                if (node.api >= BUILD_VERSION.PIE) {
-                                    node.android('textFontWeight', fontWeight);
-                                }
                                 actualFontWeight = +fontWeight;
                                 for (const { fontWeight: weight } of items) {
                                     if (weight > actualFontWeight) {
@@ -185,6 +182,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 }
                                 fontWeight ||= items.pop()!.fontWeight.toString();
                                 valid = true;
+                                closest = true;
                             }
                             else if (index < array.length - 1) {
                                 return false;
@@ -195,7 +193,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         if (valid) {
                             const font = fonts.get(fontName = convertWord(fontName)) || {};
-                            font[`${value}|${fontStyle}|${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
+                            font[`${value};${fontStyle};${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
                             fonts.set(fontName, font);
                             fontFamily = `@font/${fontName}`;
                         }
@@ -217,15 +215,25 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     return true;
                 });
-                addFontItem(node, 0, 'fontFamily', fontFamily);
-                addFontItem(node, 1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));
-                if (stored.color) {
-                    addFontItem(node, 2, 'color', Resource.addColor(resourceId, stored.color));
+                const fontSize = truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px');
+                const fontColor = stored.color && Resource.addColor(resourceId, stored.color) || '';
+                if (node.is(CONTAINER_NODE.TEXT) && api >= BUILD_VERSION.PIE) {
+                    (textMap[fontFamily + ';' + fontSize + ';' + fontWeight + ';' + fontStyle + ';' + fontColor] ||= []).push(node);
                 }
-                addFontItem(node, 3, 'fontWeight', fontWeight);
-                addFontItem(node, 4, 'fontStyle', fontStyle);
-                if (backgroundColor) {
-                    addFontItem(node, 5, 'backgroundColor', Resource.addColor(resourceId, backgroundColor, node.inputElement));
+                else {
+                    addFontItem(node, 0, 'fontFamily', fontFamily);
+                    addFontItem(node, 1, 'fontSize', fontSize);
+                    if (fontColor) {
+                        addFontItem(node, 2, 'color', fontColor);
+                    }
+                    addFontItem(node, 3, 'fontWeight', fontWeight);
+                    addFontItem(node, 4, 'fontStyle', fontStyle);
+                    if (backgroundColor) {
+                        addFontItem(node, 5, 'backgroundColor', Resource.addColor(resourceId, backgroundColor, node.inputElement));
+                    }
+                    if (closest && node.api >= BUILD_VERSION.PIE) {
+                        node.android('textFontWeight', fontWeight);
+                    }
                 }
             }
             groupMap[tag] = sorted;
@@ -379,11 +387,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const styleData: IStyleAttribute<T>[] = [];
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
-                for (const value of attrs.split(';')) {
-                    const match = REGEXP_FONTATTRIBUTE.exec(value);
-                    if (match) {
-                        items.push({ key: match[1], value: match[2] });
-                    }
+                for (const attr of attrs.split(';')) {
+                    const [key, value] = splitPair(attr, '=');
+                    items.push({ key: 'android:' + key, value: trimEnclosing(value) });
                 }
                 styleData.push({
                     name: '',
@@ -487,6 +493,33 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     styles.set(name, { name, parent, items });
                 }
             }
+        }
+        for (const attr in textMap) {
+            const [fontFamily, fontSize, fontWeight, fontStyle, fontColor] = attr.split(';');
+            const nodes = textMap[attr];
+            let tagName = nodes[0].tagName;
+            if (tagName[0] === '#') {
+                tagName = '';
+            }
+            const basename = 'Text' + (tagName ? '_' + capitalize(tagName) : '') + (fontWeight ? '_' + fontWeight : '');
+            let name = basename,
+                i = 0;
+            while (styles.has(name)) {
+                name = basename + '_' + ++i;
+            }
+            const items: StringValue[] = [
+                { key: 'android:fontFamily', value: fontFamily },
+                { key: 'android:textSize', value: fontSize },
+                { key: 'android:textFontWeight', value: fontWeight || '400' }
+            ];
+            if (fontStyle) {
+                items.push({ key: 'android:textStyle', value: fontStyle });
+            }
+            if (fontColor) {
+                items.push({ key: 'android:textColor', value: `@color/${fontColor}` });
+            }
+            styles.set(name, { name, parent: '', items } as StyleAttribute);
+            nodes.forEach(node => node.android('textAppearance', `@style/${name}`));
         }
     }
 }

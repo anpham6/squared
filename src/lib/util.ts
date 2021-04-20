@@ -29,7 +29,7 @@ export function hasKeys(obj: PlainObject) {
 }
 
 export function capitalize(value: string, upper?: boolean) {
-    return upper === false ? value[0].toLowerCase() + value.substring(1) : value[0].toUpperCase() + value.substring(1).toLowerCase();
+    return typeof value === 'string' ? upper === false ? value[0].toLowerCase() + value.substring(1) : value[0].toUpperCase() + value.substring(1).toLowerCase() : '';
 }
 
 export function convertHyphenated(value: string, char = '-') {

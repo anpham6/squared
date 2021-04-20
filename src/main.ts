@@ -187,7 +187,7 @@ export function setFramework(value: Framework, options?: PlainObject | string, .
     else if (typeof cache[0] === 'string') {
         saveName = cache[0];
     }
-    const fromCache = cache[cache.length - 1] === true;
+    const fromCache = cache[cache.length - 1];
     const reloading = framework !== null;
     const mergeSettings = (baseSettings: UserSettings, name: string) => {
         if (loadName) {
@@ -220,7 +220,7 @@ export function setFramework(value: Framework, options?: PlainObject | string, .
                 delete settings[attr];
             }
         }
-        const appBase = fromCache ? value.cached() : value.create();
+        const appBase = fromCache === true ? value.cached() : value.create();
         main = appBase.application;
         file = main.fileHandler;
         extensionManager = main.extensionManager;

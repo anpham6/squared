@@ -46,8 +46,9 @@ interface BitmapData {
 
 interface ShapeStrokeData {
     color: string;
-    dashWidth: string;
-    dashGap: string;
+    width?: string;
+    dashWidth?: string;
+    dashGap?: string;
 }
 
 interface LayerList {
@@ -180,11 +181,11 @@ function getBorderStyle(resourceId: number, border: BorderAttribute, direction =
 }
 
 function getBorderStroke(resourceId: number, border: BorderAttribute, direction = -1, hasInset?: boolean, isInset?: boolean) {
-    let result: StandardMap;
+    let result: ShapeStrokeData;
     if (isAlternatingBorder(border.style)) {
         const width = border.width;
         result = getBorderStyle(resourceId, border, direction, isInset !== true);
-        result.width = isInset ? (Math.ceil(width / 2) * 2) + 'px' : (hasInset ? Math.ceil(width / 2) : width) + 'px';
+        result.width = (isInset ? (Math.ceil(width / 2) * 2) : (hasInset ? Math.ceil(width / 2) : width)) + 'px';
     }
     else {
         result = getBorderStyle(resourceId, border);
@@ -415,7 +416,7 @@ function setBorderStyle(resourceId: number, layerList: LayerList, borders: Undef
     }
 }
 
-const createStrokeColor = (resourceId: number, value: ColorData): ShapeStrokeData => ({ color: getColorValue(resourceId, value), dashWidth: '', dashGap: '' });
+const createStrokeColor = (resourceId: number, value: ColorData): ShapeStrokeData => ({ color: getColorValue(resourceId, value) });
 const isBorderEqual = (border: BorderAttribute, other: BorderAttribute) => border.style === border.style && border.width === other.width && border.color.rgbaAsString === other.color.rgbaAsString;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 const checkBackgroundPosition = (value: string, adjacent: string, fallback: string) => value !== 'center' && value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1 ? /^[a-z]+$/.test(value) ? value + ' 0px' : fallback + ' ' + value : value;
@@ -568,7 +569,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     return;
                                 }
                             }
-                            const fontStyle = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
+                            const fontStyle = !node.is(CONTAINER_NODE.TEXT) && node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
                             if (fontStyle) {
                                 fontStyle.backgroundColor = backgroundColor;
                             }
@@ -679,7 +680,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         }
         if (border && !isAlternatingBorder(border.style, Math.round(border.width)) && !(border.style === 'double' && Math.floor(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);
-            if (images && images.length || indentWidth || borderOnly) {
+            if (images && images.length || indentWidth) {
                 layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined, stroke, indentOffset);
             }
             else {
