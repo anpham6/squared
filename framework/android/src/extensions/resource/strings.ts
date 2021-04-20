@@ -106,13 +106,16 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     valueString = upperCaseString(valueString);
                                     break;
                             }
-                            const textDecorationLine = node.css('textDecorationLine');
-                            let decoration = 0;
-                            if (textDecorationLine !== 'none') {
-                                if (textDecorationLine.includes('underline')) {
+                            let textDecorationLine = node.css('textDecorationLine'),
+                                decoration = 0;
+                            if (textDecorationLine === 'none') {
+                                textDecorationLine = node.cssAscend('textDecorationLine', { modified: true });
+                            }
+                            if (textDecorationLine) {
+                                if (textDecorationLine.indexOf('underline') !== -1) {
                                     decoration |= 1;
                                 }
-                                if (textDecorationLine.includes('line-through')) {
+                                if (textDecorationLine.indexOf('line-through') !== -1) {
                                     decoration |= 2;
                                 }
                             }

@@ -1,4 +1,4 @@
-/* android-framework 2.5.7
+/* android-framework 2.5.8
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -9076,15 +9076,25 @@ var android = (function () {
 
     const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_TEMPLATE } = squared.base.lib.constant;
     function addTextDecorationLine(node, attr) {
-        node.cascade(item => {
-            if (item.textElement) {
-                let value = item.css('textDecorationLine');
-                if (!value.includes(attr)) {
-                    value += (value ? ' ' : '') + attr;
-                    item.css('textDecorationLine', value);
-                }
+        if (!checkTextElement(node, attr)) {
+            node.cascade((item) => {
+                checkTextElement(item, attr);
+            });
+        }
+    }
+    function checkTextElement(node, attr) {
+        if (node.textElement) {
+            let value = node.css('textDecorationLine');
+            if (!value || value === 'none') {
+                value = attr;
             }
-        });
+            else if (value.indexOf(attr) === -1) {
+                value += ' ' + attr;
+            }
+            node.css('textDecorationLine', value);
+            return true;
+        }
+        return false;
     }
     const getBoundsHeight = (node) => Math.floor(node.actualHeight - node.contentBoxHeight);
     class Accessibility extends squared.base.extensions.Accessibility {
@@ -9154,6 +9164,11 @@ var android = (function () {
                             break;
                         case 'BUTTON':
                             this.subscribers.add(node);
+                            node.naturalChildren.forEach((item) => {
+                                if (!item.pageFlow && item.zIndex >= 0) {
+                                    item.android('elevation', '2px');
+                                }
+                            });
                             break;
                         case 'DEL':
                             addTextDecorationLine(node, 'line-through');
@@ -15878,13 +15893,15 @@ var android = (function () {
                                         valueString = upperCaseString(valueString);
                                         break;
                                 }
-                                const textDecorationLine = node.css('textDecorationLine');
-                                let decoration = 0;
-                                if (textDecorationLine !== 'none') {
-                                    if (textDecorationLine.includes('underline')) {
+                                let textDecorationLine = node.css('textDecorationLine'), decoration = 0;
+                                if (textDecorationLine === 'none') {
+                                    textDecorationLine = node.cssAscend('textDecorationLine', { modified: true });
+                                }
+                                if (textDecorationLine) {
+                                    if (textDecorationLine.indexOf('underline') !== -1) {
                                         decoration |= 1;
                                     }
-                                    if (textDecorationLine.includes('line-through')) {
+                                    if (textDecorationLine.indexOf('line-through') !== -1) {
                                         decoration |= 2;
                                     }
                                 }
@@ -18248,10 +18265,7 @@ var android = (function () {
             }
         },
         create() {
-            application = new Application(2 /* ANDROID */, View, Controller, squared.base.ExtensionManager, Resource);
-            file = new File();
-            application.resourceHandler.fileHandler = file;
-            application.builtInExtensions = new Map([
+            application = new Application(2 /* ANDROID */, View, Controller, squared.base.ExtensionManager, Resource, new Map([
                 ["squared.accessibility" /* ACCESSIBILITY */, new Accessibility("squared.accessibility" /* ACCESSIBILITY */, 2 /* ANDROID */)],
                 ["android.delegate.background" /* DELEGATE_BACKGROUND */, new Background("android.delegate.background" /* DELEGATE_BACKGROUND */, 2 /* ANDROID */)],
                 ["android.delegate.negative-x" /* DELEGATE_NEGATIVEX */, new NegativeX("android.delegate.negative-x" /* DELEGATE_NEGATIVEX */, 2 /* ANDROID */)],
@@ -18280,7 +18294,9 @@ var android = (function () {
                 ["android.resource.data" /* RESOURCE_DATA */, new ResourceData("android.resource.data" /* RESOURCE_DATA */, 2 /* ANDROID */)],
                 ["android.external" /* EXTERNAL */, new External("android.external" /* EXTERNAL */, 2 /* ANDROID */)],
                 ["android.substitute" /* SUBSTITUTE */, new Substitute("android.substitute" /* SUBSTITUTE */, 2 /* ANDROID */)]
-            ]);
+            ]));
+            file = new File();
+            application.resourceHandler.fileHandler = file;
             return {
                 application,
                 framework: 2 /* ANDROID */,

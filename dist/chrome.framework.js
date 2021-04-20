@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.7
+/* chrome-framework 2.5.8
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -610,6 +610,9 @@ var chrome = (function () {
                                 }
                                 if (!pathname) {
                                     delete data.uri;
+                                }
+                                if (this.processExtensions(data)) {
+                                    result.push(data);
                                 }
                             }
                         }

@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.5.7
+/* vdom-lite-framework 2.5.8
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -76,8 +76,9 @@ var vdom = (function () {
     }
     const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
     class Application$1 {
-        constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor) {
+        constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor, builtInExtensions = new Map()) {
             this.framework = framework;
+            this.builtInExtensions = builtInExtensions;
             this.extensions = [];
             this.closed = false;
             this.elementMap = null;
@@ -481,8 +482,8 @@ var vdom = (function () {
             return result;
         }
         applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
-            var _a, _b, _c, _d;
-            var _e;
+            var _a, _b, _c, _d, _e;
+            var _f;
             const resource = this.resourceHandler;
             const cssText = item.cssText;
             switch (item.type) {
@@ -512,7 +513,14 @@ var vdom = (function () {
                                             for (const name in CSS_SHORTHANDNONE) {
                                                 const css = CSS_SHORTHANDNONE[name];
                                                 if (css.value.includes(baseAttr)) {
-                                                    if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$1(css.valueOfNone))) {
+                                                    if (hasExactValue(css.name, 'none')) {
+                                                        const valueOfNone = (_b = CSS_PROPERTIES$1[baseAttr]) === null || _b === void 0 ? void 0 : _b.valueOfNone;
+                                                        if (valueOfNone) {
+                                                            value = valueOfNone;
+                                                        }
+                                                        break required;
+                                                    }
+                                                    if (hasExactValue(css.name, 'initial') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$1(css.valueOfNone))) {
                                                         break required;
                                                     }
                                                     break;
@@ -527,7 +535,7 @@ var vdom = (function () {
                                         case 'backgroundImage':
                                         case 'listStyleImage':
                                         case 'content':
-                                            value = parseImageUrl(value, (_b = item.parentStyleSheet) === null || _b === void 0 ? void 0 : _b.href, resource, resourceId);
+                                            value = parseImageUrl(value, (_c = item.parentStyleSheet) === null || _c === void 0 ? void 0 : _c.href, resource, resourceId);
                                             break;
                                     }
                                     break;
@@ -547,7 +555,7 @@ var vdom = (function () {
                         let match;
                         while (match = REGEXP_IMPORTANT.exec(cssText)) {
                             const attr = convertCamelCase$1(match[1]);
-                            const value = (_c = CSS_PROPERTIES$1[attr]) === null || _c === void 0 ? void 0 : _c.value;
+                            const value = (_d = CSS_PROPERTIES$1[attr]) === null || _d === void 0 ? void 0 : _d.value;
                             if (Array.isArray(value)) {
                                 for (let i = 0, length = value.length; i < length; ++i) {
                                     important[value[i]] = true;
@@ -603,7 +611,7 @@ var vdom = (function () {
                         const length = elements.length;
                         if (length === 0) {
                             if (resource && this.session.unusedStyles && !hostElement) {
-                                ((_e = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_e.unusedStyles = new Set())).add(selectorText);
+                                ((_f = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_f.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
@@ -639,7 +647,7 @@ var vdom = (function () {
                 }
                 case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        resource.parseFontFace(resourceId, cssText, (_d = item.parentStyleSheet) === null || _d === void 0 ? void 0 : _d.href);
+                        resource.parseFontFace(resourceId, cssText, (_e = item.parentStyleSheet) === null || _e === void 0 ? void 0 : _e.href);
                     }
                     break;
                 case CSSRule.SUPPORTS_RULE:
@@ -3022,7 +3030,7 @@ var vdom = (function () {
             return endsWith(this.display, 'grid');
         }
         get tableElement() {
-            return this.tagName === 'TABLE' || this.display === 'table';
+            return this.tagName === 'TABLE';
         }
         get inputElement() {
             switch (this.tagName) {

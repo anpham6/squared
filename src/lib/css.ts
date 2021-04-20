@@ -454,7 +454,8 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     backgroundColor: {
         trait: CSS_TRAITS.CALC,
-        value: 'transparent'
+        value: 'transparent',
+        valueOfNone: 'transparent'
     },
     backgroundImage: {
         trait: CSS_TRAITS.CALC,
@@ -2728,36 +2729,33 @@ export function checkFontSizeValue(value: string, fixedWidth?: boolean) {
 
 export function getKeyframesRules(documentRoot: DocumentOrShadowRoot = document): KeyframesMap {
     const result = new Map<string, KeyframeData>();
-    violation: {
-        const styleSheets = documentRoot.styleSheets;
-        for (let i = 0, length = styleSheets.length; i < length; ++i) {
-            try {
-                const cssRules = styleSheets[i].cssRules;
-                if (cssRules) {
-                    for (let j = 0, q = cssRules.length; j < q; ++j) {
-                        try {
-                            const item = cssRules[j] as CSSKeyframesRule;
-                            if (item.type === CSSRule.KEYFRAMES_RULE) {
-                                const value = parseKeyframes(item.cssRules);
-                                if (value) {
-                                    const data = result.get(item.name);
-                                    if (data) {
-                                        Object.assign(data, value);
-                                    }
-                                    else {
-                                        result.set(item.name, value);
-                                    }
+    const styleSheets = documentRoot.styleSheets;
+    for (let i = 0, length = styleSheets.length; i < length; ++i) {
+        try {
+            const cssRules = styleSheets[i].cssRules;
+            if (cssRules) {
+                for (let j = 0, q = cssRules.length; j < q; ++j) {
+                    try {
+                        const item = cssRules[j] as CSSKeyframesRule;
+                        if (item.type === CSSRule.KEYFRAMES_RULE) {
+                            const value = parseKeyframes(item.cssRules);
+                            if (value) {
+                                const data = result.get(item.name);
+                                if (data) {
+                                    Object.assign(data, value);
+                                }
+                                else {
+                                    result.set(item.name, value);
                                 }
                             }
                         }
-                        catch {
-                            break violation;
-                        }
+                    }
+                    catch {
                     }
                 }
             }
-            catch {
-            }
+        }
+        catch {
         }
     }
     return result;

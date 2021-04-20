@@ -170,6 +170,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             switch (element.tagName) {
                 case 'A':
                     styleMap.color ||= this._settingsStyle.anchorFontColor;
+                    styleMap.textDecorationLine ||= 'underline';
                     break;
                 case 'INPUT': {
                     styleMap.fontSize ||= this._settingsStyle.formFontSize;

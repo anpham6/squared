@@ -1,4 +1,4 @@
-/* squared.base 2.5.7
+/* squared.base 2.5.8
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -77,8 +77,9 @@ this.squared.base = (function (exports) {
     }
     const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
     class Application {
-        constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor) {
+        constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor, builtInExtensions = new Map()) {
             this.framework = framework;
+            this.builtInExtensions = builtInExtensions;
             this.extensions = [];
             this.closed = false;
             this.elementMap = null;
@@ -482,8 +483,8 @@ this.squared.base = (function (exports) {
             return result;
         }
         applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
-            var _a, _b, _c, _d;
-            var _e;
+            var _a, _b, _c, _d, _e;
+            var _f;
             const resource = this.resourceHandler;
             const cssText = item.cssText;
             switch (item.type) {
@@ -513,7 +514,14 @@ this.squared.base = (function (exports) {
                                             for (const name in CSS_SHORTHANDNONE) {
                                                 const css = CSS_SHORTHANDNONE[name];
                                                 if (css.value.includes(baseAttr)) {
-                                                    if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$3(css.valueOfNone))) {
+                                                    if (hasExactValue(css.name, 'none')) {
+                                                        const valueOfNone = (_b = CSS_PROPERTIES$4[baseAttr]) === null || _b === void 0 ? void 0 : _b.valueOfNone;
+                                                        if (valueOfNone) {
+                                                            value = valueOfNone;
+                                                        }
+                                                        break required;
+                                                    }
+                                                    if (hasExactValue(css.name, 'initial') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$3(css.valueOfNone))) {
                                                         break required;
                                                     }
                                                     break;
@@ -528,7 +536,7 @@ this.squared.base = (function (exports) {
                                         case 'backgroundImage':
                                         case 'listStyleImage':
                                         case 'content':
-                                            value = parseImageUrl(value, (_b = item.parentStyleSheet) === null || _b === void 0 ? void 0 : _b.href, resource, resourceId);
+                                            value = parseImageUrl(value, (_c = item.parentStyleSheet) === null || _c === void 0 ? void 0 : _c.href, resource, resourceId);
                                             break;
                                     }
                                     break;
@@ -548,7 +556,7 @@ this.squared.base = (function (exports) {
                         let match;
                         while (match = REGEXP_IMPORTANT.exec(cssText)) {
                             const attr = convertCamelCase$2(match[1]);
-                            const value = (_c = CSS_PROPERTIES$4[attr]) === null || _c === void 0 ? void 0 : _c.value;
+                            const value = (_d = CSS_PROPERTIES$4[attr]) === null || _d === void 0 ? void 0 : _d.value;
                             if (Array.isArray(value)) {
                                 for (let i = 0, length = value.length; i < length; ++i) {
                                     important[value[i]] = true;
@@ -604,7 +612,7 @@ this.squared.base = (function (exports) {
                         const length = elements.length;
                         if (length === 0) {
                             if (resource && this.session.unusedStyles && !hostElement) {
-                                ((_e = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_e.unusedStyles = new Set())).add(selectorText);
+                                ((_f = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_f.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
@@ -640,7 +648,7 @@ this.squared.base = (function (exports) {
                 }
                 case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        resource.parseFontFace(resourceId, cssText, (_d = item.parentStyleSheet) === null || _d === void 0 ? void 0 : _d.href);
+                        resource.parseFontFace(resourceId, cssText, (_e = item.parentStyleSheet) === null || _e === void 0 ? void 0 : _e.href);
                     }
                     break;
                 case CSSRule.SUPPORTS_RULE:
@@ -4058,7 +4066,7 @@ this.squared.base = (function (exports) {
             return endsWith$2(this.display, 'grid');
         }
         get tableElement() {
-            return this.tagName === 'TABLE' || this.display === 'table';
+            return this.tagName === 'TABLE';
         }
         get inputElement() {
             switch (this.tagName) {
@@ -5038,11 +5046,11 @@ this.squared.base = (function (exports) {
     const { FILE: FILE$1, STRING: STRING$1 } = squared.lib.regex;
     const { extractURL, resolveURL: resolveURL$1 } = squared.lib.css;
     const { convertBase64: convertBase64$1, endsWith: endsWith$1, fromLastIndexOf, isBase64, resolvePath, splitPairStart, startsWith: startsWith$4, trimBoth: trimBoth$1 } = squared.lib.util;
-    const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
-    const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
-    const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
-    const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
-    const REGEXP_FONTURL = /\s?(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
+    const REGEXP_FONTFACE = /@font-face\s*{([^}]+)}/;
+    const REGEXP_FONTFAMILY = /\bfont-family:\s*([^;]+);/;
+    const REGEXP_FONTSTYLE = /\bfont-style:\s*(\w+)\s*;/;
+    const REGEXP_FONTWEIGHT = /\bfont-weight:\s*([^;]+);/;
+    const REGEXP_FONTURL = /\b(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
     const REGEXP_DATAURI = new RegExp(`^${STRING$1.DATAURI}$`);
     class Resource {
         constructor(application) {
@@ -5216,13 +5224,30 @@ this.squared.base = (function (exports) {
             if (value) {
                 let fontFamily = (_b = REGEXP_FONTFAMILY.exec(value)) === null || _b === void 0 ? void 0 : _b[1].trim();
                 if (fontFamily) {
-                    const fontStyle = ((_c = REGEXP_FONTSTYLE.exec(value)) === null || _c === void 0 ? void 0 : _c[1].toLowerCase()) || 'normal';
-                    const fontWeight = +(((_d = REGEXP_FONTWEIGHT.exec(value)) === null || _d === void 0 ? void 0 : _d[1]) || '400');
+                    const fontStyle = ((_c = REGEXP_FONTSTYLE.exec(value)) === null || _c === void 0 ? void 0 : _c[1]) || 'normal';
+                    const weight = (_d = REGEXP_FONTWEIGHT.exec(value)) === null || _d === void 0 ? void 0 : _d[1].trim();
+                    let fontWeight = 400;
+                    if (weight) {
+                        switch (weight) {
+                            case 'normal':
+                                break;
+                            case 'lighter':
+                                fontWeight = 100;
+                                break;
+                            case 'bold':
+                            case 'bolder':
+                                fontWeight = 700;
+                                break;
+                            default:
+                                fontWeight = +weight || 400;
+                                break;
+                        }
+                    }
                     fontFamily = trimBoth$1(fontFamily, '"');
                     let match;
                     while (match = REGEXP_FONTURL.exec(value)) {
                         const url = (match[2] || match[3] || match[4]).trim();
-                        let srcFormat = match[5] ? match[5].toLowerCase() : '', mimeType = '', srcLocal, srcUrl, srcBase64;
+                        let srcFormat = match[5], mimeType = '', srcLocal, srcUrl, srcBase64;
                         const setMimeType = () => {
                             switch (srcFormat) {
                                 case 'truetype':
@@ -6606,13 +6631,11 @@ this.squared.base = (function (exports) {
                 if (!isNumber$2(fontWeight)) {
                     switch (fontWeight) {
                         case 'lighter':
-                            fontWeight = '200';
+                        case 'bolder':
+                            fontWeight = node.style.fontWeight;
                             break;
                         case 'bold':
                             fontWeight = '700';
-                            break;
-                        case 'bolder':
-                            fontWeight = '900';
                             break;
                         default:
                             fontWeight = '400';
@@ -11289,6 +11312,7 @@ this.squared.base = (function (exports) {
                 switch (element.tagName) {
                     case 'A':
                         styleMap.color || (styleMap.color = this._settingsStyle.anchorFontColor);
+                        styleMap.textDecorationLine || (styleMap.textDecorationLine = 'underline');
                         break;
                     case 'INPUT': {
                         styleMap.fontSize || (styleMap.fontSize = this._settingsStyle.formFontSize);

@@ -689,6 +689,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             if (!pathname) {
                                 delete data.uri;
                             }
+                            if (this.processExtensions(data)) {
+                                result.push(data);
+                            }
                         }
                     }
                 }
