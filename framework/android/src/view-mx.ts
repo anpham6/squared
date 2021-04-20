@@ -33,10 +33,7 @@ const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent
 const BOX_MARGIN = CSS_PROPERTIES.margin!.value as string[];
 const BOX_PADDING = CSS_PROPERTIES.padding!.value as string[];
 
-const REGEXP_CONTROLID = /[^\w$\-_.]/g;
-const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
 const CACHE_INDENT: StringMap = {};
-
 const OPTIONS_LINEHEIGHT: CssStyleMap = {
     height: 'auto',
     minHeight: 'auto',
@@ -1877,9 +1874,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public formatted(value: string, overwrite = true) {
-            const match = REGEXP_FORMATTED.exec(value);
+            const match = /^([^=]+)="(.+)"$/.exec(value);
             if (match) {
-                this.attr(match[1] || '_', match[2], match[3], overwrite);
+                const [namespace, attr] = splitPair(match[1], ':');
+                this.attr(attr && namespace || '_', attr || namespace, match[2], overwrite);
             }
         }
 
@@ -2985,7 +2983,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.styleElement) {
                         const value = this.elementId.trim() || getNamedItem(this.element as HTMLElement, 'name');
                         if (value) {
-                            name = value === 'parent' || RESERVED_JAVA.includes(value) ? '_' + value : value.replace(REGEXP_CONTROLID, '_');
+                            name = value === 'parent' || RESERVED_JAVA.includes(value) ? '_' + value : value.replace(/[^\w$\-_.]/g, '_');
                         }
                     }
                     return this._controlId = convertWord(Resource.generateId(this.localSettings.resourceId, 'android', name || fromLastIndexOf(controlName, '.').toLowerCase(), name ? 0 : 1));

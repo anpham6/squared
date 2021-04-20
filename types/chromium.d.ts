@@ -17,4 +17,5 @@ interface HTMLSourceElement {
 
 interface CSSStyleDeclaration {
     counterSet: string;
+    fontVariationSettings: string;
 }

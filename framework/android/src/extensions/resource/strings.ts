@@ -106,15 +106,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     valueString = upperCaseString(valueString);
                                     break;
                             }
-                            let textDecorationLine = node.cssValue('textDecorationLine');
-                            if (!textDecorationLine) {
-                                textDecorationLine = node.css('textDecorationLine');
-                                if (textDecorationLine === 'none') {
-                                    textDecorationLine = node.cssAscend('textDecorationLine', { modified: true });
-                                }
+                            let textDecorationLine = node.css('textDecorationLine'),
+                                decoration = 0;
+                            if (textDecorationLine === 'none') {
+                                textDecorationLine = node.cssAscend('textDecorationLine', { modified: true });
                             }
-                            let decoration = 0;
-                            if (textDecorationLine && textDecorationLine !== 'none') {
+                            if (textDecorationLine) {
                                 if (textDecorationLine.indexOf('underline') !== -1) {
                                     decoration |= 1;
                                 }
@@ -301,8 +298,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     return a + (a ? ', ' : '') + b;
                                 }, fontFeature);
                             }
-                            if (node.has('fontVariationSettings' as CssStyleAttr)) {
-                                splitSome(replaceAll(node.cssValue('fontVariationSettings' as CssStyleAttr), '"', "'"), variant => {
+                            if (node.has('fontVariationSettings')) {
+                                splitSome(replaceAll(node.cssValue('fontVariationSettings'), '"', "'"), variant => {
                                     fontVariation = delimitString(fontVariation, variant);
                                 });
                             }
