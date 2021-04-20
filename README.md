@@ -187,8 +187,6 @@ squared.settings = {
     supportRTL: true,
     supportNegativeLeftTop: true,
     preloadImages: true,
-    compressImages: false, // TinyPNG API Key <https://tinypng.com/developers>
-    convertImages: "", // png | jpeg | webp | bmp
     preloadFonts: true,
     preloadCustomElements: true,
     enabledSVG: true,
@@ -196,10 +194,14 @@ squared.settings = {
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
     lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
     baseLayoutAsFragment: false, // FragmentContainerView
-    customizationsOverwritePrivilege: true,
-    showAttributes: true,
     createElementMap: false,
     createQuerySelectorMap: false,
+
+    // Not customizable with parseDocument
+    compressImages: false, // TinyPNG API Key <https://tinypng.com/developers>
+    convertImages: "", // png | jpeg | webp | bmp
+    showAttributes: true,
+    customizationsOverwritePrivilege: true,
     pierceShadowRoot: true,
     convertPixels: "dp",
     insertSpaces: 4,

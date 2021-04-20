@@ -2089,11 +2089,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public supported(attr: string, value: string, result: PlainObject): boolean {
+        public supported(attr: string, value: string, output: PlainObject): boolean {
             const api = this.api;
             if (DEPRECATED_ATTRIBUTE.android[attr]) {
-                const valid = DEPRECATED_ATTRIBUTE.android[attr]!.call(this, result, api, value);
-                if (!valid || hasKeys(result)) {
+                const valid = DEPRECATED_ATTRIBUTE.android[attr]!.call(this, output, api, value);
+                if (!valid || hasKeys(output)) {
                     return valid;
                 }
             }
@@ -2103,7 +2103,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     case 'boolean':
                         return callback;
                     case 'function':
-                        return callback.call(this, result, api, value);
+                        return callback.call(this, output, api, value);
                 }
             }
             return true;
@@ -2128,18 +2128,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     else {
                                         const data: ObjectMap<string | boolean> = {};
                                         let value = obj[attr]!;
-                                        if (!this.supported(attr, value, data)) {
-                                            continue;
-                                        }
-                                        if (hasKeys(data)) {
-                                            if (isString(data.attr)) {
-                                                attr = data.attr;
+                                        if (this.supported(attr, value, data)) {
+                                            if (hasKeys(data)) {
+                                                if (isString(data.attr)) {
+                                                    attr = data.attr;
+                                                }
+                                                if (isString(data.value)) {
+                                                    value = data.value;
+                                                }
                                             }
-                                            if (isString(data.value)) {
-                                                value = data.value;
-                                            }
+                                            result.push(prefix + attr + `="${value}"`);
                                         }
-                                        result.push(prefix + attr + `="${value}"`);
                                     }
                                 }
                             }

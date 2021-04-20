@@ -322,15 +322,14 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     public createOptionArray(resourceId: number, element: HTMLSelectElement, controlId: string) {
         const [stringArray, numberArray] = Resource.getOptionArray(element);
         const numberAsResource = this.options.numberAsResource;
-        let result: Undef<string[]>;
-        if (!numberAsResource && numberArray) {
+        let result: string[] = [];
+        if (numberArray && !numberAsResource) {
             result = numberArray;
         }
         else {
             const resourceArray = stringArray || numberArray;
             if (resourceArray) {
                 const resource = this.resource;
-                result = [];
                 for (let i = 0, length = resourceArray.length; i < length; ++i) {
                     const value = Resource.addString(resourceId, replaceCharacterData(sanitizeString(resource.preFormatString(resourceArray[i]))), '', numberAsResource);
                     if (value) {
@@ -339,6 +338,6 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 }
             }
         }
-        return result && result.length ? Resource.insertStoredAsset(resourceId, 'arrays', `${controlId.toLowerCase()}_array`, result) : '';
+        return result.length ? Resource.insertStoredAsset(resourceId, 'arrays', controlId.toLowerCase() + '_array', result) : '';
     }
 }

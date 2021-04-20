@@ -158,7 +158,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 replaceAll(fontFamily, '"', '').split(',').some((value, index, array) => {
                     value = trimBoth(value, "'", true).toLowerCase();
                     let fontName = value,
-                        actualFontWeight = '';
+                        actualFontWeight = 0;
                     if (!disableFontAlias && FONT_REPLACE[fontName]) {
                         fontName = defaultFontFamily;
                     }
@@ -171,10 +171,20 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             createFont = true;
                         }
                         else {
-                            const font = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
-                            if (font.length) {
-                                actualFontWeight = fontWeight;
-                                fontWeight = font[0].fontWeight.toString();
+                            const items = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
+                            if (items.length) {
+                                if (node.api >= BUILD_VERSION.PIE) {
+                                    node.android('textFontWeight', fontWeight);
+                                }
+                                actualFontWeight = +fontWeight;
+                                fontWeight = items[0].fontWeight.toString();
+                                for (let j = 1; j < items.length; ++j) {
+                                    const weight = items[j].fontWeight;
+                                    if (weight > actualFontWeight) {
+                                        fontWeight = weight.toString();
+                                        break;
+                                    }
+                                }
                                 createFont = true;
                             }
                             else if (index < array.length - 1) {
@@ -198,7 +208,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         fontStyle = '';
                     }
                     if (actualFontWeight) {
-                        fontWeight = actualFontWeight;
+                        fontWeight = actualFontWeight.toString();
                     }
                     else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {
                         fontWeight = '';
