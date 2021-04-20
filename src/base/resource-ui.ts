@@ -1389,9 +1389,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                     else if (!node.naturalChild) {
                         if (!node.horizontalRowStart) {
-                            const element = node.element;
-                            const previousSibling = element && element.previousSibling;
-                            if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && startsWith(element!.textContent!.trim(), value.trim())) {
+                            const previousSibling = node.element?.previousSibling;
+                            if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling)) {
                                 value = value.replace(CHAR_LEADINGSPACE, this.STRING_SPACE);
                                 break;
                             }

@@ -140,6 +140,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             switch (element.tagName) {
                 case 'A':
                     style.color ||= this._settingsStyle.anchorFontColor;
+                    style.textDecorationLine ||= 'underline';
                     break;
                 case 'INPUT': {
                     const settings = this._settingsStyle;

@@ -1198,20 +1198,25 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public checkLinearHorizontal(layout: LayoutUI<T>) {
-        if (layout.node.lineHeight === 0 && (!layout.floated || !layout.floated.has('right')) && layout.singleRowAligned) {
-            const { fontSize, lineHeight } = layout.item(0) as T;
-            const boxWidth = layout.parent.actualBoxWidth();
-            let contentWidth = 0;
-            for (const node of layout) {
-                if (!(node.naturalChild && node.isEmpty() && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.multiline && !node.blockVertical && node.lineHeight === lineHeight && node.fontSize === fontSize && node.zIndex === 0 && !node.inputElement && !node.controlElement)) {
-                    return false;
-                }
-                contentWidth += node.linear.width;
-                if (contentWidth >= boxWidth) {
-                    return false;
-                }
+        if (layout.singleRowAligned) {
+            if ((layout.parent.renderParent as Null<T>)?.layoutGrid && layout.every(item => item.baselineElement)) {
+                return true;
             }
-            return true;
+            else if (layout.node.lineHeight === 0 && (!layout.floated || !layout.floated.has('right'))) {
+                const { fontSize, lineHeight } = layout.item(0) as T;
+                const boxWidth = layout.parent.actualBoxWidth();
+                let contentWidth = 0;
+                for (const node of layout) {
+                    if (!(node.naturalChild && node.isEmpty() && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.multiline && !node.blockVertical && node.lineHeight === lineHeight && node.fontSize === fontSize && node.zIndex === 0 && !node.inputElement && !node.controlElement)) {
+                        return false;
+                    }
+                    contentWidth += node.linear.width;
+                    if (contentWidth >= boxWidth) {
+                        return false;
+                    }
+                }
+                return true;
+            }
         }
         return false;
     }

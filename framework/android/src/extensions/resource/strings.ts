@@ -73,9 +73,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 const tagName = node.tagName;
                 switch (tagName) {
                     case 'SELECT': {
-                        const name = this.createOptionArray(resourceId, node.element as HTMLSelectElement, node.controlId);
-                        if (name) {
-                            node.android('entries', `@array/${name}`);
+                        const entries = this.createOptionArray(resourceId, node.element as HTMLSelectElement, node.controlId);
+                        if (entries) {
+                            node.android('entries', `@array/${entries}`);
                         }
                         break;
                     }
@@ -106,9 +106,15 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     valueString = upperCaseString(valueString);
                                     break;
                             }
-                            const textDecorationLine = node.css('textDecorationLine');
+                            let textDecorationLine = node.cssValue('textDecorationLine');
+                            if (!textDecorationLine) {
+                                textDecorationLine = node.css('textDecorationLine');
+                                if (textDecorationLine === 'none') {
+                                    textDecorationLine = node.cssAscend('textDecorationLine', { modified: true });
+                                }
+                            }
                             let decoration = 0;
-                            if (textDecorationLine !== 'none') {
+                            if (textDecorationLine && textDecorationLine !== 'none') {
                                 if (textDecorationLine.indexOf('underline') !== -1) {
                                     decoration |= 1;
                                 }

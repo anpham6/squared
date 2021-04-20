@@ -145,9 +145,9 @@ async function findElementAsync(element: HTMLElement, cache?: boolean) {
 }
 
 async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
-    let incomplete: Undef<boolean>;
     const elementMap = main!.elementMap;
     const result: Node[] = new Array(length);
+    let incomplete: Undef<boolean>;
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
         const item = elementMap.get(element) || await main!.parseDocument(element) as Node;

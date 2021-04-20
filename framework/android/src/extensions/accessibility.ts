@@ -9,15 +9,26 @@ import Resource from '../resource';
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_TEMPLATE } = squared.base.lib.constant;
 
 function addTextDecorationLine(node: View, attr: string) {
-    node.cascade(item => {
-        if (item.textElement) {
-            let value = item.css('textDecorationLine');
-            if (value.indexOf(attr) === -1) {
-                value += (value ? ' ' : '') + attr;
-                item.css('textDecorationLine', value);
-            }
+    if (!checkTextElement(node, attr)) {
+        node.cascade((item: View) => {
+            checkTextElement(item, attr);
+        });
+    }
+}
+
+function checkTextElement(node: View, attr: string) {
+    if (node.textElement) {
+        let value = node.css('textDecorationLine');
+        if (!value || value === 'none') {
+            value = attr;
         }
-    });
+        else if (value.indexOf(attr) === -1) {
+            value += ' ' + attr;
+        }
+        node.css('textDecorationLine', value);
+        return true;
+    }
+    return false;
 }
 
 const getBoundsHeight = (node: View) => Math.floor(node.actualHeight - node.contentBoxHeight);
@@ -86,6 +97,11 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         break;
                     case 'BUTTON':
                         this.subscribers.add(node);
+                        node.naturalChildren.forEach((item: T) => {
+                            if (!item.pageFlow && item.zIndex >= 0) {
+                                item.android('elevation', '2px');
+                            }
+                        });
                         break;
                     case 'DEL':
                         addTextDecorationLine(node, 'line-through');

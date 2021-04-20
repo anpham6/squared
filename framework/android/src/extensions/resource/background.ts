@@ -2,7 +2,7 @@ import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { BUILD_VERSION, CONTAINER_TAGNAME, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
+import { BUILD_VERSION, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X, XML_NAMESPACE } from '../../lib/constant';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
@@ -185,7 +185,7 @@ function getBorderStroke(resourceId: number, border: BorderAttribute, direction 
     if (isAlternatingBorder(border.style)) {
         const width = border.width;
         result = getBorderStyle(resourceId, border, direction, isInset !== true);
-        result.width = (isInset ? (Math.ceil(width / 2) * 2) : (hasInset ? Math.ceil(width / 2) : width)) + 'px';
+        result.width = (isInset ? Math.ceil(width / 2) * 2 : hasInset ? Math.ceil(width / 2) : width) + 'px';
     }
     else {
         result = getBorderStyle(resourceId, border);
@@ -520,10 +520,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             if (stored || boxImage) {
                 const images = this.getDrawableImages(resourceId, node, stored ||= {} as BoxStyle, boxImage);
-                if (node.controlName === CONTAINER_TAGNAME.BUTTON && stored.borderRadius?.length === 1 && images && images.some(item => item.vectorGradient) && node.api >= BUILD_VERSION.PIE) {
-                    node.android('buttonCornerRadius', stored.borderRadius[0]);
-                    delete stored.borderRadius;
-                }
                 const outline = stored.outline;
                 let indentWidth = 0;
                 if (outline && this.options.outlineAsInsetBorder) {
