@@ -166,9 +166,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         fontFamily = fontName;
                     }
                     else if (fontStyle && fontWeight) {
-                        let createFont: Undef<boolean>;
+                        let valid: Undef<boolean>;
                         if (resource.getFonts(resourceId, value, fontStyle, fontWeight).length) {
-                            createFont = true;
+                            valid = true;
                         }
                         else {
                             const items = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
@@ -177,15 +177,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     node.android('textFontWeight', fontWeight);
                                 }
                                 actualFontWeight = +fontWeight;
-                                fontWeight = items[0].fontWeight.toString();
-                                for (let j = 1; j < items.length; ++j) {
-                                    const weight = items[j].fontWeight;
+                                for (const { fontWeight: weight } of items) {
                                     if (weight > actualFontWeight) {
                                         fontWeight = weight.toString();
                                         break;
                                     }
                                 }
-                                createFont = true;
+                                fontWeight ||= items.pop()!.fontWeight.toString();
+                                valid = true;
                             }
                             else if (index < array.length - 1) {
                                 return false;
@@ -194,7 +193,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 fontFamily = defaultFontFamily;
                             }
                         }
-                        if (createFont) {
+                        if (valid) {
                             const font = fonts.get(fontName = convertWord(fontName)) || {};
                             font[`${value}|${fontStyle}|${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
                             fonts.set(fontName, font);

@@ -18,7 +18,6 @@ import Pattern from './lib/base/pattern';
 type ExtensionRequest = squared.ExtensionRequest;
 type ExtensionRequestObject = squared.ExtensionRequestObject;
 type FileActionOptions = squared.FileActionOptions;
-type FrameworkOptions = squared.FrameworkOptions;
 type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
 type File = squared.base.File<Node>;
@@ -124,7 +123,7 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
     let incomplete: Undef<boolean>;
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
-        const item = elementMap && elementMap.get(element) || main!.parseDocumentSync(element) as Node;
+        const item = elementMap.get(element) || main!.parseDocumentSync(element) as Node;
         if (item) {
             result[i] = item;
         }
@@ -179,28 +178,16 @@ export function setEndpoint(name: string, value: string) {
     }
 }
 
-export function setFramework(value: Framework, options?: FrameworkOptions | string, cache?: string | boolean) {
-    let settingsValue: Undef<PlainObject>,
-        cacheValue: Undef<boolean>,
-        saveName: Undef<string>,
-        loadName: Undef<string>;
+export function setFramework(value: Framework, options?: PlainObject | string, ...cache: (string | boolean)[]) {
+    let loadName: Undef<string>,
+        saveName: Undef<string>;
     if (typeof options === 'string') {
         loadName = options;
     }
-    else if (options) {
-        if (options.settings) {
-            ({ settings: settingsValue, saveAs: saveName, loadAs: loadName, cache: cacheValue } = options);
-        }
-        else {
-            settingsValue = options as PlainObject;
-            if (typeof cache === 'string') {
-                saveName = cache;
-            }
-        }
+    else if (typeof cache[0] === 'string') {
+        saveName = cache[0];
     }
-    if (typeof cache === 'boolean') {
-        cacheValue = cache;
-    }
+    const fromCache = cache[cache.length - 1] === true;
     const reloading = framework !== null;
     const mergeSettings = (baseSettings: UserSettings, name: string) => {
         if (loadName) {
@@ -216,24 +203,24 @@ export function setFramework(value: Framework, options?: FrameworkOptions | stri
         if (!framework) {
             Object.assign(baseSettings, settings);
         }
-        if (util.isPlainObject(settingsValue)) {
-            Object.assign(baseSettings, settingsValue);
-        }
-        if (saveName) {
-            try {
-                localStorage.setItem(saveName + '-' + name, JSON.stringify(baseSettings));
-            }
-            catch {
+        if (util.isPlainObject(options)) {
+            Object.assign(baseSettings, options);
+            if (saveName) {
+                try {
+                    localStorage.setItem(saveName + '-' + name, JSON.stringify(baseSettings));
+                }
+                catch {
+                }
             }
         }
     };
-    if (!main || framework !== value || cacheValue === false) {
+    if (!main || framework !== value || fromCache === false) {
         if (reloading && framework !== value) {
             for (const attr in settings) {
                 delete settings[attr];
             }
         }
-        const appBase = cacheValue ? value.cached() : value.create();
+        const appBase = fromCache ? value.cached() : value.create();
         main = appBase.application;
         file = main.fileHandler;
         extensionManager = main.extensionManager;
@@ -369,33 +356,21 @@ export function get(...values: string[]) {
     }
 }
 
-export function apply(value: ExtensionRequest, options: FrameworkOptions | string, saveName?: string) {
-    let settingsValue: Undef<PlainObject>,
-        loadName: Undef<string>;
-    if (typeof options === 'string') {
-        loadName = options;
-        options = {};
-    }
-    if (util.isPlainObject(options)) {
-        if (options.settings) {
-            ({ settings: settingsValue, saveAs: saveName, loadAs: loadName } = options as FrameworkOptions);
-        }
-        else {
-            settingsValue = options;
-        }
-        const mergeSettings = (name: string) => {
-            const result: StandardMap = {};
-            if (loadName) {
-                try {
-                    const storedSettings = localStorage.getItem(loadName + '-' + name);
-                    if (storedSettings) {
-                        Object.assign(result, JSON.parse(storedSettings));
-                    }
-                }
-                catch {
+export function apply(value: ExtensionRequest, options: PlainObject | string, saveName?: string) {
+    const mergeSettings = (name: string) => {
+        const result: StandardMap = {};
+        if (typeof options === 'string') {
+            try {
+                const storedSettings = localStorage.getItem(options + '-' + name);
+                if (storedSettings) {
+                    Object.assign(result, JSON.parse(storedSettings));
                 }
             }
-            Object.assign(result, settingsValue);
+            catch {
+            }
+        }
+        else if (util.isPlainObject(options)) {
+            Object.assign(result, options);
             if (saveName) {
                 try {
                     localStorage.setItem(saveName + '-' + name, JSON.stringify(result));
@@ -403,22 +378,22 @@ export function apply(value: ExtensionRequest, options: FrameworkOptions | strin
                 catch {
                 }
             }
-            return result;
-        };
-        if (typeof value === 'string') {
-            const ext = extensionManager && extensionManager.get(value, true) || addQueue.find(item => typeof item !== 'string' && item.name === value) as Undef<Extension>;
-            if (ext) {
-                value = ext;
-            }
-            else {
-                optionsQueue.set(value, mergeSettings(value));
-                return true;
-            }
         }
-        if (squared.base && value instanceof squared.base.Extension) {
-            Object.assign(value.options, mergeSettings(value.name));
+        return result;
+    };
+    if (typeof value === 'string') {
+        const ext = extensionManager && extensionManager.get(value, true) || addQueue.find(item => typeof item !== 'string' && item.name === value) as Undef<Extension>;
+        if (ext) {
+            value = ext;
+        }
+        else {
+            optionsQueue.set(value, mergeSettings(value));
             return true;
         }
+    }
+    if (squared.base && value instanceof squared.base.Extension) {
+        Object.assign(value.options, mergeSettings(value.name));
+        return true;
     }
     return false;
 }

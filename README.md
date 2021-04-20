@@ -196,13 +196,13 @@ squared.settings = {
     baseLayoutAsFragment: false, // FragmentContainerView
     createElementMap: false,
     createQuerySelectorMap: false,
+    pierceShadowRoot: true,
 
     // Not customizable with parseDocument
     compressImages: false, // TinyPNG API Key <https://tinypng.com/developers>
     convertImages: "", // png | jpeg | webp | bmp
     showAttributes: true,
     customizationsOverwritePrivilege: true,
-    pierceShadowRoot: true,
     convertPixels: "dp",
     insertSpaces: 4,
     showErrorMessages: true,
@@ -233,6 +233,8 @@ squared.settings = {
     createElementMap: true,
     createQuerySelectorMap: true,
     pierceShadowRoot: true,
+
+    // Not customizable with parseDocument
     showErrorMessages: false,
     webSocketPort: 80,
     webSocketSecurePort: 443,
@@ -254,6 +256,8 @@ squared.settings = {
     createElementMap: true,
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
+
+    // Not customizable with parseDocument
     showErrorMessages: false
 };
 ```
@@ -263,30 +267,10 @@ squared.settings = {
 Custom named user settings per framework can be saved to local storage and reloaded across all pages in the same domain. Extensions are configured using the same procedure.
 
 ```javascript
-interface FrameworkOptions {
-    settings?: PlainObject;
-    loadAs?: string;
-    saveAs?: string;
-    cache?: boolean;
-}
-
-// Initial save (required)
-squared.setFramework(android, {
-    settings: { compressImages: true, createQuerySelectorMap: true },
-    saveAs: "android-example",
-    cache: true
-});
-
-squared.setFramework(android, { loadAs: "android-example" });
-```
-
-```javascript
-// NOTE: squared 2.2.0
-
-// saveAs
+// Save
 squared.setFramework(android, { compressImages: true, createQuerySelectorMap: true }, "android-example");
 
-// loadAs
+// Load
 squared.setFramework(android, "android-example", true); // "cache" can also be used as the last argument
 ```
 
@@ -297,7 +281,9 @@ There is no official documentation for this project. The entire source code incl
 ```javascript
 .settings // See user preferences section
 
-setFramework(module: {}, options?: FrameworkOptions) // Install application interpreter
+setFramework(module: {}, options?: PlainObject, saveName?: string, cache?: boolean) // Install application interpreter
+setFramework(module: {}, loadName: string, cache?: boolean) // Load settings from Local Storage
+
 setHostname(value: string) // Use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
 setEndpoint(name: string, value: string) // Set pathname for serverless cloud functions (ASSETS_COPY | ASSETS_ARCHIVE | LOADER_DATA)
 
@@ -315,7 +301,7 @@ toString() // Current framework loaded
 add(...names: (string | Extension | ExtensionRequestObject)[]) // See extension configuration section
 remove(...names: (string | Extension)[]) // Remove extensions by namespace or control
 get(...names: (string | Extension)[]) // Retrieve extensions by namespace or control
-apply(name: string | Extension, options: FrameworkOptions) // See extension configuration section
+apply(name: string | Extension, options: PlainObject, saveName?: string) // See extension configuration section
 
 extend(functionMap: {}, framework?: number) // Add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
 

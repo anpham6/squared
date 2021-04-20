@@ -3,13 +3,6 @@ type RootElement = squared.base.RootElement;
 
 type PromiseResult = Promise<Void<PlainObject>>;
 
-export interface FrameworkOptions {
-    settings?: PlainObject;
-    loadAs?: string;
-    saveAs?: string;
-    cache?: boolean;
-}
-
 export interface FileActionOptions extends RequestData {
     exclusions?: Exclusions;
     callback?: (result: unknown) => void;
@@ -24,12 +17,12 @@ export type ExtensionRequestObject = ExtensionRequest | [ExtensionRequest, Plain
 export const settings: StandardMap;
 export function setHostname(value: string): void;
 export function setEndpoint(name: string, value: string): void;
-export function setFramework(value: PlainObject, options?: FrameworkOptions | PlainObject | string, cache?: boolean): void;
-export function setFramework(value: PlainObject, options?: FrameworkOptions | PlainObject, saveAs?: string): void;
+export function setFramework(value: PlainObject, options?: PlainObject | string, cache?: boolean): void;
+export function setFramework(value: PlainObject, options?: PlainObject, saveAs?: string, cache?: boolean): void;
 export function add(...values: ExtensionRequestObject[]): number;
 export function remove(...values: ExtensionRequest[]): number;
 export function get(...values: string[]): Undef<PlainObject | PlainObject[]>;
-export function apply(value: ExtensionRequest, options: FrameworkOptions | string, saveAs?: string): boolean;
+export function apply(value: ExtensionRequest, options: PlainObject | string, saveAs?: string): boolean;
 export function extend(functionMap: PlainObject, framework?: number): void;
 export function parseDocument(...elements: RootElement[]): Promise<Void<Node | Node[]>>;
 export function parseDocumentSync(...elements: RootElement[]): Void<Node | Node[]>;

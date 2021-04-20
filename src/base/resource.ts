@@ -455,7 +455,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             const font = assets.fonts.get(fontFamily.trim().toLowerCase());
             if (font) {
                 const mimeType = this.mimeTypeMap.font;
-                return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
+                return font.filter(item => startsWith(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType))).sort((a, b) => a.fontWeight - b.fontWeight);
             }
         }
         return [];
