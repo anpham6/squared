@@ -1,5 +1,3 @@
-import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
-
 import { BUILD_VERSION, CONTAINER_NODE } from '../../lib/constant';
 
 import type View from '../../view';
@@ -126,7 +124,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const groupMap: ObjectMap<StyleList<T>[]> = {};
         const fontItems: T[] = [];
         cache.each(node => {
-            if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
+            if (node.data(Resource.KEY_NAME, 'fontStyle')) {
                 const containerName = node.containerName;
                 (nameMap[containerName] ||= []).push(node);
             }
@@ -166,14 +164,25 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         fontFamily = fontName;
                     }
                     else if (fontStyle && fontWeight) {
-                        let valid: Undef<boolean>;
+                        if (startsWith(fontStyle, 'oblique')) {
+                            fontStyle = 'italic';
+                        }
+                        let foundFontStyle: Undef<string>;
                         if (resource.getFonts(resourceId, value, fontStyle, fontWeight).length) {
-                            valid = true;
+                            foundFontStyle = fontStyle;
                         }
                         else {
-                            const items = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
+                            let items = resource.getFonts(resourceId, value);
                             if (items.length) {
+                                foundFontStyle = 'normal';
                                 actualFontWeight = +fontWeight;
+                                if (fontStyle === 'italic') {
+                                    const italic = items.filter(item => item.fontStyle === 'italic');
+                                    if (italic.length) {
+                                        items = italic;
+                                        foundFontStyle = 'italic';
+                                    }
+                                }
                                 fontWeight = '';
                                 for (const { fontWeight: weight } of items) {
                                     if (weight > actualFontWeight) {
@@ -182,7 +191,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     }
                                 }
                                 fontWeight ||= items.pop()!.fontWeight.toString();
-                                valid = true;
                                 closest = true;
                             }
                             else if (index < array.length - 1) {
@@ -192,9 +200,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 fontFamily = defaultFontFamily;
                             }
                         }
-                        if (valid) {
+                        if (foundFontStyle) {
                             const font = fonts.get(fontName = convertWord(fontName)) || {};
-                            font[`${value};${fontStyle};${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
+                            font[`${value};${foundFontStyle};${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
                             fonts.set(fontName, font);
                             fontFamily = `@font/${fontName}`;
                         }
@@ -211,7 +219,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {
                         fontWeight = '';
                     }
-                    if (+fontWeight > 500) {
+                    if (+fontWeight >= 600) {
                         fontStyle += (fontStyle ? '|' : '') + 'bold';
                     }
                     return true;

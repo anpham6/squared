@@ -1047,7 +1047,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 this.setBoxStyle(node);
             }
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && (node.visible && !node.imageContainer || node.labelFor)) {
-                this.setFontStyle(node);
+                if (node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
+                    this.setFontStyle(node);
+                }
                 this.setValueString(node);
             }
         });
