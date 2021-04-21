@@ -16,12 +16,15 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const { hasCalc, isAngle, isCustomProperty, isPercent, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
+const { STRING } = squared.lib.regex;
+
+const { hasCalc, isAngle, isCustomProperty, getKeyframesRules, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitPairEnd, startsWith } = squared.lib.util;
+const { convertCamelCase, convertPercent, convertWord, iterateArray, replaceMap, sortNumber, splitEnclosing, splitPairEnd, spliceString, startsWith } = squared.lib.util;
 
 const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
 
+const REGEXP_PERCENT = new RegExp(STRING.PERCENT, 'g');
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
     'animation-duration': '0s',
@@ -186,8 +189,20 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         const data = keyframes[percent];
                         for (const attr in data) {
                             let value = data[attr]!;
-                            if (isPercent(value)) {
-                                value = `calc(${value})`;
+                            if (value.indexOf('%') !== -1) {
+                                const segments = splitEnclosing(value);
+                                let match: Null<RegExpExecArray>;
+                                for (let j = 0; j < segments.length; j += 2) {
+                                    let current = segments[j];
+                                    while (match = REGEXP_PERCENT.exec(current)) {
+                                        const calc = `calc(${match[0]})`;
+                                        current = spliceString(current, match.index, match[0].length, calc);
+                                        REGEXP_PERCENT.lastIndex = match.index + calc.length;
+                                    }
+                                    segments[j] = current;
+                                    REGEXP_PERCENT.lastIndex = 0;
+                                }
+                                value = segments.join('');
                             }
                             if (hasCalc(value)) {
                                 value = calculateStyle(element, convertCamelCase(attr), value);

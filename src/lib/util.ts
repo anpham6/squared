@@ -144,8 +144,8 @@ export function padStart(value: string, length: number, char: string) {
     return length > 0 ? char.repeat(length) + value : value;
 }
 
-export function spliceString(value: string, index: number, length: number) {
-    return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
+export function spliceString(value: string, index: number, length: number, replaceWith = '') {
+    return index === 0 ? replaceWith + value.substring(length) : value.substring(0, index) + replaceWith + value.substring(index + length);
 }
 
 export function splitPair(value: string, char: string, trim?: boolean, last?: boolean): [string, string] {
