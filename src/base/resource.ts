@@ -125,6 +125,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     else {
                         documentRoot.appendChild(element);
                         images.push(element);
+                        result.push(element);
                     }
                 }
             }
@@ -153,6 +154,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     else {
                         document.body.appendChild(element);
                         images.push(element);
+                        result.push(element);
                     }
                 }
             }
