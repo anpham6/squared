@@ -68,7 +68,7 @@ function calculatePosition(element: StyleElement, value: string, boundingBox?: N
         if ((seg = seg.trim()).indexOf(' ') !== -1 && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
-        else {
+        else if (seg) {
             alignment.push(seg);
         }
     }
@@ -693,8 +693,9 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         case 'offsetRotate':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.ANGLE, supportPercent: false });
         case 'offsetAnchor':
-        case 'transformOrigin':
             return calculatePosition(element, value, boundingBox);
+        case 'transformOrigin':
+            return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox, parent: false });
         case 'transform': {
             const transform = splitEnclosing(value);
             const length = transform.length;

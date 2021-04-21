@@ -20,7 +20,7 @@ const { STRING } = squared.lib.regex;
 
 const { asPercent, hasCalc, isAngle, hasCustomProperty, parseAngle, parseVar } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { convertCamelCase, convertWord, iterateArray, splitEnclosing, splitPairEnd, startsWith } = squared.lib.util;
+const { convertCamelCase, convertWord, iterateArray, splitEnclosing, splitPairEnd, spliceString, startsWith } = squared.lib.util;
 
 const { getKeyframesRules } = squared.base.lib.css;
 
@@ -199,8 +199,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 let match: Null<RegExpExecArray>;
                                 for (let j = 0; j < segments.length; j += 2) {
                                     let current = segments[j];
-                                    while (match = REGEXP_PERCENT.exec(segments[j])) {
-                                        current = current.replace(match[0], `calc(${match[0]})`);
+                                    while (match = REGEXP_PERCENT.exec(current)) {
+                                        const calc = `calc(${match[0]})`;
+                                        current = spliceString(current, match.index, match[0].length, calc);
+                                        REGEXP_PERCENT.lastIndex = match.index + calc.length;
                                     }
                                     segments[j] = current;
                                     REGEXP_PERCENT.lastIndex = 0;

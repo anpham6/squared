@@ -64,7 +64,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 adjustPadding = true;
             }
             if (adjustPadding) {
-                minWidth += parent.paddingLeft ? parent.paddingLeft : parent.marginLeft;
+                minWidth += parent.paddingLeft || parent.marginLeft;
             }
             let ordinal = !value && node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T>,
                 containerType = 0;
