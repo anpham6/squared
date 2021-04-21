@@ -78,7 +78,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         for (const element of elements) {
             element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source: HTMLImageElement | HTMLSourceElement) => splitSome(source.srcset, uri => this.addImage(resourceId, resolvePath(splitPairStart(uri, ' ', false, true)))));
             element.querySelectorAll('video').forEach((source: HTMLVideoElement) => this.addImage(resourceId, source.poster));
-            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => this.addImage(resourceId, image.src, image.width, image.height));
+            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => this.addImage(resourceId, image.src, image.width || NaN, image.height || NaN));
             element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
                 const src = source.data || source.src;
                 if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
@@ -112,6 +112,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     else {
                         documentRoot.appendChild(element);
                         images.push(element);
+                        result.push(element);
                     }
                 }
             }
@@ -141,6 +142,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                         else {
                             document.body.appendChild(element);
                             images.push(element);
+                            result.push(element);
                         }
                     }
                 }

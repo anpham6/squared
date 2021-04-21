@@ -7,10 +7,10 @@ acf779c1c69bcf35374ac73891212d7b  ./app/src/main/res/drawable-mdpi/android_xxhdp
 901cef80a0231db958488a7e0dcddc13  ./app/src/main/res/drawable-xhdpi/pencil.png
 20536b9650877f434c778287afad9623  ./app/src/main/res/drawable-xxhdpi/pencil.png
 4c2a0471c31d2b3efd888a9f85852ebf  ./app/src/main/res/drawable-xxxhdpi/pencil.png
-9f629800021984be3852e6bbd4c01cb1  ./app/src/main/res/drawable/__00002.png
-4cc5d017c639818d3f95d41248324769  ./app/src/main/res/drawable/__00003.jpg
-a6ed6a8bdd8f7fc31d5df4d655c6da10  ./app/src/main/res/drawable/div_framelayout_1.xml
-8a538941b4855b2fad43d0327d0e8451  ./app/src/main/res/layout/activity_main.xml
+9f629800021984be3852e6bbd4c01cb1  ./app/src/main/res/drawable/__00003.png
+4cc5d017c639818d3f95d41248324769  ./app/src/main/res/drawable/__00004.jpg
+f4f7f7399ccf1a2fdc88bf449f1a6722  ./app/src/main/res/drawable/div_framelayout_1.xml
+e9848fd8ef3d5161b0e93e7ea54b7fc9  ./app/src/main/res/layout/activity_main.xml
 7146860e2566fa676bd008458cab1583  ./app/src/main/res/values/colors.xml
 da000bc9af7e696b6f0b211f81a8b567  ./app/src/main/res/values/dimens.xml
 96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml

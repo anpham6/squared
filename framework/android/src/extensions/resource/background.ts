@@ -676,7 +676,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         }
         if (border && !isAlternatingBorder(border.style, Math.round(border.width)) && !(border.style === 'double' && Math.floor(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);
-            if (images && images.length || indentWidth) {
+            if (images && images.length || indentWidth || outline && borderOnly) {
                 layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined, stroke, indentOffset);
             }
             else {

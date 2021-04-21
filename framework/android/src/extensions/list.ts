@@ -15,6 +15,8 @@ import { createViewAttribute } from '../lib/util';
 
 const { formatPX, isPercent } = squared.lib.css;
 
+const { getTextMetrics } = squared.base.lib.dom;
+
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public readonly options: ExtensionListOptions = {
         ordinalFontSizeAdjust: 0.75
@@ -158,17 +160,29 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 else {
                     container = node.outerMostWrapper as T;
                 }
-                if (columnCount === 3) {
-                    container.android('layout_columnSpan', '2');
-                }
                 const tagName = node.tagName;
                 const options = createViewAttribute();
                 ordinal = application.createNode(node.sessionId, { parent, childIndex: node.childIndex });
-                ordinal.setCacheValue('tagName', 'LI');
+                ordinal.setCacheValue('tagName', tagName);
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 ordinal.inherit(node, 'textStyle');
                 if (value && !/\w/.test(value)) {
                     ordinal.setCacheValue('fontSize', node.fontSize * this.options.ordinalFontSizeAdjust);
+                }
+                const inside = node.cssValue('listStylePosition') === 'inside';
+                if (columnCount === 3) {
+                    if (inside) {
+                        ordinal.android('layout_columnSpan', '2');
+                        if (value) {
+                            const metrics = getTextMetrics(value + '  ', node.fontSize, node.css('fontFamily'));
+                            if (metrics) {
+                                minWidth += metrics.width;
+                            }
+                        }
+                    }
+                    else {
+                        container.android('layout_columnSpan', '2');
+                    }
                 }
                 if (gravity === 'right') {
                     if (image) {
@@ -295,7 +309,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public postOptimize(node: T) {
-        if (node.companion?.android('baselineAlignedChildIndex') && (node.renderParent as T).layoutGrid) {
+        if (node.companion?.android('baselineAlignedChildIndex') && node.renderParent!.layoutGrid) {
             node.setBox(BOX_STANDARD.PADDING_TOP, { reset: 1 });
         }
     }
