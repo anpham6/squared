@@ -174,6 +174,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             const items = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
                             if (items.length) {
                                 actualFontWeight = +fontWeight;
+                                fontWeight = '';
                                 for (const { fontWeight: weight } of items) {
                                     if (weight > actualFontWeight) {
                                         fontWeight = weight.toString();
@@ -513,7 +514,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 { key: 'android:textFontWeight', value: fontWeight || '400' }
             ];
             if (fontStyle) {
-                items.push({ key: 'android:textStyle', value: fontStyle });
+                if (fontStyle.indexOf('|') === -1) {
+                    items.push({ key: 'android:textStyle', value: fontStyle });
+                }
+                else {
+                    nodes.forEach(node => node.android('textStyle', fontStyle));
+                }
             }
             if (fontColor) {
                 items.push({ key: 'android:textColor', value: `@color/${fontColor}` });

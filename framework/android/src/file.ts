@@ -236,11 +236,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const [name, font] = items[i];
             const itemArray: { font: string; fontStyle: string; fontWeight: string }[] = [];
             for (const attr in font) {
-                const [fontFamily, multiStyle, fontWeight] = attr.split(';');
-                let fontStyle = multiStyle.split('|')[0];
-                if (fontStyle === 'bold') {
-                    fontStyle = 'normal';
-                }
+                const [fontFamily, fontStyle, fontWeight] = attr.split(';');
                 const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
                 itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
                 const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
