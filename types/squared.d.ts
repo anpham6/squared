@@ -4,10 +4,10 @@ type RootElement = squared.base.RootElement;
 type PromiseResult = Promise<Void<PlainObject>>;
 
 export interface FileActionOptions extends RequestData {
-    exclusions?: Exclusions;
-    callback?: (result: unknown) => void;
     configUri?: string;
     configMime?: string;
+    exclusions?: Exclusions;
+    callback?: (result: unknown) => void;
     cache?: boolean;
 }
 
