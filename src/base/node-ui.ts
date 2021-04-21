@@ -509,7 +509,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public of(containerType: number, ...alignmentType: number[]) {
-        return this.is(containerType) && alignmentType.some(value => this.hasAlign(value));
+        return this.is(containerType) && alignmentType.every(value => this.hasAlign(value));
     }
 
     public attr(name: string, attr: string, value?: string, overwrite = true): string {
