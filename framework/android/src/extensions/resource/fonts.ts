@@ -1,5 +1,3 @@
-import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
-
 import { BUILD_VERSION } from '../../lib/constant';
 
 import type View from '../../view';
@@ -126,7 +124,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const groupMap: ObjectMap<StyleList<T>[]> = {};
         const fontItems: T[] = [];
         cache.each(node => {
-            if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
+            if (node.data(Resource.KEY_NAME, 'fontStyle')) {
                 const containerName = node.containerName;
                 (nameMap[containerName] ||= []).push(node);
             }
@@ -157,7 +155,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 fontFamily.replace(/"/g, '').split(',').some((value, index, array) => {
                     value = trimBoth(value.trim(), "'").toLowerCase();
                     let fontName = value,
-                        actualFontWeight = '';
+                        actualFontWeight = 0;
                     if (!disableFontAlias && FONT_REPLACE[fontName]) {
                         fontName = defaultFontFamily;
                     }
@@ -165,16 +163,33 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         fontFamily = fontName;
                     }
                     else if (fontStyle && fontWeight) {
-                        let createFont: Undef<boolean>;
+                        if (startsWith(fontStyle, 'oblique')) {
+                            fontStyle = 'italic';
+                        }
+                        let foundFontStyle: Undef<string>;
                         if (resource.getFonts(resourceId, value, fontStyle, fontWeight).length) {
-                            createFont = true;
+                            foundFontStyle = fontStyle;
                         }
                         else {
-                            const font = startsWith(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
-                            if (font.length) {
-                                actualFontWeight = fontWeight;
-                                fontWeight = font[0].fontWeight.toString();
-                                createFont = true;
+                            let items = resource.getFonts(resourceId, value);
+                            if (items.length) {
+                                foundFontStyle = 'normal';
+                                actualFontWeight = +fontWeight;
+                                if (fontStyle === 'italic') {
+                                    const italic = items.filter(item => item.fontStyle === 'italic');
+                                    if (italic.length) {
+                                        items = italic;
+                                        foundFontStyle = 'italic';
+                                    }
+                                }
+                                fontWeight = '';
+                                for (const { fontWeight: weight } of items) {
+                                    if (weight >= actualFontWeight) {
+                                        fontWeight = weight.toString();
+                                        break;
+                                    }
+                                }
+                                fontWeight ||= items.pop()!.fontWeight.toString();
                             }
                             else if (index < array.length - 1) {
                                 return false;
@@ -183,10 +198,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 fontFamily = defaultFontFamily;
                             }
                         }
-                        if (createFont) {
-                            fontName = convertWord(fontName);
-                            const font = fonts.get(fontName) || {};
-                            font[`${value}|${fontStyle}|${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
+                        if (foundFontStyle) {
+                            const font = fonts.get(fontName = convertWord(fontName)) || {};
+                            font[`${value};${foundFontStyle};${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
                             fonts.set(fontName, font);
                             fontFamily = `@font/${fontName}`;
                         }
@@ -198,15 +212,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         fontStyle = '';
                     }
                     if (actualFontWeight) {
-                        fontWeight = actualFontWeight;
+                        fontWeight = actualFontWeight.toString();
                     }
                     else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {
                         fontWeight = '';
                     }
-                    if (+fontWeight > 500) {
+                    if (+fontWeight >= 600) {
                         fontStyle += (fontStyle ? '|' : '') + 'bold';
                     }
-                    return true;
                 });
                 addFontItem(node, 0, 'fontFamily', fontFamily);
                 addFontItem(node, 1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));
