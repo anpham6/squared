@@ -99,8 +99,7 @@ function setMultiline(node: T, value: number, overwrite: boolean) {
         else {
             return;
         }
-        offset = Math.floor(offset);
-        if (offset > 0 && node.pageFlow) {
+        if (node.pageFlow && (offset = Math.floor(offset)) > 0) {
             if (node.inlineDimension) {
                 node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                 node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
@@ -495,14 +494,14 @@ function getGravityValues(node: T, attr: string, value?: string) {
     }
 }
 
-function calculateBias(start: number, end: number, accuracy = 3) {
+function calculateBias(start: number, end: number, precision = 3) {
     if (start === 0) {
         return 0;
     }
     else if (end === 0) {
         return 1;
     }
-    return +truncate(Math.max(start / (start + end), 0), accuracy);
+    return +truncate(Math.max(start / (start + end), 0), precision);
 }
 
 const hasFlexibleContainer = (parent: Null<T>) => !!parent && (parent.layoutConstraint || parent.layoutGrid);
@@ -2484,10 +2483,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else {
                         const children = this.renderChildren;
-                        let baseline = true;
+                        let found: Undef<boolean>;
                         if ((this.floatContainer || this.nodeGroup && (this.hasAlign(NODE_ALIGNMENT.FLOAT) || children.some(node => node.floating))) && !children.some(node => node.imageElement && node.baseline)) {
                             this.android('baselineAligned', 'false');
-                            baseline = false;
+                            found = true;
                         }
                         for (let i = 0, length = children.length; i < length; ++i) {
                             const item = children[i];
@@ -2497,9 +2496,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     item.android('ellipsize', 'end');
                                 }
                             }
-                            if (baseline && item.baselineElement) {
+                            if (!found && item.baselineElement) {
                                 this.android('baselineAlignedChildIndex', i.toString(), false);
-                                baseline = false;
+                                found = true;
                             }
                         }
                     }
@@ -2514,9 +2513,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const getContainerHeight = (node: T) => Math.max(convertFloat(node.layoutHeight), convertFloat(node.android('minHeight')));
                     const height = getContainerHeight(this);
                     if (height) {
-                        const wrapperOf = this.wrapperOf;
+                        const wrapperOf = this.wrapperOf as Null<T>;
                         if (wrapperOf && !wrapperOf.positionRelative) {
-                            const wrapperHeight = getContainerHeight(wrapperOf as T);
+                            const wrapperHeight = getContainerHeight(wrapperOf);
                             if (height <= wrapperHeight) {
                                 this.setLayoutHeight('wrap_content');
                             }

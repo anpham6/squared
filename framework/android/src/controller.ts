@@ -1377,7 +1377,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'CANVAS': {
                 const resource = this.application.resourceHandler as android.base.Resource<T>;
                 const element = node.element as HTMLImageElement;
-                let imageSet: Undef<ImageSrcSet[]>;
+                let imageSet: Undef<ImageSrcData[]>;
                 if (node.actualParent!.tagName === 'PICTURE') {
                     if (imageSet = getSrcSet(element, this.localSettings.mimeType.image, node.fontSize)) {
                         const setImageDimension = (width: number, image: Undef<number | ImageAsset>) => {

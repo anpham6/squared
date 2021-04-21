@@ -66,7 +66,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
 
     public static formatOptions(resourceId: number, options: ViewAttribute, numberAlias?: boolean) {
         for (const namespace in options) {
-            const obj: StandardMap = options[namespace];
+            const obj = options[namespace];
             if (isPlainObject<StandardMap>(obj)) {
                 formatObject(resourceId, obj, numberAlias);
             }
@@ -154,11 +154,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 if (!name) {
                     name = '__symbol' + ++COUNTER_SYMBOL;
                 }
-                else {
-                    name = name.toLowerCase();
-                    if (isLeadingDigit(name) || RESERVED_JAVA.includes(name)) {
-                        name = '__' + name;
-                    }
+                else if (isLeadingDigit(name = name.toLowerCase()) || RESERVED_JAVA.includes(name)) {
+                    name = '__' + name;
                 }
                 return `@string/${Resource.insertStoredAsset(resourceId, 'strings', name, value)}`;
             }
@@ -252,7 +249,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         super.reset();
     }
 
-    public addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
+    public addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcData[]) {
         const result: StringMap = {};
         let mdpi: Undef<string>;
         if (typeof element === 'string') {

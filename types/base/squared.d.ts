@@ -899,7 +899,7 @@ declare module "base" {
             function getTextMetrics(value: string, fontSize: number, fontFamily?: string): Undef<TextMetrics>;
             function removeElementsByClassName(className: string): void;
             function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element): Element[];
-            function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontSize?: number): Undef<ImageSrcSet[]>;
+            function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontSize?: number): Undef<ImageSrcData[]>;
         }
 
         namespace internal {

@@ -20,7 +20,7 @@ const { FILE, STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, isPlainObject, replaceAll, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, isPlainObject, replaceAll, resolvePath, splitPair, splitSome, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
 const REGEXP_CSSHOST = /^:(?:host|host-context)\(([^)]+)\)/;
@@ -79,20 +79,14 @@ export default abstract class Application<T extends Node> implements squared.bas
     public static readonly KEY_NAME = 'squared.base.application';
 
     public static prioritizeExtensions<U extends Node>(value: string, extensions: Extension<U>[]) {
-        const included = value.trim().split(/\s*,\s*/);
         const result: Extension<U>[] = [];
-        const untagged: Extension<U>[] = [];
-        for (let i = 0, length = extensions.length; i < length; ++i) {
-            const ext = extensions[i];
-            const index = included.indexOf(ext.name);
+        splitSome(value, name => {
+            const index = extensions.findIndex(ext => ext.name === name);
             if (index !== -1) {
-                result[index] = ext;
+                result.push(extensions[index]);
             }
-            else {
-                untagged.push(ext);
-            }
-        }
-        return result.length ? result.filter(item => item).concat(untagged) : extensions;
+        });
+        return result.length ? result.concat(extensions.filter(ext => !result.includes(ext))) : extensions;
     }
 
     public extensions: Extension<T>[] = [];
@@ -736,8 +730,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const parseConditionText = (rule: string, value: string) => new RegExp(`@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
                 for (let i = 0, length = cssRules.length; i < length; ++i) {
                     const rule = cssRules[i];
-                    const type = rule.type;
-                    switch (type) {
+                    switch (rule.type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
                             this.applyStyleRule(sessionId, resourceId, rule as CSSStyleRule, documentRoot, queryRoot);

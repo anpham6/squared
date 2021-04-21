@@ -47,7 +47,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const mainData = this.data.get(node) as Undef<ListData>;
         if (mainData) {
             const application = this.application;
-            const controller = this.controller as android.base.Controller<T>;
             const marginTop = node.marginTop;
             let value = mainData.ordinal,
                 minWidth = node.marginLeft,
@@ -97,6 +96,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 application.addLayoutTemplate(parent, ordinal, application.renderNode(layout)!);
             }
             else {
+                const controller = this.controller as android.base.Controller<T>;
                 const { imageSrc, imagePosition } = mainData;
                 let top = 0,
                     left = 0,

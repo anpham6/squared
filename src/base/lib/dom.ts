@@ -66,7 +66,7 @@ export function getTextMetrics(value: string, fontSize: number, fontFamily?: str
 }
 
 export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontSize?: number) {
-    const result: ImageSrcSet[] = [];
+    const result: ImageSrcData[] = [];
     const parentElement = element.parentElement as HTMLPictureElement;
     let { srcset, sizes } = element,
         aspectRatio = getAspectRatio(element);

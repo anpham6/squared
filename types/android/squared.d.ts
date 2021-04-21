@@ -45,7 +45,7 @@ declare namespace base {
         static addColor(resourceId: number, value: ColorData | string, transparency?: boolean): string;
         static formatName(value: string): string;
         readonly application: Application<T>;
-        addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
+        addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcData[]): string;
         addImageSet(resourceId: number, images: StringMap, prefix?: string): string;
     }
 
