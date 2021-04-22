@@ -48,7 +48,7 @@ interface SetData extends SetOrdering, FillData {
     set: FillData[];
 }
 
-interface SetTemplate extends SetOrdering, FillData {
+interface SetTemplate extends FillData {
     'xmlns:android'?: string;
     'android:ordering'?: string;
     set: SetData[];
@@ -56,6 +56,8 @@ interface SetTemplate extends SetOrdering, FillData {
 
 interface SetOrdering {
     ordering?: string;
+    repeatMode?: string;
+    repeatCount?: string;
 }
 
 interface FillData extends SetOrdering {
@@ -1032,8 +1034,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             for (let i = 0, u = targeted.length; i < u; ++i) {
                                 const partition = targeted[i];
                                 const v = partition.length;
-                                if (i === 1 && v > 1) {
-                                    fillCustom.ordering = 'sequentially';
+                                if (i === 1) {
+                                    if (v > 1) {
+                                        fillCustom.ordering = 'sequentially';
+                                    }
+                                    fillCustom.repeatMode = 'restart';
+                                    fillCustom.repeatCount = '-1';
                                 }
                                 const animatorMap = new Map<string, PropertyValueHolder[]>();
                                 for (let j = 0; j < v; ++j) {

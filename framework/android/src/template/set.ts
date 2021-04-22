@@ -1,3 +1,5 @@
+const SET_ATTR = ['duration', 'fillAfter', 'fillBefore', 'ordering', 'repeatCount', 'repeatMode', 'shareInterpolator', 'startOffset'];
+
 export const OBJECTANIMATOR = {
     'objectAnimator': {
         '^': 'android',
@@ -19,15 +21,15 @@ export const OBJECTANIMATOR = {
 
 export default {
     'set': {
-        '@': ['xmlns:android', 'android:ordering'],
+        '@': ['xmlns:android', ...SET_ATTR.map(value => 'android:' + value)],
         '>': {
             'set': {
                 '^': 'android',
-                '@': ['ordering'],
+                '@': SET_ATTR,
                 '>': {
                     'set': {
                         '^': 'android',
-                        '@': ['ordering'],
+                        '@': SET_ATTR,
                         '>': {
                             'objectAnimator': OBJECTANIMATOR.objectAnimator
                         }

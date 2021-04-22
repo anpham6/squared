@@ -320,7 +320,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 const itemValue = convertRotate(item.value);
                                 previous.value = previousValue;
                                 item.value = itemValue;
-                                if (splitPairEnd(previousValue, ' ') !== splitPairEnd(itemValue, ' ')) {
+                                if (previousValue.split(' ').pop() !== itemValue.split(' ').pop()) {
                                     const previousAuto = startsWith(previousValue, 'auto');
                                     const auto = startsWith(itemValue, 'auto');
                                     if (previousAuto && !auto || !previousAuto && auto) {
@@ -339,7 +339,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 addAnimation(animate, delay, keyframeIndex);
                                 for (let j = 0, q = offsetRotate.length; j < q; ++j) {
                                     const item = offsetRotate[j];
-                                    item.value = (parseAngle(splitPairEnd(item.value, ' '), 0) + (startsWith(item.value, 'auto') ? 90 : 0)) + ' 0 0';
+                                    item.value = (parseAngle(item.value.split(' ').pop()!, 0) + (startsWith(item.value, 'auto') ? 90 : 0)) + ' 0 0';
                                 }
                                 attrData.rotate = offsetRotate;
                                 delete attrData['offset-rotate'];
