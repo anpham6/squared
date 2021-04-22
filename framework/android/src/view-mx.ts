@@ -776,27 +776,34 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 layoutWidth = this.getMatchConstraint(renderParent);
                             }
                         }
-                        else if (this.blockStatic) {
-                            if (this.documentRoot) {
-                                layoutWidth = 'match_parent';
-                            }
-                            else if (!actualParent.layoutElement) {
-                                if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.rootElement) {
+                        else {
+                            if (this.blockStatic) {
+                                if (this.documentRoot) {
+                                    layoutWidth = 'match_parent';
+                                }
+                                else if (!actualParent.layoutElement) {
+                                    if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.rootElement) {
+                                        layoutWidth = this.getMatchConstraint(renderParent);
+                                    }
+                                    else {
+                                        checkParentWidth(true);
+                                    }
+                                }
+                                else if (containsWidth && (actualParent.gridElement && !renderParent.layoutElement || actualParent.flexElement && this.layoutVertical && this.find(item => item.textElement && item.multiline))) {
                                     layoutWidth = this.getMatchConstraint(renderParent);
                                 }
-                                else {
-                                    checkParentWidth(true);
+                            }
+                            if (!layoutWidth) {
+                                if (containsWidth && (this.layoutFrame && this.find(item => !!item.autoMargin.horizontal) || this.tagName === 'PICTURE' && this.renderChildren.some(item => item.percentWidth))) {
+                                    layoutWidth = this.getMatchConstraint(renderParent);
+                                }
+                                else if (this.floating && this.block && this.alignParent('left') && this.alignParent('right') && !this.rightAligned) {
+                                    layoutWidth = 'match_parent';
+                                }
+                                else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
+                                    checkParentWidth(false);
                                 }
                             }
-                            else if (containsWidth && (actualParent.gridElement && !renderParent.layoutElement || actualParent.flexElement && (this.layoutVertical && this.find(item => item.textElement && item.multiline)) || this.layoutFrame && this.find(item => !!item.autoMargin.horizontal))) {
-                                layoutWidth = this.getMatchConstraint(renderParent);
-                            }
-                        }
-                        else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
-                            layoutWidth = 'match_parent';
-                        }
-                        else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
-                            checkParentWidth(false);
                         }
                     }
                 }

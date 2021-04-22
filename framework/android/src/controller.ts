@@ -1333,55 +1333,31 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'CANVAS': {
                 const resource = this.application.resourceHandler as android.base.Resource<T>;
                 const element = node.element as HTMLImageElement;
-                let imageSet: Undef<ImageSrcSet[]>;
-                if (node.actualParent!.tagName === 'PICTURE') {
-                    if (imageSet = getSrcSet(element, this.localSettings.mimeType.image)) {
-                        const setImageDimension = (width: number, image: Undef<ImageAsset>) => {
-                            node.css('width', formatPX(width), true);
-                            if (image && image.width && image.height) {
-                                const height = image.height * (width / image.width);
-                                node.css('height', formatPX(height), true);
-                            }
-                        };
-                        const image = imageSet[0];
-                        if (image.actualWidth) {
-                            setImageDimension(image.actualWidth, resource.getImage(resourceId, element.src));
-                        }
-                        else {
-                            const stored = resource.getImage(resourceId, image.src);
-                            if (stored) {
-                                setImageDimension(stored.width, stored);
-                            }
-                        }
-                    }
-                }
-                else {
-                    let scaleType: Undef<string>;
-                    switch (node.cssValue('objectFit')) {
-                        case 'fill':
+                let scaleType: Undef<string>;
+                switch (node.cssValue('objectFit')) {
+                    case 'fill':
+                        scaleType = 'fitXY';
+                        break;
+                    case 'contain':
+                        scaleType = 'centerInside';
+                        break;
+                    case 'cover':
+                        scaleType = 'centerCrop';
+                        break;
+                    case 'scale-down':
+                        scaleType = 'fitCenter';
+                        break;
+                    case 'none':
+                        scaleType = 'center';
+                        break;
+                    default:
+                        if (node.width && node.height) {
                             scaleType = 'fitXY';
-                            break;
-                        case 'contain':
-                            scaleType = 'centerInside';
-                            break;
-                        case 'cover':
-                            scaleType = 'centerCrop';
-                            break;
-                        case 'scale-down':
-                            scaleType = 'fitCenter';
-                            break;
-                        case 'none':
-                            scaleType = 'center';
-                            break;
-                        default:
-                            if (node.width && node.height) {
-                                scaleType = 'fitXY';
-                            }
-                            break;
-                    }
-                    if (scaleType) {
-                        node.android('scaleType', scaleType);
-                    }
+                        }
+                        break;
+                }
+                if (scaleType) {
+                    node.android('scaleType', scaleType);
                 }
                 if (node.baseline) {
                     node.android('baselineAlignBottom', 'true');
@@ -1400,6 +1376,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else {
+                        const imageSet = node.actualParent!.tagName === 'PICTURE' ? getSrcSet(element, this.localSettings.mimeType.image) : undefined;
                         src = resource.addImageSrc(resourceId, element, '', imageSet);
                         if (watch || tasks) {
                             const images = [element.src];
