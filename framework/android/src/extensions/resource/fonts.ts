@@ -220,6 +220,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     if (+fontWeight >= 600) {
                         fontStyle += (fontStyle ? '|' : '') + 'bold';
                     }
+                    return true;
                 });
                 addFontItem(node, 0, 'fontFamily', fontFamily);
                 addFontItem(node, 1, 'fontSize', truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px'));

@@ -1848,9 +1848,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             pseudoElement.innerText = content;
                         }
                     }
+                    const style = getStyle(element, pseudoElt);
                     for (const attr in styleMap) {
                         if (attr !== 'display') {
-                            pseudoElement.style[attr] = (value = styleMap[attr]) === 'revert' ? getStyle(element, pseudoElt)[attr] : value;
+                            switch (value = styleMap[attr]) {
+                                case 'inherit':
+                                case 'unset':
+                                case 'revert':
+                                    value = style[attr];
+                                    styleMap[attr] = value;
+                                    break;
+                            }
+                            pseudoElement.style[attr] = value;
                         }
                     }
                     setElementCache(pseudoElement, 'styleMap', styleMap, sessionId);
