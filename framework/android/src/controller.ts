@@ -1377,61 +1377,31 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'CANVAS': {
                 const resource = this.application.resourceHandler as android.base.Resource<T>;
                 const element = node.element as HTMLImageElement;
-                let imageSet: Undef<ImageSrcData[]>;
-                if (node.actualParent!.tagName === 'PICTURE') {
-                    if (imageSet = getSrcSet(element, this.localSettings.mimeType.image, node.fontSize)) {
-                        const setImageDimension = (width: number, image: Undef<number | ImageAsset>) => {
-                            let height: Undef<number>;
-                            if (typeof image === 'number') {
-                                height = width / image;
-                            }
-                            else if (image && image.width && image.height) {
-                                height = image.height * (width / image.width);
-                            }
-                            node.css('width', formatPX(width), true);
-                            if (height) {
-                                node.css('height', formatPX(height), true);
-                            }
-                        };
-                        const image = imageSet[0];
-                        if (image.actualWidth) {
-                            setImageDimension(image.actualWidth, image.aspectRatio || resource.getImage(resourceId, element.src));
-                        }
-                        else {
-                            const stored = resource.getImage(resourceId, image.src);
-                            if (stored) {
-                                setImageDimension(stored.width, stored);
-                            }
-                        }
-                    }
-                }
-                else {
-                    let scaleType: Undef<string>;
-                    switch (node.cssValue('objectFit')) {
-                        case 'fill':
+                let scaleType: Undef<string>;
+                switch (node.cssValue('objectFit')) {
+                    case 'fill':
+                        scaleType = 'fitXY';
+                        break;
+                    case 'contain':
+                        scaleType = 'centerInside';
+                        break;
+                    case 'cover':
+                        scaleType = 'centerCrop';
+                        break;
+                    case 'scale-down':
+                        scaleType = 'fitCenter';
+                        break;
+                    case 'none':
+                        scaleType = 'center';
+                        break;
+                    default:
+                        if (node.width && node.height) {
                             scaleType = 'fitXY';
-                            break;
-                        case 'contain':
-                            scaleType = 'centerInside';
-                            break;
-                        case 'cover':
-                            scaleType = 'centerCrop';
-                            break;
-                        case 'scale-down':
-                            scaleType = 'fitCenter';
-                            break;
-                        case 'none':
-                            scaleType = 'center';
-                            break;
-                        default:
-                            if (node.width && node.height) {
-                                scaleType = 'fitXY';
-                            }
-                            break;
-                    }
-                    if (scaleType) {
-                        node.android('scaleType', scaleType);
-                    }
+                        }
+                        break;
+                }
+                if (scaleType) {
+                    node.android('scaleType', scaleType);
                 }
                 if (node.baseline) {
                     node.android('baselineAlignBottom', 'true');
@@ -1450,6 +1420,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else {
+                        const imageSet = node.actualParent!.tagName === 'PICTURE' ? getSrcSet(element, this.localSettings.mimeType.image, node.fontSize) : undefined;
                         src = resource.addImageSrc(resourceId, element, '', imageSet);
                         if (watch || tasks) {
                             const images = [element.src];

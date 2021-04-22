@@ -106,17 +106,21 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontS
         const pxA = a.pixelRatio;
         const pxB = b.pixelRatio;
         if (pxA && pxB) {
-            if (pxA !== pxB) {
-                return pxA - pxB;
-            }
+            return pxA - pxB;
         }
-        else {
+
             const widthA = a.width;
             const widthB = b.width;
-            if (widthA !== widthB && widthA && widthB) {
+            if (widthA && widthB) {
                 return widthA - widthB;
             }
-        }
+            if (widthA) {
+                return -1;
+            }
+            if (widthB) {
+                return 1;
+            }
+
         return 0;
     });
     if (sizes) {
@@ -157,9 +161,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: MIMEOrAll, fontS
                 }
                 for (let i = 1; i < length; ++i) {
                     const item = result[i];
-                    if (item.pixelRatio === 0) {
-                        item.pixelRatio = item.width / width;
-                    }
+                    item.pixelRatio ||= item.width / width;
                 }
             }
             const item = result[0];
