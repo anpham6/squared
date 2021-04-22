@@ -1,3 +1,5 @@
+const { DOM } = squared.lib.regex;
+
 const { endsWith, splitPair, splitPairEnd, splitPairStart, startsWith } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
@@ -403,13 +405,8 @@ export function upperCaseString(value: string) {
 }
 
 export function lowerCaseString(value: string) {
-    const entities: string[] = [];
-    const pattern = /&#?[A-Za-z\d]+?;/g;
-    let match: Null<RegExpMatchArray>;
-    while (match = pattern.exec(value)) {
-        entities.push(match[0]);
-    }
-    return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
+    const entities = DOM.ENTITY_G.exec(value);
+    return entities ? value.split(DOM.ENTITY_G).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
 }
 
 export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void> {

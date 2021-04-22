@@ -296,6 +296,11 @@ declare module "lib" {
             TRANSLATE: RegExp;
             PERSPECTIVE: RegExp;
         };
+
+        const DOM: {
+            ENTITY_G: RegExp;
+            AMPERSAND_G: RegExp;
+        };
     }
 
     namespace session {

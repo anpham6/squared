@@ -1,10 +1,11 @@
 import { BUILD_VERSION, LOCALIZE_MAP, XML_NAMESPACE } from './constant';
 
+const { DOM } = squared.lib.regex;
+
 const { parseColor: __parseColor } = squared.lib.color;
 const { capitalize, joinArray, isPlainObject, startsWith } = squared.lib.util;
 
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
-const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
 
 export function parseColor(value: string, opacity = 1, transparency?: boolean) {
     if (value && (value !== 'transparent' || transparency)) {
@@ -206,7 +207,7 @@ export function replaceCharacterData(value: string, tab?: number, quote?: boolea
                 output += '\\\\';
                 break;
             case '\t':
-                output += tab ? '&#160;'.repeat(tab) : ch;
+                output += tab ? '&#160;'.repeat(tab) : '&#9;';
                 break;
             case '\u0003':
                 output += '&#3;';
@@ -254,19 +255,15 @@ export function replaceCharacterData(value: string, tab?: number, quote?: boolea
                 output += '&#8205;';
                 break;
             case '&':
-                if (value[i + 5] === ';') {
-                    if (value.substring(i + 1, i + 5) === 'nbsp') {
-                        output += '&#160;';
-                        i += 5;
-                        break;
-                    }
+                if (value[i + 5] === ';' && value.substring(i + 1, i + 5) === 'nbsp') {
+                    output += '&#160;';
+                    i += 5;
+                    break;
                 }
-                else if (value[i + 4] === ';') {
-                    if (value.substring(i + 1, i + 4) === '#10') {
-                        output += '\\n';
-                        i += 4;
-                        break;
-                    }
+                else if (value.substring(i + 1, i + 4) === '#10' && !/\d/.test(value[i + 4])) {
+                    output += '\\n';
+                    i += value[i + 4] === ';' ? 4 : 3;
+                    break;
                 }
                 output += '&';
                 break;
@@ -275,7 +272,7 @@ export function replaceCharacterData(value: string, tab?: number, quote?: boolea
                 break;
         }
     }
-    return output.replace(REGEXP_AMPERSAND, '&amp;');
+    return output.replace(DOM.AMPERSAND_G, '&amp;');
 }
 
 export function concatString(list: (string | number)[], char = '') {
