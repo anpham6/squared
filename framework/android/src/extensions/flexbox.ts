@@ -772,12 +772,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 if (grow > 0 || shrink !== 1 || isLength(basis, true)) {
                     result += grow;
                     let value: number;
-                    if (basis === 'auto' || basis === '0%') {
+                    if (basis === 'auto' || parseFloat(basis) === 0) {
                         if (item.hasPX(dimension)) {
                             value = item.cssUnit(dimension);
                         }
                         else {
-                            if (!percent && basis === '0%') {
+                            if (!percent && parseFloat(basis) === 0) {
                                 value = size;
                             }
                             else {

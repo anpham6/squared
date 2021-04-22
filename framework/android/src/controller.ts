@@ -307,7 +307,7 @@ function getBoxWidth(node: View) {
     if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === node.renderParent) {
         return parent.box.width - (node.linear.left - parent.box.left);
     }
-    else if (parent.floatContainer) {
+    if (parent.floatContainer) {
         const container = node.ascend({ condition: (item: View) => item.of(CONTAINER_NODE.FRAME, NODE_ALIGNMENT.COLUMN), including: parent, attr: 'renderParent' });
         if (container.length) {
             const { left, right, width } = node.box;
@@ -341,7 +341,7 @@ function causesLineBreak(element: Element) {
     if (element.tagName === 'BR') {
         return true;
     }
-    else if (element.nodeName[0] !== '#') {
+    if (element.nodeName[0] !== '#') {
         const style = getComputedStyle(element);
         const hasWidth = () => (style.width === '100%' || style.minWidth === '100%') && (style.maxWidth === 'none' || style.maxWidth === '100%');
         if (!hasCoords(style.position)) {

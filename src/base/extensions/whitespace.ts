@@ -6,7 +6,7 @@ import type NodeUI from '../node-ui';
 import ExtensionUI from '../extension-ui';
 
 const { formatPX } = squared.lib.css;
-const { iterateReverseArray, minMaxOf } = squared.lib.util;
+const { iterateReverseArray, minMaxOf, startsWith } = squared.lib.util;
 
 const DOCTYPE_HTML = !!document.doctype && document.doctype.name === 'html';
 
@@ -197,21 +197,13 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
 }
 
 function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
-    if (!node || !node.styleElement || node.lineBreak) {
+    if (!node || !node.styleElement || node.floating || node.lineBreak) {
         return false;
     }
-    else if (node.blockStatic) {
-        return true;
-    }
-    else if (!node.floating) {
-        switch (node.display) {
-            case 'table':
-            case 'list-item':
-                return true;
-            case 'inline-flex':
-            case 'inline-grid':
-            case 'inline-table':
-                return false;
+    const display = node.display;
+    if (!startsWith(display, 'inline-')) {
+        if (node.blockStatic || display === 'table' || display === 'list-item') {
+            return true;
         }
         if (direction !== undefined) {
             if (direction) {
