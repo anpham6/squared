@@ -106,7 +106,7 @@ function applyBoxReset(node: T, start: number, region: number, other?: T) {
     }
 }
 
-function applyBoxAdjustment(node: T, start: number, region: number, other: T, boxAdjustment: Undef<number[]>) {
+function applyBoxAdjustment(node: T, start: number, region: number, other: T, boxAdjustment: Null<number[]>) {
     for (let i = start; i < start + 4; ++i) {
         const key = CSS_SPACINGINDEX[i];
         if (region & key) {
@@ -458,8 +458,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _documentParent: Null<T> = null;
     protected _cache!: CacheValueUI;
     protected _cacheState!: CacheStateUI<T>;
-    protected _boxReset?: number[];
-    protected _boxAdjustment?: number[];
+    protected _boxReset: Null<number[]> = null;
+    protected _boxAdjustment: Null<number[]> = null;
     protected abstract _namespaces: ObjectMapSafe<StringMap>;
 
     private _locked: Null<ObjectMapNested<boolean>> = null;

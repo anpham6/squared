@@ -579,15 +579,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _cache!: CacheValueUI;
         protected _localSettings!: LocalSettingsUI;
         protected _styleMap!: CssStyleMap;
-        protected _boxReset?: number[];
-        protected _boxAdjustment?: number[];
+        protected _boxReset!: Null<number[]>;
+        protected _boxAdjustment!: Null<number[]>;
         protected _innerWrapped?: T;
 
         private _controlId = '';
         private _positioned = false;
+        private _anchored = false;
+        private _constraint: Null<Constraint> = null;
         private _labelFor?: T;
-        private _constraint?: Constraint;
-        private _anchored?: boolean;
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
@@ -3034,7 +3034,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         result = this.bounds.height === 0;
                     }
                     else if (!this.pageFlow) {
-                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || /^rect\(0[a-z]*, 0[a-z]*, 0[a-z]*, 0[a-z]*\)$/.test(this.cssValue('clip'));
+                        result = this.isEmpty() && (excludeHorizontal(this) || excludeVertical(this)) || this.has('clip') && /^rect\(\s*0[a-z]*\s*,\s*0[a-z]*\s*,\s*0[a-z]*\s*,\s*0[a-z]*\s*\)$/.test(this.cssValue('clip'));
                     }
                     else {
                         const parent = this.renderParent || this.parent as T;

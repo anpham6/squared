@@ -104,8 +104,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected readonly _preventNodeCascade: (node: T) => boolean;
 
     private readonly _controllerHandler: Controller<T>;
-    private readonly _resourceHandler: Null<Resource<T>> = null;
-    private readonly _extensionManager: Null<ExtensionManager<T>> = null;
+    private readonly _resourceHandler: Null<Resource<T>>;
+    private readonly _extensionManager: Null<ExtensionManager<T>>;
 
     constructor(
         public readonly framework: number,
@@ -118,12 +118,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.Node = nodeConstructor;
         const controller = new ControllerConstructor(this);
         this._controllerHandler = controller;
-        if (ExtensionManagerConstructor) {
-            this._extensionManager = new ExtensionManagerConstructor(this);
-        }
-        if (ResourceConstructor) {
-            this._resourceHandler = new ResourceConstructor(this);
-        }
+        this._extensionManager = ExtensionManagerConstructor ? new ExtensionManagerConstructor(this) : null;
+        this._resourceHandler = ResourceConstructor ? new ResourceConstructor(this) : null;
         this._afterInsertNode = controller.afterInsertNode.bind(controller);
         this._includeElement = controller.includeElement.bind(controller);
         this._preventNodeCascade = controller.preventNodeCascade.bind(controller);
