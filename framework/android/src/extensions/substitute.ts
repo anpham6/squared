@@ -7,7 +7,7 @@ import type View from '../view';
 
 import Resource from '../resource';
 
-import { createViewAttribute, getDataSet } from '../lib/util';
+import { createViewOptions, getDataSet } from '../lib/util';
 
 const { convertCamelCase } = squared.lib.util;
 
@@ -56,7 +56,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
         node.apply(
             Resource.formatOptions(
                 node.localSettings.resourceId,
-                createViewAttribute(this.options[node.elementId]),
+                createViewOptions(this.options, node.elementId),
                 this.application.extensionManager.valueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberAsResource')
             )
         );

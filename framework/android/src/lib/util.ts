@@ -161,6 +161,10 @@ export function createViewAttribute(data?: PlainObject) {
     return options;
 }
 
+export function createViewOptions(options: PlainObject, elementId: string) {
+    return createViewAttribute(elementId && isPlainObject<StandardMap>(options.element) ? options.element[elementId] : undefined);
+}
+
 export function createThemeAttribute(data?: PlainObject): ThemeAttribute {
     return { name: '', parent: '', items: {}, ...data };
 }

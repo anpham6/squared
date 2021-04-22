@@ -387,6 +387,7 @@ declare namespace lib {
         function parseColor(value: string, opacity?: number, transparency?: boolean): Null<ColorData>;
         function removeFileExtension(value: string, ext?: string): string;
         function createViewAttribute(data?: PlainObject): ViewAttribute;
+        function createViewOptions(options: PlainObject, elementId: string): ViewAttribute;
         function createThemeAttribute(data?: PlainObject): Required<ThemeAttribute>;
         function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;
         function localizeString(value: string, rtl: boolean, api: number): string;
