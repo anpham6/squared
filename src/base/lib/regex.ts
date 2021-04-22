@@ -1,6 +1,7 @@
 const { CSS_ANGLE, LENGTH_PERCENTAGE } = squared.lib.regex.STRING;
 
 const CSS_COLOR = '((?:rgb|hsl)a?\\(\\s*\\d+\\s*,\\s*\\d+%?\\s*,\\s*\\d+%?\\s*(?:,\\s*[\\d.]+\\s*)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
+const DOM_ENTITY = '#(?:[\\d]+|x[A-Za-z\\d]{5});?|[A-Za-z]{2,};';
 
 export const STRING = {
     CSS_COLOR,
@@ -16,5 +17,6 @@ export const CSS = {
 
 export const DOM = {
     SRCSET: /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i,
-    AMPERSAND_G: /&(?!(?:#(?:[\d]+|x[A-Za-z\d]{5});?|[A-Za-z]{2,};))/g
+    ENTITY_G: new RegExp('&' + DOM_ENTITY, 'g'),
+    AMPERSAND_G: new RegExp(`&(?!${DOM_ENTITY})`, 'g')
 };

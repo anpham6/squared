@@ -1,3 +1,5 @@
+import { DOM } from './regex';
+
 const { endsWith, escapePattern, hasValue, isObject, replaceAll, splitPairEnd, splitPairStart, startsWith, trimEnclosing } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
@@ -144,7 +146,6 @@ const EXT_DATA = {
 
 const CACHE_UUID: ObjectMap<RegExpMatchArray> = {};
 const HEX_STRING = '0123456789abcdef';
-const REGEXP_LOWERCASE = /&#?[A-Za-z\d]+?;/g;
 
 export function fromMimeType(value: string) {
     const [type, name] = value.split('/');
@@ -187,6 +188,8 @@ export function fromMimeType(value: string) {
                     return 'mid';
                 case 'mpeg':
                     return 'mp3';
+                case 'x-matroska':
+                    return 'mka';
                 case 'x-realaudio':
                     return 'ra';
                 case 'wave':
@@ -441,8 +444,8 @@ export function upperCaseString(value: string) {
 }
 
 export function lowerCaseString(value: string) {
-    const entities: Null<string[]> = value.match(REGEXP_LOWERCASE);
-    return entities ? value.split(REGEXP_LOWERCASE).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
+    const entities = DOM.ENTITY_G.exec(value);
+    return entities ? value.split(DOM.ENTITY_G).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
 }
 
 export function* searchObject(obj: ObjectMap<unknown>, value: string, checkName?: boolean): Generator<[string, unknown], void> {

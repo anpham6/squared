@@ -285,19 +285,15 @@ export function replaceCharacterData(value: string, tab?: number, quote?: boolea
                 output += '&#8205;';
                 break;
             case '&':
-                if (value[i + 5] === ';') {
-                    if (value.substring(i + 1, i + 5) === 'nbsp') {
-                        output += '&#160;';
-                        i += 5;
-                        break;
-                    }
+                if (value[i + 5] === ';' && value.substring(i + 1, i + 5) === 'nbsp') {
+                    output += '&#160;';
+                    i += 5;
+                    break;
                 }
-                else if (value[i + 4] === ';') {
-                    if (value.substring(i + 1, i + 4) === '#10') {
-                        output += '\\n';
-                        i += 4;
-                        break;
-                    }
+                else if (value.substring(i + 1, i + 4) === '#10' && !/\d/.test(value[i + 4])) {
+                    output += '\\n';
+                    i += value[i + 4] === ';' ? 4 : 3;
+                    break;
                 }
                 output += '&';
                 break;
