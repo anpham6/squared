@@ -1595,18 +1595,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(sessionId: string, resourceId: number, element: HTMLElement, pseudoElt: PseudoElt, elementRoot: HTMLElement | ShadowRoot = element.shadowRoot || element) {
-        let style = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
+        let styleMap = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
         if (element.tagName === 'Q') {
-            if (!style) {
-                setElementCache(element, 'styleMap' + pseudoElt, style = {}, sessionId);
+            if (!styleMap) {
+                setElementCache(element, 'styleMap' + pseudoElt, styleMap = {}, sessionId);
             }
-            style.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
+            styleMap.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
         }
-        if (style) {
-            let value = style.content;
+        if (styleMap) {
+            let value = styleMap.content;
             if (value) {
-                const absolute = hasCoords(style.position ||= 'static');
-                if (absolute && +style.opacity! <= 0) {
+                const absolute = hasCoords(styleMap.position ||= 'static');
+                if (absolute && +styleMap.opacity! <= 0) {
                     return;
                 }
                 let content = '',
@@ -1651,17 +1651,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                             if (!isString(content)) {
                                 const checkDimension = (after?: boolean) => {
-                                    switch (style!.display) {
+                                    switch (styleMap!.display) {
                                         case 'inline':
                                         case 'block':
                                         case 'inherit':
                                         case 'initial':
                                         case 'unset':
                                         case 'revert': {
-                                            const { width, height } = style!;
+                                            const { width, height } = styleMap!;
                                             if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
-                                                for (const attr in style) {
-                                                    const unit = parseFloat(style[attr as CssStyleAttr]!);
+                                                for (const attr in styleMap) {
+                                                    const unit = parseFloat(styleMap[attr as CssStyleAttr]!);
                                                     if (unit) {
                                                         switch (attr) {
                                                             case 'minHeight':
@@ -1891,7 +1891,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                 }
                 if (content || value === '""') {
-                    tagName ||= /^(?:inline|table)/.test(style.display ||= 'inline') ? 'span' : 'div';
+                    tagName ||= /^(?:inline|table)/.test(styleMap.display ||= 'inline') ? 'span' : 'div';
                     const pseudoElement = document.createElement(tagName);
                     pseudoElement.className = '__squared-pseudo';
                     pseudoElement.style.display = 'none';
@@ -1907,24 +1907,24 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const { width, height } = this.resourceHandler.getImageDimension(resourceId, content);
                             if (width && height) {
                                 let options: Undef<ParseUnitOptions>;
-                                if (style.fontSize) {
-                                    options = { fontSize: parseUnit(style.fontSize) };
+                                if (styleMap.fontSize) {
+                                    options = { fontSize: parseUnit(styleMap.fontSize) };
                                 }
-                                if (!style.width && style.height) {
-                                    const offset = parseUnit(style.height, options);
+                                if (!styleMap.width && styleMap.height) {
+                                    const offset = parseUnit(styleMap.height, options);
                                     if (offset > 0) {
-                                        style.width = width * offset / height + 'px';
+                                        styleMap.width = width * offset / height + 'px';
                                     }
                                 }
-                                else if (style.width && !style.height) {
-                                    const offset = parseUnit(style.width, options);
+                                else if (styleMap.width && !styleMap.height) {
+                                    const offset = parseUnit(styleMap.width, options);
                                     if (offset > 0) {
-                                        style.height = height * offset / width + 'px';
+                                        styleMap.height = height * offset / width + 'px';
                                     }
                                 }
                                 else {
-                                    style.width = width + 'px';
-                                    style.height = height + 'px';
+                                    styleMap.width = width + 'px';
+                                    styleMap.height = height + 'px';
                                 }
                             }
                         }
@@ -1932,12 +1932,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             pseudoElement.innerText = content;
                         }
                     }
-                    for (const attr in style) {
+                    const style = getStyle(element, pseudoElt);
+                    for (const attr in styleMap) {
                         if (attr !== 'display') {
-                            pseudoElement.style[attr] = (value = style[attr]) === 'revert' ? getStyle(element, pseudoElt)[attr] : value;
+                            switch (value = styleMap[attr]) {
+                                case 'inherit':
+                                case 'unset':
+                                case 'revert':
+                                    value = style[attr];
+                                    styleMap[attr] = value;
+                                    break;
+                            }
+                            pseudoElement.style[attr] = value;
                         }
                     }
-                    setElementCache(pseudoElement, 'styleMap', style, sessionId);
+                    setElementCache(pseudoElement, 'styleMap', styleMap, sessionId);
                     setElementCache(pseudoElement, 'pseudoElt', pseudoElt, sessionId);
                     return pseudoElement;
                 }

@@ -794,7 +794,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     const parent = layout.parent;
-                    if (child.baselineElement && (parent.layoutHorizontal || parent.layoutGrid && parent.hasAlign(NODE_ALIGNMENT.VERTICAL) || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
+                    if (child.baselineElement && (parent.layoutHorizontal || parent.layoutGrid && !parent.tableElement || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {

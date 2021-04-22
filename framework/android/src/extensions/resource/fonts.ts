@@ -185,7 +185,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 }
                                 fontWeight = '';
                                 for (const { fontWeight: weight } of items) {
-                                    if (weight > actualFontWeight) {
+                                    if (weight >= actualFontWeight) {
                                         fontWeight = weight.toString();
                                         break;
                                     }

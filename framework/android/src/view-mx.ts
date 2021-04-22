@@ -239,7 +239,7 @@ function getLineSpacingExtra(node: T, value: number) {
             node.data(Resource.KEY_NAME, 'textRange', height);
         }
     }
-    if (!height && node.styleText) {
+    if (!height && (node.styleText || node.pseudoElement)) {
         node.cssTryAll(!node.pseudoElement ? OPTIONS_LINEHEIGHT : { ...OPTIONS_LINEHEIGHT, display: 'inline-block' }, function(this: T) {
             const bounds = getRangeClientRect(this.element!);
             if (bounds) {
