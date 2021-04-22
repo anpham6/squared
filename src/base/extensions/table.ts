@@ -9,6 +9,8 @@ import type NodeUI from '../node-ui';
 import Resource from '../resource';
 import ExtensionUI from '../extension-ui';
 
+import { CSS } from '../lib/regex';
+
 const { formatPercent, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { convertPercent, replaceMap } = squared.lib.util;
@@ -189,7 +191,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const visibleStyle = td.visibleStyle;
                 if (!visibleStyle.backgroundImage && !visibleStyle.backgroundColor) {
-                    const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
+
                     if (colgroup) {
                         const group = colgroup.children[index + 1];
                         if (group) {
@@ -198,7 +200,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 td.css('backgroundImage', backgroundImage, true);
                                 visibleStyle.backgroundImage = true;
                             }
-                            if (!exclude.test(backgroundColor)) {
+                            if (!CSS.TRANSPARENT.test(backgroundColor)) {
                                 td.css('backgroundColor', backgroundColor);
                                 td.setCacheValue('backgroundColor', backgroundColor);
                                 visibleStyle.backgroundColor = true;
@@ -211,7 +213,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             td.css('backgroundImage', value, true);
                             visibleStyle.backgroundImage = true;
                         }
-                        if (value = getInheritedStyle(element, 'backgroundColor', exclude)) {
+                        if (value = getInheritedStyle(element, 'backgroundColor', CSS.TRANSPARENT)) {
                             td.css('backgroundColor', value);
                             td.setCacheValue('backgroundColor', value);
                             visibleStyle.backgroundColor = true;

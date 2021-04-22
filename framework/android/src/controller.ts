@@ -29,7 +29,7 @@ const { asPercent, formatPX, getStyle, hasCoords } = squared.lib.css;
 const { getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, convertWord, iterateArray, lastItemOf, minMaxOf, partitionArray, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
+const { capitalize, convertWord, isSpace, iterateArray, lastItemOf, minMaxOf, partitionArray, replaceAll, splitSome, startsWith, withinRange } = squared.lib.util;
 
 const { parseTransform } = squared.base.lib.css;
 const { getElementsBetweenSiblings, getSrcSet } = squared.base.lib.dom;
@@ -2235,7 +2235,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     previous = item;
                 };
                 const relativeWrapWidth = (item: T, textWidth: number) => Math.floor(currentFloatedWidth + rowWidth + textWidth - (item.inlineStatic && item.styleElement ? item.contentBoxWidth : 0)) > Math.ceil(boxWidth + (rowsAll.length === 1 ? textIndent * -1 : 0));
-                const isMultiline = (item: T) => item.plainText && Resource.hasLineBreak(item, false, true) || item.preserveWhiteSpace && /^(?:^|\s+)\n+/.test(item.textContent);
+                const isMultiline = (item: T) => item.plainText && Resource.hasLineBreak(item, false, true) || item.preserveWhiteSpace && /^(?:^|[ \t\v\f\r]+)\n+/.test(item.textContent);
                 if (node.naturalElement) {
                     if (node.blockDimension) {
                         textIndent = node.cssUnit('textIndent');
@@ -2303,7 +2303,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             else {
                                 let checkWidth = lineWrap;
                                 if (previous.textElement) {
-                                    if (i === 1 && item.plainText && item.previousSibling === previous && !/^\s+/.test(item.textContent) && !/\s+$/.test(previous.textContent)) {
+                                    if (i === 1 && item.plainText && item.previousSibling === previous && !isSpace(item.textContent[0]) && !isSpace(lastItemOf(previous.textContent))) {
                                         checkWidth = false;
                                     }
                                     else if (lineWrap && previous.multiline && (previous.bounds.width >= boxWidth || item.plainText && Resource.hasLineBreak(previous, false, true))) {

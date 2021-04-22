@@ -326,7 +326,7 @@ function checkSpaceEnd(value: string, index: number) {
 const getFallbackResult = (options: Undef<UnitOptions>, value: number) => options && options.fallback !== undefined ? options.fallback : value;
 const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
 const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
-const isColor = (value: string) => /(?:rgb|hsl)a?/.test(value);
+const isColor = (value: string) => /(?:rgb|hsl)a?\(/i.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 

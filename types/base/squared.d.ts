@@ -917,6 +917,7 @@ declare module "base" {
             };
 
             const CSS: {
+                TRANSPARENT: RegExp;
                 BACKGROUNDIMAGE_G: RegExp;
             };
 
