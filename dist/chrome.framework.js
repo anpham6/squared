@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.8
+/* chrome-framework 2.5.9
    https://github.com/anpham6/squared */
 
 var chrome = (function () {

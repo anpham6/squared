@@ -1,4 +1,4 @@
-/* android-framework 2.5.8
+/* android-framework 2.5.9
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -317,10 +317,10 @@ var android = (function () {
         RESERVED_JAVA: RESERVED_JAVA
     });
 
+    const { DOM } = squared.lib.regex;
     const { parseColor: __parseColor } = squared.lib.color;
     const { capitalize: capitalize$6, joinArray: joinArray$1, isPlainObject: isPlainObject$2, startsWith: startsWith$9 } = squared.lib.util;
     const CACHE_COLORDATA = {};
-    const REGEXP_AMPERSAND = /&(?!#?[A-Za-z\d]{2,};)/g;
     function parseColor(value, opacity = 1, transparency) {
         if (value && (value !== 'transparent' || transparency)) {
             let result = CACHE_COLORDATA[value];
@@ -509,7 +509,7 @@ var android = (function () {
                     output += '\\\\';
                     break;
                 case '\t':
-                    output += tab ? '&#160;'.repeat(tab) : ch;
+                    output += tab ? '&#160;'.repeat(tab) : '&#9;';
                     break;
                 case '\u0003':
                     output += '&#3;';
@@ -557,19 +557,15 @@ var android = (function () {
                     output += '&#8205;';
                     break;
                 case '&':
-                    if (value[i + 5] === ';') {
-                        if (value.substring(i + 1, i + 5) === 'nbsp') {
-                            output += '&#160;';
-                            i += 5;
-                            break;
-                        }
+                    if (value[i + 5] === ';' && value.substring(i + 1, i + 5) === 'nbsp') {
+                        output += '&#160;';
+                        i += 5;
+                        break;
                     }
-                    else if (value[i + 4] === ';') {
-                        if (value.substring(i + 1, i + 4) === '#10') {
-                            output += '\\n';
-                            i += 4;
-                            break;
-                        }
+                    else if (value.substring(i + 1, i + 4) === '#10' && !/\d/.test(value[i + 4])) {
+                        output += '\\n';
+                        i += value[i + 4] === ';' ? 4 : 3;
+                        break;
                     }
                     output += '&';
                     break;
@@ -578,7 +574,7 @@ var android = (function () {
                     break;
             }
         }
-        return output.replace(REGEXP_AMPERSAND, '&amp;');
+        return output.replace(DOM.AMPERSAND_G, '&amp;');
     }
     function concatString(list, char = '') {
         let output = '';
@@ -1843,7 +1839,7 @@ var android = (function () {
                 node.data(Resource.KEY_NAME, 'textRange', height);
             }
         }
-        if (!height && node.styleText) {
+        if (!height && (node.styleText || node.pseudoElement)) {
             node.cssTryAll(!node.pseudoElement ? OPTIONS_LINEHEIGHT : Object.assign(Object.assign({}, OPTIONS_LINEHEIGHT), { display: 'inline-block' }), function () { var _a; height = (_a = getRangeClientRect$1(this.element)) === null || _a === void 0 ? void 0 : _a.height; });
         }
         return height ? (value - height) / 2 : 0;
@@ -2343,27 +2339,34 @@ var android = (function () {
                                     layoutWidth = this.getMatchConstraint(renderParent);
                                 }
                             }
-                            else if (this.blockStatic) {
-                                if (this.documentRoot) {
-                                    layoutWidth = 'match_parent';
-                                }
-                                else if (!actualParent.layoutElement) {
-                                    if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(32 /* BLOCK */) || this.rootElement) {
+                            else {
+                                if (this.blockStatic) {
+                                    if (this.documentRoot) {
+                                        layoutWidth = 'match_parent';
+                                    }
+                                    else if (!actualParent.layoutElement) {
+                                        if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(32 /* BLOCK */) || this.rootElement) {
+                                            layoutWidth = this.getMatchConstraint(renderParent);
+                                        }
+                                        else {
+                                            checkParentWidth(true);
+                                        }
+                                    }
+                                    else if (containsWidth && (actualParent.gridElement && !renderParent.layoutElement || actualParent.flexElement && this.layoutVertical && this.find(item => item.textElement && item.multiline))) {
                                         layoutWidth = this.getMatchConstraint(renderParent);
                                     }
-                                    else {
-                                        checkParentWidth(true);
+                                }
+                                if (!layoutWidth) {
+                                    if (containsWidth && (this.layoutFrame && this.find(item => !!item.autoMargin.horizontal) || this.tagName === 'PICTURE' && this.renderChildren.some(item => item.percentWidth))) {
+                                        layoutWidth = this.getMatchConstraint(renderParent);
+                                    }
+                                    else if (this.floating && this.block && this.alignParent('left') && this.alignParent('right') && !this.rightAligned) {
+                                        layoutWidth = 'match_parent';
+                                    }
+                                    else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
+                                        checkParentWidth(false);
                                     }
                                 }
-                                else if (containsWidth && (actualParent.gridElement && !renderParent.layoutElement || actualParent.flexElement && (this.layoutVertical && this.find(item => item.textElement && item.multiline)) || this.layoutFrame && this.find(item => !!item.autoMargin.horizontal))) {
-                                    layoutWidth = this.getMatchConstraint(renderParent);
-                                }
-                            }
-                            else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
-                                layoutWidth = 'match_parent';
-                            }
-                            else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
-                                checkParentWidth(false);
                             }
                         }
                     }
@@ -4994,7 +4997,7 @@ var android = (function () {
         if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === node.renderParent) {
             return parent.box.width - (node.linear.left - parent.box.left);
         }
-        else if (parent.floatContainer) {
+        if (parent.floatContainer) {
             const container = node.ascend({ condition: (item) => item.of(15 /* FRAME */, 128 /* COLUMN */), including: parent, attr: 'renderParent' });
             if (container.length) {
                 const { left, right, width } = node.box;
@@ -5026,7 +5029,7 @@ var android = (function () {
         if (element.tagName === 'BR') {
             return true;
         }
-        else if (element.nodeName[0] !== '#') {
+        if (element.nodeName[0] !== '#') {
             const style = getComputedStyle(element);
             const hasWidth = () => (style.width === '100%' || style.minWidth === '100%') && (style.maxWidth === 'none' || style.maxWidth === '100%');
             if (!hasCoords(style.position)) {
@@ -5446,7 +5449,7 @@ var android = (function () {
                                 layout.containerType = 15 /* FRAME */;
                             }
                         }
-                        else if (child.baselineElement && (parent.layoutGrid && parent.hasAlign(8 /* VERTICAL */) || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
+                        else if (child.baselineElement && (parent.layoutHorizontal || parent.layoutGrid && !parent.tableElement || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
                             layout.setContainerType(16 /* LINEAR */, 4 /* HORIZONTAL */);
                         }
                         else {
@@ -5983,55 +5986,31 @@ var android = (function () {
                 case 'CANVAS': {
                     const resource = this.application.resourceHandler;
                     const element = node.element;
-                    let imageSet;
-                    if (node.actualParent.tagName === 'PICTURE') {
-                        if (imageSet = getSrcSet(element, this.localSettings.mimeType.image)) {
-                            const setImageDimension = (width, image) => {
-                                node.css('width', formatPX$a(width), true);
-                                if (image && image.width && image.height) {
-                                    const height = image.height * (width / image.width);
-                                    node.css('height', formatPX$a(height), true);
-                                }
-                            };
-                            const image = imageSet[0];
-                            if (image.actualWidth) {
-                                setImageDimension(image.actualWidth, resource.getImage(resourceId, element.src));
-                            }
-                            else {
-                                const stored = resource.getImage(resourceId, image.src);
-                                if (stored) {
-                                    setImageDimension(stored.width, stored);
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        let scaleType;
-                        switch (node.cssValue('objectFit')) {
-                            case 'fill':
+                    let scaleType;
+                    switch (node.cssValue('objectFit')) {
+                        case 'fill':
+                            scaleType = 'fitXY';
+                            break;
+                        case 'contain':
+                            scaleType = 'centerInside';
+                            break;
+                        case 'cover':
+                            scaleType = 'centerCrop';
+                            break;
+                        case 'scale-down':
+                            scaleType = 'fitCenter';
+                            break;
+                        case 'none':
+                            scaleType = 'center';
+                            break;
+                        default:
+                            if (node.width && node.height) {
                                 scaleType = 'fitXY';
-                                break;
-                            case 'contain':
-                                scaleType = 'centerInside';
-                                break;
-                            case 'cover':
-                                scaleType = 'centerCrop';
-                                break;
-                            case 'scale-down':
-                                scaleType = 'fitCenter';
-                                break;
-                            case 'none':
-                                scaleType = 'center';
-                                break;
-                            default:
-                                if (node.width && node.height) {
-                                    scaleType = 'fitXY';
-                                }
-                                break;
-                        }
-                        if (scaleType) {
-                            node.android('scaleType', scaleType);
-                        }
+                            }
+                            break;
+                    }
+                    if (scaleType) {
+                        node.android('scaleType', scaleType);
                     }
                     if (node.baseline) {
                         node.android('baselineAlignBottom', 'true');
@@ -6050,6 +6029,7 @@ var android = (function () {
                             }
                         }
                         else {
+                            const imageSet = node.actualParent.tagName === 'PICTURE' ? getSrcSet(element, this.localSettings.mimeType.image) : undefined;
                             src = resource.addImageSrc(resourceId, element, '', imageSet);
                             if (watch || tasks) {
                                 const images = [element.src];
@@ -8699,7 +8679,7 @@ var android = (function () {
                 const [name, font] = items[i];
                 const itemArray = [];
                 for (const attr in font) {
-                    const [fontFamily, fontStyle, fontWeight] = attr.split('|');
+                    const [fontFamily, fontStyle, fontWeight] = attr.split(';');
                     const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
                     itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
                     const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
@@ -11262,12 +11242,12 @@ var android = (function () {
                     if (grow > 0 || shrink !== 1 || isLength$1(basis, true)) {
                         result += grow;
                         let value;
-                        if (basis === 'auto' || basis === '0%') {
+                        if (basis === 'auto' || parseFloat(basis) === 0) {
                             if (item.hasPX(dimension)) {
                                 value = item.cssUnit(dimension);
                             }
                             else {
-                                if (!percent && basis === '0%') {
+                                if (!percent && parseFloat(basis) === 0) {
                                     value = size;
                                 }
                                 else {
@@ -11474,6 +11454,7 @@ var android = (function () {
 
     var LayoutUI$7 = squared.base.LayoutUI;
     const { formatPX: formatPX$6, isPercent: isPercent$2 } = squared.lib.css;
+    const { getTextMetrics: getTextMetrics$2 } = squared.lib.dom;
     class List extends squared.base.extensions.List {
         constructor() {
             super(...arguments);
@@ -11609,17 +11590,30 @@ var android = (function () {
                     else {
                         container = node.outerMostWrapper;
                     }
-                    if (columnCount === 3) {
-                        container.android('layout_columnSpan', '2');
-                    }
                     const tagName = node.tagName;
                     const options = createViewAttribute();
                     ordinal = application.createNode(node.sessionId, { parent });
+                    ordinal.setCacheValue('tagName', tagName);
                     ordinal.childIndex = node.childIndex;
                     ordinal.containerName = node.containerName + '_ORDINAL';
                     ordinal.inherit(node, 'textStyle');
                     if (value && !/\w/.test(value)) {
                         ordinal.setCacheValue('fontSize', node.fontSize * this.options.ordinalFontSizeAdjust);
+                    }
+                    const inside = node.cssValue('listStylePosition') === 'inside';
+                    if (columnCount === 3) {
+                        if (inside) {
+                            ordinal.android('layout_columnSpan', '2');
+                            if (value) {
+                                const metrics = getTextMetrics$2(value + '  ', node.fontSize, node.css('fontFamily'));
+                                if (metrics) {
+                                    minWidth += metrics.width;
+                                }
+                            }
+                        }
+                        else {
+                            container.android('layout_columnSpan', '2');
+                        }
                     }
                     if (gravity === 'right') {
                         if (image) {
@@ -14162,7 +14156,7 @@ var android = (function () {
             }
             if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images && images.length)) {
                 const stroke = border && getBorderStroke(resourceId, border);
-                if (images && images.length || indentWidth || borderOnly) {
+                if (images && images.length || indentWidth || outline && borderOnly) {
                     layerList = createLayerList(resourceId, data, images, borderOnly, stroke, corners, indentOffset);
                 }
                 else {
@@ -15378,7 +15372,7 @@ var android = (function () {
             const groupMap = {};
             const fontItems = [];
             cache.each(node => {
-                if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(4 /* FONT_STYLE */)) {
+                if (node.data(Resource.KEY_NAME, 'fontStyle')) {
                     const containerName = node.containerName;
                     (nameMap[containerName] || (nameMap[containerName] = [])).push(node);
                 }
@@ -15408,7 +15402,7 @@ var android = (function () {
                     }
                     fontFamily.replace(/"/g, '').split(',').some((value, index, array) => {
                         value = trimBoth(value.trim(), "'").toLowerCase();
-                        let fontName = value, actualFontWeight = '';
+                        let fontName = value, actualFontWeight = 0;
                         if (!disableFontAlias && FONT_REPLACE[fontName]) {
                             fontName = defaultFontFamily;
                         }
@@ -15416,16 +15410,33 @@ var android = (function () {
                             fontFamily = fontName;
                         }
                         else if (fontStyle && fontWeight) {
-                            let createFont;
+                            if (startsWith$2(fontStyle, 'oblique')) {
+                                fontStyle = 'italic';
+                            }
+                            let foundFontStyle;
                             if (resource.getFonts(resourceId, value, fontStyle, fontWeight).length) {
-                                createFont = true;
+                                foundFontStyle = fontStyle;
                             }
                             else {
-                                const font = startsWith$2(fontStyle, 'oblique') ? [...resource.getFonts(resourceId, value, 'italic'), ...resource.getFonts(resourceId, value, 'normal')] : resource.getFonts(resourceId, value, fontStyle);
-                                if (font.length) {
-                                    actualFontWeight = fontWeight;
-                                    fontWeight = font[0].fontWeight.toString();
-                                    createFont = true;
+                                let items = resource.getFonts(resourceId, value);
+                                if (items.length) {
+                                    foundFontStyle = 'normal';
+                                    actualFontWeight = +fontWeight;
+                                    if (fontStyle === 'italic') {
+                                        const italic = items.filter(item => item.fontStyle === 'italic');
+                                        if (italic.length) {
+                                            items = italic;
+                                            foundFontStyle = 'italic';
+                                        }
+                                    }
+                                    fontWeight = '';
+                                    for (const { fontWeight: weight } of items) {
+                                        if (weight >= actualFontWeight) {
+                                            fontWeight = weight.toString();
+                                            break;
+                                        }
+                                    }
+                                    fontWeight || (fontWeight = items.pop().fontWeight.toString());
                                 }
                                 else if (index < array.length - 1) {
                                     return false;
@@ -15434,10 +15445,9 @@ var android = (function () {
                                     fontFamily = defaultFontFamily;
                                 }
                             }
-                            if (createFont) {
-                                fontName = convertWord$1(fontName);
-                                const font = fonts.get(fontName) || {};
-                                font[`${value}|${fontStyle}|${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
+                            if (foundFontStyle) {
+                                const font = fonts.get(fontName = convertWord$1(fontName)) || {};
+                                font[`${value};${foundFontStyle};${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
                                 fonts.set(fontName, font);
                                 fontFamily = `@font/${fontName}`;
                             }
@@ -15449,12 +15459,12 @@ var android = (function () {
                             fontStyle = '';
                         }
                         if (actualFontWeight) {
-                            fontWeight = actualFontWeight;
+                            fontWeight = actualFontWeight.toString();
                         }
                         else if (fontWeight === '400' || node.api < 26 /* OREO */) {
                             fontWeight = '';
                         }
-                        if (+fontWeight > 500) {
+                        if (+fontWeight >= 600) {
                             fontStyle += (fontStyle ? '|' : '') + 'bold';
                         }
                         return true;

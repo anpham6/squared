@@ -1,4 +1,4 @@
-/* squared.svg 2.5.8
+/* squared.svg 2.5.9
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -7,7 +7,7 @@ this.squared.svg = (function (exports) {
 
     var Pattern$2 = squared.lib.base.Pattern;
     const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
-    const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize: getFontSize$3, getStyle, hasEm: hasEm$3, isLength: isLength$3, isPercent: isPercent$3, parseUnit: parseUnit$3 } = squared.lib.css;
+    const { CSS_PROPERTIES, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize: getFontSize$3, getStyle, hasEm: hasEm$3, isLength: isLength$3, isPercent: isPercent$2, parseUnit: parseUnit$3 } = squared.lib.css;
     const { getNamedItem: getNamedItem$a } = squared.lib.dom;
     const { convertRadian, hypotenuse, truncateFraction: truncateFraction$3, truncateTrailingZero } = squared.lib.math;
     const { getElementCache } = squared.lib.session;
@@ -19,7 +19,7 @@ this.squared.svg = (function (exports) {
         if (isLength$3(value)) {
             point[attr] = parseUnit$3(value, createParseUnitOptions(element, value));
         }
-        else if (isPercent$3(value)) {
+        else if (isPercent$2(value)) {
             point[attr] = convertPercent$4(value) * dimension;
         }
     }
@@ -5069,7 +5069,7 @@ this.squared.svg = (function (exports) {
         };
     };
 
-    const { isPercent: isPercent$2, parseAngle: parseAngle$1 } = squared.lib.css;
+    const { isPercent: isPercent$1, parseAngle: parseAngle$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$4 } = squared.lib.dom;
     const { truncateFraction: truncateFraction$1 } = squared.lib.math;
     const { convertPercent: convertPercent$3, isEqual, isNumber: isNumber$1, iterateArray: iterateArray$2, lastItemOf, plainMap: plainMap$1 } = squared.lib.util;
@@ -5166,7 +5166,7 @@ this.squared.svg = (function (exports) {
                     const keyPoints = this._keyPoints;
                     if (keyTimes.length === keyPoints.length) {
                         const value = item.value;
-                        let distance = isPercent$2(value) ? convertPercent$3(value) : parseFloat(value) / this.offsetLength;
+                        let distance = isPercent$1(value) ? convertPercent$3(value) : parseFloat(value) / this.offsetLength;
                         if (!isNaN(distance)) {
                             distance = Math.min(distance, 1);
                             const index = keyTimes.findIndex(previous => previous === key);
@@ -5507,10 +5507,12 @@ this.squared.svg = (function (exports) {
     }
 
     var Pattern = squared.lib.base.Pattern;
-    const { hasCalc: hasCalc$1, isAngle, isCustomProperty: isCustomProperty$1, isPercent: isPercent$1, getKeyframesRules: getKeyframesRules$1, parseAngle, parseVar: parseVar$1 } = squared.lib.css;
+    const { STRING: STRING$1 } = squared.lib.regex;
+    const { hasCalc: hasCalc$1, isAngle, isCustomProperty: isCustomProperty$1, getKeyframesRules: getKeyframesRules$1, parseAngle, parseVar: parseVar$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$3 } = squared.lib.dom;
-    const { convertCamelCase: convertCamelCase$1, convertPercent: convertPercent$2, convertWord, iterateArray: iterateArray$1, replaceMap, sortNumber, splitPairEnd, startsWith: startsWith$1 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertPercent: convertPercent$2, convertWord, iterateArray: iterateArray$1, replaceMap, sortNumber, splitEnclosing, splitPairEnd, spliceString, startsWith: startsWith$1 } = squared.lib.util;
     const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
+    const REGEXP_PERCENT = new RegExp(STRING$1.PERCENT, 'g');
     const ANIMATION_DEFAULT = {
         'animation-delay': '0s',
         'animation-duration': '0s',
@@ -5672,8 +5674,20 @@ this.squared.svg = (function (exports) {
                             const data = keyframes[percent];
                             for (const attr in data) {
                                 let value = data[attr];
-                                if (isPercent$1(value)) {
-                                    value = `calc(${value})`;
+                                if (value.indexOf('%') !== -1) {
+                                    const segments = splitEnclosing(value);
+                                    let match;
+                                    for (let j = 0; j < segments.length; j += 2) {
+                                        let current = segments[j];
+                                        while (match = REGEXP_PERCENT.exec(current)) {
+                                            const calc = `calc(${match[0]})`;
+                                            current = spliceString(current, match.index, match[0].length, calc);
+                                            REGEXP_PERCENT.lastIndex = match.index + calc.length;
+                                        }
+                                        segments[j] = current;
+                                        REGEXP_PERCENT.lastIndex = 0;
+                                    }
+                                    value = segments.join('');
                                 }
                                 if (hasCalc$1(value)) {
                                     value = calculateStyle(element, convertCamelCase$1(attr), value);

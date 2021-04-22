@@ -1,4 +1,4 @@
-/* squared 2.5.8
+/* squared 2.5.9
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -60,6 +60,7 @@
     const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
     const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
     const TAG_ATTR = `=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]*))`;
+    const DOM_ENTITY = '#(?:[\\d]+|x[A-Za-z\\d]{5});?|[A-Za-z]{2,};';
     const STRING = {
         DECIMAL,
         PERCENT: '[+-]?\\d+(?:\\.\\d+)?%',
@@ -100,13 +101,18 @@
         SKEW: new RegExp(`(skew[XY]?)\\(\\s*${STRING.CSS_ANGLE}(?:,\\s*${STRING.CSS_ANGLE})?\\s*\\)`),
         PERSPECTIVE: new RegExp(`(perspective)\\(\\s*${STRING.LENGTH_PERCENTAGE}\\s*\\)`)
     };
+    const DOM = {
+        ENTITY_G: new RegExp('&' + DOM_ENTITY, 'g'),
+        AMPERSAND_G: new RegExp(`&(?!${DOM_ENTITY})`, 'g')
+    };
 
     var regex = /*#__PURE__*/Object.freeze({
         __proto__: null,
         STRING: STRING,
         FILE: FILE,
         CSS: CSS,
-        TRANSFORM: TRANSFORM
+        TRANSFORM: TRANSFORM,
+        DOM: DOM
     });
 
     const REGEXP_DECIMALNOTAION = /^([+-]?\d+\.\d+)e([+-]?\d+)$/;
@@ -978,8 +984,8 @@
         length -= value.length;
         return length > 0 ? char.repeat(length) + value : value;
     }
-    function spliceString(value, index, length) {
-        return index === 0 ? value.substring(length) : value.substring(0, index) + value.substring(index + length);
+    function spliceString(value, index, length, replaceWith = '') {
+        return index === 0 ? replaceWith + value.substring(length) : value.substring(0, index) + replaceWith + value.substring(index + length);
     }
     function splitPair(value, char, trim, last) {
         const index = !last ? value.indexOf(char) : value.lastIndexOf(char);
@@ -1653,7 +1659,7 @@
             if ((seg = seg.trim()).includes(' ') && !isCalc(seg)) {
                 alignment.push(...seg.split(CHAR_SPACE));
             }
-            else {
+            else if (seg) {
                 alignment.push(seg);
             }
         }
@@ -3734,8 +3740,9 @@
             case 'offsetRotate':
                 return calculateVarAsString(element, value, { unitType: 8 /* ANGLE */, supportPercent: false });
             case 'offsetAnchor':
-            case 'transformOrigin':
                 return calculatePosition(element, value, boundingBox);
+            case 'transformOrigin':
+                return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox, parent: false });
             case 'transform': {
                 const transform = splitEnclosing(value);
                 const length = transform.length;
@@ -4580,16 +4587,18 @@
             const pxA = a.pixelRatio;
             const pxB = b.pixelRatio;
             if (pxA && pxB) {
-                if (pxA !== pxB) {
-                    return pxA - pxB;
-                }
+                return pxA - pxB;
             }
-            else {
-                const widthA = a.width;
-                const widthB = b.width;
-                if (widthA !== widthB && widthA && widthB) {
-                    return widthA - widthB;
-                }
+            const widthA = a.width;
+            const widthB = b.width;
+            if (widthA && widthB) {
+                return widthA - widthB;
+            }
+            if (widthA) {
+                return -1;
+            }
+            if (widthB) {
+                return 1;
             }
             return 0;
         });
@@ -4630,9 +4639,7 @@
                     }
                     for (let i = 1; i < length; ++i) {
                         const item = result[i];
-                        if (item.pixelRatio === 0) {
-                            item.pixelRatio = item.width / width;
-                        }
+                        item.pixelRatio || (item.pixelRatio = item.width / width);
                     }
                 }
                 const item = result[0];

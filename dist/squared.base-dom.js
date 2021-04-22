@@ -1,4 +1,4 @@
-/* squared.base 2.5.8
+/* squared.base 2.5.9
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -1122,6 +1122,7 @@ this.squared.base = (function (exports) {
         }
     }
 
+    const { DOM } = squared.lib.regex;
     const { endsWith: endsWith$2, splitPair: splitPair$2, splitPairEnd, splitPairStart: splitPairStart$1, startsWith: startsWith$3 } = squared.lib.util;
     class GlobExp extends RegExp {
         constructor(source, flags, negate) {
@@ -1518,13 +1519,8 @@ this.squared.base = (function (exports) {
         return result ? result.join('') : value;
     }
     function lowerCaseString(value) {
-        const entities = [];
-        const pattern = /&#?[A-Za-z\d]+?;/g;
-        let match;
-        while (match = pattern.exec(value)) {
-            entities.push(match[0]);
-        }
-        return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
+        const entities = DOM.ENTITY_G.exec(value);
+        return entities ? value.split(DOM.ENTITY_G).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
     }
     function* searchObject(obj, value, checkName) {
         const start = value[0] === '*';
@@ -5152,6 +5148,7 @@ this.squared.base = (function (exports) {
                         else {
                             documentRoot.appendChild(element);
                             images.push(element);
+                            result.push(element);
                         }
                     }
                 }
@@ -5180,6 +5177,7 @@ this.squared.base = (function (exports) {
                         else {
                             document.body.appendChild(element);
                             images.push(element);
+                            result.push(element);
                         }
                     }
                 }
