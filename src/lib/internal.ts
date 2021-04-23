@@ -117,8 +117,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'animationFillMode',
             'animationPlayState',
             'animationName'
-        ],
-        valueOfNone: '1e-05s ease 0s 1 normal none running none'
+        ]
     },
     animationDelay: {
         trait: CSS_TRAITS.CALC,
@@ -186,8 +185,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'backgroundOrigin',
             'backgroundClip',
             'backgroundColor'
-        ],
-        valueOfNone: 'rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box'
+        ]
     },
     backgroundAttachment: {
         trait: 0,
@@ -303,8 +301,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'borderImageWidth',
             'borderImageOutset',
             'borderImageRepeat'
-        ],
-        valueOfNone: 'none 100% / 1 / 0 stretch'
+        ]
     },
     borderImageOutset: {
         trait: CSS_TRAITS.CALC,
@@ -563,8 +560,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'flexGrow',
             'flexShrink',
             'flexBasis'
-        ],
-        valueOfNone: '0 0 auto'
+        ]
     },
     flexBasis: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -648,8 +644,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'fontVariantLigatures',
             'fontVariantNumeric',
             'fontVariantEastAsian'
-        ],
-        valueOfNone: 'no-common-ligatures no-discretionary-ligatures no-historical-ligatures no-contextual'
+        ]
     },
     fontVariantCaps: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
@@ -693,8 +688,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'gridAutoFlow',
             'gridRowGap',
             'gridColumnGap'
-        ],
-        valueOfNone: 'none / none / none / row / auto / auto'
+        ]
     },
     gridArea: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT | CSS_TRAITS.NONE | CSS_TRAITS.AUTO,
@@ -703,8 +697,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'gridColumnStart',
             'gridRowEnd',
             'gridColumnEnd'
-        ],
-        valueOfNone: 'none / none / none / none'
+        ]
     },
     gridAutoColumns: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -723,8 +716,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: [
             'gridColumnStart',
             'gridColumnEnd'
-        ],
-        valueOfNone: 'none / none'
+        ]
     },
     gridColumnEnd: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -750,8 +742,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: [
             'gridRowStart',
             'gridRowEnd'
-        ],
-        valueOfNone: 'none / none'
+        ]
     },
     gridRowEnd: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
@@ -771,8 +762,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'gridTemplateRows',
             'gridTemplateColumns',
             'gridTemplateAreas'
-        ],
-        valueOfNone: 'none / none / none'
+        ]
     },
     gridTemplateAreas: {
         trait: CSS_TRAITS.LAYOUT,
@@ -836,8 +826,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'listStyleType',
             'listStylePosition',
             'listStyleImage'
-        ],
-        valueOfNone: 'outside none none'
+        ]
     },
     listStyleImage: {
         trait: CSS_TRAITS.LAYOUT | CSS_TRAITS.INHERIT,
@@ -915,8 +904,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'offsetDistance',
             'offsetRotate',
             'offsetAnchor'
-        ],
-        valueOfNone: 'none 0px auto 0deg'
+        ]
     },
     offsetPath: {
         trait: CSS_TRAITS.CALC,
@@ -1152,15 +1140,15 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     scrollSnapAlign: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     scrollSnapStop: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     scrollSnapType: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     shapeImageThreshold: {
@@ -1274,8 +1262,7 @@ export const CSS_PROPERTIES: CssProperties = {
             'transitionDuration',
             'transitionTimingFunction',
             'transitionDelay'
-        ],
-        valueOfNone: 'one 0s ease 0s'
+        ]
     },
     transitionDelay: {
         trait: CSS_TRAITS.CALC,
@@ -1298,7 +1285,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal'
     },
     userSelect: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     verticalAlign: {
