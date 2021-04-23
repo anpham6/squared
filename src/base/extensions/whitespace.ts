@@ -208,10 +208,10 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
         if (direction !== undefined) {
             if (direction) {
                 const firstChild = node.firstStaticChild as NodeUI;
-                return isBlockElement(firstChild) && validAboveChild(firstChild, false);
+                return isBlockElement(firstChild) && validAboveChild(firstChild);
             }
             const lastChild = node.lastStaticChild as NodeUI;
-            return isBlockElement(lastChild) && validBelowChild(lastChild, false);
+            return isBlockElement(lastChild) && validBelowChild(lastChild);
         }
     }
     return false;
@@ -255,29 +255,31 @@ function getBottomChild(node: NodeUI) {
         const children = node.naturalChildren;
         for (let j = children.length - 1; j >= 0; --j) {
             const item = children[j] as NodeUI;
-            if (item.floating) {
-                if (!bottomChild) {
-                    const bottom = item.linear.bottom;
-                    if (bottomFloat) {
-                        if (bottom > bottomFloat.linear.bottom) {
+            if (item.pageFlow) {
+                if (item.floating) {
+                    if (!bottomChild) {
+                        const bottom = item.linear.bottom;
+                        if (bottomFloat) {
+                            if (bottom > bottomFloat.linear.bottom) {
+                                bottomFloat = item;
+                            }
+                        }
+                        else if (Math.ceil(item.linear.bottom) >= node.box.bottom) {
                             bottomFloat = item;
                         }
                     }
-                    else if (Math.ceil(item.linear.bottom) >= node.box.bottom) {
-                        bottomFloat = item;
+                    else if (item.linear.bottom >= bottomChild.linear.bottom) {
+                        bottomChild = item;
+                        break;
                     }
                 }
-                else if (item.linear.bottom >= bottomChild.linear.bottom) {
+                else if (!bottomChild) {
+                    if (bottomFloat && bottomFloat.linear.bottom > item.linear.bottom) {
+                        bottomChild = bottomFloat;
+                        break;
+                    }
                     bottomChild = item;
-                    break;
                 }
-            }
-            else if (!bottomChild) {
-                if (bottomFloat && bottomFloat.linear.bottom > item.linear.bottom) {
-                    bottomChild = bottomFloat;
-                    break;
-                }
-                bottomChild = item;
             }
         }
         if (bottomFloat && !bottomChild) {
@@ -293,9 +295,158 @@ function checkOverflowValue(value: string) {
         case 'hidden':
         case 'overlay':
             return false;
-        default:
-            return true;
     }
+    return true;
+}
+
+function getMarginTop(node: NodeUI, opposing: NodeUI, check?: boolean): [number, boolean] {
+    let marginTop = node.marginTop,
+        current = node,
+        inherited = false;
+    while (validBelowChild(current)) {
+        let child = current.firstStaticChild as NodeUI;
+        if (isBlockElement(child, true) && !child.getBox(BOX_STANDARD.MARGIN_TOP)[0]) {
+            let childTop = child.marginTop,
+                currentChild = child;
+            while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                const currentBottom = currentChild.marginBottom;
+                childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
+                if (currentBottom !== 0) {
+                    resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                }
+                if (currentChild.every(item => item.floating || !item.pageFlow)) {
+                    const nextChild = currentChild.firstStaticChild;
+                    if (nextChild) {
+                        childTop = nextChild.marginTop;
+                        currentChild = nextChild;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                else {
+                    const sibling = currentChild.nextSibling;
+                    if (sibling) {
+                        if (sibling.marginTop >= childTop) {
+                            if (currentChild.marginTop !== 0) {
+                                resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
+                            }
+                            child = sibling;
+                            childTop = sibling.marginTop;
+                            currentChild = sibling;
+                        }
+                        else if (sibling.bounds.height) {
+                            break;
+                        }
+                        else {
+                            if (sibling.marginTop !== 0) {
+                                resetBox(sibling, BOX_STANDARD.MARGIN_TOP);
+                            }
+                            currentChild = sibling;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+            if (childTop !== 0) {
+                if (!check) {
+                    resetBox(child, BOX_STANDARD.MARGIN_TOP, !node.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? node : undefined);
+                }
+                if (marginTop < 0) {
+                    if (childTop > getMarginBottom(opposing, node, true)[0]) {
+                        marginTop += childTop;
+                        inherited = true;
+                    }
+                }
+                else if (childTop > marginTop) {
+                    marginTop = childTop;
+                    inherited = true;
+                }
+            }
+            current = child;
+        }
+        else {
+            break;
+        }
+    }
+    return [marginTop, inherited];
+}
+
+function getMarginBottom(node: NodeUI, opposing: NodeUI, check?: boolean): [number, boolean] {
+    let marginBottom = node.marginBottom,
+        current = node,
+        inherited = false;
+    while (validAboveChild(current)) {
+        let child = getBottomChild(current);
+        if (child && !child.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
+            let childBottom = child.marginBottom,
+                currentChild = child;
+            while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                const currentTop = currentChild.marginTop;
+                childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
+                if (currentTop !== 0) {
+                    resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
+                }
+                if (currentChild.every(item => item.floating || !item.pageFlow)) {
+                    const nextChild = getBottomChild(currentChild);
+                    if (nextChild) {
+                        childBottom = nextChild.marginBottom;
+                        currentChild = nextChild;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                else {
+                    const sibling = currentChild.previousSibling;
+                    if (sibling) {
+                        if (sibling.marginBottom >= childBottom) {
+                            if (currentChild.marginBottom !== 0) {
+                                resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                            }
+                            child = sibling;
+                            childBottom = sibling.marginBottom;
+                            currentChild = sibling;
+                        }
+                        else if (sibling.bounds.height) {
+                            break;
+                        }
+                        else {
+                            if (sibling.marginBottom !== 0) {
+                                resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
+                            }
+                            currentChild = sibling;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+            if (childBottom !== 0) {
+                if (!check) {
+                    resetBox(child, BOX_STANDARD.MARGIN_BOTTOM, !node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? node : undefined);
+                }
+                if (marginBottom < 0) {
+                    if (childBottom > getMarginTop(opposing, node, true)[0]) {
+                        marginBottom += childBottom;
+                        inherited = true;
+                    }
+                }
+                else if (childBottom > marginBottom) {
+                    marginBottom = childBottom;
+                    inherited = true;
+                }
+            }
+            current = child;
+        }
+        else {
+            break;
+        }
+    }
+    return [marginBottom, inherited];
 }
 
 function resetBox(node: NodeUI, region: number, register?: NodeUI, wrapper?: NodeUI[]) {
@@ -304,15 +455,13 @@ function resetBox(node: NodeUI, region: number, register?: NodeUI, wrapper?: Nod
         node.registerBox(region, register);
     }
     if (wrapper) {
-        for (const parent of wrapper) {
-            parent.setBox(region, { reset: 1 });
-        }
+        wrapper.forEach(parent => parent.setBox(region, { reset: 1 }));
     }
 }
 
-const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && !node.isEmpty() && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
-const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
-const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
+const canResetChild = (node: NodeUI) => isBlockElement(node) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
+const validBelowChild = (node: NodeUI) => node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
+const validAboveChild = (node: NodeUI) => node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node);
 const hasOverflow = (node: NodeUI) => checkOverflowValue(node.valueOf('overflowY')) || checkOverflowValue(node.valueOf('overflowX'));
 const isLowestElement = (node: NodeUI, siblings: NodeUI[]) => node.linear.bottom >= minMaxOf(siblings, sibling => sibling.linear.bottom, '>')[1];
 
@@ -359,8 +508,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         blockMain: {
                             if (isBlockElement(current, true)) {
                                 if (i > 0) {
-                                    let previous = children[i - 1],
-                                        inheritedTop: Undef<boolean>;
+                                    let previous = children[i - 1];
                                     if (previous.floating || !previous.pageFlow) {
                                         if (node.layoutVertical) {
                                             const previousSiblings = current.previousSiblings();
@@ -370,9 +518,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
                                                     if (nearest!.marginBottom > 0 && current.bounds.top < previousBottom) {
                                                         if (nearest!.marginBottom < current.marginTop) {
-                                                            for (const sibling of aboveFloating) {
-                                                                resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
-                                                            }
+                                                            aboveFloating.forEach(sibling => resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM));
                                                         }
                                                         else if (current.marginTop > 0) {
                                                             resetBox(current, BOX_STANDARD.MARGIN_TOP);
@@ -393,12 +539,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         }
                                     }
                                     if (isBlockElement(previous, false)) {
-                                        let marginBottom = previous.marginBottom,
-                                            marginTop = current.marginTop;
                                         if (previous.marginTop < 0 && previous.bounds.height === 0) {
-                                            const offset = Math.min(marginBottom, previous.marginTop);
+                                            const offset = Math.min(previous.marginBottom, previous.marginTop);
                                             if (offset < 0) {
-                                                if (Math.abs(offset) < marginTop) {
+                                                if (Math.abs(offset) < current.marginTop) {
                                                     current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                                 }
                                                 else {
@@ -410,9 +554,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             }
                                         }
                                         else if (current.marginBottom < 0 && current.bounds.height === 0) {
-                                            const offset = Math.min(marginTop, current.marginBottom);
+                                            const offset = Math.min(current.marginTop, current.marginBottom);
                                             if (offset < 0) {
-                                                if (Math.abs(offset) < marginBottom) {
+                                                if (Math.abs(offset) < previous.marginBottom) {
                                                     previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
                                                 }
                                                 else {
@@ -423,131 +567,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 break blockMain;
                                             }
                                         }
-                                        let inherit = previous,
-                                            inheritedBottom: Undef<boolean>;
-                                        while (validAboveChild(inherit, true)) {
-                                            let bottomChild = getBottomChild(inherit);
-                                            if (bottomChild && !bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
-                                                let childBottom = bottomChild.marginBottom,
-                                                    currentChild = bottomChild;
-                                                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                    const currentTop = currentChild.marginTop;
-                                                    childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
-                                                    if (currentTop !== 0) {
-                                                        resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
-                                                    }
-                                                    if (currentChild.every(item => item.floating || !item.pageFlow)) {
-                                                        const nextChild = getBottomChild(currentChild);
-                                                        if (nextChild) {
-                                                            childBottom = nextChild.marginBottom;
-                                                            currentChild = nextChild;
-                                                        }
-                                                        else {
-                                                            break;
-                                                        }
-                                                    }
-                                                    else {
-                                                        const sibling = currentChild.previousSibling as T;
-                                                        if (sibling) {
-                                                            if (sibling.marginBottom >= childBottom) {
-                                                                if (currentChild.marginBottom !== 0) {
-                                                                    resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                                                }
-                                                                bottomChild = sibling;
-                                                                childBottom = sibling.marginBottom;
-                                                                currentChild = sibling;
-                                                            }
-                                                            else if (sibling.bounds.height) {
-                                                                break;
-                                                            }
-                                                            else {
-                                                                if (sibling.marginBottom !== 0) {
-                                                                    resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
-                                                                }
-                                                                currentChild = sibling;
-                                                            }
-                                                        }
-                                                        else {
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                if (childBottom !== 0) {
-                                                    resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, !previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? previous : undefined);
-                                                }
-                                                if (childBottom > marginBottom) {
-                                                    marginBottom = childBottom;
-                                                    inheritedBottom = true;
-                                                }
-                                                else if (childBottom === 0) {
-                                                    inherit = bottomChild as T;
-                                                    continue;
-                                                }
-                                            }
-                                            break;
-                                        }
-                                        inherit = current;
-                                        while (validBelowChild(inherit, true)) {
-                                            let topChild = inherit.firstStaticChild as T;
-                                            if (isBlockElement(topChild, true) && !topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0]) {
-                                                let childTop = topChild.marginTop,
-                                                    currentChild = topChild;
-                                                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                    const currentBottom = currentChild.marginBottom;
-                                                    childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
-                                                    if (currentBottom !== 0) {
-                                                        resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                                    }
-                                                    if (currentChild.every(item => item.floating || !item.pageFlow)) {
-                                                        const nextChild = currentChild.firstStaticChild;
-                                                        if (nextChild) {
-                                                            childTop = nextChild.marginTop;
-                                                            currentChild = nextChild as T;
-                                                        }
-                                                        else {
-                                                            break;
-                                                        }
-                                                    }
-                                                    else {
-                                                        const sibling = currentChild.nextSibling as T;
-                                                        if (sibling) {
-                                                            if (sibling.marginTop >= childTop) {
-                                                                if (currentChild.marginTop !== 0) {
-                                                                    resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
-                                                                }
-                                                                topChild = sibling;
-                                                                childTop = sibling.marginTop;
-                                                                currentChild = sibling;
-                                                            }
-                                                            else if (sibling.bounds.height) {
-                                                                break;
-                                                            }
-                                                            else {
-                                                                if (sibling.marginTop !== 0) {
-                                                                    resetBox(sibling, BOX_STANDARD.MARGIN_TOP);
-                                                                }
-                                                                currentChild = sibling;
-                                                            }
-                                                        }
-                                                        else {
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                if (childTop !== 0) {
-                                                    resetBox(topChild, BOX_STANDARD.MARGIN_TOP, !current.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? current : undefined);
-                                                }
-                                                if (childTop > marginTop) {
-                                                    marginTop = childTop;
-                                                    inheritedTop = true;
-                                                }
-                                                else if (childTop === 0) {
-                                                    inherit = topChild;
-                                                    continue;
-                                                }
-                                            }
-                                            break;
-                                        }
+                                        let [marginTop, inheritedTop] = getMarginTop(current, previous),
+                                            [marginBottom, inheritedBottom] = getMarginBottom(previous, current); // eslint-disable-line prefer-const
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {
@@ -677,15 +698,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                 }
                 else if (belowFloating && node.borderBottomWidth === 0 && node.paddingBottom === 0) {
-                    const bottomChild = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[0]!;
-                    if (bottomChild.marginBottom >= node.marginBottom && !bottomChild.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
-                        (node.registerBox(BOX_STANDARD.MARGIN_BOTTOM) || node).setCacheValue('marginBottom', bottomChild.marginBottom);
+                    const offset = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[1] - node.max('bounds', { subAttr: 'bottom' }).bounds.bottom;
+                    if (offset > node.marginBottom) {
+                        (node.registerBox(BOX_STANDARD.MARGIN_BOTTOM) || node).setCacheValue('marginBottom', offset);
                     }
-                    for (const sibling of belowFloating) {
-                        if (!sibling.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0]) {
-                            resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
-                        }
-                    }
+                    belowFloating.forEach(sibling => !sibling.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] && resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM));
                 }
             }
         });
