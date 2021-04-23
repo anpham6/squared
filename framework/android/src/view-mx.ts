@@ -16,7 +16,6 @@ import { concatString, getDataSet, isHorizontalAlign, isVerticalAlign, localizeS
 type T = android.base.View;
 
 const { CSS_PROPERTIES } = squared.lib.internal;
-
 const { NODE_PROCEDURE } = squared.base.lib.constant;
 
 const { isUserAgent } = squared.lib.client;
