@@ -1,5 +1,4 @@
 import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
-import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import type Controller from './controller';
 import type Resource from './resource';
@@ -15,15 +14,14 @@ type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLEle
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
 
-const { isUserAgent } = squared.lib.client;
 const { CSS_PROPERTIES, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText } = squared.lib.css;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
-const { allSettled, capitalize, convertCamelCase, escapePattern, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
 const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
-const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE);
+let CSS_SHORTHANDNONE: ObjectMap<CssPropertyData>;
 
 function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number) {
     let result: Undef<string>,
@@ -534,53 +532,35 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
                 const cssStyle = item.style;
-                const hasExactValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                const hasPartialValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                     let value: Undef<string> = cssStyle[attr];
-                    if (value) {
-                        switch (value) {
-                            case 'initial':
-                                if (isUserAgent(USER_AGENT.SAFARI) && startsWith(baseAttr, 'background')) {
-                                    break;
-                                }
-                                if (CSS_PROPERTIES[baseAttr]?.value === 'auto') {
-                                    value = 'auto';
-                                    break;
-                                }
-                            case 'normal':
-                                if (!hasExactValue(attr, value)) {
-                                    required: {
-                                        for (const name in CSS_SHORTHANDNONE) {
-                                            const css = CSS_SHORTHANDNONE[name];
-                                            if ((css.value as string[]).includes(baseAttr)) {
-                                                if (hasExactValue(css.name!, 'none')) {
-                                                    const valueOfNone = CSS_PROPERTIES[baseAttr]?.valueOfNone;
-                                                    if (valueOfNone) {
-                                                        value = valueOfNone;
-                                                    }
-                                                    break required;
-                                                }
-                                                if (hasExactValue(css.name!, 'initial') || value === 'initial' && hasPartialValue(css.name!, 'initial') || css.valueOfNone && hasExactValue(css.name!, escapePattern(css.valueOfNone))) {
-                                                    break required;
-                                                }
-                                                break;
-                                            }
+                    if (value === 'initial') {
+                        const property = CSS_PROPERTIES[baseAttr];
+                        if (property) {
+                            if (property.value === 'auto') {
+                                value = 'auto';
+                            }
+                            else {
+                                for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.NONE)) {
+                                    const css = CSS_SHORTHANDNONE[name]!;
+                                    if (css.value.includes(baseAttr)) {
+                                        if (property.valueOfNone && new RegExp(`\\s${css.name!}:\\s+none\\s*;`).test(cssText)) {
+                                            value = property.valueOfNone;
                                         }
-                                        continue;
+                                        break;
                                     }
                                 }
-                                break;
-                            default:
-                                switch (baseAttr) {
-                                    case 'backgroundImage':
-                                    case 'listStyleImage':
-                                    case 'content':
-                                        value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
-                                        break;
-                                }
+                            }
+                        }
+                    }
+                    else if (value) {
+                        switch (baseAttr) {
+                            case 'backgroundImage':
+                            case 'listStyleImage':
+                            case 'content':
+                                value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
                                 break;
                         }
                     }

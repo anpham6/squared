@@ -8,7 +8,7 @@ const { getFontSize, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, lastItemOf, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
-const REGEXP_BEZIER = new RegExp(`\\b${PATTERN_CUBICBEZIER}\\b`);
+const REGEXP_BEZIER = new RegExp(`${PATTERN_CUBICBEZIER}`);
 const REGEXP_BEZIERCSS = new RegExp(`\\bcubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
 
 const invertControlPoint = (value: number) => +(1 - value).toPrecision(5);

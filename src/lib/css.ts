@@ -26,7 +26,7 @@ const REGEXP_IMGSRCSET = /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i;
 const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
 const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
 const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-const REGEXP_EMBASED = /[\d.]+(?:em|ch|ex)\b/;
+const REGEXP_EMBASED = /[\d.]+(?:em|ch|ex)/;
 const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
 const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
 const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
@@ -1399,15 +1399,15 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     },
     scrollSnapAlign: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     scrollSnapStop: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     scrollSnapType: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     shapeImageThreshold: {
@@ -1545,7 +1545,7 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'normal'
     },
     userSelect: {
-        trait: CSS_TRAITS.NONE,
+        trait: 0,
         value: 'none'
     },
     verticalAlign: {
