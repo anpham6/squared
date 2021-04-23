@@ -230,7 +230,7 @@ declare module "lib" {
         function updateDocumentFont(): void;
         function getDocumentFontSize(): number;
         function convertFontSize(value: string, fixedWidth?: boolean): string;
-        function getPropertiesAsTraits(value: number): ObjectMap<CssPropertyData>;
+        function getPropertiesAsTraits(...values: number[]): ObjectMap<CssPropertyData>;
         function getInitialValue(element: Element, attr: CssStyleAttr): string;
         function parseSelectorText(value: string): string[];
         function getSpecificity(value: string): number;

@@ -1432,11 +1432,11 @@ export function convertFontSize(value: string, fixedWidth?: boolean) {
     return value;
 }
 
-export function getPropertiesAsTraits(value: number) {
+export function getPropertiesAsTraits(...values: number[]) {
     const result: ObjectMap<CssPropertyData> = {};
     for (const attr in CSS_PROPERTIES) {
         const item = CSS_PROPERTIES[attr]!;
-        if (item.trait & value) {
+        if (values.every(value => item.trait & value)) {
             item.name = convertHyphenated(attr);
             result[attr] = item;
         }
