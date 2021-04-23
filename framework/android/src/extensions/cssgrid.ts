@@ -438,7 +438,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         }
     }
     if (minSize && !item.hasUnit(minDimension)) {
-        minSize -= (item.contentBox ? horizontal ? item.contentBoxWidth : item.contentBoxHeight : 0);
+        minSize -= item.contentBox ? horizontal ? item.contentBoxWidth : item.contentBoxHeight : 0;
         if (minSize > 0) {
             item.css(minDimension, formatPX(minSize), true);
         }

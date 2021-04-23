@@ -1,5 +1,4 @@
 import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
-import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import type Controller from './controller';
 import type Resource from './resource';
@@ -18,7 +17,6 @@ const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, 
 const { CSS_PROPERTIES, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule, parseSelectorText } = squared.lib.internal;
 const { FILE, STRING } = squared.lib.regex;
 
-const { isUserAgent } = squared.lib.client;
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
 const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, isPlainObject, replaceAll, resolvePath, splitPair, splitSome, startsWith } = squared.lib.util;
 
@@ -543,59 +541,35 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
                 const cssStyle = item.style;
-                const hasExactValue = (attr: string, value: string) => new RegExp(`\\s${attr}:\\s+${value}\\s*;`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
                     let value: Undef<string> = cssStyle[attr];
-                    if (value) {
-                        switch (value) {
-                            case 'initial': {
-                                if (isUserAgent(USER_AGENT.SAFARI) && startsWith(baseAttr, 'background')) {
-                                    break;
-                                }
-                                const property = CSS_PROPERTIES[baseAttr];
-                                if (property) {
-                                    if (property.valueOfSome) {
-                                        break;
-                                    }
-                                    if (property.value === 'auto') {
-                                        value = 'auto';
+                    if (value === 'initial') {
+                        const property = CSS_PROPERTIES[baseAttr];
+                        if (property) {
+                            if (property.value === 'auto') {
+                                value = 'auto';
+                            }
+                            else {
+                                for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.NONE)) {
+                                    const css = CSS_SHORTHANDNONE[name]!;
+                                    if ((css.value as string[]).includes(baseAttr)) {
+                                        if (property.valueOfNone && new RegExp(`\\s${css.name!}:\\s+none\\s*;`).test(cssText)) {
+                                            value = property.valueOfNone;
+                                        }
                                         break;
                                     }
                                 }
                             }
-                            case 'normal':
-                                if (!hasExactValue(attr, value)) {
-                                    required: {
-                                        for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE)) {
-                                            const css = CSS_SHORTHANDNONE[name]!;
-                                            if ((css.value as string[]).includes(baseAttr)) {
-                                                if (hasExactValue(css.name!, 'none')) {
-                                                    const property = CSS_PROPERTIES[baseAttr];
-                                                    if (property && property.valueOfNone) {
-                                                        value = property.valueOfNone;
-                                                    }
-                                                    break required;
-                                                }
-                                                else if (hasExactValue(css.name!, 'initial') || value === 'initial' && new RegExp(`\\s${css.name!}:[^;}]*?initial\\b`).test(cssText) || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
-                                                    break required;
-                                                }
-                                                break;
-                                            }
-                                        }
-                                        continue;
-                                    }
-                                }
-                                break;
-                            default:
-                                switch (baseAttr) {
-                                    case 'backgroundImage':
-                                    case 'listStyleImage':
-                                    case 'content':
-                                        value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
-                                        break;
-                                }
+                        }
+                    }
+                    else if (value) {
+                        switch (baseAttr) {
+                            case 'backgroundImage':
+                            case 'listStyleImage':
+                            case 'content':
+                                value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
                                 break;
                         }
                     }
