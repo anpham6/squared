@@ -262,6 +262,8 @@ declare module "lib" {
 
     namespace regex {
         const STRING: {
+            QUOTED: string;
+            SINGLE_QUOTED: string;
             DECIMAL: string;
             DECIMAL_PLAIN: string;
             DECIMAL_SIGNED: string;

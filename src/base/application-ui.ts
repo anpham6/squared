@@ -29,6 +29,7 @@ type ApplyDefaultStylesMethod<T extends NodeUI> = (processing: squared.base.AppP
 type RenderNodeMethod<T extends NodeUI> = (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
 
 const { insertStyleSheetRule } = squared.lib.internal;
+const { QUOTED } = squared.lib.regex.STRING;
 
 const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
@@ -68,7 +69,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
         i = 0, j = -1;
     while (current && current.tagName === 'Q') {
         const quotes = getStyleMap(sessionId, current, 'styleMap').quotes;
-        if (quotes) {
+        if (quotes && quotes !== 'auto') {
             const match = REGEXP_QUOTE.exec(quotes);
             if (match) {
                 if (pseudoElt === '::before') {
@@ -76,18 +77,18 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
                         outside = trimBoth(match[1]);
                         ++found;
                     }
-                    if (match[3] && found < 2) {
-                        inside = trimBoth(match[3]);
+                    if (match[5] && found < 2) {
+                        inside = trimBoth(match[5]);
                         ++found;
                     }
                 }
                 else {
                     if (found === 0) {
-                        outside = trimBoth(match[2]);
+                        outside = trimBoth(match[3]);
                         ++found;
                     }
-                    if (match[4] && found < 2) {
-                        inside = trimBoth(match[4]);
+                    if (match[7] && found < 2) {
+                        inside = trimBoth(match[7]);
                         ++found;
                     }
                 }
@@ -1639,14 +1640,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     default:
                         if (value[0] === '"' || startsWith(value, 'attr')) {
-                            (REGEXP_ATTRVALUE ||= /"((?:[^"]|(?<=\\)")+)"|attr\(([^)]+)\)/g).lastIndex = 0;
+                            (REGEXP_ATTRVALUE ||= new RegExp(QUOTED + '|attr\\(([^)]+)\\)', 'g')).lastIndex = 0;
                             let match: Null<RegExpExecArray>;
                             while (match = REGEXP_ATTRVALUE.exec(value)) {
-                                if (match[1]) {
-                                    content += match[1];
+                                if (match[2]) {
+                                    content += getNamedItem(element, match[2].trim());
                                 }
                                 else {
-                                    content += getNamedItem(element, match[2].trim());
+                                    content += match[1];
                                 }
                             }
                             if (!isString(content)) {
@@ -1745,7 +1746,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                             else {
-                                (REGEXP_COUNTER ||= /counter\(([^,)]+)(?:,\s*([a-z-]+))?\)|counters\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)"/g).lastIndex = 0;
+                                (REGEXP_COUNTER ||= new RegExp(`counter\\(([^,)]+)(?:,\\s*([a-z-]+))?\\)|counters\\(([^,]+),\\s*${QUOTED}(?:,\\s*([a-z-]+))?\\)|${QUOTED}`, 'g')).lastIndex = 0;
                                 let match: Null<RegExpExecArray>;
                                 while (match = REGEXP_COUNTER.exec(value)) {
                                     if (match[6]) {

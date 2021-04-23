@@ -1,4 +1,4 @@
-const { CSS_ANGLE, LENGTH_PERCENTAGE } = squared.lib.regex.STRING;
+const { CSS_ANGLE, LENGTH_PERCENTAGE, QUOTED } = squared.lib.regex.STRING;
 
 const CSS_COLOR = '((?:rgb|hsl)a?\\(\\s*\\d+\\s*,\\s*\\d+%?\\s*,\\s*\\d+%?\\s*(?:,\\s*[\\d.]+\\s*)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
 const DOM_ENTITY = '#(?:[\\d]+|x[A-Za-z\\d]{5});?|[A-Za-z]{2,};';
@@ -6,7 +6,7 @@ const DOM_ENTITY = '#(?:[\\d]+|x[A-Za-z\\d]{5});?|[A-Za-z]{2,};';
 export const STRING = {
     CSS_COLOR,
     CSS_COLORSTOP: `\\s*${CSS_COLOR}\\s*(?:(${LENGTH_PERCENTAGE}|${CSS_ANGLE}|(?:c(?:alc|lamp)|m(?:in|ax))\\((.+)\\)(?=\\s*,)|(?:c(?:alc|lamp)|m(?:in|ax))\\((.+)\\))\\s*,?)*\\s*,?`,
-    CSS_QUOTE: '("(?:[^"]|(?<=\\\\)")+"|[^\\s]+)\\s+("(?:[^"]|(?<=\\\\)")+"|[^\\s]+)',
+    CSS_QUOTE: `(${QUOTED}|[^\\s]+)\\s+(${QUOTED}|[^\\s]+)`,
     CSS_VARNAME: 'var\\(\\s*(--[^\\s:,)]*)\\s*(?!:)',
     CSS_VARVALUE: '(--[^\\s:]*)\\s*:([^;}]+)'
 };
