@@ -370,6 +370,10 @@ export function parseMimeType(value: string) {
     return EXT_DATA[splitPairEnd(splitPairStart(value = value.toLowerCase(), '?'), '.', true, true) || value] as string || '';
 }
 
+export function getComponentEnd(value: string, leading = '?', trailing = '/') {
+    return splitPairEnd(splitPairStart(value, leading), trailing, false, true);
+}
+
 export function appendSeparator(preceding = '', value = '', separator = '/') {
     preceding = preceding.trim();
     value = value.trim();

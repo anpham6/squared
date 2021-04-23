@@ -26,7 +26,7 @@ const { createElement } = squared.lib.dom;
 const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.internal;
-const { appendSeparator, fromMimeType, parseMimeType, generateUUID, trimEnd } = squared.base.lib.util;
+const { appendSeparator, fromMimeType, parseMimeType, generateUUID, getComponentEnd, trimEnd } = squared.base.lib.util;
 
 const FILENAME_MAP = new WeakMap<ChromeAsset, string>();
 let BUNDLE_ID = 0;
@@ -272,7 +272,6 @@ const assignFilename = (value: string, ext?: string) => DIR_FUNCTIONS.ASSIGN + '
 const isCrossOrigin = (download: Undef<boolean>, preserveCrossOrigin: Undef<boolean>) => typeof download === 'boolean' ? !download : !!preserveCrossOrigin;
 const getContentType = (element: HTMLElement) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
 const getTagNode = (node: XmlTagNode, attributes: Undef<AttributeMap>, append?: TagAppend): XmlTagNode => ({ ...node, attributes, append });
-const getFilename = (value: string) => value.split('?')[0].split('/').pop()!;
 const getAssetCommand = (assetMap: Undef<ElementAssetMap>, element: HTMLElement) => assetMap && assetMap.get(element);
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
@@ -897,7 +896,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (excludeAsset(result, command, item, documentData)) {
                         continue;
                     }
-                    [saveAs, saveTo] = checkSaveAs(uri, command.saveTo || command.pathname, filename || getFilename(uri));
+                    [saveAs, saveTo] = checkSaveAs(uri, command.saveTo || command.pathname, filename || getComponentEnd(uri));
                     if (saveAs) {
                         filename = '';
                     }
@@ -1226,7 +1225,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (excludeAsset(assets, command, element, documentData)) {
                         return;
                     }
-                    [saveAs, saveTo] = checkSaveAs(uri, command.saveTo || pathname, filename || getFilename(uri));
+                    [saveAs, saveTo] = checkSaveAs(uri, command.saveTo || pathname, filename || getComponentEnd(uri));
                     if (saveAs) {
                         filename = '';
                     }
@@ -1239,12 +1238,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         if (excludeAsset(assets, saveAsImage, element, documentData)) {
                             return;
                         }
-                        [saveAs, saveTo] = checkSaveAs(uri, pathname, filename || getFilename(uri));
+                        [saveAs, saveTo] = checkSaveAs(uri, pathname, filename || getComponentEnd(uri));
                     }
                     if (file && !pathname) {
                         let fileAs = parseFileAs('saveTo', file);
                         if (fileAs) {
-                            [saveAs, saveTo] = checkSaveAs(uri, fileAs.file, filename || getFilename(uri));
+                            [saveAs, saveTo] = checkSaveAs(uri, fileAs.file, filename || getComponentEnd(uri));
                         }
                         else if (fileAs = parseFileAs('saveAs', file)) {
                             saveAs = fileAs.file;
@@ -1266,7 +1265,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else if (saveAsImage) {
                 setFilename(command = saveAsImage);
                 ({ pathname, inline, compress, download, blob, commands, tasks, cloudStorage } = command);
-                [saveAs, saveTo] = checkSaveAs(uri, pathname, filename || getFilename(uri));
+                [saveAs, saveTo] = checkSaveAs(uri, pathname, filename || getComponentEnd(uri));
             }
             if (base64 && !blob) {
                 return;

@@ -27,9 +27,9 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, fromLastIndexOf, isPlainObject, lastItemOf, replaceAll, splitPair, splitSome, resolvePath } = squared.lib.util;
+const { convertBase64, endsWith, isPlainObject, lastItemOf, replaceAll, splitPair, splitPairStart, splitSome, resolvePath } = squared.lib.util;
 
-const { fromMimeType, parseMimeType } = squared.base.lib.util;
+const { fromMimeType, getComponentEnd, parseMimeType } = squared.base.lib.util;
 
 function getFileAssets(pathname: string, items: string[], document: StringOfArray) {
     const length = items.length;
@@ -257,7 +257,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                                 ext = fromMimeType(rawData.mimeType);
                             }
                         }
-                        ext ||= fromMimeType(data.mimeType) || Resource.getExtension(uri.split('?')[0]).toLowerCase();
+                        ext ||= fromMimeType(data.mimeType) || Resource.getExtension(splitPairStart(uri, '?')).toLowerCase();
                     }
                     else if (data = fonts.find(item => item.srcBase64)) {
                         base64 = data.srcBase64;
@@ -613,7 +613,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         let i = 0;
         for (const { uri, mimeType = '' } of rawData.values()) {
             result[i++] = uri!;
-            result[i++] = fromLastIndexOf(uri!.split('?')[0], '/');
+            result[i++] = getComponentEnd(uri!);
             result[i++] = mimeType;
         }
         if (hasFileAction(options)) {

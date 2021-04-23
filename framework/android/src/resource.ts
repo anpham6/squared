@@ -8,10 +8,10 @@ import { concatString, parseColor } from './lib/util';
 const { PROTOCOL } = squared.lib.regex.FILE;
 
 const { extractURL } = squared.lib.css;
-const { fromLastIndexOf, isPlainObject, isString, padStart, replaceAll, resolvePath, splitPairStart, startsWith } = squared.lib.util;
+const { isPlainObject, isString, padStart, replaceAll, resolvePath, splitPairStart, startsWith } = squared.lib.util;
 
 const { getSrcSet } = squared.base.lib.dom;
-const { trimString } = squared.base.lib.util;
+const { getComponentEnd, trimString } = squared.base.lib.util;
 
 const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
@@ -172,7 +172,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     return asset;
                 }
             }
-            const src = fromLastIndexOf(mdpi.split('?')[0], '/');
+            const src = getComponentEnd(mdpi);
             const ext = this.getExtension(src);
             const length = ext.length;
             if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {

@@ -411,7 +411,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 content = content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
             }
             if (content || base64 || buffer) {
-                const url = uri.split('?')[0];
+                const url = splitPairStart(uri, '?');
                 if (!filename) {
                     const ext = mimeType && fromMimeType(mimeType);
                     filename = ext && url.endsWith('.' + ext) ? fromLastIndexOf(url, '/') : this.assignFilename(url, mimeType, ext);
