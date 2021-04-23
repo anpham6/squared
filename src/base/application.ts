@@ -543,7 +543,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
                 const cssStyle = item.style;
-                const hasExactValue = (attr: string, value: string) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*[;}]`).test(cssText);
+                const hasExactValue = (attr: string, value: string) => new RegExp(`\\s${attr}:\\s+${value}\\s*;`).test(cssText);
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
@@ -578,7 +578,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                                     }
                                                     break required;
                                                 }
-                                                else if (hasExactValue(css.name!, 'initial') || value === 'initial' && new RegExp(`[^-]${css.name!}\\s*:[^;}]*?initial\\b`).test(cssText) || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
+                                                else if (hasExactValue(css.name!, 'initial') || value === 'initial' && new RegExp(`\\s${css.name!}:[^;}]*?initial\\b`).test(cssText) || css.valueOfNone && hasExactValue(css.name!, css.valueOfNone)) {
                                                     break required;
                                                 }
                                                 break;
