@@ -32,9 +32,9 @@ const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
 const { capitalize, convertWord, flatArray, isString, iterateArray, partitionArray, startsWith, trimBoth, trimString } = squared.lib.util;
 
-const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)")/g;
+const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
 const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)/g;
-const REGEXP_PSEUDOQUOTE = /("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)(?:\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+))?/;
+const REGEXP_PSEUDOQUOTE = /("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+)(?:\s+("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+))?/;
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
     let right: Undef<boolean>,
@@ -94,7 +94,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
         i = 0, j = -1;
     while (current && current.tagName === 'Q') {
         const quotes = (getElementCache<CSSStyleDeclaration>(current, 'styleMap', sessionId) || getStyle(current)).quotes;
-        if (quotes) {
+        if (quotes && quotes !== 'auto') {
             const match = REGEXP_PSEUDOQUOTE.exec(quotes);
             if (match) {
                 if (pseudoElt === '::before') {
