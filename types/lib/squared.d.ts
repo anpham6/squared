@@ -97,7 +97,8 @@ declare module "lib" {
             SAFARI = 1 << 1,
             FIREFOX = 1 << 2,
             EDGE = 1 << 3,
-            EDGE_WIN = 1 << 4
+            EDGE_WIN = 1 << 4,
+            OPERA = 1 << 5
         }
         const enum CSS_UNIT {
             NONE = 0,

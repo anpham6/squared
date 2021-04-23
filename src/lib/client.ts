@@ -4,10 +4,15 @@ let CLIENT_BROWSER = USER_AGENT.CHROME;
 let CLIENT_VERSION: string | number[] = '';
 
 if (navigator.userAgent.indexOf('Chrom') !== -1) {
-    const match = /(Chrom(?:e|ium)|Edg)\/([^ ]+)/.exec(navigator.userAgent);
+    const match = /(Chrom(?:e|ium)|Edg|OPR)\/([^ ]+)/.exec(navigator.userAgent);
     if (match) {
-        if (match[1] === 'Edg') {
-            CLIENT_BROWSER = USER_AGENT.EDGE;
+        switch (match[1]) {
+            case 'Edg':
+                CLIENT_BROWSER = USER_AGENT.EDGE;
+                break;
+            case 'OPR':
+                CLIENT_BROWSER = USER_AGENT.OPERA;
+                break;
         }
         CLIENT_VERSION = match[2];
     }

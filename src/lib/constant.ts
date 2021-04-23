@@ -11,7 +11,8 @@ export const enum USER_AGENT {
     SAFARI = 1 << 1,
     FIREFOX = 1 << 2,
     EDGE = 1 << 3,
-    EDGE_WIN = 1 << 4
+    EDGE_WIN = 1 << 4,
+    OPERA = 1 << 5
 }
 
 export const enum CSS_UNIT {
