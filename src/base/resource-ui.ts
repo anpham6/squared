@@ -97,7 +97,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             const color = item[0];
             expanded = value.substring(item[1], item[2]).split(',').reduce((a, b) => b = b.trim() ? a + (a ? ', ' : '') + color + ' ' + b : a, expanded);
         }
-        value = expanded;
+        if (expanded) {
+            value = expanded;
+        }
     }
     while (match = REGEXP_COLORSTOP.exec(value)) {
         const color = parseColor(match[1]);

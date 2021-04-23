@@ -1193,7 +1193,8 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     textDecorationLine: {
         trait: 0,
-        value: 'none'
+        value: 'none',
+        valueOfNone: 'none'
     },
     textDecorationSkipInk: {
         trait: CSS_TRAITS.INHERIT,
