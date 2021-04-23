@@ -16,6 +16,8 @@ import { createViewAttribute } from '../lib/util';
 const { formatPX, isPercent } = squared.lib.css;
 const { getTextMetrics } = squared.lib.dom;
 
+const isInside = (node: View) => node.cssValue('listStylePosition') === 'inside';
+
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public readonly options: ExtensionListOptions = {
         ordinalFontSizeAdjust: 0.75
@@ -23,25 +25,24 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
 
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const layout = new LayoutUI(parent, node);
-        if (layout.linearY) {
-            layout.rowCount = node.size();
-            layout.columnCount = node.find((item: T) => item.cssValue('listStylePosition') === 'inside') ? 3 : 2;
-            layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
+        if (layout.linearY || layout.linearX || layout.singleRowAligned) {
+            super.processNode(node, parent);
+            if (layout.linearY) {
+                layout.rowCount = node.size();
+                layout.columnCount = node.find((item: T) => isInside(item)) ? 3 : 2;
+                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
+            }
+            else {
+                layout.rowCount = 1;
+                layout.columnCount = layout.size();
+                layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
+            }
+            return {
+                output: this.application.renderNode(layout),
+                complete: true,
+                include: true
+            };
         }
-        else if (layout.linearX || layout.singleRowAligned) {
-            layout.rowCount = 1;
-            layout.columnCount = layout.size();
-            layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
-        }
-        else {
-            return;
-        }
-        super.processNode(node, parent);
-        return {
-            output: this.application.renderNode(layout),
-            complete: true,
-            include: true
-        };
     }
 
     public processChild(node: T, parent: T): Void<ExtensionResult<T>> {

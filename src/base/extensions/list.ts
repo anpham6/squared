@@ -136,6 +136,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const ordered = node.tagName === 'OL';
+        const inside = node.valueOf('listStylePosition') === 'inside';
         let i = ordered && node.toElementInt('start') || 1;
         node.each((item: T) => {
             const mainData: ListData = {};
@@ -178,6 +179,9 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                 ordinal = '○';
                                 break;
                         }
+                    }
+                    if (inside && !item.valueOf('listStylePosition')) {
+                        item.css('listStylePosition', 'inside');
                     }
                     mainData.ordinal = ordinal;
                 }
