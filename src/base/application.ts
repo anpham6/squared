@@ -21,7 +21,7 @@ const { allSettled, capitalize, convertCamelCase, isBase64, isEmptyString, resol
 const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
 const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
 const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
-let CSS_SHORTHANDNONE: ObjectMap<CssPropertyData>;
+const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.NONE);
 
 function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number) {
     let result: Undef<string>,
@@ -543,14 +543,25 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 value = 'auto';
                             }
                             else {
-                                for (const name in CSS_SHORTHANDNONE ||= getPropertiesAsTraits(CSS_TRAITS.NONE)) {
-                                    const css = CSS_SHORTHANDNONE[name]!;
+                                for (const parentAttr in CSS_SHORTHANDNONE) {
+                                    const css = CSS_SHORTHANDNONE[parentAttr]!;
                                     if (css.value.includes(baseAttr)) {
                                         if (property.valueOfNone && new RegExp(`\\s${css.name!}:\\s+none\\s*;`).test(cssText)) {
                                             value = property.valueOfNone;
                                         }
                                         break;
                                     }
+                                }
+                            }
+                        }
+                    }
+                    else if (value === 'none') {
+                        const property = CSS_SHORTHANDNONE[baseAttr];
+                        if (property) {
+                            for (const subAttr of property.value as string[]) {
+                                const valueOfNone = CSS_PROPERTIES[subAttr]!.valueOfNone;
+                                if (valueOfNone) {
+                                    baseMap[subAttr] = valueOfNone;
                                 }
                             }
                         }
@@ -575,14 +586,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 let important: Undef<ObjectMap<boolean>>;
                 if (cssText.includes('!')) {
                     important = {};
-                    let match: Null<RegExpExecArray>;
+                    let property: Undef<CssPropertyData>,
+                        match: Null<RegExpExecArray>;
                     while (match = REGEXP_IMPORTANT.exec(cssText)) {
                         const attr = convertCamelCase(match[1]) as CssStyleAttr;
-                        const value = CSS_PROPERTIES[attr]?.value;
-                        if (Array.isArray(value)) {
-                            for (let i = 0, length = value.length; i < length; ++i) {
-                                important[value[i]] = true;
-                            }
+                        if ((property = CSS_PROPERTIES[attr]) && Array.isArray(property.value)) {
+                            property.value.forEach(subAttr => important![subAttr] = true);
                         }
                         else {
                             important[attr] = true;

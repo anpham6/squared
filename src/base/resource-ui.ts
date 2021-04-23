@@ -18,7 +18,7 @@ const { CSS_PROPERTIES, calculate, convertAngle, formatPercent, formatPX, getSty
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, splitPair, startsWith } = squared.lib.util;
+const { convertBase64, convertCamelCase, convertPercent, escapePattern, hasValue, isEqual, isNumber, isString, iterateArray, lastItemOf, splitPair, startsWith } = squared.lib.util;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
@@ -79,29 +79,6 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     }
     let previousOffset = 0,
         match: Null<RegExpExecArray>;
-    if (isUserAgent(USER_AGENT.SAFARI)) {
-        const colors: [string, number, number][] = [];
-        const length = value.length;
-        const colorPattern = new RegExp(PATTERN_COLOR, 'g');
-        while (match = colorPattern.exec(value)) {
-            const color = match[1];
-            const lastIndex = colorPattern.lastIndex;
-            const index = lastIndex - color.length;
-            if (/[a-z]/.test(color[0]) && /\d/.test(value[index - 1])) {
-                continue;
-            }
-            if (colors.length) {
-                colors[colors.length - 1][2] = index;
-            }
-            colors.push([color, lastIndex, length]);
-        }
-        let expanded = '';
-        for (const item of colors) {
-            const color = item[0];
-            expanded = value.substring(item[1], item[2]).split(',').reduce((a, b) => b = b.trim() ? a + (a ? ', ' : '') + color + ' ' + b : a, expanded);
-        }
-        value = expanded;
-    }
     while (match = REGEXP_COLORSTOP.exec(value)) {
         const color = parseColor(match[1]);
         if (color) {
@@ -148,54 +125,56 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             result.push({ color, offset });
         }
     }
-    const length = result.length;
-    const lastStop = result[length - 1];
-    if (lastStop.offset === -1) {
-        lastStop.offset = 1;
-    }
-    let percent = 0;
-    for (let i = 0; i < length; ++i) {
-        const stop = result[i];
-        if (stop.offset === -1) {
-            if (i === 0) {
-                stop.offset = 0;
-            }
-            else {
-                for (let j = i + 1, k = 2; j < length - 1; ++k) {
-                    const data = result[j++];
-                    if (data.offset !== -1) {
-                        stop.offset = (percent + data.offset) / k;
-                        break;
-                    }
-                }
-                if (stop.offset === -1) {
-                    stop.offset = percent + lastStop.offset / (length - 1);
-                }
-            }
+    const lastStop = lastItemOf(result);
+    if (lastStop) {
+        const length = result.length;
+        if (lastStop.offset === -1) {
+            lastStop.offset = 1;
         }
-        percent = stop.offset;
-    }
-    if (repeat) {
-        if (percent < 100) {
-            complete: {
-                let basePercent = percent;
-                const original = result.slice(0);
-                while (percent < 100) {
-                    for (let i = 0; i < length; ++i) {
-                        const data = original[i];
-                        percent = Math.min(basePercent + data.offset, 1);
-                        result.push({ ...data, offset: percent });
-                        if (percent === 1) {
-                            break complete;
+        let percent = 0;
+        for (let i = 0; i < length; ++i) {
+            const stop = result[i];
+            if (stop.offset === -1) {
+                if (i === 0) {
+                    stop.offset = 0;
+                }
+                else {
+                    for (let j = i + 1, k = 2; j < length - 1; ++k) {
+                        const data = result[j++];
+                        if (data.offset !== -1) {
+                            stop.offset = (percent + data.offset) / k;
+                            break;
                         }
                     }
-                    basePercent = percent;
+                    if (stop.offset === -1) {
+                        stop.offset = percent + lastStop.offset / (length - 1);
+                    }
+                }
+            }
+            percent = stop.offset;
+        }
+        if (repeat) {
+            if (percent < 100) {
+                complete: {
+                    let basePercent = percent;
+                    const original = result.slice(0);
+                    while (percent < 100) {
+                        for (let i = 0; i < length; ++i) {
+                            const data = original[i];
+                            percent = Math.min(basePercent + data.offset, 1);
+                            result.push({ ...data, offset: percent });
+                            if (percent === 1) {
+                                break complete;
+                            }
+                        }
+                        basePercent = percent;
+                    }
                 }
             }
         }
-    }
-    else if (percent < 1) {
-        result.push({ ...result[length - 1], offset: 1 });
+        else if (percent < 1) {
+            result.push({ ...result[length - 1], offset: 1 });
+        }
     }
     REGEXP_COLORSTOP.lastIndex = 0;
     return result;
@@ -1395,9 +1374,8 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                     else if (!node.naturalChild) {
                         if (!node.horizontalRowStart) {
-                            const element = node.element;
-                            const previousSibling = element && element.previousSibling;
-                            if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && startsWith(element!.textContent!.trim(), value.trim())) {
+                            const previousSibling = node.element?.previousSibling;
+                            if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling)) {
                                 value = value.replace(CHAR_LEADINGSPACE, this.STRING_SPACE);
                                 break;
                             }
