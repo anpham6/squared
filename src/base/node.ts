@@ -141,15 +141,15 @@ function setDimension(node: T, style: CssStyleMap, dimension: DimensionAttr) {
 
 function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[]) {
     if (!node.plainText) {
-        switch (node.css(border[1] as CssStyleAttr)) {
+        switch (node.css(border[0] as CssStyleAttr)) {
             case 'none':
             case 'hidden':
                 return 0;
         }
-        const width = node.css(border[0] as CssStyleAttr);
+        const width = node.css(border[1] as CssStyleAttr);
         let result = asPx(width);
         if (isNaN(result)) {
-            result = isLength(width, true) ? node.parseUnit(width, { dimension }) : safeFloat(node.style[border[0]]);
+            result = isLength(width, true) ? node.parseUnit(width, { dimension }) : safeFloat(node.style[border[1]]);
         }
         if (result) {
             return Math.max(Math.round(result), 1);

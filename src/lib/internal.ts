@@ -255,8 +255,8 @@ export const CSS_PROPERTIES: CssProperties = {
     borderBottom: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
-            'borderBottomWidth',
             'borderBottomStyle',
+            'borderBottomWidth',
             'borderBottomColor'
         ]
     },
@@ -326,8 +326,8 @@ export const CSS_PROPERTIES: CssProperties = {
     borderLeft: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
-            'borderLeftWidth',
             'borderLeftStyle',
+            'borderLeftWidth',
             'borderLeftColor'
         ]
     },
@@ -355,8 +355,8 @@ export const CSS_PROPERTIES: CssProperties = {
     borderRight: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
-            'borderRightWidth',
             'borderRightStyle',
+            'borderRightWidth',
             'borderRightColor'
         ]
     },
@@ -389,8 +389,8 @@ export const CSS_PROPERTIES: CssProperties = {
     borderTop: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
-            'borderTopWidth',
             'borderTopStyle',
+            'borderTopWidth',
             'borderTopColor'
         ]
     },
@@ -486,8 +486,8 @@ export const CSS_PROPERTIES: CssProperties = {
     columnRule: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
-            'columnRuleWidth',
             'columnRuleStyle',
+            'columnRuleWidth',
             'columnRuleColor'
         ]
     },

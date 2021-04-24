@@ -743,9 +743,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     protected setInputStyle(style: CssStyleMap, disabled: boolean, width = '1px') {
         const settings = this._settingsStyle;
-        this.setBorderStyle(style, width, settings.inputBorderStyle, settings[disabled ? 'inputDisabledBorderColor' : 'inputBorderColor']);
+        this.setBorderStyle(style, width, settings.inputBorderStyle, disabled ? settings.inputDisabledBorderColor : settings.inputBorderColor);
         if (hasEmptyStyle(style.backgroundColor)) {
-            const backgroundColor = settings[disabled ? 'inputDisabledBackgroundColor' : 'inputBackgroundColor'];
+            const backgroundColor = disabled ? settings.inputDisabledBackgroundColor : settings.inputBackgroundColor;
             if (backgroundColor) {
                 style.backgroundColor = backgroundColor;
             }
@@ -754,9 +754,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     protected setButtonStyle(style: CssStyleMap, disabled: boolean) {
         const settings = this._settingsStyle;
-        this.setBorderStyle(style, settings.buttonBorderWidth, settings.buttonBorderStyle, settings[disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor']);
+        this.setBorderStyle(style, settings.buttonBorderWidth, settings.buttonBorderStyle, disabled ? settings.buttonDisabledBorderColor : settings.buttonBorderColor);
         if (hasEmptyStyle(style.backgroundColor)) {
-            style.backgroundColor = settings[disabled ? 'buttonDisabledBackgroundColor' : 'buttonBackgroundColor'];
+            style.backgroundColor = disabled ? settings.buttonDisabledBackgroundColor : settings.buttonBackgroundColor;
         }
         style.textAlign ||= 'center';
         style.paddingTop ||= settings.buttonPaddingVertical;
@@ -765,19 +765,23 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         style.paddingLeft ||= settings.buttonPaddingHorizontal;
     }
 
-    protected setBorderStyle(style: CssStyleMap, borderWidth: string, borderStyle: string, borderColor: string) {
-        let result = false;
+    protected setBorderStyle(style: CssStyleMap, ...borderAttr: string[]) {
         for (let i = 0; i < 4; ++i) {
             const border = CSS_BORDER_SET[i];
-            const attr = border[0];
-            if (!style[attr]) {
-                style[attr] = borderWidth;
-                style[border[1]] = borderStyle;
-                style[border[2]] = borderColor;
-                result = true;
+            for (let j = 0; j < 3; ++j) {
+                const attr = border[j];
+                const value = style[attr];
+                if (!value) {
+                    style[attr] = borderAttr[j];
+                }
+                else if (value === 'initial' || value === 'unset') {
+                    style[attr] = 'revert';
+                }
+                else if (j === 0 && (value === 'none' || value === 'hidden')) {
+                    break;
+                }
             }
         }
-        return result;
     }
 
     protected setElementDimension(resourceId: number, element: DimensionElement, style: CssStyleMap) {
