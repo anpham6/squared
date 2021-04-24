@@ -243,67 +243,44 @@ export function splitPairEnd(value: string, char: string, trim?: boolean, last?:
     return '';
 }
 
-export function splitEnclosing(value: string, prefix?: string | RegExp, trimOuter?: boolean, opening = '(', closing = ')', separator = '') {
-    prefix ||= opening;
+export function splitEnclosing(value: string, pattern?: string | RegExp, trim?: boolean, opening = '(', closing = ')') {
+    pattern ||= opening;
     let position = 0,
-        offset = 0,
         index = -1,
-        combined: Undef<string>;
-    if (typeof prefix === 'string') {
-        if (prefix !== opening) {
-            combined = prefix + opening;
-            offset = prefix.length;
+        char: Undef<string>,
+        end = 0;
+    if (typeof pattern === 'string') {
+        if (pattern !== opening) {
+            char = pattern + opening;
+            end = pattern.length;
         }
         else {
-            combined = opening;
+            char = opening;
         }
     }
-    else if (prefix && !prefix.global) {
-        prefix = new RegExp(prefix, prefix.flags + 'g');
+    else if (!pattern.global) {
+        pattern = new RegExp(pattern, pattern.flags + 'g');
     }
     const result: string[] = [];
     const length = value.length;
-    const appendValues = (segment: string) => {
-        for (let seg of segment.split(separator)) {
-            if (seg = seg.trim()) {
-                result.push(seg);
-            }
-        }
-    };
     const nextIndex = () => {
-        if (combined) {
-            return value.indexOf(combined, position);
+        if (char) {
+            return value.indexOf(char, position);
         }
-        (prefix as RegExp).lastIndex = position;
-        const match = (prefix as RegExp).exec(value);
+        (pattern as RegExp).lastIndex = position;
+        const match = (pattern as RegExp).exec(value);
         if (match) {
-            offset = match[0].length;
+            end = match[0].length;
             return match.index;
         }
         return -1;
     };
     while ((index = nextIndex()) !== -1) {
-        let preceding = '';
         if (index !== position) {
-            let segment = value.substring(position, index);
-            if (separator) {
-                if (segment = segment.trim()) {
-                    appendValues(segment);
-                    if (combined === opening) {
-                        const joined = lastItemOf(result);
-                        if (joined && value.substring(index - joined.length, index + 1) === joined + opening) {
-                            preceding = joined;
-                            --result.length;
-                        }
-                    }
-                }
-            }
-            else {
-                result.push(segment);
-            }
+            result.push(value.substring(position, index));
         }
         let found: Undef<boolean>;
-        for (let i = index + offset + 1, open = 1, close = 0; i < length; ++i) {
+        for (let i = index + end + 1, open = 1, close = 0; i < length; ++i) {
             switch (value[i]) {
                 case opening:
                     ++open;
@@ -313,22 +290,11 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, trimOute
                     break;
             }
             if (open === close) {
-                if (trimOuter) {
+                if (trim) {
                     ++index;
                 }
-                if (separator) {
-                    for ( ; i < length; ++i) {
-                        if (value[i] === separator) {
-                            break;
-                        }
-                    }
-                    position = i + 1;
-                    result.push(preceding + value.substring(index, i + (trimOuter ? -1 : 0)).trim());
-                }
-                else {
-                    position = i + 1;
-                    result.push(value.substring(index, position + (trimOuter ? -1 : 0)));
-                }
+                position = i + 1;
+                result.push(value.substring(index, position + (trim ? -1 : 0)));
                 if (position === length) {
                     return result;
                 }
@@ -344,16 +310,7 @@ export function splitEnclosing(value: string, prefix?: string | RegExp, trimOute
         return [value];
     }
     if (position < length) {
-        const excess = value.substring(position);
-        if (separator) {
-            const segment = excess.trim();
-            if (segment) {
-                appendValues(segment);
-            }
-        }
-        else {
-            result.push(excess);
-        }
+        result.push(value.substring(position));
     }
     return result;
 }

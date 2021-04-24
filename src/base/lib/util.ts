@@ -1,6 +1,6 @@
 import { DOM } from './regex';
 
-const { endsWith, escapePattern, hasValue, isObject, replaceAll, splitPairEnd, splitPairStart, startsWith, trimEnclosing } = squared.lib.util;
+const { endsWith, escapePattern, hasValue, isObject, replaceAll, splitPair, splitPairEnd, splitPairStart, startsWith, trimEnclosing } = squared.lib.util;
 
 class GlobExp extends RegExp implements IGlobExp {
     constructor(source: string, flags: string, public negate: boolean) {
@@ -148,7 +148,7 @@ const CACHE_UUID: ObjectMap<RegExpMatchArray> = {};
 const HEX_STRING = '0123456789abcdef';
 
 export function fromMimeType(value: string) {
-    const [type, name] = value.split('/');
+    const [type, name] = splitPair(value, '/');
     switch (type) {
         case 'image':
             switch (name) {

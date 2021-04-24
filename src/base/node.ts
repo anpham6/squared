@@ -48,12 +48,14 @@ function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, 
     if (value !== current) {
         const restore = element.style[attr];
         element.style[attr] = value;
-        const newValue = element.style[attr];
-        if (newValue && current !== newValue) {
+        const updated = element.style[attr];
+        if (!updated) {
+            return STYLE_STATE.FAIL;
+        }
+        if (updated !== current) {
             setElementCache(element, attr, restore, sessionId);
             return STYLE_STATE.CHANGED;
         }
-        return STYLE_STATE.FAIL;
     }
     return STYLE_STATE.READY;
 }
