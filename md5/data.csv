@@ -77,7 +77,7 @@
 1,0000077.md5,/books/CSS_Mastery/chapter-04/04-15-multi-column-document.html
 1,0000078.md5,/books/CSS_Mastery/chapter-04/04-16-multi-column-heading-span-document.html
 1,0000079.md5,/books/CSS_Mastery/chapter-04/04-18-multi-column-vertical-rhythm.html
-32,0000080.md5,/books/CSS_Mastery/chapter-04/04-20-webfont-document.html
+1,0000080.md5,/books/CSS_Mastery/chapter-04/04-20-webfont-document.html
 1,0000081.md5,/books/CSS_Mastery/chapter-05/05-04-finished-example.html
 1,0000082.md5,/books/CSS_Mastery/chapter-05/05-05-initial-header-example.html
 1,0000083.md5,/books/CSS_Mastery/chapter-05/05-06-bigger-image-header-example.html
@@ -446,7 +446,7 @@
 1,0000446.md5,/books/HTML5_and_CSS3/solutions/town_hall_2/c10_index.html
 1,0000447.md5,/books/HTML5_and_CSS3/solutions/town_hall_3/index.html
 1,0000448.md5,/books/HTML5_and_CSS3/solutions/town_hall_3/luncheons.html
-1,0000449.md5,/books/HTML5_and_CSS3/solutions/town_hall_3/tickets.html
+32,0000449.md5,/books/HTML5_and_CSS3/solutions/town_hall_3/tickets.html
 1,0000450.md5,/books/HTML5_and_CSS3/solutions/town_hall_5/image_swaps.html
 1,0000451.md5,/books/HTML5_and_CSS3/solutions/town_hall_5/index.html
 1,0000452.md5,/books/HTML5_and_CSS3/solutions/town_hall_5/speakers/sampson.html
@@ -663,7 +663,7 @@
 1,0000663.md5,/books/The_Book_of_CSS3/examples/css3_05-01.html
 1,0000664.md5,/books/The_Book_of_CSS3/examples/css3_05-02.html
 1,0000665.md5,/books/The_Book_of_CSS3/examples/css3_05-03.html
-32,0000666.md5,/books/The_Book_of_CSS3/examples/css3_05-04.html
+1,0000666.md5,/books/The_Book_of_CSS3/examples/css3_05-04.html
 1,0000667.md5,/books/The_Book_of_CSS3/examples/css3_05-05.html
 1,0000668.md5,/books/The_Book_of_CSS3/examples/css3_05-07.html
 1,0000669.md5,/books/The_Book_of_CSS3/examples/css3_05-08_10.html
@@ -812,7 +812,7 @@
 1,0000813.md5,/demos/alignment_cssgrid_5.html
 1,0000814.md5,/demos/alignment_cssgrid_6.html
 1,0000815.md5,/demos/alignment_cssgrid_7.html
-32,0000816.md5,/books/CSS3_Foundations/index.html
+1,0000816.md5,/books/CSS3_Foundations/index.html
 0,0000817.md5,/books/HTML_and_CSS_VQG/chapter-09/select-by-first-letter.html
 1,0000818.md5,/books/HTML_and_CSS_VQG/chapter-09/select-by-first-line.html
 1,0000819.md5,/demos/whitespace.html
@@ -825,7 +825,7 @@
 16,0000826.md5,/books/MDN_Web_Components/expanding-list-web-component/index.html
 16,0000827.md5,/books/MDN_Web_Components/host-selectors/index.html
 32,0000828.md5,/books/MDN_Web_Components/life-cycle-callbacks/index.html
-32,0000829.md5,/books/MDN_Web_Components/popup-info-box-external-stylesheet/index.html
+1,0000829.md5,/books/MDN_Web_Components/popup-info-box-external-stylesheet/index.html
 16,0000830.md5,/books/MDN_Web_Components/popup-info-box-web-component/index.html
 16,0000831.md5,/books/MDN_Web_Components/shadow-part/index.html
 16,0000832.md5,/books/MDN_Web_Components/simple-template/index.html

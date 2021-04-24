@@ -225,7 +225,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                             output = output.replace(pattern, (...capture: string[]) => {
                                 const quote = capture[1];
                                 if (quote) {
-                                    return quote + value.replace(new RegExp(capture[1], 'g'), '\\' + quote) + quote;
+                                    return quote + value.replace(new RegExp(`(?:^${quote}|([^\\\\])${quote})`, 'g'), (...leading: string[]) => (leading[1] || '') + '\\' + quote) + quote;
                                 }
                                 return value;
                             });
