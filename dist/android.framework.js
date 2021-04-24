@@ -9876,7 +9876,10 @@ var android = (function () {
             }
         }
         if (minSize && !item.hasPX(minDimension)) {
-            item.css(minDimension, formatPX$8(minSize), true);
+            minSize -= item.contentBox ? horizontal ? item.contentBoxWidth : item.contentBoxHeight : 0;
+            if (minSize > 0) {
+                item.css(minDimension, formatPX$8(minSize), true);
+            }
         }
         if (parent.layoutConstraint) {
             if (horizontal) {
@@ -11455,6 +11458,7 @@ var android = (function () {
     var LayoutUI$7 = squared.base.LayoutUI;
     const { formatPX: formatPX$6, isPercent: isPercent$2 } = squared.lib.css;
     const { getTextMetrics: getTextMetrics$2 } = squared.lib.dom;
+    const isInside = (node) => node.cssValue('listStylePosition') === 'inside';
     class List extends squared.base.extensions.List {
         constructor() {
             super(...arguments);
@@ -11464,25 +11468,24 @@ var android = (function () {
         }
         processNode(node, parent) {
             const layout = new LayoutUI$7(parent, node);
-            if (layout.linearY) {
-                layout.rowCount = node.size();
-                layout.columnCount = node.find((item) => item.cssValue('listStylePosition') === 'inside') ? 3 : 2;
-                layout.setContainerType(17 /* GRID */, 8 /* VERTICAL */);
+            if (layout.linearY || layout.linearX || layout.singleRowAligned) {
+                super.processNode(node, parent);
+                if (layout.linearY) {
+                    layout.rowCount = node.size();
+                    layout.columnCount = node.find((item) => isInside(item)) ? 3 : 2;
+                    layout.setContainerType(17 /* GRID */, 8 /* VERTICAL */);
+                }
+                else {
+                    layout.rowCount = 1;
+                    layout.columnCount = layout.size();
+                    layout.setContainerType(16 /* LINEAR */, 4 /* HORIZONTAL */);
+                }
+                return {
+                    output: this.application.renderNode(layout),
+                    complete: true,
+                    include: true
+                };
             }
-            else if (layout.linearX || layout.singleRowAligned) {
-                layout.rowCount = 1;
-                layout.columnCount = layout.size();
-                layout.setContainerType(16 /* LINEAR */, 4 /* HORIZONTAL */);
-            }
-            else {
-                return;
-            }
-            super.processNode(node, parent);
-            return {
-                output: this.application.renderNode(layout),
-                complete: true,
-                include: true
-            };
         }
         processChild(node, parent) {
             var _a;

@@ -25,14 +25,13 @@ this.squared.base = (function (exports) {
 
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
     const { FILE: FILE$3, STRING: STRING$2 } = squared.lib.regex;
-    const { isUserAgent: isUserAgent$3 } = squared.lib.client;
     const { CSS_PROPERTIES: CSS_PROPERTIES$4, getSpecificity, insertStyleSheetRule: insertStyleSheetRule$1, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
     const { getElementCache: getElementCache$3, newSessionInit, setElementCache: setElementCache$3 } = squared.lib.session;
-    const { allSettled, capitalize: capitalize$2, convertCamelCase: convertCamelCase$2, escapePattern: escapePattern$3, isBase64: isBase64$1, isEmptyString: isEmptyString$1, resolvePath: resolvePath$1, splitPair: splitPair$4, startsWith: startsWith$9 } = squared.lib.util;
+    const { allSettled, capitalize: capitalize$2, convertCamelCase: convertCamelCase$2, isBase64: isBase64$1, isEmptyString: isEmptyString$1, resolvePath: resolvePath$1, splitPair: splitPair$4, startsWith: startsWith$9 } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
     const REGEXP_DATAURI$1 = new RegExp(`\\s?url\\("(${STRING$2.DATAURI})"\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
-    const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
+    const CSS_SHORTHANDNONE = getPropertiesAsTraits(64 /* NONE */);
     function parseImageUrl(value, styleSheetHref, resource, resourceId) {
         let result, match;
         while (match = REGEXP_DATAURI$1.exec(value)) {
@@ -483,8 +482,8 @@ this.squared.base = (function (exports) {
             return result;
         }
         applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
-            var _a, _b, _c, _d, _e;
-            var _f;
+            var _a, _b;
+            var _c;
             const resource = this.resourceHandler;
             const cssText = item.cssText;
             switch (item.type) {
@@ -492,53 +491,46 @@ this.squared.base = (function (exports) {
                     const hostElement = documentRoot.host;
                     const baseMap = {};
                     const cssStyle = item.style;
-                    const hasExactValue = (attr, value) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                    const hasPartialValue = (attr, value) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                     for (let i = 0, length = cssStyle.length; i < length; ++i) {
                         const attr = cssStyle[i];
                         const baseAttr = convertCamelCase$2(attr);
                         let value = cssStyle[attr];
-                        if (value) {
-                            switch (value) {
-                                case 'initial':
-                                    if (isUserAgent$3(2 /* SAFARI */) && startsWith$9(baseAttr, 'background')) {
-                                        break;
-                                    }
-                                    if (((_a = CSS_PROPERTIES$4[baseAttr]) === null || _a === void 0 ? void 0 : _a.value) === 'auto') {
-                                        value = 'auto';
-                                        break;
-                                    }
-                                case 'normal':
-                                    if (!hasExactValue(attr, value)) {
-                                        required: {
-                                            for (const name in CSS_SHORTHANDNONE) {
-                                                const css = CSS_SHORTHANDNONE[name];
-                                                if (css.value.includes(baseAttr)) {
-                                                    if (hasExactValue(css.name, 'none')) {
-                                                        const valueOfNone = (_b = CSS_PROPERTIES$4[baseAttr]) === null || _b === void 0 ? void 0 : _b.valueOfNone;
-                                                        if (valueOfNone) {
-                                                            value = valueOfNone;
-                                                        }
-                                                        break required;
-                                                    }
-                                                    if (hasExactValue(css.name, 'initial') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$3(css.valueOfNone))) {
-                                                        break required;
-                                                    }
-                                                    break;
-                                                }
+                        if (value === 'initial') {
+                            const property = CSS_PROPERTIES$4[baseAttr];
+                            if (property) {
+                                if (property.value === 'auto') {
+                                    value = 'auto';
+                                }
+                                else {
+                                    for (const parentAttr in CSS_SHORTHANDNONE) {
+                                        const css = CSS_SHORTHANDNONE[parentAttr];
+                                        if (css.value.includes(baseAttr)) {
+                                            if (property.valueOfNone && new RegExp(`\\s${css.name}:\\s+none\\s*;`).test(cssText)) {
+                                                value = property.valueOfNone;
                                             }
-                                            continue;
+                                            break;
                                         }
                                     }
-                                    break;
-                                default:
-                                    switch (baseAttr) {
-                                        case 'backgroundImage':
-                                        case 'listStyleImage':
-                                        case 'content':
-                                            value = parseImageUrl(value, (_c = item.parentStyleSheet) === null || _c === void 0 ? void 0 : _c.href, resource, resourceId);
-                                            break;
+                                }
+                            }
+                        }
+                        else if (value === 'none') {
+                            const property = CSS_SHORTHANDNONE[baseAttr];
+                            if (property) {
+                                for (const subAttr of property.value) {
+                                    const valueOfNone = CSS_PROPERTIES$4[subAttr].valueOfNone;
+                                    if (valueOfNone) {
+                                        baseMap[subAttr] = valueOfNone;
                                     }
+                                }
+                            }
+                        }
+                        else if (value) {
+                            switch (baseAttr) {
+                                case 'backgroundImage':
+                                case 'listStyleImage':
+                                case 'content':
+                                    value = parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId);
                                     break;
                             }
                         }
@@ -553,14 +545,11 @@ this.squared.base = (function (exports) {
                     let important;
                     if (cssText.includes('!')) {
                         important = {};
-                        let match;
+                        let property, match;
                         while (match = REGEXP_IMPORTANT.exec(cssText)) {
                             const attr = convertCamelCase$2(match[1]);
-                            const value = (_d = CSS_PROPERTIES$4[attr]) === null || _d === void 0 ? void 0 : _d.value;
-                            if (Array.isArray(value)) {
-                                for (let i = 0, length = value.length; i < length; ++i) {
-                                    important[value[i]] = true;
-                                }
+                            if ((property = CSS_PROPERTIES$4[attr]) && Array.isArray(property.value)) {
+                                property.value.forEach(subAttr => important[subAttr] = true);
                             }
                             else {
                                 important[attr] = true;
@@ -612,7 +601,7 @@ this.squared.base = (function (exports) {
                         const length = elements.length;
                         if (length === 0) {
                             if (resource && this.session.unusedStyles && !hostElement) {
-                                ((_f = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_f.unusedStyles = new Set())).add(selectorText);
+                                ((_c = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_c.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
@@ -648,7 +637,7 @@ this.squared.base = (function (exports) {
                 }
                 case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        resource.parseFontFace(resourceId, cssText, (_e = item.parentStyleSheet) === null || _e === void 0 ? void 0 : _e.href);
+                        resource.parseFontFace(resourceId, cssText, (_b = item.parentStyleSheet) === null || _b === void 0 ? void 0 : _b.href);
                     }
                     break;
                 case CSSRule.SUPPORTS_RULE:
@@ -5522,7 +5511,7 @@ this.squared.base = (function (exports) {
     const { getNamedItem: getNamedItem$2 } = squared.lib.dom;
     const { cos, equal: equal$1, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { convertBase64, convertCamelCase, convertPercent: convertPercent$2, escapePattern, hasValue, isEqual, isNumber: isNumber$2, isString: isString$1, iterateArray: iterateArray$2, splitPair, startsWith: startsWith$4 } = squared.lib.util;
+    const { convertBase64, convertCamelCase, convertPercent: convertPercent$2, escapePattern, hasValue, isEqual, isNumber: isNumber$2, isString: isString$1, iterateArray: iterateArray$2, lastItemOf, splitPair, startsWith: startsWith$4 } = squared.lib.util;
     const BORDER_TOP = CSS_PROPERTIES$2.borderTop.value;
     const BORDER_RIGHT = CSS_PROPERTIES$2.borderRight.value;
     const BORDER_BOTTOM = CSS_PROPERTIES$2.borderBottom.value;
@@ -5576,29 +5565,6 @@ this.squared.base = (function (exports) {
                 return result;
         }
         let previousOffset = 0, match;
-        if (isUserAgent$1(2 /* SAFARI */)) {
-            const colors = [];
-            const length = value.length;
-            const colorPattern = new RegExp(PATTERN_COLOR, 'g');
-            while (match = colorPattern.exec(value)) {
-                const color = match[1];
-                const lastIndex = colorPattern.lastIndex;
-                const index = lastIndex - color.length;
-                if (/[a-z]/.test(color[0]) && /\d/.test(value[index - 1])) {
-                    continue;
-                }
-                if (colors.length) {
-                    colors[colors.length - 1][2] = index;
-                }
-                colors.push([color, lastIndex, length]);
-            }
-            let expanded = '';
-            for (const item of colors) {
-                const color = item[0];
-                expanded = value.substring(item[1], item[2]).split(',').reduce((a, b) => b = b.trim() ? a + (a ? ', ' : '') + color + ' ' + b : a, expanded);
-            }
-            value = expanded;
-        }
         while (match = REGEXP_COLORSTOP.exec(value)) {
             const color = parseColor(match[1]);
             if (color) {
@@ -5645,54 +5611,56 @@ this.squared.base = (function (exports) {
                 result.push({ color, offset });
             }
         }
-        const length = result.length;
-        const lastStop = result[length - 1];
-        if (lastStop.offset === -1) {
-            lastStop.offset = 1;
-        }
-        let percent = 0;
-        for (let i = 0; i < length; ++i) {
-            const stop = result[i];
-            if (stop.offset === -1) {
-                if (i === 0) {
-                    stop.offset = 0;
-                }
-                else {
-                    for (let j = i + 1, k = 2; j < length - 1; ++k) {
-                        const data = result[j++];
-                        if (data.offset !== -1) {
-                            stop.offset = (percent + data.offset) / k;
-                            break;
-                        }
-                    }
-                    if (stop.offset === -1) {
-                        stop.offset = percent + lastStop.offset / (length - 1);
-                    }
-                }
+        const lastStop = lastItemOf(result);
+        if (lastStop) {
+            const length = result.length;
+            if (lastStop.offset === -1) {
+                lastStop.offset = 1;
             }
-            percent = stop.offset;
-        }
-        if (repeat) {
-            if (percent < 100) {
-                complete: {
-                    let basePercent = percent;
-                    const original = result.slice(0);
-                    while (percent < 100) {
-                        for (let i = 0; i < length; ++i) {
-                            const data = original[i];
-                            percent = Math.min(basePercent + data.offset, 1);
-                            result.push(Object.assign(Object.assign({}, data), { offset: percent }));
-                            if (percent === 1) {
-                                break complete;
+            let percent = 0;
+            for (let i = 0; i < length; ++i) {
+                const stop = result[i];
+                if (stop.offset === -1) {
+                    if (i === 0) {
+                        stop.offset = 0;
+                    }
+                    else {
+                        for (let j = i + 1, k = 2; j < length - 1; ++k) {
+                            const data = result[j++];
+                            if (data.offset !== -1) {
+                                stop.offset = (percent + data.offset) / k;
+                                break;
                             }
                         }
-                        basePercent = percent;
+                        if (stop.offset === -1) {
+                            stop.offset = percent + lastStop.offset / (length - 1);
+                        }
+                    }
+                }
+                percent = stop.offset;
+            }
+            if (repeat) {
+                if (percent < 100) {
+                    complete: {
+                        let basePercent = percent;
+                        const original = result.slice(0);
+                        while (percent < 100) {
+                            for (let i = 0; i < length; ++i) {
+                                const data = original[i];
+                                percent = Math.min(basePercent + data.offset, 1);
+                                result.push(Object.assign(Object.assign({}, data), { offset: percent }));
+                                if (percent === 1) {
+                                    break complete;
+                                }
+                            }
+                            basePercent = percent;
+                        }
                     }
                 }
             }
-        }
-        else if (percent < 1) {
-            result.push(Object.assign(Object.assign({}, result[length - 1]), { offset: 1 }));
+            else if (percent < 1) {
+                result.push(Object.assign(Object.assign({}, result[length - 1]), { offset: 1 }));
+            }
         }
         REGEXP_COLORSTOP.lastIndex = 0;
         return result;
@@ -6652,7 +6620,7 @@ this.squared.base = (function (exports) {
             }
         }
         setValueString(node) {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             let value, trimming, inlined;
             if (node.naturalChild) {
                 const element = node.element;
@@ -6832,9 +6800,8 @@ this.squared.base = (function (exports) {
                         }
                         else if (!node.naturalChild) {
                             if (!node.horizontalRowStart) {
-                                const element = node.element;
-                                const previousSibling = element && element.previousSibling;
-                                if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && startsWith$4(element.textContent.trim(), value.trim())) {
+                                const previousSibling = (_a = node.element) === null || _a === void 0 ? void 0 : _a.previousSibling;
+                                if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling)) {
                                     value = value.replace(CHAR_LEADINGSPACE, this.STRING_SPACE);
                                     break;
                                 }
@@ -6844,10 +6811,10 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else {
-                            if (node.horizontalRowStart || ((_a = node.previousSibling) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
+                            if (node.horizontalRowStart || ((_b = node.previousSibling) === null || _b === void 0 ? void 0 : _b.blockStatic)) {
                                 value = value.replace(CHAR_LEADINGSPACE, '');
                             }
-                            if ((_b = node.nextSibling) === null || _b === void 0 ? void 0 : _b.blockStatic) {
+                            if ((_c = node.nextSibling) === null || _c === void 0 ? void 0 : _c.blockStatic) {
                                 value = value.replace(CHAR_TRAILINGSPACE, '');
                             }
                         }
@@ -6871,7 +6838,7 @@ this.squared.base = (function (exports) {
                                 value = value.replace(CHAR_LEADINGSPACE, '');
                             }
                             else if (previousSibling.naturalElement) {
-                                previousSpaceEnd = hasEndingSpace(previousSibling.element) || ((_c = previousSibling.lastStaticChild) === null || _c === void 0 ? void 0 : _c.lineBreak);
+                                previousSpaceEnd = hasEndingSpace(previousSibling.element) || ((_d = previousSibling.lastStaticChild) === null || _d === void 0 ? void 0 : _d.lineBreak);
                             }
                         }
                         if (inlined) {
@@ -9295,6 +9262,7 @@ this.squared.base = (function (exports) {
         }
         processNode(node) {
             const ordered = node.tagName === 'OL';
+            const inside = node.valueOf('listStylePosition') === 'inside';
             let i = ordered && node.toElementInt('start') || 1;
             node.each((item) => {
                 const mainData = {};
@@ -9338,6 +9306,9 @@ this.squared.base = (function (exports) {
                                     break;
                             }
                         }
+                        if (inside && !item.valueOf('listStylePosition')) {
+                            item.css('listStylePosition', 'inside');
+                        }
                         mainData.ordinal = ordinal;
                     }
                     ++i;
@@ -9351,9 +9322,9 @@ this.squared.base = (function (exports) {
     const { getNamedItem: getNamedItem$1, removeElementsByClassName } = squared.lib.dom;
     const { getElementCache: getElementCache$1, setElementCache: setElementCache$1 } = squared.lib.session;
     const { capitalize: capitalize$1, convertWord, flatArray, isString, iterateArray: iterateArray$1, partitionArray: partitionArray$1, startsWith: startsWith$2, trimBoth, trimString: trimString$1 } = squared.lib.util;
-    const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"((?:[^"]|(?<=\\)")*)"(?:,\s*([a-z-]+))?\)|"((?:[^"]|(?<=\\)")+)")/g;
-    const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
-    const REGEXP_PSEUDOQUOTE = /("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)(?:\s+("(?:[^"]|(?<=\\)")+"|[^\s]+)\s+("(?:[^"]|(?<=\\)")+"|[^\s]+))?/;
+    const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
+    const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)/g;
+    const REGEXP_PSEUDOQUOTE = /("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+)(?:\s+("[^"]+"|[^\s]+)\s+("[^"]+"|[^\s]+))?/;
     function getFloatAlignmentType(nodes) {
         let right, floating;
         for (let i = 0, length = nodes.length; i < length; ++i) {
@@ -9407,7 +9378,7 @@ this.squared.base = (function (exports) {
         let current = element, found = 0, i = 0, j = -1;
         while (current && current.tagName === 'Q') {
             const quotes = (getElementCache$1(current, 'styleMap', sessionId) || getStyle$2(current)).quotes;
-            if (quotes) {
+            if (quotes && quotes !== 'auto') {
                 const match = REGEXP_PSEUDOQUOTE.exec(quotes);
                 if (match) {
                     if (pseudoElt === '::before') {
@@ -14550,10 +14521,10 @@ this.squared.base = (function (exports) {
             if (direction !== undefined) {
                 if (direction) {
                     const firstChild = node.firstStaticChild;
-                    return isBlockElement(firstChild) && validAboveChild(firstChild, false);
+                    return isBlockElement(firstChild) && validAboveChild(firstChild);
                 }
                 const lastChild = node.lastStaticChild;
-                return isBlockElement(lastChild) && validBelowChild(lastChild, false);
+                return isBlockElement(lastChild) && validBelowChild(lastChild);
             }
         }
         return false;
@@ -14595,29 +14566,31 @@ this.squared.base = (function (exports) {
             const children = node.naturalChildren;
             for (let j = children.length - 1; j >= 0; --j) {
                 const item = children[j];
-                if (item.floating) {
-                    if (!bottomChild) {
-                        const bottom = item.linear.bottom;
-                        if (bottomFloat) {
-                            if (bottom > bottomFloat.linear.bottom) {
+                if (item.pageFlow) {
+                    if (item.floating) {
+                        if (!bottomChild) {
+                            const bottom = item.linear.bottom;
+                            if (bottomFloat) {
+                                if (bottom > bottomFloat.linear.bottom) {
+                                    bottomFloat = item;
+                                }
+                            }
+                            else if (Math.ceil(item.linear.bottom) >= node.box.bottom) {
                                 bottomFloat = item;
                             }
                         }
-                        else if (Math.ceil(item.linear.bottom) >= node.box.bottom) {
-                            bottomFloat = item;
+                        else if (item.linear.bottom >= bottomChild.linear.bottom) {
+                            bottomChild = item;
+                            break;
                         }
                     }
-                    else if (item.linear.bottom >= bottomChild.linear.bottom) {
+                    else if (!bottomChild) {
+                        if (bottomFloat && bottomFloat.linear.bottom > item.linear.bottom) {
+                            bottomChild = bottomFloat;
+                            break;
+                        }
                         bottomChild = item;
-                        break;
                     }
-                }
-                else if (!bottomChild) {
-                    if (bottomFloat && bottomFloat.linear.bottom > item.linear.bottom) {
-                        bottomChild = bottomFloat;
-                        break;
-                    }
-                    bottomChild = item;
                 }
             }
             if (bottomFloat && !bottomChild) {
@@ -14632,9 +14605,150 @@ this.squared.base = (function (exports) {
             case 'hidden':
             case 'overlay':
                 return false;
-            default:
-                return true;
         }
+        return true;
+    }
+    function getMarginTop(node, opposing, check) {
+        let marginTop = node.marginTop, current = node, inherited = false;
+        while (validBelowChild(current)) {
+            let child = current.firstStaticChild;
+            if (isBlockElement(child, true) && !child.getBox(1 /* MARGIN_TOP */)[0]) {
+                let childTop = child.marginTop, currentChild = child;
+                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                    const currentBottom = currentChild.marginBottom;
+                    childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
+                    if (currentBottom !== 0) {
+                        resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
+                    }
+                    if (currentChild.every(item => item.floating || !item.pageFlow)) {
+                        const nextChild = currentChild.firstStaticChild;
+                        if (nextChild) {
+                            childTop = nextChild.marginTop;
+                            currentChild = nextChild;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    else {
+                        const sibling = currentChild.nextSibling;
+                        if (sibling) {
+                            if (sibling.marginTop >= childTop) {
+                                if (currentChild.marginTop !== 0) {
+                                    resetBox(currentChild, 1 /* MARGIN_TOP */);
+                                }
+                                child = sibling;
+                                childTop = sibling.marginTop;
+                                currentChild = sibling;
+                            }
+                            else if (sibling.bounds.height) {
+                                break;
+                            }
+                            else {
+                                if (sibling.marginTop !== 0) {
+                                    resetBox(sibling, 1 /* MARGIN_TOP */);
+                                }
+                                currentChild = sibling;
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+                if (childTop !== 0) {
+                    if (!check) {
+                        resetBox(child, 1 /* MARGIN_TOP */, !node.getBox(1 /* MARGIN_TOP */)[0] ? node : undefined);
+                    }
+                    if (marginTop < 0) {
+                        if (childTop > getMarginBottom(opposing, node, true)[0]) {
+                            marginTop += childTop;
+                            inherited = true;
+                        }
+                    }
+                    else if (childTop > marginTop) {
+                        marginTop = childTop;
+                        inherited = true;
+                    }
+                }
+                current = child;
+            }
+            else {
+                break;
+            }
+        }
+        return [marginTop, inherited];
+    }
+    function getMarginBottom(node, opposing, check) {
+        let marginBottom = node.marginBottom, current = node, inherited = false;
+        while (validAboveChild(current)) {
+            let child = getBottomChild(current);
+            if (child && !child.getBox(4 /* MARGIN_BOTTOM */)[0]) {
+                let childBottom = child.marginBottom, currentChild = child;
+                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                    const currentTop = currentChild.marginTop;
+                    childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
+                    if (currentTop !== 0) {
+                        resetBox(currentChild, 1 /* MARGIN_TOP */);
+                    }
+                    if (currentChild.every(item => item.floating || !item.pageFlow)) {
+                        const nextChild = getBottomChild(currentChild);
+                        if (nextChild) {
+                            childBottom = nextChild.marginBottom;
+                            currentChild = nextChild;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    else {
+                        const sibling = currentChild.previousSibling;
+                        if (sibling) {
+                            if (sibling.marginBottom >= childBottom) {
+                                if (currentChild.marginBottom !== 0) {
+                                    resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
+                                }
+                                child = sibling;
+                                childBottom = sibling.marginBottom;
+                                currentChild = sibling;
+                            }
+                            else if (sibling.bounds.height) {
+                                break;
+                            }
+                            else {
+                                if (sibling.marginBottom !== 0) {
+                                    resetBox(sibling, 4 /* MARGIN_BOTTOM */);
+                                }
+                                currentChild = sibling;
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+                if (childBottom !== 0) {
+                    if (!check) {
+                        resetBox(child, 4 /* MARGIN_BOTTOM */, !node.getBox(4 /* MARGIN_BOTTOM */)[0] ? node : undefined);
+                    }
+                    if (marginBottom < 0) {
+                        if (childBottom > getMarginTop(opposing, node, true)[0]) {
+                            marginBottom += childBottom;
+                            inherited = true;
+                        }
+                    }
+                    else if (childBottom > marginBottom) {
+                        marginBottom = childBottom;
+                        inherited = true;
+                    }
+                }
+                current = child;
+            }
+            else {
+                break;
+            }
+        }
+        return [marginBottom, inherited];
     }
     function resetBox(node, region, register, wrapper) {
         node.setBox(region, { reset: 1 });
@@ -14642,14 +14756,12 @@ this.squared.base = (function (exports) {
             node.registerBox(region, register);
         }
         if (wrapper) {
-            for (const parent of wrapper) {
-                parent.setBox(region, { reset: 1 });
-            }
+            wrapper.forEach(parent => parent.setBox(region, { reset: 1 }));
         }
     }
-    const canResetChild = (node, children = true) => (!children && node.blockStatic || children && !node.isEmpty() && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
-    const validAboveChild = (node, children) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
-    const validBelowChild = (node, children) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
+    const canResetChild = (node) => isBlockElement(node) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
+    const validBelowChild = (node) => node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
+    const validAboveChild = (node) => node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node);
     const hasOverflow = (node) => checkOverflowValue(node.valueOf('overflowY')) || checkOverflowValue(node.valueOf('overflowX'));
     const isLowestElement = (node, siblings) => node.linear.bottom >= minMaxOf(siblings, sibling => sibling.linear.bottom, '>')[1];
     class WhiteSpace extends ExtensionUI {
@@ -14695,7 +14807,7 @@ this.squared.base = (function (exports) {
                             blockMain: {
                                 if (isBlockElement(current, true)) {
                                     if (i > 0) {
-                                        let previous = children[i - 1], inheritedTop;
+                                        let previous = children[i - 1];
                                         if (previous.floating || !previous.pageFlow) {
                                             if (node.layoutVertical) {
                                                 const previousSiblings = current.previousSiblings();
@@ -14705,9 +14817,7 @@ this.squared.base = (function (exports) {
                                                         const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
                                                         if (nearest.marginBottom > 0 && current.bounds.top < previousBottom) {
                                                             if (nearest.marginBottom < current.marginTop) {
-                                                                for (const sibling of aboveFloating) {
-                                                                    resetBox(sibling, 4 /* MARGIN_BOTTOM */);
-                                                                }
+                                                                aboveFloating.forEach(sibling => resetBox(sibling, 4 /* MARGIN_BOTTOM */));
                                                             }
                                                             else if (current.marginTop > 0) {
                                                                 resetBox(current, 1 /* MARGIN_TOP */);
@@ -14728,11 +14838,10 @@ this.squared.base = (function (exports) {
                                             }
                                         }
                                         if (isBlockElement(previous, false)) {
-                                            let marginBottom = previous.marginBottom, marginTop = current.marginTop;
                                             if (previous.marginTop < 0 && previous.bounds.height === 0) {
-                                                const offset = Math.min(marginBottom, previous.marginTop);
+                                                const offset = Math.min(previous.marginBottom, previous.marginTop);
                                                 if (offset < 0) {
-                                                    if (Math.abs(offset) < marginTop) {
+                                                    if (Math.abs(offset) < current.marginTop) {
                                                         current.modifyBox(1 /* MARGIN_TOP */, offset);
                                                     }
                                                     else {
@@ -14744,9 +14853,9 @@ this.squared.base = (function (exports) {
                                                 }
                                             }
                                             else if (current.marginBottom < 0 && current.bounds.height === 0) {
-                                                const offset = Math.min(marginTop, current.marginBottom);
+                                                const offset = Math.min(current.marginTop, current.marginBottom);
                                                 if (offset < 0) {
-                                                    if (Math.abs(offset) < marginBottom) {
+                                                    if (Math.abs(offset) < previous.marginBottom) {
                                                         previous.modifyBox(4 /* MARGIN_BOTTOM */, offset);
                                                     }
                                                     else {
@@ -14757,128 +14866,7 @@ this.squared.base = (function (exports) {
                                                     break blockMain;
                                                 }
                                             }
-                                            let inherit = previous, inheritedBottom;
-                                            while (validAboveChild(inherit, true)) {
-                                                let bottomChild = getBottomChild(inherit);
-                                                if (bottomChild && !bottomChild.getBox(4 /* MARGIN_BOTTOM */)[0]) {
-                                                    let childBottom = bottomChild.marginBottom, currentChild = bottomChild;
-                                                    while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                        const currentTop = currentChild.marginTop;
-                                                        childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
-                                                        if (currentTop !== 0) {
-                                                            resetBox(currentChild, 1 /* MARGIN_TOP */);
-                                                        }
-                                                        if (currentChild.every(item => item.floating || !item.pageFlow)) {
-                                                            const nextChild = getBottomChild(currentChild);
-                                                            if (nextChild) {
-                                                                childBottom = nextChild.marginBottom;
-                                                                currentChild = nextChild;
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                        else {
-                                                            const sibling = currentChild.previousSibling;
-                                                            if (sibling) {
-                                                                if (sibling.marginBottom >= childBottom) {
-                                                                    if (currentChild.marginBottom !== 0) {
-                                                                        resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
-                                                                    }
-                                                                    bottomChild = sibling;
-                                                                    childBottom = sibling.marginBottom;
-                                                                    currentChild = sibling;
-                                                                }
-                                                                else if (sibling.bounds.height) {
-                                                                    break;
-                                                                }
-                                                                else {
-                                                                    if (sibling.marginBottom !== 0) {
-                                                                        resetBox(sibling, 4 /* MARGIN_BOTTOM */);
-                                                                    }
-                                                                    currentChild = sibling;
-                                                                }
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
-                                                    if (childBottom !== 0) {
-                                                        resetBox(bottomChild, 4 /* MARGIN_BOTTOM */, !previous.getBox(4 /* MARGIN_BOTTOM */)[0] ? previous : undefined);
-                                                    }
-                                                    if (childBottom > marginBottom) {
-                                                        marginBottom = childBottom;
-                                                        inheritedBottom = true;
-                                                    }
-                                                    else if (childBottom === 0) {
-                                                        inherit = bottomChild;
-                                                        continue;
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                            inherit = current;
-                                            while (validBelowChild(inherit, true)) {
-                                                let topChild = inherit.firstStaticChild;
-                                                if (isBlockElement(topChild, true) && !topChild.getBox(1 /* MARGIN_TOP */)[0]) {
-                                                    let childTop = topChild.marginTop, currentChild = topChild;
-                                                    while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                        const currentBottom = currentChild.marginBottom;
-                                                        childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
-                                                        if (currentBottom !== 0) {
-                                                            resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
-                                                        }
-                                                        if (currentChild.every(item => item.floating || !item.pageFlow)) {
-                                                            const nextChild = currentChild.firstStaticChild;
-                                                            if (nextChild) {
-                                                                childTop = nextChild.marginTop;
-                                                                currentChild = nextChild;
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                        else {
-                                                            const sibling = currentChild.nextSibling;
-                                                            if (sibling) {
-                                                                if (sibling.marginTop >= childTop) {
-                                                                    if (currentChild.marginTop !== 0) {
-                                                                        resetBox(currentChild, 1 /* MARGIN_TOP */);
-                                                                    }
-                                                                    topChild = sibling;
-                                                                    childTop = sibling.marginTop;
-                                                                    currentChild = sibling;
-                                                                }
-                                                                else if (sibling.bounds.height) {
-                                                                    break;
-                                                                }
-                                                                else {
-                                                                    if (sibling.marginTop !== 0) {
-                                                                        resetBox(sibling, 1 /* MARGIN_TOP */);
-                                                                    }
-                                                                    currentChild = sibling;
-                                                                }
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
-                                                    if (childTop !== 0) {
-                                                        resetBox(topChild, 1 /* MARGIN_TOP */, !current.getBox(1 /* MARGIN_TOP */)[0] ? current : undefined);
-                                                    }
-                                                    if (childTop > marginTop) {
-                                                        marginTop = childTop;
-                                                        inheritedTop = true;
-                                                    }
-                                                    else if (childTop === 0) {
-                                                        inherit = topChild;
-                                                        continue;
-                                                    }
-                                                }
-                                                break;
-                                            }
+                                            let [marginTop, inheritedTop] = getMarginTop(current, previous), [marginBottom, inheritedBottom] = getMarginBottom(previous, current); // eslint-disable-line prefer-const
                                             if (marginBottom > 0) {
                                                 if (marginTop > 0) {
                                                     if (marginTop <= marginBottom) {
@@ -15008,15 +14996,11 @@ this.squared.base = (function (exports) {
                         }
                     }
                     else if (belowFloating && node.borderBottomWidth === 0 && node.paddingBottom === 0) {
-                        const bottomChild = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[0];
-                        if (bottomChild.marginBottom >= node.marginBottom && !bottomChild.getBox(4 /* MARGIN_BOTTOM */)[0]) {
-                            (node.registerBox(4 /* MARGIN_BOTTOM */) || node).setCacheValue('marginBottom', bottomChild.marginBottom);
+                        const offset = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[1] - node.max('bounds', { subAttr: 'bottom' }).bounds.bottom;
+                        if (offset > node.marginBottom) {
+                            (node.registerBox(4 /* MARGIN_BOTTOM */) || node).setCacheValue('marginBottom', offset);
                         }
-                        for (const sibling of belowFloating) {
-                            if (!sibling.getBox(4 /* MARGIN_BOTTOM */)[0]) {
-                                resetBox(sibling, 4 /* MARGIN_BOTTOM */);
-                            }
-                        }
+                        belowFloating.forEach(sibling => !sibling.getBox(4 /* MARGIN_BOTTOM */)[0] && resetBox(sibling, 4 /* MARGIN_BOTTOM */));
                     }
                 }
             });

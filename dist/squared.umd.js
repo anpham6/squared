@@ -55,7 +55,7 @@
     const DECIMAL_UN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
     const DECIMAL = '[+-]?' + DECIMAL_UN;
     const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in|ex|q';
-    const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"((?:[^"]|(?<=\\\\)")+)"|'((?:[^']|(?<=\\\\)')+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
+    const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:"([^"])+"|'([^']+)'|([^\\s\\]]+))\\s*(i)?)?\\s*\\]`;
     const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
     const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
     const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
@@ -1644,7 +1644,7 @@
     const REGEXP_CALCOPERATION = /\s+([+-]\s+|\s*[*/])/;
     const REGEXP_CALCUNIT = /\s*{(\d+)}\s*/;
     const REGEXP_TRANSFORM = /([a-z]+(?:[XYZ]|3d)?)\([^)]+\)/g;
-    const REGEXP_EMBASED = /[\d.]+(?:em|ch|ex)\b/;
+    const REGEXP_EMBASED = /[\d.]+(?:em|ch|ex)/;
     const REGEXP_SELECTORGROUP = /:(?:is|where)/g;
     const REGEXP_SELECTORIS = /^:is\((.+)\)$/;
     const REGEXP_SELECTORNOT = /^:not\((.+)\)$/;
@@ -2995,15 +2995,15 @@
             value: 'auto'
         },
         scrollSnapAlign: {
-            trait: 64 /* NONE */,
+            trait: 0,
             value: 'none'
         },
         scrollSnapStop: {
-            trait: 64 /* NONE */,
+            trait: 0,
             value: 'none'
         },
         scrollSnapType: {
-            trait: 64 /* NONE */,
+            trait: 0,
             value: 'none'
         },
         shapeImageThreshold: {
@@ -3048,7 +3048,8 @@
         },
         textDecorationLine: {
             trait: 0,
-            value: 'none'
+            value: 'none',
+            valueOfNone: 'none'
         },
         textDecorationSkipInk: {
             trait: 0,
@@ -3141,7 +3142,7 @@
             value: 'normal'
         },
         userSelect: {
-            trait: 64 /* NONE */,
+            trait: 0,
             value: 'none'
         },
         verticalAlign: {

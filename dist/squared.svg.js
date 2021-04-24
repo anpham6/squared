@@ -2022,7 +2022,7 @@ this.squared.svg = (function (exports) {
     const { getFontSize: getFontSize$1, hasEm: hasEm$1, isLength: isLength$1, parseUnit: parseUnit$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$6 } = squared.lib.dom;
     const { isNumber: isNumber$3, lastItemOf: lastItemOf$2, replaceMap: replaceMap$2, sortNumber: sortNumber$3, trimEnd } = squared.lib.util;
-    const REGEXP_BEZIER = new RegExp(`\\b${PATTERN_CUBICBEZIER}\\b`);
+    const REGEXP_BEZIER = new RegExp(`${PATTERN_CUBICBEZIER}`);
     const REGEXP_BEZIERCSS = new RegExp(`\\bcubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
     const invertControlPoint = (value) => +(1 - value).toPrecision(5);
     class SvgAnimate extends SvgAnimation {

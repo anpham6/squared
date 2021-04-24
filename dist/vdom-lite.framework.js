@@ -24,14 +24,13 @@ var vdom = (function () {
 
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
     const { FILE: FILE$1, STRING } = squared.lib.regex;
-    const { isUserAgent: isUserAgent$1 } = squared.lib.client;
     const { CSS_PROPERTIES: CSS_PROPERTIES$1, getSpecificity, insertStyleSheetRule, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
     const { getElementCache: getElementCache$1, newSessionInit, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { allSettled, capitalize, convertCamelCase: convertCamelCase$1, escapePattern: escapePattern$1, isBase64, isEmptyString, resolvePath, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
+    const { allSettled, capitalize, convertCamelCase: convertCamelCase$1, isBase64, isEmptyString, resolvePath, splitPair: splitPair$1, startsWith: startsWith$1 } = squared.lib.util;
     const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
     const REGEXP_DATAURI = new RegExp(`\\s?url\\("(${STRING.DATAURI})"\\)`, 'g');
     const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
-    const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
+    const CSS_SHORTHANDNONE = getPropertiesAsTraits(64 /* NONE */);
     function parseImageUrl(value, styleSheetHref, resource, resourceId) {
         let result, match;
         while (match = REGEXP_DATAURI.exec(value)) {
@@ -482,8 +481,8 @@ var vdom = (function () {
             return result;
         }
         applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
-            var _a, _b, _c, _d, _e;
-            var _f;
+            var _a, _b;
+            var _c;
             const resource = this.resourceHandler;
             const cssText = item.cssText;
             switch (item.type) {
@@ -491,53 +490,46 @@ var vdom = (function () {
                     const hostElement = documentRoot.host;
                     const baseMap = {};
                     const cssStyle = item.style;
-                    const hasExactValue = (attr, value) => new RegExp(`[^-]${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                    const hasPartialValue = (attr, value) => new RegExp(`[^-]${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
                     for (let i = 0, length = cssStyle.length; i < length; ++i) {
                         const attr = cssStyle[i];
                         const baseAttr = convertCamelCase$1(attr);
                         let value = cssStyle[attr];
-                        if (value) {
-                            switch (value) {
-                                case 'initial':
-                                    if (isUserAgent$1(2 /* SAFARI */) && startsWith$1(baseAttr, 'background')) {
-                                        break;
-                                    }
-                                    if (((_a = CSS_PROPERTIES$1[baseAttr]) === null || _a === void 0 ? void 0 : _a.value) === 'auto') {
-                                        value = 'auto';
-                                        break;
-                                    }
-                                case 'normal':
-                                    if (!hasExactValue(attr, value)) {
-                                        required: {
-                                            for (const name in CSS_SHORTHANDNONE) {
-                                                const css = CSS_SHORTHANDNONE[name];
-                                                if (css.value.includes(baseAttr)) {
-                                                    if (hasExactValue(css.name, 'none')) {
-                                                        const valueOfNone = (_b = CSS_PROPERTIES$1[baseAttr]) === null || _b === void 0 ? void 0 : _b.valueOfNone;
-                                                        if (valueOfNone) {
-                                                            value = valueOfNone;
-                                                        }
-                                                        break required;
-                                                    }
-                                                    if (hasExactValue(css.name, 'initial') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$1(css.valueOfNone))) {
-                                                        break required;
-                                                    }
-                                                    break;
-                                                }
+                        if (value === 'initial') {
+                            const property = CSS_PROPERTIES$1[baseAttr];
+                            if (property) {
+                                if (property.value === 'auto') {
+                                    value = 'auto';
+                                }
+                                else {
+                                    for (const parentAttr in CSS_SHORTHANDNONE) {
+                                        const css = CSS_SHORTHANDNONE[parentAttr];
+                                        if (css.value.includes(baseAttr)) {
+                                            if (property.valueOfNone && new RegExp(`\\s${css.name}:\\s+none\\s*;`).test(cssText)) {
+                                                value = property.valueOfNone;
                                             }
-                                            continue;
+                                            break;
                                         }
                                     }
-                                    break;
-                                default:
-                                    switch (baseAttr) {
-                                        case 'backgroundImage':
-                                        case 'listStyleImage':
-                                        case 'content':
-                                            value = parseImageUrl(value, (_c = item.parentStyleSheet) === null || _c === void 0 ? void 0 : _c.href, resource, resourceId);
-                                            break;
+                                }
+                            }
+                        }
+                        else if (value === 'none') {
+                            const property = CSS_SHORTHANDNONE[baseAttr];
+                            if (property) {
+                                for (const subAttr of property.value) {
+                                    const valueOfNone = CSS_PROPERTIES$1[subAttr].valueOfNone;
+                                    if (valueOfNone) {
+                                        baseMap[subAttr] = valueOfNone;
                                     }
+                                }
+                            }
+                        }
+                        else if (value) {
+                            switch (baseAttr) {
+                                case 'backgroundImage':
+                                case 'listStyleImage':
+                                case 'content':
+                                    value = parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId);
                                     break;
                             }
                         }
@@ -552,14 +544,11 @@ var vdom = (function () {
                     let important;
                     if (cssText.includes('!')) {
                         important = {};
-                        let match;
+                        let property, match;
                         while (match = REGEXP_IMPORTANT.exec(cssText)) {
                             const attr = convertCamelCase$1(match[1]);
-                            const value = (_d = CSS_PROPERTIES$1[attr]) === null || _d === void 0 ? void 0 : _d.value;
-                            if (Array.isArray(value)) {
-                                for (let i = 0, length = value.length; i < length; ++i) {
-                                    important[value[i]] = true;
-                                }
+                            if ((property = CSS_PROPERTIES$1[attr]) && Array.isArray(property.value)) {
+                                property.value.forEach(subAttr => important[subAttr] = true);
                             }
                             else {
                                 important[attr] = true;
@@ -611,7 +600,7 @@ var vdom = (function () {
                         const length = elements.length;
                         if (length === 0) {
                             if (resource && this.session.unusedStyles && !hostElement) {
-                                ((_f = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_f.unusedStyles = new Set())).add(selectorText);
+                                ((_c = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_c.unusedStyles = new Set())).add(selectorText);
                             }
                             continue;
                         }
@@ -647,7 +636,7 @@ var vdom = (function () {
                 }
                 case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        resource.parseFontFace(resourceId, cssText, (_e = item.parentStyleSheet) === null || _e === void 0 ? void 0 : _e.href);
+                        resource.parseFontFace(resourceId, cssText, (_b = item.parentStyleSheet) === null || _b === void 0 ? void 0 : _b.href);
                     }
                     break;
                 case CSSRule.SUPPORTS_RULE:
