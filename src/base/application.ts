@@ -346,7 +346,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return processing ? processing.cache : new NodeList();
     }
 
-    public getUserSetting<U = unknown>(processing: Undef<string | squared.base.AppProcessing<T>>, name: keyof UserResourceSettingsUI): U {
+    public getUserSetting<U = unknown>(processing: Undef<string | squared.base.AppProcessing<T>>, name: keyof UserResourceSettings): U {
         if (typeof processing === 'string') {
             processing = this.getProcessing(processing);
         }

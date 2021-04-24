@@ -171,6 +171,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly extensions: ExtensionUI<T>[] = [];
 
     public abstract resource: ResourceUI<T>;
+    public abstract userSettings: UserResourceSettingsUI;
 
     private _resourceId = -1;
     private _layouts: LayoutAsset[] = [];
@@ -182,7 +183,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _renderNode!: RenderNodeMethod<T>;
     private _renderNodeGroup!: RenderNodeMethod<T>;
 
-    public abstract userSettings: UserResourceSettingsUI;
+    public abstract getUserSetting: squared.base.UserSettingMethod<T, UserResourceSettingsUI>;
+
     public abstract get controllerHandler(): ControllerUI<T>;
     public abstract get resourceHandler(): ResourceUI<T>;
     public abstract get extensionManager(): ExtensionManager<T>;
@@ -1102,8 +1104,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (result.subscribe) {
                                         ext.subscribers.add(nodeY);
                                     }
-                                    next = result.next === true;
-                                    if (next || result.complete) {
+                                    if ((next = result.next === true) || result.complete) {
                                         break;
                                     }
                                 }
@@ -1142,8 +1143,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 extensionsTraverse.splice(index, 1);
                                             }
                                         }
-                                        next = result.next === true;
-                                        if (next || result.complete) {
+                                        if ((next = result.next === true) || result.complete) {
                                             break;
                                         }
                                     }

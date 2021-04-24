@@ -6,6 +6,7 @@ type AppSessionConditionCallback = (sessionId: string, rule: CSSConditionRule, c
 
 declare module "base" {
     type RootElement = string | HTMLElement | ElementSettings;
+    type UserSettingMethod<T extends Node, U extends UserResourceSettings> = <V = unknown>(sessionId: Undef<string | squared.base.AppProcessing<T>>, name: keyof U) => V;
 
     interface ElementSettings extends Partial<UserResourceSettingsUI>, Partial<LocationUri> {
         element?: string | HTMLElement;
@@ -110,7 +111,7 @@ declare module "base" {
         afterCreateCache(processing: AppProcessing<T>, node: T): void;
         getProcessing(sessionId: string): Undef<AppProcessing<T>>;
         getProcessingCache(sessionId: string): NodeList<T>;
-        getUserSetting<U = unknown>(sessionId: Undef<string | squared.base.AppProcessing<T>>, name: keyof UserResourceSettingsUI): U;
+        getUserSetting: UserSettingMethod<T, UserResourceSettings>;
         getDatasetName(attr: string, element: DocumentElement): Undef<string>;
         setDatasetName(attr: string, element: DocumentElement, value: string): void;
         addRootElement(sessionId: string, element: HTMLElement): void;
@@ -156,6 +157,7 @@ declare module "base" {
         addLayout(layout: ContentUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: NodeTemplate<T>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
+        getUserSetting: UserSettingMethod<T, UserResourceSettingsUI>;
         get controllerHandler(): ControllerUI<T>;
         get resourceHandler(): ResourceUI<T>;
         get extensionManager(): ExtensionManager<T>;
