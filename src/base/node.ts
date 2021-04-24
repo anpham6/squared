@@ -3126,10 +3126,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    get elementData() {
-        return this._elementData;
-    }
-
     set dir(value) {
         switch (value = value.toLowerCase()) {
             case 'ltr':
@@ -3169,12 +3165,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    get center(): Point {
-        const bounds = this.bounds;
-        return {
-            x: (bounds.left + bounds.right) / 2,
-            y: (bounds.top + bounds.bottom) / 2
-        };
+    get elementData() {
+        return this._elementData;
     }
 
     get initial() {

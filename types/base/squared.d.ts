@@ -575,7 +575,6 @@ declare module "base" {
         get cssStyle(): CssStyleMap;
         get textStyle(): CssStyleMap;
         get elementData(): Null<ElementData>;
-        get center(): Point;
         get initial(): Null<InitialData<Node>>;
         constructor(id: number, sessionId?: string, element?: Element, children?: Node[]);
     }
