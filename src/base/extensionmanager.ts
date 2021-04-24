@@ -1,6 +1,7 @@
 import type Application from './application';
-import type Extension from './extension';
 import type Node from './node';
+
+import Extension from './extension';
 
 const { findSet, isObject } = squared.lib.util;
 
@@ -13,13 +14,15 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         if (typeof ext === 'string' && !(ext = this.get(ext, true) as Extension<T>)) {
             return false;
         }
-        const { application, extensions } = this;
-        if (ext.framework === 0 || ext.framework & application.framework) {
-            ext.application = application;
-            if (!extensions.includes(ext)) {
-                extensions.push(ext);
+        if (ext instanceof Extension) {
+            const { application, extensions } = this;
+            if (ext.framework === 0 || ext.framework & application.framework) {
+                ext.application = application;
+                if (!extensions.includes(ext)) {
+                    extensions.push(ext);
+                }
+                return true;
             }
-            return true;
         }
         return false;
     }
@@ -28,11 +31,13 @@ export default class ExtensionManager<T extends Node> implements squared.base.Ex
         if (typeof ext === 'string' && !(ext = this.get(ext, true) as Extension<T>)) {
             return false;
         }
-        const name = ext.name;
-        const index = this.extensions.findIndex(item => item.name === name);
-        if (index !== -1) {
-            this.extensions.splice(index, 1);
-            return true;
+        if (ext instanceof Extension) {
+            const name = ext.name;
+            const index = this.extensions.findIndex(item => item.name === name);
+            if (index !== -1) {
+                this.extensions.splice(index, 1);
+                return true;
+            }
         }
         return false;
     }

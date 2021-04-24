@@ -345,8 +345,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public visibleElement(element: HTMLElement, sessionId: string, pseudoElt?: PseudoElt): boolean {
         let style: CSSStyleDeclaration,
-            width: number,
-            height: number,
+            width = 1,
+            height = 1,
             display: string;
         if (!pseudoElt) {
             style = getStyle(element);
@@ -370,8 +370,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             if (display === 'none') {
                 return false;
             }
-            width = 1;
-            height = 1;
         }
         if (width && height) {
             return style.visibility === 'visible' || !hasCoords(style.position);
