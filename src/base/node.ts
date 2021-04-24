@@ -68,7 +68,7 @@ function parseLineHeight(value: string, fontSize: number) {
     return !isNaN(n) ? n * fontSize : parseUnit(value, { fontSize });
 }
 
-function isFontFixedWidth(node: T) {
+function isFixedFont(node: T) {
     const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
     return fontFirst === 'monospace' && fontSecond !== 'monospace';
 }
@@ -234,7 +234,7 @@ function checkReadOnly(element: HTMLInputElement, value: boolean) {
     return true;
 }
 
-function validateQuerySelector(this: T, selector: QueryData, child?: T) {
+function validateSelector(this: T, selector: QueryData, child?: T) {
     if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
         return false;
     }
@@ -641,7 +641,7 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
             }
             if (notData) {
                 notData.fromNot = true;
-                if (validateQuerySelector.call(this, notData)) {
+                if (validateSelector.call(this, notData)) {
                     return false;
                 }
             }
@@ -653,18 +653,18 @@ function validateQuerySelector(this: T, selector: QueryData, child?: T) {
     return true;
 }
 
-function ascendQuerySelector(this: T, selectors: QueryData[], index: number, nodes: T[], offset: number, checked?: string): boolean {
+function ascendSelector(this: T, selectors: QueryData[], index: number, nodes: T[], offset: number, checked?: string): boolean {
     const selector = selectors[index];
     const selectorAdjacent = index > 0 && selectors[--index];
     const adjacent = selector.adjacent;
     const next: T[] = [];
     for (let i = 0, length = nodes.length; i < length; ++i) {
         const child = nodes[i];
-        if (checked || selector.all || validateQuerySelector.call(child, selector)) {
+        if (checked || selector.all || validateSelector.call(child, selector)) {
             let parent = child.actualParent;
             if (adjacent) {
                 if (adjacent === '>') {
-                    if (!next.includes(parent!) && (selectorAdjacent && (selectorAdjacent.all || validateQuerySelector.call(parent!, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
+                    if (!next.includes(parent!) && (selectorAdjacent && (selectorAdjacent.all || validateSelector.call(parent!, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
                         next.push(parent!);
                     }
                 }
@@ -673,7 +673,7 @@ function ascendQuerySelector(this: T, selectors: QueryData[], index: number, nod
                     switch (adjacent) {
                         case '+': {
                             const j = children.indexOf(child) - 1;
-                            if (j >= 0 && (selectorAdjacent.all || validateQuerySelector.call(children[j], selectorAdjacent))) {
+                            if (j >= 0 && (selectorAdjacent.all || validateSelector.call(children[j], selectorAdjacent))) {
                                 next.push(children[j]);
                             }
                             break;
@@ -684,7 +684,7 @@ function ascendQuerySelector(this: T, selectors: QueryData[], index: number, nod
                                 if (sibling === child) {
                                     break;
                                 }
-                                else if (selectorAdjacent.all || validateQuerySelector.call(sibling, selectorAdjacent)) {
+                                else if (selectorAdjacent.all || validateSelector.call(sibling, selectorAdjacent)) {
                                     next.push(sibling);
                                 }
                             }
@@ -694,7 +694,7 @@ function ascendQuerySelector(this: T, selectors: QueryData[], index: number, nod
             }
             else if (selectorAdjacent) {
                 while (parent && parent.depth - this.depth >= index + offset) {
-                    if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
+                    if (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent)) {
                         next.push(parent);
                     }
                     parent = parent.actualParent;
@@ -705,7 +705,7 @@ function ascendQuerySelector(this: T, selectors: QueryData[], index: number, nod
             }
         }
     }
-    return next.length > 0 && (index === 0 ? true : ascendQuerySelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
+    return next.length > 0 && (index === 0 ? true : ascendSelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
 }
 
 function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions) {
@@ -769,16 +769,6 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
         }
     });
     return result || node;
-}
-
-function getQueryLength(value: string) {
-    let result = 0;
-    for (let i = 0, length = value.length; i < length; ++i) {
-        if (!isSpace(value[i])) {
-            ++result;
-        }
-    }
-    return result;
 }
 
 function getBoundsSize(node: T, options?: NodeParseUnitOptions) {
@@ -1797,13 +1787,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                     else {
                         CSS.SELECTOR_G.lastIndex = 0;
-                        let selector = '',
+                        let position = -1,
                             adjacent = '',
+                            segment: string,
                             match: Null<RegExpExecArray>;
                         while (match = CSS.SELECTOR_G.exec(query)) {
-                            let segment = match[1];
-                            selector += segment;
-                            switch (segment) {
+                            if (match.index > position + 1) {
+                                break invalid;
+                            }
+                            position = match.index + match[0].length;
+                            switch (segment = match[1]) {
                                 case '+':
                                 case '~':
                                     --offset;
@@ -1815,15 +1808,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     continue;
                                 case '*':
                                 case '*|*':
-                                    if (match.index) {
-                                        if (match[0][0] !== ' ') {
-                                            break invalid;
-                                        }
-                                    }
-                                    else {
-                                        start = true;
-                                    }
                                     q = selectors.push({ all: true, adjacent });
+                                    start = true;
                                     adjacent = '';
                                     continue;
                                 case ':root':
@@ -1941,7 +1927,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             });
                             adjacent = '';
                         }
-                        if (getQueryLength(query) !== getQueryLength(selector)) {
+                        if (position < query.length) {
                             continue;
                         }
                     }
@@ -1973,7 +1959,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             const items = queryMap[j];
                             for (let k = 0, s = items.length; k < s; ++k) {
                                 const node = items[k];
-                                if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
+                                if ((all || !result.includes(node)) && ascendSelector.call(this, selectors, q - 1, [node], offset)) {
                                     result.push(node);
                                 }
                             }
@@ -3054,13 +3040,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.styleElement) {
-                    const fixedWidth = isFontFixedWidth(this);
+                    const fixedWidth = isFixedFont(this);
                     let value = convertFontSize(this.valueOf('fontSize'), fixedWidth);
                     if (isNaN(result = asPx(value)) && !isNaN(result = asPercent(value))) {
                         const parent = this.actualParent;
                         if (parent) {
                             result *= parent.fontSize;
-                            if (fixedWidth && !isFontFixedWidth(parent)) {
+                            if (fixedWidth && !isFixedFont(parent)) {
                                 result *= 13 / getRemSize();
                             }
                         }
@@ -3113,7 +3099,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             else {
-                const options = { fixedWidth: isFontFixedWidth(this) };
+                const options = { fixedWidth: isFixedFont(this) };
                 result = parseUnit(this.css('fontSize'), options) || (this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', options));
             }
             this._cache.fontSize = result;
