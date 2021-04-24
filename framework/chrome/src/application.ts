@@ -222,7 +222,13 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                         const current = type === 'object' ? JSON.stringify(param) : param as string;
                         let output = current;
                         for (const [pattern, value] of paramMap.values()) {
-                            output = output.replace(pattern, value);
+                            output = output.replace(pattern, (...capture: string[]) => {
+                                const quote = capture[1];
+                                if (quote) {
+                                    return quote + value.replace(new RegExp(capture[1], 'g'), '\\' + quote) + quote;
+                                }
+                                return value;
+                            });
                         }
                         if (output !== current) {
                             if (type === 'object') {
@@ -240,7 +246,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     return param;
                 };
                 if (location.href.indexOf('?') !== -1) {
-                    new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`\\{\\{\\s*${escapePattern(key)}\\s*\\}\\}`, 'g'), value]));
+                    new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`(["'])?\\{\\{\\s*${escapePattern(key)}\\s*\\}\\}\\1`, 'g'), value]));
                 }
                 for (const item of commands) {
                     if (item.selector) {
