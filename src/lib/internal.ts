@@ -19,16 +19,15 @@ const SPEC_NOT = /^:not\((.+)\)$/;
 updateDocumentFont();
 
 function calculateSpecificity(value: string) {
-    let result = splitEnclosing(value, ':not').reduce((a, b) => {
-        const match = SPEC_NOT.exec(b);
-        if (match) {
-            a += getSelectorValue(match[1]);
+    const result: Specificity = [0, 0, 0];
+    let match: Null<RegExpExecArray>;
+    splitEnclosing(value, ':not').forEach(seg => {
+        if (seg[0] === ':' && (match = SPEC_NOT.exec(seg))) {
+            addSpecificity(result, getSelectorValue(match[1]));
             value = spliceString(value, match.index, match[0].length);
         }
-        return a;
-    }, 0);
+    });
     CSS.SELECTOR_G.lastIndex = 0;
-    let match: Null<RegExpExecArray>;
     while (match = CSS.SELECTOR_G.exec(value)) {
         let segment = match[1];
         if (segment.length === 1) {
@@ -46,49 +45,61 @@ function calculateSpecificity(value: string) {
             }
             segment = segment.substring(2);
         }
-        let subMatch: Null<RegExpExecArray>;
-        while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
-            if (subMatch[1]) {
-                result += 1;
+        let partial: Null<RegExpExecArray>;
+        const removeUsed = () => segment = spliceString(segment, partial!.index, partial![0].length);
+        while (partial = CSS.SELECTOR_ATTR.exec(segment)) {
+            if (partial[1]) {
+                ++result[2];
             }
-            if (subMatch[3] || subMatch[4] || subMatch[5]) {
-                result += 10;
+            if (partial[3] || partial[4] || partial[5]) {
+                ++result[1];
             }
-            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+            removeUsed();
         }
-        while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
-            result += 1;
-            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+        while (partial = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
+            ++result[2];
+            removeUsed();
         }
-        while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-            result += 10;
-            segment = spliceString(segment, subMatch.index, subMatch[0].length);
+        while (partial = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
+            ++result[1];
+            removeUsed();
         }
-        while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
-            const label = subMatch[0];
+        while (partial = CSS.SELECTOR_LABEL.exec(segment)) {
+            const label = partial[0];
             switch (label[0]) {
                 case '#':
-                    result += 100;
+                    ++result[0];
                     break;
                 case '.':
-                    result += 10;
+                    ++result[1];
                     break;
                 default:
-                    result += 1;
+                    ++result[2];
                     break;
             }
-            segment = spliceString(segment, subMatch.index, label.length);
+            removeUsed();
         }
     }
     return result;
 }
 
 function getSelectorValue(value: string) {
-    let result = 0;
+    let result: Undef<Specificity>;
     for (const part of parseSelectorText(value)) {
-        result = Math.max(result, calculateSpecificity(part));
+        const seg = calculateSpecificity(part);
+        if (compareSpecificity(seg, result)) {
+            result = seg;
+        }
     }
     return result;
+}
+
+function addSpecificity(value: Specificity, other: Undef<Specificity>) {
+    if (other) {
+        for (let i = 0; i < 3; ++i) {
+            value[i]! += other[i]!;
+        }
+    }
 }
 
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
@@ -1457,37 +1468,58 @@ export function getInitialValue(element: Element, attr: CssStyleAttr) {
     return '';
 }
 
-export function getSpecificity(value: string) {
-    let result = 0;
-    for (const seg of splitEnclosing(value, SPEC_GROUP)) {
-        if (seg[0] === ':') {
-            if (startsWith(seg, ':where(')) {
-                continue;
-            }
-            else {
-                const match = SPEC_IS.exec(seg);
-                if (match) {
-                    result += getSelectorValue(match[1]);
-                    continue;
+export function compareSpecificity(value: Specificity, preceding: Undef<Specificity>) {
+    if (preceding) {
+        const j = value.length;
+        const k = preceding.length;
+        if (k > j) {
+            return false;
+        }
+        if (j === k) {
+            for (let i = 0; i < j; ++i) {
+                if (value[i]! !== preceding[i]!) {
+                    return value[i]! > preceding[i]!;
                 }
             }
         }
-        result += calculateSpecificity(seg);
     }
-    return result;
+    return true;
+}
+
+export function getSpecificity(value: string) {
+    let result: Undef<Specificity>;
+    splitEnclosing(value, SPEC_GROUP).forEach(seg => {
+        let group: Undef<Specificity>;
+        if (seg[0] === ':') {
+            if (startsWith(seg, ':where(')) {
+                return;
+            }
+            const match = SPEC_IS.exec(seg);
+            if (match) {
+                group = getSelectorValue(match[1]);
+            }
+        }
+        group ||= calculateSpecificity(seg);
+        if (!result) {
+            result = group;
+        }
+        else {
+            addSpecificity(result, group);
+        }
+    });
+    return result || [0, 0, 0];
 }
 
 export function parseSelectorText(value: string) {
     if ((value = value.trim()).indexOf(',') !== -1) {
+        const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
         let timestamp: Undef<number>,
             removed: Undef<string[]>;
-        const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
         for (let i = 0; i < segments.length; ++i) {
             const seg = segments[i];
             if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
-                timestamp ||= Date.now();
                 (removed ||= []).push(seg);
-                segments[i] = timestamp + '-' + (removed.length - 1);
+                segments[i] = (timestamp ||= Date.now()) + '-' + (removed.length - 1);
             }
         }
         if (removed) {

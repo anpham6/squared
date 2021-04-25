@@ -891,9 +891,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 for (let i = 0; i < length; ++i) {
                                     const attr = style[i];
                                     const baseAttr = convertCamelCase(attr);
-                                    if ((specificity[baseAttr]! | 0) <= 1000) {
+                                    const values = specificity[baseAttr];
+                                    if (!values || values.length < 5) {
                                         styleMap[baseAttr] = style.getPropertyValue(attr);
-                                        specificity[baseAttr] = 1000;
+                                        specificity[baseAttr] = [1, 0, 0, 0];
                                     }
                                 }
                             }
@@ -1416,12 +1417,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public cssSpecificity(attr: CssStyleAttr) {
         if (this.styleElement) {
-            const styleData = !this.pseudoElt ? this._elementData?.styleSpecificity : this.actualParent?.elementData?.['styleSpecificity' + this.pseudoElt] as Undef<ObjectMap<number>>;
+            const styleData = !this.pseudoElt ? this._elementData?.styleSpecificity : this.actualParent?.elementData?.['styleSpecificity' + this.pseudoElt] as Undef<ObjectMap<Specificity>>;
             if (styleData) {
-                return styleData[attr] || 0;
+                return styleData[attr];
             }
         }
-        return 0;
     }
 
     public cssTry(attr: CssStyleAttr, value: string, callback?: FunctionBind<this>) {
@@ -1834,9 +1834,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     break;
                             }
                             let attrList: Undef<QueryAttribute[]>,
-                                subMatch: Null<RegExpExecArray>;
-                            while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
-                                let key = subMatch[1].replace('\\:', ':').toLowerCase(),
+                                partial: Null<RegExpExecArray>;
+                            const removeUsed = () => segment = spliceString(segment, partial!.index, partial![0].length);
+                            while (partial = CSS.SELECTOR_ATTR.exec(segment)) {
+                                let key = partial[1].replace('\\:', ':').toLowerCase(),
                                     trailing: Undef<boolean>;
                                 switch (key.indexOf('|')) {
                                     case -1:
@@ -1850,19 +1851,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     default:
                                         break invalid;
                                 }
-                                const ignoreCase = subMatch[6] === 'i';
-                                let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
+                                const ignoreCase = partial[6] === 'i';
+                                let attrValue = partial[3] || partial[4] || partial[5] || '';
                                 if (ignoreCase) {
                                     attrValue = attrValue.toLowerCase();
                                 }
                                 (attrList ||= []).push({
                                     key,
-                                    symbol: subMatch[2],
+                                    symbol: partial[2],
                                     value: attrValue,
                                     trailing,
                                     ignoreCase
                                 });
-                                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                removeUsed();
                             }
                             if (segment.indexOf('::') !== -1) {
                                 break invalid;
@@ -1870,13 +1871,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             let notList: Undef<string[]>,
                                 pseudoList: Undef<string[]>;
                             if (notIndex) {
-                                while (subMatch = REGEXP_NOTINDEX.exec(segment)) {
-                                    (notList ||= []).push(notIndex[subMatch[1].length - 1]);
-                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                while (partial = REGEXP_NOTINDEX.exec(segment)) {
+                                    (notList ||= []).push(notIndex[partial[1].length - 1]);
+                                    removeUsed();
                                 }
                             }
-                            while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-                                const pseudoClass = subMatch[0].toLowerCase();
+                            while (partial = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
+                                const pseudoClass = partial[0].toLowerCase();
                                 switch (pseudoClass) {
                                     case ':root':
                                     case ':scope':
@@ -1885,13 +1886,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         (pseudoList ||= []).push(pseudoClass);
                                         break;
                                 }
-                                segment = spliceString(segment, subMatch.index, pseudoClass.length);
+                                removeUsed();
                             }
                             let tagName: Undef<string>,
                                 id: Undef<string>,
                                 classList: Undef<string[]>;
-                            while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
-                                const label = subMatch[0];
+                            while (partial = CSS.SELECTOR_LABEL.exec(segment)) {
+                                const label = partial[0];
                                 switch (label[0]) {
                                     case '#': {
                                         const subId = label.substring(1);
@@ -1911,7 +1912,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                         tagName = label.toUpperCase();
                                         break;
                                 }
-                                segment = spliceString(segment, subMatch.index, label.length);
+                                removeUsed();
                             }
                             if (q === 0 && (notList || pseudoList)) {
                                 start = true;

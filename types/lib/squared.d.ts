@@ -233,7 +233,8 @@ declare module "lib" {
         function getPropertiesAsTraits(...values: number[]): ObjectMap<CssPropertyData>;
         function getInitialValue(element: Element, attr: CssStyleAttr): string;
         function parseSelectorText(value: string): string[];
-        function getSpecificity(value: string): number;
+        function getSpecificity(value: string): Specificity;
+        function compareSpecificity(value: Specificity, preceding: Undef<Specificity>): boolean;
         function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot): Null<VoidFunction>;
     }
 

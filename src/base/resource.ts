@@ -497,7 +497,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             return [data as ImageAsset];
         }
         const result: ImageAsset[] = [];
-        for (const seg of splitEnclosing(value, 'url')) {
+        splitEnclosing(value, 'url').forEach(seg => {
             const url = resolveURL(seg);
             if (url) {
                 const image = this.getImage(resourceId, url);
@@ -505,7 +505,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     result.push(image);
                 }
             }
-        }
+        });
         return result;
     }
 

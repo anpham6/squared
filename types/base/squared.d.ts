@@ -434,7 +434,7 @@ declare module "base" {
         cssAny(attr: CssStyleAttr, values: string[], options?: CssAnyOptions): boolean;
         cssAscend(attr: CssStyleAttr, options?: CssAscendOptions): string;
         cssSort(attr: CssStyleAttr, options?: CssSortOptions): Node[];
-        cssSpecificity(attr: CssStyleAttr): number;
+        cssSpecificity(attr: CssStyleAttr): Undef<Specificity>;
         cssParent(attr: CssStyleAttr, value?: string, cache?: boolean): string;
         cssUnit(attr: CssStyleAttr, options?: CssUnitOptions): number;
         cssAsTuple(...attrs: CssStyleAttr[]): string[];

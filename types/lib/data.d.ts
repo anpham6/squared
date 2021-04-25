@@ -28,7 +28,7 @@ interface ElementData {
     node?: unknown;
     style?: CSSStyleDeclaration;
     styleMap?: CssStyleMap;
-    styleSpecificity?: ObjectMap<number>;
+    styleSpecificity?: ObjectMap<Specificity>;
     'style::before'?: CSSStyleDeclaration;
     'style::after'?: CSSStyleDeclaration;
     'styleMap::before'?: CssStyleMap;

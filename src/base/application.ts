@@ -14,7 +14,7 @@ type ElementSettings = squared.base.ElementSettings;
 type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
-const { CSS_PROPERTIES, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule, parseSelectorText } = squared.lib.internal;
+const { CSS_PROPERTIES, compareSpecificity, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule, parseSelectorText } = squared.lib.internal;
 const { FILE, STRING } = squared.lib.regex;
 
 const { getElementCache, newSessionInit, setElementCache } = squared.lib.session;
@@ -621,33 +621,26 @@ export default abstract class Application<T extends Node> implements squared.bas
                         if (!hostElement) {
                             continue;
                         }
-                        let valid = false;
-                        if (selector === ':host') {
-                            valid = true;
-                        }
-                        else {
-                            const host = REGEXP_CSSHOST.exec(selector);
-                            if (host) {
-                                if (host[1] === '*') {
-                                    valid = true;
-                                }
-                                else {
-                                    const result = document.querySelectorAll(host[1] === 'host' ? hostElement.tagName + host[1] : host[1] + ' ' + hostElement.tagName);
-                                    for (let i = 0, length = result.length; i < length; ++i) {
-                                        if (result[i] === hostElement) {
-                                            valid = true;
-                                            break;
+                        valid: {
+                            if (selector !== ':host') {
+                                const host = REGEXP_CSSHOST.exec(selector);
+                                if (host) {
+                                    if (host[1] === '*') {
+                                        break valid;
+                                    }
+                                    else {
+                                        const result = document.querySelectorAll(host[1] === 'host' ? hostElement.tagName + host[1] : host[1] + ' ' + hostElement.tagName);
+                                        for (let i = 0, length = result.length; i < length; ++i) {
+                                            if (result[i] === hostElement) {
+                                                break valid;
+                                            }
                                         }
                                     }
                                 }
+                                continue;
                             }
                         }
-                        if (valid) {
-                            elements = [hostElement];
-                        }
-                        else {
-                            continue;
-                        }
+                        elements = [hostElement];
                     }
                     else {
                         elements = (queryRoot || documentRoot).querySelectorAll(selector || '*');
@@ -668,11 +661,18 @@ export default abstract class Application<T extends Node> implements squared.bas
                         const element = elements[i];
                         const styleData = getElementCache<CssStyleMap>(element, attrStyle, sessionId);
                         if (styleData) {
-                            const specificityData = getElementCache<ObjectMap<number>>(element, attrSpecificity, sessionId)!;
+                            const specificityData = getElementCache<ObjectMap<Specificity>>(element, attrSpecificity, sessionId)!;
+                            let revised: Specificity;
                             for (const attr in baseMap) {
-                                const previous = specificityData[attr];
-                                const revised = specificity + (important && important[attr] ? 2000 : 0);
-                                if (!previous || revised >= previous) {
+                                if (important && important[attr]) {
+                                    const values = specificity.slice(0) as Specificity;
+                                    values.splice(0, 0, 1, 0);
+                                    revised = values;
+                                }
+                                else {
+                                    revised = specificity;
+                                }
+                                if (compareSpecificity(revised, specificityData[attr])) {
                                     styleData[attr] = baseMap[attr];
                                     specificityData[attr] = revised;
                                 }
@@ -680,9 +680,16 @@ export default abstract class Application<T extends Node> implements squared.bas
                         }
                         else {
                             const style = { ...baseMap };
-                            const specificityData: ObjectMap<number> = {};
+                            const specificityData: ObjectMap<Specificity> = {};
                             for (const attr in style) {
-                                specificityData[attr] = specificity + (important && important[attr] ? 2000 : 0);
+                                if (important && important[attr]) {
+                                    const values = specificity.slice(0) as Specificity;
+                                    values.splice(0, 0, 1, 0);
+                                    specificityData[attr] = values;
+                                }
+                                else {
+                                    specificityData[attr] = specificity;
+                                }
                             }
                             setElementCache(element, 'sessionId', sessionId);
                             setElementCache(element, attrStyle, style, sessionId);
