@@ -292,7 +292,7 @@ parseDocumentSync(...elements: (Element | string)[]) // Skips preloadImages and 
 
 latest(count?: number) // Most recent parseDocument session ids (1 newest / -1 oldest: string, other: string[])
 
-close() // Close current session preceding document write (android)
+close() // Close current session (optional)
 save() // Save current session to a new archive using default settings
 reset() // Clear cache and reopen new session
 

@@ -169,7 +169,7 @@ declare module "base" {
         static readonly KEY_NAME: string;
         readonly application: Application<T>;
         readonly localSettings: ControllerSettings;
-        init(resourceId: number): void;
+        init(): void;
         reset(): void;
         resolveUserSettings(processing: squared.base.AppProcessing<T>): void;
         sortInitialCache(cache: NodeList<T>): void;

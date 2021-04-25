@@ -17,9 +17,11 @@ export default class Controller<T extends Node> implements squared.base.Controll
 
     private _sessionId = 0;
 
-    constructor(public readonly application: Application<T>) {}
+    constructor(public readonly application: Application<T>) {
+        this.init();
+    }
 
-    public init(resourceId: number) {}
+    public init() {}
     public reset() {}
     public resolveUserSettings(processing: squared.base.AppProcessing<T>) {}
     public sortInitialCache(cache: NodeList<T>) {}

@@ -541,6 +541,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
                 const cssStyle = item.style;
+                let important: Undef<ObjectMap<boolean>>;
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
@@ -592,7 +593,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     baseMap[baseAttr] = value;
                 }
-                let important: Undef<ObjectMap<boolean>>;
                 if (cssText.indexOf('!') !== -1) {
                     important = {};
                     let property: Undef<CssPropertyData>,
@@ -865,7 +865,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (resourceHandler) {
             resourceHandler.init(resourceId);
         }
-        controllerHandler.init(resourceId);
         const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
         if (queryRoot && queryRoot !== document.documentElement) {
             this.setStyleMap(sessionId, resourceId, document, queryRoot);
@@ -895,10 +894,12 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: HTMLElement[], multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
         processing.initializing = false;
-        const controller = this.controllerHandler;
+        const { controllerHandler, extensions } = this;
         const sessionId = processing.sessionId;
         const success: T[] = [];
-        const removeStyle = controller.localSettings.adoptedStyleSheet && insertStyleSheetRule(controller.localSettings.adoptedStyleSheet);
+        const removeStyle = controllerHandler.localSettings.adoptedStyleSheet && insertStyleSheetRule(controllerHandler.localSettings.adoptedStyleSheet);
+        let enabled: Undef<Extension<T>[]>,
+            disabled: Undef<Extension<T>[]>;
         if (preloaded) {
             for (let i = 0, length = preloaded.length; i < length; ++i) {
                 const image = preloaded[i];
@@ -907,10 +908,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-        const extensions = this.extensions;
         const length = extensions.length;
-        let enabled: Undef<Extension<T>[]>,
-            disabled: Undef<Extension<T>[]>;
         if (length) {
             enabled = [];
             for (let i = 0, ext: Extension<T>; i < length; ++i) {
@@ -925,7 +923,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (let i = 0; i < rootElements.length; ++i) {
             processing.settings = processing.customSettings[i];
-            controller.resolveUserSettings(processing);
+            controllerHandler.resolveUserSettings(processing);
             if (length) {
                 const current: Extension<T>[] = [];
                 const exclude = processing.settings?.exclude;

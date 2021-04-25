@@ -1874,8 +1874,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderSpace(sessionId: string, attrs: RenderSpaceAttribute) {
-        const android = attrs.android;
-        let { width, height } = attrs,
+        let { width, height, android } = attrs, // eslint-disable-line prefer-const
             n: number;
         if (width) {
             if (!isNaN(n = asPercent(width))) {

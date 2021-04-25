@@ -187,8 +187,7 @@ export default class Container<T = unknown> implements squared.lib.base.Containe
 
     public find(predicate: IteratorPredicate<T, unknown>, options?: ContainerFindOptions<T>) {
         if (options) {
-            const { also, error, cascade } = options;
-            let { start, end, count } = options;
+            let { also, error, cascade, start, end, count } = options; // eslint-disable-line prefer-const
             start &&= Math.max(start, 0);
             end &&= Math.min(this.size(), end);
             if (!count || count < 0) {

@@ -197,10 +197,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     case 'SECTION':
                                         style.fontSize = '1.5em';
                                         break found;
-                                    default:
-                                        parent = parent.parentElement;
-                                        break;
                                 }
+                                parent = parent.parentElement;
                             }
                             style.fontSize = '2em';
                         }

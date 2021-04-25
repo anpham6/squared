@@ -245,7 +245,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     }
                     return param;
                 };
-                if (location.href.indexOf('?') !== -1) {
+                if (location.search) {
                     new URLSearchParams(location.search).forEach((value, key) => paramMap.set(key, [new RegExp(`(["'])?\\{\\{\\s*${escapePattern(key)}\\s*\\}\\}\\1`, 'g'), value]));
                 }
                 for (const item of commands) {
