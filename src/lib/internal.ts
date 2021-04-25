@@ -937,8 +937,8 @@ export const CSS_PROPERTIES: CssProperties = {
     outline: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.NONE,
         value: [
-            'outlineWidth',
             'outlineStyle',
+            'outlineWidth',
             'outlineColor'
         ]
     },

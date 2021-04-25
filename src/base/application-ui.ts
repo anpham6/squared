@@ -199,6 +199,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this._controllerSettings = localSettings;
         this._excludedElements = localSettings.unsupported.excluded;
         this.setResourceId();
+        super.init();
     }
 
     public finalize() {

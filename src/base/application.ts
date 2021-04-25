@@ -126,7 +126,10 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public abstract insertNode(processing: squared.base.AppProcessing<T>, element: Element): Undef<T>;
 
-    public init() {}
+    public init() {
+        this.controllerHandler.init();
+    }
+
     public finalize() { return true; }
 
     public createNode(sessionId: string, options: CreateNodeOptions) {

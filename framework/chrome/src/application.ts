@@ -84,6 +84,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 (this._cssUnusedSupports[sessionId] ||= new Set()).add(condition);
             }
         };
+        super.init();
     }
 
     public reset() {
@@ -218,7 +219,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 const paramMap = new Map<string, [RegExp, string]>();
                 const replaceParams = (param: unknown): unknown => {
                     const type = typeof param;
-                    if (param && type !== 'number' && type !== 'boolean' && type !== 'bigint') {
+                    if (param && (type === 'object' || type === 'string')) {
                         const current = type === 'object' ? JSON.stringify(param) : param as string;
                         let output = current;
                         for (const [pattern, value] of paramMap.values()) {

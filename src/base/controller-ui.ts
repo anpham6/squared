@@ -220,7 +220,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     style.fontSize ||= '0.67em';
                     break;
                 case 'HR':
-                    this.setBorderStyle(style, '1px', 'inset', this._settingsStyle.hrBorderColor);
+                    this.setBorderStyle(style, 'inset', '1px', this._settingsStyle.hrBorderColor);
                     break;
                 case 'FORM':
                     style.marginTop ||= '0px';
@@ -741,7 +741,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     protected setInputStyle(style: CssStyleMap, disabled: boolean, width = '1px') {
         const settings = this._settingsStyle;
-        this.setBorderStyle(style, width, settings.inputBorderStyle, disabled ? settings.inputDisabledBorderColor : settings.inputBorderColor);
+        this.setBorderStyle(style, settings.inputBorderStyle, width, disabled ? settings.inputDisabledBorderColor : settings.inputBorderColor);
         if (hasEmptyStyle(style.backgroundColor)) {
             const backgroundColor = disabled ? settings.inputDisabledBackgroundColor : settings.inputBackgroundColor;
             if (backgroundColor) {
@@ -752,7 +752,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     protected setButtonStyle(style: CssStyleMap, disabled: boolean) {
         const settings = this._settingsStyle;
-        this.setBorderStyle(style, settings.buttonBorderWidth, settings.buttonBorderStyle, disabled ? settings.buttonDisabledBorderColor : settings.buttonBorderColor);
+        this.setBorderStyle(style, settings.buttonBorderStyle, settings.buttonBorderWidth, disabled ? settings.buttonDisabledBorderColor : settings.buttonBorderColor);
         if (hasEmptyStyle(style.backgroundColor)) {
             style.backgroundColor = disabled ? settings.buttonDisabledBackgroundColor : settings.buttonBackgroundColor;
         }
