@@ -625,7 +625,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         super.reset();
     }
 
-    public resolveUserSettings(processing: squared.base.AppProcessing<T>) {
+    public processUserSettings(processing: squared.base.AppProcessing<T>) {
         const application = this.application;
         const dpiRatio = 160 / application.getUserSetting<number>(processing, 'resolutionDPI');
         this._targetAPI[processing.sessionId] = application.getUserSetting<number>(processing, 'targetAPI') || BUILD_VERSION.LATEST;

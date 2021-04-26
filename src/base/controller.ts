@@ -6,6 +6,7 @@ const { padStart } = squared.lib.util;
 
 export default class Controller<T extends Node> implements squared.base.Controller<T> {
     public static readonly KEY_NAME = 'squared.base.controller';
+
     public readonly localSettings: ControllerSettings = {
         mimeType: {
             font: '*',
@@ -21,7 +22,7 @@ export default class Controller<T extends Node> implements squared.base.Controll
 
     public init() {}
     public reset() {}
-    public resolveUserSettings(processing: squared.base.AppProcessing<T>) {}
+    public processUserSettings(processing: squared.base.AppProcessing<T>) {}
     public sortInitialCache(cache: NodeList<T>) {}
     public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element, pseudoElt?: PseudoElt) {}
     public includeElement(element: HTMLElement) { return true; }

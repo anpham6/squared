@@ -933,7 +933,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (let i = 0; i < rootElements.length; ++i) {
             processing.settings = processing.customSettings[i];
-            controllerHandler.resolveUserSettings(processing);
+            controllerHandler.processUserSettings(processing);
             if (length) {
                 const current: Extension<T>[] = [];
                 const exclude = processing.settings?.exclude;

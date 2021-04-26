@@ -103,7 +103,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element) {
-        if (element.nodeName.charAt(0) === '#') {
+        if (element.nodeName[0] === '#') {
             setElementCache(element, 'styleMap', {
                 position: 'static',
                 display: 'inline',
@@ -348,8 +348,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             display: string;
         if (!pseudoElt) {
             style = getStyle(element);
-            display = style.display;
-            if (display !== 'none') {
+            if ((display = style.display) !== 'none') {
                 const bounds = element.getBoundingClientRect();
                 if (!withinViewport(bounds)) {
                     return false;
@@ -364,8 +363,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             const parentElement = getParentElement(element);
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
-            display = style.display;
-            if (display === 'none') {
+            if ((display = style.display) === 'none') {
                 return false;
             }
         }
@@ -384,7 +382,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
         switch (element.tagName) {
             case 'IMG':
-                return display !== 'none';
             case 'SLOT':
                 return true;
         }

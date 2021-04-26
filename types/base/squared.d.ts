@@ -171,7 +171,7 @@ declare module "base" {
         readonly localSettings: ControllerSettings;
         init(): void;
         reset(): void;
-        resolveUserSettings(processing: squared.base.AppProcessing<T>): void;
+        processUserSettings(processing: squared.base.AppProcessing<T>): void;
         sortInitialCache(cache: NodeList<T>): void;
         includeElement(element: HTMLElement): boolean;
         applyDefaultStyles(processing: AppProcessing<T>, element: Element, pseudoElt?: PseudoElt): void;
