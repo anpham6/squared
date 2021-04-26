@@ -840,7 +840,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _naturalElements: Null<T[]> = null;
     protected _childIndex = Infinity;
     protected _elementData: Null<ElementData> = null;
-    protected _textBounds?: Null<BoxRectDimension>;
     protected readonly _element: Null<Element>;
 
     private _style: Null<CSSStyleDeclaration> = null;
@@ -1662,7 +1661,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         else if (this.plainText) {
             const rect = getRangeClientRect(this._element!);
             if (rect) {
-                this._textBounds = rect;
+                this._cacheState.textBounds = rect;
                 this._cache.multiline = rect.numberOfLines! > 1;
             }
             bounds = rect || newBoxRectDimension();
@@ -1680,7 +1679,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public resetBounds(recalibrate?: boolean) {
         if (!recalibrate) {
             this._bounds = null;
-            this._textBounds = undefined;
+            this._cacheState.textBounds = undefined;
             this._cache.multiline = undefined;
         }
         this._box = null;
@@ -2226,7 +2225,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get dataset(): DOMStringMap {
-        return this._dataset ||= this.styleElement ? (this._element as HTMLElement).dataset : {};
+        return this.naturalElement ? (this._element as HTMLElement).dataset : this._dataset ||= {};
     }
 
     get documentBody() {
@@ -2679,11 +2678,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    set textBounds(value) {
-        this._textBounds = value;
-    }
     get textBounds() {
-        let result = this._textBounds;
+        let result = this._cacheState.textBounds;
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.textElement) {
@@ -2722,7 +2718,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     }
                 }
             }
-            return this._textBounds = result || null;
+            return this._cacheState.textBounds = result || null;
         }
         return result;
     }

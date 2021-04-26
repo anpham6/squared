@@ -244,12 +244,12 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
                     container.contentAltered = true;
                     container.textContent = value;
                     container.actualParent = parentContainer;
-                    container.textBounds = bounds;
                     container.unsafe({ element, initial, elementData, preferInitial: false, bounds });
                     container.setCacheState('naturalChild', false);
                     container.setCacheState('naturalElement', naturalElement && !isNaN(columns));
                     container.setCacheState('htmlElement', naturalElement);
                     container.setCacheState('styleElement', naturalElement);
+                    container.setCacheState('textBounds', bounds);
                     container.setCacheValue('tagName', tagName);
                     container.setCacheValue('fontSize', fontSize);
                     container.setCacheValue('lineHeight', lineHeight);

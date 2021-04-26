@@ -81,6 +81,7 @@ interface CacheState<T> {
     wrapperOf?: Null<T>;
     textContent?: string;
     textEmpty?: boolean;
+    textBounds?: Null<BoxRectDimension>;
     firstLineStyle?: Null<CssStyleMap>;
     firstLetterStyle?: Null<CssStyleMap>;
     dir?: string;

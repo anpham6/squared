@@ -477,7 +477,6 @@ declare module "base" {
         get dir(): string;
         set inlineText(value);
         get inlineText(): boolean;
-        set textBounds(value);
         get textBounds(): Null<BoxRectDimension>;
         get box(): BoxRectDimension;
         get bounds(): BoxRectDimension;

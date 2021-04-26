@@ -55,7 +55,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _requireFormat = false;
     private _unsupportedCascade!: string[];
     private _unsupportedTagName!: string[];
-    private _innerXmlTags!: string[];
+    private _layoutInnerXmlTags!: string[];
     private _settingsStyle!: ControllerSettingsStyleUI;
 
     public abstract processUnknownParent(layout: LayoutUI<T>): void;
@@ -79,11 +79,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract get containerTypePercent(): LayoutType;
 
     public init() {
-        const { cascade, tagName } = this.localSettings.unsupported;
-        this._unsupportedCascade = cascade;
-        this._unsupportedTagName = tagName;
-        this._innerXmlTags = this.localSettings.layout.innerXmlTags;
-        this._settingsStyle = this.localSettings.style;
+        const { unsupported, style, layout } = this.localSettings;
+        this._unsupportedCascade = unsupported.cascade;
+        this._unsupportedTagName = unsupported.tagName;
+        this._settingsStyle = style;
+        this._layoutInnerXmlTags = layout.innerXmlTags;
     }
 
     public preventNodeCascade(node: T) {
@@ -714,7 +714,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         this.getBeforeOutsideTemplate(node, previous) + indent +
                         '<' + controlName + (depth === 0 ? '{#0}' : '') +
                         (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
-                        (renderTemplates || beforeInside || afterInside || this._innerXmlTags.includes(controlName)
+                        (renderTemplates || beforeInside || afterInside || this._layoutInnerXmlTags.includes(controlName)
                             ? '>\n' +
                                 beforeInside +
                                 (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next, showAttributes) : '') +
@@ -733,7 +733,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public getEnclosingXmlTag(controlName: string, attributes = '', content = '') {
-        return '<' + controlName + attributes + (content || this._innerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
+        return '<' + controlName + attributes + (content || this._layoutInnerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
     protected setInputStyle(style: CssStyleMap, disabled: boolean, width = '1px') {
