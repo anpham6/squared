@@ -314,11 +314,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
         if (stored.themes.size) {
             const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
-            const appTheme: ObjectMap<boolean> = {};
+            const appTheme = new Set<string>();
             for (const [filename, themes] of stored.themes) {
                 const itemArray: ItemData[] = [];
                 for (const [themeName, themeData] of themes) {
-                    if (!appTheme[filename] || themeName !== manifestThemeName) {
+                    if (!appTheme.has(filename) || themeName !== manifestThemeName) {
                         const themeArray: ItemValue[] = [];
                         const items = themeData.items;
                         for (const name in items) {
@@ -327,7 +327,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         itemArray.push({ name: themeName, parent: themeData.parent, item: themeArray });
                     }
                     if (themeName === manifestThemeName) {
-                        appTheme[filename] = true;
+                        appTheme.add(filename);
                     }
                 }
                 if (itemArray.length) {

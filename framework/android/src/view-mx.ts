@@ -577,16 +577,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _containerType = 0;
         protected _cache!: CacheValueUI;
         protected _localSettings!: LocalSettingsUI;
-        protected _styleMap!: CssStyleMap;
         protected _boxReset!: Null<number[]>;
         protected _boxAdjustment!: Null<number[]>;
-        protected _innerWrapped?: T;
 
         private _controlId = '';
         private _positioned = false;
         private _anchored = false;
         private _constraint: Null<Constraint> = null;
         private _labelFor?: T;
+        private _innerWrapped?: T;
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;

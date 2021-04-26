@@ -544,7 +544,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const hostElement = (documentRoot as ShadowRoot).host as Undef<Element>;
                 const baseMap: CssStyleMap = {};
                 const cssStyle = item.style;
-                let important: Undef<ObjectMap<boolean>>;
+                let important: Undef<Set<string>>;
                 for (let i = 0, length = cssStyle.length; i < length; ++i) {
                     const attr = cssStyle[i];
                     const baseAttr = convertCamelCase(attr) as CssStyleAttr;
@@ -597,7 +597,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     baseMap[baseAttr] = value;
                 }
                 if (cssText.indexOf('!') !== -1) {
-                    important = {};
+                    important = new Set();
                     let property: Undef<CssPropertyData>,
                         match: Null<RegExpExecArray>;
                     while (match = REGEXP_IMPORTANT.exec(cssText)) {
@@ -606,7 +606,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             property.value.forEach(subAttr => important![subAttr] = true);
                         }
                         else {
-                            important[attr] = true;
+                            important.add(attr);
                         }
                     }
                     REGEXP_IMPORTANT.lastIndex = 0;
@@ -664,7 +664,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const specificityData = getElementCache<ObjectMap<Specificity>>(element, attrSpecificity, sessionId)!;
                             let revised: Specificity;
                             for (const attr in baseMap) {
-                                if (important && important[attr]) {
+                                if (important && important.has(attr)) {
                                     const values = specificity.slice(0) as Specificity;
                                     values.splice(0, 0, 1, 0);
                                     revised = values;
@@ -682,7 +682,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             const style = { ...baseMap };
                             const specificityData: ObjectMap<Specificity> = {};
                             for (const attr in style) {
-                                if (important && important[attr]) {
+                                if (important && important.has(attr)) {
                                     const values = specificity.slice(0) as Specificity;
                                     values.splice(0, 0, 1, 0);
                                     specificityData[attr] = values;
