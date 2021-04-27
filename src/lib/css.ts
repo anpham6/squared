@@ -353,7 +353,7 @@ function getInnerDimension(horizontal: boolean, options?: ParseUnitOptions) {
 const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
 const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
-const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
+const isColor = (value: string) => /(?:rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
@@ -3136,35 +3136,35 @@ export function calculate(value: string, options?: CalculateOptions) {
         value = `(${value})`;
         length += 2;
     }
-    const opening: boolean[] = [];
+    const opening: number[] = [];
     const closing: number[] = [];
-    let opened = 0;
     for (let i = 0; i < length; ++i) {
         switch (value[i]) {
             case '(':
-                ++opened;
-                opening[i] = true;
+                opening.push(i);
                 break;
             case ')':
                 closing.push(i);
                 break;
         }
     }
-    if (opened === closing.length) {
-        const equated: number[] = [];
+    if (opening.length === closing.length) {
+        const equated: [number, Undef<NumString>][] = [];
         let index = 0;
         do {
             for (let i = 0; i < closing.length; ++i) {
                 let valid: Undef<boolean>,
-                    j = closing[i] - 1;
+                    j = closing[i] - 1,
+                    l = i;
                 for ( ; j >= 0; j--) {
-                    if (opening[j]) {
-                        opening[j] = false;
+                    const k = opening.indexOf(j);
+                    if (k !== -1) {
+                        opening[k] = NaN;
                         valid = true;
                         break;
                     }
                     else if (closing.includes(j)) {
-                        break;
+                        l = j;
                     }
                 }
                 if (valid) {
@@ -3181,7 +3181,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                         operator: Undef<string>;
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    const operation = value.substring(j + 1, closing[i]).split(REGEXP_CALCOPERATION);
+                    const operation = value.substring(j + 1, closing[l]).split(REGEXP_CALCOPERATION);
                     for (let k = 0, q = operation.length; k < q; ++k) {
                         const partial = operation[k].trim();
                         switch (partial) {
@@ -3206,8 +3206,8 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             break;
                                     }
                                     const unit = equated[+match[1]];
-                                    seg.push(unit);
-                                    operand = unit.toString();
+                                    seg.push(unit[0]);
+                                    operand = unit[1] ? unit[1].toString() : undefined;
                                     found = true;
                                 }
                                 else {
@@ -3352,11 +3352,12 @@ export function calculate(value: string, options?: CalculateOptions) {
                         const result = seg[0];
                         return min !== undefined && result < min || max !== undefined && result > max ? NaN : truncateFraction(result);
                     }
-                    equated[index] = seg[0];
+                    equated[index] = [seg[0], operand];
                     const hash = `{${index++}}`;
-                    const remaining = closing[i] + 1;
+                    const remaining = closing[l] + 1;
                     value = value.substring(0, j) + hash + ' '.repeat(remaining - (j + hash.length)) + value.substring(remaining);
-                    closing.splice(i--, 1);
+                    closing.splice(l, 1);
+                    i = -1;
                 }
             }
         }
