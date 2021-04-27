@@ -56,19 +56,22 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
 
     private _fileHandler: Null<File<T>> = null;
 
-    constructor(public readonly application: Application<T>) {}
-
-    public init(resourceId: number) {
-        const data = Resource.ASSETS[resourceId] ||= {} as ResourceAssetMap;
-        data.fonts = new Map();
-        data.image = new Map();
+    constructor(public readonly application: Application<T>) {
+        this.init();
     }
+
+    public init() {}
+    public reset() {}
 
     public clear() {
         Resource.ASSETS.length = 0;
     }
 
-    public reset() {}
+    public createThread(resourceId: number) {
+        const data = Resource.ASSETS[resourceId] ||= {} as ResourceAssetMap;
+        data.fonts = new Map();
+        data.image = new Map();
+    }
 
     public preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[], preloadImages?: boolean, preloadFonts?: boolean): [PreloadItem[], HTMLImageElement[]] {
         const assets = Resource.ASSETS[resourceId]!;

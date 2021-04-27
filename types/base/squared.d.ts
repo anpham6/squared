@@ -84,7 +84,12 @@ declare module "base" {
         clearMap: Map<T, string>;
     }
 
-    class Application<T extends Node> implements FileActionAsync, ErrorAction {
+    interface AppModule {
+        init(): void;
+        reset(): void;
+    }
+
+    class Application<T extends Node> implements AppModule, FileActionAsync, ErrorAction {
         static readonly KEY_NAME: string;
         static prioritizeExtensions<U extends Node>(value: string, extensions: Extension<U>[]): Extension<U>[];
         builtInExtensions: Map<string, Extension<T>>;
@@ -97,8 +102,8 @@ declare module "base" {
         readonly extensions: Extension<T>[];
         readonly Node: Constructor<T>;
         init(): void;
-        finalize(): boolean;
         reset(): void;
+        finalize(): boolean;
         setExtensions(namespaces?: string[]): void;
         parseDocument(...elements: RootElement[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: RootElement[]): Void<T | T[]>;
@@ -165,7 +170,7 @@ declare module "base" {
         get clearMap(): Map<T, string>;
     }
 
-    class Controller<T extends Node> implements AppHandler<T> {
+    class Controller<T extends Node> implements AppModule, AppHandler<T> {
         static readonly KEY_NAME: string;
         readonly application: Application<T>;
         readonly localSettings: ControllerSettings;
@@ -215,16 +220,17 @@ declare module "base" {
         get requireFormat(): boolean;
     }
 
-    class Resource<T extends Node> implements Resource<T>, AppHandler<T> {
+    class Resource<T extends Node> implements AppModule, AppHandler<T> {
         static readonly KEY_NAME: string;
         static readonly ASSETS: ResourceSessionAsset;
         static hasMimeType(formats: MIMEOrAll, value: string): boolean;
         static getExtension(value: string): string;
         static parseDataURI(value: string, mimeType?: string, encoding?: string): RawDataOptions;
         readonly application: Application<T>;
-        clear(): void;
+        init(): void;
         reset(): void;
-        init(resourceId: number): void;
+        clear(): void;
+        createThread(resourceId: number): void;
         preloadAssets(resourceId: number, documentRoot: HTMLElement, elements: QuerySelectorElement[], preloadImages?: boolean, preloadFonts?: boolean): [(HTMLImageElement | string)[], HTMLImageElement[]];
         parseFontFace(resourceId: number, cssText: string, styleSheetHref?: Null<string>): void;
         parseKeyFrames(resourceId: number, cssRule: CSSKeyframesRule): void;

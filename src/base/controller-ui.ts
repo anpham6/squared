@@ -41,6 +41,45 @@ function pushIndentArray(values: string[], depth: number) {
     return values.join('');
 }
 
+function setDimension(element: DimensionElement, style: CssStyleMap, attr: DimensionAttr) {
+    if (hasEmptyDimension(style[attr])) {
+        const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
+        if (match) {
+            const value = match[1];
+            if (isPercent(value)) {
+                style[attr] = value;
+                return;
+            }
+            const unit = parseFloat(value);
+            if (!isNaN(unit)) {
+                style[attr] = unit + 'px';
+                return;
+            }
+        }
+        if (element.clientWidth === 300 && element.clientHeight === 150) {
+            switch (element.tagName) {
+                case 'IMG':
+                case 'INPUT':
+                case 'SOURCE':
+                    break;
+                case 'OBJECT':
+                case 'EMBED':
+                     if ((element as HTMLObjectElement).type.startsWith('image/')) {
+                        break;
+                     }
+                default:
+                    if (attr === 'width') {
+                        style.width = '300px';
+                    }
+                    else {
+                        style.height = '150px';
+                    }
+                    break;
+            }
+        }
+    }
+}
+
 const hasEmptyStyle = (value: Undef<string>) => !value || value === 'initial';
 const hasEmptyDimension = (value: Undef<string>) => !value || value === 'auto';
 
@@ -780,9 +819,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     protected setElementDimension(resourceId: number, element: DimensionElement, style: CssStyleMap) {
-        this.setDimension(element, style, 'width');
-        this.setDimension(element, style, 'height');
-        if (!hasEmptyDimension(style.height) && hasEmptyDimension(style.width) || !hasEmptyDimension(style.width) && hasEmptyDimension(style.height)) {
+        setDimension(element, style, 'width');
+        setDimension(element, style, 'height');
+        if (!(hasEmptyDimension(style.height) && hasEmptyDimension(style.width))) {
             switch (element.tagName) {
                 case 'IMG':
                 case 'INPUT':
@@ -809,46 +848,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         }
                     }
                     break;
-                }
-            }
-        }
-    }
-
-    private setDimension(element: DimensionElement, style: CssStyleMap, attr: DimensionAttr) {
-        if (!style[attr] || style[attr] === 'auto') {
-            const horizontal = attr === 'width';
-            const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
-            if (match) {
-                const value = match[1];
-                if (isPercent(value)) {
-                    style[attr] = value;
-                    return;
-                }
-                const unit = parseFloat(value);
-                if (!isNaN(unit)) {
-                    style[attr] = unit + 'px';
-                    return;
-                }
-            }
-            if (element.clientWidth === 300 && element.clientHeight === 150) {
-                switch (element.tagName) {
-                    case 'IMG':
-                    case 'INPUT':
-                    case 'SOURCE':
-                        break;
-                    case 'OBJECT':
-                    case 'EMBED':
-                         if ((element as HTMLObjectElement).type.startsWith('image/')) {
-                            break;
-                         }
-                    default:
-                        if (horizontal) {
-                            style.width = '300px';
-                        }
-                        else {
-                            style.height = '150px';
-                        }
-                        break;
                 }
             }
         }

@@ -219,27 +219,30 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return (isLeadingDigit(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
     }
 
-    private readonly _imageFormat?: MIMEOrAll;
+    private _imageFormat?: MIMEOrAll;
 
     constructor(
         public application: Application<T>,
         public cache: squared.base.NodeList<T>)
     {
         super();
+    }
+
+    public init() {
         const mimeType = this.controllerSettings.mimeType.image;
         if (mimeType !== '*') {
             this._imageFormat = mimeType.filter(value => value !== 'image/svg+xml');
         }
     }
 
-    public init(resourceId: number) {
+    public createThread(resourceId: number) {
         const data = Resource.STORED[resourceId] ||= {} as Required<ResourceStoredMap>;
         data.styles = new Map();
         data.themes = new Map();
         data.dimens = new Map();
         data.drawables = new Map();
         data.animators = new Map();
-        super.init(resourceId);
+        super.createThread(resourceId);
     }
 
     public reset() {

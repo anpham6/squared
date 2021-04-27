@@ -873,7 +873,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         newSessionInit(sessionId);
         this.session.active.set(sessionId, processing);
         if (resourceHandler) {
-            resourceHandler.init(resourceId);
+            resourceHandler.createThread(resourceId);
         }
         const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
         if (queryRoot && queryRoot !== document.documentElement) {
