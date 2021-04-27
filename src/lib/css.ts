@@ -7,7 +7,7 @@ import { getDeviceDPI } from './client';
 import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
-import { endsWith, escapePattern, isSpace, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith, trimEnclosing } from './util';
+import { endsWith, escapePattern, isSpace, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, trimEnclosing } from './util';
 
 const ELEMENT_BLOCK = [
     'ADDRESS',
@@ -136,15 +136,13 @@ function calculateColor(element: StyleElement, value: string) {
     const color = splitEnclosing(value);
     const length = color.length;
     if (length > 1) {
-        for (let i = 1; i < length; ++i) {
-            const seg = color[i].trim();
-            if (hasCalc(seg)) {
-                const name = color[i - 1].trim();
-                if (isColor(name)) {
-                    const component = trimEnclosing(seg).split(CHAR_SEPARATOR);
+        for (let i = 1, seg: string, previous: string; i < length; i += 2) {
+            if (hasCalc(seg = color[i])) {
+                if (isColor(previous = color[i - 1])) {
+                    const component = trimEnclosing(seg.trim()).split(CHAR_SEPARATOR);
                     const q = component.length;
                     if (q >= 3) {
-                        const hsl = startsWith(name, 'hsl');
+                        const hsl = previous.indexOf('h') !== -1;
                         for (let j = 0; j < q; ++j) {
                             const rgb = component[j];
                             if (isCalc(rgb)) {
@@ -189,10 +187,9 @@ function calculateColor(element: StyleElement, value: string) {
 
 function calculateGeneric(element: StyleElement, value: string, unitType: number, min: number, boundingBox?: Null<Dimension>, dimension: DimensionAttr = 'width') {
     const segments = splitEnclosing(value, REGEXP_CALCENCLOSING);
-    for (let i = 0, length = segments.length; i < length; ++i) {
-        const seg = segments[i];
-        if (isCalc(seg)) {
-            const unit = REGEXP_LENGTH.test(seg);
+    for (let i = 0, length = segments.length, seg: string; i < length; ++i) {
+        if (isCalc(seg = segments[i])) {
+            const unit = isLength(seg);
             const result = calculateVar(element, seg, unit ? { dimension, boundingBox, min: 0, parent: false } : { unitType, min, supportPercent: false });
             if (isNaN(result)) {
                 return '';
@@ -210,28 +207,16 @@ function calculateAngle(element: StyleElement, value: string) {
     }
 }
 
-function calculatePercent(element: StyleElement, value: string, clampRange: boolean) {
+function calculatePercent(element: StyleElement, value: string, restrict?: boolean) {
     const percent = value.indexOf('%') !== -1;
     let result = calculateVar(element, value, { unitType: percent ? CSS_UNIT.PERCENT : CSS_UNIT.DECIMAL });
     if (!isNaN(result)) {
         if (percent) {
             result /= 100;
         }
-        return (clampRange ? clamp(result) : result).toString();
+        return (restrict ? clamp(result) : result).toString();
     }
     return '';
-}
-
-function getWritingMode(value?: string) {
-    if (value) {
-        switch (value) {
-            case 'vertical-lr':
-                return 1;
-            case 'vertical-rl':
-                return 2;
-        }
-    }
-    return 0;
 }
 
 function getContentBoxWidth(style: CSSStyleDeclaration) {
@@ -267,17 +252,6 @@ function checkCalculateNumber(operand: Undef<string>, operator: Undef<string>) {
                     return false;
                 }
                 break;
-        }
-    }
-    return true;
-}
-
-function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>) {
-    if (operand) {
-        switch (operator) {
-            case '+':
-            case '-':
-                return false;
         }
     }
     return true;
@@ -323,12 +297,15 @@ function checkSpaceEnd(value: string, index: number) {
     return true;
 }
 
-const getFallbackResult = (options: Undef<UnitOptions>, value: number) => options && options.fallback !== undefined ? options.fallback : value;
+const trimMethod = (value: string) => value.split(CHAR_SPACE).pop()!.toLowerCase();
+const checkCalculateOperator = (operand: Undef<string>, operator: Undef<string>) => !!operand && (operator === '+' || operator === '-');
+const getWritingMode = (value?: string) => value ? value === 'vertical-lr' ? 1 : value === 'vertical-rl' ? 2 : 1 : 0;
 const hasBorderStyle = (value: string) => value !== 'none' && value !== 'hidden';
 const calculateLength = (element: StyleElement, value: string) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
-const isColor = (value: string) => /(?:rgb|hsl)a?\(/i.test(value);
+const isColor = (value: string) => /(?:rgb|hsl)a?/i.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
+const getFallbackResult = (options: Undef<UnitOptions>, value: number) => options && options.fallback !== undefined ? options.fallback : value;
 
 export function getStyle(element: Element, pseudoElt = '') {
     let style = getElementCache<CSSStyleDeclaration>(element, 'style' + pseudoElt, '0');
@@ -700,9 +677,8 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const transform = splitEnclosing(value);
             const length = transform.length;
             if (length > 1) {
-                for (let i = 1; i < length; ++i) {
-                    let seg = transform[i];
-                    if (hasCalc(seg)) {
+                for (let i = 1, seg: string; i < length; i += 2) {
+                    if (hasCalc(seg = transform[i])) {
                         seg = trimEnclosing(seg);
                         let calc: Undef<string>;
                         switch (transform[i - 1].trim()) {
@@ -784,18 +760,16 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const image = splitEnclosing(value);
             const length = image.length;
             if (length > 1) {
-                for (let i = 1; i < length; ++i) {
-                    const color = image[i];
-                    if (isColor(color) && hasCalc(color)) {
+                for (let i = 1, color: string; i < length; i += 2) {
+                    if (!endsWith(image[i - 1], 'url') && hasCalc(color = image[i])) {
                         const component = splitEnclosing(trimEnclosing(color));
-                        for (let j = 1, q = component.length; j < q; ++j) {
+                        for (let j = 1, q = component.length, previous: string; j < q; j += 2) {
                             if (hasCalc(component[j])) {
-                                const previous = component[j - 1];
-                                if (isColor(previous)) {
-                                    const prefix = previous.split(CHAR_SPACE).pop()!;
-                                    const result = calculateColor(element, prefix + component[j]);
+                                if (isColor(previous = component[j - 1])) {
+                                    const method = trimMethod(previous);
+                                    const result = calculateColor(element, method + component[j]);
                                     if (result) {
-                                        component[j] = result.replace(prefix, '');
+                                        component[j] = result.replace(method, '');
                                         continue;
                                     }
                                 }
@@ -814,16 +788,18 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const color = splitEnclosing(value);
             const length = color.length;
             if (length > 1) {
-                for (let i = 1; i < length; ++i) {
-                    const previous = color[i - 1];
-                    if (isColor(previous) && hasCalc(color[i])) {
-                        const prefix = previous.split(CHAR_SPACE).pop()!;
-                        const result = calculateColor(element, prefix + color[i]);
+                for (let i = 1, previous: string; i < length; i += 2) {
+                    if (hasCalc(color[i])) {
+                        if (!isColor(previous = color[i - 1])) {
+                            return '';
+                        }
+                        const method = trimMethod(previous);
+                        const result = calculateColor(element, method + color[i]);
                         if (!result) {
                             return '';
                         }
                         color[i] = result;
-                        color[i - 1] = previous.substring(0, previous.length - prefix.length);
+                        color[i - 1] = previous.substring(0, previous.length - method.length);
                     }
                 }
                 return color.join('');
@@ -876,15 +852,14 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const border = splitEnclosing(value);
             const length = border.length;
             if (length > 1) {
-                for (let i = 1; i < length; ++i) {
-                    const previous = border[i - 1];
-                    const prefix = previous.split(CHAR_SPACE).pop()!.toLowerCase();
+                for (let i = 1, previous: string; i < length; i += 2) {
+                    const method = trimMethod(previous = border[i - 1]);
                     let result: string;
-                    if (prefix === 'calc') {
-                        result = formatVar(calculateVar(element, prefix + border[i], { min: 0, supportPercent: false }));
+                    if (method === 'calc') {
+                        result = formatVar(calculateVar(element, method + border[i], { min: 0, supportPercent: false }));
                     }
-                    else if (isColor(prefix)) {
-                        result = calculateColor(element, prefix + border[i]);
+                    else if (isColor(method)) {
+                        result = calculateColor(element, method + border[i]);
                     }
                     else {
                         continue;
@@ -893,7 +868,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         return '';
                     }
                     border[i] = result;
-                    border[i - 1] = previous.substring(0, previous.length - prefix.length);
+                    border[i - 1] = previous.substring(0, previous.length - method.length);
                 }
                 return border.join('');
             }
@@ -904,20 +879,18 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const timingFunction = splitEnclosing(value);
             const length = timingFunction.length;
             if (length > 1) {
-                for (let i = 1; i < length; ++i) {
-                    let seg = timingFunction[i];
-                    if (hasCalc(seg)) {
-                        const prefix = timingFunction[i - 1].trim();
-                        seg = trimEnclosing(seg);
+                for (let i = 1, seg: string; i < length; i += 2) {
+                    if (hasCalc(seg = timingFunction[i])) {
+                        const prefix = timingFunction[i - 1].toLowerCase();
                         let calc: Undef<string>;
+                        seg = trimEnclosing(seg);
                         if (endsWith(prefix, 'cubic-bezier')) {
                             const cubic = seg.split(CHAR_SEPARATOR);
                             const q = cubic.length;
                             if (q === 4) {
                                 calc = '';
-                                for (let j = 0; j < q; ++j) {
-                                    let bezier = cubic[j];
-                                    if (isCalc(bezier)) {
+                                for (let j = 0, bezier: string; j < q; ++j) {
+                                    if (isCalc(bezier = cubic[j])) {
                                         const p = calculateVar(element, bezier, j % 2 === 0 ? { unitType: CSS_UNIT.DECIMAL, supportPercent: false, min: 0, max: 1 } : undefined);
                                         if (isNaN(p)) {
                                             return '';
@@ -949,9 +922,9 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const path = splitEnclosing(value);
             const length = path.length;
             if (length === 2) {
-                const prefix = path[0].trim();
+                const method = path[0].trim().toLowerCase();
                 let shape = trimEnclosing(path[1].trim());
-                switch (prefix) {
+                switch (method) {
                     case 'linear-gradient':
                     case 'radial-gradient':
                     case 'conic-gradient':
@@ -964,7 +937,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         let [radius, position] = shape.split(/\s+at\s+/);
                         if (hasCalc(radius)) {
                             const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
-                            if (prefix === 'circle') {
+                            if (method === 'circle') {
                                 if (radius.indexOf('%') !== -1) {
                                     boundingBox ||= element.parentElement && getContentBoxDimension(element.parentElement);
                                     if (!boundingBox) {
@@ -1010,7 +983,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                         return !hasCalc(path[1]) ? value : '';
                 }
                 if (shape) {
-                    return `${prefix}(${shape})`;
+                    return `${method}(${shape})`;
                 }
             }
             return value;
@@ -1047,7 +1020,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                 }
                 if (length > 2) {
                     let distance = url.slice(2).join('');
-                    if (hasCalc(offset) && !(distance = calculateStyle(element, REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox))) {
+                    if (hasCalc(offset) && !(distance = calculateStyle(element, isLength(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox))) {
                         return '';
                     }
                     offset += ' ' + distance;
@@ -1063,7 +1036,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return offset + (anchor ? ` / ${anchor}` : '');
         }
         case 'borderImage': {
-            const match = /([a-z-]+\(.+?\))\s*([^/]+)(?:\s*\/\s*)?(.+)?/.exec(value.trim());
+            const match = /([a-z-]+\(.+?\))\s*([^/]+)(?:\s*\/\s*)?(.+)?/i.exec(value);
             if (match) {
                 let slice = match[2].trim();
                 if (hasCalc(slice)) {
@@ -1099,18 +1072,17 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             const filters = splitEnclosing(value);
             const length = filters.length;
             if (length > 1) {
-                for (let i = 1; i < length; ++i) {
-                    let seg = filters[i];
-                    if (hasCalc(seg)) {
+                for (let i = 1, seg: string; i < length; i += 2) {
+                    if (hasCalc(seg = filters[i])) {
                         seg = trimEnclosing(seg);
                         let result: Undef<string>;
-                        switch (filters[i - 1].trim()) {
+                        switch (filters[i - 1].trim().toLowerCase()) {
                             case 'blur':
                                 result = calculateLength(element, seg);
                                 break;
                             case 'brightness':
                             case 'saturate':
-                                result = calculatePercent(element, seg, false);
+                                result = calculatePercent(element, seg);
                                 break;
                             case 'contrast':
                             case 'grayscale':
@@ -1287,14 +1259,9 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     for (let seg of separator ? value.split(separator) : [value]) {
         if (seg = seg.trim()) {
             const calc = splitEnclosing(seg, REGEXP_CALCENCLOSING);
-            const length = calc.length;
-            if (length === 0) {
-                return '';
-            }
             let partial = '';
-            for (let i = 0, j = 0; i < length; ++i) {
-                let output = calc[i];
-                if (isCalc(output)) {
+            for (let i = 0, j = 0, length = calc.length, output: string; i < length; ++i) {
+                if (isCalc(output = calc[i])) {
                     if (options) {
                         if (orderedSize && orderedSize[j] !== undefined) {
                             options.boundingSize = orderedSize[j++];
@@ -1548,7 +1515,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                     switch (unitType) {
                                         case CSS_UNIT.PERCENT:
                                             if (!isNaN(n)) {
-                                                if (!checkCalculateOperator(operand, operator)) {
+                                                if (checkCalculateOperator(operand, operator)) {
                                                     return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
@@ -1566,7 +1533,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             break;
                                         case CSS_UNIT.TIME:
                                             if (!isNaN(n)) {
-                                                if (!checkCalculateOperator(operand, operator)) {
+                                                if (checkCalculateOperator(operand, operator)) {
                                                     return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
@@ -1584,7 +1551,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             break;
                                         case CSS_UNIT.ANGLE:
                                             if (!isNaN(n)) {
-                                                if (!checkCalculateOperator(operand, operator)) {
+                                                if (checkCalculateOperator(operand, operator)) {
                                                     return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
@@ -1627,7 +1594,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             break;
                                         default:
                                             if (!isNaN(n)) {
-                                                if (!checkCalculateOperator(operand, operator)) {
+                                                if (checkCalculateOperator(operand, operator)) {
                                                     return getFallbackResult(options, NaN);
                                                 }
                                                 seg.push(n);
