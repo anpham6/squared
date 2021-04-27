@@ -238,8 +238,14 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: Un
     if (uri && !pathname && filename) {
         try {
             const asset = new URL(uri);
-            if (location.origin === asset.origin && asset.pathname.startsWith(pathname = splitPairStart(location.pathname, '/', false, true))) {
-                pathname = splitPairStart(asset.pathname.substring(pathname.length + 1), '/', false, true);
+            if (location.origin === asset.origin && startsWith(asset.pathname, pathname = splitPairStart(location.pathname, '/', false, true))) {
+                const pathsub = asset.pathname.substring(pathname.length + 1);
+                if (pathsub.includes('/')) {
+                    pathname = splitPairStart(pathsub, '/', false, true);
+                }
+                else {
+                    return filename;
+                }
             }
             else {
                 return '';
