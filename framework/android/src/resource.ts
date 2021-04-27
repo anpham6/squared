@@ -226,9 +226,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         public cache: squared.base.NodeList<T>)
     {
         super();
-    }
-
-    public init() {
         const mimeType = this.controllerSettings.mimeType.image;
         if (mimeType !== '*') {
             this._imageFormat = mimeType.filter(value => value !== 'image/svg+xml');

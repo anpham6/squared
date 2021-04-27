@@ -438,8 +438,8 @@ data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
         <import type="java.util.Map" />
         <import type="java.util.List" />
         <variable name="user" type="com.example.User" />
-        <variable name="list" type="List<String>" />
-        <variable name="map" type="Map<String, String>" />
+        <variable name="list" type="List&lt;String&gt;" /> <!-- List<String> -->
+        <variable name="map" type="Map&lt;String, String&gt;" /> <!-- Map<String, String> -->
         <variable name="index" type="int" />
         <variable name="key" type="String" />
     </data>

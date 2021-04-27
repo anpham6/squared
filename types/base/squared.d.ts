@@ -6,7 +6,8 @@ type AppSessionConditionCallback = (sessionId: string, rule: CSSConditionRule, c
 
 declare module "base" {
     type RootElement = string | HTMLElement | ElementSettings;
-    type UserSettingMethod<T extends Node, U extends UserResourceSettings> = <V = unknown>(sessionId: Undef<string | squared.base.AppProcessing<T>>, name: keyof U) => V;
+    type UserSettingMethod<T extends Node, U extends UserResourceSettings> = <V = unknown>(sessionId: Undef<string | AppProcessing<T>>, name: keyof U) => V;
+    type AppThreadData<T extends Node> = [AppProcessing<T>, HTMLElement[], QuerySelectorElement[], string[]?];
 
     interface ElementSettings extends Partial<UserResourceSettingsUI>, Partial<LocationUri> {
         element?: string | HTMLElement;
@@ -107,6 +108,8 @@ declare module "base" {
         setExtensions(namespaces?: string[]): void;
         parseDocument(...elements: RootElement[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: RootElement[]): Void<T | T[]>;
+        createThread(elements: RootElement[], sync?: boolean): AppThreadData<T>;
+        resumeThread(processing: AppProcessing<T>, rootElements: HTMLElement[], requestCount: number): Node | Node[];
         createCache(processing: AppProcessing<T>, documentRoot: HTMLElement): Undef<T>;
         setStyleMap(sessionId: string, resourceId: number, documentRoot?: DocumentRoot, queryRoot?: QuerySelectorElement): void;
         replaceShadowRootSlots(shadowRoot: ShadowRoot): void;
@@ -176,7 +179,7 @@ declare module "base" {
         readonly localSettings: ControllerSettings;
         init(): void;
         reset(): void;
-        processUserSettings(processing: squared.base.AppProcessing<T>): void;
+        processUserSettings(processing: AppProcessing<T>): void;
         sortInitialCache(cache: NodeList<T>): void;
         includeElement(element: HTMLElement): boolean;
         applyDefaultStyles(processing: AppProcessing<T>, element: Element, pseudoElt?: PseudoElt): void;
@@ -296,7 +299,7 @@ declare module "base" {
         beforeInsertNode?(element: HTMLElement, sessionId: string): boolean;
         afterInsertNode?(node: T): boolean;
         beforeParseDocument(sessionId: string): void;
-        beforeCascadeRoot(processing: squared.base.AppProcessing<T>): void;
+        beforeCascadeRoot(processing: AppProcessing<T>): void;
         afterParseDocument(sessionId: string): void;
         set application(value);
         get application(): Application<T>;

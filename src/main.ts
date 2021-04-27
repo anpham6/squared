@@ -15,9 +15,6 @@ import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
 import Pattern from './lib/base/pattern';
 
-type ExtensionRequest = squared.ExtensionRequest;
-type ExtensionRequestObject = squared.ExtensionRequestObject;
-type FileActionOptions = squared.FileActionOptions;
 type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;
 type File = squared.base.File<Node>;
@@ -25,6 +22,9 @@ type Framework = squared.base.AppFramework<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionManager = squared.base.ExtensionManager<Node>;
 type ExtendPrototypeMap = ObjectMap<FunctionType | { set?: (value: unknown) => void; get?: () => unknown }>;
+type ExtensionRequest = squared.ExtensionRequest;
+type ExtensionRequestObject = squared.ExtensionRequestObject;
+type FileActionOptions = squared.FileActionOptions;
 type RootElement = squared.base.RootElement;
 
 const optionsQueue = new Map<string, PlainObject>();

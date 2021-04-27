@@ -11,7 +11,6 @@ import NodeList from './nodelist';
 type FileActionOptions = squared.FileActionOptions;
 type RootElement = squared.base.RootElement;
 type ElementSettings = squared.base.ElementSettings;
-type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], Undef<string[]>];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { CSS_PROPERTIES, compareSpecificity, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule, parseSelectorText } = squared.lib.internal;
@@ -187,7 +186,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public parseDocument(...elements: RootElement[]) {
         const resource = this.resourceHandler;
-        const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements);
+        const [processing, rootElements, shadowElements, styleSheets] = this.createThread(elements);
         if (rootElements.length === 0) {
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
@@ -256,15 +255,171 @@ export default abstract class Application<T extends Node> implements squared.bas
                         this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
                     }
                 }
-                return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
+                for (let i = 0, length = preloaded.length; i < length; ++i) {
+                    const image = preloaded[i];
+                    if (image.parentElement) {
+                        documentRoot.removeChild(image);
+                    }
+                }
+                return this.resumeThread(processing, rootElements, elements.length);
             });
         }
-        return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
+        return Promise.resolve(this.resumeThread(processing, rootElements, elements.length));
     }
 
     public parseDocumentSync(...elements: RootElement[]): Undef<T | T[]> {
-        const sessionData = this.createSessionThread(elements, true);
-        return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
+        const sessionData = this.createThread(elements, true);
+        return this.resumeThread(sessionData[0], sessionData[1], elements.length);
+    }
+
+    public createThread(elements: RootElement[], sync?: boolean): squared.base.AppThreadData<T> {
+        const { controllerHandler, resourceHandler, resourceId } = this;
+        const rootElements: HTMLElement[] = [];
+        const customSettings: Null<ElementSettings>[] = [];
+        const isEnabled = <U extends UserSettings>(settings: Null<U>, name: keyof U) => settings && name in settings ? settings[name] : (this.userSettings as U)[name];
+        let length = elements.length,
+            shadowElements: Undef<ShadowRoot[]>,
+            styleSheets: Undef<string[]>;
+        if (length === 0) {
+            elements.push(this.mainElement);
+            length = 1;
+        }
+        for (let i = 0; i < length; ++i) {
+            let item: Null<RootElement> = elements[i],
+                settings: Null<ElementSettings> = null;
+            if (isPlainObject<ElementSettings>(item)) {
+                if (item.element) {
+                    settings = item;
+                    item = item.element;
+                }
+                else {
+                    continue;
+                }
+            }
+            if (typeof item === 'string') {
+                item = document.getElementById(item);
+            }
+            if (item && !rootElements.includes(item)) {
+                rootElements.push(item);
+                customSettings.push(settings);
+                if (!sync && resourceHandler && isEnabled(settings as UserSettings, 'pierceShadowRoot') && isEnabled(settings as UserResourceSettings, 'preloadCustomElements')) {
+                    item.querySelectorAll('*').forEach(host => {
+                        const shadowRoot = host.shadowRoot;
+                        if (shadowRoot) {
+                            shadowRoot.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child: HTMLLinkElement) => (styleSheets ||= []).push(child.href));
+                            (shadowElements ||= []).push(shadowRoot);
+                        }
+                    });
+                }
+            }
+        }
+        if (rootElements.length === 0) {
+            return [{} as squared.base.AppProcessing<T>, rootElements, []];
+        }
+        const sessionId = controllerHandler.generateSessionId;
+        const processing: squared.base.AppProcessing<T> = {
+            sessionId,
+            resourceId,
+            initializing: false,
+            cache: new NodeList<T>([], sessionId, resourceId),
+            excluded: new NodeList<T>([], sessionId, resourceId),
+            rootElements,
+            settings: customSettings[0],
+            customSettings,
+            node: null,
+            documentElement: null,
+            extensions: []
+        };
+        newSessionInit(sessionId);
+        this.session.active.set(sessionId, processing);
+        if (resourceHandler) {
+            resourceHandler.createThread(resourceId);
+        }
+        const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
+        if (queryRoot && queryRoot !== document.documentElement) {
+            this.setStyleMap(sessionId, resourceId, document, queryRoot);
+        }
+        else {
+            this.setStyleMap(sessionId, resourceId);
+        }
+        if (resourceHandler) {
+            const queryElements: QuerySelectorElement[] = [queryRoot || document];
+            if (shadowElements) {
+                queryElements.push(...shadowElements);
+            }
+            for (const element of queryElements) {
+                element.querySelectorAll('[style]').forEach((child: HTMLElement) => {
+                    const { backgroundImage, listStyleImage } = child.style;
+                    if (backgroundImage) {
+                        parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
+                    }
+                    if (listStyleImage) {
+                        parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
+                    }
+                });
+            }
+        }
+        return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
+    }
+
+    public resumeThread(processing: squared.base.AppProcessing<T>, rootElements: HTMLElement[], requestCount: number) {
+        processing.initializing = false;
+        const { controllerHandler, extensions } = this;
+        const sessionId = processing.sessionId;
+        const success: T[] = [];
+        const removeStyle = controllerHandler.localSettings.adoptedStyleSheet && insertStyleSheetRule(controllerHandler.localSettings.adoptedStyleSheet);
+        let enabled: Undef<Extension<T>[]>,
+            disabled: Undef<Extension<T>[]>;
+        const length = extensions.length;
+        if (length) {
+            enabled = [];
+            for (let i = 0, ext: Extension<T>; i < length; ++i) {
+                if ((ext = extensions[i]).enabled) {
+                    ext.beforeParseDocument(sessionId);
+                    enabled.push(ext);
+                }
+                else {
+                    (disabled ||= []).push(ext);
+                }
+            }
+        }
+        for (let i = 0; i < rootElements.length; ++i) {
+            processing.settings = processing.customSettings[i];
+            controllerHandler.processUserSettings(processing);
+            if (length) {
+                const current: Extension<T>[] = [];
+                const exclude = processing.settings?.exclude;
+                for (let j = 0; j < length; ++j) {
+                    const ext = extensions[j];
+                    if (!(exclude === ext.name || Array.isArray(exclude) && exclude.find(name => name === ext.name))) {
+                        ext.beforeCascadeRoot(processing);
+                        if (ext.enabled) {
+                            current.push(ext);
+                        }
+                    }
+                }
+                processing.extensions = current;
+            }
+            const node = this.createCache(processing, rootElements[i]);
+            if (node) {
+                this.afterCreateCache(processing, node);
+                success.push(node);
+            }
+        }
+        if (length) {
+            for (let i = 0, q = enabled!.length; i < q; ++i) {
+                const ext = extensions[i];
+                ext.afterParseDocument(sessionId);
+                ext.enabled = true;
+            }
+            if (disabled) {
+                disabled.forEach(ext => ext.enabled = false);
+            }
+        }
+        if (removeStyle) {
+            removeStyle();
+        }
+        return requestCount > 1 ? success : success[0];
     }
 
     public createCache(processing: squared.base.AppProcessing<T>, documentRoot: HTMLElement) {
@@ -810,164 +965,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-    }
-
-    private createSessionThread(elements: RootElement[], sync?: boolean): SessionThreadData<T> {
-        const { controllerHandler, resourceHandler, resourceId } = this;
-        const rootElements: HTMLElement[] = [];
-        const customSettings: Null<ElementSettings>[] = [];
-        const isEnabled = <U extends UserSettings>(settings: Null<U>, name: keyof U) => settings && name in settings ? settings[name] : (this.userSettings as U)[name];
-        let length = elements.length,
-            shadowElements: Undef<ShadowRoot[]>,
-            styleSheets: Undef<string[]>;
-        if (length === 0) {
-            elements.push(this.mainElement);
-            length = 1;
-        }
-        for (let i = 0; i < length; ++i) {
-            let item: Null<RootElement> = elements[i],
-                settings: Null<ElementSettings> = null;
-            if (isPlainObject<ElementSettings>(item)) {
-                if (item.element) {
-                    settings = item;
-                    item = item.element;
-                }
-                else {
-                    continue;
-                }
-            }
-            if (typeof item === 'string') {
-                item = document.getElementById(item);
-            }
-            if (item && !rootElements.includes(item)) {
-                rootElements.push(item);
-                customSettings.push(settings);
-                if (!sync && resourceHandler && isEnabled(settings as UserSettings, 'pierceShadowRoot') && isEnabled(settings as UserResourceSettings, 'preloadCustomElements')) {
-                    item.querySelectorAll('*').forEach(host => {
-                        const shadowRoot = host.shadowRoot;
-                        if (shadowRoot) {
-                            shadowRoot.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child: HTMLLinkElement) => (styleSheets ||= []).push(child.href));
-                            (shadowElements ||= []).push(shadowRoot);
-                        }
-                    });
-                }
-            }
-        }
-        if (rootElements.length === 0) {
-            return ([rootElements] as unknown) as SessionThreadData<T>;
-        }
-        const sessionId = controllerHandler.generateSessionId;
-        const processing: squared.base.AppProcessing<T> = {
-            sessionId,
-            resourceId,
-            initializing: false,
-            cache: new NodeList<T>([], sessionId, resourceId),
-            excluded: new NodeList<T>([], sessionId, resourceId),
-            rootElements,
-            settings: customSettings[0],
-            customSettings,
-            node: null,
-            documentElement: null,
-            extensions: []
-        };
-        newSessionInit(sessionId);
-        this.session.active.set(sessionId, processing);
-        if (resourceHandler) {
-            resourceHandler.createThread(resourceId);
-        }
-        const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
-        if (queryRoot && queryRoot !== document.documentElement) {
-            this.setStyleMap(sessionId, resourceId, document, queryRoot);
-        }
-        else {
-            this.setStyleMap(sessionId, resourceId);
-        }
-        if (resourceHandler) {
-            const queryElements: QuerySelectorElement[] = [queryRoot || document];
-            if (shadowElements) {
-                queryElements.push(...shadowElements);
-            }
-            for (const element of queryElements) {
-                element.querySelectorAll('[style]').forEach((child: HTMLElement) => {
-                    const { backgroundImage, listStyleImage } = child.style;
-                    if (backgroundImage) {
-                        parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
-                    }
-                    if (listStyleImage) {
-                        parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
-                    }
-                });
-            }
-        }
-        return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
-    }
-
-    private resumeSessionThread(processing: squared.base.AppProcessing<T>, rootElements: HTMLElement[], multipleRequest: number, documentRoot?: HTMLElement, preloaded?: HTMLImageElement[]) {
-        processing.initializing = false;
-        const { controllerHandler, extensions } = this;
-        const sessionId = processing.sessionId;
-        const success: T[] = [];
-        const removeStyle = controllerHandler.localSettings.adoptedStyleSheet && insertStyleSheetRule(controllerHandler.localSettings.adoptedStyleSheet);
-        let enabled: Undef<Extension<T>[]>,
-            disabled: Undef<Extension<T>[]>;
-        if (preloaded) {
-            for (let i = 0, length = preloaded.length; i < length; ++i) {
-                const image = preloaded[i];
-                if (image.parentElement) {
-                    documentRoot!.removeChild(image);
-                }
-            }
-        }
-        const length = extensions.length;
-        if (length) {
-            enabled = [];
-            for (let i = 0, ext: Extension<T>; i < length; ++i) {
-                if ((ext = extensions[i]).enabled) {
-                    ext.beforeParseDocument(sessionId);
-                    enabled.push(ext);
-                }
-                else {
-                    (disabled ||= []).push(ext);
-                }
-            }
-        }
-        for (let i = 0; i < rootElements.length; ++i) {
-            processing.settings = processing.customSettings[i];
-            controllerHandler.processUserSettings(processing);
-            if (length) {
-                const current: Extension<T>[] = [];
-                const exclude = processing.settings?.exclude;
-                for (let j = 0; j < length; ++j) {
-                    const ext = extensions[j];
-                    if (!(exclude === ext.name || Array.isArray(exclude) && exclude.find(name => name === ext.name))) {
-                        ext.beforeCascadeRoot(processing);
-                        if (ext.enabled) {
-                            current.push(ext);
-                        }
-                    }
-                }
-                processing.extensions = current;
-            }
-            const node = this.createCache(processing, rootElements[i]);
-            if (node) {
-                this.afterCreateCache(processing, node);
-                success.push(node);
-            }
-        }
-        if (length) {
-            for (let i = 0, q = enabled!.length; i < q; ++i) {
-                const ext = extensions[i];
-                ext.afterParseDocument(sessionId);
-                ext.enabled = true;
-            }
-            if (disabled) {
-                disabled.forEach(ext => ext.enabled = false);
-            }
-        }
-        if (removeStyle) {
-            removeStyle();
-        }
-        return multipleRequest > 1 ? success : success[0];
     }
 
     get mainElement() {
