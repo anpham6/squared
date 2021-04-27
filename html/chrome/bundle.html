@@ -121,7 +121,10 @@
                         }
                     ],
                     configUri: 'http://localhost:3000/chrome/bundle.yml',
-                    saveAs: { font: { blob: true, inline: true } },
+                    saveAs: {
+                        image: { blob: true },
+                        font: { blob: true, inline: true }
+                    },
                     useOriginalHtmlPage: true,
                     emptyDir: true,
                     watch: true

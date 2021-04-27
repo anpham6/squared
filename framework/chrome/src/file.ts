@@ -1146,7 +1146,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         let data: Null<ChromeAsset> = null;
         if (src) {
-            if ((data = File.parseUri(resolvePath(src), isCrossOrigin(download, preserveCrossOrigin), { saveAs: file, mimeType, format, fromConfig })) && data.format !== 'crossorigin') {
+            if ((data = File.parseUri(resolvePath(src), isCrossOrigin(download, preserveCrossOrigin) || assetCommand && preserve, { saveAs: file, mimeType, format, fromConfig })) && data.format !== 'crossorigin') {
                 if (assetCommand) {
                     if (inline) {
                         switch (assetCommand.type) {
