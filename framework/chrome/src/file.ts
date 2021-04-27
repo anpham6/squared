@@ -23,7 +23,7 @@ interface FileAsData {
 const { DOM } = squared.base.lib.regex;
 
 const { createElement } = squared.lib.dom;
-const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome } = squared.lib.util;
+const { convertWord, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.internal;
 const { appendSeparator, fromMimeType, parseMimeType, generateUUID, getComponentEnd, trimEnd } = squared.base.lib.util;
@@ -44,16 +44,16 @@ function parseFileAs(attr: string, value: Undef<string>) {
 function parseOptions(value: Undef<string>) {
     const result: OptionsData = {};
     if (value) {
-        if (value.includes('inline')) {
+        if (value.indexOf('inline') !== -1) {
             result.inline = true;
         }
-        if (value.includes('preserve')) {
+        if (value.indexOf('preserve') !== -1) {
             result.preserve = true;
         }
-        if (value.includes('blob')) {
+        if (value.indexOf('blob') !== -1) {
             result.blob = true;
         }
-        if (value.includes('crossorigin')) {
+        if (value.indexOf('crossorigin') !== -1) {
             result.download = false;
         }
         const pattern = /\bcompress\[([^\]]+)\]/g;
@@ -66,10 +66,10 @@ function parseOptions(value: Undef<string>) {
 }
 
 function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<string>, string, string] {
-    if (value.startsWith('./')) {
+    if (startsWith(value, './')) {
         value = value.substring(2);
     }
-    if (!value.includes('/')) {
+    if (value.indexOf('/') === -1) {
         return [undefined, '', value];
     }
     let moveTo: Undef<string>;
@@ -77,7 +77,7 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
         moveTo = DIR_FUNCTIONS.SERVERROOT;
         value = value.substring(1);
     }
-    else if (value.startsWith('../')) {
+    else if (startsWith(value, '../')) {
         moveTo = DIR_FUNCTIONS.SERVERROOT;
         const pathname: StringOfArray = location.pathname.split('/');
         if (--pathname.length) {
@@ -241,8 +241,14 @@ function getCustomPath(uri: Undef<string>, pathname: Undef<string>, filename: Un
     if (uri && !pathname && filename) {
         try {
             const asset = new URL(uri);
-            if (location.origin === asset.origin && asset.pathname.startsWith(pathname = splitPairStart(location.pathname, '/', false, true))) {
-                pathname = splitPairStart(asset.pathname.substring(pathname.length + 1), '/', false, true);
+            if (location.origin === asset.origin && startsWith(asset.pathname, pathname = splitPairStart(location.pathname, '/', false, true))) {
+                const pathsub = asset.pathname.substring(pathname.length + 1);
+                if (pathsub.indexOf('/') !== -1) {
+                    pathname = splitPairStart(pathsub, '/', false, true);
+                }
+                else {
+                    return filename;
+                }
             }
             else {
                 return '';
@@ -276,7 +282,7 @@ const getAssetCommand = (assetMap: Undef<ElementAssetMap>, element: HTMLElement)
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
 const getBaseUrl = () => location.origin + location.pathname;
-const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && item.filename.startsWith(DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
+const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static createTagNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlTagNode {
@@ -320,7 +326,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         mimeType ||= parseMimeType(uri);
         let value = trimEnd(uri, '/'),
             file: Undef<string>;
-        const local = value.startsWith(location.origin);
+        const local = startsWith(value, location.origin);
         if (!local && preserveCrossOrigin) {
             return createFile(mimeType);
         }
@@ -363,7 +369,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (lastItemOf(pathbase) !== '/') {
                         pathbase = splitPairStart(pathbase, '/', false, true);
                     }
-                    if (pathsub.startsWith(pathbase)) {
+                    if (startsWith(pathsub, pathbase)) {
                         pathname = pathsub.substring(pathbase.length + 1);
                     }
                     else {
@@ -475,7 +481,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         case 'css': {
                             const { module, identifier } = template;
                             let value = template.value;
-                            if (module && identifier && value && (value = value.trim()) && value.includes('function')) {
+                            if (module && identifier && value && (value = value.trim()) && value.indexOf('function') !== -1) {
                                 addTemplate(type, module, identifier, value);
                             }
                             break;
@@ -543,7 +549,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (rel !== 'stylesheet') {
                     const checkMimeType = () => {
                         const filename = fromLastIndexOf(href, '/');
-                        if (filename.includes('.')) {
+                        if (filename.indexOf('.') !== -1) {
                             mimeType = getMimeType(element, filename);
                             return true;
                         }
@@ -552,7 +558,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (getAssetCommand(assetMap, element)) {
                         checkMimeType();
                     }
-                    else if (!href || !rel.includes('icon') || !checkMimeType()) {
+                    else if (!href || rel.indexOf('icon') === -1 || !checkMimeType()) {
                         return;
                     }
                 }
@@ -661,7 +667,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             }
                             const pathname = command.pathname;
                             filename ||= item.filename;
-                            if (mimeType.startsWith('image/') && (commands = command.commands)) {
+                            if (startsWith(mimeType, 'image/') && (commands = command.commands)) {
                                 for (let i = 0; i < commands.length; ++i) {
                                     const match = /^(?:^|\s+)(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
                                     if (match) {
@@ -859,14 +865,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
                     break;
                 case 'IFRAME':
-                    if (!(getAssetCommand(assetMap, element) || element.dataset.chromeFile?.startsWith('saveTo'))) {
+                    if (!(getAssetCommand(assetMap, element) || startsWith(element.dataset.chromeFile, 'saveTo'))) {
                         return;
                     }
                 case 'OBJECT':
                 case 'EMBED': {
                     const src = element instanceof HTMLObjectElement ? element.data : element.src;
                     const mimeType = (element as HTMLObjectElement | HTMLEmbedElement).type || parseMimeType(src);
-                    if (mimeType.startsWith('image/')) {
+                    if (startsWith(mimeType, 'image/')) {
                         this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, mimeType);
                         return;
                     }
@@ -1002,11 +1008,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 }
                                 else {
                                     const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, textContent);
-                                    if (type.startsWith('append/')) {
+                                    if (startsWith(type, 'append/')) {
                                         append.nextSibling = getNextSibling();
                                         elementData = getTagNode(node, attributes, append);
                                     }
-                                    else if (type.startsWith('prepend/')) {
+                                    else if (startsWith(type, 'prepend/')) {
                                         append.prepend = true;
                                         elementData = getTagNode(node, attributes, append);
                                     }
@@ -1291,7 +1297,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 else if (inline) {
                     data.format = 'base64';
                 }
-                else if (!element && assets.find(item => item.moveTo === data.moveTo && item.pathname === data.pathname && item.filename === data.filename && !data.filename.includes(DIR_FUNCTIONS.ASSIGN))) {
+                else if (!element && assets.find(item => item.moveTo === data.moveTo && item.pathname === data.pathname && item.filename === data.filename && data.filename.indexOf(DIR_FUNCTIONS.ASSIGN) === -1)) {
                     return;
                 }
                 if (commands) {
