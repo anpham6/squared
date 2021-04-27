@@ -9,8 +9,8 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
         this.containerName = node.containerName + '_GROUP';
         this.actualParent = actualParent;
         this.documentParent = node.documentParent;
-        this.dir = actualParent.dir;
         this.unsafe('depth', node.depth);
+        this.setCacheState('dir', actualParent.dir);
         this.retainAs(children, node, parent);
     }
 

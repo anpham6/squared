@@ -624,7 +624,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const actualParent = node.actualParent;
                     if (actualParent) {
                         this.actualParent = actualParent;
-                        this.dir = actualParent.dir;
+                        this.setCacheState('dir', actualParent.dir);
                     }
                     break;
                 }

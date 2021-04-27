@@ -3123,27 +3123,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    set dir(value) {
-        switch (value = value.toLowerCase()) {
-            case 'ltr':
-            case 'rtl':
-            case 'auto':
-                if (this.naturalElement) {
-                    (this._element as HTMLElement).dir = value;
-                    this.cascade(node => {
-                        if (node.dir === value) {
-                            return false;
-                        }
-                        node.unsetState('dir');
-                    });
-                }
-                else if (this.naturalChild) {
-                    return;
-                }
-                this._cacheState.dir = value;
-                break;
-        }
-    }
     get dir(): string {
         let result = this._cacheState.dir;
         if (result === undefined) {

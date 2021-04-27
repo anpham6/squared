@@ -473,7 +473,6 @@ declare module "base" {
         get childIndex(): number;
         get naturalChildren(): Node[];
         get naturalElements(): Node[];
-        set dir(value);
         get dir(): string;
         set inlineText(value);
         get inlineText(): boolean;
