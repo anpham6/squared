@@ -3261,7 +3261,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 }
                                                 const angle = parseAngle(partial);
                                                 if (!isNaN(angle)) {
-                                                    seg.push();
+                                                    seg.push(angle);
                                                     found = true;
                                                 }
                                                 else {

@@ -27,7 +27,7 @@ Option #1 - [Node.js](http://www.nodejs.org)
 
 > npm run prod
 > npm run deploy
-<!-- OR -->
+  <!-- OR -->
 > npm run dev
 ```
 
@@ -205,7 +205,7 @@ squared.settings = {
     outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify"} }
     outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (NOTE: Only applicabale to raw assets)
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip', // zip | 7z | gz | tar
+    outputArchiveFormat: 'zip', // zip | tar | 7z | gz
     outputArchiveCache: false // Downloadable URL in ResponseData<downloadUrl>
 };
 ```

@@ -38,6 +38,7 @@ const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 const REGEXP_EM = /\dem$/;
+const REGEXP_NOT = /^:not\((.+)\)$/i;
 const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
 const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
 const REGEXP_NOTINDEX = /:not-(x+)/;
@@ -1756,7 +1757,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const checkNot = (condition: string) => {
                 return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
                     if (b[0] === ':') {
-                        const match = REGEXP_ENCLOSING.exec(b);
+                        const match = REGEXP_NOT.exec(b);
                         if (match) {
                             b = parseNot(match[1].trim());
                         }
