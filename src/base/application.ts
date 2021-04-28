@@ -9,7 +9,7 @@ import type Node from './node';
 import NodeList from './nodelist';
 
 type FileActionOptions = squared.FileActionOptions;
-type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], Undef<string[]>];
+type SessionThreadData<T extends Node> = [squared.base.AppProcessing<T>, HTMLElement[], QuerySelectorElement[], string[]?];
 
 const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
 const { FILE, STRING } = squared.lib.regex;
@@ -803,7 +803,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
             if (rootElements.length === 0) {
-                return ([rootElements] as unknown) as SessionThreadData<T>;
+                return [{} as squared.base.AppProcessing<T>, rootElements, []];
             }
         }
         const { controllerHandler, resourceHandler, resourceId, extensionsAll: extensions } = this;
