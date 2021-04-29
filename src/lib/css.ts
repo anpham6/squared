@@ -4,7 +4,6 @@ import { CSS_PROPERTIES, PROXY_INLINESTYLE, getDocumentFontSize } from './intern
 import { CSS, STRING } from './regex';
 
 import { getDeviceDPI } from './client';
-import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
 import { endsWith, escapePattern, isSpace, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, trimEnclosing } from './util';
@@ -1198,12 +1197,12 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
 export function parseVar(element: StyleElement, value: string, style?: CSSStyleDeclaration) {
     let match: Null<RegExpExecArray>;
     while (match = REGEXP_VARNESTED.exec(value)) {
-        let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim(),
-            fallback = match[3];
-        if (fallback) {
+        let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
+        if (!propertyValue && match[3]) {
+            let fallback = match[3],
+                template: Undef<string[]>;
             const segments = splitEnclosing(fallback);
             const length = segments.length;
-            let template: Undef<string[]>;
             if (length > 1) {
                 for (let i = 1, j = 0; i < length; i += 2) {
                     (template ||= []).push(segments[i]);
@@ -1218,10 +1217,7 @@ export function parseVar(element: StyleElement, value: string, style?: CSSStyleD
                         other = other.replace(`{{${index[1]}}}`, template[+index[1]]);
                     }
                 }
-                if (!propertyValue) {
-                    propertyValue = other;
-                }
-                else if (!isNaN(+other) && isNaN(+propertyValue) || isLength(other, true) && !isLength(propertyValue, true) || parseColor(other) && !parseColor(propertyValue)) {
+                if (other) {
                     propertyValue = other;
                     return true;
                 }

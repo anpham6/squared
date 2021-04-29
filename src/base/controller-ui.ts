@@ -20,6 +20,7 @@ const { getElementCache, setElementCache } = squared.lib.session;
 const { iterateArray } = squared.lib.util;
 
 const CACHE_INDENT: StringMap = {};
+const DIMENSION_AUTO: CssStyleAttr[][] = [['width', 'height', 'maxWidth'], ['height', 'width', 'maxHeight']];
 
 function pushIndent(value: string, depth: number, indent = '\t'.repeat(depth)) {
     if (depth > 0) {
@@ -821,7 +822,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     protected setElementDimension(resourceId: number, element: DimensionElement, style: CssStyleMap) {
         setDimension(element, style, 'width');
         setDimension(element, style, 'height');
-        if (!(hasEmptyDimension(style.height) && hasEmptyDimension(style.width))) {
+        if (!(!hasEmptyDimension(style.width) && !hasEmptyDimension(style.height))) {
             switch (element.tagName) {
                 case 'IMG':
                 case 'INPUT':
@@ -831,8 +832,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'OBJECT': {
                     const image = this.application.resourceHandler.getImageDimension(resourceId, element instanceof HTMLObjectElement ? element.data : (element as HTMLImageElement).src);
                     if (image.width && image.height) {
-                        for (let i = 0; i < 2; ++i) {
-                            const [attr, opposing, maxDimension] = (i === 0 ? ['width', 'height', 'maxWidth'] : ['height', 'width', 'maxHeight']) as CssStyleAttr[];
+                        for (const [attr, opposing, maxDimension] of DIMENSION_AUTO) {
                             const value = style[opposing];
                             if (value && isLength(value)) {
                                 const valueMax = style[maxDimension];

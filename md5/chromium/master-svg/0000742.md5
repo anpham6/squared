@@ -1,13 +1,13 @@
 c40cf48663d8cc9e6962aa8b48f7f7c3  ./app/src/main/res/anim/path_interpolator_0_1_0_1.xml
 09e0b617be2155ba6ac9390acdf5f61d  ./app/src/main/res/anim/path_interpolator_0_75_0_0_75_0_9.xml
 31679b970758aa88fbaa1994bbd6fb89  ./app/src/main/res/anim/svg_imageview_1_viewbox_anim_animate.xml
-5b40db105d4904c528badb7b33df8bd7  ./app/src/main/res/anim/svg_imageview_1_viewbox_anim_opacity_step.xml
+c5769f4ef3794293c00047055455edcb  ./app/src/main/res/anim/svg_imageview_1_viewbox_anim_opacity_step.xml
 ce888fac1719bf3cce2c886d22b6d32d  ./app/src/main/res/anim/svg_imageview_1_viewbox_anim_rotate_group.xml
 6c3e8718502968144fb8597a99a6afce  ./app/src/main/res/anim/svg_imageview_1_viewbox_anim_translate_step_group.xml
 19238984b63f403745afa2ba14ef3818  ./app/src/main/res/drawable/svg_imageview_1_viewbox.xml
 a0e73cf9db82b504afdb57764a963bcb  ./app/src/main/res/drawable/svg_imageview_1_viewbox_anim.xml
 07feabc4098a831308e6d55e32e9f8cd  ./app/src/main/res/layout/activity_main.xml
-99b44ac199012299b80aa8248c9fc19d  ./app/src/main/res/values/colors.xml
+36d86355c3d4bed74670299d861bcd6e  ./app/src/main/res/values/colors.xml
 54fb99f03654b5f537a2b46be91274d0  ./app/src/main/res/values/dimens.xml
 96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
