@@ -84,7 +84,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return Array.isArray(value) ? value.slice(0) : value;
     }
 
-    public readonly archiveFormats = ['zip', '7z', 'tar', 'gz', 'tgz'];
+    public readonly archiveFormats = ['zip', 'tar', '7z', 'gz', 'tgz'];
 
     private _hostname = '';
     private _endpoints = {

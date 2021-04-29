@@ -488,11 +488,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             });
-            excluded.each(item => {
-                if (!item.pageFlow) {
-                    item.cssTry('display', 'none');
-                }
-            });
+            excluded.each(item => !item.pageFlow && item.cssTry('display', 'none'));
             cache.each(item => {
                 if (item.pseudoElt) {
                     pseudoElements.push(item);

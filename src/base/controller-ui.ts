@@ -138,6 +138,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public reset() {
+        this._beforeOutside = new WeakMap();
+        this._beforeInside = new WeakMap();
+        this._afterInside = new WeakMap();
+        this._afterOutside = new WeakMap();
         this._requireFormat = false;
     }
 
@@ -703,11 +707,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             children.push(...order);
                         }
                     }
-                    node.each((item: T) => {
-                        if (!children.includes(item)) {
-                            children.push(item);
-                        }
-                    });
+                    node.each((item: T) => !children.includes(item) && children.push(item));
                     node.retainAs(children);
                 }
             }

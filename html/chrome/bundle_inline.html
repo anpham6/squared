@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title></title>
-    <link rel="stylesheet" type="text/css" href="/common/css/dev.css" data-chrome-file="saveAs:~::beautify" data-chrome-watch="200::1h" />
+    <link rel="stylesheet" type="text/css" href="/common/css/dev.css" data-chrome-file="saveAs:~::beautify" data-chrome-watch="200::1h::true" />
     <style data-chrome-file="exportAs:css/prod.css::minify" data-chrome-options="preserve">
         body {
             font: 1em/1.4 Helvetica, Arial, sans-serif;
@@ -91,7 +91,7 @@
         }
     </style>
     <script src="/dist/squared.js" data-chrome-file="saveAs:js/modules1.js::es5-script" data-chrome-options="compress[br]" data-chrome-watch="100::1m 1s"></script>
-    <script src="/dist/squared.base-dom.js" data-chrome-file="saveAs:js/modules2.js::bundle+minify" data-chrome-watch="~::1h 0.5m::true"></script>
+    <script src="/dist/squared.base.js" data-chrome-file="saveAs:js/modules2.js::minify" data-chrome-watch="~::1h 0.5m::true"></script>
     <script src="/dist/chrome.framework.js" data-chrome-file="saveAs:js/modules2.js"></script>
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {

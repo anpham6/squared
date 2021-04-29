@@ -27,7 +27,7 @@ Option #1 - [Node.js](http://www.nodejs.org)
 
 > npm run prod
 > npm run deploy
-<!-- OR -->
+  <!-- OR -->
 > npm run dev
 ```
 
@@ -87,7 +87,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
     squared.settings.targetAPI = 30; // optional
 
     document.addEventListener("DOMContentLoaded", async () => {
-        squared.setFramework(android, /* optional: FrameworkOptions */);
+        squared.setFramework(android, /* optional: settings */);
 
         await squared.parseDocument(); // document.body "BODY" (default)
         // OR
@@ -121,7 +121,7 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
 <script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
 <script>
     document.addEventListener("DOMContentLoaded", async () => {
-        squared.setFramework(vdom /* chrome */, /* optional: FrameworkOptions */);
+        squared.setFramework(vdom /* chrome */, /* optional: settings */);
 
         const element = await squared.parseDocument(/* HTMLElement */); // document.documentElement "HTML" (default)
         // OR
@@ -151,6 +151,26 @@ Gulp installation is required in order to use "outputTasks". Further instruction
 
 ```javascript
 squared.settings = {
+    targetAPI: 30,
+    resolutionDPI: 160, // Pixel C: 320dpi 2560x1800
+    resolutionScreenWidth: 1280,
+    resolutionScreenHeight: 900,
+    framesPerSecond: 60,
+    supportRTL: true,
+    supportNegativeLeftTop: true,
+    preloadImages: true,
+    preloadFonts: true,
+    preloadCustomElements: true,
+    enabledSVG: true,
+    enabledMultiline: true, // fontMeasureWrap (squared 2.5)
+    fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
+    lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
+    baseLayoutAsFragment: false, // FragmentContainerView
+    createElementMap: false,
+    createQuerySelectorMap: false,
+    pierceShadowRoot: true,
+
+    // Not customizable with parseDocument
     builtInExtensions: [
         "squared.accessibility",
         "android.delegate.background",
@@ -179,26 +199,6 @@ squared.settings = {
         "android.resource.data",
         "android.resource.includes"
     ],
-    targetAPI: 30,
-    resolutionDPI: 160, // Pixel C: 320dpi 2560x1800
-    resolutionScreenWidth: 1280,
-    resolutionScreenHeight: 900,
-    framesPerSecond: 60,
-    supportRTL: true,
-    supportNegativeLeftTop: true,
-    preloadImages: true,
-    preloadFonts: true,
-    preloadCustomElements: true,
-    enabledSVG: true,
-    enabledMultiline: true, // fontMeasureWrap (squared 2.5)
-    fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
-    lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
-    baseLayoutAsFragment: false, // FragmentContainerView
-    createElementMap: false,
-    createQuerySelectorMap: false,
-    pierceShadowRoot: true,
-
-    // Not customizable with parseDocument
     compressImages: false, // TinyPNG API Key <https://tinypng.com/developers>
     convertImages: "", // png | jpeg | webp | bmp
     showAttributes: true,
@@ -214,9 +214,9 @@ squared.settings = {
     outputDocumentHandler: "android",
     outputEmptyCopyDirectory: false, // Sub directories within target directory
     outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify" } }
-    outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (NOTE: Only applicabale to raw assets)
+    outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (only raw assets)
     outputArchiveName: "android-xml",
-    outputArchiveFormat: "zip", // zip | 7z | gz | tar
+    outputArchiveFormat: "zip", // zip | tar | 7z | gz
     outputArchiveCache: false // Downloadable URL in ResponseData<downloadUrl>
 };
 ```
@@ -225,7 +225,6 @@ squared.settings = {
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [],
     preloadImages: false,
     preloadFonts: false,
     preloadCustomElements: false,
@@ -235,6 +234,7 @@ squared.settings = {
     pierceShadowRoot: true,
 
     // Not customizable with parseDocument
+    builtInExtensions: [],
     showErrorMessages: false,
     webSocketPort: 80,
     webSocketSecurePort: 443,
@@ -252,12 +252,12 @@ squared.settings = {
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [],
     createElementMap: true,
     createQuerySelectorMap: true,
     pierceShadowRoot: false,
 
     // Not customizable with parseDocument
+    builtInExtensions: [],
     showErrorMessages: false
 };
 ```
@@ -303,7 +303,7 @@ remove(...names: (string | Extension)[]) // Remove extensions by namespace or co
 get(...names: (string | Extension)[]) // Retrieve extensions by namespace or control
 apply(name: string | Extension, options: PlainObject, saveName?: string) // See extension configuration section
 
-extend(functionMap: {}, framework?: number) // Add extension functions to Node prototype (framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome)
+extend(functionMap: {}, framework?: /* 0 - ALL | 1 - vdom | 2 - android | 4 - chrome */) // Add extension functions to Node prototype
 
 // Promise (cache: createElementMap - true)
 
@@ -578,13 +578,13 @@ Layout rendering can also be customized using extensions as the program was buil
 ```javascript
 // Create an extension
 class Sample extends squared.base.Extension {
-    constructor(name, framework = 0, options = {}) { // framework: 0 - ALL | 1 - vdom | 2 - android | 4 - chrome
+    constructor(name, framework = 0, options = {}) { // 0 - ALL | 1 - vdom | 2 - android | 4 - chrome (framework)
         super(name, framework, options);
     }
 }
 
 // Install an extension
-const sample = new Sample("your.namespace.sample", 0, {/* same as configure */});
+const sample = new Sample("your.namespace.sample", 0, {/* Same as configure */});
 squared.add(sample);
 // OR
 squared.add([sample, {/* config */}]);

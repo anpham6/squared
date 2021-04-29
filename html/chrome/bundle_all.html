@@ -100,10 +100,11 @@
             squared
                 .copyTo('C:/Users/An/Downloads/chrome', {
                     useOriginalHtmlPage: true,
+                    productionRelease: true,
                     saveAs: {
                         html: {
                             cloudStorage: [{
-                                service: 'aws',
+                                service: 'aws-v3',
                                 bucket: 'squared-001',
                                 credential: 'main',
                                 admin: {
@@ -115,6 +116,11 @@
                                     localStorage: false,
                                     endpoint: 'https://squared-001.s3.us-west-2.amazonaws.com',
                                     overwrite: true
+                                },
+                                download: {
+                                    filename: 'bundle_all.html',
+                                    pathname: 'download',
+                                    overwrite: true
                                 }
                             }]
                         },
@@ -122,7 +128,7 @@
                             filename: 'bundle.css',
                             process: ['minify'],
                             cloudStorage: [{
-                                service: 'ibm',
+                                service: 'aws-v3',
                                 bucket: 'squared-001',
                                 credential: 'main',
                                 admin: {
@@ -133,7 +139,11 @@
                                 upload: {
                                     active: true,
                                     localStorage: false,
-                                    all: true,
+                                    all: true
+                                },
+                                download: {
+                                    filename: 'common/css/bundle.css',
+                                    pathname: 'download',
                                     overwrite: true
                                 }
                             }]
