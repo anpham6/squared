@@ -161,12 +161,15 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 }
             }
             options.usedVariables = variables;
+            delete options.removeUnusedVariables;
         }
         if (options.removeUnusedFontFace) {
             options.usedFontFace = Array.from(this._cssUsedFontFace[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
+            delete options.removeUnusedFontFace;
         }
         if (options.removeUnusedKeyframes) {
             options.usedKeyframes = Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|keyframes:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
+            delete options.removeUnusedKeyframes;
         }
         if (options.removeUnusedMedia) {
             const unusedMedia = this._cssUnusedMedia[sessionId];
@@ -182,6 +185,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     options.unusedMedia = queries;
                 }
             }
+            delete options.removeUnusedMedia;
         }
         if (options.removeUnusedSupports) {
             const unusedSupports = this._cssUnusedSupports[sessionId];
@@ -197,6 +201,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     options.unusedSupports = supports;
                 }
             }
+            delete options.removeUnusedSupports;
         }
         if (options.removeUnusedClasses || options.removeUnusedPseudoClasses) {
             const unusedSelectors = this._cssUnusedSelectors[sessionId];
@@ -211,6 +216,8 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     options.unusedStyles = styles;
                 }
             }
+            delete options.removeUnusedClasses;
+            delete options.removeUnusedPseudoClasses;
         }
         if (options.configUri) {
             const commands = await this.fileHandler!.loadConfig(options.configUri, options) as Undef<AssetCommand[]>;
@@ -296,6 +303,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     }
                 }
             }
+            delete options.configUri;
         }
         if (assetMap.size === 0) {
             delete options.assetMap;

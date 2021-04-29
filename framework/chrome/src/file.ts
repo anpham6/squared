@@ -1068,6 +1068,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (templateMap) {
             options.templateMap = templateMap;
         }
+        delete options.saveAs;
         delete options.assetMap;
         delete options.indexMap;
         delete options.nodeMap;
