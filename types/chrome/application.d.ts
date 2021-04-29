@@ -10,7 +10,7 @@ interface FileUniversalAttribute extends PlainObject, DocumentOutput {
     removeInlineStyles?: boolean;
     retainUsedStyles?: (string | RegExp)[];
     removeUnusedClasses?: boolean;
-    removeUnusedSelectors?: boolean;
+    removeUnusedPseudoClasses?: boolean;
     removeUnusedVariables?: boolean;
     removeUnusedFontFace?: boolean;
     removeUnusedKeyframes?: boolean;
