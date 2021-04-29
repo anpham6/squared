@@ -510,7 +510,7 @@ export function parseWatchInterval(value: Undef<string>) {
         if (value === 'true') {
             return true;
         }
-        const match = /^(~|\d+)(?:\s*::\s*(~|.+?)(?:\s*::\s*(.+?)(?:\[([^\]]+)\])?)?)?\s*$/.exec(value);
+        const match = /^(?:^|\s+)(~|\d+)\s*(?:::\s*(~|.+?)\s*(?:::\s*(.+?)(?:\[([^\]]+)\])?)?)?(?:\s+|$)$/.exec(value);
         if (match) {
             let interval: Undef<number>,
                 expires: Undef<string>,
@@ -530,7 +530,7 @@ export function parseWatchInterval(value: Undef<string>) {
                         secure = match[4].includes('secure');
                         module = match[4].includes('module');
                     }
-                    reload = { socketId: socketId !== '~' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
+                    reload = { socketId: socketId !== '~' && socketId !== 'true' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
                 }
             }
             return { interval, expires, reload } as WatchInterval;

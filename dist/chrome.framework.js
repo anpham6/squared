@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.9
+/* chrome-framework 2.5.10
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -207,8 +207,14 @@ var chrome = (function () {
         if (uri && !pathname && filename) {
             try {
                 const asset = new URL(uri);
-                if (location.origin === asset.origin && asset.pathname.startsWith(pathname = splitPairStart(location.pathname, '/', false, true))) {
-                    pathname = splitPairStart(asset.pathname.substring(pathname.length + 1), '/', false, true);
+                if (location.origin === asset.origin && startsWith(asset.pathname, pathname = splitPairStart(location.pathname, '/', false, true))) {
+                    const pathsub = asset.pathname.substring(pathname.length + 1);
+                    if (pathsub.includes('/')) {
+                        pathname = splitPairStart(pathsub, '/', false, true);
+                    }
+                    else {
+                        return filename;
+                    }
                 }
                 else {
                     return '';
@@ -1026,7 +1032,7 @@ var chrome = (function () {
             }
             let data = null;
             if (src) {
-                if ((data = File.parseUri(resolvePath(src), isCrossOrigin(download, preserveCrossOrigin), { saveAs: file, mimeType, format, fromConfig })) && data.format !== 'crossorigin') {
+                if ((data = File.parseUri(resolvePath(src), isCrossOrigin(download, preserveCrossOrigin) || assetCommand && preserve, { saveAs: file, mimeType, format, fromConfig })) && data.format !== 'crossorigin') {
                     if (assetCommand) {
                         if (inline) {
                             switch (assetCommand.type) {

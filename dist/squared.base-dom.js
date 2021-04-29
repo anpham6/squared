@@ -1,4 +1,4 @@
-/* squared.base 2.5.9
+/* squared.base 2.5.10
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -760,7 +760,7 @@ this.squared.base = (function (exports) {
                     }
                 }
                 if (rootElements.length === 0) {
-                    return [rootElements];
+                    return [{}, rootElements, []];
                 }
             }
             const { controllerHandler, resourceHandler, resourceId, extensionsAll: extensions } = this;
@@ -1607,7 +1607,7 @@ this.squared.base = (function (exports) {
             if (value === 'true') {
                 return true;
             }
-            const match = /^(~|\d+)(?:\s*::\s*(~|.+?)(?:\s*::\s*(.+?)(?:\[([^\]]+)\])?)?)?\s*$/.exec(value);
+            const match = /^(?:^|\s+)(~|\d+)\s*(?:::\s*(~|.+?)\s*(?:::\s*(.+?)(?:\[([^\]]+)\])?)?)?(?:\s+|$)$/.exec(value);
             if (match) {
                 let interval, expires, reload;
                 if (match[1] !== '~' && !isNaN(+match[1])) {
@@ -1624,7 +1624,7 @@ this.squared.base = (function (exports) {
                             secure = match[4].includes('secure');
                             module = match[4].includes('module');
                         }
-                        reload = { socketId: socketId !== '~' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
+                        reload = { socketId: socketId !== '~' && socketId !== 'true' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
                     }
                 }
                 return { interval, expires, reload };
@@ -1699,7 +1699,7 @@ this.squared.base = (function (exports) {
     const getEndpoint = (hostname, endpoint) => startsWith$2(endpoint, 'http') ? endpoint : hostname + endpoint;
     class File {
         constructor() {
-            this.archiveFormats = ['zip', '7z', 'tar', 'gz', 'tgz'];
+            this.archiveFormats = ['zip', 'tar', '7z', 'gz', 'tgz'];
             this._hostname = '';
             this._endpoints = {
                 ASSETS_COPY: '/api/v1/assets/copy',
@@ -2002,7 +2002,7 @@ this.squared.base = (function (exports) {
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
-    const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith: endsWith$1, escapePattern, hasValue, isNumber, isObject, isSpace, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith: startsWith$1 } = squared.lib.util;
+    const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith: endsWith$1, escapePattern, hasValue, isNumber, isObject, iterateArray, iterateReverseArray, spliceString, splitEnclosing, splitPair, startsWith: startsWith$1 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -2024,6 +2024,7 @@ this.squared.base = (function (exports) {
     const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value;
     const BORDER_OUTLINE = CSS_PROPERTIES.outline.value;
     const REGEXP_EM = /\dem$/;
+    const REGEXP_NOT = /^:not\((.+)\)$/i;
     const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
     const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
     const REGEXP_NOTINDEX = /:not-(x+)/;
@@ -2035,12 +2036,14 @@ this.squared.base = (function (exports) {
         if (value !== current) {
             const restore = element.style[attr];
             element.style[attr] = value;
-            const newValue = element.style[attr];
-            if (newValue && current !== newValue) {
+            const updated = element.style[attr];
+            if (!updated) {
+                return 0 /* FAIL */;
+            }
+            if (updated !== current) {
                 setElementCache(element, attr, restore, sessionId);
                 return 2 /* CHANGED */;
             }
-            return 0 /* FAIL */;
         }
         return 1 /* READY */;
     }
@@ -2048,7 +2051,7 @@ this.squared.base = (function (exports) {
         const lineHeight = convertPercent(value);
         return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit(value, { fontSize });
     }
-    function isFontFixedWidth(node) {
+    function isFixedWidth(node) {
         const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
         return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
@@ -2203,7 +2206,7 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    function validateQuerySelector(selector, child) {
+    function validateSelector(selector, child) {
         if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
             return false;
         }
@@ -2608,7 +2611,7 @@ this.squared.base = (function (exports) {
                 }
                 if (notData) {
                     notData.fromNot = true;
-                    if (validateQuerySelector.call(this, notData)) {
+                    if (validateSelector.call(this, notData)) {
                         return false;
                     }
                 }
@@ -2619,18 +2622,18 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    function ascendQuerySelector(selectors, index, nodes, offset, checked) {
+    function ascendSelector(selectors, index, nodes, offset, checked) {
         const selector = selectors[index];
         const selectorAdjacent = index > 0 && selectors[--index];
         const adjacent = selector.adjacent;
         const next = [];
         for (let i = 0, length = nodes.length; i < length; ++i) {
             const child = nodes[i];
-            if (checked || selector.all || validateQuerySelector.call(child, selector)) {
+            if (checked || selector.all || validateSelector.call(child, selector)) {
                 let parent = child.actualParent;
                 if (adjacent) {
                     if (adjacent === '>') {
-                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
+                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
                             next.push(parent);
                         }
                     }
@@ -2639,7 +2642,7 @@ this.squared.base = (function (exports) {
                         switch (adjacent) {
                             case '+': {
                                 const j = children.indexOf(child) - 1;
-                                if (j >= 0 && (selectorAdjacent.all || validateQuerySelector.call(children[j], selectorAdjacent))) {
+                                if (j >= 0 && (selectorAdjacent.all || validateSelector.call(children[j], selectorAdjacent))) {
                                     next.push(children[j]);
                                 }
                                 break;
@@ -2650,7 +2653,7 @@ this.squared.base = (function (exports) {
                                     if (sibling === child) {
                                         break;
                                     }
-                                    else if (selectorAdjacent.all || validateQuerySelector.call(sibling, selectorAdjacent)) {
+                                    else if (selectorAdjacent.all || validateSelector.call(sibling, selectorAdjacent)) {
                                         next.push(sibling);
                                     }
                                 }
@@ -2660,7 +2663,7 @@ this.squared.base = (function (exports) {
                 }
                 else if (selectorAdjacent) {
                     while (parent && parent.depth - this.depth >= index + offset) {
-                        if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
+                        if (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent)) {
                             next.push(parent);
                         }
                         parent = parent.actualParent;
@@ -2671,7 +2674,7 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        return next.length > 0 && (index === 0 ? true : ascendQuerySelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
+        return next.length > 0 && (index === 0 ? true : ascendSelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
     }
     function getMinMax(node, min, attr, options) {
         let self, last, wrapperOf, subAttr, initialValue, initial;
@@ -2729,15 +2732,6 @@ this.squared.base = (function (exports) {
             }
         });
         return result || node;
-    }
-    function getQueryLength(value) {
-        let result = 0;
-        for (let i = 0, length = value.length; i < length; ++i) {
-            if (!isSpace(value[i])) {
-                ++result;
-            }
-        }
-        return result;
     }
     function getBoundsSize(node, options) {
         var _a;
@@ -3642,9 +3636,9 @@ this.squared.base = (function (exports) {
                 const checkNot = (condition) => {
                     return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
                         if (b[0] === ':') {
-                            const match = REGEXP_ENCLOSING.exec(b);
-                            if (match && match[1].toLowerCase() === 'not') {
-                                b = parseNot(match[2].trim());
+                            const match = REGEXP_NOT.exec(b);
+                            if (match) {
+                                b = parseNot(match[1].trim());
                             }
                         }
                         return a + b;
@@ -3713,31 +3707,26 @@ this.squared.base = (function (exports) {
                         }
                         else {
                             CSS$1.SELECTOR_G.lastIndex = 0;
-                            let selector = '', adjacent = '', match;
+                            let position = -1, adjacent = '', segment, match;
                             while (match = CSS$1.SELECTOR_G.exec(query)) {
-                                let segment = match[1];
-                                selector += segment;
-                                switch (segment) {
+                                if (match.index > position + 1) {
+                                    break invalid;
+                                }
+                                position = match.index + match[0].length;
+                                switch (segment = match[1]) {
                                     case '+':
                                     case '~':
                                         --offset;
                                     case '>':
-                                        if (adjacent || q === 0 && (segment !== '>' || !/^:(root|scope)/.test(query))) {
+                                        if (adjacent || q === 0 && (segment !== '>' || !/^:(?:root|scope)/i.test(query))) {
                                             break invalid;
                                         }
                                         adjacent = segment;
                                         continue;
                                     case '*':
                                     case '*|*':
-                                        if (match.index) {
-                                            if (match[0][0] !== ' ') {
-                                                break invalid;
-                                            }
-                                        }
-                                        else {
-                                            start = true;
-                                        }
                                         q = selectors.push({ all: true, adjacent });
+                                        start = true;
                                         adjacent = '';
                                         continue;
                                     case ':root':
@@ -3850,7 +3839,7 @@ this.squared.base = (function (exports) {
                                 });
                                 adjacent = '';
                             }
-                            if (getQueryLength(query) !== getQueryLength(selector)) {
+                            if (position < query.length) {
                                 continue;
                             }
                         }
@@ -3881,7 +3870,7 @@ this.squared.base = (function (exports) {
                                 const items = queryMap[j];
                                 for (let k = 0, s = items.length; k < s; ++k) {
                                     const node = items[k];
-                                    if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
+                                    if ((all || !result.includes(node)) && ascendSelector.call(this, selectors, q - 1, [node], offset)) {
                                         result.push(node);
                                     }
                                 }
@@ -4892,7 +4881,7 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 if (this.naturalChild) {
                     if (this.styleElement) {
-                        const fixedWidth = isFontFixedWidth(this);
+                        const fixedWidth = isFixedWidth(this);
                         let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
                         if (isPx(value)) {
                             result = parseFloat(value);
@@ -4901,7 +4890,7 @@ this.squared.base = (function (exports) {
                             const parent = this.actualParent;
                             if (parent) {
                                 result = convertPercent(value) * parent.fontSize;
-                                if (fixedWidth && !isFontFixedWidth(parent)) {
+                                if (fixedWidth && !isFixedWidth(parent)) {
                                     result *= 13 / getRemSize();
                                 }
                             }
@@ -4953,7 +4942,7 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else {
-                    const options = { fixedWidth: isFontFixedWidth(this) };
+                    const options = { fixedWidth: isFixedWidth(this) };
                     result = parseUnit(this.css('fontSize'), options) || ((_b = (_a = this.ascend({ condition: item => item.fontSize > 0 })[0]) === null || _a === void 0 ? void 0 : _a.fontSize) !== null && _b !== void 0 ? _b : parseUnit('1rem', options));
                 }
                 this._cache.fontSize = result;

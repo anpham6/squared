@@ -1,4 +1,4 @@
-/* squared.svg 2.5.9
+/* squared.svg 2.5.10
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -2102,7 +2102,7 @@ this.squared.svg = (function (exports) {
             switch (attributeName) {
                 case 'fill':
                 case 'stroke': {
-                    const start = parseColor$2(valueA);
+                    const start = parseColor$2(valueA) || index === 0 && parseColor$2('#000000') || parseColor$2(values[index - 1]);
                     const end = parseColor$2(valueB);
                     if (start && end) {
                         currentValue = [start];
@@ -2175,7 +2175,7 @@ this.squared.svg = (function (exports) {
                                     break;
                             }
                             const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
-                            const percent = (interval * (i + offset)) / 100;
+                            const percent = time > 0 ? (interval * (i + offset)) / 100 : 0;
                             let result = '';
                             switch (attributeName) {
                                 case 'fill':

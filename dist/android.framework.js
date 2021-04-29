@@ -1,4 +1,4 @@
-/* android-framework 2.5.9
+/* android-framework 2.5.10
    https://github.com/anpham6/squared */
 
 var android = (function () {

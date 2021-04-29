@@ -1,7 +1,6 @@
 import { CSS_TRAITS, CSS_UNIT, PLATFORM, USER_AGENT } from './constant';
 
 import { getDeviceDPI, isPlatform, isUserAgent } from './client';
-import { parseColor } from './color';
 import { clamp, truncate, truncateFraction } from './math';
 import { CSS, STRING, TRANSFORM } from './regex';
 import { getElementCache, setElementCache } from './session';
@@ -2800,9 +2799,8 @@ export function parseVar(element: StyleElement, value: string, style?: CSSStyleD
     let match: Null<RegExpMatchArray>;
     while (match = REGEXP_VAR.exec(value)) {
         let propertyValue = (style ||= getStyle(element)).getPropertyValue(match[2]).trim();
-        const fallback = match[3];
-        if (fallback && (!propertyValue || isLength(fallback, true) && !isLength(propertyValue, true) || isNumber(fallback) && !isNumber(propertyValue) || parseColor(fallback) && !parseColor(propertyValue))) {
-            propertyValue = fallback.trim();
+        if (!propertyValue && match[3]) {
+            propertyValue = match[3].trim();
         }
         if (!propertyValue) {
             return '';

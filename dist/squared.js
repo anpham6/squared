@@ -1,4 +1,4 @@
-/* squared 2.5.9
+/* squared 2.5.10
    https://github.com/anpham6/squared */
 
 var squared = (function (exports) {
@@ -82,7 +82,7 @@ var squared = (function (exports) {
         HEX: /^#?[\dA-Fa-f]{3,8}$/,
         RGBA: /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)$/,
         HSLA: /^hsla?\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+%?)\s*)?\)$/,
-        SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${SELECTOR_ATTR}|${SELECTOR_PSEUDO_ELEMENT}|${SELECTOR_PSEUDO_CLASS}|${SELECTOR_LABEL}|\\*)+|[>~+*])`, 'g'),
+        SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${SELECTOR_ATTR}|${SELECTOR_PSEUDO_ELEMENT}|${SELECTOR_PSEUDO_CLASS}|${SELECTOR_LABEL}|\\*(?![A-Za-z\\d*]))+|\\*(?![A-Za-z\\d*])|[>~+](?!\\s*[>~+]))`, 'g'),
         SELECTOR_LABEL: new RegExp(SELECTOR_LABEL),
         SELECTOR_PSEUDO_ELEMENT: new RegExp(SELECTOR_PSEUDO_ELEMENT),
         SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
@@ -1947,7 +1947,7 @@ var squared = (function (exports) {
     const hasBorderStyle = (value) => value !== 'none' && value !== 'hidden';
     const calculateLength = (element, value) => formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
     const fromFontNamedValue = (index, fixedWidth) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
-    const isColor = (value) => /(rgb|hsl)a?/.test(value);
+    const isColor = (value) => /(?:rgb|hsl)a?/.test(value);
     const formatVar = (value) => !isNaN(value) ? value + 'px' : '';
     const formatDecimal = (value) => !isNaN(value) ? value.toString() : '';
     const trimEnclosing = (value) => value.substring(1, value.length - 1);
@@ -4366,9 +4366,8 @@ var squared = (function (exports) {
         let match;
         while (match = REGEXP_VAR.exec(value)) {
             let propertyValue = (style || (style = getStyle(element))).getPropertyValue(match[2]).trim();
-            const fallback = match[3];
-            if (fallback && (!propertyValue || isLength(fallback, true) && !isLength(propertyValue, true) || isNumber(fallback) && !isNumber(propertyValue) || parseColor(fallback) && !parseColor(propertyValue))) {
-                propertyValue = fallback.trim();
+            if (!propertyValue && match[3]) {
+                propertyValue = match[3].trim();
             }
             if (!propertyValue) {
                 return '';
@@ -4687,32 +4686,31 @@ var squared = (function (exports) {
         }
         const opening = [];
         const closing = [];
-        let opened = 0;
         for (let i = 0; i < length; ++i) {
             switch (value[i]) {
                 case '(':
-                    ++opened;
-                    opening[i] = true;
+                    opening.push(i);
                     break;
                 case ')':
                     closing.push(i);
                     break;
             }
         }
-        if (opened === closing.length) {
+        if (opening.length === closing.length) {
             const equated = [];
             let index = 0;
             do {
                 for (let i = 0; i < closing.length; ++i) {
-                    let valid, j = closing[i] - 1;
+                    let valid, j = closing[i] - 1, l = i;
                     for (; j >= 0; j--) {
-                        if (opening[j]) {
-                            opening[j] = false;
+                        const k = opening.indexOf(j);
+                        if (k !== -1) {
+                            opening[k] = NaN;
                             valid = true;
                             break;
                         }
                         else if (closing.includes(j)) {
-                            break;
+                            l = j;
                         }
                     }
                     if (valid) {
@@ -4723,7 +4721,7 @@ var squared = (function (exports) {
                         let found, operand, operator;
                         const seg = [];
                         const evaluate = [];
-                        const operation = value.substring(j + 1, closing[i]).split(REGEXP_CALCOPERATION);
+                        const operation = value.substring(j + 1, closing[l]).split(REGEXP_CALCOPERATION);
                         for (let k = 0, q = operation.length; k < q; ++k) {
                             const partial = operation[k].trim();
                             switch (partial) {
@@ -4748,8 +4746,8 @@ var squared = (function (exports) {
                                                 break;
                                         }
                                         const unit = equated[+match[1]];
-                                        seg.push(unit);
-                                        operand = unit.toString();
+                                        seg.push(unit[0]);
+                                        operand = unit[1] ? unit[1].toString() : undefined;
                                         found = true;
                                     }
                                     else {
@@ -4803,7 +4801,7 @@ var squared = (function (exports) {
                                                     }
                                                     const angle = parseAngle(partial);
                                                     if (!isNaN(angle)) {
-                                                        seg.push();
+                                                        seg.push(angle);
                                                         found = true;
                                                     }
                                                     else {
@@ -4894,11 +4892,12 @@ var squared = (function (exports) {
                             const result = seg[0];
                             return min !== undefined && result < min || max !== undefined && result > max ? NaN : truncateFraction(result);
                         }
-                        equated[index] = seg[0];
+                        equated[index] = [seg[0], operand];
                         const hash = `{${index++}}`;
-                        const remaining = closing[i] + 1;
+                        const remaining = closing[l] + 1;
                         value = value.substring(0, j) + hash + ' '.repeat(remaining - (j + hash.length)) + value.substring(remaining);
-                        closing.splice(i--, 1);
+                        closing.splice(l, 1);
+                        i = -1;
                     }
                 }
             } while (true);

@@ -52,7 +52,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         switch (attributeName) {
             case 'fill':
             case 'stroke': {
-                const start = parseColor(valueA);
+                const start = parseColor(valueA) || index === 0 && parseColor('#000000') || parseColor(values[index - 1]);
                 const end = parseColor(valueB);
                 if (start && end) {
                     currentValue = [start];
@@ -125,7 +125,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                 break;
                         }
                         const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
-                        const percent = (interval * (i + offset)) / 100;
+                        const percent = time > 0 ? (interval * (i + offset)) / 100 : 0;
                         let result = '';
                         switch (attributeName) {
                             case 'fill':
