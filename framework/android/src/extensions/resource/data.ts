@@ -7,6 +7,10 @@ const { capitalize } = squared.lib.util;
 export default class ResourceData<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
+    public beforeCascadeRoot(processing: squared.base.AppProcessing<T>) {
+        this.enabled = this.application.getUserSetting<boolean>(processing, 'enabledViewModel');
+    }
+
     public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
         const viewModel = (this.application as android.base.Application<T>).viewModel;
         if (viewModel.size) {

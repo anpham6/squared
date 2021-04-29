@@ -100,6 +100,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             squared.setFramework(android);
+            squared.settings.enabledViewModel = false;
             const copyTo = new URLSearchParams(location.search).get('copyTo');
             if (copyTo) {
                 squared.settings.showErrorMessages = false;
@@ -112,7 +113,7 @@
                 }
             });
             const time = performance.now();
-            squared.parseDocument()
+            squared.parseDocument({ element: document.body, enabledViewModel: true })
                 .then(() => {
                     android.setViewModel({
                         import: ['android.util.SparseArray', 'java.util.Map', 'java.util.List'],

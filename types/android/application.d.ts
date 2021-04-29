@@ -3,6 +3,7 @@ interface UserResourceSettingsUI {
     resolutionDPI: number;
     supportRTL: boolean;
     enabledMultiline: boolean;
+    enabledViewModel: boolean;
     compressImages: boolean;
     convertImages: string;
     baseLayoutAsFragment: boolean;

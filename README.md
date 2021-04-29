@@ -163,6 +163,7 @@ squared.settings = {
     preloadCustomElements: true,
     enabledSVG: true,
     enabledMultiline: true, // fontMeasureWrap (squared 2.5)
+    enabledViewModel: true,
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
     lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
     baseLayoutAsFragment: false, // FragmentContainerView

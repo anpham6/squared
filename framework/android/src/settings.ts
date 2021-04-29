@@ -36,6 +36,7 @@ const settings: UserResourceSettingsUI = {
     supportNegativeLeftTop: true,
     enabledSVG: true,
     enabledMultiline: true,
+    enabledViewModel: true,
     preloadImages: true,
     preloadFonts: true,
     preloadCustomElements: true,
