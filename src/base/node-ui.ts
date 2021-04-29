@@ -1766,6 +1766,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
+    get styleText() {
+        return this.naturalElement && this.inlineText;
+    }
+
     set multiline(value) {
         this._cache.multiline = value;
         this._cache.baselineElement = undefined;

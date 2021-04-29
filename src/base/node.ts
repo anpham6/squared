@@ -2187,10 +2187,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.tagName[0] === '#';
     }
 
-    get styleText() {
-        return this.naturalElement && this.inlineText;
-    }
-
     get lineBreak() {
         return this.tagName === 'BR';
     }

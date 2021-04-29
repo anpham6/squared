@@ -540,7 +540,6 @@ declare module "base" {
         get block(): boolean;
         get blockStatic(): boolean;
         get plainText(): boolean;
-        get styleText(): boolean;
         get textContent(): string;
         get lineBreak(): boolean;
         get pageFlow(): boolean;
@@ -684,6 +683,7 @@ declare module "base" {
         get autoPosition(): boolean;
         set textContent(value);
         get textContent(): string;
+        get styleText(): boolean;
         set multiline(value);
         get multiline(): boolean;
         set visible(value);
