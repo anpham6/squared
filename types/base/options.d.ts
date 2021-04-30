@@ -191,7 +191,7 @@ interface ParseGlobOptions {
 
 interface LoadDataOptions {
     type?: XMLHttpRequestResponseType;
-    mime?: string;
+    mimeType?: string;
     accept?: string;
     cache?: boolean;
 }

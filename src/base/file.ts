@@ -120,12 +120,16 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public async loadConfig(uri: string, options?: squared.FileActionOptions) {
-        let mime: Undef<string>,
+        let mimeType: Undef<string>,
             cache: Undef<boolean>;
         if (options) {
-            ({ configMime: mime, cache } = options);
+            let config: Undef<squared.FileActionConfig>;
+            ({ config, cache } = options);
+            if (config) {
+                mimeType = config.mimeType;
+            }
         }
-        const config = await this.loadData(uri, { type: 'json', mime, cache }) as Null<ResponseData>;
+        const config = await this.loadData(uri, { type: 'json', mimeType, cache }) as Null<ResponseData>;
         if (config) {
             if (config.success && Array.isArray(config.data)) {
                 return config.data as OutputCommand[];
@@ -138,9 +142,9 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public loadData(value: string, options: LoadDataOptions): Promise<unknown> {
-        const { type, mime, cache } = options;
+        const { type, mimeType, cache } = options;
         if (this.hasHttpProtocol() && type) {
-            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mime ? '&mime=' + encodeURIComponent(mime) : ''), {
+            return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mimeType ? '&mime=' + encodeURIComponent(mimeType) : ''), {
                 method: 'GET',
                 headers: new Headers({ Accept: options.accept || '*/*' })
             })
@@ -366,6 +370,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 body.task = Array.from(taskName);
             }
             this.finalizeRequestBody(body);
+            delete body.config;
             return body;
         }
     }

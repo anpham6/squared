@@ -4,11 +4,15 @@ type RootElement = squared.base.RootElement;
 type PromiseResult = Promise<Void<PlainObject>>;
 
 export interface FileActionOptions extends RequestData {
-    configUri?: string;
-    configMime?: string;
+    config?: FileActionConfig;
     exclusions?: Exclusions;
     callback?: (result: unknown) => void;
     cache?: boolean;
+}
+
+export interface FileActionConfig {
+    uri?: string;
+    mimeType?: string;
 }
 
 export type ExtensionRequest = squared.base.Extension<Node> | string;

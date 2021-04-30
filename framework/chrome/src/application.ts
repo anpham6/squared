@@ -219,8 +219,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             delete options.removeUnusedClasses;
             delete options.removeUnusedPseudoClasses;
         }
-        if (options.configUri) {
-            const commands = await this.fileHandler!.loadConfig(options.configUri, options) as Undef<AssetCommand[]>;
+        const uri = options.config?.uri;
+        if (uri) {
+            const commands = await this.fileHandler!.loadConfig(uri, options) as Undef<AssetCommand[]>;
             if (commands) {
                 const documentHandler = this.getUserSetting<StringOfArray>(processing, 'outputDocumentHandler');
                 const paramMap = new Map<string, [RegExp, string]>();
@@ -303,7 +304,6 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                     }
                 }
             }
-            delete options.configUri;
         }
         if (assetMap.size === 0) {
             delete options.assetMap;
