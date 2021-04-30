@@ -1,4 +1,4 @@
-/* squared.base 2.5.0
+/* squared.base
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -6,14 +6,15 @@ this.squared.base = (function (exports) {
     'use strict';
 
     class NodeList extends squared.lib.base.Container {
-        constructor(children, sessionId = '') {
+        constructor(children, sessionId = '0', resourceId = -1) {
             super(children);
             this.sessionId = sessionId;
+            this.resourceId = resourceId;
         }
-        add(node, delegate, cascade, remove) {
+        add(node, options) {
             super.add(node);
-            if (delegate && this.afterAdd) {
-                this.afterAdd(node, cascade, remove);
+            if (options && this.afterAdd) {
+                this.afterAdd.call(node, options);
             }
             return this;
         }
@@ -24,15 +25,14 @@ this.squared.base = (function (exports) {
     }
 
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
-    const { FILE: FILE$3, STRING: STRING$2 } = squared.lib.regex;
-    const { isUserAgent: isUserAgent$3 } = squared.lib.client;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$4, checkMediaRule, getSpecificity, insertStyleSheetRule: insertStyleSheetRule$1, getPropertiesAsTraits, parseKeyframes, parseSelectorText: parseSelectorText$1 } = squared.lib.css;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$2, compareSpecificity, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule: insertStyleSheetRule$1, parseSelectorText: parseSelectorText$1 } = squared.lib.internal;
+    const { FILE: FILE$2, STRING: STRING$3 } = squared.lib.regex;
     const { getElementCache: getElementCache$3, newSessionInit, setElementCache: setElementCache$3 } = squared.lib.session;
-    const { allSettled, capitalize: capitalize$2, convertCamelCase: convertCamelCase$2, escapePattern: escapePattern$3, isBase64: isBase64$1, isEmptyString: isEmptyString$1, resolvePath: resolvePath$1, splitPair: splitPair$4, startsWith: startsWith$8 } = squared.lib.util;
-    const REGEXP_IMPORTANT = /\s?([a-z-]+):[^!;]+!important;/g;
-    const REGEXP_DATAURI$1 = new RegExp(`\\s?url\\("(${STRING$2.DATAURI})"\\)`, 'g');
-    const REGEXP_CSSHOST = /^:(host|host-context)\(\s*([^)]+)\s*\)/;
-    const CSS_SHORTHANDNONE = getPropertiesAsTraits(2 /* SHORTHAND */ | 64 /* NONE */);
+    const { allSettled, capitalize: capitalize$1, convertCamelCase: convertCamelCase$2, isBase64: isBase64$1, isEmptyString: isEmptyString$1, isPlainObject: isPlainObject$1, replaceAll: replaceAll$5, resolvePath: resolvePath$2, splitPair: splitPair$7, splitSome: splitSome$8, startsWith: startsWith$a } = squared.lib.util;
+    const REGEXP_IMPORTANT = /([a-z-]+):[^!;]+!important;/g;
+    const REGEXP_CSSHOST = /^:(?:host|host-context)\(([^)]+)\)/;
+    const REGEXP_DATAURI$1 = new RegExp(`url\\("(${STRING$3.DATAURI})"\\)`, 'g');
+    const CSS_SHORTHANDNONE = getPropertiesAsTraits(64 /* NONE */);
     function parseImageUrl(value, styleSheetHref, resource, resourceId) {
         let result, match;
         while (match = REGEXP_DATAURI$1.exec(value)) {
@@ -47,16 +47,16 @@ this.squared.base = (function (exports) {
                     else {
                         content = match[5];
                     }
-                    resource.addRawData(resourceId, match[1], { mimeType: leading && leading.includes('/') ? leading : 'image/unknown', encoding, content, base64 });
+                    resource.addRawData(resourceId, match[1], { mimeType: leading && leading.indexOf('/') !== -1 ? leading : 'image/unknown', encoding, content, base64 });
                 }
             }
             else {
-                const url = resolvePath$1(match[5], styleSheetHref);
+                const url = resolvePath$2(match[5], styleSheetHref);
                 if (url) {
                     if (resource) {
-                        resource.addImageData(resourceId, url);
+                        resource.addImage(resourceId, url);
                     }
-                    result = (result || value).replace(match[0], `url("${url}")`);
+                    result = replaceAll$5(result || value, match[0], `url("${url}")`, 1);
                 }
             }
         }
@@ -77,61 +77,54 @@ this.squared.base = (function (exports) {
     }
     const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
     class Application {
-        constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor) {
+        constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor, builtInExtensions = new Map()) {
             this.framework = framework;
+            this.builtInExtensions = builtInExtensions;
             this.extensions = [];
+            this.userSettings = {};
             this.closed = false;
-            this.elementMap = null;
+            this.elementMap = new WeakMap();
             this.session = { active: new Map() };
             this._nextId = 0;
-            this._resourceHandler = null;
-            this._extensionManager = null;
             this.Node = nodeConstructor;
             const controller = new ControllerConstructor(this);
             this._controllerHandler = controller;
-            if (ExtensionManagerConstructor) {
-                this._extensionManager = new ExtensionManagerConstructor(this);
-            }
-            if (ResourceConstructor) {
-                this._resourceHandler = new ResourceConstructor(this);
-            }
+            this._extensionManager = ExtensionManagerConstructor ? new ExtensionManagerConstructor(this) : null;
+            this._resourceHandler = ResourceConstructor ? new ResourceConstructor(this) : null;
             this._afterInsertNode = controller.afterInsertNode.bind(controller);
             this._includeElement = controller.includeElement.bind(controller);
             this._preventNodeCascade = controller.preventNodeCascade.bind(controller);
             this.init();
         }
         static prioritizeExtensions(value, extensions) {
-            const included = value.trim().split(/\s*,\s*/);
             const result = [];
-            const untagged = [];
-            for (let i = 0, length = extensions.length; i < length; ++i) {
-                const ext = extensions[i];
-                const index = included.indexOf(ext.name);
+            splitSome$8(value, name => {
+                const index = extensions.findIndex(ext => ext.name === name);
                 if (index !== -1) {
-                    result[index] = ext;
+                    result.push(extensions[index]);
                 }
-                else {
-                    untagged.push(ext);
-                }
-            }
-            return result.length ? result.filter(item => item).concat(untagged) : extensions;
+            });
+            return result.length ? result.concat(extensions.filter(ext => !result.includes(ext))) : extensions;
         }
-        init() { }
+        init() {
+            this.controllerHandler.init();
+        }
         finalize() { return true; }
         createNode(sessionId, options) {
             return this.createNodeStatic(this.getProcessing(sessionId), options.element);
         }
         createNodeStatic(processing, element) {
-            const node = new this.Node(this.nextId, processing.sessionId, element);
-            this._afterInsertNode(node);
+            const sessionId = processing.sessionId;
+            const node = new this.Node(this.nextId, sessionId, element);
+            this._afterInsertNode(node, sessionId);
             if (processing.afterInsertNode) {
                 processing.afterInsertNode.some(item => item.afterInsertNode(node));
             }
             return node;
         }
         afterCreateCache(processing, node) {
-            if (this.userSettings.createElementMap) {
-                const elementMap = this.elementMap || (this.elementMap = new WeakMap());
+            if (this.getUserSetting(processing, 'createElementMap')) {
+                const elementMap = this.elementMap;
                 processing.cache.each(item => elementMap.set(item.element, item));
             }
         }
@@ -163,20 +156,19 @@ this.squared.base = (function (exports) {
             var _a;
             this.controllerHandler.reset();
             (_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.reset();
-            for (const ext of this.extensions) {
-                ext.reset();
-            }
+            this.extensions.forEach(ext => ext.reset());
+            this.elementMap = new WeakMap();
             this.closed = false;
         }
         parseDocument(...elements) {
             const resource = this.resourceHandler;
-            const [processing, rootElements, shadowElements, styleSheets] = this.createSessionThread(elements, this.userSettings.pierceShadowRoot && resource ? resource.userSettings.preloadCustomElements : false);
+            const [processing, rootElements, shadowElements, styleSheets] = this.createThread(elements);
             if (rootElements.length === 0) {
                 return reject(DOCUMENT_ROOT_NOT_FOUND);
             }
             const resourceId = processing.resourceId;
             const documentRoot = rootElements[0];
-            const [preloadItems, preloaded] = resource ? resource.preloadAssets(resourceId, documentRoot, shadowElements) : [[], []];
+            const [preloadItems, preloaded] = resource ? resource.preloadAssets(resourceId, documentRoot, shadowElements, this.getUserSetting(processing, 'preloadImages'), this.getUserSetting(processing, 'preloadFonts')) : [[], []];
             if (styleSheets) {
                 preloadItems.push(...styleSheets);
             }
@@ -187,15 +179,20 @@ this.squared.base = (function (exports) {
                         if (typeof item === 'string') {
                             fetch(item)
                                 .then(async (result) => {
-                                const mimeType = result.headers.get('content-type') || '';
-                                if (startsWith$8(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
-                                    success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
-                                }
-                                else if (startsWith$8(mimeType, 'image/svg+xml') || FILE$3.SVG.test(item)) {
-                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
+                                if (result.status >= 300) {
+                                    error(item + ` (${result.status}: ${result.statusText})`);
                                 }
                                 else {
-                                    success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair$4(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
+                                    const mimeType = result.headers.get('content-type') || '';
+                                    if (startsWith$a(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                        success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
+                                    }
+                                    else if (startsWith$a(mimeType, 'image/svg+xml') || FILE$2.SVG.test(item)) {
+                                        success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
+                                    }
+                                    else {
+                                        success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair$7(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
+                                    }
                                 }
                             })
                                 .catch(err => error(err));
@@ -222,7 +219,7 @@ this.squared.base = (function (exports) {
                             resource.addRawData(resourceId, data, item.value);
                         }
                         else {
-                            resource.addImage(resourceId, data);
+                            resource.addImageElement(resourceId, data);
                         }
                     }
                     if (errors) {
@@ -234,14 +231,165 @@ this.squared.base = (function (exports) {
                             this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
                         }
                     }
-                    return this.resumeSessionThread(processing, rootElements, elements.length, documentRoot, preloaded);
+                    for (let i = 0, length = preloaded.length; i < length; ++i) {
+                        const image = preloaded[i];
+                        if (image.parentElement) {
+                            documentRoot.removeChild(image);
+                        }
+                    }
+                    return this.resumeThread(processing, rootElements, elements.length);
                 });
             }
-            return Promise.resolve(this.resumeSessionThread(processing, rootElements, elements.length));
+            return Promise.resolve(this.resumeThread(processing, rootElements, elements.length));
         }
         parseDocumentSync(...elements) {
-            const sessionData = this.createSessionThread(elements, false);
-            return this.resumeSessionThread(sessionData[0], sessionData[1], elements.length);
+            const sessionData = this.createThread(elements, true);
+            return this.resumeThread(sessionData[0], sessionData[1], elements.length);
+        }
+        createThread(elements, sync) {
+            const { controllerHandler, resourceHandler, resourceId } = this;
+            const rootElements = [];
+            const customSettings = [];
+            const isEnabled = (settings, name) => settings && name in settings ? settings[name] : this.userSettings[name];
+            let length = elements.length, shadowElements, styleSheets;
+            if (length === 0) {
+                elements.push(this.mainElement);
+                length = 1;
+            }
+            for (let i = 0; i < length; ++i) {
+                let item = elements[i], settings = null;
+                if (isPlainObject$1(item)) {
+                    if (item.element) {
+                        settings = item;
+                        item = item.element;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                if (typeof item === 'string') {
+                    item = document.getElementById(item);
+                }
+                if (item && !rootElements.includes(item)) {
+                    rootElements.push(item);
+                    customSettings.push(settings);
+                    if (!sync && resourceHandler && isEnabled(settings, 'pierceShadowRoot') && isEnabled(settings, 'preloadCustomElements')) {
+                        item.querySelectorAll('*').forEach(host => {
+                            const shadowRoot = host.shadowRoot;
+                            if (shadowRoot) {
+                                shadowRoot.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child) => (styleSheets || (styleSheets = [])).push(child.href));
+                                (shadowElements || (shadowElements = [])).push(shadowRoot);
+                            }
+                        });
+                    }
+                }
+            }
+            if (rootElements.length === 0) {
+                return [{}, rootElements, []];
+            }
+            const sessionId = controllerHandler.generateSessionId;
+            const processing = {
+                sessionId,
+                resourceId,
+                initializing: false,
+                cache: new NodeList([], sessionId, resourceId),
+                excluded: new NodeList([], sessionId, resourceId),
+                rootElements,
+                settings: customSettings[0],
+                customSettings,
+                node: null,
+                documentElement: null,
+                extensions: []
+            };
+            newSessionInit(sessionId);
+            this.session.active.set(sessionId, processing);
+            if (resourceHandler) {
+                resourceHandler.createThread(resourceId);
+            }
+            const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
+            if (queryRoot && queryRoot !== document.documentElement) {
+                this.setStyleMap(sessionId, resourceId, document, queryRoot);
+            }
+            else {
+                this.setStyleMap(sessionId, resourceId);
+            }
+            if (resourceHandler) {
+                const queryElements = [queryRoot || document];
+                if (shadowElements) {
+                    queryElements.push(...shadowElements);
+                }
+                for (const element of queryElements) {
+                    element.querySelectorAll('[style]').forEach((child) => {
+                        const { backgroundImage, listStyleImage } = child.style;
+                        if (backgroundImage) {
+                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
+                        }
+                        if (listStyleImage) {
+                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
+                        }
+                    });
+                }
+            }
+            return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
+        }
+        resumeThread(processing, rootElements, requestCount) {
+            var _a;
+            processing.initializing = false;
+            const { controllerHandler, extensions } = this;
+            const sessionId = processing.sessionId;
+            const success = [];
+            const removeStyle = controllerHandler.localSettings.adoptedStyleSheet && insertStyleSheetRule$1(controllerHandler.localSettings.adoptedStyleSheet);
+            let enabled, disabled;
+            const length = extensions.length;
+            if (length) {
+                enabled = [];
+                for (let i = 0, ext; i < length; ++i) {
+                    if ((ext = extensions[i]).enabled) {
+                        ext.beforeParseDocument(sessionId);
+                        enabled.push(ext);
+                    }
+                    else {
+                        (disabled || (disabled = [])).push(ext);
+                    }
+                }
+            }
+            for (let i = 0; i < rootElements.length; ++i) {
+                processing.settings = processing.customSettings[i];
+                controllerHandler.processUserSettings(processing);
+                if (length) {
+                    const current = [];
+                    const exclude = (_a = processing.settings) === null || _a === void 0 ? void 0 : _a.exclude;
+                    for (let j = 0; j < length; ++j) {
+                        const ext = extensions[j];
+                        if (!(exclude === ext.name || Array.isArray(exclude) && exclude.find(name => name === ext.name))) {
+                            ext.beforeCascadeRoot(processing);
+                            if (ext.enabled) {
+                                current.push(ext);
+                            }
+                        }
+                    }
+                    processing.extensions = current;
+                }
+                const node = this.createCache(processing, rootElements[i]);
+                if (node) {
+                    this.afterCreateCache(processing, node);
+                    success.push(node);
+                }
+            }
+            if (length) {
+                for (let i = 0, q = enabled.length; i < q; ++i) {
+                    const ext = extensions[i];
+                    ext.afterParseDocument(sessionId);
+                    ext.enabled = true;
+                }
+                if (disabled) {
+                    disabled.forEach(ext => ext.enabled = false);
+                }
+            }
+            if (removeStyle) {
+                removeStyle();
+            }
+            return requestCount > 1 ? success : success[0];
         }
         createCache(processing, documentRoot) {
             const node = this.createRootNode(processing, documentRoot);
@@ -255,13 +403,13 @@ this.squared.base = (function (exports) {
             let errors;
             for (let i = 0, length = styleSheets.length; i < length; ++i) {
                 const styleSheet = styleSheets[i];
-                let mediaText;
+                let query;
                 try {
-                    mediaText = styleSheet.media.mediaText;
+                    query = styleSheet.media.mediaText;
                 }
                 catch (_a) {
                 }
-                if (!mediaText || checkMediaRule(mediaText)) {
+                if (!query || window.matchMedia(query).matches) {
                     try {
                         this.applyStyleSheet(sessionId, resourceId, styleSheet, documentRoot, queryRoot);
                     }
@@ -304,7 +452,7 @@ this.squared.base = (function (exports) {
                 else {
                     const namespace = namespaces[i] + '.';
                     for (const data of builtInExtensions) {
-                        if (startsWith$8(data[0], namespace) && !extensions.includes(ext = data[1])) {
+                        if (startsWith$a(data[0], namespace) && !extensions.includes(ext = data[1])) {
                             ext.application = this;
                             extensions.push(ext);
                         }
@@ -319,11 +467,30 @@ this.squared.base = (function (exports) {
             const processing = this.session.active.get(sessionId);
             return processing ? processing.cache : new NodeList();
         }
+        getUserSetting(processing, name) {
+            if (typeof processing === 'string') {
+                processing = this.getProcessing(processing);
+            }
+            if (processing) {
+                const settings = processing.settings;
+                if (settings && name in settings) {
+                    return settings[name];
+                }
+            }
+            return this.userSettings[name];
+        }
         getDatasetName(attr, element) {
-            return element.dataset[attr + capitalize$2(this.systemName)] || element.dataset[attr];
+            return element.dataset[attr + capitalize$1(this.systemName)] || element.dataset[attr];
         }
         setDatasetName(attr, element, value) {
-            element.dataset[attr + capitalize$2(this.systemName)] = value;
+            element.dataset[attr + capitalize$1(this.systemName)] = value;
+        }
+        addRootElement(sessionId, element) {
+            var _a;
+            const rootElements = (_a = this.getProcessing(sessionId)) === null || _a === void 0 ? void 0 : _a.rootElements;
+            if (rootElements && !rootElements.includes(element)) {
+                rootElements.push(element);
+            }
         }
         writeError(message, hint) {
             (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
@@ -334,7 +501,7 @@ this.squared.base = (function (exports) {
         createRootNode(processing, rootElement) {
             const { sessionId, resourceId } = processing;
             const extensions = processing.extensions.filter(item => !!item.beforeInsertNode);
-            const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, extensions.length ? extensions : null);
+            const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, this.getUserSetting(processing, 'pierceShadowRoot'), this.getUserSetting(processing, 'createQuerySelectorMap'), extensions.length ? extensions : null);
             if (node) {
                 node.documentRoot = true;
                 processing.node = node;
@@ -349,7 +516,7 @@ this.squared.base = (function (exports) {
                         const length = children.length;
                         const elements = new Array(length);
                         const parent = new this.Node(id--, sessionId, currentElement, [previousNode]);
-                        this._afterInsertNode(parent);
+                        this._afterInsertNode(parent, sessionId);
                         for (let i = 0; i < length; ++i) {
                             const element = children[i];
                             let child;
@@ -358,14 +525,13 @@ this.squared.base = (function (exports) {
                             }
                             else {
                                 child = new this.Node(id--, sessionId, element);
-                                this._afterInsertNode(child);
+                                this._afterInsertNode(child, sessionId);
                             }
-                            child.init(parent, depth + 1, i);
+                            child.internalSelf(parent, depth + 1, i);
                             child.actualParent = parent;
                             elements[i] = child;
                         }
-                        parent.naturalChildren = elements;
-                        parent.naturalElements = elements;
+                        parent.internalNodes(elements, elements);
                         if (currentElement === document.documentElement) {
                             processing.documentElement = parent;
                             break;
@@ -380,7 +546,7 @@ this.squared.base = (function (exports) {
             }
             return node;
         }
-        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, extensions, shadowParent) {
+        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowParent) {
             const node = this.insertNode(processing, parentElement);
             if (node) {
                 if (depth === 0) {
@@ -395,7 +561,6 @@ this.squared.base = (function (exports) {
                 const length = childNodes.length;
                 const children = [];
                 const elements = [];
-                const pierceShadowRoot = this.userSettings.pierceShadowRoot;
                 let inlineText = true, plainText = false, j = 0;
                 for (let i = 0; i < length; ++i) {
                     const element = childNodes[i];
@@ -417,7 +582,7 @@ this.squared.base = (function (exports) {
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                             this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
-                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
+                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                             elements.push(child);
                             inlineText = false;
                         }
@@ -426,7 +591,7 @@ this.squared.base = (function (exports) {
                         processing.excluded.add(child);
                     }
                     if (child) {
-                        child.init(node, childDepth, j++);
+                        child.internalSelf(node, childDepth, j++);
                         child.actualParent = node;
                         if (shadowParent) {
                             child.shadowHost = shadowParent;
@@ -434,8 +599,7 @@ this.squared.base = (function (exports) {
                         children.push(child);
                     }
                 }
-                node.naturalChildren = children;
-                node.naturalElements = elements;
+                node.internalNodes(children, elements);
                 if (hostElement !== parentElement) {
                     node.shadowRoot = true;
                 }
@@ -449,7 +613,7 @@ this.squared.base = (function (exports) {
                         processing.cache.add(children[0]);
                     }
                 }
-                if (elements.length && this.userSettings.createQuerySelectorMap) {
+                if (elements.length && createQuerySelectorMap) {
                     node.queryMap = this.createQueryMap(elements);
                 }
             }
@@ -468,11 +632,8 @@ this.squared.base = (function (exports) {
                         if (items) {
                             items.push(...childMap[j]);
                         }
-                        else if (q === 1) {
-                            result[k] = childMap[j];
-                        }
                         else {
-                            result[k] = childMap[j].slice(0);
+                            result[k] = q === 1 ? childMap[j] : childMap[j].slice(0);
                         }
                     }
                 }
@@ -480,124 +641,123 @@ this.squared.base = (function (exports) {
             return result;
         }
         applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
-            var _a, _b, _c;
-            var _d;
+            var _a, _b;
             const resource = this.resourceHandler;
-            const styleSheetHref = ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href;
             const cssText = item.cssText;
             switch (item.type) {
                 case CSSRule.STYLE_RULE: {
                     const hostElement = documentRoot.host;
                     const baseMap = {};
-                    const important = {};
                     const cssStyle = item.style;
-                    const hasExactValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:\\s*${value}\\s*;?`).test(cssText);
-                    const hasPartialValue = (attr, value) => new RegExp(`\\s*${attr}\\s*:[^;]*?${value}[^;]*;?`).test(cssText);
+                    let important;
                     for (let i = 0, length = cssStyle.length; i < length; ++i) {
                         const attr = cssStyle[i];
-                        if (attr[0] === '-') {
-                            continue;
-                        }
                         const baseAttr = convertCamelCase$2(attr);
                         let value = cssStyle[attr];
-                        switch (value) {
-                            case 'initial':
-                                if (isUserAgent$3(2 /* SAFARI */) && startsWith$8(baseAttr, 'background')) {
-                                    break;
-                                }
-                                if (((_b = CSS_PROPERTIES$4[baseAttr]) === null || _b === void 0 ? void 0 : _b.value) === 'auto') {
+                        if (value === 'initial') {
+                            const property = CSS_PROPERTIES$2[baseAttr];
+                            if (property) {
+                                if (property.value === 'auto') {
                                     value = 'auto';
-                                    break;
                                 }
-                            case 'normal':
-                                if (!hasExactValue(attr, value)) {
-                                    required: {
-                                        for (const name in CSS_SHORTHANDNONE) {
-                                            const css = CSS_SHORTHANDNONE[name];
-                                            if (css.value.includes(baseAttr)) {
-                                                if (hasExactValue(css.name, '(?:none|initial)') || value === 'initial' && hasPartialValue(css.name, 'initial') || css.valueOfNone && hasExactValue(css.name, escapePattern$3(css.valueOfNone))) {
-                                                    break required;
-                                                }
-                                                break;
+                                else {
+                                    for (const parentAttr in CSS_SHORTHANDNONE) {
+                                        const css = CSS_SHORTHANDNONE[parentAttr];
+                                        if (css.value.includes(baseAttr)) {
+                                            if (property.valueOfNone && new RegExp(`\\s${css.name}:\\s+none\\s*;`).test(cssText)) {
+                                                value = property.valueOfNone;
                                             }
+                                            break;
                                         }
-                                        continue;
                                     }
                                 }
-                                break;
+                            }
                         }
-                        switch (baseAttr) {
-                            case 'backgroundImage':
-                            case 'listStyleImage':
-                            case 'content':
-                                if (value !== 'initial') {
-                                    value = parseImageUrl(value, styleSheetHref, resource, resourceId);
+                        else if (value === 'none') {
+                            const property = CSS_SHORTHANDNONE[baseAttr];
+                            if (property) {
+                                for (const subAttr of property.value) {
+                                    const valueOfNone = CSS_PROPERTIES$2[subAttr].valueOfNone;
+                                    if (valueOfNone) {
+                                        baseMap[subAttr] = valueOfNone;
+                                    }
                                 }
-                                break;
+                            }
+                        }
+                        else if (value) {
+                            switch (baseAttr) {
+                                case 'backgroundImage':
+                                case 'listStyleImage':
+                                case 'content':
+                                    value = parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId);
+                                    break;
+                            }
+                        }
+                        else if (baseAttr in cssStyle) {
+                            value = 'revert';
+                        }
+                        else {
+                            continue;
                         }
                         baseMap[baseAttr] = value;
                     }
-                    let match;
-                    while (match = REGEXP_IMPORTANT.exec(cssText)) {
-                        const attr = convertCamelCase$2(match[1]);
-                        const value = (_c = CSS_PROPERTIES$4[attr]) === null || _c === void 0 ? void 0 : _c.value;
-                        if (Array.isArray(value)) {
-                            for (let i = 0, length = value.length; i < length; ++i) {
-                                important[value[i]] = true;
+                    if (cssText.indexOf('!') !== -1) {
+                        important = [];
+                        let property, match;
+                        while (match = REGEXP_IMPORTANT.exec(cssText)) {
+                            const attr = convertCamelCase$2(match[1]);
+                            if ((property = CSS_PROPERTIES$2[attr]) && Array.isArray(property.value)) {
+                                property.value.forEach(subAttr => important.push(subAttr));
+                            }
+                            else {
+                                important.push(attr);
                             }
                         }
-                        else {
-                            important[attr] = true;
-                        }
+                        REGEXP_IMPORTANT.lastIndex = 0;
                     }
-                    REGEXP_IMPORTANT.lastIndex = 0;
-                    let processing;
+                    const { usedSelector, unusedSelector } = this.session;
                     for (const selectorText of parseSelectorText$1(item.selectorText)) {
                         const specificity = getSpecificity(selectorText);
-                        const [selector, target] = splitPair$4(selectorText, '::');
+                        const [selector, target] = splitPair$7(selectorText, '::');
                         const targetElt = target ? '::' + target : '';
                         let elements;
-                        if (startsWith$8(selector, ':host')) {
+                        if (startsWith$a(selector, ':host')) {
                             if (!hostElement) {
                                 continue;
                             }
-                            let valid = false;
-                            if (selector === ':host') {
-                                valid = true;
-                            }
-                            else {
-                                const matchHost = REGEXP_CSSHOST.exec(selector);
-                                if (matchHost) {
-                                    if (matchHost[2] === '*') {
-                                        valid = true;
-                                    }
-                                    else {
-                                        const result = document.querySelectorAll(matchHost[1] === 'host' ? hostElement.tagName + matchHost[2] : matchHost[2] + ' ' + hostElement.tagName);
-                                        for (let i = 0, length = result.length; i < length; ++i) {
-                                            if (result[i] === hostElement) {
-                                                valid = true;
-                                                break;
+                            valid: {
+                                if (selector !== ':host') {
+                                    const host = REGEXP_CSSHOST.exec(selector);
+                                    if (host) {
+                                        if (host[1] === '*') {
+                                            break valid;
+                                        }
+                                        else {
+                                            const result = document.querySelectorAll(host[1] === 'host' ? hostElement.tagName + host[1] : host[1] + ' ' + hostElement.tagName);
+                                            for (let i = 0, length = result.length; i < length; ++i) {
+                                                if (result[i] === hostElement) {
+                                                    break valid;
+                                                }
                                             }
                                         }
                                     }
+                                    continue;
                                 }
                             }
-                            if (valid) {
-                                elements = [hostElement];
-                            }
-                            else {
-                                continue;
-                            }
+                            elements = [hostElement];
                         }
                         else {
                             elements = (queryRoot || documentRoot).querySelectorAll(selector || '*');
                         }
                         const length = elements.length;
                         if (length === 0) {
-                            if (resource && !hostElement) {
-                                ((_d = (processing || (processing = this.getProcessing(sessionId)))).unusedStyles || (_d.unusedStyles = new Set())).add(selectorText);
+                            if (unusedSelector) {
+                                unusedSelector.call(this, sessionId, item, selectorText, hostElement);
                             }
                             continue;
+                        }
+                        else if (usedSelector) {
+                            usedSelector.call(this, sessionId, item, selectorText, hostElement);
                         }
                         const attrStyle = 'styleMap' + targetElt;
                         const attrSpecificity = 'styleSpecificity' + targetElt;
@@ -606,23 +766,37 @@ this.squared.base = (function (exports) {
                             const styleData = getElementCache$3(element, attrStyle, sessionId);
                             if (styleData) {
                                 const specificityData = getElementCache$3(element, attrSpecificity, sessionId);
+                                let revised;
                                 for (const attr in baseMap) {
-                                    const previous = specificityData[attr];
-                                    const revised = specificity + (important[attr] ? 1000 : 0);
-                                    if (!previous || revised >= previous) {
+                                    if (important && important.includes(attr)) {
+                                        const values = specificity.slice(0);
+                                        values.splice(0, 0, 1, 0);
+                                        revised = values;
+                                    }
+                                    else {
+                                        revised = specificity;
+                                    }
+                                    if (compareSpecificity(revised, specificityData[attr])) {
                                         styleData[attr] = baseMap[attr];
                                         specificityData[attr] = revised;
                                     }
                                 }
                             }
                             else {
-                                const styleMap = Object.assign({}, baseMap);
+                                const style = Object.assign({}, baseMap);
                                 const specificityData = {};
-                                for (const attr in styleMap) {
-                                    specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
+                                for (const attr in style) {
+                                    if (important && important.includes(attr)) {
+                                        const values = specificity.slice(0);
+                                        values.splice(0, 0, 1, 0);
+                                        specificityData[attr] = values;
+                                    }
+                                    else {
+                                        specificityData[attr] = specificity;
+                                    }
                                 }
                                 setElementCache$3(element, 'sessionId', sessionId);
-                                setElementCache$3(element, attrStyle, styleMap, sessionId);
+                                setElementCache$3(element, attrStyle, style, sessionId);
                                 setElementCache$3(element, attrSpecificity, specificityData, sessionId);
                             }
                         }
@@ -631,7 +805,7 @@ this.squared.base = (function (exports) {
                 }
                 case CSSRule.FONT_FACE_RULE:
                     if (resource) {
-                        resource.parseFontFace(resourceId, cssText, styleSheetHref);
+                        resource.parseFontFace(resourceId, cssText, (_b = item.parentStyleSheet) === null || _b === void 0 ? void 0 : _b.href);
                     }
                     break;
                 case CSSRule.SUPPORTS_RULE:
@@ -640,58 +814,61 @@ this.squared.base = (function (exports) {
             }
         }
         applyStyleSheet(sessionId, resourceId, item, documentRoot, queryRoot) {
-            var _a, _b;
-            var _c;
+            var _a;
             try {
                 const cssRules = item.cssRules;
                 if (cssRules) {
-                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${escapePattern$3(rule)}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
+                    const resource = this.resourceHandler;
+                    const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
                     for (let i = 0, length = cssRules.length; i < length; ++i) {
                         const rule = cssRules[i];
-                        const type = rule.type;
-                        switch (type) {
+                        switch (rule.type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
                                 this.applyStyleRule(sessionId, resourceId, rule, documentRoot, queryRoot);
                                 break;
-                            case CSSRule.IMPORT_RULE: {
-                                const uri = resolvePath$1(rule.href, ((_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href);
-                                if (uri) {
-                                    (_b = this.resourceHandler) === null || _b === void 0 ? void 0 : _b.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
+                            case CSSRule.IMPORT_RULE:
+                                if (resource) {
+                                    const uri = resolvePath$2(rule.href, (_a = rule.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href);
+                                    if (uri) {
+                                        resource.addRawData(resourceId, uri, { mimeType: 'text/css', encoding: 'utf8' });
+                                    }
                                 }
                                 this.applyStyleSheet(sessionId, resourceId, rule.styleSheet, documentRoot, queryRoot);
                                 break;
-                            }
-                            case CSSRule.MEDIA_RULE:
-                                if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
+                            case CSSRule.MEDIA_RULE: {
+                                const conditionText = rule.conditionText || parseConditionText('media', rule.cssText);
+                                if (window.matchMedia(conditionText).matches) {
                                     this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
                                 }
                                 else {
                                     this.parseStyleRules(sessionId, resourceId, rule.cssRules);
+                                    const unusedMedia = this.session.unusedMedia;
+                                    if (unusedMedia) {
+                                        unusedMedia.call(this, sessionId, rule, conditionText, documentRoot.host);
+                                    }
                                 }
                                 break;
-                            case CSSRule.SUPPORTS_RULE:
-                                if (CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))) {
+                            }
+                            case CSSRule.SUPPORTS_RULE: {
+                                const conditionText = rule.conditionText || parseConditionText('supports', rule.cssText);
+                                if (CSS.supports(conditionText)) {
                                     this.applyCssRules(sessionId, resourceId, rule.cssRules, documentRoot, queryRoot);
                                 }
                                 else {
                                     this.parseStyleRules(sessionId, resourceId, rule.cssRules);
+                                    const unusedSupports = this.session.unusedSupports;
+                                    if (unusedSupports) {
+                                        unusedSupports.call(this, sessionId, rule, conditionText, documentRoot.host);
+                                    }
                                 }
                                 break;
-                            case CSSRule.KEYFRAMES_RULE: {
-                                const value = parseKeyframes(rule.cssRules);
-                                if (value) {
-                                    const keyframesMap = (_c = this.getProcessing(sessionId)).keyframesMap || (_c.keyframesMap = new Map());
-                                    const name = rule.name;
-                                    const keyframe = keyframesMap.get(name);
-                                    if (keyframe) {
-                                        Object.assign(keyframe, value);
-                                    }
-                                    else {
-                                        keyframesMap.set(name, value);
-                                    }
-                                }
                             }
+                            case CSSRule.KEYFRAMES_RULE:
+                                if (resource) {
+                                    resource.parseKeyFrames(resourceId, rule);
+                                }
+                                break;
                         }
                     }
                 }
@@ -722,7 +899,7 @@ this.squared.base = (function (exports) {
                                     case 'content': {
                                         const value = cssStyle[attr];
                                         if (value !== 'initial') {
-                                            parseImageUrl(value, ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || location.href, resource, resourceId);
+                                            parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId);
                                         }
                                         break;
                                     }
@@ -736,125 +913,6 @@ this.squared.base = (function (exports) {
                     }
                 }
             }
-        }
-        createSessionThread(elements, pierceShadowRoot) {
-            const rootElements = [];
-            const length = elements.length;
-            if (length === 0) {
-                rootElements.push(this.mainElement);
-            }
-            else {
-                for (let i = 0; i < length; ++i) {
-                    let element = elements[i];
-                    if (typeof element === 'string') {
-                        element = document.getElementById(element);
-                    }
-                    if (element && !rootElements.includes(element)) {
-                        rootElements.push(element);
-                    }
-                }
-                if (rootElements.length === 0) {
-                    return [rootElements];
-                }
-            }
-            const { controllerHandler, resourceHandler, resourceId, extensionsAll: extensions } = this;
-            const sessionId = controllerHandler.generateSessionId;
-            const processing = {
-                sessionId,
-                resourceId,
-                initializing: false,
-                cache: new NodeList(undefined, sessionId),
-                excluded: new NodeList(undefined, sessionId),
-                rootElements,
-                node: null,
-                documentElement: null,
-                elementMap: newSessionInit(sessionId),
-                extensions
-            };
-            const afterInsertNode = extensions.filter(item => item.afterInsertNode);
-            if (afterInsertNode.length) {
-                processing.afterInsertNode = afterInsertNode;
-            }
-            this.session.active.set(sessionId, processing);
-            if (resourceHandler) {
-                resourceHandler.init(resourceId);
-            }
-            controllerHandler.init(resourceId);
-            const queryRoot = rootElements.length === 1 && rootElements[0].parentElement;
-            if (queryRoot && queryRoot !== document.documentElement) {
-                this.setStyleMap(sessionId, resourceId, document, queryRoot);
-            }
-            else {
-                this.setStyleMap(sessionId, resourceId);
-            }
-            let shadowElements, styleSheets;
-            if (pierceShadowRoot) {
-                for (const element of rootElements) {
-                    element.querySelectorAll('*').forEach(child => {
-                        const shadowRoot = child.shadowRoot;
-                        if (shadowRoot) {
-                            (shadowElements || (shadowElements = [])).push(shadowRoot);
-                        }
-                    });
-                }
-                if (shadowElements) {
-                    for (const element of shadowElements) {
-                        element.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child) => (styleSheets || (styleSheets = [])).push(child.href));
-                    }
-                }
-            }
-            if (resourceHandler) {
-                const queryElements = [queryRoot || document];
-                if (shadowElements) {
-                    queryElements.push(...shadowElements);
-                }
-                for (const element of queryElements) {
-                    element.querySelectorAll('[style]').forEach((child) => {
-                        const { backgroundImage, listStyleImage } = child.style;
-                        if (backgroundImage) {
-                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
-                        }
-                        if (listStyleImage) {
-                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
-                        }
-                    });
-                }
-            }
-            return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
-        }
-        resumeSessionThread(processing, rootElements, multipleRequest, documentRoot, preloaded) {
-            processing.initializing = false;
-            const { sessionId, extensions } = processing;
-            const styleElement = insertStyleSheetRule$1('html > body { overflow: hidden !important; }');
-            if (preloaded) {
-                for (let i = 0, length = preloaded.length; i < length; ++i) {
-                    const image = preloaded[i];
-                    if (image.parentElement) {
-                        documentRoot.removeChild(image);
-                    }
-                }
-            }
-            const length = extensions.length;
-            for (let i = 0; i < length; ++i) {
-                extensions[i].beforeParseDocument(sessionId);
-            }
-            const success = [];
-            for (const element of rootElements) {
-                const node = this.createCache(processing, element);
-                if (node) {
-                    this.afterCreateCache(processing, node);
-                    success.push(node);
-                }
-            }
-            for (let i = 0; i < length; ++i) {
-                extensions[i].afterParseDocument(sessionId);
-            }
-            try {
-                document.head.removeChild(styleElement);
-            }
-            catch (_a) {
-            }
-            return multipleRequest > 1 ? success : success[0];
         }
         get mainElement() {
             return document.documentElement;
@@ -880,9 +938,6 @@ this.squared.base = (function (exports) {
         get extensionManager() {
             return this._extensionManager;
         }
-        get extensionsAll() {
-            return this.extensions.filter(item => item.enabled);
-        }
         get sessionAll() {
             const active = this.session.active;
             if (active.size === 1) {
@@ -892,10 +947,21 @@ this.squared.base = (function (exports) {
             const extensions = [];
             const children = [];
             for (const processing of active.values()) {
-                extensions.push(...processing.extensions);
+                if (extensions.length) {
+                    const items = processing.extensions;
+                    for (let i = 0, length = items.length; i < length; ++i) {
+                        const item = items[i];
+                        if (!extensions.includes(item)) {
+                            extensions.push(item);
+                        }
+                    }
+                }
+                else {
+                    extensions.push(...processing.extensions);
+                }
                 children.push(...processing.cache.children);
             }
-            return [Array.from(new Set(extensions)), children];
+            return [extensions, children];
         }
         get resourceId() {
             let result = -1;
@@ -928,20 +994,16 @@ this.squared.base = (function (exports) {
             };
             this._sessionId = 0;
         }
-        init(resourceId) { }
+        init() { }
+        reset() { }
+        processUserSettings(processing) { }
         sortInitialCache(cache) { }
         applyDefaultStyles(processing, element, pseudoElt) { }
-        reset() { }
         includeElement(element) { return true; }
         preventNodeCascade(node) { return false; }
+        afterInsertNode(node, sessionId) { }
         get generateSessionId() {
             return padStart((++this._sessionId).toString(), 5, '0');
-        }
-        get afterInsertNode() {
-            return (node) => { };
-        }
-        get userSettings() {
-            return this.application.userSettings;
         }
     }
     Controller.KEY_NAME = 'squared.base.controller';
@@ -957,12 +1019,9 @@ this.squared.base = (function (exports) {
             this.dependencies = [];
             this.subscribers = new Set();
             if (options) {
-                const dependencies = options.dependencies;
-                if (dependencies) {
-                    for (const item of dependencies) {
-                        this.dependencies.push(item);
-                    }
-                    delete options.dependencies;
+                const items = options.dependencies;
+                if (items) {
+                    this.dependencies.push(...items);
                 }
                 Object.assign(this.options, options);
             }
@@ -976,6 +1035,7 @@ this.squared.base = (function (exports) {
             }
         }
         beforeParseDocument(sessionId) { }
+        beforeCascadeRoot(processing) { }
         afterParseDocument(sessionId) { }
         set application(value) {
             this._application = value;
@@ -987,42 +1047,39 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { findSet, isObject: isObject$1 } = squared.lib.util;
+    const { findSet, isObject: isObject$2 } = squared.lib.util;
     class ExtensionManager {
         constructor(application) {
             this.application = application;
             this.cache = new Set();
         }
         add(ext) {
-            if (typeof ext === 'string') {
-                const item = this.get(ext, true);
-                if (!item) {
-                    return false;
-                }
-                ext = item;
+            if (typeof ext === 'string' && !(ext = this.get(ext, true))) {
+                return false;
             }
-            const { application, extensions } = this;
-            if (ext.framework === 0 || ext.framework & application.framework) {
-                ext.application = application;
-                if (!extensions.includes(ext)) {
-                    extensions.push(ext);
+            if (ext instanceof Extension) {
+                const { application, extensions } = this;
+                if (ext.framework === 0 || ext.framework & application.framework) {
+                    ext.application = application;
+                    if (!extensions.includes(ext)) {
+                        extensions.push(ext);
+                    }
+                    return true;
                 }
-                return true;
             }
             return false;
         }
         remove(ext) {
-            if (typeof ext === 'string') {
-                ext = this.get(ext, true);
-                if (!ext) {
-                    return false;
-                }
+            if (typeof ext === 'string' && !(ext = this.get(ext, true))) {
+                return false;
             }
-            const name = ext.name;
-            const index = this.extensions.findIndex(item => item.name === name);
-            if (index !== -1) {
-                this.extensions.splice(index, 1);
-                return true;
+            if (ext instanceof Extension) {
+                const name = ext.name;
+                const index = this.extensions.findIndex(item => item.name === name);
+                if (index !== -1) {
+                    this.extensions.splice(index, 1);
+                    return true;
+                }
             }
             return false;
         }
@@ -1030,26 +1087,22 @@ this.squared.base = (function (exports) {
             return this.extensions.find(item => item.name === name) || findSet(this.cache, item => item.name === name) || (builtIn ? this.application.builtInExtensions.get(name) : undefined);
         }
         checkDependencies() {
-            const extensions = this.extensions;
+            const { application, extensions } = this;
             let result;
             for (let i = 0; i < extensions.length; ++i) {
-                const dependencies = extensions[i].dependencies;
-                const q = dependencies.length;
-                if (q === 0) {
-                    continue;
-                }
-                for (let j = 0, k = 1; j < q; ++j) {
-                    const dependency = dependencies[j];
-                    const name = dependency.name;
-                    const index = extensions.findIndex(item => item.name === name);
+                const items = extensions[i].dependencies;
+                for (let j = 0, k = 1, q = items.length; j < q; ++j) {
+                    const item = items[j];
+                    const name = item.name;
+                    const index = extensions.findIndex(ext => ext.name === name);
                     if (index === -1) {
-                        const ext = this.application.builtInExtensions.get(name);
+                        const ext = application.builtInExtensions.get(name);
                         if (ext) {
-                            ext.application = this.application;
-                            if (dependency.leading) {
+                            ext.application = application;
+                            if (item.leading) {
                                 extensions.splice(i - 1, 0, ext);
                             }
-                            else if (dependency.trailing) {
+                            else if (item.trailing) {
                                 extensions.splice(i + k++, 0, ext);
                             }
                             else {
@@ -1059,12 +1112,12 @@ this.squared.base = (function (exports) {
                         }
                     }
                     if (index !== -1) {
-                        if (dependency.leading) {
+                        if (item.leading) {
                             if (index > i) {
                                 extensions.splice(i - 1, 0, extensions.splice(index, 1)[0]);
                             }
                         }
-                        else if (dependency.trailing) {
+                        else if (item.trailing) {
                             if (index < i) {
                                 extensions.splice(i + 1 + k++, 0, extensions.splice(index, 1)[0]);
                             }
@@ -1082,11 +1135,11 @@ this.squared.base = (function (exports) {
         valueOf(name, attr, fallback) {
             var _a;
             const options = (_a = this.get(name, true)) === null || _a === void 0 ? void 0 : _a.options;
-            return isObject$1(options) ? options[attr] : fallback;
+            return isObject$2(options) ? options[attr] : fallback;
         }
         valueAsObject(name, attr, fallback = null) {
             const value = this.valueOf(name, attr);
-            return isObject$1(value) ? value : fallback;
+            return isObject$2(value) ? value : fallback;
         }
         valueAsString(name, attr, fallback = '') {
             const value = this.valueOf(name, attr);
@@ -1105,7 +1158,34 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { endsWith: endsWith$3, splitPair: splitPair$3, splitPairEnd: splitPairEnd$1, splitPairStart: splitPairStart$1, startsWith: startsWith$7 } = squared.lib.util;
+    const { CSS_ANGLE, LENGTH_PERCENTAGE, QUOTED: QUOTED$1 } = squared.lib.regex.STRING;
+    const CSS_COLOR = '((?:rgb|hsl)a?\\(\\s*\\d+\\s*,\\s*\\d+%?\\s*,\\s*\\d+%?\\s*(?:,\\s*[\\d.]+\\s*)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
+    const DOM_ENTITY = '#(?:[\\d]+|x[A-Za-z\\d]{5});?|[A-Za-z]{2,};';
+    const STRING$2 = {
+        CSS_COLOR,
+        CSS_COLORSTOP: `\\s*${CSS_COLOR}\\s*(?:(${LENGTH_PERCENTAGE}|${CSS_ANGLE}|(?:c(?:alc|lamp)|m(?:in|ax))\\((.+)\\)(?=\\s*,)|(?:c(?:alc|lamp)|m(?:in|ax))\\((.+)\\))\\s*,?)*\\s*,?`,
+        CSS_QUOTE: `(${QUOTED$1}|[^\\s]+)\\s+(${QUOTED$1}|[^\\s]+)`,
+        CSS_VARNAME: 'var\\(\\s*(--[^\\s:,)]*)\\s*(?!:)',
+        CSS_VARVALUE: '(--[^\\s:]*)\\s*:([^;}]+)'
+    };
+    const CSS$2 = {
+        TRANSPARENT: /\b(?:(?:rgb|hsl)a\([^,]+,[^,]+,[^,]+,\s*0(\.0*)?\s*\)|transparent)/,
+        BACKGROUNDIMAGE_G: new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?\\s*(?:(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${STRING$2.CSS_COLORSTOP})+)\\)`, 'g')
+    };
+    const DOM = {
+        SRCSET: /^(.*?)(?:\s+([\d.]+)\s*([xw]))?$/i,
+        ENTITY_G: new RegExp('&' + DOM_ENTITY, 'g'),
+        AMPERSAND_G: new RegExp(`&(?!${DOM_ENTITY})`, 'g')
+    };
+
+    var regex = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        STRING: STRING$2,
+        CSS: CSS$2,
+        DOM: DOM
+    });
+
+    const { endsWith: endsWith$3, escapePattern: escapePattern$3, hasValue: hasValue$2, isObject: isObject$1, replaceAll: replaceAll$4, splitPair: splitPair$6, splitPairEnd: splitPairEnd$2, splitPairStart: splitPairStart$1, startsWith: startsWith$9, trimEnclosing } = squared.lib.util;
     class GlobExp extends RegExp {
         constructor(source, flags, negate) {
             super(source, flags);
@@ -1118,7 +1198,6 @@ this.squared.base = (function (exports) {
             return values.filter(value => this.test(value));
         }
     }
-    const HEX_STRING = '0123456789abcdef';
     const EXT_DATA = {
         '3gp': 'video/3gpp',
         '3g2': 'video/3gpp2',
@@ -1247,8 +1326,10 @@ this.squared.base = (function (exports) {
         yml: 'text/yaml',
         zip: 'application/zip'
     };
+    const CACHE_UUID = {};
+    const HEX_STRING = '0123456789abcdef';
     function fromMimeType(value) {
-        const [type, name] = value.split('/');
+        const [type, name] = splitPair$6(value, '/');
         switch (type) {
             case 'image':
                 switch (name) {
@@ -1257,6 +1338,7 @@ this.squared.base = (function (exports) {
                     case 'bmp':
                     case 'heic':
                     case 'heif':
+                    case 'gif':
                     case 'png':
                     case 'webp':
                         return name;
@@ -1278,7 +1360,6 @@ this.squared.base = (function (exports) {
                 switch (name) {
                     case 'aac':
                     case 'flac':
-                    case 'gif':
                     case 'gsm':
                     case 'ogg':
                     case 'wav':
@@ -1288,6 +1369,8 @@ this.squared.base = (function (exports) {
                         return 'mid';
                     case 'mpeg':
                         return 'mp3';
+                    case 'x-matroska':
+                        return 'mka';
                     case 'x-realaudio':
                         return 'ra';
                     case 'wave':
@@ -1464,32 +1547,67 @@ this.squared.base = (function (exports) {
         return '';
     }
     function parseMimeType(value) {
-        return EXT_DATA[splitPairEnd$1(splitPairStart$1(value = value.toLowerCase(), '?'), '.', true, true) || value] || '';
+        return EXT_DATA[splitPairEnd$2(splitPairStart$1(value = value.toLowerCase(), '?'), '.', true, true) || value] || '';
+    }
+    function getComponentEnd(value, leading = '?', trailing = '/') {
+        return splitPairEnd$2(splitPairStart$1(value, leading), trailing, false, true);
     }
     function appendSeparator(preceding = '', value = '', separator = '/') {
         preceding = preceding.trim();
         value = value.trim();
         switch (separator) {
             case '\\':
-                preceding && (preceding = preceding.replace(/\/+/g, '\\'));
-                value && (value = value.replace(/\/+/g, '\\'));
+                preceding && (preceding = replaceAll$4(preceding, '/', '\\'));
+                value && (value = replaceAll$4(value, '/', '\\'));
                 break;
             case '/':
-                preceding && (preceding = preceding.replace(/\\+/g, '/'));
-                value && (value = value.replace(/\\+/g, '/'));
+                preceding && (preceding = replaceAll$4(preceding, '\\', '/'));
+                value && (value = replaceAll$4(value, '\\', '/'));
                 break;
         }
-        return preceding + (preceding && value && !endsWith$3(preceding, separator) && !startsWith$7(value, separator) ? separator : '') + value;
+        return preceding + (preceding && value && !endsWith$3(preceding, separator) && !startsWith$9(value, separator) ? separator : '') + value;
     }
-    function randomUUID(separator = '-') {
-        return [8, 4, 4, 4, 12].reduce((a, b, index) => {
-            if (index > 0) {
-                a += separator;
+    function assignEmptyValue(dest, ...attrs) {
+        const length = attrs.length;
+        if (length > 1) {
+            let current = dest, i = 0;
+            do {
+                const name = attrs[i];
+                const value = current[name];
+                if (i === length - 2) {
+                    if (!hasValue$2(value)) {
+                        current[name] = attrs[i + 1];
+                    }
+                    break;
+                }
+                else if (name) {
+                    if (value === undefined || value === null) {
+                        current = {};
+                        current[name] = current;
+                    }
+                    else if (isObject$1(value)) {
+                        current = value;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                else {
+                    break;
+                }
+            } while (++i);
+        }
+    }
+    function generateUUID(format = '8-4-4-4-12') {
+        return (CACHE_UUID[format] || format.match(/(\d+|[^\d]+)/g)).reduce((a, b) => {
+            const length = +b;
+            if (!isNaN(length)) {
+                for (let i = 0; i < length; ++i) {
+                    a += HEX_STRING[Math.floor(Math.random() * 16)];
+                }
+                return a;
             }
-            for (let i = 0; i < b; ++i) {
-                a += HEX_STRING[Math.floor(Math.random() * 16)];
-            }
-            return a;
+            return a + b;
         }, '');
     }
     function upperCaseString(value) {
@@ -1501,23 +1619,18 @@ this.squared.base = (function (exports) {
         return result ? result.join('') : value;
     }
     function lowerCaseString(value) {
-        const entities = [];
-        const pattern = /&#?[A-Za-z\d]+?;/g;
-        let match;
-        while (match = pattern.exec(value)) {
-            entities.push(match[0]);
-        }
-        return entities.length ? value.split(pattern).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
+        const entities = DOM.ENTITY_G.exec(value);
+        return entities ? value.split(DOM.ENTITY_G).reduce((a, b, index) => a + b.toLowerCase() + (entities[index] || ''), '') : value.toLowerCase();
     }
     function* searchObject(obj, value, checkName) {
         const start = value[0] === '*';
         const end = endsWith$3(value, '*');
         const search = start && end
-            ? (a) => a.includes(value.replace(/^\*/, '').replace(/\*$/, ''))
+            ? (a) => a.indexOf(value.replace(/^\*/, '').replace(/\*$/, '')) !== -1
             : start
                 ? (a) => endsWith$3(a, value.replace(/^\*/, ''))
                 : end
-                    ? (a) => startsWith$7(a, value.replace(/\*$/, ''))
+                    ? (a) => startsWith$9(a, value.replace(/\*$/, ''))
                     : (a) => a === value;
         for (const attr in obj) {
             if (checkName) {
@@ -1530,8 +1643,66 @@ this.squared.base = (function (exports) {
             }
         }
     }
+    function trimBoth(value, char = '"', trim) {
+        if (trim) {
+            value = value.trim();
+        }
+        const length = value.length;
+        return value[0] === char && value[length - 1] === char ? trimEnclosing(value) : value;
+    }
+    function trimString(value, pattern) {
+        if (pattern.length === 1) {
+            return trimEnd(trimStart(value, pattern), pattern);
+        }
+        const match = new RegExp(`^(?:${pattern = escapePattern$3(pattern)})*([\\s\\S]*?)(?:${pattern})*$`).exec(value);
+        return match ? match[1] : value;
+    }
+    function trimStart(value, pattern) {
+        if (pattern.length === 1) {
+            for (let i = 0, length = value.length; i < length; ++i) {
+                if (value[i] !== pattern) {
+                    if (i > 0) {
+                        return value.substring(i);
+                    }
+                    break;
+                }
+            }
+            return value;
+        }
+        const match = new RegExp(`^(?:${escapePattern$3(pattern)})+`).exec(value);
+        return match ? value.substring(match[0].length) : value;
+    }
+    function trimEnd(value, pattern) {
+        if (pattern.length === 1) {
+            for (let i = value.length - 1, j = 0; i >= 0; --i, ++j) {
+                if (value[i] !== pattern) {
+                    if (j > 0) {
+                        return value.substring(0, value.length - j);
+                    }
+                    break;
+                }
+            }
+            return value;
+        }
+        const match = new RegExp(`(?:${escapePattern$3(pattern)})+$`).exec(value);
+        return match ? value.substring(0, value.length - match[0].length) : value;
+    }
+    function flatArray(list, depth = 1, current = 0) {
+        const result = [];
+        for (let i = 0, length = list.length; i < length; ++i) {
+            const item = list[i];
+            if (current < depth && Array.isArray(item)) {
+                if (item.length) {
+                    result.push(...flatArray(item, depth, current + 1));
+                }
+            }
+            else if (item !== undefined && item !== null) {
+                result.push(item);
+            }
+        }
+        return result;
+    }
     function parseGlob(value, options) {
-        value = value.trim();
         let flags = '', fromEnd;
         if (options) {
             if (options.caseSensitive === false) {
@@ -1539,8 +1710,8 @@ this.squared.base = (function (exports) {
             }
             fromEnd = options.fromEnd;
         }
-        const trimCurrent = (cwd) => fromEnd && startsWith$7(cwd, './') ? cwd.substring(2) : cwd;
-        const source = ((!fromEnd ? '^' : '') + trimCurrent(value))
+        const trimCurrent = (cwd) => fromEnd && startsWith$9(cwd, './') ? cwd.substring(2) : cwd;
+        const source = ((!fromEnd ? '^' : '') + trimCurrent(value = value.trim()))
             .replace(/\\\\([^\\])/g, (...match) => ':' + match[1].charCodeAt(0))
             .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
             .replace(/\{([^}]+)\}/g, (...match) => {
@@ -1565,9 +1736,8 @@ this.squared.base = (function (exports) {
                     return escape() + match[1];
                 case '@':
                     return match[2];
-                default:
-                    return match[0];
             }
+            return match[0];
         })
             .replace(/\?(?!!)/g, '[^/]')
             .replace(/\*/g, '[^/]*?')
@@ -1581,72 +1751,34 @@ this.squared.base = (function (exports) {
                     return '\\*';
                 case '<':
                     return '\\?';
-                default:
-                    return '\\\\' + String.fromCharCode(+match[1]);
             }
+            return '\\\\' + String.fromCharCode(+match[1]);
         }) + '$';
         return new GlobExp(source, flags, value[0] === '!');
-    }
-    function parseTask(value) {
-        if (value) {
-            const result = [];
-            for (const item of value.split('+')) {
-                const [handler, command] = splitPair$3(item, ':', true);
-                if (handler && command) {
-                    const [task, preceding] = splitPair$3(command, ':', true);
-                    result.push({ handler, task, preceding: preceding === 'true' });
-                }
-            }
-            return result;
-        }
-    }
-    function parseWatchInterval(value) {
-        if (value && (value = value.trim())) {
-            if (value === 'true') {
-                return true;
-            }
-            const match = /^(~|\d+)(?:\s*::\s*(~|.+?)(?:\s*::\s*(.+?)(?:\[([^\]]+)\])?)?)?\s*$/.exec(value);
-            if (match) {
-                let interval, expires, reload;
-                if (match[1] !== '~' && !isNaN(+match[1])) {
-                    interval = +match[1];
-                }
-                if (match[2]) {
-                    if (match[2] !== '~') {
-                        expires = match[2].trim();
-                    }
-                    if (match[3]) {
-                        const [socketId, port] = splitPair$3(match[3], ':', true, true);
-                        let secure, module;
-                        if (match[4]) {
-                            secure = match[4].includes('secure');
-                            module = match[4].includes('module');
-                        }
-                        reload = { socketId: socketId !== '~' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
-                    }
-                }
-                return { interval, expires, reload };
-            }
-        }
     }
 
     var util = /*#__PURE__*/Object.freeze({
         __proto__: null,
         fromMimeType: fromMimeType,
         parseMimeType: parseMimeType,
+        getComponentEnd: getComponentEnd,
         appendSeparator: appendSeparator,
-        randomUUID: randomUUID,
+        assignEmptyValue: assignEmptyValue,
+        generateUUID: generateUUID,
         upperCaseString: upperCaseString,
         lowerCaseString: lowerCaseString,
         searchObject: searchObject,
-        parseGlob: parseGlob,
-        parseTask: parseTask,
-        parseWatchInterval: parseWatchInterval
+        trimBoth: trimBoth,
+        trimString: trimString,
+        trimStart: trimStart,
+        trimEnd: trimEnd,
+        flatArray: flatArray,
+        parseGlob: parseGlob
     });
 
     const { DIRECTORY_NOT_PROVIDED, INVALID_ASSET_REQUEST, SERVER_REQUIRED } = squared.lib.error;
     const { createElement: createElement$1 } = squared.lib.dom;
-    const { escapePattern: escapePattern$2, fromLastIndexOf: fromLastIndexOf$1, isPlainObject, splitPair: splitPair$2, startsWith: startsWith$6, trimEnd } = squared.lib.util;
+    const { escapePattern: escapePattern$2, fromLastIndexOf: fromLastIndexOf$1, isPlainObject, replaceAll: replaceAll$3, splitPair: splitPair$5, startsWith: startsWith$8 } = squared.lib.util;
     function validateAsset(file, exclusions) {
         const { pathname, filename } = file;
         const glob = exclusions.glob;
@@ -1665,7 +1797,7 @@ this.squared.base = (function (exports) {
         }
         if (exclusions.pathname) {
             for (const value of exclusions.pathname) {
-                if (new RegExp(`^${escapePattern$2(trimEnd(value.replace(/\\/g, '/'), '/'))}/?`).test(pathname)) {
+                if (new RegExp(`^${escapePattern$2(trimEnd(replaceAll$3(value, '\\', '/'), '/'))}/?`).test(pathname)) {
                     return false;
                 }
             }
@@ -1694,16 +1826,18 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    const getEndpoint = (hostname, endpoint) => startsWith$6(endpoint, 'http') ? endpoint : hostname + endpoint;
+    const getEndpoint = (hostname, endpoint) => startsWith$8(endpoint, 'http') ? endpoint : hostname + endpoint;
     class File {
-        constructor() {
-            this.archiveFormats = ['zip', '7z', 'tar', 'gz', 'tgz'];
+        constructor(resource) {
+            this.resource = resource;
+            this.archiveFormats = ['zip', 'tar', '7z', 'gz', 'tgz'];
             this._hostname = '';
             this._endpoints = {
                 ASSETS_COPY: '/api/v1/assets/copy',
                 ASSETS_ARCHIVE: '/api/v1/assets/archive',
                 LOADER_DATA: '/api/v1/loader/data'
             };
+            resource.fileHandler = this;
         }
         static downloadFile(href, filename, mimeType) {
             if (typeof href !== 'string') {
@@ -1721,7 +1855,10 @@ this.squared.base = (function (exports) {
             document.body.removeChild(element);
             setTimeout(() => URL.revokeObjectURL(href), 1);
         }
-        finalizeRequestBody(data, options) { }
+        static copyDocument(value) {
+            return Array.isArray(value) ? value.slice(0) : value;
+        }
+        finalizeRequestBody(body) { }
         getCopyQueryParameters(options) { return ''; }
         getArchiveQueryParameters(options) { return ''; }
         saveFiles(filename, options) {
@@ -1734,11 +1871,15 @@ this.squared.base = (function (exports) {
             return this.copying(pathname, Object.assign({}, options));
         }
         async loadConfig(uri, options) {
-            let mime, cache;
+            let mimeType, cache;
             if (options) {
-                ({ configMime: mime, cache } = options);
+                let config;
+                ({ config, cache } = options);
+                if (config) {
+                    mimeType = config.mimeType;
+                }
             }
-            const config = await this.loadData(uri, { type: 'json', mime, cache });
+            const config = await this.loadData(uri, { type: 'json', mimeType, cache });
             if (config) {
                 if (config.success && Array.isArray(config.data)) {
                     return config.data;
@@ -1750,9 +1891,9 @@ this.squared.base = (function (exports) {
             }
         }
         loadData(value, options) {
-            const { type, mime, cache } = options;
+            const { type, mimeType, cache } = options;
             if (this.hasHttpProtocol() && type) {
-                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mime ? '&mime=' + encodeURIComponent(mime) : ''), {
+                return fetch(getEndpoint(this.hostname, this._endpoints.LOADER_DATA) + `/${type}?key=` + encodeURIComponent(value) + (typeof cache === 'boolean' ? '&cache=' + (cache ? '1' : '0') : '') + (mimeType ? '&mime=' + encodeURIComponent(mimeType) : ''), {
                     method: 'GET',
                     headers: new Headers({ Accept: options.accept || '*/*' })
                 })
@@ -1777,7 +1918,7 @@ this.squared.base = (function (exports) {
         copying(pathname = '', options) {
             if (this.hasHttpProtocol()) {
                 if (pathname = pathname.trim()) {
-                    const body = this.createRequestBody(options.assets, options);
+                    const body = this.createRequestBody(options);
                     if (body) {
                         return fetch(getEndpoint(this.hostname, this._endpoints.ASSETS_COPY) +
                             '?to=' + encodeURIComponent(pathname) +
@@ -1807,12 +1948,12 @@ this.squared.base = (function (exports) {
         }
         archiving(target = '', options) {
             if (this.hasHttpProtocol()) {
-                const body = this.createRequestBody(options.assets, options);
+                const body = this.createRequestBody(options);
                 if (body) {
                     let { filename, format } = options;
                     const setFilename = () => {
                         if (!format || !this.archiveFormats.includes(format = format.toLowerCase())) {
-                            [filename, format] = splitPair$2(filename, '.', true, true);
+                            [filename, format] = splitPair$5(filename, '.', false, true);
                             if (format && !this.archiveFormats.includes(format)) {
                                 filename += '.' + format;
                                 format = '';
@@ -1874,21 +2015,22 @@ this.squared.base = (function (exports) {
         writeError(message, hint) {
             (this.userSettings.showErrorMessages ? alert : console.log)((hint ? hint + '\n\n' : '') + message); // eslint-disable-line no-console
         }
-        createRequestBody(assets, options) {
-            if (assets === null || assets === void 0 ? void 0 : assets.length) {
-                const exclusions = options.exclusions;
+        createRequestBody(body) {
+            let assets = body.assets;
+            if (assets && assets.length) {
+                const exclusions = body.exclusions;
                 if (exclusions) {
-                    assets = assets.filter(item => validateAsset(item, exclusions));
-                    if (!assets.length) {
+                    if ((assets = assets.filter(item => validateAsset(item, exclusions))).length === 0) {
                         return;
                     }
+                    body.assets = assets;
                 }
                 let socketId;
-                const documentName = new Set(options.document);
+                const documentName = new Set(body.document);
                 const taskName = new Set();
                 const setSocketId = (watch) => {
                     var _a;
-                    socketId || (socketId = randomUUID());
+                    socketId || (socketId = generateUUID());
                     if (watch.reload === true) {
                         watch.reload = { socketId };
                     }
@@ -1901,7 +2043,7 @@ this.squared.base = (function (exports) {
                     if (tasks) {
                         tasks.forEach(item => taskName.add(item.handler));
                     }
-                    if (options.watch && isPlainObject(watch)) {
+                    if (body.watch && isPlainObject(watch)) {
                         setSocketId(watch);
                     }
                     if (document) {
@@ -1915,7 +2057,7 @@ this.squared.base = (function (exports) {
                 }
                 const { outputTasks, outputWatch } = this.userSettings;
                 for (let i = 0; i < 2; ++i) {
-                    if (i === 1 && !options.watch) {
+                    if (i === 1 && !body.watch) {
                         break;
                     }
                     const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
@@ -1936,9 +2078,7 @@ this.squared.base = (function (exports) {
                                         };
                                         item.tasks || (item.tasks = []);
                                         if (Array.isArray(value)) {
-                                            for (const task of value) {
-                                                addTask(task);
-                                            }
+                                            value.forEach(task => addTask(task));
                                         }
                                         else if (isPlainObject(value)) {
                                             addTask(value);
@@ -1966,21 +2106,22 @@ this.squared.base = (function (exports) {
                         }
                     }
                 }
-                const data = { assets, document: Array.from(documentName) };
+                body.document = Array.from(documentName);
                 if (taskName.size) {
-                    data.task = Array.from(taskName);
+                    body.task = Array.from(taskName);
                 }
-                this.finalizeRequestBody(data, options);
-                return data;
+                this.finalizeRequestBody(body);
+                delete body.config;
+                return body;
             }
         }
         hasHttpProtocol() {
-            return startsWith$6(this._hostname || location.protocol, 'http');
+            return startsWith$8(this._hostname || location.protocol, 'http');
         }
         set hostname(value) {
             try {
                 const url = new URL(value);
-                this._hostname = startsWith$6(url.origin, 'http') ? url.origin : '';
+                this._hostname = startsWith$8(url.origin, 'http') ? url.origin : '';
             }
             catch (_a) {
             }
@@ -1990,14 +2131,15 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { CSS: CSS$1, FILE: FILE$2 } = squared.lib.regex;
+    const { CSS_BORDER_SET: CSS_BORDER_SET$3, CSS_PROPERTIES: CSS_PROPERTIES$1, PROXY_INLINESTYLE, convertFontSize, getInitialValue, parseSelectorText } = squared.lib.internal;
+    const { CSS: CSS$1, FILE: FILE$1 } = squared.lib.regex;
     const { isUserAgent: isUserAgent$2 } = squared.lib.client;
     const { isTransparent } = squared.lib.color;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$3, PROXY_INLINESTYLE, checkFontSizeValue, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle: getStyle$4, isAngle, isLength: isLength$6, isPercent: isPercent$4, isPx: isPx$3, isTime, parseSelectorText, parseUnit: parseUnit$2 } = squared.lib.css;
-    const { assignRect, getNamedItem: getNamedItem$3, getParentElement: getParentElement$1, getRangeClientRect: getRangeClientRect$1, newBoxRectDimension } = squared.lib.dom;
+    const { asPercent: asPercent$3, asPx: asPx$1, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle: getStyle$5, isAngle, isLength: isLength$7, isPercent: isPercent$3, isTime, parseUnit: parseUnit$5 } = squared.lib.css;
+    const { assignRect, getNamedItem: getNamedItem$3, getParentElement: getParentElement$1, getRangeClientRect: getRangeClientRect$1 } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$2, getElementCache: getElementCache$2, getElementData, setElementCache: setElementCache$2 } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$1, convertFloat: convertFloat$1, convertInt, convertPercent: convertPercent$3, endsWith: endsWith$2, escapePattern: escapePattern$1, hasValue: hasValue$1, isNumber: isNumber$4, isObject, isSpace, iterateArray: iterateArray$3, iterateReverseArray: iterateReverseArray$1, spliceString, splitEnclosing, splitPair: splitPair$1, startsWith: startsWith$5 } = squared.lib.util;
+    const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent: convertPercent$1, endsWith: endsWith$2, escapePattern: escapePattern$1, hasValue: hasValue$1, isObject, isSpace, iterateArray: iterateArray$4, iterateReverseArray: iterateReverseArray$1, lastItemOf: lastItemOf$1, safeFloat: safeFloat$2, spliceString, splitEnclosing: splitEnclosing$3, splitPair: splitPair$4, splitSome: splitSome$7, startsWith: startsWith$7 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -2006,63 +2148,61 @@ this.squared.base = (function (exports) {
         'fontStretch',
         'color',
         'whiteSpace',
-        'textDecoration',
+        'textDecorationLine',
+        'textDecorationStyle',
+        'textDecorationColor',
         'textTransform',
         'letterSpacing',
         'wordSpacing'
     ];
-    const BORDER_TOP$1 = CSS_PROPERTIES$3.borderTop.value;
-    const BORDER_RIGHT$1 = CSS_PROPERTIES$3.borderRight.value;
-    const BORDER_BOTTOM$1 = CSS_PROPERTIES$3.borderBottom.value;
-    const BORDER_LEFT$1 = CSS_PROPERTIES$3.borderLeft.value;
-    const BORDER_OUTLINE$1 = CSS_PROPERTIES$3.outline.value;
-    const REGEXP_EM = /\dem$/;
-    const REGEXP_ENCLOSING = /^:(not|is|where)\((.+?)\)$/i;
+    const [BORDER_TOP$1, BORDER_RIGHT$1, BORDER_BOTTOM$1, BORDER_LEFT$1, BORDER_OUTLINE$1] = CSS_BORDER_SET$3;
+    const REGEXP_EM = /\dem$/i;
+    const REGEXP_NOT = /^:not\((.+)\)$/i;
+    const REGEXP_ENCLOSING = /^:(not|is|where)\((.+)\)$/i;
     const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
     const REGEXP_NOTINDEX = /:not-(x+)/;
-    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+?)\)$/;
+    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
     const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
-    function setStyleCache(element, attr, value, style, styleMap, sessionId) {
-        let current = style[attr];
+    function setStyleCache(element, attr, value, style, sessionId) {
+        const current = style[attr];
         if (value !== current) {
+            const restore = element.style[attr];
             element.style[attr] = value;
-            const newValue = element.style[attr];
-            if (current !== newValue) {
-                if (isPx$3(current)) {
-                    const styleValue = styleMap[attr];
-                    if (styleValue) {
-                        current = styleValue;
-                        value = '';
-                    }
-                }
-                setElementCache$2(element, attr, value !== 'auto' ? current : '', sessionId);
+            const updated = element.style[attr];
+            if (!updated) {
+                return 0 /* FAIL */;
+            }
+            if (updated !== current) {
+                setElementCache$2(element, attr, restore, sessionId);
                 return 2 /* CHANGED */;
             }
-            return 0 /* FAIL */;
         }
         return 1 /* READY */;
     }
     function parseLineHeight(value, fontSize) {
-        const lineHeight = convertPercent$3(value);
-        return !isNaN(lineHeight) ? lineHeight * fontSize : parseUnit$2(value, { fontSize });
+        let n = +value;
+        if (isNaN(n)) {
+            n = asPercent$3(value);
+        }
+        return !isNaN(n) ? n * fontSize : parseUnit$5(value, { fontSize });
     }
-    function isFontFixedWidth(node) {
-        const [fontFirst, fontSecond] = splitPair$1(node.css('fontFamily'), ',', true);
+    function isFixedFont(node) {
+        const [fontFirst, fontSecond] = splitPair$4(node.css('fontFamily'), ',', true);
         return fontFirst === 'monospace' && fontSecond !== 'monospace';
     }
-    function getFlexValue(node, attr, fallback, parent) {
-        const value = (parent || node).css(attr);
-        return isNumber$4(value) ? +value : fallback;
+    function getCssFloat(node, attr, fallback) {
+        const value = +node.css(attr);
+        return !isNaN(value) ? value : fallback;
     }
     function hasTextAlign(node, ...values) {
-        const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
-        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true }) : startsWith$5(node.display, 'inline'));
+        const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasUnit('width', { initial: true }) });
+        return value !== '' && values.includes(value) && (node.blockStatic ? node.textElement && !node.hasUnit('width', { initial: true }) && !node.hasUnit('maxWidth', { initial: true }) : startsWith$7(node.display, 'inline'));
     }
-    function setDimension(node, styleMap, dimension) {
+    function setDimension$1(node, style, dimension) {
         const options = { dimension };
-        const value = styleMap[dimension];
-        const minValue = styleMap[dimension === 'width' ? 'minWidth' : 'minHeight'];
+        const value = style[dimension];
+        const minValue = style[dimension === 'width' ? 'minWidth' : 'minHeight'];
         const baseValue = value ? node.parseUnit(value, options) : 0;
         let result = minValue ? Math.max(baseValue, node.parseUnit(minValue, options)) : baseValue;
         if (result === 0 && node.styleElement) {
@@ -2075,6 +2215,7 @@ this.squared.base = (function (exports) {
                 case 'IMG':
                 case 'TD':
                 case 'TH':
+                case 'SVG':
                 case 'svg':
                 case 'IFRAME':
                 case 'VIDEO':
@@ -2083,8 +2224,8 @@ this.squared.base = (function (exports) {
                 case 'OBJECT':
                 case 'EMBED': {
                     const size = getNamedItem$3(element, dimension);
-                    if (size && (result = isNumber$4(size) ? +size : node.parseUnit(size, options))) {
-                        node.css(dimension, isPercent$4(size) ? size : size + 'px');
+                    if (size && (!isNaN(result = +size) || (result = node.parseUnit(size, options)))) {
+                        node.css(dimension, isPercent$3(size) ? size : size + 'px');
                     }
                     break;
                 }
@@ -2092,17 +2233,17 @@ this.squared.base = (function (exports) {
         }
         if (baseValue && !node.imageElement) {
             const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
-            const max = styleMap[attr];
+            const max = style[attr];
             if (max) {
                 if (value === max) {
-                    delete styleMap[attr];
+                    delete style[attr];
                 }
                 else {
                     const maxValue = node.parseUnit(max, { dimension });
                     if (maxValue) {
-                        if (maxValue <= baseValue && value && isLength$6(value)) {
-                            styleMap[dimension] = max;
-                            delete styleMap[attr];
+                        if (maxValue <= baseValue && value && isLength$7(value)) {
+                            style[dimension] = max;
+                            delete style[attr];
                         }
                         else {
                             return Math.min(result, maxValue);
@@ -2115,13 +2256,16 @@ this.squared.base = (function (exports) {
     }
     function convertBorderWidth(node, dimension, border) {
         if (!node.plainText) {
-            switch (node.css(border[1])) {
+            switch (node.css(border[0])) {
                 case 'none':
                 case 'hidden':
                     return 0;
             }
-            const width = node.css(border[0]);
-            const result = isPx$3(width) ? parseFloat(width) : isLength$6(width, true) ? node.parseUnit(width, { dimension }) : parseFloat(node.style[border[0]]);
+            const width = node.css(border[1]);
+            let result = asPx$1(width);
+            if (isNaN(result)) {
+                result = isLength$7(width, true) ? node.parseUnit(width, { dimension }) : safeFloat$2(node.style[border[1]]);
+            }
             if (result) {
                 return Math.max(Math.round(result), 1);
             }
@@ -2145,9 +2289,9 @@ this.squared.base = (function (exports) {
                         case 'TH':
                             return 0;
                         default: {
-                            const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
+                            const parent = node.ascend({ condition: item => item.tableElement })[0];
                             if (parent) {
-                                const [horizontal, vertical] = splitPair$1(parent.css('borderSpacing'), ' ');
+                                const [horizontal, vertical] = splitPair$4(parent.css('borderSpacing'), ' ');
                                 switch (attr) {
                                     case 'marginTop':
                                     case 'marginBottom':
@@ -2165,15 +2309,11 @@ this.squared.base = (function (exports) {
         return node.cssUnit(attr, ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.gridElement) ? { parent: false } : undefined);
     }
     function convertPosition(node, attr) {
-        if (!node.positionStatic) {
-            const unit = node.valueOf(attr, { modified: true });
-            if (isPx$3(unit)) {
-                return parseFloat(unit);
+        if (!node.positionStatic || node.valueOf('position') === 'sticky') {
+            const value = node.valueOf(attr, { modified: true });
+            if (value) {
+                return node.parseUnit(value, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
             }
-            else if (isPercent$4(unit)) {
-                return node.styleElement && parseFloat(node.style[attr]) || 0;
-            }
-            return node.parseUnit(unit, attr === 'top' || attr === 'bottom' ? { dimension: 'height' } : undefined);
         }
         return 0;
     }
@@ -2206,7 +2346,7 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    function validateQuerySelector(selector, child) {
+    function validateSelector(selector, child) {
         if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
             return false;
         }
@@ -2242,17 +2382,17 @@ this.squared.base = (function (exports) {
                 }
                 const other = attr.value;
                 if (other) {
-                    if (attr.caseInsensitive) {
+                    if (attr.ignoreCase) {
                         value = value.toLowerCase();
                     }
                     switch (attr.symbol) {
                         case '~':
-                            if (!value.split(/\s+/).includes(other)) {
+                            if (!splitSome$7(value, item => item === other, /\s+/g)) {
                                 return false;
                             }
                             break;
                         case '^':
-                            if (!startsWith$5(value, other)) {
+                            if (!startsWith$7(value, other)) {
                                 return false;
                             }
                             break;
@@ -2267,7 +2407,7 @@ this.squared.base = (function (exports) {
                             }
                             break;
                         case '|':
-                            if (value !== other && !startsWith$5(value, other + '-')) {
+                            if (value !== other && !startsWith$7(value, other + '-')) {
                                 return false;
                             }
                             break;
@@ -2474,7 +2614,7 @@ this.squared.base = (function (exports) {
                                 const placement = match[3].trim();
                                 switch (placement) {
                                     case 'even':
-                                        if (index % 2 !== 0) {
+                                        if (index % 2) {
                                             return false;
                                         }
                                         break;
@@ -2484,7 +2624,7 @@ this.squared.base = (function (exports) {
                                         }
                                         break;
                                     default:
-                                        if (isNumber$4(placement)) {
+                                        if (!isNaN(+placement)) {
                                             if (placement !== index.toString()) {
                                                 return false;
                                             }
@@ -2560,7 +2700,7 @@ this.squared.base = (function (exports) {
             }
             if (scoped.length) {
                 try {
-                    if (iterateArray$3(element.parentElement.querySelectorAll(':scope > ' + scoped.join('')), item => item === element) !== Infinity) {
+                    if (iterateArray$4(element.parentElement.querySelectorAll(':scope > ' + scoped.join('')), item => item === element) !== Infinity) {
                         return false;
                     }
                 }
@@ -2582,13 +2722,13 @@ this.squared.base = (function (exports) {
                     case '[':
                         if ((match = CSS$1.SELECTOR_ATTR.exec(not)) && match[0] === not) {
                             const value = match[3] || match[4] || match[5];
-                            const caseInsensitive = match[6] === 'i';
+                            const ignoreCase = match[6] === 'i';
                             notData = {
                                 attrList: [{
                                         key: match[1],
                                         symbol: match[2],
-                                        value: caseInsensitive && value ? value.toLowerCase() : value,
-                                        caseInsensitive
+                                        value: ignoreCase && value ? value.toLowerCase() : value,
+                                        ignoreCase
                                     }]
                             };
                         }
@@ -2611,7 +2751,7 @@ this.squared.base = (function (exports) {
                 }
                 if (notData) {
                     notData.fromNot = true;
-                    if (validateQuerySelector.call(this, notData)) {
+                    if (validateSelector.call(this, notData)) {
                         return false;
                     }
                 }
@@ -2622,18 +2762,18 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    function ascendQuerySelector(selectors, index, nodes, offset, checked) {
+    function ascendSelector(selectors, index, nodes, offset, checked) {
         const selector = selectors[index];
         const selectorAdjacent = index > 0 && selectors[--index];
         const adjacent = selector.adjacent;
         const next = [];
         for (let i = 0, length = nodes.length; i < length; ++i) {
             const child = nodes[i];
-            if (checked || selector.all || validateQuerySelector.call(child, selector)) {
+            if (checked || selector.all || validateSelector.call(child, selector)) {
                 let parent = child.actualParent;
                 if (adjacent) {
                     if (adjacent === '>') {
-                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
+                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
                             next.push(parent);
                         }
                     }
@@ -2642,7 +2782,7 @@ this.squared.base = (function (exports) {
                         switch (adjacent) {
                             case '+': {
                                 const j = children.indexOf(child) - 1;
-                                if (j >= 0 && (selectorAdjacent.all || validateQuerySelector.call(children[j], selectorAdjacent))) {
+                                if (j >= 0 && (selectorAdjacent.all || validateSelector.call(children[j], selectorAdjacent))) {
                                     next.push(children[j]);
                                 }
                                 break;
@@ -2653,7 +2793,7 @@ this.squared.base = (function (exports) {
                                     if (sibling === child) {
                                         break;
                                     }
-                                    else if (selectorAdjacent.all || validateQuerySelector.call(sibling, selectorAdjacent)) {
+                                    else if (selectorAdjacent.all || validateSelector.call(sibling, selectorAdjacent)) {
                                         next.push(sibling);
                                     }
                                 }
@@ -2663,7 +2803,7 @@ this.squared.base = (function (exports) {
                 }
                 else if (selectorAdjacent) {
                     while (parent && parent.depth - this.depth >= index + offset) {
-                        if (selectorAdjacent.all || validateQuerySelector.call(parent, selectorAdjacent)) {
+                        if (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent)) {
                             next.push(parent);
                         }
                         parent = parent.actualParent;
@@ -2674,7 +2814,7 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        return next.length > 0 && (index === 0 ? true : ascendQuerySelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
+        return next.length > 0 && (index === 0 ? true : ascendSelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
     }
     function getMinMax(node, min, attr, options) {
         let self, last, wrapperOf, subAttr, initialValue, initial;
@@ -2733,25 +2873,17 @@ this.squared.base = (function (exports) {
         });
         return result || node;
     }
-    function getQueryLength(value) {
-        let result = 0;
-        for (let i = 0, length = value.length; i < length; ++i) {
-            if (!isSpace(value[i])) {
-                ++result;
-            }
-        }
-        return result;
-    }
     function getBoundsSize(node, options) {
         var _a;
         const bounds = (!options || options.parent !== false) && ((_a = node.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || node.bounds;
         return bounds[options && options.dimension || 'width'];
     }
-    const aboveRange = (a, b, offset = 1) => a + offset > b;
-    const belowRange = (a, b, offset = 1) => a - offset < b;
+    const aboveRange = (a, b, offset = 1) => a + offset >= b;
+    const belowRange = (a, b, offset = 1) => a - offset <= b;
     const sortById = (a, b) => a.id - b.id;
-    const isInlineVertical = (value) => startsWith$5(value, 'inline') || value === 'table-cell';
+    const isInlineVertical = (value) => startsWith$7(value, 'inline') || value === 'table-cell';
     const canTextAlign = (node) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
+    const newBoxRectDimension = () => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 });
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element, children) {
             super(children);
@@ -2759,9 +2891,9 @@ this.squared.base = (function (exports) {
             this.sessionId = sessionId;
             this.documentRoot = false;
             this.shadowRoot = false;
-            this.depth = -1;
             this.queryMap = null;
             this._parent = null;
+            this._depth = -1;
             this._cache = {};
             this._cacheState = { inlineText: false };
             this._preferInitial = false;
@@ -2769,37 +2901,26 @@ this.squared.base = (function (exports) {
             this._box = null;
             this._linear = null;
             this._initial = null;
-            this._cssStyle = null;
+            this._styleMap = {};
             this._naturalChildren = null;
             this._naturalElements = null;
             this._childIndex = Infinity;
-            this._element = null;
-            this._style = null;
-            if (element) {
-                this._element = element;
-                if (sessionId !== '0') {
-                    setElementCache$2(element, 'node', this, sessionId);
-                    const elementData = getElementData(element, sessionId);
-                    if (elementData) {
-                        this._elementData = elementData;
-                        if (!this.syncWith(sessionId)) {
-                            this._styleMap = {};
-                        }
-                        return;
-                    }
-                }
-            }
-            this._styleMap = {};
             this._elementData = null;
+            this._style = null;
+            this._element = element || null;
+            if (element && sessionId !== '0') {
+                this.syncWith(sessionId);
+                setElementCache$2(element, 'node', this, sessionId);
+            }
         }
-        static sanitizeCss(element, styleMap, writingMode) {
+        static sanitizeCss(element, style, writingMode) {
             const result = {};
-            for (let attr in styleMap) {
-                let value = styleMap[attr];
+            for (let attr in style) {
+                let value = style[attr];
                 const alias = checkWritingMode(attr, writingMode);
                 if (alias !== attr) {
                     if (typeof alias === 'string') {
-                        if (!styleMap[alias]) {
+                        if (!style[alias]) {
                             attr = alias;
                         }
                         else {
@@ -2807,11 +2928,14 @@ this.squared.base = (function (exports) {
                         }
                     }
                     else {
-                        for (const attrAlt of alias) {
-                            if (!styleMap[attrAlt]) {
-                                const valueAlt = checkStyleValue(element, attrAlt, value);
-                                if (valueAlt) {
-                                    result[attrAlt] = valueAlt;
+                        let actual;
+                        for (const alt of alias) {
+                            if (!style[alt]) {
+                                if (actual || (actual = checkStyleValue(element, alt, value))) {
+                                    result[alt] = actual;
+                                }
+                                else {
+                                    break;
                                 }
                             }
                         }
@@ -2824,38 +2948,23 @@ this.squared.base = (function (exports) {
             }
             return result;
         }
-        init(parent, depth, index) {
+        internalSelf(parent, depth, childIndex) {
             this._parent = parent;
-            this.depth = depth;
-            if (index !== undefined) {
-                this.childIndex = index;
+            this._depth = depth;
+            if (childIndex !== undefined) {
+                this._childIndex = childIndex;
             }
+        }
+        internalNodes(children, elements) {
+            this._naturalChildren = children;
+            this._naturalElements = elements || children.filter((item) => item.naturalElement);
         }
         syncWith(sessionId, cache) {
             const element = this._element;
             if (element) {
                 let elementData;
-                if (!sessionId) {
-                    sessionId = getElementCache$2(element, 'sessionId', '0');
-                    if (sessionId === this.sessionId) {
-                        if (cache) {
-                            this._cache = {};
-                        }
-                        return true;
-                    }
-                    else if (sessionId) {
-                        if (elementData = getElementData(element, sessionId)) {
-                            this._elementData = elementData;
-                        }
-                    }
-                    else {
-                        return false;
-                    }
-                }
-                else {
-                    elementData = this._elementData;
-                }
-                if (elementData) {
+                if ((sessionId || (sessionId = getElementCache$2(element, 'sessionId', '0'))) && (elementData = getElementData(element, sessionId))) {
+                    this._elementData = elementData;
                     const styleMap = elementData.styleMap;
                     if (styleMap) {
                         if (!this.plainText && this.naturalChild) {
@@ -2863,9 +2972,15 @@ this.squared.base = (function (exports) {
                                 const length = element.style.length;
                                 if (length) {
                                     const style = element.style;
+                                    const specificity = elementData.styleSpecificity || (elementData.styleSpecificity = {});
                                     for (let i = 0; i < length; ++i) {
                                         const attr = style[i];
-                                        styleMap[convertCamelCase$1(attr)] = style.getPropertyValue(attr);
+                                        const baseAttr = convertCamelCase$1(attr);
+                                        const values = specificity[baseAttr];
+                                        if (!values || values.length < 5) {
+                                            styleMap[baseAttr] = style.getPropertyValue(attr);
+                                            specificity[baseAttr] = [1, 0, 0, 0];
+                                        }
                                     }
                                 }
                             }
@@ -2877,7 +2992,6 @@ this.squared.base = (function (exports) {
                         else {
                             this._styleMap = styleMap;
                         }
-                        this._cssStyle = styleMap;
                         if (cache) {
                             this._cache = {};
                         }
@@ -2985,28 +3099,25 @@ this.squared.base = (function (exports) {
                         case 'paddingBottom':
                             cache.contentBoxHeight = undefined;
                             break;
-                        case 'fontSize':
-                            cache.lineHeight = undefined;
-                            break;
                         case 'whiteSpace':
                             cache.preserveWhiteSpace = undefined;
                             cache.textStyle = undefined;
                             this._cacheState.textEmpty = undefined;
                             continue;
                         default:
-                            if (startsWith$5(attr, 'background')) {
+                            if (startsWith$7(attr, 'background')) {
                                 cache.visibleStyle = undefined;
                             }
-                            else if (startsWith$5(attr, 'border')) {
-                                if (startsWith$5(attr, 'borderTop')) {
+                            else if (startsWith$7(attr, 'border')) {
+                                if (startsWith$7(attr, 'borderTop')) {
                                     cache.borderTopWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
-                                else if (startsWith$5(attr, 'borderRight')) {
+                                else if (startsWith$7(attr, 'borderRight')) {
                                     cache.borderRightWidth = undefined;
                                     cache.contentBoxWidth = undefined;
                                 }
-                                else if (startsWith$5(attr, 'borderBottom')) {
+                                else if (startsWith$7(attr, 'borderBottom')) {
                                     cache.borderBottomWidth = undefined;
                                     cache.contentBoxHeight = undefined;
                                 }
@@ -3016,7 +3127,7 @@ this.squared.base = (function (exports) {
                                 }
                                 cache.visibleStyle = undefined;
                             }
-                            else if (TEXT_STYLE.includes(attr)) {
+                            else if (attr === 'fontSize' || TEXT_STYLE.includes(attr)) {
                                 cache.lineHeight = undefined;
                                 cache.textStyle = undefined;
                             }
@@ -3032,10 +3143,10 @@ this.squared.base = (function (exports) {
             }
             if (!this._preferInitial && this.naturalChild) {
                 let parent;
-                if (attrs.some(value => CSS_PROPERTIES$3[value].trait & 4 /* LAYOUT */)) {
-                    parent = this.pageFlow && this.ascend({ condition: item => item.hasPX('width') && item.hasPX('height') || item.documentRoot })[0] || this;
+                if (attrs.some(value => !!CSS_PROPERTIES$1[value] && (CSS_PROPERTIES$1[value].trait & 4 /* LAYOUT */))) {
+                    parent = this.pageFlow && this.ascend({ condition: item => item.hasUnit('width') && item.hasUnit('height') || item.documentRoot })[0] || this;
                 }
-                else if (attrs.some(value => CSS_PROPERTIES$3[value].trait & 8 /* CONTAIN */)) {
+                else if (attrs.some(value => !!CSS_PROPERTIES$1[value] && (CSS_PROPERTIES$1[value].trait & 8 /* CONTAIN */))) {
                     parent = this;
                 }
                 else {
@@ -3162,7 +3273,7 @@ this.squared.base = (function (exports) {
         }
         intersectX(rect, options) {
             if (rect.width) {
-                const { left, right } = this[(options === null || options === void 0 ? void 0 : options.dimension) || 'linear'];
+                const { left, right } = this[options && options.dimension || 'linear'];
                 const { left: leftA, right: rightA } = rect;
                 return (Math.ceil(left) >= leftA && left < Math.floor(rightA) ||
                     Math.floor(right) > leftA && right <= Math.ceil(rightA) ||
@@ -3173,7 +3284,7 @@ this.squared.base = (function (exports) {
         }
         intersectY(rect, options) {
             if (rect.height) {
-                const { top, bottom } = this[(options === null || options === void 0 ? void 0 : options.dimension) || 'linear'];
+                const { top, bottom } = this[options && options.dimension || 'linear'];
                 const { top: topA, bottom: bottomA } = rect;
                 return (Math.ceil(top) >= topA && top < Math.floor(bottomA) ||
                     Math.floor(bottom) > topA && bottom <= Math.ceil(bottomA) ||
@@ -3231,9 +3342,9 @@ this.squared.base = (function (exports) {
             if (this.styleElement && attr in style) {
                 if (value === '') {
                     style[attr] = 'initial';
-                    const property = CSS_PROPERTIES$3[attr];
+                    const property = CSS_PROPERTIES$1[attr];
                     if (property && typeof property.value === 'string') {
-                        this._styleMap[attr] = property.valueOfNone || (property.value + (property.trait & 256 /* UNIT */ ? 'px' : ''));
+                        this._styleMap[attr] = getInitialValue(this._element, attr) + (property.trait & 256 /* UNIT */ ? 'px' : '');
                     }
                     else {
                         delete this._styleMap[attr];
@@ -3264,9 +3375,9 @@ this.squared.base = (function (exports) {
                 }
             }
             else {
-                const styleMap = this._styleMap;
+                const style = this._styleMap;
                 for (const attr in values) {
-                    if (!styleMap[attr]) {
+                    if (!style[attr]) {
                         this.css(attr, values[attr], cache);
                     }
                 }
@@ -3289,10 +3400,9 @@ this.squared.base = (function (exports) {
             return dataMap[attr] || options && (options.modified && this._styleMap[attr] || options.computed && this.style[attr]) || '';
         }
         cssAscend(attr, options) {
-            let parent = options && options.startSelf ? this : this.actualParent, value;
+            let value, parent = options && options.startSelf ? this : this.actualParent;
             while (parent) {
-                value = parent.valueOf(attr, options);
-                if (value && value !== 'inherit') {
+                if ((value = parent.valueOf(attr, options)) && value !== 'inherit') {
                     return value;
                 }
                 parent = parent.actualParent;
@@ -3350,15 +3460,14 @@ this.squared.base = (function (exports) {
             if (this.styleElement) {
                 const styleData = !this.pseudoElt ? (_a = this._elementData) === null || _a === void 0 ? void 0 : _a.styleSpecificity : (_c = (_b = this.actualParent) === null || _b === void 0 ? void 0 : _b.elementData) === null || _c === void 0 ? void 0 : _c['styleSpecificity' + this.pseudoElt];
                 if (styleData) {
-                    return styleData[attr] || 0;
+                    return styleData[attr];
                 }
             }
-            return 0;
         }
         cssTry(attr, value, callback) {
             if (this.styleElement) {
                 const element = this._element;
-                if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle$4(element), this._styleMap, this.sessionId)) {
+                if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle$5(element), this.sessionId)) {
                     if (callback) {
                         callback.call(this, attr);
                         this.cssFinally(attr);
@@ -3373,10 +3482,10 @@ this.squared.base = (function (exports) {
                 const result = {};
                 const sessionId = this.sessionId;
                 const element = this._element;
-                const style = !this.pseudoElement ? this.style : getStyle$4(element);
+                const style = !this.pseudoElement ? this.style : getStyle$5(element);
                 for (const attr in values) {
                     const value = values[attr];
-                    switch (setStyleCache(element, attr, value, style, this._styleMap, sessionId)) {
+                    switch (setStyleCache(element, attr, value, style, sessionId)) {
                         case 0 /* FAIL */:
                             this.cssFinally(result);
                             return false;
@@ -3402,14 +3511,14 @@ this.squared.base = (function (exports) {
                 if (elementData) {
                     if (typeof attrs === 'string') {
                         const value = elementData[attrs];
-                        if (value) {
+                        if (value !== undefined) {
                             this._element.style[attrs] = value;
                         }
                     }
                     else {
                         for (const attr in attrs) {
                             const value = elementData[attr];
-                            if (value) {
+                            if (value !== undefined) {
                                 this._element.style[attr] = value;
                             }
                         }
@@ -3418,18 +3527,16 @@ this.squared.base = (function (exports) {
             }
         }
         cssCopy(node, ...attrs) {
-            const styleMap = this._styleMap;
-            for (let i = 0, length = attrs.length; i < length; ++i) {
-                const attr = attrs[i];
-                styleMap[attr] = node.css(attr);
+            const style = this._styleMap;
+            for (let i = 0, attr, length = attrs.length; i < length; ++i) {
+                style[attr = attrs[i]] = node.css(attr);
             }
         }
         cssCopyIfEmpty(node, ...attrs) {
-            const styleMap = this._styleMap;
-            for (let i = 0, length = attrs.length; i < length; ++i) {
-                const attr = attrs[i];
-                if (!styleMap[attr]) {
-                    styleMap[attr] = node.css(attr);
+            const style = this._styleMap;
+            for (let i = 0, attr, length = attrs.length; i < length; ++i) {
+                if (!style[attr = attrs[i]]) {
+                    style[attr] = node.css(attr);
                 }
             }
         }
@@ -3443,45 +3550,16 @@ this.squared.base = (function (exports) {
         }
         cssAsObject(...attrs) {
             const result = {};
-            for (let i = 0, length = attrs.length; i < length; ++i) {
-                const attr = attrs[i];
-                result[attr] = this.css(attr);
+            for (let i = 0, attr, length = attrs.length; i < length; ++i) {
+                result[attr = attrs[i]] = this.css(attr);
             }
             return result;
         }
-        cssPseudoElement(name, attr) {
-            if (this.naturalElement) {
-                if (attr) {
-                    return getStyle$4(this._element, name)[attr];
-                }
-                const styleMap = this._elementData['styleMap' + name];
-                if (styleMap) {
-                    switch (name) {
-                        case '::first-letter':
-                        case '::first-line':
-                            switch (this.display) {
-                                case 'block':
-                                case 'inline-block':
-                                case 'list-item':
-                                case 'table-cell':
-                                    break;
-                                default:
-                                    return;
-                            }
-                        case '::before':
-                        case '::after':
-                            return Node.sanitizeCss(this._element, styleMap, styleMap.writingMode || this.valueOf('writingMode'));
-                    }
-                }
-            }
+        toInt(attr, fallback = NaN, options) {
+            return convertInt(this.cssInitial(attr, options), fallback);
         }
-        toInt(attr, fallback = NaN, initial) {
-            var _a;
-            return convertInt((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], fallback);
-        }
-        toFloat(attr, fallback = NaN, initial) {
-            var _a;
-            return convertFloat$1((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], fallback);
+        toFloat(attr, fallback = NaN, options) {
+            return convertFloat(this.cssInitial(attr, options), fallback);
         }
         toElementInt(attr, fallback = NaN) {
             if (this.naturalElement) {
@@ -3502,7 +3580,7 @@ this.squared.base = (function (exports) {
                     case 'number':
                         return value;
                     case 'string':
-                        return convertFloat$1(value, fallback);
+                        return convertFloat(value, fallback);
                 }
             }
             return fallback;
@@ -3525,32 +3603,6 @@ this.squared.base = (function (exports) {
             }
             return fallback;
         }
-        parseUnit(value, options) {
-            if (!value) {
-                return 0;
-            }
-            else if (isPx$3(value)) {
-                return parseFloat(value);
-            }
-            else if (isPercent$4(value)) {
-                return convertPercent$3(value) * getBoundsSize(this, options);
-            }
-            if (!options) {
-                options = { fontSize: this.fontSize };
-            }
-            else {
-                options.fontSize || (options.fontSize = this.fontSize);
-            }
-            return parseUnit$2(value, options);
-        }
-        convertUnit(value, unit, options) {
-            let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
-            if (unit === 'percent' || unit === '%') {
-                result *= 100 / getBoundsSize(this, options);
-                return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
-            }
-            return convertUnit(result, unit, options);
-        }
         has(attr, options) {
             const value = options && options.initial ? this.cssInitial(attr, options) : this._styleMap[attr];
             if (value) {
@@ -3559,17 +3611,20 @@ this.squared.base = (function (exports) {
                     ({ not, type, ignoreDefault } = options);
                 }
                 if (ignoreDefault !== true) {
-                    const data = CSS_PROPERTIES$3[attr];
-                    if (data && (value === data.value || (data.trait & 256 /* UNIT */) && this.parseUnit(value) === parseFloat(data.value))) {
-                        return false;
+                    const property = CSS_PROPERTIES$1[attr];
+                    if (property) {
+                        const propValue = this.styleElement ? getInitialValue(this._element, attr) : property.value;
+                        if (typeof propValue === 'string' && (value === propValue || (property.trait & 256 /* UNIT */) && this.parseUnit(value) === parseFloat(propValue))) {
+                            return false;
+                        }
                     }
                 }
                 if (not && (value === not || Array.isArray(not) && not.includes(value))) {
                     return false;
                 }
                 if (type) {
-                    return ((type & 1 /* LENGTH */) > 0 && isLength$6(value) ||
-                        (type & 2 /* PERCENT */) > 0 && isPercent$4(value, true) ||
+                    return ((type & 1 /* LENGTH */) > 0 && isLength$7(value) ||
+                        (type & 2 /* PERCENT */) > 0 && isPercent$3(value) ||
                         (type & 4 /* TIME */) > 0 && isTime(value) ||
                         (type & 8 /* ANGLE */) > 0 && isAngle(value));
                 }
@@ -3577,13 +3632,46 @@ this.squared.base = (function (exports) {
             }
             return false;
         }
-        hasPX(attr, options) {
+        parseUnit(value, options) {
+            var _a;
+            switch (typeof value) {
+                case 'string':
+                    break;
+                case 'number':
+                    return value;
+                default:
+                    return options && options.fallback !== undefined ? options.fallback : 0;
+            }
+            let n = asPx$1(value);
+            if (!isNaN(n)) {
+                return n;
+            }
+            else if (!isNaN(n = asPercent$3(value))) {
+                return n * getBoundsSize(this, options);
+            }
+            if (!options) {
+                options = { fontSize: this.fontSize };
+            }
+            else {
+                (_a = options.fontSize) !== null && _a !== void 0 ? _a : (options.fontSize = this.fontSize);
+            }
+            return parseUnit$5(value, options);
+        }
+        convertUnit(value, unit = 'px', options) {
+            let result = this.parseUnit(value, options);
+            if (unit === '%' || unit === 'percent') {
+                result *= 100 / getBoundsSize(this, options);
+                return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
+            }
+            return convertUnit(result, unit, options);
+        }
+        hasUnit(attr, options) {
             let percent, initial;
             if (options) {
                 ({ percent, initial } = options);
             }
             const value = initial ? this.cssInitial(attr, options) : this._styleMap[attr];
-            return value ? isLength$6(value, percent !== false) : false;
+            return value ? isLength$7(value, percent !== false) : false;
         }
         setBounds(cache = true) {
             var _a;
@@ -3594,7 +3682,7 @@ this.squared.base = (function (exports) {
             else if (this.plainText) {
                 const rect = getRangeClientRect$1(this._element);
                 if (rect) {
-                    this._textBounds = rect;
+                    this._cacheState.textBounds = rect;
                     this._cache.multiline = rect.numberOfLines > 1;
                 }
                 bounds = rect || newBoxRectDimension();
@@ -3611,7 +3699,7 @@ this.squared.base = (function (exports) {
         resetBounds(recalibrate) {
             if (!recalibrate) {
                 this._bounds = null;
-                this._textBounds = undefined;
+                this._cacheState.textBounds = undefined;
                 this._cache.multiline = undefined;
             }
             this._box = null;
@@ -3626,7 +3714,7 @@ this.squared.base = (function (exports) {
         querySelector(value) {
             return this.querySelectorAll(value)[0] || null;
         }
-        querySelectorAll(value, customMap) {
+        querySelectorAll(value, sorted = true, customMap) {
             const queryMap = customMap || this.queryMap;
             const result = [];
             if (queryMap) {
@@ -3636,13 +3724,13 @@ this.squared.base = (function (exports) {
                     (notIndex || (notIndex = [])).push(part);
                     return ':not-' + 'x'.repeat(notIndex.length);
                 };
-                const parseNot = (condition) => condition.includes(',') ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
+                const parseNot = (condition) => condition.indexOf(',') !== -1 ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
                 const checkNot = (condition) => {
-                    return splitEnclosing(condition, /:not/i).reduce((a, b) => {
+                    return splitEnclosing$3(condition, /:not/gi).reduce((a, b) => {
                         if (b[0] === ':') {
-                            const match = REGEXP_ENCLOSING.exec(b);
-                            if (match && match[1].toLowerCase() === 'not') {
-                                b = parseNot(match[2].trim());
+                            const match = REGEXP_NOT.exec(b);
+                            if (match) {
+                                b = parseNot(match[1].trim());
                             }
                         }
                         return a + b;
@@ -3652,7 +3740,7 @@ this.squared.base = (function (exports) {
                     let selector = '', expand;
                     invalid: {
                         let match;
-                        for (let seg of splitEnclosing(query, CSS$1.SELECTOR_ENCLOSING)) {
+                        for (let seg of splitEnclosing$3(query, CSS$1.SELECTOR_ENCLOSING_G)) {
                             if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
                                 const condition = match[2].trim();
                                 switch (match[1].toLowerCase()) {
@@ -3661,10 +3749,10 @@ this.squared.base = (function (exports) {
                                         break;
                                     case 'is':
                                     case 'where':
-                                        if (selector && !/\s/.test(selector[selector.length - 1])) {
+                                        if (selector && !isSpace(lastItemOf$1(selector))) {
                                             break invalid;
                                         }
-                                        if (condition.includes(',')) {
+                                        if (condition.indexOf(',') !== -1) {
                                             seg = parseSelectorText(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
                                             expand = true;
                                         }
@@ -3704,42 +3792,37 @@ this.squared.base = (function (exports) {
                     invalid: {
                         const query = queries[i];
                         const selectors = [];
-                        let start, offset = 0;
+                        let q = 0, offset = 0, start;
                         if (query === '*') {
-                            selectors.push({ all: true });
+                            q = selectors.push({ all: true });
                             start = true;
                         }
                         else {
                             CSS$1.SELECTOR_G.lastIndex = 0;
-                            let selector = '', adjacent = '', match;
+                            let position = -1, adjacent = '', segment, match;
                             while (match = CSS$1.SELECTOR_G.exec(query)) {
-                                let segment = match[1];
-                                selector += segment;
-                                switch (segment) {
+                                if (match.index > position + 1) {
+                                    break invalid;
+                                }
+                                position = match.index + match[0].length;
+                                switch (segment = match[1]) {
                                     case '+':
                                     case '~':
                                         --offset;
                                     case '>':
-                                        if (adjacent || selectors.length === 0 && (segment !== '>' || !/^:(root|scope)/.test(query))) {
+                                        if (adjacent || q === 0 && (segment !== '>' || !/^:(?:root|scope)/i.test(query))) {
                                             break invalid;
                                         }
                                         adjacent = segment;
                                         continue;
                                     case '*':
                                     case '*|*':
-                                        if (match.index) {
-                                            if (match[0][0] !== ' ') {
-                                                break invalid;
-                                            }
-                                        }
-                                        else {
-                                            start = true;
-                                        }
-                                        selectors.push({ all: true, adjacent });
+                                        q = selectors.push({ all: true, adjacent });
+                                        start = true;
                                         adjacent = '';
                                         continue;
                                     case ':root':
-                                        if (selectors.length === 0 && this._element === document.documentElement) {
+                                        if (q === 0 && this._element === document.documentElement) {
                                             if (result.includes(this)) {
                                                 result.push(this);
                                             }
@@ -3748,20 +3831,21 @@ this.squared.base = (function (exports) {
                                         }
                                         break invalid;
                                     case ':scope':
-                                        if (selectors.length) {
+                                        if (q) {
                                             break invalid;
                                         }
                                         start = true;
                                         continue;
                                     default:
-                                        if (startsWith$5(segment, '*|')) {
+                                        if (startsWith$7(segment, '*|')) {
                                             segment = segment.substring(2);
                                         }
                                         break;
                                 }
-                                let attrList, subMatch;
-                                while (subMatch = CSS$1.SELECTOR_ATTR.exec(segment)) {
-                                    let key = subMatch[1].replace(/\\:/, ':').toLowerCase(), trailing;
+                                let attrList, partial;
+                                const removeUsed = () => segment = spliceString(segment, partial.index, partial[0].length);
+                                while (partial = CSS$1.SELECTOR_ATTR.exec(segment)) {
+                                    let key = partial[1].replace('\\:', ':').toLowerCase(), trailing;
                                     switch (key.indexOf('|')) {
                                         case -1:
                                             break;
@@ -3774,32 +3858,32 @@ this.squared.base = (function (exports) {
                                         default:
                                             break invalid;
                                     }
-                                    const caseInsensitive = subMatch[6] === 'i';
-                                    let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
-                                    if (caseInsensitive) {
+                                    const ignoreCase = partial[6] === 'i';
+                                    let attrValue = partial[3] || partial[4] || partial[5] || '';
+                                    if (ignoreCase) {
                                         attrValue = attrValue.toLowerCase();
                                     }
                                     (attrList || (attrList = [])).push({
                                         key,
-                                        symbol: subMatch[2],
+                                        symbol: partial[2],
                                         value: attrValue,
                                         trailing,
-                                        caseInsensitive
+                                        ignoreCase
                                     });
-                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                    removeUsed();
                                 }
-                                if (segment.includes('::')) {
+                                if (segment.indexOf('::') !== -1) {
                                     break invalid;
                                 }
                                 let notList, pseudoList;
                                 if (notIndex) {
-                                    while (subMatch = REGEXP_NOTINDEX.exec(segment)) {
-                                        (notList || (notList = [])).push(notIndex[subMatch[1].length - 1]);
-                                        segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                    while (partial = REGEXP_NOTINDEX.exec(segment)) {
+                                        (notList || (notList = [])).push(notIndex[partial[1].length - 1]);
+                                        removeUsed();
                                     }
                                 }
-                                while (subMatch = CSS$1.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-                                    const pseudoClass = subMatch[0].toLowerCase();
+                                while (partial = CSS$1.SELECTOR_PSEUDO_CLASS.exec(segment)) {
+                                    const pseudoClass = partial[0].toLowerCase();
                                     switch (pseudoClass) {
                                         case ':root':
                                         case ':scope':
@@ -3808,11 +3892,11 @@ this.squared.base = (function (exports) {
                                             (pseudoList || (pseudoList = [])).push(pseudoClass);
                                             break;
                                     }
-                                    segment = spliceString(segment, subMatch.index, pseudoClass.length);
+                                    removeUsed();
                                 }
                                 let tagName, id, classList;
-                                while (subMatch = CSS$1.SELECTOR_LABEL.exec(segment)) {
-                                    const label = subMatch[0];
+                                while (partial = CSS$1.SELECTOR_LABEL.exec(segment)) {
+                                    const label = partial[0];
                                     switch (label[0]) {
                                         case '#': {
                                             const subId = label.substring(1);
@@ -3832,9 +3916,12 @@ this.squared.base = (function (exports) {
                                             tagName = label.toUpperCase();
                                             break;
                                     }
-                                    segment = spliceString(segment, subMatch.index, label.length);
+                                    removeUsed();
                                 }
-                                selectors.push({
+                                if (q === 0 && (notList || pseudoList)) {
+                                    start = true;
+                                }
+                                q = selectors.push({
                                     tagName,
                                     id,
                                     adjacent,
@@ -3845,18 +3932,38 @@ this.squared.base = (function (exports) {
                                 });
                                 adjacent = '';
                             }
-                            if (getQueryLength(query) !== getQueryLength(selector)) {
+                            if (position < query.length) {
                                 continue;
                             }
                         }
-                        const q = selectors.length;
                         if (q) {
+                            if (q > 1 && selectors[0].all && selectors[1].all) {
+                                let max = 0, parent = this.actualParent;
+                                while (parent) {
+                                    ++max;
+                                    parent = parent.actualParent;
+                                }
+                                if (max) {
+                                    let min = 0;
+                                    for (let j = 2; j < q; ++j) {
+                                        if (selectors[j].all) {
+                                            ++min;
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                    }
+                                    const s = min <= max ? min + 1 : max;
+                                    selectors.splice(0, s);
+                                    q -= s;
+                                }
+                            }
                             const all = result.length === 0;
                             for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
                                 const items = queryMap[j];
                                 for (let k = 0, s = items.length; k < s; ++k) {
                                     const node = items[k];
-                                    if ((all || !result.includes(node)) && ascendQuerySelector.call(this, selectors, q - 1, [node], offset)) {
+                                    if ((all || !result.includes(node)) && ascendSelector.call(this, selectors, q - 1, [node], offset)) {
                                         result.push(node);
                                     }
                                 }
@@ -3865,7 +3972,7 @@ this.squared.base = (function (exports) {
                     }
                 }
             }
-            return result.sort(sortById);
+            return sorted ? result.sort(sortById) : result;
         }
         ancestors(value, options) {
             const result = this.ascend(options);
@@ -3881,7 +3988,7 @@ this.squared.base = (function (exports) {
                     customMap.push([item]);
                     depth = item.depth;
                 });
-                return this.querySelectorAll(value, customMap);
+                return this.querySelectorAll(value, true, customMap);
             }
             return result.sort(sortById);
         }
@@ -3903,7 +4010,7 @@ this.squared.base = (function (exports) {
                         for (let i = 0; i < length; ++i) {
                             customMap[i] || (customMap[i] = []);
                         }
-                        return this.querySelectorAll(value, customMap);
+                        return this.querySelectorAll(value, true, customMap);
                     }
                     return children.sort(sortById);
                 }
@@ -3939,14 +4046,14 @@ this.squared.base = (function (exports) {
                     iterateReverseArray$1(this.actualParent.naturalElements, filterPredicate, 0, this.childIndex);
                 }
                 else {
-                    iterateArray$3(this.actualParent.naturalElements, filterPredicate, this.childIndex + 1);
+                    iterateArray$4(this.actualParent.naturalElements, filterPredicate, this.childIndex + 1);
                 }
                 if (value) {
                     const ancestors = this.ascend();
                     const customMap = [];
                     iterateReverseArray$1(ancestors, (item) => customMap.push([item]));
                     customMap.push(result);
-                    result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
+                    result = this.querySelectorAll(value, true, customMap).filter(item => !ancestors.includes(item));
                 }
                 return reverse && result.length > 1 ? result.reverse() : result;
             }
@@ -3970,8 +4077,8 @@ this.squared.base = (function (exports) {
                 else if (!value.contains(this)) {
                     value.add(this);
                 }
-                if (this.depth === -1) {
-                    this.depth = value.depth + 1;
+                if (this._depth === -1) {
+                    this._depth = value.depth + 1;
                 }
             }
         }
@@ -3991,7 +4098,7 @@ this.squared.base = (function (exports) {
         }
         get elementId() {
             var _a;
-            return (((_a = this._element) === null || _a === void 0 ? void 0 : _a.id) || '').trim();
+            return ((_a = this._element) === null || _a === void 0 ? void 0 : _a.id) || '';
         }
         get htmlElement() {
             const result = this._cacheState.htmlElement;
@@ -3999,7 +4106,7 @@ this.squared.base = (function (exports) {
         }
         get svgElement() {
             const result = this._cacheState.svgElement;
-            return result === undefined ? this._cacheState.svgElement = !this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE$2.SVG.test(this.toElementString('src')) : result;
+            return result === undefined ? this._cacheState.svgElement = !this.htmlElement && this._element instanceof SVGElement || this.imageElement && FILE$1.SVG.test(this._element.src) : result;
         }
         get styleElement() {
             const result = this._cacheState.styleElement;
@@ -4026,7 +4133,7 @@ this.squared.base = (function (exports) {
             return endsWith$2(this.display, 'grid');
         }
         get tableElement() {
-            return this.tagName === 'TABLE' || this.display === 'table';
+            return this.tagName === 'TABLE';
         }
         get inputElement() {
             switch (this.tagName) {
@@ -4035,16 +4142,15 @@ this.squared.base = (function (exports) {
                 case 'SELECT':
                 case 'TEXTAREA':
                     return true;
-                default:
-                    return false;
             }
+            return false;
         }
         get buttonElement() {
             switch (this.tagName) {
                 case 'BUTTON':
                     return true;
                 case 'INPUT':
-                    switch (this.toElementString('type')) {
+                    switch (this._element.type) {
                         case 'button':
                         case 'submit':
                         case 'reset':
@@ -4052,15 +4158,11 @@ this.squared.base = (function (exports) {
                         case 'image':
                             return true;
                     }
-                default:
-                    return false;
             }
+            return false;
         }
         get plainText() {
             return this.tagName[0] === '#';
-        }
-        get styleText() {
-            return this.naturalElement && this.inlineText;
         }
         get lineBreak() {
             return this.tagName === 'BR';
@@ -4088,7 +4190,7 @@ this.squared.base = (function (exports) {
             return this.naturalChild && !this.svgElement ? this._element.textContent : '';
         }
         get dataset() {
-            return this._dataset || (this._dataset = this.styleElement ? this._element.dataset : {});
+            return this.naturalElement ? this._element.dataset : this._dataset || (this._dataset = {});
         }
         get documentBody() {
             return this._element === document.body;
@@ -4144,12 +4246,12 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 if (this.flexElement) {
                     const [flexWrap, flexDirection, alignContent, justifyContent] = this.cssAsTuple('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                    const row = startsWith$5(flexDirection, 'row');
+                    const row = startsWith$7(flexDirection, 'row');
                     result = {
                         row,
                         column: !row,
                         reverse: endsWith$2(flexDirection, 'reverse'),
-                        wrap: startsWith$5(flexWrap, 'wrap'),
+                        wrap: startsWith$7(flexWrap, 'wrap'),
                         wrapReverse: flexWrap === 'wrap-reverse',
                         alignContent,
                         justifyContent
@@ -4172,8 +4274,8 @@ this.squared.base = (function (exports) {
                         alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
                         justifySelf: justifySelf === 'auto' ? this.cssParent('justifyItems') : justifySelf,
                         basis,
-                        grow: getFlexValue(this, 'flexGrow', 0),
-                        shrink: getFlexValue(this, 'flexShrink', 1),
+                        grow: getCssFloat(this, 'flexGrow', 0),
+                        shrink: getCssFloat(this, 'flexShrink', 1),
                         order: this.toInt('order', 0)
                     };
                 }
@@ -4186,11 +4288,11 @@ this.squared.base = (function (exports) {
         }
         get width() {
             const result = this._cache.width;
-            return result === undefined ? this._cache.width = setDimension(this, this._styleMap, 'width') : result;
+            return result === undefined ? this._cache.width = setDimension$1(this, this._styleMap, 'width') : result;
         }
         get height() {
             const result = this._cache.height;
-            return result === undefined ? this._cache.height = setDimension(this, this._styleMap, 'height') : result;
+            return result === undefined ? this._cache.height = setDimension$1(this, this._styleMap, 'height') : result;
         }
         get hasWidth() {
             const result = this._cache.hasWidth;
@@ -4199,7 +4301,7 @@ this.squared.base = (function (exports) {
         get hasHeight() {
             var _a;
             const result = this._cache.hasHeight;
-            return result === undefined ? this._cache.hasHeight = isPercent$4(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.valueOf('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false }) : result;
+            return result === undefined ? this._cache.hasHeight = isPercent$3(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.valueOf('position') === 'fixed' || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
         }
         get lineHeight() {
             let result = this._cache.lineHeight;
@@ -4355,8 +4457,8 @@ this.squared.base = (function (exports) {
                         result = true;
                         break;
                     case 'inline':
-                        if (this.tagName === 'svg' && this.actualParent.htmlElement) {
-                            result = !this.hasPX('width') && convertFloat$1(getNamedItem$3(this._element, 'width')) === 0;
+                        if (this.tagName.toLowerCase() === 'svg' && this.actualParent.htmlElement) {
+                            result = !this.hasUnit('width') && convertFloat(getNamedItem$3(this._element, 'width')) === 0;
                             break;
                         }
                     default:
@@ -4382,7 +4484,7 @@ this.squared.base = (function (exports) {
                             if (this.inlineStatic && ((_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
                                 result = true;
                             }
-                            else if (this.inline || startsWith$5(this.display, 'table-') || this.hasPX('maxWidth')) {
+                            else if (this.inline || startsWith$7(this.display, 'table-') || this.hasUnit('maxWidth')) {
                                 result = false;
                             }
                         }
@@ -4394,17 +4496,17 @@ this.squared.base = (function (exports) {
                 if (result === undefined) {
                     const width = this.valueOf('width');
                     const minWidth = this.valueOf('minWidth');
-                    let percent = 0;
-                    if (isPercent$4(width)) {
-                        percent = convertPercent$3(width);
+                    let percent = 0, n;
+                    if (!isNaN(n = asPercent$3(width))) {
+                        percent = n;
                     }
-                    if (isPercent$4(minWidth)) {
-                        percent = Math.max(convertPercent$3(minWidth), percent);
+                    if (!isNaN(n = asPercent$3(minWidth))) {
+                        percent = Math.max(n, percent);
                     }
                     if (percent) {
                         const marginLeft = this.valueOf('marginLeft');
                         const marginRight = this.valueOf('marginRight');
-                        result = percent + Math.max(0, convertPercent$3(marginLeft, 0)) + convertPercent$3(marginRight, 0) >= 1;
+                        result = percent + Math.max(0, convertPercent$1(marginLeft)) + convertPercent$1(marginRight) >= 1;
                     }
                 }
                 return this._cache.blockStatic = !!result;
@@ -4417,26 +4519,26 @@ this.squared.base = (function (exports) {
         }
         get centerAligned() {
             const result = this._cache.centerAligned;
-            return result === undefined ? this._cache.centerAligned = !this.pageFlow ? this.hasPX('left') && this.hasPX('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center') : result;
+            return result === undefined ? this._cache.centerAligned = !this.pageFlow ? this.hasUnit('left') && this.hasUnit('right') : this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center') : result;
         }
         get rightAligned() {
             const result = this._cache.rightAligned;
-            return result === undefined ? this._cache.rightAligned = !this.pageFlow ? this.hasPX('right') && !this.hasPX('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', this.dir === 'rtl' ? 'start' : 'end') : result;
+            return result === undefined ? this._cache.rightAligned = !this.pageFlow ? this.hasUnit('right') && !this.hasUnit('left') : this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', this.dir === 'rtl' ? 'start' : 'end') : result;
         }
         get bottomAligned() {
             var _a;
             const result = this._cache.bottomAligned;
-            return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasPX('bottom') && !this.hasPX('top') : !!(((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) && this.autoMargin.top) : result;
+            return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasUnit('bottom') && !this.hasUnit('top') : !!(((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) && this.autoMargin.top) : result;
         }
         get autoMargin() {
             let result = this._cache.autoMargin;
             if (result === undefined) {
                 if (this.blockStatic || !this.pageFlow || this.display === 'table') {
-                    const styleMap = this._styleMap;
-                    const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasPX('right'));
-                    const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
-                    const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasPX('bottom'));
-                    const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.hasPX('top'));
+                    const style = this._styleMap;
+                    const left = style.marginLeft === 'auto' && (this.pageFlow || this.hasUnit('right'));
+                    const right = style.marginRight === 'auto' && (this.pageFlow || this.hasUnit('left'));
+                    const top = style.marginTop === 'auto' && (this.pageFlow || this.hasUnit('bottom'));
+                    const bottom = style.marginBottom === 'auto' && (this.pageFlow || this.hasUnit('top'));
                     result = {
                         horizontal: left || right,
                         left: left && !right,
@@ -4459,7 +4561,7 @@ this.squared.base = (function (exports) {
             let result = this._cache.baseline;
             if (result === undefined) {
                 const display = this.display;
-                if ((startsWith$5(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
+                if ((startsWith$7(display, 'inline') || display === 'list-item') && this.pageFlow && !this.floating && !this.tableElement) {
                     const value = this.css('verticalAlign');
                     result = value === 'baseline' || !isNaN(parseFloat(value));
                 }
@@ -4474,11 +4576,8 @@ this.squared.base = (function (exports) {
             let result = this._cache.verticalAlign;
             if (result === undefined) {
                 const value = this.css('verticalAlign');
-                if (value !== 'baseline' && this.pageFlow) {
-                    if (isPx$3(value)) {
-                        result = parseFloat(value);
-                    }
-                    else if (isLength$6(value)) {
+                if (value !== 'baseline' && this.pageFlow && isNaN(result = asPx$1(value))) {
+                    if (isLength$7(value)) {
                         result = this.parseUnit(value);
                     }
                     else if (this.styleElement) {
@@ -4499,7 +4598,7 @@ this.squared.base = (function (exports) {
                                 valid = true;
                                 break;
                             default:
-                                valid = isPercent$4(value);
+                                valid = isPercent$3(value);
                                 break;
                         }
                         if (valid && this.cssTry('verticalAlign', 'baseline')) {
@@ -4515,11 +4614,8 @@ this.squared.base = (function (exports) {
             }
             return result;
         }
-        set textBounds(value) {
-            this._textBounds = value;
-        }
         get textBounds() {
-            let result = this._textBounds;
+            let result = this._cacheState.textBounds;
             if (result === undefined) {
                 if (this.naturalChild) {
                     if (this.textElement) {
@@ -4554,7 +4650,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                 }
-                return this._textBounds = result || null;
+                return this._cacheState.textBounds = result || null;
             }
             return result;
         }
@@ -4567,8 +4663,7 @@ this.squared.base = (function (exports) {
             let result = this._cache.backgroundColor;
             if (result === undefined) {
                 if (!this.plainText) {
-                    result = this.css('backgroundColor');
-                    if (isTransparent(result) && !this.buttonElement) {
+                    if (isTransparent(result = this.css('backgroundColor')) && !this.buttonElement) {
                         result = '';
                     }
                 }
@@ -4598,8 +4693,7 @@ this.squared.base = (function (exports) {
         get percentWidth() {
             const result = this._cache.percentWidth;
             if (result === undefined) {
-                const value = this.valueOf('width');
-                return this._cache.percentWidth = convertPercent$3(value, 0);
+                return this._cache.percentWidth = asPercent$3(this.valueOf('width')) || 0;
             }
             return result;
         }
@@ -4607,8 +4701,8 @@ this.squared.base = (function (exports) {
             var _a;
             const result = this._cache.percentHeight;
             if (result === undefined) {
-                const value = this.valueOf('height');
-                return this._cache.percentHeight = isPercent$4(value) && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.valueOf('position') === 'fixed') ? convertPercent$3(value) : 0;
+                const value = asPercent$3(this.valueOf('height'));
+                return this._cache.percentHeight = !isNaN(value) && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.valueOf('position') === 'fixed') ? value : 0;
             }
             return result;
         }
@@ -4621,11 +4715,11 @@ this.squared.base = (function (exports) {
                     const backgroundImage = this.backgroundImage !== '';
                     let backgroundRepeatX = false, backgroundRepeatY = false;
                     if (backgroundImage) {
-                        for (const repeat of this.css('backgroundRepeat').split(',')) {
-                            const [repeatX, repeatY] = splitPair$1(repeat.trim(), ' ');
+                        splitSome$7(this.css('backgroundRepeat'), repeat => {
+                            const [repeatX, repeatY] = splitPair$4(repeat, ' ');
                             backgroundRepeatX || (backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x');
                             backgroundRepeatY || (backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
-                        }
+                        });
                     }
                     result = {
                         background: borderWidth || backgroundImage || backgroundColor,
@@ -4713,11 +4807,8 @@ this.squared.base = (function (exports) {
                 }
                 else {
                     let parent;
-                    if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.row)) {
-                        result = this.width;
-                        if (result && this.contentBox && !this.tableElement) {
-                            result += this.contentBoxWidth;
-                        }
+                    if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.row) && (result = this.width) && this.contentBox && !this.tableElement) {
+                        result += this.contentBoxWidth;
                     }
                 }
                 return this._cache.actualWidth = result || this.bounds.width;
@@ -4728,11 +4819,8 @@ this.squared.base = (function (exports) {
             let result = this._cache.actualHeight;
             if (result === undefined) {
                 let parent;
-                if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.column)) {
-                    result = this.height;
-                    if (result && this.contentBox && !this.tableElement) {
-                        result += this.contentBoxHeight;
-                    }
+                if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.column) && (result = this.height) && this.contentBox && !this.tableElement) {
+                    result += this.contentBoxHeight;
                 }
                 return this._cache.actualHeight = result || this.bounds.height;
             }
@@ -4741,20 +4829,14 @@ this.squared.base = (function (exports) {
         get actualDimension() {
             return { width: this.actualWidth, height: this.actualHeight };
         }
-        set childIndex(value) {
-            this._childIndex = value;
+        get depth() {
+            return this._depth;
         }
         get childIndex() {
             return this._childIndex;
         }
-        set naturalChildren(value) {
-            this._naturalChildren = value;
-        }
         get naturalChildren() {
             return this._naturalChildren || (this._naturalChildren = this.toArray());
-        }
-        set naturalElements(value) {
-            this._naturalElements = value;
         }
         get naturalElements() {
             return this._naturalElements || (this._naturalElements = this.naturalChildren.filter((item) => item.naturalElement));
@@ -4763,15 +4845,13 @@ this.squared.base = (function (exports) {
             return this.naturalChildren[0] || null;
         }
         get lastChild() {
-            const children = this.naturalChildren;
-            return children[children.length - 1] || null;
+            return lastItemOf$1(this.naturalChildren) || null;
         }
         get firstElementChild() {
             return this.naturalElements[0] || null;
         }
         get lastElementChild() {
-            const children = this.naturalElements;
-            return children[children.length - 1] || null;
+            return lastItemOf$1(this.naturalElements) || null;
         }
         get previousSibling() {
             var _a;
@@ -4867,16 +4947,13 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 if (this.naturalChild) {
                     if (this.styleElement) {
-                        const fixedWidth = isFontFixedWidth(this);
-                        let value = checkFontSizeValue(this.valueOf('fontSize'), fixedWidth);
-                        if (isPx$3(value)) {
-                            result = parseFloat(value);
-                        }
-                        else if (isPercent$4(value)) {
+                        const fixedWidth = isFixedFont(this);
+                        let value = convertFontSize(this.valueOf('fontSize'), fixedWidth);
+                        if (isNaN(result = asPx$1(value)) && !isNaN(result = asPercent$3(value))) {
                             const parent = this.actualParent;
                             if (parent) {
-                                result = convertPercent$3(value) * parent.fontSize;
-                                if (fixedWidth && !isFontFixedWidth(parent)) {
+                                result *= parent.fontSize;
+                                if (fixedWidth && !isFixedFont(parent)) {
                                     result *= 13 / getRemSize();
                                 }
                             }
@@ -4887,7 +4964,7 @@ this.squared.base = (function (exports) {
                         else {
                             let emRatio = 1;
                             if (REGEXP_EM.test(value)) {
-                                emRatio = parseFloat(value);
+                                emRatio = safeFloat$2(value);
                                 value = 'inherit';
                             }
                             if (value === 'inherit') {
@@ -4901,12 +4978,12 @@ this.squared.base = (function (exports) {
                                         else {
                                             const fontSize = parent.valueOf('fontSize');
                                             if (fontSize && fontSize !== 'inherit') {
-                                                value = checkFontSizeValue(fontSize);
-                                                if (isPercent$4(value)) {
-                                                    emRatio *= convertPercent$3(value);
+                                                const n = asPercent$3(value = convertFontSize(fontSize));
+                                                if (!isNaN(n)) {
+                                                    emRatio *= n;
                                                 }
                                                 else if (REGEXP_EM.test(value)) {
-                                                    emRatio *= parseFloat(value);
+                                                    emRatio *= safeFloat$2(value);
                                                 }
                                                 else {
                                                     break;
@@ -4920,7 +4997,7 @@ this.squared.base = (function (exports) {
                                     value = '1rem';
                                 }
                             }
-                            result = (endsWith$2(value, 'rem') ? parseFloat(value) * getRemSize(fixedWidth) : parseUnit$2(value, { fixedWidth })) * emRatio;
+                            result = (endsWith$2(value, 'rem') ? safeFloat$2(value, 3) * getRemSize(fixedWidth) : parseUnit$5(value, { fixedWidth })) * emRatio;
                         }
                     }
                     else {
@@ -4928,51 +5005,28 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else {
-                    const options = { fixedWidth: isFontFixedWidth(this) };
-                    result = parseUnit$2(this.css('fontSize'), options) || ((_b = (_a = this.ascend({ condition: item => item.fontSize > 0 })[0]) === null || _a === void 0 ? void 0 : _a.fontSize) !== null && _b !== void 0 ? _b : parseUnit$2('1rem', options));
+                    const options = { fixedWidth: isFixedFont(this) };
+                    result = parseUnit$5(this.css('fontSize'), options) || ((_b = (_a = this.ascend({ condition: item => item.fontSize > 0 })[0]) === null || _a === void 0 ? void 0 : _a.fontSize) !== null && _b !== void 0 ? _b : parseUnit$5('1rem', options));
                 }
                 this._cache.fontSize = result;
             }
             return result;
         }
         get style() {
-            return this._style || (this._style = this.styleElement ? !this.pseudoElt ? getStyle$4(this._element) : getStyle$4(getParentElement$1(this._element), this.pseudoElt) : PROXY_INLINESTYLE);
+            return this._style || (this._style = this.styleElement ? !this.pseudoElt ? getStyle$5(this._element) : getStyle$5(getParentElement$1(this._element), this.pseudoElt) : PROXY_INLINESTYLE);
         }
         get cssStyle() {
-            return Object.assign({}, this._cssStyle);
+            return this._elementData ? Object.assign({}, this._elementData.styleMap) : {};
         }
         get textStyle() {
             let result = this._cache.textStyle;
             if (result === undefined) {
                 result = this.cssAsObject(...TEXT_STYLE);
                 result.fontSize = 'inherit';
+                result.lineHeight = 'inherit';
                 this._cache.textStyle = result;
             }
             return result;
-        }
-        get elementData() {
-            return this._elementData;
-        }
-        set dir(value) {
-            switch (value = value.toLowerCase()) {
-                case 'ltr':
-                case 'rtl':
-                case 'auto':
-                    if (this.naturalElement) {
-                        this._element.dir = value;
-                        this.cascade(node => {
-                            if (node.dir === value) {
-                                return false;
-                            }
-                            node.unsetState('dir');
-                        });
-                    }
-                    else if (this.naturalChild) {
-                        return;
-                    }
-                    this._cacheState.dir = value;
-                    break;
-            }
         }
         get dir() {
             let result = this._cacheState.dir;
@@ -4991,38 +5045,361 @@ this.squared.base = (function (exports) {
             }
             return result;
         }
-        get center() {
-            const bounds = this.bounds;
-            return {
-                x: (bounds.left + bounds.right) / 2,
-                y: (bounds.top + bounds.bottom) / 2
-            };
+        get elementData() {
+            return this._elementData;
         }
         get initial() {
             return this._initial;
         }
     }
 
-    const { FILE: FILE$1, STRING: STRING$1 } = squared.lib.regex;
+    const { TRANSFORM } = squared.lib.regex;
+    const { asPercent: asPercent$2, isPercent: isPercent$2, convertAngle: convertAngle$1, parseUnit: parseUnit$4 } = squared.lib.css;
+    const { splitEnclosing: splitEnclosing$2, splitPair: splitPair$3, splitSome: splitSome$6, startsWith: startsWith$6 } = squared.lib.util;
+    function getKeyframesRules(documentRoot = document) {
+        const result = new Map();
+        const styleSheets = documentRoot.styleSheets;
+        for (let i = 0, length = styleSheets.length; i < length; ++i) {
+            try {
+                const cssRules = styleSheets[i].cssRules;
+                if (cssRules) {
+                    for (let j = 0, q = cssRules.length; j < q; ++j) {
+                        try {
+                            const item = cssRules[j];
+                            if (item.type === CSSRule.KEYFRAMES_RULE) {
+                                const value = parseKeyframes(item.cssRules);
+                                if (value) {
+                                    const data = result.get(item.name);
+                                    if (data) {
+                                        Object.assign(data, value);
+                                    }
+                                    else {
+                                        result.set(item.name, value);
+                                    }
+                                }
+                            }
+                        }
+                        catch (_a) {
+                        }
+                    }
+                }
+            }
+            catch (_b) {
+            }
+        }
+        return result;
+    }
+    function parseKeyframes(rules) {
+        const result = {};
+        let valid;
+        for (let i = 0, length = rules.length; i < length; ++i) {
+            const item = rules[i];
+            const values = splitEnclosing$2(item.cssText, '', true, '{', '}');
+            const items = values[1].trim().split(';');
+            items.pop();
+            splitSome$6(item.keyText || values[0], percent => {
+                switch (percent) {
+                    case 'from':
+                        percent = '0%';
+                        break;
+                    case 'to':
+                        percent = '100%';
+                        break;
+                }
+                const keyframe = {};
+                items.forEach(frame => {
+                    const [attr, value] = splitPair$3(frame, ':', true);
+                    if (value) {
+                        keyframe[attr] = value;
+                    }
+                });
+                result[percent] = keyframe;
+                valid = true;
+            });
+        }
+        return valid ? result : null;
+    }
+    function parseTransform(value, options) {
+        var _a, _b, _c, _d;
+        let accumulate, boundingBox;
+        if (options) {
+            ({ accumulate, boundingBox } = options);
+        }
+        const result = [];
+        const transforms = splitEnclosing$2(value);
+        for (let i = 0, length = transforms.length; i < length; i += 2) {
+            const method = transforms[i].trim();
+            const transform = method + transforms[i + 1];
+            if (startsWith$6(method, 'translate')) {
+                const translate = TRANSFORM.TRANSLATE.exec(transform);
+                if (translate) {
+                    const tX = translate[2];
+                    let x = 0, y = 0, z = 0, group = 'translate', n;
+                    switch (method) {
+                        case 'translate':
+                        case 'translate3d': {
+                            if (!isNaN(n = asPercent$2(tX))) {
+                                if (boundingBox) {
+                                    x = n * boundingBox.width;
+                                }
+                            }
+                            else {
+                                x = parseUnit$4(tX, options);
+                            }
+                            const tY = translate[3];
+                            if (tY) {
+                                if (!isNaN(n = asPercent$2(tY))) {
+                                    if (boundingBox) {
+                                        y = n * boundingBox.height;
+                                    }
+                                }
+                                else {
+                                    y = parseUnit$4(tY, options);
+                                }
+                            }
+                            if (method === 'translate3d') {
+                                const tZ = translate[4];
+                                if (tZ && !isPercent$2(tZ)) {
+                                    z = parseUnit$4(tZ, options);
+                                    group += '3d';
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            break;
+                        }
+                        case 'translateX':
+                            if (!isNaN(n = asPercent$2(tX))) {
+                                if (boundingBox) {
+                                    x = n * boundingBox.width;
+                                }
+                            }
+                            else {
+                                x = parseUnit$4(tX, options);
+                            }
+                            break;
+                        case 'translateY':
+                            if (!isNaN(n = asPercent$2(tX))) {
+                                if (boundingBox) {
+                                    y = n * boundingBox.height;
+                                }
+                            }
+                            else {
+                                y = parseUnit$4(tX, options);
+                            }
+                            break;
+                        case 'translateZ':
+                            z = parseUnit$4(tX, options);
+                            break;
+                    }
+                    if (accumulate) {
+                        const values = (_a = result.find(item => item.group === group)) === null || _a === void 0 ? void 0 : _a.values;
+                        if (values) {
+                            values[0] += x;
+                            values[1] += y;
+                            values[2] += z;
+                            continue;
+                        }
+                    }
+                    result.push({ group, method, values: [x, y, z] });
+                }
+            }
+            else if (startsWith$6(method, 'rotate')) {
+                const rotate = TRANSFORM.ROTATE.exec(transform);
+                if (rotate) {
+                    const angle = convertAngle$1(rotate[5], rotate[6]);
+                    if (!isNaN(angle)) {
+                        let x = 0, y = 0, z = 0, group = 'rotate';
+                        switch (method) {
+                            case 'rotate':
+                                x = angle;
+                                y = angle;
+                                break;
+                            case 'rotateX':
+                                x = angle;
+                                break;
+                            case 'rotateY':
+                                y = angle;
+                                break;
+                            case 'rotateZ':
+                                z = angle;
+                                break;
+                            case 'rotate3d':
+                                x = +rotate[2];
+                                y = +rotate[3];
+                                z = +rotate[4];
+                                if (isNaN(x) || isNaN(y) || isNaN(z)) {
+                                    continue;
+                                }
+                                group += '3d';
+                                break;
+                        }
+                        if (accumulate) {
+                            const data = result.find(item => item.group === group);
+                            if (data) {
+                                const values = data.values;
+                                values[0] += x;
+                                values[1] += y;
+                                values[2] += z;
+                                if (data.angle !== undefined) {
+                                    data.angle += angle;
+                                }
+                                continue;
+                            }
+                        }
+                        result.push({ group, method, values: [x, y, z], angle: method === 'rotate3d' ? angle : undefined });
+                    }
+                }
+            }
+            else if (startsWith$6(method, 'scale')) {
+                const scale = TRANSFORM.SCALE.exec(transform);
+                if (scale) {
+                    let x = 1, y = 1, z = 1, group = 'scale';
+                    switch (method) {
+                        case 'scale':
+                        case 'scale3d':
+                            x = +scale[2];
+                            y = scale[3] ? +scale[3] : x;
+                            if (method === 'scale3d') {
+                                if (scale[4]) {
+                                    z = +scale[4];
+                                    group += '3d';
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            break;
+                        case 'scaleX':
+                            x = +scale[2];
+                            break;
+                        case 'scaleY':
+                            y = +scale[2];
+                            break;
+                        case 'scaleZ':
+                            z = +scale[2];
+                            break;
+                    }
+                    if (accumulate) {
+                        const values = (_b = result.find(item => item.group === group)) === null || _b === void 0 ? void 0 : _b.values;
+                        if (values) {
+                            values[0] *= x;
+                            values[1] *= y;
+                            values[2] *= z;
+                            continue;
+                        }
+                    }
+                    result.push({ group, method, values: [x, y, z] });
+                }
+            }
+            else if (startsWith$6(method, 'skew')) {
+                const skew = TRANSFORM.SKEW.exec(transform);
+                if (skew) {
+                    const angle = convertAngle$1(skew[2], skew[3]);
+                    if (!isNaN(angle)) {
+                        let x = 0, y = 0;
+                        switch (method) {
+                            case 'skew':
+                                x = angle;
+                                if (skew[4] && skew[5]) {
+                                    y = convertAngle$1(skew[4], skew[5], 0);
+                                }
+                                break;
+                            case 'skewX':
+                                x = angle;
+                                break;
+                            case 'skewY':
+                                y = angle;
+                                break;
+                        }
+                        if (accumulate) {
+                            const values = (_c = result.find(item => item.group === 'skew')) === null || _c === void 0 ? void 0 : _c.values;
+                            if (values) {
+                                values[0] += x;
+                                values[1] += y;
+                                continue;
+                            }
+                        }
+                        result.push({ group: 'skew', method, values: [x, y] });
+                    }
+                }
+            }
+            else if (startsWith$6(method, 'matrix')) {
+                const matrix = TRANSFORM.MATRIX.exec(transform);
+                if (matrix) {
+                    let args;
+                    if (method === 'matrix') {
+                        if (matrix[8]) {
+                            continue;
+                        }
+                        args = 6;
+                    }
+                    else {
+                        if (!matrix[17]) {
+                            continue;
+                        }
+                        args = 16;
+                    }
+                    const values = new Array(args);
+                    for (let j = 0; j < args; ++j) {
+                        values[j] = +matrix[j + 2];
+                    }
+                    result.push({ group: method, method, values });
+                }
+            }
+            else if (method === 'perspective') {
+                const perspective = TRANSFORM.PERSPECTIVE.exec(transform);
+                if (perspective) {
+                    const pX = perspective[2];
+                    const n = asPercent$2(pX);
+                    let x = 0;
+                    if (!isNaN(n)) {
+                        if (boundingBox) {
+                            x = n * boundingBox.width;
+                        }
+                    }
+                    else {
+                        x = parseUnit$4(pX, options);
+                    }
+                    if (accumulate) {
+                        const values = (_d = result.find(item => item.group === 'perspective')) === null || _d === void 0 ? void 0 : _d.values;
+                        if (values) {
+                            values[0] = x;
+                            continue;
+                        }
+                    }
+                    result.push({ group: 'perspective', method, values: [x] });
+                }
+            }
+        }
+        return result;
+    }
+
+    var css = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        getKeyframesRules: getKeyframesRules,
+        parseKeyframes: parseKeyframes,
+        parseTransform: parseTransform
+    });
+
+    const { FILE, STRING: STRING$1 } = squared.lib.regex;
     const { extractURL, resolveURL: resolveURL$1 } = squared.lib.css;
-    const { convertBase64: convertBase64$1, endsWith: endsWith$1, fromLastIndexOf, isBase64, resolvePath, splitPairStart, startsWith: startsWith$4, trimBoth: trimBoth$1 } = squared.lib.util;
-    const REGEXP_FONTFACE = /\s?@font-face\s*{([^}]+)}/;
-    const REGEXP_FONTFAMILY = /\s?font-family:\s*([^;]+);/;
-    const REGEXP_FONTSTYLE = /\s?font-style:\s*(\w+)\s*;/;
-    const REGEXP_FONTWEIGHT = /\s?font-weight:\s*(\d+)\s*;/;
-    const REGEXP_FONTURL = /\s?(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)(?:\s*format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
-    const REGEXP_DATAURI = new RegExp(`^${STRING$1.DATAURI}$`);
+    const { convertBase64: convertBase64$1, endsWith: endsWith$1, fromLastIndexOf, isBase64, resolvePath: resolvePath$1, splitEnclosing: splitEnclosing$1, splitPair: splitPair$2, splitPairEnd: splitPairEnd$1, splitPairStart, splitSome: splitSome$5, startsWith: startsWith$5 } = squared.lib.util;
+    const REGEXP_FONTURL = /(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)\s*(?:format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
+    const REGEXP_DATAURI = new RegExp(`^(?:^|\\s+)${STRING$1.DATAURI}(?:$|\\s+)$`);
     class Resource {
         constructor(application) {
             this.application = application;
             this._fileHandler = null;
+            this.init();
         }
         static hasMimeType(formats, value) {
             return formats === '*' || formats.includes(parseMimeType(value));
         }
         static getExtension(value) {
             var _a;
-            return ((_a = /\.([^./]+)\s*$/.exec(value)) === null || _a === void 0 ? void 0 : _a[1]) || '';
+            return ((_a = /\.([^.\s/]+?)(?:\s+|$)$/.exec(value)) === null || _a === void 0 ? void 0 : _a[1]) || '';
         }
         static parseDataURI(value, mimeType = 'image/unknown', encoding = 'base64') {
             const match = REGEXP_DATAURI.exec(value);
@@ -5035,7 +5412,7 @@ this.squared.base = (function (exports) {
                     encoding = trailing.trim();
                 }
                 else if (leading) {
-                    if (leading.includes('/')) {
+                    if (leading.indexOf('/') !== -1) {
                         mimeType = leading;
                         if (!encoding && isBase64(data)) {
                             encoding = 'base64';
@@ -5050,49 +5427,38 @@ this.squared.base = (function (exports) {
                 return result;
             }
         }
-        init(resourceId) {
+        init() { }
+        reset() { }
+        clear() {
+            Resource.ASSETS.length = 0;
+        }
+        createThread(resourceId) {
             var _a;
             const data = (_a = Resource.ASSETS)[resourceId] || (_a[resourceId] = {});
             data.fonts = new Map();
             data.image = new Map();
-            data.video = new Map();
-            data.audio = new Map();
-            data.rawData = new Map();
-            data.other = [];
         }
-        clear() {
-            Resource.ASSETS.length = 0;
-        }
-        reset() { }
-        preloadAssets(resourceId, documentRoot, elements) {
-            const { preloadImages, preloadFonts } = this.userSettings;
+        preloadAssets(resourceId, documentRoot, elements, preloadImages, preloadFonts) {
             const assets = Resource.ASSETS[resourceId];
             const result = [];
             const images = [];
             const preloadMap = [];
-            const parseSrcSet = (value) => {
-                if (value) {
-                    for (const uri of value.split(',')) {
-                        this.addImageData(resourceId, resolvePath(splitPairStart(uri.trim(), ' ')));
-                    }
-                }
-            };
             for (const element of elements) {
-                element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source) => parseSrcSet(source.srcset));
-                element.querySelectorAll('video').forEach((source) => this.addImageData(resourceId, source.poster));
-                element.querySelectorAll('input[type=image]').forEach((image) => this.addImageData(resourceId, image.src, image.width, image.height));
+                element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source) => splitSome$5(source.srcset, uri => this.addImage(resourceId, resolvePath$1(splitPairStart(uri, ' ', false, true)))));
+                element.querySelectorAll('video').forEach((source) => this.addImage(resourceId, source.poster));
+                element.querySelectorAll('input[type=image]').forEach((image) => this.addImage(resourceId, image.src, image.width || NaN, image.height || NaN));
                 element.querySelectorAll('object, embed').forEach((source) => {
                     const src = source.data || source.src;
-                    if (src && (startsWith$4(source.type, 'image/') || startsWith$4(parseMimeType(src), 'image/'))) {
-                        this.addImageData(resourceId, src.trim());
+                    if (src && (startsWith$5(source.type, 'image/') || startsWith$5(parseMimeType(src), 'image/'))) {
+                        this.addImage(resourceId, src.trim());
                     }
                 });
                 element.querySelectorAll('svg use').forEach((use) => {
                     const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
                     if (href && href.indexOf('#') > 0) {
-                        const src = resolvePath(splitPairStart(href, '#'));
-                        if (FILE$1.SVG.test(src)) {
-                            this.addImageData(resourceId, src);
+                        const src = resolvePath$1(splitPairStart(href, '#'));
+                        if (FILE.SVG.test(src)) {
+                            this.addImage(resourceId, src);
                         }
                     }
                 });
@@ -5101,10 +5467,10 @@ this.squared.base = (function (exports) {
                 const { image, rawData } = assets;
                 for (const item of image.values()) {
                     const uri = item.uri;
-                    if (FILE$1.SVG.test(uri)) {
+                    if (FILE.SVG.test(uri)) {
                         result.push(uri);
                     }
-                    else if (item.width === 0 || item.height === 0) {
+                    else if (isNaN(item.width) || isNaN(item.height)) {
                         const element = document.createElement('img');
                         element.src = uri;
                         if (element.naturalWidth && element.naturalHeight) {
@@ -5114,34 +5480,38 @@ this.squared.base = (function (exports) {
                         else {
                             documentRoot.appendChild(element);
                             images.push(element);
+                            result.push(element);
                         }
                     }
                 }
-                for (const data of rawData) {
-                    const item = data[1];
-                    const mimeType = item.mimeType;
-                    if (startsWith$4(mimeType, 'image/') && !endsWith$1(mimeType, 'svg+xml')) {
-                        let src = `data:${mimeType};`;
-                        if (item.base64) {
-                            src += 'base64,' + item.base64;
-                        }
-                        else if (item.content) {
-                            src += item.content;
-                        }
-                        else {
-                            continue;
-                        }
-                        const element = document.createElement('img');
-                        element.src = src;
-                        const { naturalWidth: width, naturalHeight: height } = element;
-                        if (width && height) {
-                            item.width = width;
-                            item.height = height;
-                            image.set(data[0], { width, height, uri: item.filename });
-                        }
-                        else {
-                            document.body.appendChild(element);
-                            images.push(element);
+                if (rawData) {
+                    for (const data of rawData) {
+                        const item = data[1];
+                        const mimeType = item.mimeType;
+                        if (startsWith$5(mimeType, 'image/') && !endsWith$1(mimeType, 'svg+xml')) {
+                            let src = `data:${mimeType};`;
+                            if (item.base64) {
+                                src += 'base64,' + item.base64;
+                            }
+                            else if (item.content) {
+                                src += item.content;
+                            }
+                            else {
+                                continue;
+                            }
+                            const element = document.createElement('img');
+                            element.src = src;
+                            const { naturalWidth: width, naturalHeight: height } = element;
+                            if (width && height) {
+                                item.width = width;
+                                item.height = height;
+                                image.set(data[0], { width, height, uri: item.filename });
+                            }
+                            else {
+                                document.body.appendChild(element);
+                                images.push(element);
+                                result.push(element);
+                            }
                         }
                     }
                 }
@@ -5159,16 +5529,16 @@ this.squared.base = (function (exports) {
             for (const element of elements) {
                 element.querySelectorAll('img').forEach((image) => {
                     if (!preloadImages) {
-                        this.addImage(resourceId, image);
+                        this.addImageElement(resourceId, image);
                     }
                     else {
                         const src = image.src;
                         if (!preloadMap.includes(src)) {
-                            if (FILE$1.SVG.test(src)) {
+                            if (FILE.SVG.test(src)) {
                                 result.push(src);
                             }
                             else if (image.complete) {
-                                this.addImage(resourceId, image);
+                                this.addImageElement(resourceId, image);
                             }
                             else {
                                 result.push(image);
@@ -5181,18 +5551,41 @@ this.squared.base = (function (exports) {
             return [result, images];
         }
         parseFontFace(resourceId, cssText, styleSheetHref) {
-            var _a, _b, _c, _d;
-            const value = (_a = REGEXP_FONTFACE.exec(cssText)) === null || _a === void 0 ? void 0 : _a[1];
-            if (value) {
-                let fontFamily = (_b = REGEXP_FONTFAMILY.exec(value)) === null || _b === void 0 ? void 0 : _b[1].trim();
-                if (fontFamily) {
-                    const fontStyle = ((_c = REGEXP_FONTSTYLE.exec(value)) === null || _c === void 0 ? void 0 : _c[1].toLowerCase()) || 'normal';
-                    const fontWeight = +(((_d = REGEXP_FONTWEIGHT.exec(value)) === null || _d === void 0 ? void 0 : _d[1]) || '400');
-                    fontFamily = trimBoth$1(fontFamily, '"');
+            const fontFace = splitEnclosing$1(cssText, '', true, '{', '}')[1];
+            if (fontFace) {
+                const fontMap = {};
+                const items = fontFace.trim().split(';');
+                for (let i = 0, length = items.length - 1; i < length; ++i) {
+                    const [attr, value] = splitPair$2(items[i], ':', true);
+                    fontMap[attr] = value;
+                }
+                let fontFamily = fontMap['font-family'];
+                if (fontMap.src && fontFamily) {
+                    const style = fontMap['font-style'];
+                    const weight = fontMap['font-weight'];
+                    const fontStyle = style || 'normal';
+                    let fontWeight = 400;
+                    if (weight) {
+                        switch (weight) {
+                            case 'normal':
+                                break;
+                            case 'lighter':
+                                fontWeight = 100;
+                                break;
+                            case 'bold':
+                            case 'bolder':
+                                fontWeight = 700;
+                                break;
+                            default:
+                                fontWeight = +weight || 400;
+                                break;
+                        }
+                    }
+                    fontFamily = trimBoth(fontFamily);
                     let match;
-                    while (match = REGEXP_FONTURL.exec(value)) {
+                    while (match = REGEXP_FONTURL.exec(fontFace)) {
                         const url = (match[2] || match[3] || match[4]).trim();
-                        let srcFormat = match[5] ? match[5].toLowerCase() : '', mimeType = '', srcLocal, srcUrl, srcBase64;
+                        let srcFormat = match[5], mimeType = '', srcLocal, srcUrl, srcBase64;
                         const setMimeType = () => {
                             switch (srcFormat) {
                                 case 'truetype':
@@ -5223,35 +5616,35 @@ this.squared.base = (function (exports) {
                             srcLocal = url;
                         }
                         else {
-                            if (startsWith$4(url, 'data:')) {
-                                const [mime, base64] = url.split(',');
-                                srcBase64 = base64.trim();
-                                if (!mime.includes('base64') && !isBase64(srcBase64)) {
+                            if (startsWith$5(url, 'data:')) {
+                                let mime;
+                                [mime, srcBase64] = splitPair$2(url, ',', true);
+                                if (mime.indexOf('base64') === -1 && !isBase64(srcBase64)) {
                                     continue;
                                 }
                                 mimeType || (mimeType = mime.toLowerCase());
                             }
                             else {
-                                srcUrl = resolvePath(url, styleSheetHref);
+                                srcUrl = resolvePath$1(url, styleSheetHref);
                                 mimeType || (mimeType = parseMimeType(srcUrl));
                             }
                             if (!srcFormat) {
-                                if (mimeType.includes('/ttf')) {
+                                if (mimeType.indexOf('/ttf') !== -1) {
                                     srcFormat = 'truetype';
                                 }
-                                else if (mimeType.includes('/otf')) {
+                                else if (mimeType.indexOf('/otf') !== -1) {
                                     srcFormat = 'opentype';
                                 }
-                                else if (mimeType.includes('/woff2')) {
+                                else if (mimeType.indexOf('/woff2') !== -1) {
                                     srcFormat = 'woff2';
                                 }
-                                else if (mimeType.includes('/woff')) {
+                                else if (mimeType.indexOf('/woff') !== -1) {
                                     srcFormat = 'woff';
                                 }
-                                else if (mimeType.includes('/svg+xml')) {
+                                else if (mimeType.indexOf('/svg+xml') !== -1) {
                                     srcFormat = 'svg';
                                 }
-                                else if (mimeType.includes('/vnd.ms-fontobject')) {
+                                else if (mimeType.indexOf('/vnd.ms-fontobject') !== -1) {
                                     srcFormat = 'embedded-opentype';
                                 }
                                 else {
@@ -5275,53 +5668,61 @@ this.squared.base = (function (exports) {
                 }
             }
         }
+        parseKeyFrames(resourceId, cssRule) {
+            var _a;
+            const value = parseKeyframes(cssRule.cssRules);
+            if (value) {
+                const keyFrames = (_a = Resource.ASSETS[resourceId]).keyFrames || (_a.keyFrames = new Map());
+                const item = keyFrames.get(cssRule.name);
+                if (item) {
+                    Object.assign(item, value);
+                }
+                else {
+                    keyFrames.set(cssRule.name, value);
+                }
+            }
+        }
         addAsset(resourceId, asset) {
             const assets = Resource.ASSETS[resourceId];
             if (assets && (asset.content || asset.uri || asset.base64)) {
+                const other = assets.other || (assets.other = []);
                 const { pathname, filename } = asset;
-                const append = assets.other.find(item => item.pathname === pathname && item.filename === filename);
+                const append = other.find(item => item.pathname === pathname && item.filename === filename);
                 if (append) {
                     Object.assign(append, asset);
                 }
                 else {
-                    assets.other.push(asset);
+                    other.push(asset);
                 }
             }
         }
-        addImage(resourceId, element) {
+        addImage(resourceId, uri, width = NaN, height = NaN) {
             const assets = Resource.ASSETS[resourceId];
-            if (assets && element.complete) {
-                const uri = element.src;
-                const image = Resource.parseDataURI(uri);
-                if (image) {
-                    image.width = element.naturalWidth;
-                    image.height = element.naturalHeight;
-                    this.addRawData(resourceId, uri, image);
-                }
-                if (uri) {
-                    assets.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
-                }
+            if (assets && uri && (width && height || !this.getImage(resourceId, uri))) {
+                assets.image.set(uri, { width, height, uri });
             }
         }
         addAudio(resourceId, uri, options) {
-            var _a;
-            (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.audio.set(uri, Object.assign({ uri }, options));
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                (assets.audio || (assets.audio = new Map())).set(uri, Object.assign({ uri }, options));
+            }
         }
         addVideo(resourceId, uri, options) {
-            var _a;
-            (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.video.set(uri, Object.assign({ uri }, options));
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                (assets.video || (assets.video = new Map())).set(uri, Object.assign({ uri }, options));
+            }
         }
         addFont(resourceId, data) {
             const assets = Resource.ASSETS[resourceId];
             if (assets) {
-                const fontFamily = data.fontFamily.trim().toLowerCase();
-                data.fontFamily = fontFamily;
-                const items = assets.fonts.get(fontFamily);
+                const items = assets.fonts.get(data.fontFamily = data.fontFamily.toLowerCase());
                 if (items) {
                     items.push(data);
                 }
                 else {
-                    assets.fonts.set(fontFamily, [data]);
+                    assets.fonts.set(data.fontFamily, [data]);
                 }
             }
         }
@@ -5338,7 +5739,7 @@ this.squared.base = (function (exports) {
                 if (base64 || encoding === 'base64') {
                     if (!base64) {
                         if (content) {
-                            base64 = startsWith$4(content, 'data:') ? content.split(',')[1].trim() : content;
+                            base64 = startsWith$5(content, 'data:') ? splitPairEnd$1(content, ',', true) : content;
                             content = undefined;
                         }
                         else if (buffer) {
@@ -5360,13 +5761,13 @@ this.squared.base = (function (exports) {
                     content = content.replace(/\\(["'])/g, (...match) => match[1]);
                 }
                 if (content || base64 || buffer) {
-                    const url = uri.split('?')[0];
+                    const url = splitPairStart(uri, '?');
                     if (!filename) {
-                        const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
-                        filename = url.endsWith(ext) ? fromLastIndexOf(url, '/') : this.randomUUID + ext;
+                        const ext = mimeType && fromMimeType(mimeType);
+                        filename = ext && url.endsWith('.' + ext) ? fromLastIndexOf(url, '/') : this.assignFilename(url, mimeType, ext);
                     }
-                    assets.rawData.set(uri, {
-                        pathname: startsWith$4(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
+                    (assets.rawData || (assets.rawData = new Map())).set(uri, {
+                        pathname: startsWith$5(url, location.origin) ? url.substring(location.origin.length + 1, url.lastIndexOf('/')) : '',
                         filename,
                         mimeType,
                         content,
@@ -5379,40 +5780,62 @@ this.squared.base = (function (exports) {
             }
         }
         getImage(resourceId, uri) {
-            var _a;
-            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.image.get(uri);
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                return assets.image.get(uri);
+            }
         }
         getVideo(resourceId, uri) {
             var _a;
-            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.video.get(uri);
+            const video = (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.video;
+            if (video) {
+                return video.get(uri);
+            }
         }
         getAudio(resourceId, uri) {
             var _a;
-            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.audio.get(uri);
+            const audio = (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.audio;
+            if (audio) {
+                return audio.get(uri);
+            }
         }
         getFonts(resourceId, fontFamily, fontStyle = 'normal', fontWeight) {
-            var _a;
-            const font = (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.fonts.get(fontFamily.trim().toLowerCase());
-            if (font) {
-                const mimeType = this.mimeTypeMap.font;
-                return font.filter(item => startsWith$4(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType)));
+            const assets = Resource.ASSETS[resourceId];
+            if (assets) {
+                const font = assets.fonts.get(fontFamily.trim().toLowerCase());
+                if (font) {
+                    const mimeType = this.mimeTypeMap.font;
+                    return font.filter(item => startsWith$5(fontStyle, item.fontStyle) && (!fontWeight || item.fontWeight === +fontWeight) && (mimeType === '*' || mimeType.includes(item.mimeType))).sort((a, b) => a.fontWeight - b.fontWeight);
+                }
             }
             return [];
         }
         getRawData(resourceId, uri) {
             var _a;
-            if (startsWith$4(uri, 'url(')) {
-                uri = extractURL(uri);
-                if (!uri) {
-                    return;
+            const rawData = (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.rawData;
+            if (rawData) {
+                if (startsWith$5(uri, 'url(')) {
+                    uri = extractURL(uri);
+                    if (!uri) {
+                        return;
+                    }
                 }
+                return rawData.get(uri);
             }
-            return (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.rawData.get(uri);
         }
-        addImageData(resourceId, uri, width = 0, height = 0) {
+        addImageElement(resourceId, element) {
             var _a;
-            if (uri && (width && height || !this.getImage(resourceId, uri))) {
-                (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.image.set(uri, { width, height, uri });
+            if (element.complete) {
+                const uri = element.src;
+                const image = Resource.parseDataURI(uri);
+                if (image) {
+                    image.width = element.naturalWidth;
+                    image.height = element.naturalHeight;
+                    this.addRawData(resourceId, uri, image);
+                }
+                if (uri) {
+                    (_a = Resource.ASSETS[resourceId]) === null || _a === void 0 ? void 0 : _a.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
+                }
             }
         }
         fromImageUrl(resourceId, value) {
@@ -5421,23 +5844,21 @@ this.squared.base = (function (exports) {
                 return [data];
             }
             const result = [];
-            const pattern = /url\([^)]+\)/g;
-            let match;
-            while (match = pattern.exec(value)) {
-                const url = resolveURL$1(match[0]);
+            splitEnclosing$1(value, 'url').forEach(seg => {
+                const url = resolveURL$1(seg);
                 if (url) {
                     const image = this.getImage(resourceId, url);
                     if (image) {
                         result.push(image);
                     }
                 }
-            }
+            });
             return result;
         }
+        assignFilename(uri, mimeType, ext = 'unknown') {
+            return generateUUID(this.application.userSettings.formatUUID) + '.' + ext;
+        }
         set fileHandler(value) {
-            if (value) {
-                value.resource = this;
-            }
             this._fileHandler = value;
         }
         get fileHandler() {
@@ -5446,14 +5867,8 @@ this.squared.base = (function (exports) {
         get controllerSettings() {
             return this.application.controllerHandler.localSettings;
         }
-        get userSettings() {
-            return this.application.userSettings;
-        }
         get mimeTypeMap() {
             return this.controllerSettings.mimeType;
-        }
-        get randomUUID() {
-            return randomUUID();
         }
         get mapOfAssets() {
             return Resource.ASSETS;
@@ -5462,23 +5877,17 @@ this.squared.base = (function (exports) {
     Resource.KEY_NAME = 'squared.base.resource';
     Resource.ASSETS = [];
 
-    const { STRING } = squared.lib.regex;
+    const { CSS_BORDER_SET: CSS_BORDER_SET$2 } = squared.lib.internal;
+    const { TAG_ATTR, TAG_OPEN } = squared.lib.regex.STRING;
     const { isUserAgent: isUserAgent$1 } = squared.lib.client;
     const { parseColor } = squared.lib.color;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$2, calculate, convertAngle, formatPercent: formatPercent$2, formatPX: formatPX$5, getStyle: getStyle$3, hasCoords: hasCoords$3, isCalc: isCalc$1, isLength: isLength$5, isPercent: isPercent$3, parseAngle, parseUnit: parseUnit$1 } = squared.lib.css;
+    const { asPercent: asPercent$1, calculateAll, convertAngle, formatPercent: formatPercent$2, formatPX: formatPX$5, getStyle: getStyle$4, hasCoords: hasCoords$3, isCalc: isCalc$2, isLength: isLength$6, parseAngle, parseUnit: parseUnit$3 } = squared.lib.css;
     const { getNamedItem: getNamedItem$2 } = squared.lib.dom;
     const { cos, equal: equal$1, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { convertBase64, convertCamelCase, convertPercent: convertPercent$2, escapePattern, hasValue, isEqual, isNumber: isNumber$3, isString: isString$1, iterateArray: iterateArray$2, splitPair, startsWith: startsWith$3 } = squared.lib.util;
-    const BORDER_TOP = CSS_PROPERTIES$2.borderTop.value;
-    const BORDER_RIGHT = CSS_PROPERTIES$2.borderRight.value;
-    const BORDER_BOTTOM = CSS_PROPERTIES$2.borderBottom.value;
-    const BORDER_LEFT = CSS_PROPERTIES$2.borderLeft.value;
-    const BORDER_OUTLINE = CSS_PROPERTIES$2.outline.value;
-    const PATTERN_COLOR = '((?:rgb|hsl)a?\\(\\s*\\d+\\s*,\\s*\\d+%?\\s*,\\s*\\d+%?\\s*(?:,\\s*[\\d.]+\\s*)?\\)|#[A-Za-z\\d]{3,8}|[a-z]{3,})';
-    const PATTERN_COLORSTOP = `\\s*${PATTERN_COLOR}(?:\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|calc\\((.+)\\)(?=\\s*,)|calc\\((.+)\\))\\s*,?)*\\s*,?`;
-    const REGEXP_BACKGROUNDIMAGE = new RegExp(`url\\([^)]+\\)|initial|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w\\s%]+)?)?)\\s*,?\\s*((?:${PATTERN_COLORSTOP})+)\\)`, 'g');
-    const REGEXP_COLORSTOP = new RegExp(PATTERN_COLORSTOP, 'g');
+    const { convertBase64, convertCamelCase, escapePattern, hasValue, isEqual, isNumber, isString: isString$2, iterateArray: iterateArray$3, lastItemOf, replaceAll: replaceAll$2, splitPair: splitPair$1, startsWith: startsWith$4 } = squared.lib.util;
+    const [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT, BORDER_OUTLINE] = CSS_BORDER_SET$2;
+    const REGEXP_COLORSTOP = new RegExp(STRING$2.CSS_COLORSTOP, 'g');
     const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
     const CHAR_LEADINGSPACE = /^\s+/;
     const CHAR_TRAILINGSPACE = /\s+$/;
@@ -5523,29 +5932,6 @@ this.squared.base = (function (exports) {
                 return result;
         }
         let previousOffset = 0, match;
-        if (isUserAgent$1(2 /* SAFARI */)) {
-            const colors = [];
-            const length = value.length;
-            const colorPattern = new RegExp(PATTERN_COLOR, 'g');
-            while (match = colorPattern.exec(value)) {
-                const color = match[1];
-                const lastIndex = colorPattern.lastIndex;
-                const index = lastIndex - color.length;
-                if (/[a-z]/.test(color[0]) && /\d/.test(value[index - 1])) {
-                    continue;
-                }
-                if (colors.length) {
-                    colors[colors.length - 1][2] = index;
-                }
-                colors.push([color, lastIndex, length]);
-            }
-            let expanded = '';
-            for (const item of colors) {
-                const color = item[0];
-                expanded = value.substring(item[1], item[2]).split(',').reduce((a, b) => b = b.trim() ? a + (a ? ', ' : '') + color + ' ' + b : a, expanded);
-            }
-            value = expanded;
-        }
         while (match = REGEXP_COLORSTOP.exec(value)) {
             const color = parseColor(match[1]);
             if (color) {
@@ -5560,107 +5946,105 @@ this.squared.base = (function (exports) {
                 else {
                     const unit = match[2];
                     if (unit) {
-                        if (isPercent$3(unit)) {
-                            offset = convertPercent$2(unit);
+                        const n = asPercent$1(unit);
+                        if (!isNaN(n)) {
+                            offset = n;
                         }
-                        else if (isLength$5(unit)) {
+                        else if (isLength$6(unit)) {
                             offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
                         }
-                        else if (isCalc$1(unit)) {
-                            offset = calculate(match[6], { boundingSize: size, fontSize: node.fontSize }) / size;
+                        else if (isCalc$2(unit)) {
+                            offset = calculateAll(unit, { boundingSize: size, fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension }) / size;
                         }
                         if (repeat && offset !== -1) {
                             offset *= extent;
                         }
                     }
                 }
-                if (isNaN(offset)) {
-                    continue;
-                }
-                if (result.length === 0) {
-                    if (offset === -1) {
-                        offset = 0;
-                    }
-                    else if (offset > 0) {
-                        result.push({ color, offset: 0 });
-                    }
-                }
-                if (offset !== -1) {
-                    offset = Math.max(previousOffset, offset);
-                    previousOffset = offset;
-                }
-                result.push({ color, offset });
-            }
-        }
-        const length = result.length;
-        const lastStop = result[length - 1];
-        if (lastStop.offset === -1) {
-            lastStop.offset = 1;
-        }
-        let percent = 0;
-        for (let i = 0; i < length; ++i) {
-            const stop = result[i];
-            if (stop.offset === -1) {
-                if (i === 0) {
-                    stop.offset = 0;
-                }
-                else {
-                    for (let j = i + 1, k = 2; j < length - 1; ++k) {
-                        const data = result[j++];
-                        if (data.offset !== -1) {
-                            stop.offset = (percent + data.offset) / k;
-                            break;
+                if (!isNaN(offset)) {
+                    if (result.length === 0) {
+                        if (offset === -1) {
+                            offset = 0;
+                        }
+                        else if (offset > 0) {
+                            result.push({ color, offset: 0 });
                         }
                     }
-                    if (stop.offset === -1) {
-                        stop.offset = percent + lastStop.offset / (length - 1);
+                    if (offset !== -1) {
+                        offset = Math.max(previousOffset, offset);
+                        previousOffset = offset;
                     }
+                    result.push({ color, offset });
                 }
             }
-            percent = stop.offset;
         }
-        if (repeat) {
-            if (percent < 100) {
-                complete: {
-                    let basePercent = percent;
-                    const original = result.slice(0);
-                    while (percent < 100) {
-                        for (let i = 0; i < length; ++i) {
-                            const data = original[i];
-                            percent = Math.min(basePercent + data.offset, 1);
-                            result.push(Object.assign(Object.assign({}, data), { offset: percent }));
-                            if (percent === 1) {
-                                break complete;
+        const lastStop = lastItemOf(result);
+        if (lastStop) {
+            if (lastStop.offset === -1) {
+                lastStop.offset = 1;
+            }
+            let percent = 0;
+            const length = result.length;
+            for (let i = 0; i < length; ++i) {
+                const stop = result[i];
+                if (stop.offset === -1) {
+                    if (i === 0) {
+                        stop.offset = 0;
+                    }
+                    else {
+                        for (let j = i + 1, k = 2; j < length - 1; ++k) {
+                            const data = result[j++];
+                            if (data.offset !== -1) {
+                                stop.offset = (percent + data.offset) / k;
+                                break;
                             }
                         }
-                        basePercent = percent;
+                        if (stop.offset === -1) {
+                            stop.offset = percent + lastStop.offset / (length - 1);
+                        }
+                    }
+                }
+                percent = stop.offset;
+            }
+            if (repeat) {
+                if (percent < 100) {
+                    complete: {
+                        let basePercent = percent;
+                        const original = result.slice(0);
+                        while (percent < 100) {
+                            for (let i = 0; i < length; ++i) {
+                                const data = original[i];
+                                percent = Math.min(basePercent + data.offset, 1);
+                                result.push(Object.assign(Object.assign({}, data), { offset: percent }));
+                                if (percent === 1) {
+                                    break complete;
+                                }
+                            }
+                            basePercent = percent;
+                        }
                     }
                 }
             }
-        }
-        else if (percent < 1) {
-            result.push(Object.assign(Object.assign({}, result[length - 1]), { offset: 1 }));
+            else if (percent < 1) {
+                result.push(Object.assign(Object.assign({}, lastStop), { offset: 1 }));
+            }
         }
         REGEXP_COLORSTOP.lastIndex = 0;
         return result;
     }
-    function setBorderStyle$2(node, boxStyle, attr, border) {
-        let width = node[border[0]];
+    function setBorderStyle$1(node, boxStyle, attr, border) {
+        let width = node[border[1]];
         if (width > 0) {
-            const style = node.css(border[1]) || 'solid';
+            const style = node.css(border[0]) || 'solid';
             let color = node.css(border[2]) || 'rgb(0, 0, 0)';
-            if (startsWith$3(color, 'current')) {
+            if (startsWith$4(color, 'current')) {
                 color = node.css('color');
             }
             if (width === 2 && (style === 'inset' || style === 'outset')) {
                 width = 1;
             }
             if (color = parseColor(color)) {
-                boxStyle[attr] = {
-                    width: formatPX$5(width),
-                    style,
-                    color
-                };
+                boxStyle[attr] = { width, style, color };
                 return true;
             }
         }
@@ -5690,8 +6074,7 @@ this.squared.base = (function (exports) {
         return false;
     }
     function hasEndingSpace(element) {
-        const value = element.textContent;
-        const ch = value[value.length - 1];
+        const ch = lastItemOf(element.textContent);
         return ch === ' ' || ch === '\t';
     }
     function newBoxRectPosition(orientation = ['left', 'top']) {
@@ -5710,23 +6093,23 @@ this.squared.base = (function (exports) {
             orientation
         };
     }
-    function replaceSvgAttribute(src, tagName, attrs, timestamp, start) {
+    function replaceSvgAttribute(src, tagName, attrs, uuid, start) {
         const length = attrs.length;
         let i = 0;
         while (i < length) {
             const attr = attrs[i++];
-            tagName = (i === 0 && start ? '' : '@@' + timestamp) + `(${tagName})`;
+            tagName = (i === 0 && start ? '' : '!' + uuid) + `(${tagName})`;
             const style = ' ' + attr + `="${attrs[i++]}"`;
-            const match = new RegExp(`<${tagName}(${STRING.TAG_OPEN}+?)${attr}\\s*${STRING.TAG_ATTR}(${STRING.TAG_OPEN}*)>`, 'i').exec(src);
-            src = match ? src.replace(match[0], '<@@' + timestamp + match[1] + match[2] + style + match[6] + '>') : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<@@' + timestamp + capture[1] + style);
+            const match = new RegExp(`<${tagName}(${TAG_OPEN}+?)${attr}\\s*${TAG_ATTR}(${TAG_OPEN}*)>`, 'i').exec(src);
+            src = match ? replaceAll$2(src, match[0], '<!' + uuid + match[1] + match[2] + style + match[6] + '>', 1) : src.replace(new RegExp(`<${tagName}`, 'i'), (...capture) => '<!' + uuid + capture[1] + style);
         }
         return src;
     }
     function replaceSvgValues(src, children, dimension) {
         for (let i = 0, length = children.length; i < length; ++i) {
             const item = children[i];
-            const timestamp = performance.now().toString().replace(/\./, '');
-            const tagName = item.tagName;
+            const uuid = generateUUID('10');
+            const tagName = item.tagName.toLowerCase();
             let start = true;
             switch (tagName) {
                 case 'svg':
@@ -5739,7 +6122,7 @@ this.squared.base = (function (exports) {
                             dimension && dimension.width || item.width.baseVal.value,
                             'height',
                             dimension && dimension.height || item.height.baseVal.value
-                        ], timestamp, true);
+                        ], uuid, true);
                         start = false;
                     }
                     catch (_a) {
@@ -5752,7 +6135,7 @@ this.squared.base = (function (exports) {
                 case 'circle':
                 case 'polyline':
                 case 'polygon': {
-                    const { stroke, strokeWidth, strokeDasharray, strokeDashoffset, strokeLinecap, strokeLinejoin, strokeMiterlimit, strokeOpacity, fill, fillRule, fillOpacity, clipPath, clipRule } = getStyle$3(item);
+                    const { stroke, strokeWidth, strokeDasharray, strokeDashoffset, strokeLinecap, strokeLinejoin, strokeMiterlimit, strokeOpacity, fill, fillRule, fillOpacity, clipPath, clipRule } = getStyle$4(item);
                     const strokeColor = parseColor(stroke);
                     const fillColor = parseColor(fill);
                     src = replaceSvgAttribute(src, tagName, [
@@ -5769,25 +6152,31 @@ this.squared.base = (function (exports) {
                         'fill-opacity', fillOpacity,
                         'clip-path', clipPath,
                         'clip-rule', clipRule
-                    ], timestamp, start);
+                    ], uuid, start);
                     src = replaceSvgValues(src, item.children);
                     break;
                 }
                 case 'stop': {
-                    const { stopColor, stopOpacity } = getStyle$3(item);
+                    const { stopColor, stopOpacity } = getStyle$4(item);
                     const color = parseColor(stopColor);
                     src = replaceSvgAttribute(src, tagName, [
                         'stop-color', color && !color.transparent ? color.valueAsRGBA : 'none',
                         'stop-opacity', stopOpacity
-                    ], timestamp, true);
+                    ], uuid, true);
                     break;
                 }
             }
         }
         return src;
     }
-    const parseLength = (value, dimension, options) => isPercent$3(value) ? Math.round(convertPercent$2(value) * dimension) : parseUnit$1(value, options);
-    const parsePercent = (value, dimension, options) => isPercent$3(value) ? convertPercent$2(value) : parseUnit$1(value, options) / dimension;
+    function parseLength(value, dimension, options) {
+        const n = asPercent$1(value);
+        return !isNaN(n) ? Math.round(n * dimension) : parseUnit$3(value, options);
+    }
+    function parsePercent(value, dimension, options) {
+        const n = asPercent$1(value);
+        return !isNaN(n) ? n : parseUnit$3(value, options) / dimension;
+    }
     const checkPreviousSibling = (node) => !node || node.lineBreak || node.floating || node.plainText && CHAR_TRAILINGSPACE.test(node.textContent);
     class ResourceUI extends Resource {
         static generateId(resourceId, section, name, start = 1) {
@@ -5828,7 +6217,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                     if (!result) {
-                        if (isNumber$3(name)) {
+                        if (!isNaN(+name)) {
                             name = '__' + name;
                         }
                         let i = 0;
@@ -5847,66 +6236,62 @@ this.squared.base = (function (exports) {
         }
         static getBackgroundPosition(value, dimension, options) {
             if (value && value !== 'left top' && value !== '0% 0%') {
-                let fontSize, imageDimension, imageSize, screenDimension;
+                let imageDimension, imageSize;
                 if (options) {
-                    ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+                    ({ imageDimension, imageSize } = options);
                 }
                 const { width, height } = dimension;
                 const setImageOffset = (position, horizontal, direction, directionAsPercent) => {
-                    if (imageDimension && !isLength$5(position)) {
+                    if (imageDimension && !isLength$6(position)) {
                         let offset = result[directionAsPercent];
                         if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
                             const [sizeW, sizeH] = imageSize.split(/\s+/);
+                            let imageOffset, n;
                             if (horizontal) {
-                                let imageWidth = width;
-                                if (isLength$5(sizeW, true)) {
-                                    if (isPercent$3(sizeW)) {
-                                        imageWidth *= convertPercent$2(sizeW);
-                                    }
-                                    else {
-                                        imageWidth = parseUnit$1(sizeW, { fontSize, screenDimension }) || imageWidth;
-                                    }
+                                imageOffset = width;
+                                if (!isNaN(n = asPercent$1(sizeW))) {
+                                    imageOffset *= n;
+                                }
+                                else if (isLength$6(sizeW)) {
+                                    imageOffset = parseUnit$3(sizeW, options) || imageOffset;
                                 }
                                 else if (sizeH) {
                                     let percent = 1;
-                                    if (isPercent$3(sizeH)) {
-                                        percent = (convertPercent$2(sizeH) * height) / imageDimension.height;
+                                    if (!isNaN(n = asPercent$1(sizeH))) {
+                                        percent = (n * height) / imageDimension.height;
                                     }
-                                    else if (isLength$5(sizeH)) {
-                                        const unit = parseUnit$1(sizeH, { fontSize, screenDimension });
+                                    else if (isLength$6(sizeH)) {
+                                        const unit = parseUnit$3(sizeH, options);
                                         if (unit) {
                                             percent = unit / imageDimension.height;
                                         }
                                     }
-                                    imageWidth = percent * imageDimension.width;
+                                    imageOffset = percent * imageDimension.width;
                                 }
-                                offset *= imageWidth;
                             }
                             else {
-                                let imageHeight = height;
-                                if (isLength$5(sizeH, true)) {
-                                    if (isPercent$3(sizeH)) {
-                                        imageHeight *= convertPercent$2(sizeH);
-                                    }
-                                    else {
-                                        imageHeight = parseUnit$1(sizeH, { fontSize, screenDimension }) || imageHeight;
-                                    }
+                                imageOffset = height;
+                                if (!isNaN(n = asPercent$1(sizeH))) {
+                                    imageOffset *= n;
+                                }
+                                else if (isLength$6(sizeH)) {
+                                    imageOffset = parseUnit$3(sizeH, options) || imageOffset;
                                 }
                                 else if (sizeW) {
                                     let percent = 1;
-                                    if (isPercent$3(sizeW)) {
-                                        percent = (convertPercent$2(sizeW) * width) / imageDimension.width;
+                                    if (!isNaN(n = asPercent$1(sizeW))) {
+                                        percent = (n * width) / imageDimension.width;
                                     }
-                                    else if (isLength$5(sizeW)) {
-                                        const unit = parseUnit$1(sizeW, { fontSize, screenDimension });
+                                    else if (isLength$6(sizeW)) {
+                                        const unit = parseUnit$3(sizeW, options);
                                         if (unit) {
                                             percent = unit / imageDimension.width;
                                         }
                                     }
-                                    imageHeight = percent * imageDimension.height;
+                                    imageOffset = percent * imageDimension.height;
                                 }
-                                offset *= imageHeight;
                             }
+                            offset *= imageOffset;
                         }
                         else {
                             offset *= horizontal ? imageDimension.width : imageDimension.height;
@@ -5977,14 +6362,14 @@ this.squared.base = (function (exports) {
                                 result[directionAsPercent] = 0.5;
                                 break;
                             default: {
-                                const percent = parsePercent(position, offsetParent, { fontSize, screenDimension });
+                                const percent = parsePercent(position, offsetParent, options);
                                 if (percent > 1) {
                                     orientation[i] = '100%';
                                     position = horizontal ? 'right' : 'bottom';
-                                    result[position] = parseLength(formatPercent$2(percent - 1), offsetParent, { fontSize, screenDimension }) * -1;
+                                    result[position] = parseLength(formatPercent$2(percent - 1), offsetParent, options) * -1;
                                 }
                                 else {
-                                    result[direction] = parseLength(position, offsetParent, { fontSize, screenDimension });
+                                    result[direction] = parseLength(position, offsetParent, options);
                                 }
                                 result[directionAsPercent] = percent;
                                 break;
@@ -6061,13 +6446,13 @@ this.squared.base = (function (exports) {
                     };
                     for (let i = 0; i < length; ++i) {
                         const position = orientation[i];
-                        if (isLength$5(position, true)) {
+                        if (isLength$6(position, true)) {
                             const alignment = orientation[i - 1];
                             switch (alignment) {
                                 case 'left':
                                 case 'right': {
-                                    const location = parseLength(position, width, { fontSize, screenDimension });
-                                    const locationAsPercent = parsePercent(position, width, { fontSize, screenDimension });
+                                    const location = parseLength(position, width, options);
+                                    const locationAsPercent = parsePercent(position, width, options);
                                     if (alignment === 'right') {
                                         result.right = location;
                                         result.rightAsPercent = locationAsPercent;
@@ -6079,7 +6464,7 @@ this.squared.base = (function (exports) {
                                         if (locationAsPercent > 1) {
                                             const percent = 1 - locationAsPercent;
                                             result.horizontal = 'right';
-                                            result.right = parseLength(formatPercent$2(percent), width, { fontSize, screenDimension });
+                                            result.right = parseLength(formatPercent$2(percent), width, options);
                                             result.rightAsPercent = percent;
                                             setImageOffset(position, true, 'right', 'rightAsPercent');
                                         }
@@ -6091,8 +6476,8 @@ this.squared.base = (function (exports) {
                                 }
                                 case 'top':
                                 case 'bottom': {
-                                    const location = parseLength(position, height, { fontSize, screenDimension });
-                                    const locationAsPercent = parsePercent(position, height, { fontSize, screenDimension });
+                                    const location = parseLength(position, height, options);
+                                    const locationAsPercent = parsePercent(position, height, options);
                                     if (alignment === 'bottom') {
                                         result.bottom = location;
                                         result.bottomAsPercent = locationAsPercent;
@@ -6104,7 +6489,7 @@ this.squared.base = (function (exports) {
                                         if (locationAsPercent > 1) {
                                             const percent = 1 - locationAsPercent;
                                             result.horizontal = 'bottom';
-                                            result.bottom = parseLength(formatPercent$2(percent), height, { fontSize, screenDimension });
+                                            result.bottom = parseLength(formatPercent$2(percent), height, options);
                                             result.bottomAsPercent = percent;
                                             setImageOffset(position, false, 'bottom', 'bottomAsPercent');
                                         }
@@ -6134,7 +6519,7 @@ this.squared.base = (function (exports) {
         static getOptionArray(element, showDisabled) {
             const result = [];
             let numberArray = true;
-            iterateArray$2(element.children, (item) => {
+            iterateArray$3(element.children, (item) => {
                 if (item.disabled && !showDisabled) {
                     return;
                 }
@@ -6142,7 +6527,7 @@ this.squared.base = (function (exports) {
                     case 'OPTION': {
                         const value = item.text.trim() || item.value.trim();
                         if (value) {
-                            if (numberArray && !isNumber$3(value)) {
+                            if (numberArray && isNaN(+value)) {
                                 numberArray = false;
                             }
                             result.push(value);
@@ -6165,10 +6550,9 @@ this.squared.base = (function (exports) {
             return numberArray ? [undefined, result] : [result];
         }
         static parseBackgroundImage(node, backgroundImage) {
-            var _a, _b;
             const backgroundSize = node.css('backgroundSize').split(/\s*,\s*/);
             const images = [];
-            const getGradientPosition = (value) => isString$1(value) ? value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] : null;
+            const getGradientPosition = (value) => isString$2(value) ? value.indexOf('at ') !== -1 ? /(.*?)at\s+(.+?)(?:\s+|$)$/.exec(value) : [value, value] : null;
             const getAngle = (value, fallback = 0) => {
                 if (value = value.trim()) {
                     let degree = parseAngle(value, fallback);
@@ -6181,10 +6565,11 @@ this.squared.base = (function (exports) {
                 }
                 return fallback;
             };
+            CSS$2.BACKGROUNDIMAGE_G.lastIndex = 0;
             let i = 0, match;
-            while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
+            while (match = CSS$2.BACKGROUNDIMAGE_G.exec(backgroundImage)) {
                 const value = match[0];
-                if (startsWith$3(value, 'url(') || value === 'initial') {
+                if (startsWith$4(value, 'url(') || value === 'initial') {
                     images.push(value);
                 }
                 else {
@@ -6263,13 +6648,12 @@ this.squared.base = (function (exports) {
                             const { left, top } = center;
                             const { width, height } = dimension;
                             let shape = 'ellipse', closestSide = top, farthestSide = top, closestCorner = Infinity, farthestCorner = -Infinity, radius = 0, radiusExtent = 0;
-                            if (position) {
-                                const name = (_a = position[1]) === null || _a === void 0 ? void 0 : _a.trim();
-                                if (startsWith$3(name, 'circle')) {
+                            if (position && (position[1] = position[1].trim())) {
+                                if (startsWith$4(position[1], 'circle')) {
                                     shape = 'circle';
                                 }
-                                else if (name) {
-                                    const [radiusX, radiusY] = splitPair(name, ' ', true);
+                                else {
+                                    const [radiusX, radiusY] = splitPair$1(position[1], ' ');
                                     let minRadius = Infinity;
                                     if (radiusX) {
                                         minRadius = node.parseWidth(radiusX, false);
@@ -6306,7 +6690,7 @@ this.squared.base = (function (exports) {
                             };
                             if (radius === 0 && radiusExtent === 0) {
                                 radius = farthestCorner;
-                                const extent = position && ((_b = position[1]) === null || _b === void 0 ? void 0 : _b.split(' ').pop()) || '';
+                                const extent = position && position[1].split(' ').pop() || '';
                                 switch (extent) {
                                     case 'closest-corner':
                                     case 'closest-side':
@@ -6347,7 +6731,6 @@ this.squared.base = (function (exports) {
                 }
                 ++i;
             }
-            REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
             if (images.length) {
                 return images;
             }
@@ -6396,7 +6779,7 @@ this.squared.base = (function (exports) {
                 if (trim) {
                     value = value.trim();
                 }
-                return value.includes('\n') && (node.preserveWhiteSpace || node.plainText && node.actualParent.preserveWhiteSpace || node.css('whiteSpace') === 'pre-line');
+                return value.indexOf('\n') !== -1 && (node.preserveWhiteSpace || node.plainText && node.actualParent.preserveWhiteSpace || node.css('whiteSpace') === 'pre-line');
             }
             return false;
         }
@@ -6407,7 +6790,7 @@ this.squared.base = (function (exports) {
                     let nextSibling = node.nextSibling;
                     if (nextSibling && nextSibling.naturalElement) {
                         const textContent = node.textContent;
-                        if (isString$1(textContent)) {
+                        if (isString$2(textContent)) {
                             const match = REGEXP_TRAILINGINDENT.exec(textContent);
                             if (match) {
                                 if (!nextSibling.textElement) {
@@ -6422,7 +6805,7 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        init(resourceId) {
+        createThread(resourceId) {
             var _a;
             const data = (_a = ResourceUI.STORED)[resourceId] || (_a[resourceId] = {});
             data.ids = new Map();
@@ -6431,7 +6814,7 @@ this.squared.base = (function (exports) {
             data.fonts = new Map();
             data.colors = new Map();
             data.images = new Map();
-            super.init(resourceId);
+            super.createThread(resourceId);
         }
         clear() {
             ResourceUI.STORED.length = 0;
@@ -6443,20 +6826,22 @@ this.squared.base = (function (exports) {
                     this.setBoxStyle(node);
                 }
                 if (node.hasResource(8 /* VALUE_STRING */) && (node.visible && !node.imageContainer || node.labelFor)) {
-                    this.setFontStyle(node);
+                    if (node.hasResource(4 /* FONT_STYLE */)) {
+                        this.setFontStyle(node);
+                    }
                     this.setValueString(node);
                 }
             });
         }
         writeRawImage(resourceId, filename, options) {
-            let base64 = options.base64, content = options.content;
+            let { base64, content } = options;
             if (base64 || content || options.buffer) {
                 if (!base64) {
                     if (options.buffer) {
                         base64 = convertBase64(options.buffer);
                     }
                     else if (content && options.encoding === 'base64') {
-                        base64 = startsWith$3(content, 'data:') ? splitPair(content, ',', true)[1] : content;
+                        base64 = startsWith$4(content, 'data:') ? splitPair$1(content, ',', true)[1] : content;
                     }
                     else {
                         return;
@@ -6469,19 +6854,22 @@ this.squared.base = (function (exports) {
                 else {
                     content = undefined;
                 }
-                const otherAssets = ResourceUI.ASSETS[resourceId].other;
-                const pathname = appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image);
-                let result = otherAssets.find(item => item.pathname === pathname && item.filename === filename);
-                if (result) {
-                    if (content && result.content === content || base64 && result.base64 === base64) {
-                        return result;
+                const pathname = appendSeparator(this.application.userSettings.outputDirectory, this.controllerSettings.directory.image);
+                const other = ResourceUI.ASSETS[resourceId].other;
+                let result;
+                if (other) {
+                    result = other.find(item => item.pathname === pathname && item.filename === filename);
+                    if (result) {
+                        if (content && result.content === content || base64 && result.base64 === base64) {
+                            return result;
+                        }
+                        const ext = ResourceUI.getExtension(filename);
+                        const basename = filename.substring(0, filename.length - ext.length);
+                        let i = 1;
+                        do {
+                            filename = `${basename}_${i}.${ext}`;
+                        } while (other.find(item => item.pathname === pathname && item.filename === filename) && ++i);
                     }
-                    const ext = ResourceUI.getExtension(filename);
-                    const basename = filename.substring(0, filename.length - ext.length);
-                    let i = 1;
-                    do {
-                        filename = `${basename}_${i}.${ext}`;
-                    } while (otherAssets.find(item => item.pathname === pathname && item.filename === filename) && ++i);
                 }
                 result = {
                     pathname,
@@ -6501,7 +6889,7 @@ this.squared.base = (function (exports) {
         writeRawSvg(resourceId, element, dimension) {
             const content = replaceSvgValues(element.outerHTML.trim().replace(/\s+/g, ' '), [element], dimension)
                 .replace(/["']/g, (...capture) => '\\' + capture[0])
-                .replace(/<@@\d+/g, '<');
+                .replace(/<!\d+/g, '<');
             const uri = 'data:image/svg+xml,' + content;
             this.addRawData(resourceId, uri, { mimeType: 'image/svg+xml', content });
             return uri;
@@ -6512,12 +6900,12 @@ this.squared.base = (function (exports) {
                 const boxStyle = {};
                 let borderWidth = visibleStyle.borderWidth, backgroundColor = node.backgroundColor, backgroundImage;
                 if (borderWidth) {
-                    setBorderStyle$2(node, boxStyle, 'borderTop', BORDER_TOP);
-                    setBorderStyle$2(node, boxStyle, 'borderRight', BORDER_RIGHT);
-                    setBorderStyle$2(node, boxStyle, 'borderBottom', BORDER_BOTTOM);
-                    setBorderStyle$2(node, boxStyle, 'borderLeft', BORDER_LEFT);
+                    setBorderStyle$1(node, boxStyle, 'borderTop', BORDER_TOP);
+                    setBorderStyle$1(node, boxStyle, 'borderRight', BORDER_RIGHT);
+                    setBorderStyle$1(node, boxStyle, 'borderBottom', BORDER_BOTTOM);
+                    setBorderStyle$1(node, boxStyle, 'borderLeft', BORDER_LEFT);
                 }
-                if (visibleStyle.outline && setBorderStyle$2(node, boxStyle, 'outline', BORDER_OUTLINE)) {
+                if (visibleStyle.outline && setBorderStyle$1(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                     borderWidth = true;
                 }
                 if (!backgroundColor && !node.documentParent.visible && node.has('backgroundColor')) {
@@ -6541,10 +6929,10 @@ this.squared.base = (function (exports) {
                     }
                     if (node.css('borderRadius') !== '0px') {
                         const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
-                        const [A, B] = splitPair(borderTopLeftRadius, ' ');
-                        const [C, D] = splitPair(borderTopRightRadius, ' ');
-                        const [E, F] = splitPair(borderBottomRightRadius, ' ');
-                        const [G, H] = splitPair(borderBottomLeftRadius, ' ');
+                        const [A, B] = splitPair$1(borderTopLeftRadius, ' ');
+                        const [C, D] = splitPair$1(borderTopRightRadius, ' ');
+                        const [E, F] = splitPair$1(borderBottomRightRadius, ' ');
+                        const [G, H] = splitPair$1(borderBottomLeftRadius, ' ');
                         const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
                         const horizontal = node.actualWidth >= node.actualHeight;
                         const radius = borderRadius[0];
@@ -6565,7 +6953,7 @@ this.squared.base = (function (exports) {
             }
             else if (visibleStyle.outline) {
                 const boxStyle = {};
-                if (setBorderStyle$2(node, boxStyle, 'outline', BORDER_OUTLINE)) {
+                if (setBorderStyle$1(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                     node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
                 }
             }
@@ -6573,16 +6961,14 @@ this.squared.base = (function (exports) {
         setFontStyle(node) {
             if ((node.textElement || node.inlineText) && (!node.textEmpty || node.pseudoElement || node.visibleStyle.background) || node.inputElement && !node.controlElement) {
                 let fontWeight = node.css('fontWeight');
-                if (!isNumber$3(fontWeight)) {
+                if (!isNumber(fontWeight)) {
                     switch (fontWeight) {
                         case 'lighter':
-                            fontWeight = '200';
+                        case 'bolder':
+                            fontWeight = node.style.fontWeight;
                             break;
                         case 'bold':
                             fontWeight = '700';
-                            break;
-                        case 'bolder':
-                            fontWeight = '900';
                             break;
                         default:
                             fontWeight = '400';
@@ -6599,7 +6985,7 @@ this.squared.base = (function (exports) {
             }
         }
         setValueString(node) {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             let value, trimming, inlined;
             if (node.naturalChild) {
                 const element = node.element;
@@ -6672,7 +7058,7 @@ this.squared.base = (function (exports) {
                                 value = isUserAgent$1(4 /* FIREFOX */) ? 'Browse...' : 'Choose File';
                                 break;
                             case 'color': {
-                                const borderColor = this.controllerSettings.style.inputColorBorderColor;
+                                const borderColor = this.controllerSettings.style[element.disabled ? 'buttonDisabledBorderColor' : 'buttonBorderColor'];
                                 const backgroundColor = (parseColor(value) || parseColor('black')).valueAsRGBA;
                                 const { width, height } = node.actualDimension;
                                 const backgroundSize = `${width - 10}px ${height - 10}px, ${width - 8}px ${height - 8}px`;
@@ -6720,7 +7106,7 @@ this.squared.base = (function (exports) {
                     default:
                         trimming = true;
                         if (node.plainText || node.pseudoElement || node.hasAlign(512 /* INLINE */) && node.textElement) {
-                            value = trimming ? node.textContent.replace(/&/g, '&amp;') : node.textContent;
+                            value = trimming ? replaceAll$2(node.textContent, '&', '&amp;') : node.textContent;
                             inlined = true;
                         }
                         else if (node.inlineText) {
@@ -6742,7 +7128,7 @@ this.squared.base = (function (exports) {
                     case 'pre':
                     case 'pre-wrap': {
                         if (!node.renderParent.layoutVertical) {
-                            value = value.replace(/^\s*\n/, '');
+                            value = value.replace(/^(?:^|\s+)\n/, '');
                         }
                         const preIndent = ResourceUI.checkPreIndent(node);
                         if (preIndent) {
@@ -6754,16 +7140,12 @@ this.squared.base = (function (exports) {
                         }
                     }
                     case 'break-spaces':
-                        value = value
-                            .replace(/\n/g, this.STRING_NEWLINE)
-                            .replace(/\t/g, this.STRING_SPACE.repeat(node.toInt('tabSize', 8)))
-                            .replace(/\s/g, this.STRING_SPACE);
+                        value = replaceAll$2(value, '\n', this.STRING_NEWLINE);
+                        value = replaceAll$2(value, '\t', this.STRING_SPACE.repeat(node.toInt('tabSize', 8))).replace(/\s/g, this.STRING_SPACE);
                         trimming = false;
                         break;
                     case 'pre-line':
-                        value = value
-                            .replace(/\n/g, this.STRING_NEWLINE)
-                            .replace(/\s{2,}/g, ' ');
+                        value = replaceAll$2(value, '\n', this.STRING_NEWLINE).replace(/\s{2,}/g, ' ');
                         trimming = false;
                         break;
                     case 'nowrap':
@@ -6779,9 +7161,8 @@ this.squared.base = (function (exports) {
                         }
                         else if (!node.naturalChild) {
                             if (!node.horizontalRowStart) {
-                                const element = node.element;
-                                const previousSibling = element && element.previousSibling;
-                                if (previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling) && startsWith$3(element.textContent.trim(), value.trim())) {
+                                const previousSibling = (_a = node.element) === null || _a === void 0 ? void 0 : _a.previousSibling;
+                                if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling)) {
                                     value = value.replace(CHAR_LEADINGSPACE, this.STRING_SPACE);
                                     break;
                                 }
@@ -6791,17 +7172,17 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else {
-                            if (node.horizontalRowStart || ((_a = node.previousSibling) === null || _a === void 0 ? void 0 : _a.blockStatic)) {
+                            if (node.horizontalRowStart || ((_b = node.previousSibling) === null || _b === void 0 ? void 0 : _b.blockStatic)) {
                                 value = value.replace(CHAR_LEADINGSPACE, '');
                             }
-                            if ((_b = node.nextSibling) === null || _b === void 0 ? void 0 : _b.blockStatic) {
+                            if ((_c = node.nextSibling) === null || _c === void 0 ? void 0 : _c.blockStatic) {
                                 value = value.replace(CHAR_TRAILINGSPACE, '');
                             }
                         }
                         break;
                 }
             }
-            else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle')) && !isString$1(node.textContent)) {
+            else if (node.naturalChildren.length === 0 && !node.hasUnit('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle')) && !isString$2(node.textContent)) {
                 value = node.textContent;
             }
             if (value) {
@@ -6818,7 +7199,7 @@ this.squared.base = (function (exports) {
                                 value = value.replace(CHAR_LEADINGSPACE, '');
                             }
                             else if (previousSibling.naturalElement) {
-                                previousSpaceEnd = hasEndingSpace(previousSibling.element) || ((_c = previousSibling.lastStaticChild) === null || _c === void 0 ? void 0 : _c.lineBreak);
+                                previousSpaceEnd = hasEndingSpace(previousSibling.element) || ((_d = previousSibling.lastStaticChild) === null || _d === void 0 ? void 0 : _d.lineBreak);
                             }
                         }
                         if (inlined) {
@@ -6856,8 +7237,12 @@ this.squared.base = (function (exports) {
                 }
             }
         }
+        getImageDimension(resourceId, uri) {
+            const image = this.getImage(resourceId, uri);
+            return image ? { width: image.width, height: image.height } : { width: NaN, height: NaN };
+        }
         preFormatString(value) {
-            return value.replace(/\u00A0/g, this.STRING_SPACE);
+            return replaceAll$2(value, '\u00A0', this.STRING_SPACE);
         }
         removeExcludedText(node, element) {
             const { preserveWhiteSpace, sessionId } = node;
@@ -6874,26 +7259,26 @@ this.squared.base = (function (exports) {
                                 value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
                             }
                             else if (child.positioned) {
-                                value = value.replace(item.outerHTML, '');
+                                value = replaceAll$2(value, item.outerHTML, '', 1);
                             }
                             else if (child.display === 'contents') {
-                                value = value.replace(item.outerHTML, child.textContent);
+                                value = replaceAll$2(value, item.outerHTML, child.textContent, 1);
                             }
                             else if (!preserveWhiteSpace) {
-                                value = value.replace(item.outerHTML, child.pageFlow && isString$1(child.textContent) ? this.STRING_SPACE : '');
+                                value = replaceAll$2(value, item.outerHTML, child.pageFlow && isString$2(child.textContent) ? this.STRING_SPACE : '', 1);
                             }
                             return;
                         }
                         const textContent = child.plainText ? child.textContent : child[attr];
                         if (textContent) {
                             if (!preserveWhiteSpace) {
-                                value = value.replace(textContent, '');
+                                value = replaceAll$2(value, textContent, '', 1);
                             }
                             return;
                         }
                     }
                     else if (item.nodeName[0] !== '#') {
-                        value = value.replace(item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords$3(getComputedStyle(item).position) && isString$1(item.textContent) ? this.STRING_SPACE : '');
+                        value = replaceAll$2(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords$3(getStyle$4(item).position) && isString$2(item.textContent) ? this.STRING_SPACE : '', 1);
                     }
                     if (!preserveWhiteSpace) {
                         if (index === 0) {
@@ -7039,21 +7424,12 @@ this.squared.base = (function (exports) {
         get NODE_PROCEDURE () { return NODE_PROCEDURE; }
     });
 
-    const { CSS_PROPERTIES: CSS_PROPERTIES$1, isPx: isPx$2 } = squared.lib.css;
+    const { CSS_BORDER_SET: CSS_BORDER_SET$1, CSS_PROPERTIES } = squared.lib.internal;
+    const { getStyle: getStyle$3 } = squared.lib.css;
     const { createElement, getRangeClientRect } = squared.lib.dom;
     const { equal } = squared.lib.math;
     const { getElementAsNode } = squared.lib.session;
-    const { cloneObject, hasKeys, isArray, isEmptyString, startsWith: startsWith$2, withinRange: withinRange$3 } = squared.lib.util;
-    const CSS_SPACING = new Map([
-        [1 /* MARGIN_TOP */, 0],
-        [2 /* MARGIN_RIGHT */, 1],
-        [4 /* MARGIN_BOTTOM */, 2],
-        [8 /* MARGIN_LEFT */, 3],
-        [16 /* PADDING_TOP */, 4],
-        [32 /* PADDING_RIGHT */, 5],
-        [64 /* PADDING_BOTTOM */, 6],
-        [128 /* PADDING_LEFT */, 7]
-    ]);
+    const { cloneObject, hasKeys, isArray, isEmptyString, replaceAll: replaceAll$1, startsWith: startsWith$3, withinRange: withinRange$3 } = squared.lib.util;
     const CSS_SPACINGINDEX = [1 /* MARGIN_TOP */, 2 /* MARGIN_RIGHT */, 4 /* MARGIN_BOTTOM */, 8 /* MARGIN_LEFT */, 16 /* PADDING_TOP */, 32 /* PADDING_RIGHT */, 64 /* PADDING_BOTTOM */, 128 /* PADDING_LEFT */];
     function cascadeActualPadding(children, attr, value) {
         let valid = false;
@@ -7120,7 +7496,7 @@ this.squared.base = (function (exports) {
                     }
                     else {
                         if (node.naturalChild) {
-                            const value = getSpacingOffset(node, i);
+                            const value = getBoxOffset(node, i);
                             if (value >= 0) {
                                 other.modifyBox(key, value);
                             }
@@ -7152,7 +7528,28 @@ this.squared.base = (function (exports) {
             }
         }
     }
-    function getSpacingOffset(node, index) {
+    function getBoxSpacing(value) {
+        switch (value) {
+            case 1 /* MARGIN_TOP */:
+                return 0;
+            case 2 /* MARGIN_RIGHT */:
+                return 1;
+            case 4 /* MARGIN_BOTTOM */:
+                return 2;
+            case 8 /* MARGIN_LEFT */:
+                return 3;
+            case 16 /* PADDING_TOP */:
+                return 4;
+            case 32 /* PADDING_RIGHT */:
+                return 5;
+            case 64 /* PADDING_BOTTOM */:
+                return 6;
+            case 128 /* PADDING_LEFT */:
+                return 7;
+        }
+        return NaN;
+    }
+    function getBoxOffset(node, index) {
         switch (index) {
             case 0:
                 return node.marginTop;
@@ -7170,19 +7567,18 @@ this.squared.base = (function (exports) {
                 return node.paddingBottom;
             case 7:
                 return node.paddingLeft;
-            default:
-                return 0;
         }
+        return 0;
     }
     function setOverflow(node) {
         let result = 0;
         if (node.scrollElement) {
             const element = node.element;
             const [overflowX, overflowY] = node.cssAsTuple('overflowX', 'overflowY');
-            if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
+            if (node.hasHeight && (node.hasUnit('height') || node.hasUnit('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
                 result |= 8 /* VERTICAL */;
             }
-            if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
+            if ((node.hasUnit('width') || node.hasUnit('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
                 result |= 4 /* HORIZONTAL */;
             }
         }
@@ -7220,6 +7616,8 @@ this.squared.base = (function (exports) {
             this._preferInitial = true;
             this._boxRegister = null;
             this._documentParent = null;
+            this._boxReset = null;
+            this._boxAdjustment = null;
             this._locked = null;
             this._siblingsLeading = null;
             this._siblingsTrailing = null;
@@ -7447,7 +7845,7 @@ this.squared.base = (function (exports) {
             return this.containerType === containerType;
         }
         of(containerType, ...alignmentType) {
-            return this.is(containerType) && alignmentType.some(value => this.hasAlign(value));
+            return this.is(containerType) && alignmentType.every(value => this.hasAlign(value));
         }
         attr(name, attr, value, overwrite = true) {
             const obj = this.namespace(name);
@@ -7455,11 +7853,9 @@ this.squared.base = (function (exports) {
                 if (overwrite && this.lockedAttr(name, attr)) {
                     overwrite = false;
                 }
-                if (!overwrite && obj[attr]) {
-                    return obj[attr];
+                if (overwrite || !obj[attr]) {
+                    return obj[attr] = value;
                 }
-                obj[attr] = value;
-                return value;
             }
             return obj[attr] || '';
         }
@@ -7468,7 +7864,7 @@ this.squared.base = (function (exports) {
             if (obj) {
                 for (let i = 0, length = attrs.length; i < length; ++i) {
                     const attr = attrs[i];
-                    if (attr.includes('*')) {
+                    if (attr.indexOf('*') !== -1) {
                         for (const item of searchObject(obj, attr, true)) {
                             delete obj[item[0]];
                         }
@@ -7487,16 +7883,11 @@ this.squared.base = (function (exports) {
             return Object.entries(this._namespaces);
         }
         unsafe(name, value) {
-            if (arguments.length === 1) {
-                if (typeof name === 'string') {
-                    return this['_' + name];
-                }
-                for (const attr in name) {
-                    this['_' + attr] = name[attr];
-                }
+            if (typeof name === 'string') {
+                return arguments.length === 1 ? this['_' + name] : this['_' + name] = value;
             }
-            else {
-                return this['_' + name] = value;
+            for (const attr in name) {
+                this['_' + attr] = name[attr];
             }
         }
         lockAttr(name, attr) {
@@ -7522,12 +7913,6 @@ this.squared.base = (function (exports) {
         }
         parseUnit(value, options) {
             var _a;
-            if (!value) {
-                return 0;
-            }
-            else if (isPx$2(value)) {
-                return parseFloat(value);
-            }
             (_a = (options || (options = {}))).screenDimension || (_a.screenDimension = this.localSettings.screenDimension);
             return super.parseUnit(value, options);
         }
@@ -7558,13 +7943,13 @@ this.squared.base = (function (exports) {
                         this._bounds = node.bounds;
                         this._linear = node.linear;
                         this._box = node.box;
-                        if (this.depth === -1) {
-                            this.depth = node.depth;
+                        if (this._depth === -1) {
+                            this._depth = node.depth;
                         }
                         const actualParent = node.actualParent;
                         if (actualParent) {
                             this.actualParent = actualParent;
-                            this.dir = actualParent.dir;
+                            this.setCacheState('dir', actualParent.dir);
                         }
                         break;
                     }
@@ -7577,7 +7962,7 @@ this.squared.base = (function (exports) {
                         this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
                         if (!this.positionStatic) {
                             const setPosition = (attr) => {
-                                if (node.hasPX(attr)) {
+                                if (node.hasUnit(attr)) {
                                     this._styleMap[attr] = node.css(attr);
                                 }
                             };
@@ -7595,32 +7980,33 @@ this.squared.base = (function (exports) {
                     case 'textStyle':
                         result = node.textStyle;
                         result.fontSize = node.fontSize + 'px';
+                        result.lineHeight = node.lineHeight + 'px';
                         this.cssApply(result);
                         break;
                     case 'boxStyle': {
                         if (this.naturalElement) {
                             const properties = [];
                             if (!this.backgroundImage) {
-                                properties.push(...CSS_PROPERTIES$1.background.value);
+                                properties.push(...CSS_PROPERTIES.background.value);
                                 --properties.length;
                             }
                             if (this.borderTopWidth === 0) {
-                                properties.push(...CSS_PROPERTIES$1.borderTop.value);
+                                properties.push(...CSS_BORDER_SET$1[0]);
                             }
                             if (this.borderRightWidth === 0) {
-                                properties.push(...CSS_PROPERTIES$1.borderRight.value);
+                                properties.push(...CSS_BORDER_SET$1[1]);
                             }
                             if (this.borderBottomWidth === 0) {
-                                properties.push(...CSS_PROPERTIES$1.borderBottom.value);
+                                properties.push(...CSS_BORDER_SET$1[2]);
                             }
                             if (this.borderLeftWidth === 0) {
-                                properties.push(...CSS_PROPERTIES$1.borderLeft.value);
+                                properties.push(...CSS_BORDER_SET$1[3]);
                             }
                             if (this.cssAny('backgroundColor', ['none', 'transparent', 'rgba(0, 0, 0, 0)'])) {
                                 properties.push('backgroundColor');
                             }
                             if (this.css('borderRadius') === '0px') {
-                                properties.push(...CSS_PROPERTIES$1.borderRadius.value);
+                                properties.push(...CSS_PROPERTIES.borderRadius.value);
                             }
                             this.cssCopy(node, ...properties);
                         }
@@ -7729,11 +8115,10 @@ this.squared.base = (function (exports) {
                     (_a = replaceWith.parent) === null || _a === void 0 ? void 0 : _a.remove(replaceWith);
                     let childIndex;
                     if (replaceWith.naturalChild && this.naturalElement) {
-                        childIndex = child.childIndex;
                         replaceWith.actualParent.naturalChildren.splice(replaceWith.childIndex, 1);
-                        this.naturalChildren.splice(childIndex, 1, replaceWith);
+                        this.naturalChildren.splice(childIndex = child.childIndex, 1, replaceWith);
                     }
-                    replaceWith.init(this, child.depth, childIndex);
+                    replaceWith.internalSelf(this, child.depth, childIndex);
                     children[i] = replaceWith;
                     return true;
                 }
@@ -7749,7 +8134,7 @@ this.squared.base = (function (exports) {
             if (renderParent) {
                 const { renderTemplates, renderChildren } = renderParent;
                 if (renderTemplates) {
-                    const index = renderChildren.findIndex(node => node === this);
+                    const index = renderChildren.indexOf(this);
                     if (index !== -1) {
                         const template = renderTemplates[index];
                         if (template.node === this) {
@@ -7765,7 +8150,7 @@ this.squared.base = (function (exports) {
                                         const replaceIndex = replaceTemplates.findIndex(item => item.node === replaceWith);
                                         if (replaceIndex !== -1) {
                                             if (beforeReplace) {
-                                                beforeReplace(this, replaceWith);
+                                                beforeReplace.call(this, replaceWith);
                                             }
                                             renderChildren[index] = replaceWith;
                                             renderTemplates[index] = replaceTemplates[replaceIndex];
@@ -7776,7 +8161,7 @@ this.squared.base = (function (exports) {
                                                 replaceWith.documentRoot = true;
                                                 this.documentRoot = false;
                                             }
-                                            replaceWith.depth = this.depth;
+                                            replaceWith.unsafe('depth', this.depth);
                                             this.renderParent = null;
                                             return template;
                                         }
@@ -7785,7 +8170,7 @@ this.squared.base = (function (exports) {
                             }
                             else {
                                 if (beforeReplace) {
-                                    beforeReplace(this);
+                                    beforeReplace.call(this);
                                 }
                                 renderChildren.splice(index, 1);
                                 this.renderParent = null;
@@ -7818,7 +8203,7 @@ this.squared.base = (function (exports) {
             const checkBlockDimension = (previous) => this.blockDimension && Math.ceil(this.bounds.top) >= previous.bounds.bottom && (this.blockVertical || previous.blockVertical || this.percentWidth > 0 || previous.percentWidth > 0);
             if (isArray(siblings)) {
                 const previous = siblings[siblings.length - 1];
-                const getPercentWidth = (node) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
+                const getPercentWidth = (node) => node.inlineDimension && !node.hasUnit('maxWidth') ? node.percentWidth : -Infinity;
                 if (cleared) {
                     if (cleared.size && (cleared.has(this) || this.siblingsLeading.some(item => item.excluded && cleared.has(item)))) {
                         return 4 /* FLOAT_CLEAR */;
@@ -7857,7 +8242,7 @@ this.squared.base = (function (exports) {
                         if (floating && !horizontal && previous.blockStatic) {
                             return 0 /* HORIZONTAL */;
                         }
-                        else if (!startsWith$2(this.display, 'inline-')) {
+                        else if (!startsWith$3(this.display, 'inline-')) {
                             let { top, bottom } = this.bounds;
                             if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
                                 return 7 /* FLOAT_INTERSECT */;
@@ -7956,7 +8341,7 @@ this.squared.base = (function (exports) {
         modifyBox(region, value, negative = true) {
             var _a;
             if (value !== 0) {
-                const index = CSS_SPACING.get(region);
+                const index = getBoxSpacing(region);
                 const node = (_a = this._boxRegister) === null || _a === void 0 ? void 0 : _a[index];
                 if (node) {
                     node.modifyBox(region, value, negative);
@@ -7964,9 +8349,9 @@ this.squared.base = (function (exports) {
                 else {
                     const boxReset = this.boxReset;
                     const boxAdjustment = this.boxAdjustment;
-                    if (!negative && (boxReset[index] === 0 ? getSpacingOffset(this, index) : 0) + boxAdjustment[index] + value <= 0) {
+                    if (!negative && (boxReset[index] === 0 ? getBoxOffset(this, index) : 0) + boxAdjustment[index] + value <= 0) {
                         boxAdjustment[index] = 0;
-                        if (value < 0 && getSpacingOffset(this, index) >= 0) {
+                        if (value < 0 && getBoxOffset(this, index) >= 0) {
                             boxReset[index] = 1;
                         }
                     }
@@ -7977,12 +8362,12 @@ this.squared.base = (function (exports) {
             }
         }
         getBox(region) {
-            const index = CSS_SPACING.get(region);
+            const index = getBoxSpacing(region);
             return [this._boxReset ? this._boxReset[index] : 0, this._boxAdjustment ? this._boxAdjustment[index] : 0];
         }
         setBox(region, options) {
             var _a;
-            const index = CSS_SPACING.get(region);
+            const index = getBoxSpacing(region);
             const node = (_a = this._boxRegister) === null || _a === void 0 ? void 0 : _a[index];
             if (node) {
                 node.setBox(region, options);
@@ -8006,8 +8391,8 @@ this.squared.base = (function (exports) {
                             value += boxAdjustment[index];
                         }
                         if (options.negative === false) {
-                            if ((!this._boxReset || this.boxReset[index] === 0 ? getSpacingOffset(this, index) : 0) + value <= 0) {
-                                if (value < 0 && getSpacingOffset(this, index) >= 0) {
+                            if ((!this._boxReset || this.boxReset[index] === 0 ? getBoxOffset(this, index) : 0) + value <= 0) {
+                                if (value < 0 && getBoxOffset(this, index) >= 0) {
                                     this.boxReset[index] = 1;
                                 }
                                 value = 0;
@@ -8040,7 +8425,7 @@ this.squared.base = (function (exports) {
         registerBox(region, node) {
             var _a;
             this._boxRegister || (this._boxRegister = new Array(8));
-            const index = CSS_SPACING.get(region);
+            const index = getBoxSpacing(region);
             if (node) {
                 this._boxRegister[index] = node;
             }
@@ -8092,7 +8477,7 @@ this.squared.base = (function (exports) {
             if (this.pageFlow) {
                 let offsetLeft = 0, offsetRight = 0, current = this.actualParent;
                 while (current) {
-                    if (current.hasPX('width', { percent: false }) || !current.pageFlow) {
+                    if (current.hasUnit('width', { percent: false }) || !current.pageFlow) {
                         return value;
                     }
                     offsetLeft += Math.max(current.marginLeft, 0) + current.borderLeftWidth + current.paddingLeft;
@@ -8118,6 +8503,7 @@ this.squared.base = (function (exports) {
                 : this.cssAsObject('paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor', 'borderTopStyle', 'borderRightStyle', 'borderBottomStyle', 'borderLeftStyle');
             Object.assign(style, this.textStyle);
             style.fontSize = this.naturalElement && this.valueOf('fontSize') || this.fontSize + 'px';
+            style.lineHeight = this.naturalElement && this.valueOf('lineHeight') || this.lineHeight + 'px';
             if (width) {
                 style.width = width;
             }
@@ -8133,8 +8519,7 @@ this.squared.base = (function (exports) {
             return result ? result.height : NaN;
         }
         cloneBase(node) {
-            node.depth = this.depth;
-            node.childIndex = this.childIndex;
+            node.internalSelf(this.parent, this.depth, this.childIndex);
             node.inlineText = this.inlineText;
             node.actualParent = this.actualParent;
             node.documentRoot = this.documentRoot;
@@ -8179,10 +8564,10 @@ this.squared.base = (function (exports) {
                 }
             }
             else {
-                const styleMap = this._styleMap;
+                const style = this._styleMap;
                 for (const attr in values) {
-                    if (!styleMap[attr]) {
-                        styleMap[attr] = values[attr];
+                    if (!style[attr]) {
+                        style[attr] = values[attr];
                         if (cache) {
                             this.unsetCache(attr);
                         }
@@ -8258,6 +8643,32 @@ this.squared.base = (function (exports) {
                 (!boxReset[3] ? this.marginLeft : 0) + this.borderLeftWidth + (!boxReset[7] ? this.paddingLeft : 0) + boxAdjustment[3] + boxAdjustment[7]
             ];
         }
+        getPseudoElement(name, attr) {
+            if (this.naturalElement) {
+                if (attr) {
+                    return getStyle$3(this._element, name)[attr];
+                }
+                const style = this._elementData['styleMap' + name];
+                if (style) {
+                    switch (name) {
+                        case '::first-letter':
+                        case '::first-line':
+                            switch (this.display) {
+                                case 'block':
+                                case 'inline-block':
+                                case 'list-item':
+                                case 'table-cell':
+                                    break;
+                                default:
+                                    return;
+                            }
+                        case '::before':
+                        case '::after':
+                            return Node.sanitizeCss(this._element, style, style.writingMode || this.valueOf('writingMode'));
+                    }
+                }
+            }
+        }
         fitToScreen(value) {
             const { width, height } = this.localSettings.screenDimension;
             if (value.width > width) {
@@ -8272,11 +8683,11 @@ this.squared.base = (function (exports) {
             return this._styleMap[attr] || '';
         }
         cssValues(...attrs) {
-            const styleMap = this._styleMap;
+            const style = this._styleMap;
             const length = attrs.length;
             const result = new Array(length);
             for (let i = 0; i < length; ++i) {
-                result[i] = styleMap[attrs[i]] || '';
+                result[i] = style[attrs[i]] || '';
             }
             return result;
         }
@@ -8301,7 +8712,7 @@ this.squared.base = (function (exports) {
                 if (this.htmlElement) {
                     switch (this.tagName) {
                         case 'INPUT':
-                            switch (this.toElementString('type')) {
+                            switch (this._element.type) {
                                 case 'button':
                                 case 'submit':
                                 case 'reset':
@@ -8416,9 +8827,7 @@ this.squared.base = (function (exports) {
                         if (result === 'INPUT') {
                             result += '_' + element.type.toUpperCase();
                         }
-                        if (result.includes('-')) {
-                            result = result.replace(/-/g, '_');
-                        }
+                        result = replaceAll$1(result, '-', '_');
                     }
                 }
                 return this._cacheState.containerName = result || 'UNKNOWN';
@@ -8455,7 +8864,7 @@ this.squared.base = (function (exports) {
             if (result === undefined) {
                 if (this.naturalElement || this.pseudoElement) {
                     const value = this.display;
-                    result = (startsWith$2(value, 'inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
+                    result = (startsWith$3(value, 'inline') || value === 'table-cell') && !this.floating && this._element !== document.documentElement;
                 }
                 else {
                     result = false;
@@ -8466,12 +8875,12 @@ this.squared.base = (function (exports) {
         }
         get inlineDimension() {
             const result = this._cache.inlineDimension;
-            return result === undefined ? this._cache.inlineDimension = (this.naturalElement || this.pseudoElement) && (startsWith$2(this.display, 'inline-') || this.floating) : result;
+            return result === undefined ? this._cache.inlineDimension = (this.naturalElement || this.pseudoElement) && (startsWith$3(this.display, 'inline-') || this.floating) : result;
         }
         get inlineFlow() {
             var _a;
             const result = this._cache.inlineFlow;
-            return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && !!((_a = this.previousSibling) === null || _a === void 0 ? void 0 : _a.floating)) && this.pageFlow : result;
+            return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasUnit('width', { percent: false }) || this.tableElement && !!((_a = this.previousSibling) === null || _a === void 0 ? void 0 : _a.floating)) && this.pageFlow : result;
         }
         get blockStatic() {
             return super.blockStatic || this.hasAlign(32 /* BLOCK */) && this.pageFlow && !this.floating;
@@ -8492,6 +8901,10 @@ this.squared.base = (function (exports) {
             const result = this._cache.verticalAligned;
             return result === undefined ? this._cache.verticalAligned = this.verticalAlign !== 0 && !isNaN(parseFloat(this.valueOf('verticalAlign'))) : result;
         }
+        get variableWidth() {
+            const percent = this.percentWidth;
+            return percent > 0 && percent < 1 || this.has('maxWidth', { type: 1 /* LENGTH */ | 2 /* PERCENT */, not: '100%' });
+        }
         set autoPosition(value) {
             this._cache.autoPosition = value;
         }
@@ -8511,7 +8924,7 @@ this.squared.base = (function (exports) {
         }
         get positiveAxis() {
             const result = this._cache.positiveAxis;
-            return result === undefined ? this._cache.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
+            return result === undefined ? this._cache.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasUnit('left')) && (this.bottom <= 0 || this.hasUnit('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
         }
         get leftTopAxis() {
             let result = this._cache.leftTopAxis;
@@ -8566,6 +8979,9 @@ this.squared.base = (function (exports) {
                 this._cache.baselineElement = result;
             }
             return result;
+        }
+        get styleText() {
+            return this.naturalElement && this.inlineText;
         }
         set multiline(value) {
             this._cache.multiline = value;
@@ -8772,7 +9188,7 @@ this.squared.base = (function (exports) {
         get textWidth() {
             const result = this._cache.textWidth;
             if (result === undefined) {
-                if (this.styleText && !this.hasPX('width')) {
+                if (this.styleText && !this.hasUnit('width')) {
                     const textBounds = this.textBounds;
                     if (textBounds && (textBounds.numberOfLines > 1 || Math.ceil(textBounds.width) < this.box.width)) {
                         return this._cache.textWidth = textBounds.width;
@@ -8781,9 +9197,6 @@ this.squared.base = (function (exports) {
                 return this._cache.textWidth = this.bounds.width;
             }
             return result;
-        }
-        set childIndex(value) {
-            this._childIndex = value;
         }
         get childIndex() {
             const result = this._childIndex;
@@ -8824,11 +9237,11 @@ this.squared.base = (function (exports) {
         }
         get firstLetterStyle() {
             const result = this._cacheState.firstLetterStyle;
-            return result === undefined ? this._cacheState.firstLetterStyle = this.cssPseudoElement('::first-letter') || null : result;
+            return result === undefined ? this._cacheState.firstLetterStyle = this.getPseudoElement('::first-letter') || null : result;
         }
         get firstLineStyle() {
             const result = this._cacheState.firstLineStyle;
-            return result === undefined ? this._cacheState.firstLineStyle = this.cssPseudoElement('::first-line') || null : result;
+            return result === undefined ? this._cacheState.firstLineStyle = this.getPseudoElement('::first-line') || null : result;
         }
         get textAlignLast() {
             if (!this.inlineStatic) {
@@ -9061,13 +9474,14 @@ this.squared.base = (function (exports) {
         }
     }
 
+    const { splitSome: splitSome$4 } = squared.lib.util;
     class ExtensionUI extends Extension {
         constructor(name, framework, options) {
             super(name, framework, options);
             this.tagNames = options && options.tagNames;
         }
         static includes(source, value) {
-            return source ? source.trim().split(/\s*,\s*/).includes(value) : false;
+            return !!source && splitSome$4(source, item => item === value);
         }
         static findNestedElement(node, name) {
             if (node.styleElement) {
@@ -9075,7 +9489,7 @@ this.squared.base = (function (exports) {
                 const children = node.element.children;
                 for (let i = 0, length = children.length; i < length; ++i) {
                     const item = children[i];
-                    if (ExtensionUI.includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
+                    if (this.includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
                         return item;
                     }
                 }
@@ -9112,25 +9526,18 @@ this.squared.base = (function (exports) {
         beforeFinalize(data) { }
     }
 
-    const { isNumber: isNumber$2 } = squared.lib.util;
-    function isListItem(node) {
+    function getItemType(node, checked) {
         if (node.display === 'list-item') {
-            return true;
+            const value = node.css('listStyleType');
+            if (value !== 'none') {
+                node.css('listStyleType', value);
+                return 1;
+            }
         }
-        switch (node.tagName) {
-            case 'DT':
-            case 'DD':
-                return true;
-            default:
-                return false;
-        }
+        return node.marginLeft < 0 && node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat && (checked || node.actualParent.every(item => item.blockStatic)) ? 2 : 0;
     }
     const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const NUMERALS = [
-        '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
-        '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
-        '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
-    ];
+    let NUMERALS;
     function convertAlpha(value) {
         if (value >= 0) {
             let result = '';
@@ -9156,6 +9563,11 @@ this.squared.base = (function (exports) {
         return value.toString();
     }
     function convertRoman(value) {
+        NUMERALS || (NUMERALS = [
+            '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
+            '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
+            '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
+        ]);
         const digits = value.toString().split('');
         let result = '', i = 3;
         while (i--) {
@@ -9163,7 +9575,6 @@ this.squared.base = (function (exports) {
         }
         return 'M'.repeat(+digits.join('')) + result;
     }
-    const hasSingleImage = (visibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
     function convertListStyle(name, value, fallback) {
         switch (name) {
             case 'decimal':
@@ -9191,105 +9602,243 @@ this.squared.base = (function (exports) {
     }
     class List extends ExtensionUI {
         is(node) {
-            return !node.isEmpty() && !!node.find((item) => {
-                var _a;
-                const type = item.css('listStyleType') !== 'none';
-                return (type || ((_a = item.innerBefore) === null || _a === void 0 ? void 0 : _a.pageFlow)) && isListItem(item) || !type && item.marginLeft < 0 && hasSingleImage(item.visibleStyle);
-            });
+            return !node.isEmpty() && !!node.find((item) => getItemType(item) > 0);
         }
-        condition(node) {
-            let blockStatic = true, inlineVertical = true, floating = true, blockAlternate = true, floated;
-            const children = node.children;
-            for (let i = 0, length = children.length; i < length; ++i) {
-                const item = children[i];
-                if (floating || blockAlternate) {
-                    if (item.floating) {
-                        (floated || (floated = new Set())).add(item.float);
-                        blockAlternate = false;
-                    }
-                    else {
-                        floating = false;
-                        if (i > 0 && i < length - 1 && !item.blockStatic && !(children[i - 1].blockStatic && children[i + 1].blockStatic)) {
-                            blockAlternate = false;
-                        }
-                    }
-                }
-                if (item.blockStatic) {
-                    floating = false;
-                }
-                else {
-                    blockStatic = false;
-                }
-                if (!item.inlineVertical) {
-                    inlineVertical = false;
-                }
-                if (!blockStatic && !inlineVertical && !blockAlternate && !floating) {
-                    return false;
-                }
-            }
-            return blockStatic || inlineVertical || blockAlternate || !!floated && floated.size === 1;
-        }
+        condition() { return true; }
         processNode(node) {
             const ordered = node.tagName === 'OL';
+            const inside = node.valueOf('listStylePosition') === 'inside';
             let i = ordered && node.toElementInt('start') || 1;
             node.each((item) => {
                 const mainData = {};
                 this.data.set(item, mainData);
-                if (isListItem(item) || hasSingleImage(item.visibleStyle)) {
-                    const type = item.display === 'list-item' ? item.css('listStyleType') : 'none';
-                    if (item.has('listStyleImage')) {
-                        mainData.imageSrc = item.css('listStyleImage');
-                    }
-                    else {
-                        if (ordered && item.tagName === 'LI') {
-                            const value = item.attributes['value'];
-                            if (value && isNumber$2(value)) {
-                                i = parseInt(value);
-                            }
-                        }
-                        let ordinal = convertListStyle(type, i);
-                        if (ordinal) {
-                            ordinal += '.';
+                switch (getItemType(item, true)) {
+                    case 1: {
+                        const listStyleImage = item.css('listStyleImage');
+                        if (listStyleImage !== 'none') {
+                            mainData.imageSrc = listStyleImage;
                         }
                         else {
-                            switch (type) {
-                                case 'disc':
-                                    ordinal = '●';
-                                    break;
-                                case 'square':
-                                    ordinal = '■';
-                                    break;
-                                case 'none':
-                                    if (!item.visibleStyle.backgroundRepeat) {
-                                        const src = item.backgroundImage;
-                                        if (src) {
-                                            mainData.imageSrc = src;
-                                            mainData.imagePosition = item.css('backgroundPosition');
-                                            item.exclude({ resource: 16 /* IMAGE_SOURCE */ });
-                                        }
-                                    }
-                                    return;
-                                default:
-                                    ordinal = '○';
-                                    break;
+                            const type = item.css('listStyleType');
+                            if (ordered) {
+                                const n = +item.attributes.value;
+                                if (!isNaN(n)) {
+                                    i = Math.floor(n);
+                                }
                             }
+                            let ordinal = convertListStyle(type, i);
+                            if (ordinal) {
+                                ordinal += '.';
+                            }
+                            else {
+                                switch (type) {
+                                    case 'disc':
+                                        ordinal = '●';
+                                        break;
+                                    case 'square':
+                                        ordinal = '■';
+                                        break;
+                                    default:
+                                        ordinal = '○';
+                                        break;
+                                }
+                            }
+                            mainData.ordinal = ordinal;
                         }
-                        mainData.ordinal = ordinal;
+                        if (inside && !item.valueOf('listStylePosition')) {
+                            item.css('listStylePosition', 'inside');
+                        }
+                        ++i;
+                        break;
                     }
-                    ++i;
+                    case 2:
+                        mainData.imageSrc = item.backgroundImage;
+                        mainData.imagePosition = item.css('backgroundPosition');
+                        item.exclude({ resource: 16 /* IMAGE_SOURCE */ });
+                        break;
                 }
             });
         }
     }
 
-    const { FILE } = squared.lib.regex;
-    const { formatPX: formatPX$4, getStyle: getStyle$2, hasCoords: hasCoords$2, isCalc, insertStyleSheetRule, resolveURL } = squared.lib.css;
-    const { getNamedItem: getNamedItem$1, removeElementsByClassName } = squared.lib.dom;
+    const { STRING } = squared.lib.regex;
+    const { calculateVar, getFontSize: getFontSize$1, isCalc: isCalc$1, isLength: isLength$5, parseUnit: parseUnit$2 } = squared.lib.css;
+    const { isString: isString$1, iterateArray: iterateArray$2, resolvePath, splitSome: splitSome$3 } = squared.lib.util;
+    let REGEXP_SOURCESIZES;
+    function getAspectRatio(element) {
+        if (element.width && element.height) {
+            return element.width / element.height;
+        }
+    }
+    function removeElementsByClassName(className) {
+        const elements = Array.from(document.getElementsByClassName(className));
+        for (let i = 0, length = elements.length; i < length; ++i) {
+            const element = elements[i];
+            const parentElement = element.parentElement;
+            if (parentElement) {
+                parentElement.removeChild(element);
+            }
+        }
+    }
+    function getElementsBetweenSiblings(elementStart, elementEnd) {
+        const parentNode = elementEnd.parentNode;
+        const result = [];
+        if (parentNode && (!elementStart || parentNode === elementStart.parentNode)) {
+            let startIndex = elementStart ? -1 : 0, endIndex = -1;
+            iterateArray$2(parentNode.childNodes, (element, index) => {
+                if (element === elementEnd) {
+                    endIndex = index;
+                    if (startIndex !== -1) {
+                        return true;
+                    }
+                }
+                else if (element === elementStart) {
+                    startIndex = index;
+                    if (endIndex !== -1) {
+                        return true;
+                    }
+                }
+            });
+            if (startIndex !== -1 && endIndex !== -1) {
+                iterateArray$2(parentNode.childNodes, (element) => {
+                    const nodeName = element.nodeName;
+                    if (nodeName[0] !== '#' || nodeName === '#text') {
+                        result.push(element);
+                    }
+                }, Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
+            }
+        }
+        return result;
+    }
+    function getTextMetrics(value, fontSize, fontFamily) {
+        const context = document.createElement('canvas').getContext('2d');
+        if (context) {
+            context.font = fontSize + 'px' + (fontFamily ? ' ' + fontFamily : '');
+            return context.measureText(value);
+        }
+    }
+    function getSrcSet(element, mimeType, fontSize) {
+        const result = [];
+        const parentElement = element.parentElement;
+        let { srcset, sizes } = element, aspectRatio = getAspectRatio(element);
+        if (parentElement && parentElement.tagName === 'PICTURE') {
+            iterateArray$2(parentElement.children, (item) => {
+                if (item.tagName === 'SOURCE' && (!item.type || !mimeType || mimeType === '*' || mimeType.includes(item.type.trim().toLowerCase())) && !(isString$1(item.media) && !window.matchMedia(item.media).matches)) {
+                    ({ srcset, sizes } = item);
+                    aspectRatio = getAspectRatio(item);
+                    return true;
+                }
+            });
+        }
+        if (srcset) {
+            splitSome$3(srcset, value => {
+                const match = DOM.SRCSET.exec(value);
+                if (match) {
+                    let width = 0, pixelRatio = 1;
+                    if (match[3]) {
+                        if (match[3].toLowerCase() === 'w') {
+                            width = +match[2];
+                            pixelRatio = 0;
+                        }
+                        else {
+                            pixelRatio = +match[2];
+                        }
+                    }
+                    result.push({ src: resolvePath(match[1].split(/\s+/)[0]), pixelRatio, width, aspectRatio });
+                }
+            });
+        }
+        const length = result.length;
+        if (length === 0) {
+            return;
+        }
+        result.sort((a, b) => {
+            const pxA = a.pixelRatio;
+            const pxB = b.pixelRatio;
+            if (pxA && pxB) {
+                return pxA - pxB;
+            }
+            const widthA = a.width;
+            const widthB = b.width;
+            if (widthA && widthB) {
+                return widthA - widthB;
+            }
+            if (widthA) {
+                return -1;
+            }
+            if (widthB) {
+                return 1;
+            }
+            return 0;
+        });
+        if (sizes) {
+            REGEXP_SOURCESIZES || (REGEXP_SOURCESIZES = new RegExp(`^((?:\\(\\s*)?(?:\\s*(?:(?:and|or|not)\\s+)?(?:\\(\\s*)?(?:orientation\\s*:\\s*(?:portrait|landscape)|(?:max|min)-width\\s*:\\s*${STRING.LENGTH_PERCENTAGE})\\s*(?:\\))?)+\\s*(?:\\))?)?\\s*(.*)$`, 'i'));
+            const options = { fontSize: fontSize !== null && fontSize !== void 0 ? fontSize : getFontSize$1(element), min: 0 };
+            let width = NaN;
+            splitSome$3(sizes, value => {
+                var _a;
+                const match = REGEXP_SOURCESIZES.exec(value);
+                if (match) {
+                    const query = match[1];
+                    const unit = match[3];
+                    if (!unit || query && !window.matchMedia(((_a = /^\(\s*(\(.+\))\s*\)$/.exec(query)) === null || _a === void 0 ? void 0 : _a[1]) || query).matches) {
+                        return;
+                    }
+                    if (isCalc$1(unit)) {
+                        width = calculateVar(element, unit, options);
+                    }
+                    else if (isLength$5(unit)) {
+                        width = parseUnit$2(unit, options);
+                    }
+                    if (!isNaN(width)) {
+                        return true;
+                    }
+                }
+            });
+            if (!isNaN(width)) {
+                if (length > 1) {
+                    const resolution = width * window.devicePixelRatio;
+                    let index = -1;
+                    for (let i = 0; i < length; ++i) {
+                        const imageWidth = result[i].width;
+                        if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
+                            index = i;
+                        }
+                    }
+                    if (index > 0) {
+                        result.unshift(result.splice(index, 1)[0]);
+                    }
+                    for (let i = 1; i < length; ++i) {
+                        const item = result[i];
+                        item.pixelRatio || (item.pixelRatio = item.width / width);
+                    }
+                }
+                const item = result[0];
+                item.pixelRatio = 1;
+                item.actualWidth = width;
+            }
+        }
+        return result;
+    }
+
+    var dom = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        removeElementsByClassName: removeElementsByClassName,
+        getElementsBetweenSiblings: getElementsBetweenSiblings,
+        getTextMetrics: getTextMetrics,
+        getSrcSet: getSrcSet
+    });
+
+    const { insertStyleSheetRule } = squared.lib.internal;
+    const { QUOTED } = squared.lib.regex.STRING;
+    const { formatPX: formatPX$4, getStyle: getStyle$2, hasCoords: hasCoords$2, isCalc, parseUnit: parseUnit$1, resolveURL } = squared.lib.css;
+    const { getNamedItem: getNamedItem$1 } = squared.lib.dom;
     const { getElementCache: getElementCache$1, setElementCache: setElementCache$1 } = squared.lib.session;
-    const { capitalize: capitalize$1, convertWord, flatArray, isString, iterateArray: iterateArray$1, partitionArray: partitionArray$1, startsWith: startsWith$1, trimBoth, trimString: trimString$1 } = squared.lib.util;
-    const REGEXP_PSEUDOCOUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s*([a-z-]+))?\)|(counters)\(([^,]+),\s*"([^"]*)"(?:,\s*([a-z-]+))?\)|"([^"]+)")/g;
-    const REGEXP_PSEUDOCOUNTERVALUE = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
-    const REGEXP_PSEUDOQUOTE = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/;
+    const { capitalize, convertWord, isString, iterateArray: iterateArray$1, partitionArray: partitionArray$1, replaceAll, splitSome: splitSome$2, startsWith: startsWith$2 } = squared.lib.util;
+    let REGEXP_COUNTER;
+    let REGEXP_COUNTERVALUE;
+    let REGEXP_ATTRVALUE;
+    let REGEXP_QUOTE;
     function getFloatAlignmentType(nodes) {
         let right, floating;
         for (let i = 0, length = nodes.length; i < length; ++i) {
@@ -9307,62 +9856,33 @@ this.squared.base = (function (exports) {
                 right = true;
             }
         }
-        let result = 0;
-        if (!floating) {
-            result |= 256 /* FLOAT */;
-        }
-        if (!right) {
-            result |= 1024 /* RIGHT */;
-        }
-        return result;
-    }
-    function checkPseudoDimension(styleMap, after, absolute) {
-        switch (styleMap.display) {
-            case 'inline':
-            case 'block':
-            case 'inherit':
-            case 'initial':
-            case 'unset': {
-                const { width, height } = styleMap;
-                if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
-                    for (const attr in styleMap) {
-                        const value = styleMap[attr];
-                        if (/(padding|Width|Height)/.test(attr) && parseFloat(value) || !absolute && startsWith$1(attr, 'margin') && parseFloat(value)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }
-            default:
-                return true;
-        }
+        return (!floating ? 256 /* FLOAT */ : 0) | (!right ? 1024 /* RIGHT */ : 0);
     }
     function getPseudoQuoteValue(element, pseudoElt, outside, inside, sessionId) {
-        const extractQuote = (value) => { var _a; return ((_a = /^"(.+)"$/.exec(value)) === null || _a === void 0 ? void 0 : _a[1]) || value; };
+        REGEXP_QUOTE || (REGEXP_QUOTE = new RegExp(STRING$2.CSS_QUOTE + `(?:\\s+${STRING$2.CSS_QUOTE})?`));
         let current = element, found = 0, i = 0, j = -1;
         while (current && current.tagName === 'Q') {
-            const quotes = (getElementCache$1(current, 'styleMap', sessionId) || getStyle$2(current)).quotes;
-            if (quotes) {
-                const match = REGEXP_PSEUDOQUOTE.exec(quotes);
+            const quotes = getStyleMap(sessionId, current, 'styleMap').quotes;
+            if (quotes && quotes !== 'auto') {
+                const match = REGEXP_QUOTE.exec(quotes);
                 if (match) {
                     if (pseudoElt === '::before') {
                         if (found === 0) {
-                            outside = extractQuote(match[1]);
+                            outside = match[2] || match[1];
                             ++found;
                         }
-                        if (match[3] && found < 2) {
-                            inside = extractQuote(match[3]);
+                        if (match[5] && found < 2) {
+                            inside = match[6] || match[5];
                             ++found;
                         }
                     }
                     else {
                         if (found === 0) {
-                            outside = extractQuote(match[2]);
+                            outside = match[4] || match[3];
                             ++found;
                         }
-                        if (match[4] && found < 2) {
-                            inside = extractQuote(match[4]);
+                        if (match[7] && found < 2) {
+                            inside = match[8] || match[7];
                             ++found;
                         }
                     }
@@ -9385,32 +9905,50 @@ this.squared.base = (function (exports) {
     }
     function getCounterValue(value, counterName, fallback = 1) {
         if (value && value !== 'none') {
-            REGEXP_PSEUDOCOUNTERVALUE.lastIndex = 0;
+            (REGEXP_COUNTERVALUE || (REGEXP_COUNTERVALUE = /([^-\d][^\s]*)(\s+([+-]?\d+))?/g)).lastIndex = 0;
             let match;
-            while (match = REGEXP_PSEUDOCOUNTERVALUE.exec(value)) {
+            while (match = REGEXP_COUNTERVALUE.exec(value)) {
                 if (match[1] === counterName) {
-                    return +match[2];
+                    return match[2] ? +match[2] : fallback;
                 }
             }
-            return fallback;
         }
+        return null;
     }
     function setColumnMaxWidth(nodes, offset) {
         for (let i = 0, length = nodes.length; i < length; ++i) {
             const child = nodes[i];
-            if (!child.hasPX('width') && !child.hasPX('maxWidth') && !child.imageElement && !child.svgElement) {
+            if (!child.hasUnit('width') && !child.hasUnit('maxWidth') && !child.imageElement && !child.svgElement) {
                 child.css('maxWidth', formatPX$4(offset));
             }
         }
     }
-    function setElementState(node, styleElement, naturalElement, htmlElement, svgElement) {
+    function setElementState(node, type) {
         const cacheState = node.unsafe('cacheState');
         cacheState.naturalChild = true;
-        cacheState.styleElement = styleElement;
-        cacheState.naturalElement = naturalElement;
-        cacheState.htmlElement = htmlElement;
-        cacheState.svgElement = svgElement;
+        if (type === 1) {
+            cacheState.styleElement = false;
+            cacheState.naturalElement = false;
+            cacheState.htmlElement = false;
+            cacheState.svgElement = false;
+        }
+        else {
+            cacheState.styleElement = true;
+            if (type === 2) {
+                cacheState.naturalElement = false;
+                cacheState.htmlElement = true;
+                cacheState.svgElement = false;
+            }
+            else {
+                cacheState.naturalElement = true;
+            }
+        }
     }
+    function isDocumentBase(node) {
+        const renderExtension = node.renderExtension;
+        return !!renderExtension && renderExtension.some(item => item.documentBase);
+    }
+    const getStyleMap = (sessionId, element, pseudoElt = '') => getElementCache$1(element, 'styleMap' + pseudoElt, sessionId) || getStyle$2(element, pseudoElt);
     class ApplicationUI extends Application {
         constructor() {
             super(...arguments);
@@ -9420,6 +9958,7 @@ this.squared.base = (function (exports) {
                 clearMap: new Map()
             };
             this.extensions = [];
+            this._resourceId = -1;
             this._layouts = [];
         }
         init() {
@@ -9430,9 +9969,9 @@ this.squared.base = (function (exports) {
             this._renderNode = controller.renderNode.bind(controller);
             this._renderNodeGroup = controller.renderNodeGroup.bind(controller);
             this._controllerSettings = localSettings;
-            this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`, 'i');
             this._excludedElements = localSettings.unsupported.excluded;
             this.setResourceId();
+            super.init();
         }
         finalize() {
             var _a, _b;
@@ -9442,7 +9981,7 @@ this.squared.base = (function (exports) {
             const controller = this.controllerHandler;
             const [extensions, children] = this.sessionAll;
             let itemCount = 0, length = children.length;
-            const rendered = new Array(length);
+            const rendered = new Array(length - 1);
             for (let i = 0; i < length; ++i) {
                 const node = children[i];
                 if (node.renderParent && node.visible) {
@@ -9455,17 +9994,17 @@ this.squared.base = (function (exports) {
                     rendered[itemCount++] = node;
                 }
             }
-            if (itemCount < length) {
+            if (itemCount < rendered.length) {
                 rendered.length = itemCount;
             }
             controller.optimize(rendered);
             length = extensions.length;
             for (let i = 0; i < length; ++i) {
                 const ext = extensions[i];
-                const postOptimize = ext.postOptimize;
+                const postOptimize = (_a = ext.postOptimize) === null || _a === void 0 ? void 0 : _a.bind(ext);
                 if (postOptimize) {
                     for (const node of ext.subscribers) {
-                        postOptimize.call(ext, node, rendered);
+                        postOptimize(node, rendered);
                     }
                 }
             }
@@ -9477,27 +10016,28 @@ this.squared.base = (function (exports) {
                 if (node.hasResource(2 /* BOX_SPACING */)) {
                     node.setBoxSpacing();
                 }
-                if (node.documentRoot && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
-                    const layoutName = node.innerMostWrapped.data(Application.KEY_NAME, 'layoutName');
-                    const renderTemplates = (_a = node.renderParent) === null || _a === void 0 ? void 0 : _a.renderTemplates;
-                    if (layoutName && renderTemplates) {
-                        documentRoot.push({ node, layoutName, renderTemplates });
+                if (node.documentRoot && node.renderParent && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
+                    const host = node.innerMostWrapped;
+                    const filename = host.data(Application.KEY_NAME, 'filename');
+                    const renderTemplates = node.renderParent.renderTemplates;
+                    if (filename && renderTemplates) {
+                        documentRoot.push({ node, pathname: host.data(Application.KEY_NAME, 'pathname'), filename, documentBase: isDocumentBase(host) || isDocumentBase(node), renderTemplates });
                     }
                 }
             }
             for (let i = 0; i < length; ++i) {
                 const ext = extensions[i];
-                const postBoxSpacing = ext.postBoxSpacing;
+                const postBoxSpacing = (_b = ext.postBoxSpacing) === null || _b === void 0 ? void 0 : _b.bind(ext);
                 if (postBoxSpacing) {
                     for (const node of ext.subscribers) {
-                        postBoxSpacing.call(ext, node, rendered);
+                        postBoxSpacing(node, rendered);
                     }
                 }
                 ext.beforeFinalize(finalizeData);
             }
             for (let i = 0, q = documentRoot.length; i < q; ++i) {
-                const { node, layoutName, renderTemplates } = documentRoot[i];
-                this.saveDocument(layoutName, this._controllerSettings.layout.baseTemplate + controller.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes), node.dataset['pathname' + capitalize$1(this.systemName)], ((_b = node.renderExtension) === null || _b === void 0 ? void 0 : _b.some(item => item.documentBase)) ? 0 : undefined);
+                const { node, pathname, filename, documentBase, renderTemplates } = documentRoot[i];
+                this.saveDocument(filename, this._controllerSettings.layout.baseTemplate + controller.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes), pathname, documentBase ? 0 : -1);
             }
             controller.finalize(this._layouts);
             for (let i = 0; i < length; ++i) {
@@ -9517,12 +10057,6 @@ this.squared.base = (function (exports) {
         }
         reset() {
             const session = this.session;
-            const iterationName = 'iteration' + capitalize$1(this.systemName);
-            for (const item of session.active.values()) {
-                for (const element of item.rootElements) {
-                    delete element.dataset[iterationName];
-                }
-            }
             session.active.clear();
             session.extensionMap = new WeakMap();
             session.clearMap.clear();
@@ -9558,7 +10092,7 @@ this.squared.base = (function (exports) {
         }
         saveDocument(filename, content, pathname, index = -1) {
             const layout = {
-                pathname: pathname ? trimString$1(pathname.replace(/\\/g, '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
+                pathname: pathname ? trimString(replaceAll(pathname, '\\', '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.baseDirectory),
                 filename,
                 content,
                 index
@@ -9607,15 +10141,15 @@ this.squared.base = (function (exports) {
             }
         }
         createNode(sessionId, options) {
-            const { element, parent, children, flags = 0 } = options;
+            const { element, parent, children, childIndex, flags = 0 } = options;
             const { cache, afterInsertNode } = this.getProcessing(sessionId);
             const node = new this.Node(this.nextId, sessionId, element);
-            this._afterInsertNode(node);
+            this._afterInsertNode(node, sessionId);
             if (afterInsertNode) {
                 afterInsertNode.some(item => item.afterInsertNode(node));
             }
             if (parent) {
-                node.depth = parent.depth + 1;
+                node.unsafe('depth', parent.depth + 1);
                 if (!element && parent.naturalElement) {
                     node.actualParent = parent;
                 }
@@ -9631,7 +10165,10 @@ this.squared.base = (function (exports) {
                 }
             }
             if (~flags & 1 /* DEFER */) {
-                cache.add(node, (flags & 2 /* DELEGATE */) > 0, (flags & 4 /* CASCADE */) > 0);
+                cache.add(node, flags & 2 /* DELEGATE */ ? { cascade: (flags & 4 /* CASCADE */) > 0 } : undefined);
+            }
+            if (childIndex !== undefined) {
+                node.unsafe('childIndex', childIndex);
             }
             return node;
         }
@@ -9653,8 +10190,8 @@ this.squared.base = (function (exports) {
                 if (parent) {
                     parent.visible = false;
                     node.documentParent = parent;
-                    setElementState(parent, true, true, true, false);
-                    if (parent.tagName === 'HTML') {
+                    setElementState(parent);
+                    if (parent.element === document.documentElement) {
                         parent.addAlign(2 /* AUTO_LAYOUT */);
                         parent.exclude({ resource: 4 /* FONT_STYLE */ | 8 /* VALUE_STRING */, procedure: 63 /* ALL */ });
                         cache.add(parent);
@@ -9677,18 +10214,16 @@ this.squared.base = (function (exports) {
                                 case 'right':
                                 case 'end':
                                 case 'justify':
-                                    data = { 'text-align': textAlign };
-                                    element.style.setProperty('text-align', 'left');
-                                    preAlignment.set(item, data);
+                                    element.style.textAlign = 'left';
+                                    preAlignment.set(item, data = { textAlign });
                                     break;
                             }
                         }
                         if (item.positionRelative) {
                             const setPosition = (attr) => {
-                                if (item.hasPX(attr)) {
+                                if (item.hasUnit(attr)) {
                                     if (!data) {
-                                        data = {};
-                                        preAlignment.set(item, data);
+                                        preAlignment.set(item, data = {});
                                     }
                                     data[attr] = item.valueOf(attr);
                                     element.style[attr] = 'auto';
@@ -9707,11 +10242,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                 });
-                excluded.each(item => {
-                    if (!item.pageFlow) {
-                        item.cssTry('display', 'none');
-                    }
-                });
+                excluded.each(item => !item.pageFlow && item.cssTry('display', 'none'));
                 cache.each(item => {
                     if (item.pseudoElt) {
                         pseudoElements.push(item);
@@ -9725,24 +10256,25 @@ this.squared.base = (function (exports) {
                     for (let i = 0, length = pseudoElements.length; i < length; ++i) {
                         const item = pseudoElements[i];
                         const parentElement = item.parentElement;
-                        let id = '', styleElement;
+                        let previousId = null, removeStyle = null;
                         if (item.pageFlow) {
                             let tagName;
                             if (parentElement.shadowRoot) {
                                 tagName = ':host';
                             }
                             else {
-                                id = parentElement.id.trim();
-                                if (!id) {
-                                    id = '__squared_' + Math.round(Math.random() * new Date().getTime());
+                                let id = parentElement.id;
+                                if (!startsWith$2(id, 'sqd__') && (!id || id !== id.trim())) {
+                                    previousId = id;
+                                    id = 'sqd__' + Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                                     parentElement.id = id;
                                 }
                                 tagName = '#' + id;
                             }
-                            styleElement = insertStyleSheetRule(`${tagName + item.pseudoElt} { display: none !important; }`, 0, item.shadowHost);
+                            removeStyle = insertStyleSheetRule(tagName + item.pseudoElt + ' { display: none !important; }', item.shadowHost);
                         }
                         if (item.cssTry('display', item.display)) {
-                            pseudoMap.push([item, id, styleElement]);
+                            pseudoMap.push([item, previousId, removeStyle]);
                         }
                     }
                     const length = pseudoMap.length;
@@ -9750,17 +10282,12 @@ this.squared.base = (function (exports) {
                         pseudoMap[i][0].setBounds(false);
                     }
                     for (let i = 0; i < length; ++i) {
-                        const data = pseudoMap[i];
-                        const item = data[0];
-                        if (startsWith$1(data[1], '__squared_')) {
-                            item.parentElement.id = '';
+                        const [item, previousId, removeStyle] = pseudoMap[i];
+                        if (previousId !== null) {
+                            item.parentElement.id = previousId;
                         }
-                        if (data[2]) {
-                            try {
-                                (item.shadowHost || document.head).removeChild(data[2]);
-                            }
-                            catch (_a) {
-                            }
+                        if (removeStyle) {
+                            removeStyle();
                         }
                         item.cssFinally('display');
                     }
@@ -9780,7 +10307,7 @@ this.squared.base = (function (exports) {
                         const reset = preAlignment.get(item);
                         if (reset) {
                             for (const attr in reset) {
-                                element.style.setProperty(attr, reset[attr]);
+                                element.style[attr] = reset[attr];
                             }
                         }
                         if (direction.has(element)) {
@@ -9797,37 +10324,41 @@ this.squared.base = (function (exports) {
         }
         afterCreateCache(processing, node) {
             super.afterCreateCache(processing, node);
-            const systemName = capitalize$1(this.systemName);
-            const dataset = node.dataset;
-            const filename = dataset['filename' + systemName] || dataset.filename;
-            const iteration = dataset['iteration' + systemName];
-            const prefix = isString(filename) && filename.replace(this._layoutFileExtension, '') || node.elementId || `document_${this.length}`;
-            const suffix = iteration ? +iteration + 1 : 0;
-            const layoutName = convertWord(suffix ? prefix + '_' + suffix : prefix, true);
-            dataset['iteration' + systemName] = suffix.toString();
-            dataset['layoutName' + systemName] = layoutName;
-            node.data(Application.KEY_NAME, 'layoutName', layoutName);
+            const { elementId, dataset } = node;
+            const systemName = capitalize(this.systemName);
+            const settings = processing.settings;
+            let pathname = settings && settings.pathname || dataset['pathname' + systemName] || dataset.pathname, filename = settings && settings.filename || dataset['filename' + systemName] || dataset.filename;
+            if (!filename) {
+                const baseName = elementId && convertWord(elementId) || 'document_' + this.length;
+                filename = baseName;
+                let i = 0;
+                while (this._layouts.find(item => item.filename === filename)) {
+                    filename = baseName + '_' + ++i;
+                }
+            }
+            if (pathname) {
+                pathname = trimString(replaceAll(pathname, '\\', '/'), '/');
+                dataset['pathname' + systemName] = pathname;
+                node.data(Application.KEY_NAME, 'pathname', pathname);
+            }
+            dataset['filename' + systemName] = filename;
+            node.data(Application.KEY_NAME, 'filename', filename);
             this.setBaseLayout(processing);
             this.setConstraints(processing);
             this.setResources(processing);
         }
         useElement(element) {
             const use = this.getDatasetName('use', element);
-            return use ? use.split(',').some(value => this.extensionManager.get(value.trim())) : false;
+            return !!use && splitSome$2(use, value => this.extensionManager.get(value));
         }
         toString() {
             var _a;
             return ((_a = this.layouts[0]) === null || _a === void 0 ? void 0 : _a.content) || '';
         }
-        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, extensions, shadowParent, beforeElement, afterElement, cascadeAll) {
+        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowParent, beforeElement, afterElement, cascadeAll) {
             var _a;
             const node = this.insertNode(processing, parentElement, cascadeAll);
-            if (parentElement.tagName === 'svg') {
-                setElementState(node, true, true, false, true);
-            }
-            else {
-                setElementState(node, true, true, true, false);
-            }
+            setElementState(node);
             if (depth === 0) {
                 processing.cache.add(node);
                 for (const name of node.extensions) {
@@ -9845,19 +10376,16 @@ this.squared.base = (function (exports) {
                     return node;
                 }
                 const { cache, rootElements } = processing;
-                const pierceShadowRoot = this.userSettings.pierceShadowRoot;
-                const hostElement = parentElement.shadowRoot || parentElement;
-                const childNodes = hostElement.childNodes;
+                const hostParent = parentElement.shadowRoot || parentElement;
+                const childNodes = hostParent.childNodes;
                 const children = [];
                 const elements = [];
                 const childDepth = depth + 1;
                 let inlineText = true, plainText = -1, lineBreak = -1, j = 0;
-                for (let i = 0, length = childNodes.length; i < length; ++i) {
+                for (let i = 0, child, length = childNodes.length; i < length; ++i) {
                     const element = childNodes[i];
-                    let child;
                     if (element === beforeElement) {
-                        child = this.insertNode(processing, beforeElement, cascadeAll, '::before');
-                        setElementState(child, true, false, true, false);
+                        setElementState(child = this.insertNode(processing, beforeElement, cascadeAll, '::before'), 2);
                         if (!child.textEmpty) {
                             child.cssApply(node.textStyle, false);
                             child.inlineText = true;
@@ -9866,8 +10394,7 @@ this.squared.base = (function (exports) {
                         node.innerBefore = child;
                     }
                     else if (element === afterElement) {
-                        child = this.insertNode(processing, afterElement, cascadeAll, '::after');
-                        setElementState(child, true, false, true, false);
+                        setElementState(child = this.insertNode(processing, afterElement, cascadeAll, '::after'), 2);
                         if (!child.textEmpty) {
                             child.cssApply(node.textStyle, false);
                             child.inlineText = true;
@@ -9877,8 +10404,7 @@ this.squared.base = (function (exports) {
                     }
                     else if (element.nodeName[0] === '#') {
                         if (this.visibleText(node, element)) {
-                            child = this.insertNode(processing, element);
-                            setElementState(child, false, false, false, false);
+                            setElementState(child = this.insertNode(processing, element), 1);
                             child.cssApply(node.textStyle);
                             plainText = j;
                         }
@@ -9897,11 +10423,11 @@ this.squared.base = (function (exports) {
                                 this.replaceShadowRootSlots(shadowRoot);
                                 this.setStyleMap(sessionId, resourceId, shadowRoot);
                             }
-                            const hostElementChild = shadowRoot || element;
-                            const beforeElementChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostElementChild);
-                            const afterElementChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostElementChild);
-                            if (hostElementChild.childNodes.length) {
-                                child = this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, extensions, shadowRoot || shadowParent, beforeElementChild, afterElementChild, cascadeAll);
+                            const hostChild = shadowRoot || element;
+                            const beforeChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostChild);
+                            const afterChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostChild);
+                            if (hostChild.childNodes.length) {
+                                child = this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowRoot || shadowParent, beforeChild, afterChild, cascadeAll);
                                 if (child.display === 'contents' && !child.excluded && !shadowRoot) {
                                     for (const item of child.naturalChildren) {
                                         if (item.naturalElement) {
@@ -9910,7 +10436,7 @@ this.squared.base = (function (exports) {
                                         else if (item.plainText) {
                                             plainText = j;
                                         }
-                                        item.init(node, childDepth, j++);
+                                        item.internalSelf(node, childDepth, j++);
                                         item.actualParent = node;
                                         children.push(item);
                                     }
@@ -9919,13 +10445,7 @@ this.squared.base = (function (exports) {
                                 }
                             }
                             else {
-                                child = this.insertNode(processing, element, cascadeAll);
-                                if (element.tagName === 'svg') {
-                                    setElementState(child, true, true, false, true);
-                                }
-                                else {
-                                    setElementState(child, true, true, true, child.imageElement && FILE.SVG.test(child.toElementString('src')));
-                                }
+                                setElementState(child = this.insertNode(processing, element, cascadeAll), 0);
                             }
                             if (!child.excluded) {
                                 inlineText = false;
@@ -9949,13 +10469,12 @@ this.squared.base = (function (exports) {
                     if (shadowParent) {
                         child.shadowHost = shadowParent;
                     }
-                    child.init(node, childDepth, j++);
+                    child.internalSelf(node, childDepth, j++);
                     child.actualParent = node;
                     children.push(child);
                 }
-                node.naturalChildren = children;
-                node.naturalElements = elements;
-                if (hostElement !== parentElement) {
+                node.internalNodes(children, elements);
+                if (hostParent !== parentElement) {
                     node.shadowRoot = true;
                 }
                 const contents = display === 'contents';
@@ -10041,28 +10560,44 @@ this.squared.base = (function (exports) {
                         }
                     }
                 }
-                if (elements.length && this.userSettings.createQuerySelectorMap) {
+                if (elements.length && createQuerySelectorMap) {
                     node.queryMap = this.createQueryMap(elements);
                 }
             }
             return node;
         }
         setBaseLayout(processing) {
+            var _a;
             const controller = this.controllerHandler;
             const { extensionMap, clearMap } = this.session;
-            const { sessionId, extensions, cache, node: rootNode } = processing;
+            const { sessionId, extensions, cache } = processing;
+            const rootNode = processing.node.parent;
             const mapData = new Map();
             const setMapDepth = (depth, node) => {
-                const data = mapData.get(depth);
+                const data = mapData.get(depth = depth + 1);
                 if (data) {
-                    data.add(node);
+                    if (!data.includes(node)) {
+                        data.push(node);
+                    }
                 }
                 else {
-                    mapData.set(depth, new Set([node]));
+                    mapData.set(depth, [node]);
+                }
+                if (depth > 0 && !mapData.has(-depth)) {
+                    mapData.set(-depth, []);
                 }
             };
-            if (rootNode.parent) {
-                setMapDepth(-1, rootNode.parent);
+            const deleteNode = (depth, node) => {
+                const data = mapData.get(depth + 1);
+                if (data) {
+                    const index = data.indexOf(node);
+                    if (index !== -1) {
+                        data.splice(index, 1);
+                    }
+                }
+            };
+            if (rootNode) {
+                setMapDepth(-1, rootNode);
             }
             cache.each(node => {
                 if (!node.isEmpty()) {
@@ -10088,31 +10623,23 @@ this.squared.base = (function (exports) {
                                 }
                             }
                             if (item.floating) {
-                                const float = item.float;
-                                floated.add(float);
+                                floated.add(item.float);
                                 clearable.push(item);
                             }
                         }
                     }
                 }
             });
-            for (const depth of Array.from(mapData.keys())) {
-                if (depth !== -1) {
-                    mapData.set(-(depth + 2), new Set());
+            cache.afterAdd = function (options) {
+                if (options.remove) {
+                    deleteNode(this.depth, this);
                 }
-            }
-            cache.afterAdd = (node, cascade, remove) => {
-                var _a;
-                if (remove) {
-                    (_a = mapData.get(node.depth)) === null || _a === void 0 ? void 0 : _a.delete(node);
-                }
-                setMapDepth(-(node.depth + 2), node);
-                if (cascade && !node.isEmpty()) {
-                    node.cascade((item) => {
-                        var _a;
+                setMapDepth(-(this.depth + 2), this);
+                if (options.cascade && !this.isEmpty()) {
+                    this.cascade((item) => {
                         if (!item.isEmpty()) {
                             const depth = item.depth;
-                            (_a = mapData.get(depth)) === null || _a === void 0 ? void 0 : _a.delete(item);
+                            deleteNode(depth, item);
                             setMapDepth(-(depth + 2), item);
                         }
                     });
@@ -10124,36 +10651,37 @@ this.squared.base = (function (exports) {
             }
             let extensionsTraverse = extensions.filter((item) => !item.eventOnly);
             for (const depth of mapData.values()) {
-                for (const parent of depth.values()) {
-                    const q = parent.size();
-                    if (q === 0) {
+                for (let i = 0, q = depth.length; i < q; ++i) {
+                    const parent = depth[i];
+                    const r = parent.size();
+                    if (r === 0) {
                         continue;
                     }
                     const renderExtension = parent.renderExtension;
                     const floatContainer = parent.floatContainer;
                     const axisY = parent.toArray();
-                    for (let i = 0; i < q; ++i) {
-                        let nodeY = axisY[i];
+                    for (let j = 0; j < r; ++j) {
+                        let nodeY = axisY[j];
                         if (nodeY.rendered || !nodeY.visible) {
                             continue;
                         }
                         let parentY = nodeY.parent;
-                        if (q > 1 && i < q - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(1 /* UNKNOWN */) || nodeY.hasAlign(4096 /* EXTENDABLE */)) && !nodeY.nodeGroup && nodeY.hasSection(1 /* DOM_TRAVERSE */)) {
+                        if (r > 1 && j < r - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(1 /* UNKNOWN */) || nodeY.hasAlign(4096 /* EXTENDABLE */)) && !nodeY.nodeGroup && nodeY.hasSection(1 /* DOM_TRAVERSE */)) {
                             const horizontal = [];
                             const vertical = [];
-                            let j = i, k = 0;
+                            let k = j, l = 0;
                             if (parentY.layoutVertical && nodeY.hasAlign(4096 /* EXTENDABLE */)) {
                                 horizontal.push(nodeY);
-                                ++j;
                                 ++k;
+                                ++l;
                             }
                             traverse: {
                                 let floatActive;
-                                for (; j < q; ++j, ++k) {
-                                    const item = axisY[j];
+                                for (; k < r; ++k, ++l) {
+                                    const item = axisY[k];
                                     if (item.pageFlow) {
                                         if (item.labelFor && !item.visible) {
-                                            --k;
+                                            --l;
                                             continue;
                                         }
                                         if (floatContainer) {
@@ -10167,7 +10695,7 @@ this.squared.base = (function (exports) {
                                                 floatActive = true;
                                             }
                                         }
-                                        if (k === 0) {
+                                        if (l === 0) {
                                             const next = item.siblingsTrailing[0];
                                             if (next) {
                                                 if (!item.inlineFlow || next.alignedVertically([item])) {
@@ -10229,9 +10757,9 @@ this.squared.base = (function (exports) {
                                         }
                                     }
                                     else if (item.autoPosition) {
-                                        const r = vertical.length;
-                                        if (r) {
-                                            if (vertical[r - 1].blockStatic && !item.renderExclude) {
+                                        const s = vertical.length;
+                                        if (s) {
+                                            if (vertical[s - 1].blockStatic && !item.renderExclude) {
                                                 vertical.push(item);
                                             }
                                             break;
@@ -10246,7 +10774,7 @@ this.squared.base = (function (exports) {
                                 const items = horizontal.filter(item => !item.renderExclude || floatContainer && clearMap.has(item));
                                 if (items.length > 1) {
                                     const layout = controller.processTraverseHorizontal(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
-                                    if (horizontal[horizontal.length - 1] === axisY[q - 1]) {
+                                    if (horizontal[horizontal.length - 1] === axisY[r - 1]) {
                                         parentY.removeAlign(1 /* UNKNOWN */);
                                     }
                                     if (layout && this.addLayout(layout)) {
@@ -10259,10 +10787,10 @@ this.squared.base = (function (exports) {
                                 if (items.length > 1) {
                                     const layout = controller.processTraverseVertical(new LayoutUI(parentY, nodeY, 0, 0, items), axisY);
                                     const segEnd = vertical[vertical.length - 1];
-                                    if (segEnd === axisY[q - 1]) {
+                                    if (segEnd === axisY[r - 1]) {
                                         parentY.removeAlign(1 /* UNKNOWN */);
                                     }
-                                    else if (segEnd.inlineFlow && segEnd !== axisY[q - 1]) {
+                                    else if (segEnd.inlineFlow && segEnd !== axisY[r - 1]) {
                                         segEnd.addAlign(4096 /* EXTENDABLE */);
                                     }
                                     if (layout && this.addLayout(layout)) {
@@ -10272,7 +10800,7 @@ this.squared.base = (function (exports) {
                             }
                         }
                         nodeY.removeAlign(4096 /* EXTENDABLE */);
-                        if (i === q - 1) {
+                        if (j === r - 1) {
                             parentY.removeAlign(1 /* UNKNOWN */);
                         }
                         if (nodeY.renderAs && parentY.replaceTry({ child: nodeY, replaceWith: nodeY.renderAs })) {
@@ -10286,8 +10814,8 @@ this.squared.base = (function (exports) {
                             const descendant = extensionMap.get(nodeY);
                             let combined = descendant ? renderExtension ? renderExtension.concat(descendant) : descendant : renderExtension, next;
                             if (combined) {
-                                for (let j = 0, r = combined.length; j < r; ++j) {
-                                    const ext = combined[j];
+                                for (let k = 0, s = combined.length; k < s; ++k) {
+                                    const ext = combined[k];
                                     const result = ext.processChild(nodeY, parentY);
                                     if (result) {
                                         if (result.output) {
@@ -10302,8 +10830,7 @@ this.squared.base = (function (exports) {
                                         if (result.subscribe) {
                                             ext.subscribers.add(nodeY);
                                         }
-                                        next = result.next === true;
-                                        if (next || result.complete) {
+                                        if ((next = result.next === true) || result.complete) {
                                             break;
                                         }
                                     }
@@ -10314,39 +10841,36 @@ this.squared.base = (function (exports) {
                             }
                             if (nodeY.styleElement) {
                                 combined = nodeY.use ? ApplicationUI.prioritizeExtensions(nodeY.use, extensionsTraverse) : extensionsTraverse;
-                                for (let j = 0, r = combined.length; j < r; ++j) {
-                                    const ext = combined[j];
-                                    if (ext.is(nodeY)) {
-                                        if (ext.condition(nodeY, parentY) && !(descendant && descendant.includes(ext))) {
-                                            const result = ext.processNode(nodeY, parentY);
-                                            if (result) {
-                                                if (result.output) {
-                                                    this.addLayoutTemplate(result.outerParent || parentY, nodeY, result.output);
+                                for (let k = 0, s = combined.length; k < s; ++k) {
+                                    const ext = combined[k];
+                                    if (ext.is(nodeY) && ext.condition(nodeY, parentY) && !(descendant && descendant.includes(ext))) {
+                                        const result = ext.processNode(nodeY, parentY);
+                                        if (result) {
+                                            if (result.output) {
+                                                this.addLayoutTemplate(result.outerParent || parentY, nodeY, result.output);
+                                            }
+                                            if (result.renderAs && result.outputAs) {
+                                                this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
+                                            }
+                                            if (result.parent) {
+                                                parentY = result.parent;
+                                            }
+                                            if (result.include) {
+                                                (nodeY.renderExtension || (nodeY.renderExtension = [])).push(ext);
+                                                ext.subscribers.add(nodeY);
+                                            }
+                                            else if (result.subscribe) {
+                                                ext.subscribers.add(nodeY);
+                                            }
+                                            if (result.remove) {
+                                                const index = extensionsTraverse.indexOf(ext);
+                                                if (index !== -1) {
+                                                    extensionsTraverse = extensionsTraverse.slice(0);
+                                                    extensionsTraverse.splice(index, 1);
                                                 }
-                                                if (result.renderAs && result.outputAs) {
-                                                    this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
-                                                }
-                                                if (result.parent) {
-                                                    parentY = result.parent;
-                                                }
-                                                if (result.include) {
-                                                    (nodeY.renderExtension || (nodeY.renderExtension = [])).push(ext);
-                                                    ext.subscribers.add(nodeY);
-                                                }
-                                                else if (result.subscribe) {
-                                                    ext.subscribers.add(nodeY);
-                                                }
-                                                if (result.remove) {
-                                                    const index = extensionsTraverse.indexOf(ext);
-                                                    if (index !== -1) {
-                                                        extensionsTraverse = extensionsTraverse.slice(0);
-                                                        extensionsTraverse.splice(index, 1);
-                                                    }
-                                                }
-                                                next = result.next === true;
-                                                if (next || result.complete) {
-                                                    break;
-                                                }
+                                            }
+                                            if ((next = result.next === true) || result.complete) {
+                                                break;
                                             }
                                         }
                                     }
@@ -10413,11 +10937,11 @@ this.squared.base = (function (exports) {
             });
             for (let i = 0; i < length; ++i) {
                 const ext = extensions[i];
-                const postBaseLayout = ext.postBaseLayout;
+                const postBaseLayout = (_a = ext.postBaseLayout) === null || _a === void 0 ? void 0 : _a.bind(ext);
                 if (postBaseLayout) {
                     for (const node of ext.subscribers) {
                         if (node.sessionId === sessionId) {
-                            postBaseLayout.call(ext, node);
+                            postBaseLayout(node);
                         }
                     }
                 }
@@ -10425,15 +10949,16 @@ this.squared.base = (function (exports) {
             }
         }
         setConstraints(processing) {
+            var _a;
             const { sessionId, cache, extensions } = processing;
             this.controllerHandler.setConstraints(cache);
             for (let i = 0, length = extensions.length; i < length; ++i) {
                 const ext = extensions[i];
-                const postConstraints = ext.postConstraints;
+                const postConstraints = (_a = ext.postConstraints) === null || _a === void 0 ? void 0 : _a.bind(ext);
                 if (postConstraints) {
                     for (const node of ext.subscribers) {
                         if (node.sessionId === sessionId) {
-                            postConstraints.call(ext, node);
+                            postConstraints(node);
                         }
                     }
                 }
@@ -10441,15 +10966,16 @@ this.squared.base = (function (exports) {
             }
         }
         setResources(processing) {
+            var _a;
             const { sessionId, resourceId, cache, extensions } = processing;
             this.resourceHandler.setData(cache);
             for (let i = 0, length = extensions.length; i < length; ++i) {
                 const ext = extensions[i];
-                const postResources = ext.postResources;
+                const postResources = (_a = ext.postResources) === null || _a === void 0 ? void 0 : _a.bind(ext);
                 if (postResources) {
                     for (const node of ext.subscribers) {
                         if (node.sessionId === sessionId) {
-                            postResources.call(ext, node);
+                            postResources(node);
                         }
                     }
                 }
@@ -10565,8 +11091,7 @@ this.squared.base = (function (exports) {
                     inlineBelow[0].addAlign(4096 /* EXTENDABLE */);
                 }
                 inlineBelow.unshift(node);
-                const wrapper = controllerHandler.createNodeGroup(node, inlineBelow, parent);
-                wrapper.childIndex = node.childIndex;
+                const wrapper = controllerHandler.createNodeGroup(node, inlineBelow, parent, { childIndex: node.childIndex });
                 wrapper.containerName = node.containerName;
                 boxStyle = wrapper.inherit(node, 'boxStyle');
                 wrapper.innerWrapped = node;
@@ -10579,20 +11104,20 @@ this.squared.base = (function (exports) {
             layout.itemCount = layerIndex.length;
             for (let i = 0; i < layout.itemCount; ++i) {
                 const item = layerIndex[i];
-                let segments, itemCount, floatgroup;
+                let segments, itemCount, outerGroup;
                 if (Array.isArray(item[0])) {
                     segments = item;
                     itemCount = segments.length;
                     const grouping = flatArray(segments, Infinity).sort((a, b) => a.childIndex - b.childIndex);
                     const node = layout.node;
                     if (node.layoutVertical) {
-                        floatgroup = node;
+                        outerGroup = node;
                     }
                     else {
-                        floatgroup = controllerHandler.createNodeGroup(grouping[0], grouping, node);
+                        outerGroup = controllerHandler.createNodeGroup(grouping[0], grouping, node);
                         this.addLayout(LayoutUI.create({
                             parent: node,
-                            node: floatgroup,
+                            node: outerGroup,
                             containerType,
                             alignmentType: alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? 1024 /* RIGHT */ : 0),
                             itemCount
@@ -10603,11 +11128,11 @@ this.squared.base = (function (exports) {
                     segments = [item];
                     itemCount = 1;
                 }
-                const parent = floatgroup || layout.node;
+                outerGroup || (outerGroup = layout.node);
                 for (let j = 0; j < itemCount; ++j) {
                     const seg = segments[j];
-                    const target = controllerHandler.createNodeGroup(seg[0], seg, parent, { flags: 2 /* DELEGATE */ | 4 /* CASCADE */ });
-                    const group = new LayoutUI(parent, target, 0, 64 /* SEGMENTED */, seg);
+                    const target = controllerHandler.createNodeGroup(seg[0], seg, outerGroup, { flags: 2 /* DELEGATE */ | 4 /* CASCADE */ });
+                    const group = new LayoutUI(outerGroup, target, 0, 64 /* SEGMENTED */, seg);
                     if (seg === inlineAbove) {
                         group.addAlign(128 /* COLUMN */);
                         if (inheritStyle) {
@@ -10640,7 +11165,7 @@ this.squared.base = (function (exports) {
                     }
                     this.addLayout(group);
                     if (seg === inlineAbove) {
-                        this.setFloatPadding(parent, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
+                        this.setFloatPadding(outerGroup, target, inlineAbove, leftSub && flatArray(leftSub), rightSub && flatArray(rightSub));
                     }
                 }
             }
@@ -10730,8 +11255,7 @@ this.squared.base = (function (exports) {
                             }
                         }
                         if (blockCount > 1 || floating) {
-                            subgroup = controllerHandler.createNodeGroup(children[0], children);
-                            wrapper.push(subgroup);
+                            wrapper.push(subgroup = controllerHandler.createNodeGroup(children[0], children));
                         }
                         else if (blockCount === 1) {
                             wrapper.push(children[0]);
@@ -10751,12 +11275,10 @@ this.squared.base = (function (exports) {
             return layout;
         }
         createPseduoElement(sessionId, resourceId, element, pseudoElt, elementRoot = element.shadowRoot || element) {
-            var _a;
             let styleMap = getElementCache$1(element, 'styleMap' + pseudoElt, sessionId);
             if (element.tagName === 'Q') {
                 if (!styleMap) {
-                    styleMap = {};
-                    setElementCache$1(element, 'styleMap' + pseudoElt, styleMap, sessionId);
+                    setElementCache$1(element, 'styleMap' + pseudoElt, styleMap = {}, sessionId);
                 }
                 styleMap.content || (styleMap.content = getStyle$2(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote'));
             }
@@ -10767,60 +11289,23 @@ this.squared.base = (function (exports) {
                     if (absolute && +styleMap.opacity <= 0) {
                         return;
                     }
-                    const textContent = trimBoth(value, '"');
-                    if (!isString(textContent)) {
-                        if (pseudoElt === '::after') {
-                            const checkPseudoAfter = (sibling) => sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent);
-                            if ((absolute || !textContent || !checkPseudoAfter(element.lastChild)) && !checkPseudoDimension(styleMap, true, absolute)) {
-                                return;
-                            }
-                        }
-                        else {
-                            const childNodes = elementRoot.childNodes;
-                            for (let i = 0, length = childNodes.length; i < length; ++i) {
-                                const child = childNodes[i];
-                                if (child.nodeName[0] === '#') {
-                                    if (child.nodeName === '#text' && isString(child.textContent)) {
-                                        break;
-                                    }
-                                }
-                                else {
-                                    const style = getStyle$2(child);
-                                    if (hasCoords$2(styleMap.position)) {
-                                        continue;
-                                    }
-                                    else if (style.float !== 'none') {
-                                        return;
-                                    }
-                                    break;
-                                }
-                            }
-                            if (!checkPseudoDimension(styleMap, false, absolute)) {
-                                return;
-                            }
-                        }
-                    }
-                    else if (value === 'inherit') {
-                        let current = element;
-                        do {
-                            value = getStyle$2(current).content;
-                            if (value !== 'inherit') {
-                                break;
-                            }
-                            current = current.parentElement;
-                        } while (current);
-                    }
                     let content = '', tagName;
+                    switch (value) {
+                        case 'initial':
+                        case 'unset':
+                        case 'revert':
+                            value = getStyleMap(sessionId, element, pseudoElt).content;
+                            break;
+                        case 'inherit':
+                            value = getStyleMap(sessionId, element).content;
+                            break;
+                    }
                     switch (value) {
                         case 'normal':
                         case 'none':
-                        case 'initial':
-                        case 'inherit':
-                        case 'unset':
                         case 'no-open-quote':
                         case 'no-close-quote':
-                        case '""':
-                            break;
+                            return;
                         case 'open-quote':
                             if (pseudoElt === '::before') {
                                 content = getPseudoQuoteValue(element, pseudoElt, '“', "‘", sessionId);
@@ -10831,138 +11316,259 @@ this.squared.base = (function (exports) {
                                 content = getPseudoQuoteValue(element, pseudoElt, '”', "’", sessionId);
                             }
                             break;
-                        default: {
-                            const url = resolveURL(value);
-                            if (url) {
-                                if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
-                                    tagName = 'img';
-                                    content = url;
-                                }
-                            }
-                            else {
-                                const style = getStyle$2(element);
-                                const getCounterIncrementValue = (parent, counterName, fallback) => { var _a; return getCounterValue((_a = getElementCache$1(parent, 'styleMap' + pseudoElt, sessionId)) === null || _a === void 0 ? void 0 : _a.counterIncrement, counterName, fallback); };
-                                let found, match;
-                                while (match = REGEXP_PSEUDOCOUNTER.exec(value)) {
-                                    if (match[1]) {
-                                        content += getNamedItem$1(element, match[1].trim());
+                        default:
+                            if (value[0] === '"' || startsWith$2(value, 'attr')) {
+                                (REGEXP_ATTRVALUE || (REGEXP_ATTRVALUE = new RegExp(QUOTED + '|attr\\(([^)]+)\\)', 'g'))).lastIndex = 0;
+                                let match;
+                                while (match = REGEXP_ATTRVALUE.exec(value)) {
+                                    if (match[2]) {
+                                        content += getNamedItem$1(element, match[2].trim());
                                     }
-                                    else if (match[2] || match[5]) {
-                                        const counterType = match[2] === 'counter';
-                                        let counterName, styleName;
-                                        if (counterType) {
-                                            counterName = match[3];
-                                            styleName = match[4] || 'decimal';
-                                        }
-                                        else {
-                                            counterName = match[6];
-                                            styleName = match[8] || 'decimal';
-                                        }
-                                        const initialValue = ((_a = getCounterIncrementValue(element, counterName, 0)) !== null && _a !== void 0 ? _a : 1) + (getCounterValue(style.counterReset, counterName, 0) || 0);
-                                        const subcounter = [];
-                                        let current = element, counter = initialValue, ascending, lastResetElement;
-                                        const incrementCounter = (increment, pseudo) => {
-                                            if (subcounter.length === 0) {
-                                                counter += increment;
-                                            }
-                                            else if (ascending || pseudo) {
-                                                subcounter[subcounter.length - 1] += increment;
-                                            }
-                                        };
-                                        const cascadeCounterSibling = (sibling) => {
-                                            if (getCounterValue(getStyle$2(sibling).counterReset, counterName) === undefined) {
-                                                iterateArray$1(sibling.children, (item) => {
-                                                    if (item.className !== '__squared-pseudo') {
-                                                        let increment = getCounterIncrementValue(item, counterName);
-                                                        if (increment) {
-                                                            incrementCounter(increment, true);
+                                    else {
+                                        content += match[1];
+                                    }
+                                }
+                                if (!isString(content)) {
+                                    const checkDimension = (after) => {
+                                        switch (styleMap.display) {
+                                            case 'inline':
+                                            case 'block':
+                                            case 'inherit':
+                                            case 'initial':
+                                            case 'unset':
+                                            case 'revert': {
+                                                const { width, height } = styleMap;
+                                                if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
+                                                    for (const attr in styleMap) {
+                                                        const unit = parseFloat(styleMap[attr]);
+                                                        if (unit) {
+                                                            switch (attr) {
+                                                                case 'minHeight':
+                                                                    return true;
+                                                                case 'borderTopWidth':
+                                                                    if (getStyle$2(element, pseudoElt).borderTopStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderRightWidth':
+                                                                    if (getStyle$2(element, pseudoElt).borderRightStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderBottomWidth':
+                                                                    if (getStyle$2(element, pseudoElt).borderBottomStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderLeftWidth':
+                                                                    if (getStyle$2(element, pseudoElt).borderLeftStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                            }
+                                                            if (startsWith$2(attr, 'padding')) {
+                                                                return true;
+                                                            }
+                                                            else if (!absolute && startsWith$2(attr, 'margin')) {
+                                                                return true;
+                                                            }
                                                         }
-                                                        const childStyle = getStyle$2(item);
-                                                        if (increment = getCounterValue(childStyle.counterIncrement, counterName)) {
-                                                            incrementCounter(increment, false);
+                                                        else if (unit === 0 && attr === 'maxHeight') {
+                                                            break;
                                                         }
-                                                        increment = getCounterValue(childStyle.counterReset, counterName);
-                                                        if (increment !== undefined) {
-                                                            return true;
-                                                        }
-                                                        cascadeCounterSibling(item);
                                                     }
-                                                });
-                                            }
-                                        };
-                                        while (current) {
-                                            ascending = false;
-                                            if (current.previousElementSibling) {
-                                                if (current = current.previousElementSibling) {
-                                                    cascadeCounterSibling(current);
+                                                    return false;
                                                 }
-                                                else {
+                                            }
+                                        }
+                                        return true;
+                                    };
+                                    if (pseudoElt === '::after') {
+                                        const checkLastChild = (sibling) => !!sibling && sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent);
+                                        if ((absolute || !content || !checkLastChild(element.lastChild)) && !checkDimension(true)) {
+                                            return;
+                                        }
+                                    }
+                                    else if (!checkDimension()) {
+                                        return;
+                                    }
+                                    else {
+                                        const childNodes = elementRoot.childNodes;
+                                        for (let i = 0, length = childNodes.length; i < length; ++i) {
+                                            const child = childNodes[i];
+                                            if (child.nodeName[0] === '#') {
+                                                if (child.nodeName === '#text' && isString(child.textContent)) {
                                                     break;
                                                 }
                                             }
                                             else {
-                                                current = current.parentElement;
-                                                if (!current) {
+                                                const { position, float } = getStyle$2(child);
+                                                if (hasCoords$2(position)) {
+                                                    continue;
+                                                }
+                                                else if (float !== 'none') {
+                                                    return;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                const url = resolveURL(value);
+                                if (url) {
+                                    if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
+                                        tagName = 'img';
+                                        content = url;
+                                    }
+                                }
+                                else {
+                                    (REGEXP_COUNTER || (REGEXP_COUNTER = new RegExp(`counter\\(([^,)]+)(?:,\\s*([a-z-]+))?\\)|counters\\(([^,]+),\\s*${QUOTED}(?:,\\s*([a-z-]+))?\\)|${QUOTED}`, 'g'))).lastIndex = 0;
+                                    let match;
+                                    while (match = REGEXP_COUNTER.exec(value)) {
+                                        if (match[6]) {
+                                            content += match[6];
+                                            continue;
+                                        }
+                                        const [counterName, styleName = 'decimal'] = match[1] ? [match[1], match[2]] : [match[3], match[5]];
+                                        const counters = [NaN];
+                                        let current = element, depth = 0, initial = 0, wasSet = 0, wasReset, locked;
+                                        const incrementCounter = (increment, isSet) => {
+                                            if (increment !== null && !locked && (isSet || wasSet !== 2)) {
+                                                if (isNaN(counters[0])) {
+                                                    counters[0] = increment;
+                                                }
+                                                else {
+                                                    counters[0] += increment;
+                                                }
+                                            }
+                                        };
+                                        const cascadeSibling = (target, ignoreReset, ascending) => {
+                                            const [counterSet, counterReset] = setCounter(target, ascending);
+                                            let type = 0;
+                                            if (counterSet !== null) {
+                                                wasSet = ascending ? 2 : 1;
+                                            }
+                                            if (counterReset !== null) {
+                                                if (depth === 0) {
+                                                    if (ascending && !wasReset) {
+                                                        type = 1;
+                                                    }
+                                                    else {
+                                                        return 1;
+                                                    }
+                                                }
+                                                else {
+                                                    return 0;
+                                                }
+                                            }
+                                            iterateArray$1(target.children, (item) => {
+                                                if (item.className !== '__squared-pseudo') {
+                                                    switch (cascadeSibling(item)) {
+                                                        case 0:
+                                                        case 1:
+                                                            wasReset = true;
+                                                            return true;
+                                                    }
+                                                }
+                                            });
+                                            if (type === 1) {
+                                                if (!ignoreReset || target === current) {
+                                                    incrementCounter(counterReset, true);
+                                                    locked = false;
+                                                    counters.unshift(NaN);
+                                                    return 1;
+                                                }
+                                                return ascending ? -1 : 0;
+                                            }
+                                            if (ascending) {
+                                                if (wasSet === 2) {
+                                                    return 2;
+                                                }
+                                                if (wasSet === 1 && !wasReset) {
+                                                    incrementCounter(initial);
+                                                    locked = true;
+                                                }
+                                            }
+                                            return wasReset ? 0 : -1;
+                                        };
+                                        const setCounter = (target, ascending) => {
+                                            const { counterSet, counterReset, counterIncrement } = getStyleMap(sessionId, target);
+                                            const setValue = getCounterValue(counterSet, counterName, 0);
+                                            const resetValue = getCounterValue(counterReset, counterName);
+                                            if (!locked) {
+                                                const isSet = setValue !== null;
+                                                if (ascending) {
+                                                    incrementCounter(setValue, isSet);
+                                                }
+                                                else if (isSet) {
+                                                    counters[0] = setValue;
+                                                }
+                                                if (ascending || setValue === null && resetValue === null) {
+                                                    incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
+                                                }
+                                                incrementCounter(getCounterValue(getStyleMap(sessionId, target, pseudoElt).counterIncrement, counterName), isSet);
+                                            }
+                                            return [setValue, resetValue];
+                                        };
+                                        while (current) {
+                                            const [counterSet, counterReset] = setCounter(current, true);
+                                            initial = 0;
+                                            wasReset = false;
+                                            if (counterSet !== null) {
+                                                locked = true;
+                                                wasSet = 2;
+                                            }
+                                            else {
+                                                wasSet = 0;
+                                            }
+                                            if (counterReset !== null) {
+                                                incrementCounter(counterReset, true);
+                                                if (match[1]) {
                                                     break;
                                                 }
-                                                ascending = true;
-                                            }
-                                            if (current.className !== '__squared-pseudo') {
-                                                const pesudoIncrement = getCounterIncrementValue(current, counterName);
-                                                if (pesudoIncrement) {
-                                                    incrementCounter(pesudoIncrement, true);
-                                                }
-                                                const currentStyle = getStyle$2(current);
-                                                const counterIncrement = getCounterValue(currentStyle.counterIncrement, counterName);
-                                                if (counterIncrement) {
-                                                    incrementCounter(counterIncrement, false);
-                                                }
-                                                const counterReset = getCounterValue(currentStyle.counterReset, counterName);
-                                                if (counterReset !== undefined) {
-                                                    if (!lastResetElement) {
-                                                        counter += counterReset;
-                                                    }
-                                                    lastResetElement = current;
-                                                    if (counterType) {
-                                                        break;
-                                                    }
-                                                    else if (ascending) {
-                                                        subcounter.push((pesudoIncrement || 0) + counterReset);
-                                                    }
+                                                else {
+                                                    locked = false;
+                                                    counters.unshift(NaN);
                                                 }
                                             }
-                                        }
-                                        if (lastResetElement) {
-                                            if (!counterType && subcounter.length > 1) {
-                                                subcounter.reverse().splice(1, 1);
-                                                const textValue = match[7];
-                                                content += subcounter.reduce((a, b) => a + convertListStyle(styleName, b, true) + textValue, '');
+                                            let sibling = current.previousElementSibling;
+                                            while (sibling) {
+                                                if (sibling.className !== '__squared-pseudo') {
+                                                    if (!locked) {
+                                                        initial = counters[0];
+                                                    }
+                                                    switch (cascadeSibling(sibling, counterReset !== null, true)) {
+                                                        case 0:
+                                                            incrementCounter(initial, true);
+                                                            locked = true;
+                                                            break;
+                                                        case 1:
+                                                            wasSet = 0;
+                                                            break;
+                                                        case 2:
+                                                            locked = true;
+                                                            break;
+                                                    }
+                                                }
+                                                sibling = sibling.previousElementSibling;
                                             }
+                                            ++depth;
+                                            current = current.parentElement;
                                         }
-                                        else {
-                                            counter = initialValue;
-                                        }
-                                        content += convertListStyle(styleName, counter, true);
+                                        const delimiter = match[4] ? replaceAll(match[4], '\\"', '"') : '';
+                                        content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
                                     }
-                                    else if (match[9]) {
-                                        content += match[9];
-                                    }
-                                    found = true;
-                                }
-                                REGEXP_PSEUDOCOUNTER.lastIndex = 0;
-                                if (!found) {
-                                    content = value;
                                 }
                             }
                             break;
-                        }
                     }
                     if (content || value === '""') {
-                        styleMap.display || (styleMap.display = 'inline');
-                        tagName || (tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div');
+                        tagName || (tagName = /^(?:inline|table)/.test(styleMap.display || (styleMap.display = 'inline')) ? 'span' : 'div');
                         const pseudoElement = document.createElement(tagName);
                         pseudoElement.className = '__squared-pseudo';
-                        pseudoElement.style.setProperty('display', 'none');
+                        pseudoElement.style.display = 'none';
                         if (pseudoElt === '::before') {
                             elementRoot.insertBefore(pseudoElement, elementRoot.childNodes[0]);
                         }
@@ -10972,13 +11578,27 @@ this.squared.base = (function (exports) {
                         if (content) {
                             if (tagName === 'img') {
                                 pseudoElement.src = content;
-                                const image = this.resourceHandler.getImage(resourceId, content);
-                                if (image) {
-                                    if (image.width) {
-                                        styleMap.width || (styleMap.width = image.width + 'px');
+                                const { width, height } = this.resourceHandler.getImageDimension(resourceId, content);
+                                if (width && height) {
+                                    let options;
+                                    if (styleMap.fontSize) {
+                                        options = { fontSize: parseUnit$1(styleMap.fontSize) };
                                     }
-                                    if (image.height) {
-                                        styleMap.height || (styleMap.height = image.height + 'px');
+                                    if (!styleMap.width && styleMap.height) {
+                                        const offset = parseUnit$1(styleMap.height, options);
+                                        if (offset > 0) {
+                                            styleMap.width = width * offset / height + 'px';
+                                        }
+                                    }
+                                    else if (styleMap.width && !styleMap.height) {
+                                        const offset = parseUnit$1(styleMap.width, options);
+                                        if (offset > 0) {
+                                            styleMap.height = height * offset / width + 'px';
+                                        }
+                                    }
+                                    else {
+                                        styleMap.width = width + 'px';
+                                        styleMap.height = height + 'px';
                                     }
                                 }
                             }
@@ -10986,9 +11606,18 @@ this.squared.base = (function (exports) {
                                 pseudoElement.innerText = content;
                             }
                         }
+                        const style = getStyle$2(element, pseudoElt);
                         for (const attr in styleMap) {
                             if (attr !== 'display') {
-                                pseudoElement.style[attr] = styleMap[attr];
+                                switch (value = styleMap[attr]) {
+                                    case 'inherit':
+                                    case 'unset':
+                                    case 'revert':
+                                        value = style[attr];
+                                        styleMap[attr] = value;
+                                        break;
+                                }
+                                pseudoElement.style[attr] = value;
                             }
                         }
                         setElementCache$1(pseudoElement, 'styleMap', styleMap, sessionId);
@@ -11049,7 +11678,7 @@ this.squared.base = (function (exports) {
                     if (marginLeft !== -Infinity) {
                         const offset = floatPosition + marginOffset - (parent.box.left + marginLeft + Math.max(...target.map((child) => !paddingNodes.includes(child) ? child.marginLeft : 0)));
                         if (offset > 0 && offset < parent.actualBoxWidth()) {
-                            target.modifyBox(128 /* PADDING_LEFT */, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(128 /* PADDING_LEFT */, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasUnit('width', { percent: false }) }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                             setColumnMaxWidth(leftAbove, offset);
                         }
                     }
@@ -11085,7 +11714,7 @@ this.squared.base = (function (exports) {
                     if (marginRight !== -Infinity) {
                         const offset = parent.box.right - (floatPosition - marginOffset + marginRight + Math.max(...target.map((child) => !paddingNodes.includes(child) ? child.marginRight : 0)));
                         if (offset > 0 && offset < parent.actualBoxWidth()) {
-                            target.modifyBox(32 /* PADDING_RIGHT */, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasPX('width', { percent: false }) }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(32 /* PADDING_RIGHT */, offset + (!spacing && target.find(child => child.multiline, { cascade: item => !item.hasUnit('width', { percent: false }) }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                             setColumnMaxWidth(rightAbove, offset);
                         }
                     }
@@ -11112,7 +11741,7 @@ this.squared.base = (function (exports) {
                     if (indexA === 0 || indexB === Infinity || indexB === -1 && indexA !== Infinity) {
                         return -1;
                     }
-                    else if (indexB === 0 || indexA === Infinity || indexA === -1 && indexB !== Infinity) {
+                    if (indexB === 0 || indexA === Infinity || indexA === -1 && indexB !== Infinity) {
                         return 1;
                     }
                     return indexA - indexB;
@@ -11125,62 +11754,72 @@ this.squared.base = (function (exports) {
         }
     }
 
+    const { CSS_BORDER_SET } = squared.lib.internal;
     const { isUserAgent } = squared.lib.client;
-    const { CSS_PROPERTIES, formatPX: formatPX$3, getStyle: getStyle$1, hasCoords: hasCoords$1, isLength: isLength$4, isPercent: isPercent$2, parseUnit } = squared.lib.css;
+    const { formatPX: formatPX$3, getFontSize, getStyle: getStyle$1, hasCoords: hasCoords$1, isLength: isLength$4, isPercent: isPercent$1, parseUnit } = squared.lib.css;
     const { getParentElement, withinViewport } = squared.lib.dom;
     const { getElementCache, setElementCache } = squared.lib.session;
-    const { capitalize, convertFloat, iterateArray, joinArray } = squared.lib.util;
-    const BORDER_BOX = [
-        CSS_PROPERTIES.borderTop.value,
-        CSS_PROPERTIES.borderRight.value,
-        CSS_PROPERTIES.borderBottom.value,
-        CSS_PROPERTIES.borderLeft.value
-    ];
-    function setBorderStyle$1(styleMap, defaultColor) {
-        if (!BORDER_BOX.some(item => item[0] in styleMap)) {
-            for (let i = 0; i < 4; ++i) {
-                const border = BORDER_BOX[i];
-                styleMap[border[0]] = '1px';
-                styleMap[border[1]] = 'outset';
-                styleMap[border[2]] = defaultColor;
-            }
-            return true;
-        }
-        return false;
-    }
-    function setButtonStyle(styleMap, applied, defaultColor) {
-        if (applied) {
-            const backgroundColor = styleMap.backgroundColor;
-            if (!backgroundColor || backgroundColor === 'initial') {
-                styleMap.backgroundColor = defaultColor;
-            }
-        }
-        styleMap.textAlign || (styleMap.textAlign = 'center');
-        if (!CSS_PROPERTIES.padding.value.some(attr => styleMap[attr])) {
-            styleMap.paddingTop = '2px';
-            styleMap.paddingRight = '6px';
-            styleMap.paddingBottom = '3px';
-            styleMap.paddingLeft = '6px';
-        }
-    }
-    function pushIndent(value, depth, char = '\t', indent) {
+    const { iterateArray } = squared.lib.util;
+    const CACHE_INDENT = {};
+    const DIMENSION_AUTO = [['width', 'height', 'maxWidth'], ['height', 'width', 'maxHeight']];
+    function pushIndent(value, depth, indent = '\t'.repeat(depth)) {
         if (depth > 0) {
-            indent || (indent = char.repeat(depth));
-            return joinArray(value.split('\n'), line => line ? indent + line : '', '\n') + '\n';
-        }
-        return value;
-    }
-    function pushIndentArray(values, depth, char = '\t', separator = '') {
-        if (depth > 0) {
-            const indent = char.repeat(depth);
+            const lines = trimEnd(value, '\n').split('\n');
             let result = '';
-            for (let i = 0, length = values.length; i < length; ++i) {
-                result += (i > 0 ? separator : '') + pushIndent(values[i], depth, char, indent);
+            for (let i = 0, length = lines.length; i < length; ++i) {
+                result += (i === 0 || i === length - 1 || lines[i + 1][0] === '\t' ? indent : '') + lines[i] + '\n';
             }
             return result;
         }
-        return values.join(separator);
+        return value;
     }
+    function pushIndentArray(values, depth) {
+        if (depth > 0) {
+            const indent = '\t'.repeat(depth);
+            return values.reduce((a, b) => a + pushIndent(b, depth, indent), '');
+        }
+        return values.join('');
+    }
+    function setDimension(element, style, attr) {
+        if (hasEmptyDimension(style[attr])) {
+            const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
+            if (match) {
+                const value = match[1];
+                if (isPercent$1(value)) {
+                    style[attr] = value;
+                    return;
+                }
+                const unit = parseFloat(value);
+                if (!isNaN(unit)) {
+                    style[attr] = unit + 'px';
+                    return;
+                }
+            }
+            if (element.clientWidth === 300 && element.clientHeight === 150) {
+                switch (element.tagName) {
+                    case 'IMG':
+                    case 'INPUT':
+                    case 'SOURCE':
+                        break;
+                    case 'OBJECT':
+                    case 'EMBED':
+                        if (element.type.startsWith('image/')) {
+                            break;
+                        }
+                    default:
+                        if (attr === 'width') {
+                            style.width = '300px';
+                        }
+                        else {
+                            style.height = '150px';
+                        }
+                        break;
+                }
+            }
+        }
+    }
+    const hasEmptyStyle = (value) => !value || value === 'initial';
+    const hasEmptyDimension = (value) => !value || value === 'auto';
     class ControllerUI extends Controller {
         constructor() {
             super(...arguments);
@@ -11191,11 +11830,11 @@ this.squared.base = (function (exports) {
             this._requireFormat = false;
         }
         init() {
-            const unsupported = this.localSettings.unsupported;
+            const { unsupported, style, layout } = this.localSettings;
             this._unsupportedCascade = unsupported.cascade;
             this._unsupportedTagName = unsupported.tagName;
-            this._innerXmlTags = this.localSettings.layout.innerXmlTags;
-            this._settingsStyle = this.localSettings.style;
+            this._settingsStyle = style;
+            this._layoutInnerXmlTags = layout.innerXmlTags;
         }
         preventNodeCascade(node) {
             return this._unsupportedCascade.includes(node.tagName);
@@ -11208,100 +11847,97 @@ this.squared.base = (function (exports) {
             return !this._unsupportedTagName.includes(tagName) || element.contentEditable === 'true';
         }
         reset() {
+            this._beforeOutside = new WeakMap();
+            this._beforeInside = new WeakMap();
+            this._afterInside = new WeakMap();
+            this._afterOutside = new WeakMap();
             this._requireFormat = false;
         }
         applyDefaultStyles(processing, element) {
-            const sessionId = processing.sessionId;
-            if (element.nodeName.charAt(0) === '#') {
+            if (element.nodeName[0] === '#') {
                 setElementCache(element, 'styleMap', {
                     position: 'static',
                     display: 'inline',
                     verticalAlign: 'baseline',
                     float: 'none'
-                }, sessionId);
+                }, processing.sessionId);
             }
             else {
-                let styleMap = getElementCache(element, 'styleMap', sessionId);
-                if (!styleMap) {
-                    styleMap = {};
-                    setElementCache(element, 'styleMap', styleMap, sessionId);
+                let style = getElementCache(element, 'styleMap', processing.sessionId);
+                if (!style) {
+                    setElementCache(element, 'styleMap', style = {}, processing.sessionId);
                 }
                 if (isUserAgent(4 /* FIREFOX */)) {
                     switch (element.tagName) {
                         case 'BODY':
-                            if (styleMap.backgroundColor === 'rgba(0, 0, 0, 0)') {
-                                styleMap.backgroundColor = '';
+                            if (style.backgroundColor === 'rgba(0, 0, 0, 0)') {
+                                delete style.backgroundColor;
                             }
                             break;
                         case 'INPUT':
                         case 'SELECT':
                         case 'BUTTON':
                         case 'TEXTAREA':
-                            styleMap.display || (styleMap.display = 'inline-block');
+                            style.display || (style.display = 'inline-block');
                             break;
                         case 'FIELDSET':
-                            styleMap.display || (styleMap.display = 'block');
+                            style.display || (style.display = 'block');
                             break;
                         case 'RUBY':
-                            styleMap.display || (styleMap.display = 'inline');
+                            style.display || (style.display = 'inline');
                             break;
                     }
                 }
                 switch (element.tagName) {
                     case 'A':
-                        styleMap.color || (styleMap.color = this._settingsStyle.anchorFontColor);
+                        style.color || (style.color = this._settingsStyle.anchorFontColor);
+                        style.textDecorationLine || (style.textDecorationLine = 'underline');
                         break;
                     case 'INPUT': {
-                        styleMap.fontSize || (styleMap.fontSize = this._settingsStyle.formFontSize);
-                        const type = element.type;
+                        const settings = this._settingsStyle;
+                        style.fontSize || (style.fontSize = settings.formFontSize);
+                        const { type, disabled } = element;
                         switch (type) {
+                            case 'image':
+                                this.setElementDimension(processing.resourceId, element, style);
                             case 'radio':
                             case 'checkbox':
-                            case 'image':
                                 break;
-                            case 'week':
-                            case 'month':
-                            case 'time':
-                            case 'date':
-                            case 'datetime-local':
-                                styleMap.paddingTop = formatPX$3(convertFloat(styleMap.paddingTop) + 1);
-                                styleMap.paddingRight = formatPX$3(convertFloat(styleMap.paddingRight) + 1);
-                                styleMap.paddingBottom = formatPX$3(convertFloat(styleMap.paddingBottom) + 1);
-                                styleMap.paddingLeft = formatPX$3(convertFloat(styleMap.paddingLeft) + 1);
+                            case 'file':
+                            case 'reset':
+                            case 'submit':
+                            case 'button':
+                                this.setButtonStyle(style, disabled);
                                 break;
-                            default: {
-                                const result = setBorderStyle$1(styleMap, this._settingsStyle.inputBorderColor);
-                                switch (type) {
-                                    case 'file':
-                                    case 'reset':
-                                    case 'submit':
-                                    case 'button':
-                                        setButtonStyle(styleMap, result, this._settingsStyle.inputBackgroundColor);
-                                        break;
+                            case 'range':
+                                if (!disabled && hasEmptyStyle(style.backgroundColor)) {
+                                    style.backgroundColor = settings.rangeBackgroundColor;
                                 }
+                            default:
+                                this.setInputStyle(style, disabled, settings.inputBorderWidth);
                                 break;
-                            }
                         }
                         break;
                     }
-                    case 'BUTTON':
-                        styleMap.fontSize || (styleMap.fontSize = this._settingsStyle.formFontSize);
-                        setButtonStyle(styleMap, setBorderStyle$1(styleMap, this._settingsStyle.inputBorderColor), this._settingsStyle.inputBackgroundColor);
+                    case 'BUTTON': {
+                        const disabled = element.disabled;
+                        style.fontSize || (style.fontSize = this._settingsStyle.formFontSize);
+                        this.setButtonStyle(style, disabled);
                         break;
+                    }
                     case 'TEXTAREA':
-                    case 'SELECT':
-                        styleMap.fontSize || (styleMap.fontSize = this._settingsStyle.formFontSize);
-                        setBorderStyle$1(styleMap, this._settingsStyle.inputBorderColor);
-                        break;
-                    case 'BODY': {
-                        const backgroundColor = styleMap.backgroundColor;
-                        if ((!backgroundColor || backgroundColor === 'initial') && (getComputedStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
-                            styleMap.backgroundColor = 'rgb(255, 255, 255)';
-                        }
+                    case 'SELECT': {
+                        style.fontSize || (style.fontSize = this._settingsStyle.formFontSize);
+                        this.setInputStyle(style, element.disabled);
                         break;
                     }
+                    case 'BODY':
+                        if (hasEmptyStyle(style.backgroundColor) && (getStyle$1(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
+                            style.backgroundColor = 'rgb(255, 255, 255)';
+                        }
+                        break;
                     case 'H1':
-                        if (!styleMap.fontSize) {
+                        if (!style.fontSize) {
                             let parent = element.parentElement;
                             found: {
                                 while (parent) {
@@ -11310,69 +11946,71 @@ this.squared.base = (function (exports) {
                                         case 'ASIDE':
                                         case 'NAV':
                                         case 'SECTION':
-                                            styleMap.fontSize = '1.5em';
+                                            style.fontSize = '1.5em';
                                             break found;
-                                        default:
-                                            parent = parent.parentElement;
-                                            break;
                                     }
+                                    parent = parent.parentElement;
                                 }
-                                styleMap.fontSize = '2em';
+                                style.fontSize = '2em';
                             }
                         }
                         break;
                     case 'H2':
-                        styleMap.fontSize || (styleMap.fontSize = '1.5em');
+                        style.fontSize || (style.fontSize = '1.5em');
                         break;
                     case 'H3':
-                        styleMap.fontSize || (styleMap.fontSize = '1.17em');
+                        style.fontSize || (style.fontSize = '1.17em');
                         break;
                     case 'H4':
-                        styleMap.fontSize || (styleMap.fontSize = '1em');
+                        style.fontSize || (style.fontSize = '1em');
                         break;
                     case 'H5':
-                        styleMap.fontSize || (styleMap.fontSize = '0.83em');
+                        style.fontSize || (style.fontSize = '0.83em');
                         break;
                     case 'H6':
-                        styleMap.fontSize || (styleMap.fontSize = '0.67em');
+                        style.fontSize || (style.fontSize = '0.67em');
+                        break;
+                    case 'HR':
+                        this.setBorderStyle(style, 'inset', '1px', this._settingsStyle.hrBorderColor);
                         break;
                     case 'FORM':
-                        styleMap.marginTop || (styleMap.marginTop = '0px');
-                        break;
-                    case 'LI':
-                        styleMap.listStyleImage || (styleMap.listStyleImage = 'inherit');
+                        style.marginTop || (style.marginTop = '0px');
                         break;
                     case 'SUP':
                     case 'SUB':
                     case 'SMALL':
-                        styleMap.fontSize || (styleMap.fontSize = 'smaller');
+                        style.fontSize || (style.fontSize = 'smaller');
                         break;
                     case 'RT':
-                        if (!styleMap.fontSize && element.parentElement.tagName === 'RUBY') {
-                            styleMap.fontSize = '50%';
+                        if (!style.fontSize && element.parentElement.tagName === 'RUBY') {
+                            style.fontSize = '50%';
                         }
                         break;
+                    case 'SOURCE':
+                        if (element.parentElement.tagName !== 'PICTURE') {
+                            break;
+                        }
                     case 'IFRAME':
-                        if (!styleMap.display || styleMap.display === 'inline') {
-                            styleMap.display = 'inline-block';
+                        if (!style.display || style.display === 'inline') {
+                            style.display = 'inline-block';
                         }
                     case 'IMG':
                     case 'CANVAS':
-                    case 'svg':
                     case 'VIDEO':
+                    case 'AUDIO':
                     case 'OBJECT':
                     case 'EMBED':
-                        this.setElementDimension(processing, element, styleMap, 'width', 'height');
-                        this.setElementDimension(processing, element, styleMap, 'height', 'width');
+                    case 'SVG':
+                    case 'svg':
+                        this.setElementDimension(processing.resourceId, element, style);
                         break;
                 }
             }
         }
-        addBeforeOutsideTemplate(node, value, format = true, index = -1) {
+        addBeforeOutsideTemplate(node, value, format, index = -1) {
             let template = this._beforeOutside.get(node);
             if (!template) {
-                template = [];
-                this._beforeOutside.set(node, template);
+                this._beforeOutside.set(node, template = []);
             }
             if (index >= 0 && index < template.length) {
                 template.splice(index, 0, value);
@@ -11384,11 +12022,10 @@ this.squared.base = (function (exports) {
                 this._requireFormat = true;
             }
         }
-        addBeforeInsideTemplate(node, value, format = true, index = -1) {
+        addBeforeInsideTemplate(node, value, format, index = -1) {
             let template = this._beforeInside.get(node);
             if (!template) {
-                template = [];
-                this._beforeInside.set(node, template);
+                this._beforeInside.set(node, template = []);
             }
             if (index >= 0 && index < template.length) {
                 template.splice(index, 0, value);
@@ -11400,11 +12037,10 @@ this.squared.base = (function (exports) {
                 this._requireFormat = true;
             }
         }
-        addAfterInsideTemplate(node, value, format = true, index = -1) {
+        addAfterInsideTemplate(node, value, format, index = -1) {
             let template = this._afterInside.get(node);
             if (!template) {
-                template = [];
-                this._afterInside.set(node, template);
+                this._afterInside.set(node, template = []);
             }
             if (index >= 0 && index < template.length) {
                 template.splice(index, 0, value);
@@ -11416,11 +12052,10 @@ this.squared.base = (function (exports) {
                 this._requireFormat = true;
             }
         }
-        addAfterOutsideTemplate(node, value, format = true, index = -1) {
+        addAfterOutsideTemplate(node, value, format, index = -1) {
             let template = this._afterOutside.get(node);
             if (!template) {
-                template = [];
-                this._afterOutside.set(node, template);
+                this._afterOutside.set(node, template = []);
             }
             if (index >= 0 && index < template.length) {
                 template.splice(index, 0, value);
@@ -11448,15 +12083,11 @@ this.squared.base = (function (exports) {
             const template = this._afterOutside.get(node);
             return template ? pushIndentArray(template, depth) : '';
         }
-        hasAppendProcessing(node) {
-            return node ? this._beforeOutside.has(node) || this._beforeInside.has(node) || this._afterInside.has(node) || this._afterOutside.has(node) : this._requireFormat;
-        }
         visibleElement(element, sessionId, pseudoElt) {
-            let style, width, height, display;
+            let style, width = 1, height = 1, display;
             if (!pseudoElt) {
                 style = getStyle$1(element);
-                display = style.display;
-                if (display !== 'none') {
+                if ((display = style.display) !== 'none') {
                     const bounds = element.getBoundingClientRect();
                     if (!withinViewport(bounds)) {
                         return false;
@@ -11471,12 +12102,9 @@ this.squared.base = (function (exports) {
             else {
                 const parentElement = getParentElement(element);
                 style = parentElement ? getStyle$1(parentElement, pseudoElt) : getStyle$1(element);
-                display = style.display;
-                if (display === 'none') {
+                if ((display = style.display) === 'none') {
                     return false;
                 }
-                width = 1;
-                height = 1;
             }
             if (width && height) {
                 return style.visibility === 'visible' || !hasCoords$1(style.position);
@@ -11488,23 +12116,20 @@ this.squared.base = (function (exports) {
                         return false;
                     case 'SUMMARY':
                         return true;
-                    default:
-                        parent = parent.parentElement;
-                        break;
                 }
+                parent = parent.parentElement;
             }
             switch (element.tagName) {
                 case 'IMG':
-                    return display !== 'none';
                 case 'SLOT':
                     return true;
-                default:
-                    return !hasCoords$1(style.position) && (display === 'block' || width > 0 && style.float !== 'none' || style.clear !== 'none') || iterateArray(element.children, (item) => this.visibleElement(item, sessionId)) === Infinity;
             }
+            return !hasCoords$1(style.position) && (display === 'block' || width > 0 && style.float !== 'none' || style.clear !== 'none') || iterateArray(element.children, (item) => this.visibleElement(item, sessionId)) === Infinity;
         }
         evaluateNonStatic(documentRoot, cache) {
-            const altered = new Set();
-            const escaped = new Map();
+            const altered = [];
+            const supportNegativeLeftTop = this.application.getUserSetting(documentRoot.sessionId, 'supportNegativeLeftTop');
+            let escaped;
             cache.each(node => {
                 if (node.floating) {
                     if (node.float === 'left') {
@@ -11515,7 +12140,7 @@ this.squared.base = (function (exports) {
                             parent = parent.actualParent;
                         }
                         if (parent && previousParent && parent !== actualParent && parent.tagName === 'DIV') {
-                            if (escaped.has(previousParent)) {
+                            if ((escaped || (escaped = new Map())).has(previousParent)) {
                                 escaped.get(previousParent).appending.push(node);
                             }
                             else {
@@ -11544,7 +12169,7 @@ this.squared.base = (function (exports) {
                                 node.autoPosition = false;
                             }
                             parent = absoluteParent;
-                            if (this.userSettings.supportNegativeLeftTop && !(node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right'))) {
+                            if (supportNegativeLeftTop && !(node.hasUnit('top') && node.hasUnit('bottom') || node.hasUnit('left') && node.hasUnit('right'))) {
                                 let outside;
                                 while (parent && parent.bounds.height) {
                                     if (parent.layoutElement) {
@@ -11594,7 +12219,7 @@ this.squared.base = (function (exports) {
                                 bounds.left += left;
                                 bounds.right += left;
                             }
-                            else if (!absoluteParent.hasPX('left') && right !== 0) {
+                            else if (!absoluteParent.hasUnit('left') && right !== 0) {
                                 bounds.left -= right;
                                 bounds.right -= right;
                             }
@@ -11602,7 +12227,7 @@ this.squared.base = (function (exports) {
                                 bounds.top += top;
                                 bounds.bottom += top;
                             }
-                            else if (!absoluteParent.hasPX('top') && bottom !== 0) {
+                            else if (!absoluteParent.hasUnit('top') && bottom !== 0) {
                                 bounds.top -= bottom;
                                 bounds.bottom -= bottom;
                             }
@@ -11615,165 +12240,167 @@ this.squared.base = (function (exports) {
                         } while (current && current !== parent);
                         node.cssInitial('opacity', { value: opacity.toString() });
                         node.parent = parent;
-                        altered.add(parent);
+                        if (!altered.includes(parent)) {
+                            altered.push(parent);
+                        }
                     }
                     node.documentParent = parent;
                 }
             });
-            for (const [floated, data] of escaped) {
-                const { parent, appending } = data;
-                const children = parent.children;
-                const containerIndex = children.findIndex(item => item === floated);
-                if (containerIndex !== -1) {
-                    const childIndex = floated.childIndex;
-                    const documentChildren = parent.naturalChildren.slice(0);
-                    const target = children[containerIndex];
-                    const depth = parent.depth + 1;
-                    const actualParent = new Set();
-                    for (let i = 0, j = 0, k = 0, prepend = false; i < appending.length; ++i) {
-                        const item = appending[i];
-                        if (item.actualParent.firstStaticChild === item) {
-                            prepend = true;
-                        }
-                        else if (prepend) {
-                            const previous = appending[i - 1];
-                            prepend = previous.nextSibling === item && previous.float === item.float;
-                        }
-                        const increment = j + (prepend ? 0 : k + 1);
-                        const l = childIndex + increment;
-                        const m = containerIndex + increment;
-                        documentChildren.splice(l, 0, item);
-                        children.splice(m, 0, item);
-                        if (prepend) {
-                            target.siblingsLeading.unshift(item);
-                            ++j;
-                        }
-                        else {
-                            ++k;
-                        }
-                        item.parent.remove(item);
-                        item.init(parent, depth);
-                        item.documentParent = parent;
-                        const clear = item.valueOf('clear');
-                        switch (clear) {
-                            case 'left':
-                            case 'right':
-                            case 'both':
-                                notFound: {
-                                    let clearing;
-                                    for (let n = l - 1; n >= 0; --n) {
-                                        const sibling = documentChildren[n];
-                                        if (sibling.floating) {
-                                            const float = sibling.float;
-                                            if (clear === 'both' || float === clear) {
-                                                this.application.clearMap.set(item, clear);
-                                                let nextSibling = item.nextElementSibling;
-                                                while (nextSibling) {
-                                                    if (nextSibling.floating && !appending.includes(nextSibling)) {
-                                                        appending.push(nextSibling);
-                                                    }
-                                                    nextSibling = nextSibling.nextElementSibling;
-                                                }
-                                                break;
-                                            }
-                                            else if (float === clearing) {
-                                                break;
-                                            }
-                                        }
-                                        else {
-                                            const clearBefore = sibling.valueOf('clear');
-                                            switch (clearBefore) {
-                                                case 'left':
-                                                case 'right':
-                                                    if (clear === clearBefore) {
-                                                        break notFound;
-                                                    }
-                                                    else {
-                                                        clearing = clearBefore;
+            if (escaped) {
+                for (const [floated, data] of escaped) {
+                    const { parent, appending } = data;
+                    const children = parent.children;
+                    const containerIndex = children.indexOf(floated);
+                    if (containerIndex !== -1) {
+                        const childIndex = floated.childIndex;
+                        const documentChildren = parent.naturalChildren.slice(0);
+                        const target = children[containerIndex];
+                        const depth = parent.depth + 1;
+                        const actualParent = new Set();
+                        for (let i = 0, j = 0, k = 0, prepend = false; i < appending.length; ++i) {
+                            const item = appending[i];
+                            if (item.actualParent.firstStaticChild === item) {
+                                prepend = true;
+                            }
+                            else if (prepend) {
+                                const previous = appending[i - 1];
+                                prepend = previous.nextSibling === item && previous.float === item.float;
+                            }
+                            const increment = j + (prepend ? 0 : k + 1);
+                            const l = childIndex + increment;
+                            const m = containerIndex + increment;
+                            documentChildren.splice(l, 0, item);
+                            children.splice(m, 0, item);
+                            if (prepend) {
+                                target.siblingsLeading.unshift(item);
+                                ++j;
+                            }
+                            else {
+                                ++k;
+                            }
+                            item.parent.remove(item);
+                            item.internalSelf(parent, depth);
+                            item.documentParent = parent;
+                            const clear = item.valueOf('clear');
+                            switch (clear) {
+                                case 'left':
+                                case 'right':
+                                case 'both':
+                                    notFound: {
+                                        let clearing;
+                                        for (let n = l - 1; n >= 0; --n) {
+                                            const sibling = documentChildren[n];
+                                            if (sibling.floating) {
+                                                const float = sibling.float;
+                                                if (clear === 'both' || float === clear) {
+                                                    this.application.clearMap.set(item, clear);
+                                                    let nextSibling = item.nextElementSibling;
+                                                    while (nextSibling) {
+                                                        if (nextSibling.floating && !appending.includes(nextSibling)) {
+                                                            appending.push(nextSibling);
+                                                        }
+                                                        nextSibling = nextSibling.nextElementSibling;
                                                     }
                                                     break;
-                                                case 'both':
-                                                    break notFound;
+                                                }
+                                                else if (float === clearing) {
+                                                    break;
+                                                }
+                                            }
+                                            else {
+                                                const clearBefore = sibling.valueOf('clear');
+                                                switch (clearBefore) {
+                                                    case 'left':
+                                                    case 'right':
+                                                        if (clear === clearBefore) {
+                                                            break notFound;
+                                                        }
+                                                        else {
+                                                            clearing = clearBefore;
+                                                        }
+                                                        break;
+                                                    case 'both':
+                                                        break notFound;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                break;
-                        }
-                        actualParent.add(item.actualParent);
-                    }
-                    parent.floatContainer = true;
-                    for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
-                        const item = appending[i];
-                        const index = documentChildren.findIndex(child => child === item);
-                        if (index !== -1) {
-                            const siblingsLeading = [];
-                            const siblingsTrailing = [];
-                            for (let j = index - 1; j >= 0; --j) {
-                                const sibling = documentChildren[j];
-                                siblingsLeading.push(sibling);
-                                if (!sibling.excluded) {
                                     break;
-                                }
                             }
-                            for (let j = index + 1; j < q; ++j) {
-                                const sibling = documentChildren[j];
-                                siblingsTrailing.push(sibling);
-                                if (!sibling.excluded) {
-                                    break;
-                                }
-                            }
-                            item.siblingsLeading = siblingsLeading;
-                            item.siblingsTrailing = siblingsTrailing;
+                            actualParent.add(item.actualParent);
                         }
-                    }
-                    for (const item of actualParent) {
-                        if (!item.find(child => child.floating)) {
-                            item.floatContainer = false;
+                        parent.floatContainer = true;
+                        for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
+                            const item = appending[i];
+                            const index = documentChildren.indexOf(item);
+                            if (index !== -1) {
+                                const siblingsLeading = [];
+                                const siblingsTrailing = [];
+                                for (let j = index - 1; j >= 0; --j) {
+                                    const sibling = documentChildren[j];
+                                    siblingsLeading.push(sibling);
+                                    if (!sibling.excluded) {
+                                        break;
+                                    }
+                                }
+                                for (let j = index + 1; j < q; ++j) {
+                                    const sibling = documentChildren[j];
+                                    siblingsTrailing.push(sibling);
+                                    if (!sibling.excluded) {
+                                        break;
+                                    }
+                                }
+                                item.siblingsLeading = siblingsLeading;
+                                item.siblingsTrailing = siblingsTrailing;
+                            }
+                        }
+                        for (const item of actualParent) {
+                            if (!item.find(child => child.floating)) {
+                                item.floatContainer = false;
+                            }
                         }
                     }
                 }
             }
-            for (const node of altered) {
-                const layers = [];
-                node.each((item) => {
-                    if (item.parent !== item.actualParent) {
-                        const sibling = node.find((adjacent) => {
-                            if (adjacent.naturalElements.includes(item)) {
-                                return true;
-                            }
-                            const nested = adjacent.cascade();
-                            return item.ascend({ condition: child => nested.includes(child) }).length > 0;
-                        });
-                        if (sibling) {
-                            const index = sibling.childIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
-                            (layers[index] || (layers[index] = [])).push(item);
-                        }
-                    }
-                });
-                const length = layers.length;
-                if (length) {
-                    const children = [];
-                    for (let i = 0; i < length; ++i) {
-                        const order = layers[i];
-                        if (order) {
-                            order.sort((a, b) => {
-                                if (a.parent === b.parent) {
-                                    const zA = a.zIndex;
-                                    const zB = b.zIndex;
-                                    return zA === zB ? a.id - b.id : zA - zB;
-                                }
-                                return 0;
-                            });
-                            children.push(...order);
-                        }
-                    }
+            if (altered.length) {
+                for (const node of altered) {
+                    const layers = [];
                     node.each((item) => {
-                        if (!children.includes(item)) {
-                            children.push(item);
+                        if (item.parent !== item.actualParent) {
+                            const sibling = node.find((adjacent) => {
+                                if (adjacent.naturalElements.includes(item)) {
+                                    return true;
+                                }
+                                const nested = adjacent.cascade();
+                                return item.ascend({ condition: child => nested.includes(child) }).length > 0;
+                            });
+                            if (sibling) {
+                                const index = sibling.childIndex + (item.zIndex >= 0 || sibling !== item.actualParent ? 1 : 0);
+                                (layers[index] || (layers[index] = [])).push(item);
+                            }
                         }
                     });
-                    node.retainAs(children);
+                    const length = layers.length;
+                    if (length) {
+                        const children = [];
+                        for (let i = 0; i < length; ++i) {
+                            const order = layers[i];
+                            if (order) {
+                                order.sort((a, b) => {
+                                    if (a.parent === b.parent) {
+                                        const zA = a.zIndex;
+                                        const zB = b.zIndex;
+                                        return zA === zB ? a.id - b.id : zA - zB;
+                                    }
+                                    return 0;
+                                });
+                                children.push(...order);
+                            }
+                        }
+                        node.each((item) => !children.includes(item) && children.push(item));
+                        node.retainAs(children);
+                    }
                 }
             }
         }
@@ -11799,7 +12426,7 @@ this.squared.base = (function (exports) {
             });
         }
         writeDocument(templates, depth, showAttributes) {
-            const indent = '\t'.repeat(depth);
+            const indent = CACHE_INDENT[depth] || (CACHE_INDENT[depth] = '\t'.repeat(depth));
             let output = '';
             for (let i = 0, length = templates.length; i < length; ++i) {
                 const item = templates[i];
@@ -11813,9 +12440,9 @@ this.squared.base = (function (exports) {
                         const afterInside = this.getAfterInsideTemplate(node, next);
                         output +=
                             this.getBeforeOutsideTemplate(node, previous) + indent +
-                                `<${controlName + (depth === 0 ? '{#0}' : '')}` +
+                                '<' + controlName + (depth === 0 ? '{#0}' : '') +
                                 (showAttributes ? !attributes ? node.extractAttributes(next) : pushIndent(attributes, next) : '') +
-                                (renderTemplates || beforeInside || afterInside || this._innerXmlTags.includes(controlName)
+                                (renderTemplates || beforeInside || afterInside || this._layoutInnerXmlTags.includes(controlName)
                                     ? '>\n' +
                                         beforeInside +
                                         (renderTemplates ? this.writeDocument(this.sortRenderPosition(node, renderTemplates), next, showAttributes) : '') +
@@ -11833,43 +12460,83 @@ this.squared.base = (function (exports) {
             return output;
         }
         getEnclosingXmlTag(controlName, attributes = '', content = '') {
-            return '<' + controlName + attributes + (content || this._innerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
+            return '<' + controlName + attributes + (content || this._layoutInnerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
         }
-        setElementDimension(processing, element, styleMap, attr, opposing) {
-            var _a;
-            const dimension = styleMap[attr];
-            if (!dimension || dimension === 'auto') {
-                const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
-                if (match) {
-                    const value = match[1];
-                    if (isPercent$2(value)) {
-                        styleMap[attr] = value;
-                    }
-                    else if (isLength$4(value)) {
-                        styleMap[attr] = value + 'px';
-                    }
+        setInputStyle(style, disabled, width = '1px') {
+            const settings = this._settingsStyle;
+            this.setBorderStyle(style, settings.inputBorderStyle, width, disabled ? settings.inputDisabledBorderColor : settings.inputBorderColor);
+            if (hasEmptyStyle(style.backgroundColor)) {
+                const backgroundColor = disabled ? settings.inputDisabledBackgroundColor : settings.inputBackgroundColor;
+                if (backgroundColor) {
+                    style.backgroundColor = backgroundColor;
                 }
-                else if (element.clientWidth === 300 && element.clientHeight === 150 && !((element instanceof HTMLObjectElement || element instanceof HTMLEmbedElement) && element.type.startsWith('image/'))) {
-                    if (attr === 'width') {
-                        styleMap.width = '300px';
+            }
+        }
+        setButtonStyle(style, disabled) {
+            const settings = this._settingsStyle;
+            this.setBorderStyle(style, settings.buttonBorderStyle, settings.buttonBorderWidth, disabled ? settings.buttonDisabledBorderColor : settings.buttonBorderColor);
+            if (hasEmptyStyle(style.backgroundColor)) {
+                style.backgroundColor = disabled ? settings.buttonDisabledBackgroundColor : settings.buttonBackgroundColor;
+            }
+            style.textAlign || (style.textAlign = 'center');
+            style.paddingTop || (style.paddingTop = settings.buttonPaddingVertical);
+            style.paddingRight || (style.paddingRight = settings.buttonPaddingHorizontal);
+            style.paddingBottom || (style.paddingBottom = settings.buttonPaddingVertical);
+            style.paddingLeft || (style.paddingLeft = settings.buttonPaddingHorizontal);
+        }
+        setBorderStyle(style, ...borderAttr) {
+            for (let i = 0; i < 4; ++i) {
+                const border = CSS_BORDER_SET[i];
+                for (let j = 0; j < 3; ++j) {
+                    const attr = border[j];
+                    const value = style[attr];
+                    if (!value) {
+                        style[attr] = borderAttr[j];
                     }
-                    else {
-                        styleMap.height = '150px';
+                    else if (value === 'initial' || value === 'unset') {
+                        style[attr] = 'revert';
                     }
-                }
-                else {
-                    const image = (_a = this.application.resourceHandler) === null || _a === void 0 ? void 0 : _a.getImage(processing.resourceId, element.src);
-                    if (image && image.width && image.height) {
-                        const value = styleMap[opposing];
-                        if (value && isLength$4(value)) {
-                            const attrMax = 'max' + capitalize(attr);
-                            if (!styleMap[attrMax] || !isPercent$2(attrMax)) {
-                                styleMap[attr] = formatPX$3(image[attr] * parseUnit(value, { fontSize: parseFloat(getStyle$1(element).fontSize) }) / image[opposing]);
-                            }
-                        }
+                    else if (j === 0 && (value === 'none' || value === 'hidden')) {
+                        break;
                     }
                 }
             }
+        }
+        setElementDimension(resourceId, element, style) {
+            setDimension(element, style, 'width');
+            setDimension(element, style, 'height');
+            if (!(!hasEmptyDimension(style.width) && !hasEmptyDimension(style.height))) {
+                switch (element.tagName) {
+                    case 'IMG':
+                    case 'INPUT':
+                    case 'SOURCE':
+                    case 'EMBED':
+                    case 'IFRAME':
+                    case 'OBJECT': {
+                        const image = this.application.resourceHandler.getImageDimension(resourceId, element instanceof HTMLObjectElement ? element.data : element.src);
+                        if (image.width && image.height) {
+                            for (const [attr, opposing, maxDimension] of DIMENSION_AUTO) {
+                                const value = style[opposing];
+                                if (value && isLength$4(value)) {
+                                    const valueMax = style[maxDimension];
+                                    if (!valueMax || !isPercent$1(valueMax)) {
+                                        const options = { fontSize: getFontSize(element) };
+                                        let unit = image[attr] * parseUnit(value, options) / image[opposing];
+                                        if (valueMax && isLength$4(valueMax)) {
+                                            unit = Math.min(unit, parseUnit(valueMax, options));
+                                        }
+                                        style[attr] = formatPX$3(unit);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        get requireFormat() {
+            return this._requireFormat;
         }
     }
 
@@ -11988,12 +12655,9 @@ this.squared.base = (function (exports) {
         get lastChild() {
             return this.item(-1) || null;
         }
-        set childIndex(value) {
-            this._childIndex = value;
-        }
         get childIndex() {
             const result = super.childIndex;
-            return result === Infinity ? super.childIndex = this.min('childIndex', { self: true }).childIndex : result;
+            return result === Infinity ? this._childIndex = this.min('childIndex', { self: true }).childIndex : result;
         }
         get centerAligned() {
             const result = this._cache.centerAligned;
@@ -12026,13 +12690,14 @@ this.squared.base = (function (exports) {
     class Accessibility extends ExtensionUI {
     }
 
-    const { isLength: isLength$3, isPx: isPx$1 } = squared.lib.css;
+    const { isLength: isLength$3 } = squared.lib.css;
+    const { safeFloat: safeFloat$1 } = squared.lib.util;
     class Column extends ExtensionUI {
         is(node) {
             return node.size() > 1 && (node.blockDimension && node.display !== 'table') && !node.layoutElement;
         }
         condition(node) {
-            return node.has('columnCount') || node.hasPX('columnWidth');
+            return node.has('columnCount') || node.hasUnit('columnWidth');
         }
         processNode(node, parent) {
             let items = [], maxSize = Infinity, multiline = false;
@@ -12086,7 +12751,7 @@ this.squared.base = (function (exports) {
                 columnSized,
                 columnRule: {
                     borderLeftStyle,
-                    borderLeftWidth: borderLeftStyle !== 'none' ? isPx$1(borderLeftWidth) ? parseFloat(borderLeftWidth) : isLength$3(borderLeftWidth, true) ? node.parseUnit(borderLeftWidth) : parseFloat(node.style.borderLeftWidth) : 0,
+                    borderLeftWidth: borderLeftStyle !== 'none' ? isLength$3(borderLeftWidth, true) ? node.parseUnit(borderLeftWidth) : safeFloat$1(node.style.borderLeftWidth) : 0,
                     borderLeftColor
                 },
                 boxWidth: parent.actualBoxWidth(boxWidth),
@@ -12095,19 +12760,11 @@ this.squared.base = (function (exports) {
         }
     }
 
-    const { formatPercent: formatPercent$1, formatPX: formatPX$2, isLength: isLength$2, isPercent: isPercent$1, isPx } = squared.lib.css;
-    const { convertPercent: convertPercent$1, endsWith, isNumber: isNumber$1, splitPairEnd, startsWith, trimString, withinRange: withinRange$2 } = squared.lib.util;
-    const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-    const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s*([^)]+)\\s*\\)';
-    const PATTERN_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
-    const PATTERN_NAMED = '\\[([\\w\\s\\-]+)\\]';
-    const REGEXP_UNIT = new RegExp(`^${PATTERN_UNIT}$`);
-    const REGEXP_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s*(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT}\\s*)`, 'g');
-    const REGEXP_REPEAT = new RegExp(`\\s*(${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})`, 'g');
-    const REGEXP_CELL_UNIT = new RegExp(PATTERN_UNIT);
-    const REGEXP_CELL_MINMAX = new RegExp(PATTERN_MINMAX);
-    const REGEXP_CELL_FIT_CONTENT = new RegExp(PATTERN_FIT_CONTENT);
-    const REGEXP_CELL_NAMED = new RegExp(PATTERN_NAMED);
+    const { asPercent, asPx, formatPercent: formatPercent$1, formatPX: formatPX$2, isLength: isLength$2 } = squared.lib.css;
+    const { endsWith, safeFloat, splitEnclosing, splitPairEnd, splitSome: splitSome$1, startsWith: startsWith$1, withinRange: withinRange$2 } = squared.lib.util;
+    const PATTERN_SIZE = '\\[([^\\]]+)\\]|minmax\\(([^,]+),([^)]+)\\)|fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)|([\\d.]+[a-z%]+|auto|max-content|min-content)';
+    const REGEXP_SIZE = new RegExp(PATTERN_SIZE, 'g');
+    const REGEXP_REPEAT = /repeat\(\s*(auto-fit|auto-fill|\d+)/;
     function repeatUnit(data, sizes) {
         const repeat = data.repeat;
         const unitPX = [];
@@ -12142,13 +12799,13 @@ this.squared.base = (function (exports) {
         const unit = data.unit;
         if (unit.length === 1 && (data.flags & 1 /* AUTO_FIT */ || data.flags & 2 /* AUTO_FILL */)) {
             const unitMin = data.unitMin;
-            let sizeMin = 0;
+            let sizeMin = 0, offset;
             for (const value of [unit[0], unitMin[0]]) {
-                if (isPercent$1(value)) {
-                    sizeMin = Math.max(convertPercent$1(value) * dimension, sizeMin);
+                if (!isNaN(offset = asPx(value))) {
+                    sizeMin = Math.max(offset, sizeMin);
                 }
-                else if (isPx(value)) {
-                    sizeMin = Math.max(parseFloat(value), sizeMin);
+                else if (!isNaN(offset = asPercent(value))) {
+                    sizeMin = Math.max(offset * dimension, sizeMin);
                 }
             }
             if (sizeMin) {
@@ -12161,18 +12818,18 @@ this.squared.base = (function (exports) {
         return false;
     }
     function setFlexibleDimension(dimension, gap, count, unit, max) {
-        let filled = 0, fractional = 0, percent = 1;
+        let filled = 0, fractional = 0, percent = 1, n;
         const length = unit.length;
         for (let i = 0; i < length; ++i) {
             const value = unit[i];
-            if (isPx(value)) {
-                filled += parseFloat(value);
+            if (!isNaN(n = asPx(value))) {
+                filled += n;
             }
             else if (endsWith(value, 'fr')) {
-                fractional += parseFloat(value);
+                fractional += safeFloat(value);
             }
-            else if (isPercent$1(value)) {
-                percent -= convertPercent$1(value);
+            else if (!isNaN(n = asPercent(value))) {
+                percent -= n;
             }
         }
         if (percent < 1 && fractional) {
@@ -12181,7 +12838,7 @@ this.squared.base = (function (exports) {
                 for (let i = 0; i < length; ++i) {
                     const value = unit[i];
                     if (endsWith(value, 'fr')) {
-                        unit[i] = formatPX$2(parseFloat(value) * ratio);
+                        unit[i] = formatPX$2(safeFloat(value) * ratio);
                     }
                 }
             }
@@ -12215,17 +12872,15 @@ this.squared.base = (function (exports) {
     }
     function getOpenRowIndex(cells) {
         for (let i = 0, length = cells.length; i < length; ++i) {
-            for (const value of cells[i]) {
-                if (value === 0) {
-                    return i;
-                }
+            if (cells[i].some(value => value === 0)) {
+                return i;
             }
         }
         return Math.max(0, length - 1);
     }
     function createDataAttribute$2(node) {
         const data = node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow');
-        return Object.assign(Object.assign({}, data), { children: [], rowData: [], rowSpanMultiple: [], rowDirection: !data.gridAutoFlow.includes('column'), dense: data.gridAutoFlow.includes('dense'), templateAreas: {}, row: CssGrid.createDataRowAttribute(node.parseHeight(node.valueOf('rowGap'), false)), column: CssGrid.createDataRowAttribute(node.parseWidth(node.valueOf('columnGap'), false)), emptyRows: [], minCellHeight: 0 });
+        return Object.assign(Object.assign({}, data), { children: [], rowData: [], rowSpanMultiple: [], rowDirection: data.gridAutoFlow.indexOf('column') === -1, dense: data.gridAutoFlow.indexOf('dense') !== -1, templateAreas: {}, row: CssGrid.createDataRowAttribute(node.parseHeight(node.valueOf('rowGap'), false)), column: CssGrid.createDataRowAttribute(node.parseWidth(node.valueOf('columnGap'), false)), emptyRows: [], minCellHeight: 0 });
     }
     function applyLayout(node, data, dataCount, horizontal) {
         let unit = data.unit;
@@ -12253,21 +12908,24 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        else if (data.flags & 1 /* AUTO_FIT */ || data.flags & 2 /* AUTO_FILL */ && (horizontal && node.blockStatic && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
+        else if (data.flags & 1 /* AUTO_FIT */ || data.flags & 2 /* AUTO_FILL */ && (horizontal && node.blockStatic && !node.hasWidth && !node.hasUnit('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
             unit.length = dataCount;
         }
         let percent = 1, fr = 0, auto = 0;
         const length = unit.length;
         for (let i = 0; i < length; ++i) {
             const value = unit[i];
-            if (isPercent$1(value)) {
-                percent -= convertPercent$1(value);
-            }
-            else if (endsWith(value, 'fr')) {
-                fr += parseFloat(value);
-            }
-            else if (value === 'auto') {
+            if (value === 'auto') {
                 ++auto;
+            }
+            else {
+                const n = asPercent(value);
+                if (!isNaN(n)) {
+                    percent -= n;
+                }
+                else if (endsWith(value, 'fr')) {
+                    fr += safeFloat(value);
+                }
             }
         }
         if (percent < 1 || fr > 0) {
@@ -12277,19 +12935,19 @@ this.squared.base = (function (exports) {
             if (fr) {
                 for (let i = 0; i < length; ++i) {
                     if (endsWith(unit[i], 'fr')) {
-                        unit[i] = percent * (parseFloat(unit[i]) / fr) + 'fr';
+                        unit[i] = percent * (safeFloat(unit[i]) / fr) + 'fr';
                     }
                 }
             }
             else if (auto === 1) {
-                const j = unit.findIndex(value => value === 'auto');
+                const j = unit.indexOf('auto');
                 if (j !== -1) {
                     unit[j] = formatPercent$1(percent);
                 }
             }
         }
     }
-    const convertLength = (node, value, index) => isLength$2(value) ? formatPX$2(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
+    const convertLength = (node, value, index) => isLength$2(value = value.trim()) ? formatPX$2(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
     class CssGrid extends ExtensionUI {
         static isAligned(node) {
             return node.hasHeight && /^space-|center|flex-end|end/.test(node.valueOf('alignContent'));
@@ -12318,6 +12976,7 @@ this.squared.base = (function (exports) {
             return !node.isEmpty();
         }
         processNode(node) {
+            var _a;
             const data = this.data;
             const mainData = createDataAttribute$2(node);
             const { column, dense, row, rowDirection: horizontal } = mainData;
@@ -12367,96 +13026,98 @@ this.squared.base = (function (exports) {
                     const direction = index === 0 ? row : column;
                     const { name, repeat, unit, unitMin } = direction;
                     let i = 1, match;
-                    while (match = REGEXP_NAMED.exec(value)) {
-                        const command = match[1].trim();
-                        switch (index) {
-                            case 0:
-                            case 1:
-                                if (command[0] === '[') {
-                                    for (const attr of match[4].split(/\s+/)) {
-                                        (name[attr] || (name[attr] = [])).push(i);
-                                    }
+                    for (const seg of splitEnclosing(value, 'repeat')) {
+                        if (startsWith$1(seg, 'repeat')) {
+                            if (match = REGEXP_REPEAT.exec(seg)) {
+                                let iterations = 1;
+                                switch (match[1]) {
+                                    case 'auto-fit':
+                                        direction.flags |= 1 /* AUTO_FIT */;
+                                        break;
+                                    case 'auto-fill':
+                                        direction.flags |= 2 /* AUTO_FILL */;
+                                        break;
+                                    default:
+                                        iterations = +match[1] || 1;
+                                        break;
                                 }
-                                else if (startsWith(command, 'repeat')) {
-                                    let iterations = 1;
-                                    switch (match[2]) {
-                                        case 'auto-fit':
-                                            direction.flags |= 1 /* AUTO_FIT */;
-                                            break;
-                                        case 'auto-fill':
-                                            direction.flags |= 2 /* AUTO_FILL */;
-                                            break;
-                                        default:
-                                            iterations = +match[2] || 1;
-                                            break;
-                                    }
-                                    if (iterations) {
-                                        const repeating = [];
-                                        let subMatch, namedMatch;
-                                        while (subMatch = REGEXP_REPEAT.exec(match[3])) {
-                                            if (namedMatch = REGEXP_CELL_NAMED.exec(subMatch[1])) {
-                                                const subName = namedMatch[1];
-                                                if (!name[subName]) {
-                                                    name[subName] = [];
-                                                }
-                                                repeating.push({ name: subName });
-                                            }
-                                            else if (namedMatch = REGEXP_CELL_MINMAX.exec(subMatch[1])) {
-                                                repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
-                                            }
-                                            else if (namedMatch = REGEXP_CELL_FIT_CONTENT.exec(subMatch[1])) {
-                                                repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
-                                            }
-                                            else if (namedMatch = REGEXP_CELL_UNIT.exec(subMatch[1])) {
-                                                repeating.push({ unit: convertLength(node, namedMatch[0], index) });
-                                            }
+                                if (iterations) {
+                                    const repeating = [];
+                                    const size = seg.substring(match[0].length);
+                                    while (match = REGEXP_SIZE.exec(size)) {
+                                        if (match[1]) {
+                                            name[_a = match[1]] || (name[_a] = []);
+                                            repeating.push({ name: match[1] });
                                         }
-                                        const q = repeating.length;
-                                        if (q) {
-                                            for (let j = 0; j < iterations; ++j) {
-                                                for (let k = 0; k < q; ++k) {
-                                                    const item = repeating[k];
-                                                    if (item.name) {
-                                                        name[item.name].push(i);
-                                                    }
-                                                    else if (item.unit) {
-                                                        unit.push(item.unit);
-                                                        unitMin.push(item.unitMin || '');
-                                                        repeat.push(true);
-                                                        ++i;
-                                                    }
+                                        else if (match[2]) {
+                                            repeating.push({ unitMin: convertLength(node, match[2], index), unit: convertLength(node, match[3], index) });
+                                        }
+                                        else if (match[4]) {
+                                            repeating.push({ unitMin: '0px', unit: convertLength(node, match[4], index) });
+                                        }
+                                        else if (match[5]) {
+                                            repeating.push({ unit: convertLength(node, match[5], index) });
+                                        }
+                                    }
+                                    const q = repeating.length;
+                                    if (q) {
+                                        for (let j = 0; j < iterations; ++j) {
+                                            for (let k = 0; k < q; ++k) {
+                                                const item = repeating[k];
+                                                if (item.name) {
+                                                    name[item.name].push(i);
+                                                }
+                                                else if (item.unit) {
+                                                    unit.push(item.unit);
+                                                    unitMin.push(item.unitMin || '');
+                                                    repeat.push(true);
+                                                    ++i;
                                                 }
                                             }
                                         }
-                                        REGEXP_REPEAT.lastIndex = 0;
                                     }
+                                    REGEXP_SIZE.lastIndex = 0;
                                 }
-                                else if (startsWith(command, 'minmax')) {
-                                    unit.push(convertLength(node, match[6], index));
-                                    unitMin.push(convertLength(node, match[5], index));
-                                    repeat.push(false);
-                                    ++i;
+                            }
+                        }
+                        else {
+                            while (match = REGEXP_SIZE.exec(seg)) {
+                                switch (index) {
+                                    case 0:
+                                    case 1:
+                                        if (match[1]) {
+                                            splitSome$1(match[1], attr => {
+                                                (name[attr] || (name[attr] = [])).push(i);
+                                            }, /\s+/g);
+                                        }
+                                        else if (match[2]) {
+                                            unitMin.push(convertLength(node, match[2], index));
+                                            unit.push(convertLength(node, match[3], index));
+                                            repeat.push(false);
+                                            ++i;
+                                        }
+                                        else if (match[4]) {
+                                            unit.push(convertLength(node, match[4], index));
+                                            unitMin.push('0px');
+                                            repeat.push(false);
+                                            ++i;
+                                        }
+                                        else if (match[5]) {
+                                            unit.push(convertLength(node, match[5], index));
+                                            unitMin.push('');
+                                            repeat.push(false);
+                                            ++i;
+                                        }
+                                        break;
+                                    case 2:
+                                    case 3:
+                                        (index === 2 ? row : column).auto.push(isLength$2(match[0]) ? formatPX$2(node.parseUnit(match[0], { dimension: index !== 2 ? 'width' : 'height' })) : match[0]);
+                                        break;
                                 }
-                                else if (startsWith(command, 'fit-content')) {
-                                    unit.push(convertLength(node, match[7], index));
-                                    unitMin.push('0px');
-                                    repeat.push(false);
-                                    ++i;
-                                }
-                                else if (REGEXP_UNIT.test(command)) {
-                                    unit.push(convertLength(node, command, index));
-                                    unitMin.push('');
-                                    repeat.push(false);
-                                    ++i;
-                                }
-                                break;
-                            case 2:
-                            case 3:
-                                (index === 2 ? row : column).auto.push(isLength$2(command) ? formatPX$2(node.parseUnit(command, { dimension: index !== 2 ? 'width' : 'height' })) : command);
-                                break;
+                            }
+                            REGEXP_SIZE.lastIndex = 0;
                         }
                     }
-                    REGEXP_NAMED.lastIndex = 0;
                 }
             }
             if (horizontal) {
@@ -12516,18 +13177,18 @@ this.squared.base = (function (exports) {
                         columnIndex = 1;
                     }
                     const [gridRowEnd, gridColumnEnd] = item.cssAsTuple('gridRowEnd', 'gridColumnEnd');
-                    let rowSpan = 1, columnSpan = 1;
-                    if (startsWith(gridRowEnd, 'span')) {
+                    let rowSpan = 1, columnSpan = 1, n;
+                    if (startsWith$1(gridRowEnd, 'span')) {
                         rowSpan = +splitPairEnd(gridRowEnd, ' ');
                     }
-                    else if (isNumber$1(gridRowEnd)) {
-                        rowSpan = +gridRowEnd - rowIndex;
+                    else if (!isNaN(n = +gridRowEnd)) {
+                        rowSpan = n - rowIndex;
                     }
-                    if (startsWith(gridColumnEnd, 'span')) {
+                    if (startsWith$1(gridColumnEnd, 'span')) {
                         columnSpan = +splitPairEnd(gridColumnEnd, ' ');
                     }
-                    else if (isNumber$1(gridColumnEnd)) {
-                        columnSpan = +gridColumnEnd - columnIndex;
+                    else if (!isNaN(n = +gridColumnEnd)) {
+                        columnSpan = n - columnIndex;
                     }
                     if (columnIndex === 1 && columnMax) {
                         found: {
@@ -12661,8 +13322,9 @@ this.squared.base = (function (exports) {
                     }
                     if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                         const setPlacement = (value, position, vertical, length) => {
-                            if (isNumber$1(value)) {
-                                const cellIndex = +value;
+                            let n;
+                            if (!isNaN(n = +value)) {
+                                const cellIndex = n;
                                 if (cellIndex > 0) {
                                     placement[position] = cellIndex;
                                     return true;
@@ -12673,7 +13335,7 @@ this.squared.base = (function (exports) {
                                     return true;
                                 }
                             }
-                            else if (startsWith(value, 'span')) {
+                            else if (startsWith$1(value, 'span')) {
                                 const span = +splitPairEnd(value, ' ');
                                 if (span === length && previousPlacement) {
                                     if (horizontal) {
@@ -12695,19 +13357,17 @@ this.squared.base = (function (exports) {
                                 switch (position) {
                                     case 0: {
                                         const rowIndex = positions[2];
-                                        if (isNumber$1(rowIndex)) {
-                                            const pos = +rowIndex;
-                                            placement[0] = pos - span;
-                                            placement[2] = pos;
+                                        if (!isNaN(n = +rowIndex)) {
+                                            placement[0] = n - span;
+                                            placement[2] = n;
                                         }
                                         break;
                                     }
                                     case 1: {
                                         const colIndex = positions[3];
-                                        if (isNumber$1(colIndex)) {
-                                            const pos = +colIndex;
-                                            placement[1] = pos - span;
-                                            placement[3] = pos;
+                                        if (!isNaN(n = +colIndex)) {
+                                            placement[1] = n - span;
+                                            placement[3] = n;
                                         }
                                         break;
                                     }
@@ -12731,7 +13391,7 @@ this.squared.base = (function (exports) {
                             return false;
                         };
                         let rowStart, colStart;
-                        for (let i = 0; i < 4; ++i) {
+                        for (let i = 0, n; i < 4; ++i) {
                             const value = positions[i];
                             if (value !== 'auto' && !placement[i]) {
                                 const vertical = i % 2 === 0;
@@ -12742,17 +13402,17 @@ this.squared.base = (function (exports) {
                                         alias[1] = alias[0];
                                         alias[0] = '1';
                                     }
-                                    else if (isNumber$1(alias[0])) {
+                                    else if (!isNaN(n = +alias[0])) {
                                         if (vertical) {
                                             if (rowStart) {
-                                                rowSpan = +alias[0] - +rowStart[0];
+                                                rowSpan = n - +rowStart[0];
                                             }
                                             else {
                                                 rowStart = alias;
                                             }
                                         }
                                         else if (colStart) {
-                                            columnSpan = +alias[0] - +colStart[0];
+                                            columnSpan = n - +colStart[0];
                                         }
                                         else {
                                             colStart = alias;
@@ -12760,9 +13420,9 @@ this.squared.base = (function (exports) {
                                     }
                                     const named = direction.name[alias[1]];
                                     if (named) {
-                                        const nameIndex = +alias[0];
-                                        if (nameIndex <= named.length) {
-                                            placement[i] = named[nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
+                                        n = +alias[0];
+                                        if (n <= named.length) {
+                                            placement[i] = named[n - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
                                         }
                                     }
                                 }
@@ -12770,12 +13430,8 @@ this.squared.base = (function (exports) {
                         }
                     }
                     if (!previousPlacement) {
-                        if (!placement[0]) {
-                            placement[0] = 1;
-                        }
-                        if (!placement[1]) {
-                            placement[1] = 1;
-                        }
+                        placement[0] || (placement[0] = 1);
+                        placement[1] || (placement[1] = 1);
                     }
                     const [a, b, c, d] = placement;
                     if (rowSpan === -1) {
@@ -12865,14 +13521,10 @@ this.squared.base = (function (exports) {
                     }
                     if (!PLACEMENT[rowA]) {
                         placement[rowA] = rowData.length + 1;
-                        if (!placement[colA]) {
-                            placement[colA] = 1;
-                        }
+                        placement[colA] || (placement[colA] = 1);
                     }
                     else if (!PLACEMENT[colA]) {
-                        if (!PLACEMENT[rowB]) {
-                            PLACEMENT[rowB] = PLACEMENT[rowA] + ROW_SPAN;
-                        }
+                        PLACEMENT[rowB] || (PLACEMENT[rowB] = PLACEMENT[rowA] + ROW_SPAN);
                         const available = [];
                         const l = PLACEMENT[rowA] - 1;
                         const m = PLACEMENT[rowB] - 1;
@@ -12943,20 +13595,13 @@ this.squared.base = (function (exports) {
                             }
                         }
                     }
-                    const indexA = PLACEMENT[rowA];
-                    if (indexA) {
-                        if (PLACEMENT[colA]) {
-                            placement[rowA] = indexA;
-                            placement[colA] = PLACEMENT[colA];
-                        }
+                    if (PLACEMENT[rowA] && PLACEMENT[colA]) {
+                        placement[rowA] = PLACEMENT[rowA];
+                        placement[colA] = PLACEMENT[colA];
                     }
                 }
-                if (!placement[rowB]) {
-                    placement[rowB] = placement[rowA] + ROW_SPAN;
-                }
-                if (!placement[colB]) {
-                    placement[colB] = placement[colA] + COLUMN_SPAN;
-                }
+                placement[rowB] || (placement[rowB] = placement[rowA] + ROW_SPAN);
+                placement[colB] || (placement[colB] = placement[colA] + COLUMN_SPAN);
                 if (setDataRows(item, placement)) {
                     const [a, b, c, d] = placement;
                     const rowStart = a - 1;
@@ -13097,8 +13742,9 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else {
-                            if (isNumber$1(unitHeight)) {
-                                rowMax[i] = +unitHeight;
+                            const n = +unitHeight;
+                            if (!isNaN(n)) {
+                                rowMax[i] = n;
                             }
                             if (horizontal) {
                                 mainData.emptyRows[i] = [Infinity];
@@ -13107,7 +13753,7 @@ this.squared.base = (function (exports) {
                     }
                     mainData.minCellHeight = minCellHeight;
                     if (horizontal) {
-                        if (node.hasPX('width', { percent: false })) {
+                        if (node.hasUnit('width', { percent: false })) {
                             column.flags |= 4 /* FIXED_WIDTH */;
                             column.flags &= ~8 /* FLEXIBLE */;
                             setFlexibleDimension(node.actualWidth, columnGap, columnCount, column.unit, columnMax);
@@ -13117,7 +13763,7 @@ this.squared.base = (function (exports) {
                         }
                     }
                     else {
-                        if (node.hasPX('height', { percent: false })) {
+                        if (node.hasUnit('height', { percent: false })) {
                             row.flags |= 4 /* FIXED_WIDTH */;
                             row.flags &= ~8 /* FLEXIBLE */;
                             setFlexibleDimension(node.actualHeight, rowGap, rowCount, rowUnit, rowMax);
@@ -13286,9 +13932,8 @@ this.squared.base = (function (exports) {
                 case 'middle':
                 case 'bottom':
                     return true;
-                default:
-                    return node.floating;
             }
+            return node.floating;
         }
         return false;
     }
@@ -13303,7 +13948,7 @@ this.squared.base = (function (exports) {
         }
         condition(node) {
             const size = node.size();
-            if (size > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
+            if (size > 1 && !node.layoutElement && !node.tableElement) {
                 if (node.display === 'table') {
                     return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
                 }
@@ -13331,6 +13976,7 @@ this.squared.base = (function (exports) {
         }
         processNode(node) {
             var _a;
+            var _b;
             const columnEnd = [];
             const nextMapX = new Map();
             let columns;
@@ -13340,8 +13986,7 @@ this.squared.base = (function (exports) {
                         const index = Math.floor(column.linear.left);
                         let mapX = nextMapX.get(index);
                         if (!mapX) {
-                            mapX = [];
-                            nextMapX.set(index, mapX);
+                            nextMapX.set(index, mapX = []);
                         }
                         mapX.push(column);
                     }
@@ -13450,10 +14095,7 @@ this.squared.base = (function (exports) {
                 }
                 for (let l = 0, q = columns.reduce((a, b) => Math.max(a, b.length), 0); l < q; ++l) {
                     for (let m = 0, r = columns.length; m < r; ++m) {
-                        const row = columns[m];
-                        if (!row[l]) {
-                            row[l] = { spacer: 1 };
-                        }
+                        (_b = columns[m])[l] || (_b[l] = { spacer: 1 });
                     }
                 }
                 columnEnd.push(node.box.right);
@@ -13558,13 +14200,13 @@ this.squared.base = (function (exports) {
             const renderParent = node.renderParent;
             const verticalAlign = !node.baselineAltered ? node.verticalAlign : 0;
             let top = 0, right = 0, bottom = 0, left = 0;
-            if (node.hasPX('top')) {
+            if (node.hasUnit('top')) {
                 top = node.top;
             }
             else {
                 bottom = node.bottom;
             }
-            if (node.hasPX('left')) {
+            if (node.hasUnit('left')) {
                 left = node.left;
             }
             else {
@@ -13601,7 +14243,7 @@ this.squared.base = (function (exports) {
                     target.baselineAltered = true;
                     this.application.getProcessingCache(node.sessionId).add(target);
                     const layout = new ContentUI(renderParent, target, target.containerType, target.alignmentType);
-                    const index = renderParent.renderChildren.findIndex(item => item === node);
+                    const index = renderParent.renderChildren.indexOf(node);
                     if (index !== -1) {
                         layout.renderIndex = index + 1;
                     }
@@ -13639,7 +14281,7 @@ this.squared.base = (function (exports) {
                                         if (top !== 0) {
                                             top -= rect.top - bounds.top;
                                         }
-                                        else if (previous && previous.positionRelative && previous.hasPX('top')) {
+                                        else if (previous && previous.positionRelative && previous.hasUnit('top')) {
                                             bottom += bounds.bottom - rect.bottom;
                                         }
                                         else {
@@ -13653,7 +14295,7 @@ this.squared.base = (function (exports) {
                                         if (left !== 0) {
                                             left -= rect.left - bounds.left;
                                         }
-                                        else if (previous && previous.positionRelative && previous.hasPX('right')) {
+                                        else if (previous && previous.positionRelative && previous.hasUnit('right')) {
                                             right += bounds.right - rect.right;
                                         }
                                         else {
@@ -13710,10 +14352,22 @@ this.squared.base = (function (exports) {
     }
 
     const { isLength: isLength$1 } = squared.lib.css;
-    const REGEXP_POSITION = /^0[a-z%]+|left|start|top/;
+    function hasInlineText(node) {
+        if (node.inlineText) {
+            const textIndent = node.valueOf('textIndent');
+            if (textIndent) {
+                const offset = node.parseUnit(textIndent);
+                if (offset < 0 && Math.abs(offset) >= node.bounds.width) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
     class Sprite extends ExtensionUI {
         is(node) {
-            return node.visibleStyle.backgroundImage && node.isEmpty() && node.hasWidth && node.hasHeight && (!node.use || this.included(node.element));
+            return node.visibleStyle.backgroundImage && node.isEmpty() && !hasInlineText(node) && node.hasWidth && node.hasHeight && (!node.use || this.included(node.element));
         }
         condition(node) {
             const images = this.resource.fromImageUrl(node.localSettings.resourceId, node.backgroundImage);
@@ -13721,24 +14375,22 @@ this.squared.base = (function (exports) {
                 const dimension = node.actualDimension;
                 const [backgroundPositionX, backgroundPositionY, backgroundSize] = node.cssAsTuple('backgroundPositionX', 'backgroundPositionY', 'backgroundSize');
                 const position = ResourceUI.getBackgroundPosition(backgroundPositionX + ' ' + backgroundPositionY, dimension, { fontSize: node.fontSize, screenDimension: node.localSettings.screenDimension });
-                const [sizeW, sizeH] = backgroundSize.split(' ');
+                const [sizeW, sizeH] = backgroundSize !== 'auto' ? backgroundSize.split(' ') : ['auto', 'auto'];
                 const image = images[0];
                 let { width, height } = image;
-                if (isLength$1(sizeW, true)) {
+                if (sizeW !== 'auto' && isLength$1(sizeW, true)) {
                     width = node.parseWidth(sizeW, false);
                     if (sizeH === 'auto') {
                         height = image.height * width / image.width;
                     }
                 }
-                if (isLength$1(sizeH, true)) {
+                if (sizeH !== 'auto' && isLength$1(sizeH, true)) {
                     height = node.parseHeight(sizeH, false);
                     if (sizeW === 'auto') {
                         width = image.width * height / image.height;
                     }
                 }
-                const x = width > dimension.width && (position.left < 0 || REGEXP_POSITION.test(backgroundPositionX));
-                const y = height > dimension.height && (position.top < 0 || REGEXP_POSITION.test(backgroundPositionY));
-                if ((x || y) && (x || position.left === 0) && (y || position.top === 0)) {
+                if (width > dimension.width && position.left <= 0 || height > dimension.height && position.top <= 0) {
                     this.data.set(node, { image, width, height, position });
                     return true;
                 }
@@ -13749,7 +14401,7 @@ this.squared.base = (function (exports) {
 
     const { formatPercent, formatPX: formatPX$1, getStyle, isLength, isPercent } = squared.lib.css;
     const { getNamedItem } = squared.lib.dom;
-    const { convertPercent, isNumber, replaceMap } = squared.lib.util;
+    const { convertPercent, replaceMap } = squared.lib.util;
     function setAutoWidth(node, td, data) {
         data.percent = Math.round(td.bounds.width / node.box.width * 100) + '%';
         data.expand = true;
@@ -13801,6 +14453,10 @@ this.squared.base = (function (exports) {
     }
     const setBoundsWidth = (node) => node.css('width', formatPX$1(node.bounds.width), true);
     class Table extends ExtensionUI {
+        is(node) {
+            return node.tableElement;
+        }
+        condition() { return true; }
         processNode(node) {
             const mainData = createDataAttribute(node);
             let table = [], tfoot, thead;
@@ -13881,22 +14537,26 @@ this.squared.base = (function (exports) {
                             }
                         }
                     }
-                    if (!td.hasPX('width')) {
-                        const value = getNamedItem(element, 'width');
-                        if (isPercent(value)) {
-                            td.css('width', value, true);
-                        }
-                        else if (isNumber(value)) {
-                            td.css('width', formatPX$1(+value), true);
+                    if (!td.hasUnit('width')) {
+                        let value = getNamedItem(element, 'width');
+                        if (value) {
+                            if (isPercent(value)) {
+                                td.css('width', value, true);
+                            }
+                            else if (!isNaN(value = +value)) {
+                                td.css('width', formatPX$1(value), true);
+                            }
                         }
                     }
-                    if (!td.hasPX('height')) {
-                        const value = getNamedItem(element, 'height');
-                        if (isPercent(value)) {
-                            td.css('height', value);
-                        }
-                        else if (isNumber(value)) {
-                            td.css('height', formatPX$1(+value));
+                    if (!td.hasUnit('height')) {
+                        let value = getNamedItem(element, 'height');
+                        if (value) {
+                            if (isPercent(value)) {
+                                td.css('height', value);
+                            }
+                            else if (!isNaN(value = +value)) {
+                                td.css('height', formatPX$1(value));
+                            }
                         }
                     }
                     if (!td.valueOf('verticalAlign')) {
@@ -13904,7 +14564,6 @@ this.squared.base = (function (exports) {
                     }
                     const visibleStyle = td.visibleStyle;
                     if (!visibleStyle.backgroundImage && !visibleStyle.backgroundColor) {
-                        const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
                         if (colgroup) {
                             const group = colgroup.children[index + 1];
                             if (group) {
@@ -13913,7 +14572,7 @@ this.squared.base = (function (exports) {
                                     td.css('backgroundImage', backgroundImage, true);
                                     visibleStyle.backgroundImage = true;
                                 }
-                                if (!exclude.test(backgroundColor)) {
+                                if (!CSS$2.TRANSPARENT.test(backgroundColor)) {
                                     td.css('backgroundColor', backgroundColor);
                                     td.setCacheValue('backgroundColor', backgroundColor);
                                     visibleStyle.backgroundColor = true;
@@ -13926,7 +14585,7 @@ this.squared.base = (function (exports) {
                                 td.css('backgroundImage', value, true);
                                 visibleStyle.backgroundImage = true;
                             }
-                            if (value = getInheritedStyle(element, 'backgroundColor', exclude)) {
+                            if (value = getInheritedStyle(element, 'backgroundColor', CSS$2.TRANSPARENT)) {
                                 td.css('backgroundColor', value);
                                 td.setCacheValue('backgroundColor', value);
                                 visibleStyle.backgroundColor = true;
@@ -14012,7 +14671,7 @@ this.squared.base = (function (exports) {
                 hideCell(tr);
                 columnCount = Math.max(columnCount, row.length);
             }
-            if (node.hasPX('width', { percent: false }) && mapWidth.some(value => isPercent(value))) {
+            if (node.hasUnit('width', { percent: false }) && mapWidth.some(value => isPercent(value))) {
                 replaceMap(mapWidth, (value, index) => {
                     if (value === 'auto') {
                         const dimension = mapBounds[index];
@@ -14044,47 +14703,50 @@ this.squared.base = (function (exports) {
                 percentAll = true;
             }
             else if (mapWidth.every(value => isLength(value))) {
-                const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
                 if (hasWidth) {
+                    const columnWidth = mapWidth.map(value => value !== '0px' ? node.parseWidth(value, false) : 0);
+                    const width = columnWidth.reduce((a, b) => a + b, 0);
                     if (width < node.width) {
-                        replaceMap(mapWidth, value => value !== '0px' ? formatPercent(parseFloat(value) / width) : value);
+                        for (let i = 0, length = mapWidth.length; i < length; ++i) {
+                            const value = columnWidth[i];
+                            if (value > 0) {
+                                mapWidth[i] = formatPercent(columnWidth[i] / width);
+                            }
+                        }
                     }
                     else if (width > node.width) {
                         node.css('width', 'auto');
                         if (!layoutFixed) {
-                            for (const tr of table) {
-                                for (const td of tr) {
-                                    td.css('width', 'auto');
-                                }
-                            }
+                            table.forEach(tr => tr.each(td => td.css('width', 'auto')));
                         }
                     }
                 }
-                if (layoutFixed && !node.hasPX('width')) {
+                if (layoutFixed && !node.hasUnit('width')) {
                     node.css('width', formatPX$1(node.bounds.width));
                 }
             }
             mainData.layoutType = (() => {
                 if (mapWidth.length > 1) {
-                    mapPercent = mapWidth.reduce((a, b) => a + convertPercent(b, 0), 0);
-                    if (layoutFixed && mapWidth.reduce((a, b) => a + (isLength(b) ? parseFloat(b) : 0), 0) >= node.actualWidth) {
+                    mapPercent = mapWidth.reduce((a, b) => a + convertPercent(b), 0);
+                    if (layoutFixed && mapWidth.reduce((a, b) => a + (b !== '0px' && isLength(b) ? node.parseWidth(b, false) : 0), 0) >= node.actualWidth) {
                         return 4 /* COMPRESS */;
                     }
                     else if (mapWidth.length > 1 && mapWidth.some(value => isPercent(value)) || mapWidth.every(value => isLength(value) && value !== '0px')) {
                         return 3 /* VARIABLE */;
                     }
-                    else if (mapWidth.every(value => value === mapWidth[0])) {
+                    const baseWidth = mapWidth[0];
+                    if (mapWidth.every(value => value === baseWidth)) {
                         if (node.find(td => td.tagName === 'TD' && td.hasHeight, { cascade: true })) {
                             mainData.flags |= 4 /* EXPAND */;
                             return 3 /* VARIABLE */;
                         }
-                        else if (mapWidth[0] === 'auto') {
+                        else if (baseWidth === 'auto') {
                             return hasWidth ? 3 /* VARIABLE */ : table.some(tr => tr.find(td => td.multiline)) ? 3 /* VARIABLE */ : 0 /* NONE */;
                         }
                         else if (hasWidth) {
                             return 2 /* FIXED */;
                         }
-                        else if (mapWidth[0] === '0px') {
+                        else if (baseWidth === '0px') {
                             return 0 /* NONE */;
                         }
                     }
@@ -14101,7 +14763,7 @@ this.squared.base = (function (exports) {
             if (caption) {
                 if (!caption.hasWidth) {
                     if (caption.textElement) {
-                        if (!caption.hasPX('maxWidth')) {
+                        if (!caption.hasUnit('maxWidth')) {
                             caption.css('maxWidth', formatPX$1(caption.bounds.width));
                         }
                     }
@@ -14170,7 +14832,7 @@ this.squared.base = (function (exports) {
                                     }
                                 }
                                 else {
-                                    if (!td.hasPX('width', { percent: false }) || td.percentWidth) {
+                                    if (!td.hasUnit('width', { percent: false }) || td.percentWidth) {
                                         setBoundsWidth(td);
                                     }
                                     flags |= 16 /* SHRINK */;
@@ -14298,7 +14960,7 @@ this.squared.base = (function (exports) {
     }
 
     const { formatPX } = squared.lib.css;
-    const { iterateReverseArray, minMaxOf } = squared.lib.util;
+    const { iterateReverseArray, minMaxOf, startsWith } = squared.lib.util;
     const DOCTYPE_HTML = !!document.doctype && document.doctype.name === 'html';
     function setSpacingOffset(node, region, value, adjustment = 0) {
         let offset;
@@ -14417,7 +15079,7 @@ this.squared.base = (function (exports) {
                                             }
                                             if (node.layoutVertical) {
                                                 const firstChild = node.renderChildren.find(item => item.pageFlow);
-                                                if (firstChild && firstChild !== child.outerMostWrapper && (target.positionStatic || target.top >= 0 && !target.hasPX('bottom'))) {
+                                                if (firstChild && firstChild !== child.outerMostWrapper && (target.positionStatic || target.top >= 0 && !target.hasUnit('bottom'))) {
                                                     adjustRegion(firstChild, region, offsetChild);
                                                     adjustRegion(target, region, 0);
                                                     resetChild = true;
@@ -14479,29 +15141,21 @@ this.squared.base = (function (exports) {
         }
     }
     function isBlockElement(node, direction) {
-        if (!node || !node.styleElement || node.lineBreak) {
+        if (!node || !node.styleElement || node.floating || node.lineBreak) {
             return false;
         }
-        else if (node.blockStatic) {
-            return true;
-        }
-        else if (!node.floating) {
-            switch (node.display) {
-                case 'table':
-                case 'list-item':
-                    return true;
-                case 'inline-flex':
-                case 'inline-grid':
-                case 'inline-table':
-                    return false;
+        const display = node.display;
+        if (!startsWith(display, 'inline-')) {
+            if (node.blockStatic || display === 'table' || display === 'list-item') {
+                return true;
             }
             if (direction !== undefined) {
                 if (direction) {
                     const firstChild = node.firstStaticChild;
-                    return isBlockElement(firstChild) && validAboveChild(firstChild, false);
+                    return isBlockElement(firstChild) && validAboveChild(firstChild);
                 }
                 const lastChild = node.lastStaticChild;
-                return isBlockElement(lastChild) && validBelowChild(lastChild, false);
+                return isBlockElement(lastChild) && validBelowChild(lastChild);
             }
         }
         return false;
@@ -14543,29 +15197,31 @@ this.squared.base = (function (exports) {
             const children = node.naturalChildren;
             for (let j = children.length - 1; j >= 0; --j) {
                 const item = children[j];
-                if (item.floating) {
-                    if (!bottomChild) {
-                        const bottom = item.linear.bottom;
-                        if (bottomFloat) {
-                            if (bottom > bottomFloat.linear.bottom) {
+                if (item.pageFlow) {
+                    if (item.floating) {
+                        if (!bottomChild) {
+                            const bottom = item.linear.bottom;
+                            if (bottomFloat) {
+                                if (bottom > bottomFloat.linear.bottom) {
+                                    bottomFloat = item;
+                                }
+                            }
+                            else if (Math.ceil(item.linear.bottom) >= node.box.bottom) {
                                 bottomFloat = item;
                             }
                         }
-                        else if (Math.ceil(item.linear.bottom) >= node.box.bottom) {
-                            bottomFloat = item;
+                        else if (item.linear.bottom >= bottomChild.linear.bottom) {
+                            bottomChild = item;
+                            break;
                         }
                     }
-                    else if (item.linear.bottom >= bottomChild.linear.bottom) {
+                    else if (!bottomChild) {
+                        if (bottomFloat && bottomFloat.linear.bottom > item.linear.bottom) {
+                            bottomChild = bottomFloat;
+                            break;
+                        }
                         bottomChild = item;
-                        break;
                     }
-                }
-                else if (!bottomChild) {
-                    if (bottomFloat && bottomFloat.linear.bottom > item.linear.bottom) {
-                        bottomChild = bottomFloat;
-                        break;
-                    }
-                    bottomChild = item;
                 }
             }
             if (bottomFloat && !bottomChild) {
@@ -14580,9 +15236,150 @@ this.squared.base = (function (exports) {
             case 'hidden':
             case 'overlay':
                 return false;
-            default:
-                return true;
         }
+        return true;
+    }
+    function getMarginTop(node, opposing, check) {
+        let marginTop = node.marginTop, current = node, inherited = false;
+        while (validBelowChild(current)) {
+            let child = current.firstStaticChild;
+            if (isBlockElement(child, true) && !child.getBox(1 /* MARGIN_TOP */)[0]) {
+                let childTop = child.marginTop, currentChild = child;
+                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                    const currentBottom = currentChild.marginBottom;
+                    childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
+                    if (currentBottom !== 0) {
+                        resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
+                    }
+                    if (currentChild.every(item => item.floating || !item.pageFlow)) {
+                        const nextChild = currentChild.firstStaticChild;
+                        if (nextChild) {
+                            childTop = nextChild.marginTop;
+                            currentChild = nextChild;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    else {
+                        const sibling = currentChild.nextSibling;
+                        if (sibling) {
+                            if (sibling.marginTop >= childTop) {
+                                if (currentChild.marginTop !== 0) {
+                                    resetBox(currentChild, 1 /* MARGIN_TOP */);
+                                }
+                                child = sibling;
+                                childTop = sibling.marginTop;
+                                currentChild = sibling;
+                            }
+                            else if (sibling.bounds.height) {
+                                break;
+                            }
+                            else {
+                                if (sibling.marginTop !== 0) {
+                                    resetBox(sibling, 1 /* MARGIN_TOP */);
+                                }
+                                currentChild = sibling;
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+                if (childTop !== 0) {
+                    if (!check) {
+                        resetBox(child, 1 /* MARGIN_TOP */, !node.getBox(1 /* MARGIN_TOP */)[0] ? node : undefined);
+                    }
+                    if (marginTop < 0) {
+                        if (childTop > getMarginBottom(opposing, node, true)[0]) {
+                            marginTop += childTop;
+                            inherited = true;
+                        }
+                    }
+                    else if (childTop > marginTop) {
+                        marginTop = childTop;
+                        inherited = true;
+                    }
+                }
+                current = child;
+            }
+            else {
+                break;
+            }
+        }
+        return [marginTop, inherited];
+    }
+    function getMarginBottom(node, opposing, check) {
+        let marginBottom = node.marginBottom, current = node, inherited = false;
+        while (validAboveChild(current)) {
+            let child = getBottomChild(current);
+            if (child && !child.getBox(4 /* MARGIN_BOTTOM */)[0]) {
+                let childBottom = child.marginBottom, currentChild = child;
+                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                    const currentTop = currentChild.marginTop;
+                    childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
+                    if (currentTop !== 0) {
+                        resetBox(currentChild, 1 /* MARGIN_TOP */);
+                    }
+                    if (currentChild.every(item => item.floating || !item.pageFlow)) {
+                        const nextChild = getBottomChild(currentChild);
+                        if (nextChild) {
+                            childBottom = nextChild.marginBottom;
+                            currentChild = nextChild;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    else {
+                        const sibling = currentChild.previousSibling;
+                        if (sibling) {
+                            if (sibling.marginBottom >= childBottom) {
+                                if (currentChild.marginBottom !== 0) {
+                                    resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
+                                }
+                                child = sibling;
+                                childBottom = sibling.marginBottom;
+                                currentChild = sibling;
+                            }
+                            else if (sibling.bounds.height) {
+                                break;
+                            }
+                            else {
+                                if (sibling.marginBottom !== 0) {
+                                    resetBox(sibling, 4 /* MARGIN_BOTTOM */);
+                                }
+                                currentChild = sibling;
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+                if (childBottom !== 0) {
+                    if (!check) {
+                        resetBox(child, 4 /* MARGIN_BOTTOM */, !node.getBox(4 /* MARGIN_BOTTOM */)[0] ? node : undefined);
+                    }
+                    if (marginBottom < 0) {
+                        if (childBottom > getMarginTop(opposing, node, true)[0]) {
+                            marginBottom += childBottom;
+                            inherited = true;
+                        }
+                    }
+                    else if (childBottom > marginBottom) {
+                        marginBottom = childBottom;
+                        inherited = true;
+                    }
+                }
+                current = child;
+            }
+            else {
+                break;
+            }
+        }
+        return [marginBottom, inherited];
     }
     function resetBox(node, region, register, wrapper) {
         node.setBox(region, { reset: 1 });
@@ -14590,14 +15387,12 @@ this.squared.base = (function (exports) {
             node.registerBox(region, register);
         }
         if (wrapper) {
-            for (const parent of wrapper) {
-                parent.setBox(region, { reset: 1 });
-            }
+            wrapper.forEach(parent => parent.setBox(region, { reset: 1 }));
         }
     }
-    const canResetChild = (node, children = true) => (!children && node.blockStatic || children && !node.isEmpty() && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
-    const validAboveChild = (node, children) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
-    const validBelowChild = (node, children) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
+    const canResetChild = (node) => isBlockElement(node) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
+    const validBelowChild = (node) => node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node);
+    const validAboveChild = (node) => node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node);
     const hasOverflow = (node) => checkOverflowValue(node.valueOf('overflowY')) || checkOverflowValue(node.valueOf('overflowX'));
     const isLowestElement = (node, siblings) => node.linear.bottom >= minMaxOf(siblings, sibling => sibling.linear.bottom, '>')[1];
     class WhiteSpace extends ExtensionUI {
@@ -14643,7 +15438,7 @@ this.squared.base = (function (exports) {
                             blockMain: {
                                 if (isBlockElement(current, true)) {
                                     if (i > 0) {
-                                        let previous = children[i - 1], inheritedTop;
+                                        let previous = children[i - 1];
                                         if (previous.floating || !previous.pageFlow) {
                                             if (node.layoutVertical) {
                                                 const previousSiblings = current.previousSiblings();
@@ -14653,9 +15448,7 @@ this.squared.base = (function (exports) {
                                                         const [nearest, previousBottom] = minMaxOf(aboveFloating, sibling => sibling.linear.bottom, '>');
                                                         if (nearest.marginBottom > 0 && current.bounds.top < previousBottom) {
                                                             if (nearest.marginBottom < current.marginTop) {
-                                                                for (const sibling of aboveFloating) {
-                                                                    resetBox(sibling, 4 /* MARGIN_BOTTOM */);
-                                                                }
+                                                                aboveFloating.forEach(sibling => resetBox(sibling, 4 /* MARGIN_BOTTOM */));
                                                             }
                                                             else if (current.marginTop > 0) {
                                                                 resetBox(current, 1 /* MARGIN_TOP */);
@@ -14676,11 +15469,10 @@ this.squared.base = (function (exports) {
                                             }
                                         }
                                         if (isBlockElement(previous, false)) {
-                                            let marginBottom = previous.marginBottom, marginTop = current.marginTop;
                                             if (previous.marginTop < 0 && previous.bounds.height === 0) {
-                                                const offset = Math.min(marginBottom, previous.marginTop);
+                                                const offset = Math.min(previous.marginBottom, previous.marginTop);
                                                 if (offset < 0) {
-                                                    if (Math.abs(offset) < marginTop) {
+                                                    if (Math.abs(offset) < current.marginTop) {
                                                         current.modifyBox(1 /* MARGIN_TOP */, offset);
                                                     }
                                                     else {
@@ -14692,9 +15484,9 @@ this.squared.base = (function (exports) {
                                                 }
                                             }
                                             else if (current.marginBottom < 0 && current.bounds.height === 0) {
-                                                const offset = Math.min(marginTop, current.marginBottom);
+                                                const offset = Math.min(current.marginTop, current.marginBottom);
                                                 if (offset < 0) {
-                                                    if (Math.abs(offset) < marginBottom) {
+                                                    if (Math.abs(offset) < previous.marginBottom) {
                                                         previous.modifyBox(4 /* MARGIN_BOTTOM */, offset);
                                                     }
                                                     else {
@@ -14705,128 +15497,7 @@ this.squared.base = (function (exports) {
                                                     break blockMain;
                                                 }
                                             }
-                                            let inherit = previous, inheritedBottom;
-                                            while (validAboveChild(inherit, true)) {
-                                                let bottomChild = getBottomChild(inherit);
-                                                if (bottomChild && !bottomChild.getBox(4 /* MARGIN_BOTTOM */)[0]) {
-                                                    let childBottom = bottomChild.marginBottom, currentChild = bottomChild;
-                                                    while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                        const currentTop = currentChild.marginTop;
-                                                        childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
-                                                        if (currentTop !== 0) {
-                                                            resetBox(currentChild, 1 /* MARGIN_TOP */);
-                                                        }
-                                                        if (currentChild.every(item => item.floating || !item.pageFlow)) {
-                                                            const nextChild = getBottomChild(currentChild);
-                                                            if (nextChild) {
-                                                                childBottom = nextChild.marginBottom;
-                                                                currentChild = nextChild;
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                        else {
-                                                            const sibling = currentChild.previousSibling;
-                                                            if (sibling) {
-                                                                if (sibling.marginBottom >= childBottom) {
-                                                                    if (currentChild.marginBottom !== 0) {
-                                                                        resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
-                                                                    }
-                                                                    bottomChild = sibling;
-                                                                    childBottom = sibling.marginBottom;
-                                                                    currentChild = sibling;
-                                                                }
-                                                                else if (sibling.bounds.height) {
-                                                                    break;
-                                                                }
-                                                                else {
-                                                                    if (sibling.marginBottom !== 0) {
-                                                                        resetBox(sibling, 4 /* MARGIN_BOTTOM */);
-                                                                    }
-                                                                    currentChild = sibling;
-                                                                }
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
-                                                    if (childBottom !== 0) {
-                                                        resetBox(bottomChild, 4 /* MARGIN_BOTTOM */, !previous.getBox(4 /* MARGIN_BOTTOM */)[0] ? previous : undefined);
-                                                    }
-                                                    if (childBottom > marginBottom) {
-                                                        marginBottom = childBottom;
-                                                        inheritedBottom = true;
-                                                    }
-                                                    else if (childBottom === 0) {
-                                                        inherit = bottomChild;
-                                                        continue;
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                            inherit = current;
-                                            while (validBelowChild(inherit, true)) {
-                                                let topChild = inherit.firstStaticChild;
-                                                if (isBlockElement(topChild, true) && !topChild.getBox(1 /* MARGIN_TOP */)[0]) {
-                                                    let childTop = topChild.marginTop, currentChild = topChild;
-                                                    while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                        const currentBottom = currentChild.marginBottom;
-                                                        childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
-                                                        if (currentBottom !== 0) {
-                                                            resetBox(currentChild, 4 /* MARGIN_BOTTOM */);
-                                                        }
-                                                        if (currentChild.every(item => item.floating || !item.pageFlow)) {
-                                                            const nextChild = currentChild.firstStaticChild;
-                                                            if (nextChild) {
-                                                                childTop = nextChild.marginTop;
-                                                                currentChild = nextChild;
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                        else {
-                                                            const sibling = currentChild.nextSibling;
-                                                            if (sibling) {
-                                                                if (sibling.marginTop >= childTop) {
-                                                                    if (currentChild.marginTop !== 0) {
-                                                                        resetBox(currentChild, 1 /* MARGIN_TOP */);
-                                                                    }
-                                                                    topChild = sibling;
-                                                                    childTop = sibling.marginTop;
-                                                                    currentChild = sibling;
-                                                                }
-                                                                else if (sibling.bounds.height) {
-                                                                    break;
-                                                                }
-                                                                else {
-                                                                    if (sibling.marginTop !== 0) {
-                                                                        resetBox(sibling, 1 /* MARGIN_TOP */);
-                                                                    }
-                                                                    currentChild = sibling;
-                                                                }
-                                                            }
-                                                            else {
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
-                                                    if (childTop !== 0) {
-                                                        resetBox(topChild, 1 /* MARGIN_TOP */, !current.getBox(1 /* MARGIN_TOP */)[0] ? current : undefined);
-                                                    }
-                                                    if (childTop > marginTop) {
-                                                        marginTop = childTop;
-                                                        inheritedTop = true;
-                                                    }
-                                                    else if (childTop === 0) {
-                                                        inherit = topChild;
-                                                        continue;
-                                                    }
-                                                }
-                                                break;
-                                            }
+                                            let [marginTop, inheritedTop] = getMarginTop(current, previous), [marginBottom, inheritedBottom] = getMarginBottom(previous, current); // eslint-disable-line prefer-const
                                             if (marginBottom > 0) {
                                                 if (marginTop > 0) {
                                                     if (marginTop <= marginBottom) {
@@ -14956,15 +15627,11 @@ this.squared.base = (function (exports) {
                         }
                     }
                     else if (belowFloating && node.borderBottomWidth === 0 && node.paddingBottom === 0) {
-                        const bottomChild = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[0];
-                        if (bottomChild.marginBottom >= node.marginBottom && !bottomChild.getBox(4 /* MARGIN_BOTTOM */)[0]) {
-                            (node.registerBox(4 /* MARGIN_BOTTOM */) || node).setCacheValue('marginBottom', bottomChild.marginBottom);
+                        const offset = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[1] - node.max('bounds', { subAttr: 'bottom' }).bounds.bottom;
+                        if (offset > node.marginBottom) {
+                            (node.registerBox(4 /* MARGIN_BOTTOM */) || node).setCacheValue('marginBottom', offset);
                         }
-                        for (const sibling of belowFloating) {
-                            if (!sibling.getBox(4 /* MARGIN_BOTTOM */)[0]) {
-                                resetBox(sibling, 4 /* MARGIN_BOTTOM */);
-                            }
-                        }
+                        belowFloating.forEach(sibling => !sibling.getBox(4 /* MARGIN_BOTTOM */)[0] && resetBox(sibling, 4 /* MARGIN_BOTTOM */));
                     }
                 }
             });
@@ -15082,7 +15749,7 @@ this.squared.base = (function (exports) {
                                     parent.modifyBox(64 /* PADDING_BOTTOM */, offset);
                                 }
                                 else if (!parent.hasHeight) {
-                                    const value = Math.max(offset, parent.hasPX('minHeight', { percent: false }) ? parent.cssUnit('minHeight', { dimension: 'height' }) : 0);
+                                    const value = Math.max(offset, parent.hasUnit('minHeight', { percent: false }) ? parent.cssUnit('minHeight', { dimension: 'height' }) : 0);
                                     if (value) {
                                         parent.css('minHeight', formatPX(value));
                                     }
@@ -15240,6 +15907,56 @@ this.squared.base = (function (exports) {
         }
     }
 
+    const { splitPair, splitSome } = squared.lib.util;
+    function parseTask(value) {
+        if (value) {
+            const result = [];
+            splitSome(value, item => {
+                const [handler, command] = splitPair(item, ':', true);
+                if (handler && command) {
+                    const [task, preceding] = splitPair(command, ':', true);
+                    result.push({ handler, task, preceding: preceding === 'true' });
+                }
+            }, '+');
+            return result;
+        }
+    }
+    function parseWatchInterval(value) {
+        if (value && (value = value.trim())) {
+            if (value === 'true') {
+                return true;
+            }
+            const match = /^(?:^|\s+)(~|\d+)\s*(?:::\s*(~|.+?)\s*(?:::\s*(.+?)(?:\[([^\]]+)\])?)?)?(?:\s+|$)$/.exec(value);
+            if (match) {
+                let interval, expires, reload;
+                if (match[1] !== '~' && !isNaN(+match[1])) {
+                    interval = +match[1];
+                }
+                if (match[2]) {
+                    if (match[2] !== '~') {
+                        expires = match[2].trim();
+                    }
+                    if (match[3]) {
+                        const [socketId, port] = splitPair(match[3], ':', true, true);
+                        let secure, module;
+                        if (match[4]) {
+                            secure = match[4].indexOf('secure') !== -1;
+                            module = match[4].indexOf('module') !== -1;
+                        }
+                        reload = { socketId: socketId !== '~' && socketId !== 'true' ? socketId : '', port: port && !isNaN(+port) ? +port : undefined, secure, module };
+                    }
+                }
+                return { interval, expires, reload };
+            }
+        }
+    }
+
+    var internal = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        parseTask: parseTask,
+        parseWatchInterval: parseWatchInterval
+    });
+
     const extensions = {
         Accessibility,
         Column,
@@ -15254,6 +15971,10 @@ this.squared.base = (function (exports) {
     };
     const lib = {
         constant,
+        css,
+        dom,
+        internal,
+        regex,
         util
     };
 
