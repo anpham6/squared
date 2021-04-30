@@ -12507,12 +12507,11 @@ var android = (function () {
                         const container = application.createNode(sessionId, { parent: parentContainer });
                         const metrics = getTextMetrics$1(value, fontSize, fontFamily);
                         const bounds = Object.assign(Object.assign({}, boxRect), { width: (metrics ? metrics.width : 0) + (value.length * adjustment) });
-                        container.internalSelf(parentContainer, depth);
+                        container.internalSelf(parentContainer, depth, undefined, parentContainer);
                         container.inlineText = true;
                         container.renderExclude = false;
                         container.contentAltered = true;
                         container.textContent = value;
-                        container.actualParent = parentContainer;
                         container.unsafe({ element, initial, elementData, preferInitial: false, bounds });
                         container.setCacheState('naturalChild', false);
                         container.setCacheState('naturalElement', naturalElement && !isNaN(columns));

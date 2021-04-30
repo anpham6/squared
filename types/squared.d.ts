@@ -50,6 +50,8 @@ export function querySelectorAll(value: string, sync: true, cache?: boolean): No
 export function querySelectorAll(value: string, sync?: Undef<false>, cache?: boolean): Promise<Null<Node[]>>;
 export function fromElement(element: HTMLElement, sync: true, cache?: boolean): Null<Node>;
 export function fromElement(element: HTMLElement, sync?: Undef<false>, cache?: boolean): Promise<Null<Node>>;
+export function fromNode(node: Node, sync?: true, cache?: boolean): Null<Node>;
+export function fromNode(node: Node, sync?: Undef<false>, cache?: boolean): Promise<Null<Node>>;
 export function clearCache(): void;
 export function toString(): string;
 

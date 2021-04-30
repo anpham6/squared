@@ -16,7 +16,7 @@ type T = NodeUI;
 const { CSS_BORDER_SET, CSS_PROPERTIES } = squared.lib.internal;
 
 const { getStyle } = squared.lib.css;
-const { createElement, getRangeClientRect } = squared.lib.dom;
+const { createElement, getParentElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { cloneObject, hasKeys, isArray, isEmptyString, replaceAll, startsWith, withinRange } = squared.lib.util;
@@ -1590,7 +1590,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._actualParent = value;
     }
     get actualParent() {
-        return super.actualParent as Null<T>;
+        const result = this._actualParent as Null<T>;
+        if (!result && !this.naturalChild) {
+            const element = this.innerMostWrapped.element;
+            const parentElement = element && getParentElement(element);
+            return this._actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || this.parent;
+        }
+        return result;
     }
 
     set documentParent(value) {

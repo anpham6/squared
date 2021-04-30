@@ -1,4 +1,4 @@
-## squared 2.5
+## squared 3.0
 
 * README: [squared-functions](https://github.com/anpham6/squared-functions#readme)  
 * README: [squared-express](https://github.com/anpham6/squared-express#readme)
@@ -313,6 +313,7 @@ querySelector(value: string, sync?: boolean, cache?: boolean)
 querySelectorAll(value: string, sync?: boolean, cache?: boolean)
 
 fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) // sync - false | cache - false (default)
+fromNode(node: Node, sync?: boolean, cache?: boolean)
 
 clearCache() // Clear all data stored in memory
 ```

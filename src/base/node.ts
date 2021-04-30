@@ -13,7 +13,7 @@ const { isTransparent } = squared.lib.color;
 const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseUnit } = squared.lib.css;
 const { assignRect, getNamedItem, getParentElement, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
-const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
+const { getElementCache, getElementData, setElementCache } = squared.lib.session;
 const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
 
 const TEXT_STYLE: CssStyleAttr[] = [
@@ -839,7 +839,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _styleMap: CssStyleMap = {};
     protected _naturalChildren: Null<T[]> = null;
     protected _naturalElements: Null<T[]> = null;
-    protected _actualParent: Optional<T> = undefined;
+    protected _actualParent: Null<T> = null;
     protected _childIndex = Infinity;
     protected _elementData: Null<ElementData> = null;
     protected readonly _element: Null<Element>;
@@ -2810,13 +2810,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get actualParent() {
-        const result = this._actualParent;
-        if (result === undefined) {
-            const element = this.element;
-            const parentElement = element && getParentElement(element);
-            return this._actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || this.parent;
-        }
-        return result;
+        return this._actualParent;
     }
 
     get wrapperOf() {

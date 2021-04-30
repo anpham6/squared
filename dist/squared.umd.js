@@ -6171,6 +6171,12 @@
         }
         return sync ? null : Promise.resolve(null);
     }
+    function fromNode(node, sync, cache) {
+        if (main && node instanceof squared.base.Node) {
+            return findElement(node.element, sync, cache);
+        }
+        return sync ? null : Promise.resolve(null);
+    }
     function clearCache() {
         var _a;
         if (main) {
@@ -6213,6 +6219,7 @@
     exports.copyTo = copyTo;
     exports.extend = extend;
     exports.fromElement = fromElement;
+    exports.fromNode = fromNode;
     exports.get = get;
     exports.getElementById = getElementById;
     exports.latest = latest;

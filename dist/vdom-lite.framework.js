@@ -526,11 +526,10 @@ var vdom = (function () {
                                 child = new this.Node(id--, sessionId, element);
                                 this._afterInsertNode(child, sessionId);
                             }
-                            child.internalSelf(parent, depth + 1, i);
-                            child.actualParent = parent;
+                            child.internalSelf(parent, depth + 1, i, parent);
                             elements[i] = child;
                         }
-                        parent.internalNodes(elements, elements);
+                        parent.internalNodes(elements);
                         if (currentElement === document.documentElement) {
                             processing.documentElement = parent;
                             break;
@@ -590,20 +589,15 @@ var vdom = (function () {
                         processing.excluded.add(child);
                     }
                     if (child) {
-                        child.internalSelf(node, childDepth, j++);
-                        child.actualParent = node;
+                        child.internalSelf(node, childDepth, j++, node);
                         if (shadowParent) {
                             child.shadowHost = shadowParent;
                         }
                         children.push(child);
                     }
                 }
-                node.internalNodes(children, elements);
-                if (hostElement !== parentElement) {
-                    node.shadowRoot = true;
-                }
+                node.internalNodes(children, elements, inlineText && plainText && j > 0, hostElement !== parentElement);
                 if (j > 0) {
-                    node.inlineText = inlineText && plainText;
                     node.retainAs(children);
                     if (j > 1) {
                         processing.cache.addAll(children);
@@ -1026,7 +1020,7 @@ var vdom = (function () {
     const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
-    const { getElementAsNode, getElementCache, getElementData, setElementCache } = squared.lib.session;
+    const { getElementCache, getElementData, setElementCache } = squared.lib.session;
     const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
@@ -1778,13 +1772,14 @@ var vdom = (function () {
             this.id = id;
             this.sessionId = sessionId;
             this.documentRoot = false;
-            this.shadowRoot = false;
             this.queryMap = null;
             this._parent = null;
             this._depth = -1;
             this._cache = {};
-            this._cacheState = { inlineText: false };
+            this._cacheState = {};
             this._preferInitial = false;
+            this._inlineText = false;
+            this._shadowRoot = false;
             this._bounds = null;
             this._box = null;
             this._linear = null;
@@ -1792,6 +1787,7 @@ var vdom = (function () {
             this._styleMap = {};
             this._naturalChildren = null;
             this._naturalElements = null;
+            this._actualParent = null;
             this._childIndex = Infinity;
             this._elementData = null;
             this._style = null;
@@ -1836,16 +1832,25 @@ var vdom = (function () {
             }
             return result;
         }
-        internalSelf(parent, depth, childIndex) {
+        internalSelf(parent, depth, childIndex, actualParent) {
             this._parent = parent;
             this._depth = depth;
             if (childIndex !== undefined) {
                 this._childIndex = childIndex;
             }
+            if (actualParent !== undefined) {
+                this._actualParent = actualParent;
+            }
         }
-        internalNodes(children, elements) {
+        internalNodes(children, elements, inlineText, shadowRoot) {
             this._naturalChildren = children;
             this._naturalElements = elements || children.filter((item) => item.naturalElement);
+            if (inlineText !== undefined) {
+                this._inlineText = inlineText;
+            }
+            if (shadowRoot !== undefined) {
+                this._shadowRoot = shadowRoot;
+            }
         }
         syncWith(sessionId, cache) {
             const element = this._element;
@@ -2058,10 +2063,6 @@ var vdom = (function () {
                     const attr = attrs[i];
                     if (attr in cacheState) {
                         switch (attr) {
-                            case 'actualParent':
-                                cacheState.absoluteParent = undefined;
-                                reset = true;
-                                break;
                             case 'absoluteParent':
                                 reset = true;
                                 break;
@@ -2069,16 +2070,13 @@ var vdom = (function () {
                                 cacheState.textEmpty = undefined;
                                 reset = true;
                                 break;
-                            case 'inlineText':
-                                cacheState.inlineText = false;
-                                continue;
                         }
                         cacheState[attr] = undefined;
                     }
                 }
             }
             else {
-                this._cacheState = { inlineText: false };
+                this._cacheState = {};
                 reset = true;
             }
             if (reset && !this._preferInitial && this.naturalChild) {
@@ -2952,26 +2950,11 @@ var vdom = (function () {
         }
         get naturalChild() { return true; }
         get pseudoElement() { return false; }
-        set parent(value) {
-            if (value) {
-                const parent = this._parent;
-                if (value !== parent) {
-                    if (parent) {
-                        parent.remove(this);
-                    }
-                    this._parent = value;
-                    value.add(this);
-                }
-                else if (!value.contains(this)) {
-                    value.add(this);
-                }
-                if (this._depth === -1) {
-                    this._depth = value.depth + 1;
-                }
-            }
-        }
         get parent() {
             return this._parent;
+        }
+        get shadowRoot() {
+            return this._shadowRoot;
         }
         get tagName() {
             const result = this._cache.tagName;
@@ -3328,11 +3311,8 @@ var vdom = (function () {
             const result = this._cache.inlineStatic;
             return result === undefined ? this._cache.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement : result;
         }
-        set inlineText(value) {
-            this._cacheState.inlineText = value || this.tagName === 'BUTTON' && this.textContent.trim() !== '';
-        }
         get inlineText() {
-            return this._cacheState.inlineText;
+            return this._inlineText;
         }
         get block() {
             let result = this._cache.block;
@@ -3640,17 +3620,8 @@ var vdom = (function () {
             }
             return result;
         }
-        set actualParent(value) {
-            this._cacheState.actualParent = value;
-        }
         get actualParent() {
-            const result = this._cacheState.actualParent;
-            if (result === undefined) {
-                const element = this.element;
-                const parentElement = element && getParentElement(element);
-                return this._cacheState.actualParent = parentElement && getElementAsNode(parentElement, this.sessionId) || this.parent;
-            }
-            return result;
+            return this._actualParent;
         }
         get wrapperOf() {
             let result = this._cacheState.wrapperOf;

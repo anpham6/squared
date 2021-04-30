@@ -529,6 +529,13 @@ export function fromElement(element: HTMLElement, sync?: boolean, cache?: boolea
     return sync ? null : Promise.resolve(null);
 }
 
+export function fromNode(node: Node, sync?: boolean, cache?: boolean) {
+    if (main && node instanceof squared.base.Node) {
+        return findElement(node.element as HTMLElement, sync, cache);
+    }
+    return sync ? null : Promise.resolve(null);
+}
+
 export function clearCache() {
     if (main) {
         main.elementMap = new WeakMap();

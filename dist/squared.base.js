@@ -527,11 +527,10 @@ this.squared.base = (function (exports) {
                                 child = new this.Node(id--, sessionId, element);
                                 this._afterInsertNode(child, sessionId);
                             }
-                            child.internalSelf(parent, depth + 1, i);
-                            child.actualParent = parent;
+                            child.internalSelf(parent, depth + 1, i, parent);
                             elements[i] = child;
                         }
-                        parent.internalNodes(elements, elements);
+                        parent.internalNodes(elements);
                         if (currentElement === document.documentElement) {
                             processing.documentElement = parent;
                             break;
@@ -591,20 +590,15 @@ this.squared.base = (function (exports) {
                         processing.excluded.add(child);
                     }
                     if (child) {
-                        child.internalSelf(node, childDepth, j++);
-                        child.actualParent = node;
+                        child.internalSelf(node, childDepth, j++, node);
                         if (shadowParent) {
                             child.shadowHost = shadowParent;
                         }
                         children.push(child);
                     }
                 }
-                node.internalNodes(children, elements);
-                if (hostElement !== parentElement) {
-                    node.shadowRoot = true;
-                }
+                node.internalNodes(children, elements, inlineText && plainText && j > 0, hostElement !== parentElement);
                 if (j > 0) {
-                    node.inlineText = inlineText && plainText;
                     node.retainAs(children);
                     if (j > 1) {
                         processing.cache.addAll(children);
@@ -2136,9 +2130,9 @@ this.squared.base = (function (exports) {
     const { isUserAgent: isUserAgent$2 } = squared.lib.client;
     const { isTransparent } = squared.lib.color;
     const { asPercent: asPercent$3, asPx: asPx$1, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle: getStyle$5, isAngle, isLength: isLength$7, isPercent: isPercent$3, isTime, parseUnit: parseUnit$5 } = squared.lib.css;
-    const { assignRect, getNamedItem: getNamedItem$3, getParentElement: getParentElement$1, getRangeClientRect: getRangeClientRect$1 } = squared.lib.dom;
+    const { assignRect, getNamedItem: getNamedItem$3, getParentElement: getParentElement$2, getRangeClientRect: getRangeClientRect$1 } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
-    const { getElementAsNode: getElementAsNode$2, getElementCache: getElementCache$2, getElementData, setElementCache: setElementCache$2 } = squared.lib.session;
+    const { getElementCache: getElementCache$2, getElementData, setElementCache: setElementCache$2 } = squared.lib.session;
     const { convertCamelCase: convertCamelCase$1, convertFloat, convertInt, convertPercent: convertPercent$1, endsWith: endsWith$2, escapePattern: escapePattern$1, hasValue: hasValue$1, isObject, isSpace, iterateArray: iterateArray$4, iterateReverseArray: iterateReverseArray$1, lastItemOf: lastItemOf$1, safeFloat: safeFloat$2, spliceString, splitEnclosing: splitEnclosing$3, splitPair: splitPair$4, splitSome: splitSome$7, startsWith: startsWith$7 } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
@@ -2890,13 +2884,14 @@ this.squared.base = (function (exports) {
             this.id = id;
             this.sessionId = sessionId;
             this.documentRoot = false;
-            this.shadowRoot = false;
             this.queryMap = null;
             this._parent = null;
             this._depth = -1;
             this._cache = {};
-            this._cacheState = { inlineText: false };
+            this._cacheState = {};
             this._preferInitial = false;
+            this._inlineText = false;
+            this._shadowRoot = false;
             this._bounds = null;
             this._box = null;
             this._linear = null;
@@ -2904,6 +2899,7 @@ this.squared.base = (function (exports) {
             this._styleMap = {};
             this._naturalChildren = null;
             this._naturalElements = null;
+            this._actualParent = null;
             this._childIndex = Infinity;
             this._elementData = null;
             this._style = null;
@@ -2948,16 +2944,25 @@ this.squared.base = (function (exports) {
             }
             return result;
         }
-        internalSelf(parent, depth, childIndex) {
+        internalSelf(parent, depth, childIndex, actualParent) {
             this._parent = parent;
             this._depth = depth;
             if (childIndex !== undefined) {
                 this._childIndex = childIndex;
             }
+            if (actualParent !== undefined) {
+                this._actualParent = actualParent;
+            }
         }
-        internalNodes(children, elements) {
+        internalNodes(children, elements, inlineText, shadowRoot) {
             this._naturalChildren = children;
             this._naturalElements = elements || children.filter((item) => item.naturalElement);
+            if (inlineText !== undefined) {
+                this._inlineText = inlineText;
+            }
+            if (shadowRoot !== undefined) {
+                this._shadowRoot = shadowRoot;
+            }
         }
         syncWith(sessionId, cache) {
             const element = this._element;
@@ -3170,10 +3175,6 @@ this.squared.base = (function (exports) {
                     const attr = attrs[i];
                     if (attr in cacheState) {
                         switch (attr) {
-                            case 'actualParent':
-                                cacheState.absoluteParent = undefined;
-                                reset = true;
-                                break;
                             case 'absoluteParent':
                                 reset = true;
                                 break;
@@ -3181,16 +3182,13 @@ this.squared.base = (function (exports) {
                                 cacheState.textEmpty = undefined;
                                 reset = true;
                                 break;
-                            case 'inlineText':
-                                cacheState.inlineText = false;
-                                continue;
                         }
                         cacheState[attr] = undefined;
                     }
                 }
             }
             else {
-                this._cacheState = { inlineText: false };
+                this._cacheState = {};
                 reset = true;
             }
             if (reset && !this._preferInitial && this.naturalChild) {
@@ -4064,26 +4062,11 @@ this.squared.base = (function (exports) {
         }
         get naturalChild() { return true; }
         get pseudoElement() { return false; }
-        set parent(value) {
-            if (value) {
-                const parent = this._parent;
-                if (value !== parent) {
-                    if (parent) {
-                        parent.remove(this);
-                    }
-                    this._parent = value;
-                    value.add(this);
-                }
-                else if (!value.contains(this)) {
-                    value.add(this);
-                }
-                if (this._depth === -1) {
-                    this._depth = value.depth + 1;
-                }
-            }
-        }
         get parent() {
             return this._parent;
+        }
+        get shadowRoot() {
+            return this._shadowRoot;
         }
         get tagName() {
             const result = this._cache.tagName;
@@ -4118,7 +4101,7 @@ this.squared.base = (function (exports) {
         }
         get parentElement() {
             var _a;
-            return this._element ? getParentElement$1(this._element) : ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.element) || null;
+            return this._element ? getParentElement$2(this._element) : ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.element) || null;
         }
         get textElement() {
             return this.plainText || this.inlineText && this.tagName !== 'BUTTON';
@@ -4440,11 +4423,8 @@ this.squared.base = (function (exports) {
             const result = this._cache.inlineStatic;
             return result === undefined ? this._cache.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement : result;
         }
-        set inlineText(value) {
-            this._cacheState.inlineText = value || this.tagName === 'BUTTON' && this.textContent.trim() !== '';
-        }
         get inlineText() {
-            return this._cacheState.inlineText;
+            return this._inlineText;
         }
         get block() {
             let result = this._cache.block;
@@ -4752,17 +4732,8 @@ this.squared.base = (function (exports) {
             }
             return result;
         }
-        set actualParent(value) {
-            this._cacheState.actualParent = value;
-        }
         get actualParent() {
-            const result = this._cacheState.actualParent;
-            if (result === undefined) {
-                const element = this.element;
-                const parentElement = element && getParentElement$1(element);
-                return this._cacheState.actualParent = parentElement && getElementAsNode$2(parentElement, this.sessionId) || this.parent;
-            }
-            return result;
+            return this._actualParent;
         }
         get wrapperOf() {
             let result = this._cacheState.wrapperOf;
@@ -5013,7 +4984,7 @@ this.squared.base = (function (exports) {
             return result;
         }
         get style() {
-            return this._style || (this._style = this.styleElement ? !this.pseudoElt ? getStyle$5(this._element) : getStyle$5(getParentElement$1(this._element), this.pseudoElt) : PROXY_INLINESTYLE);
+            return this._style || (this._style = this.styleElement ? !this.pseudoElt ? getStyle$5(this._element) : getStyle$5(getParentElement$2(this._element), this.pseudoElt) : PROXY_INLINESTYLE);
         }
         get cssStyle() {
             return this._elementData ? Object.assign({}, this._elementData.styleMap) : {};
@@ -7426,7 +7397,7 @@ this.squared.base = (function (exports) {
 
     const { CSS_BORDER_SET: CSS_BORDER_SET$1, CSS_PROPERTIES } = squared.lib.internal;
     const { getStyle: getStyle$3 } = squared.lib.css;
-    const { createElement, getRangeClientRect } = squared.lib.dom;
+    const { createElement, getParentElement: getParentElement$1, getRangeClientRect } = squared.lib.dom;
     const { equal } = squared.lib.math;
     const { getElementAsNode } = squared.lib.session;
     const { cloneObject, hasKeys, isArray, isEmptyString, replaceAll: replaceAll$1, startsWith: startsWith$3, withinRange: withinRange$3 } = squared.lib.util;
@@ -8519,9 +8490,8 @@ this.squared.base = (function (exports) {
             return result ? result.height : NaN;
         }
         cloneBase(node) {
-            node.internalSelf(this.parent, this.depth, this.childIndex);
+            node.internalSelf(this.parent, this.depth, this.childIndex, this.actualParent);
             node.inlineText = this.inlineText;
-            node.actualParent = this.actualParent;
             node.documentRoot = this.documentRoot;
             node.localSettings = this.localSettings;
             node.alignmentType = this.alignmentType;
@@ -8583,14 +8553,7 @@ this.squared.base = (function (exports) {
             this._cache[attr] = value;
         }
         setCacheState(attr, value) {
-            switch (attr) {
-                case 'inlineText':
-                    this._cacheState.inlineText = value === true;
-                    break;
-                default:
-                    this._cacheState[attr] = value;
-                    break;
-            }
+            this._cacheState[attr] = value;
         }
         unsetCache(...attrs) {
             var _a;
@@ -8805,6 +8768,39 @@ this.squared.base = (function (exports) {
             const result = this._cache.positionRelative;
             return result === undefined ? this._cache.positionRelative = super.positionRelative : result;
         }
+        set parent(value) {
+            if (value) {
+                const parent = this._parent;
+                if (value !== parent) {
+                    if (parent) {
+                        parent.remove(this);
+                    }
+                    this._parent = value;
+                    value.add(this);
+                }
+                else if (!value.contains(this)) {
+                    value.add(this);
+                }
+                if (this._depth === -1) {
+                    this._depth = value.depth + 1;
+                }
+            }
+        }
+        get parent() {
+            return this._parent;
+        }
+        set actualParent(value) {
+            this._actualParent = value;
+        }
+        get actualParent() {
+            const result = this._actualParent;
+            if (!result && !this.naturalChild) {
+                const element = this.innerMostWrapped.element;
+                const parentElement = element && getParentElement$1(element);
+                return this._actualParent = parentElement && getElementAsNode(parentElement, this.sessionId) || this.parent;
+            }
+            return result;
+        }
         set documentParent(value) {
             this._documentParent = value;
         }
@@ -8881,6 +8877,12 @@ this.squared.base = (function (exports) {
             var _a;
             const result = this._cache.inlineFlow;
             return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasUnit('width', { percent: false }) || this.tableElement && !!((_a = this.previousSibling) === null || _a === void 0 ? void 0 : _a.floating)) && this.pageFlow : result;
+        }
+        set inlineText(value) {
+            this._inlineText = value;
+        }
+        get inlineText() {
+            return this._inlineText;
         }
         get blockStatic() {
             return super.blockStatic || this.hasAlign(32 /* BLOCK */) && this.pageFlow && !this.floating;
@@ -10436,8 +10438,7 @@ this.squared.base = (function (exports) {
                                         else if (item.plainText) {
                                             plainText = j;
                                         }
-                                        item.internalSelf(node, childDepth, j++);
-                                        item.actualParent = node;
+                                        item.internalSelf(node, childDepth, j++, node);
                                         children.push(item);
                                     }
                                     child.excluded = true;
@@ -10469,18 +10470,13 @@ this.squared.base = (function (exports) {
                     if (shadowParent) {
                         child.shadowHost = shadowParent;
                     }
-                    child.internalSelf(node, childDepth, j++);
-                    child.actualParent = node;
+                    child.internalSelf(node, childDepth, j++, node);
                     children.push(child);
                 }
-                node.internalNodes(children, elements);
-                if (hostParent !== parentElement) {
-                    node.shadowRoot = true;
-                }
+                node.internalNodes(children, elements, inlineText && plainText !== -1, hostParent !== parentElement);
                 const contents = display === 'contents';
                 const length = children.length;
                 if (!inlineText) {
-                    node.inlineText = false;
                     if (j > 0) {
                         if (length > 1) {
                             let siblingsLeading = [], siblingsTrailing = [], trailing = children[0], floating = false, excluded;
@@ -10541,7 +10537,6 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else {
-                    node.inlineText = plainText !== -1;
                     if (lineBreak !== -1 && lineBreak < plainText) {
                         node.multiline = true;
                     }
@@ -12670,8 +12665,6 @@ this.squared.base = (function (exports) {
             const result = this._cache.rightAligned;
             return result === undefined ? this._cache.rightAligned = this.every(node => node.rightAligned) : result;
         }
-        set inlineText(value) { }
-        get inlineText() { return false; }
         set multiline(value) { }
         get multiline() { return false; }
         get tagName() { return ''; }
