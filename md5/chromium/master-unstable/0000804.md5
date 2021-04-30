@@ -4,6 +4,8 @@ acac39bb9b396de6423b1b78d712ea2c  ./app/src/main/res/drawable/color_gradient_3.x
 5e211d139fd1d300b27f1eca22567fc4  ./app/src/main/res/drawable/fieldset_linearlayout_1.xml
 22606818e8fe9360744a4c1b881d6539  ./app/src/main/res/drawable/film_gradient_1.xml
 31d297092cddc5be98d63e7f4ca1565f  ./app/src/main/res/drawable/input_color_color.xml
+5963cd87a39fc9ad5858ea2d9e3a76c5  ./app/src/main/res/drawable/input_range_howyourateit.xml
+6b2ec767ad484da6a0faf13d736b23b9  ./app/src/main/res/drawable/input_range_howyourateit_main.xml
 a51d585c8ccec5566515e3dbfa087d32  ./app/src/main/res/drawable/input_range_howyourateit_main_thumb.xml
 436d200d60b19acf9d1e1e718635ff04  ./app/src/main/res/drawable/input_range_howyourateit_thumb.xml
 23bf176230f41b69a533a3bb2dfc8281  ./app/src/main/res/drawable/input_text_film.xml
@@ -12,9 +14,9 @@ a51d585c8ccec5566515e3dbfa087d32  ./app/src/main/res/drawable/input_range_howyou
 fb222c1a1815f87a4775605f66b78d60  ./app/src/main/res/drawable/legend_relativelayout_9.xml
 44e8d4b47c5371e66a15b8503d5ebe3c  ./app/src/main/res/drawable/span_range.xml
 a44328ee33ccf2253812e2aeacbc505d  ./app/src/main/res/drawable/span_textview_30.xml
-53bfb58f078cee8d228d5793a6574a7d  ./app/src/main/res/layout/activity_main.xml
-c5a009d41f051ffed9ef8449ed169833  ./app/src/main/res/values/colors.xml
-5368fa5dbc5fa096f585542bfeccfbd4  ./app/src/main/res/values/dimens.xml
-8f79792a17134445e5ca944533e53179  ./app/src/main/res/values/strings.xml
+88ebcd113ed5d73cf61be0ed03ad1ffc  ./app/src/main/res/layout/activity_main.xml
+e5c30530b4f792540ecf7c9d0ac4038c  ./app/src/main/res/values/colors.xml
+6091373bb343ecf29619c18fc0eabbe4  ./app/src/main/res/values/dimens.xml
+af472abee0d8636d132d4a47598ed4fe  ./app/src/main/res/values/strings.xml
 b5f6a85db1a2e7a37d1fbf8b93d3f492  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

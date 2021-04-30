@@ -572,11 +572,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                             child = new this.Node(id--, sessionId, element);
                             this._afterInsertNode(child, sessionId);
                         }
-                        child.internalSelf(parent, depth + 1, i);
-                        child.actualParent = parent;
+                        child.internalSelf(parent, depth + 1, i, parent);
                         elements[i] = child;
                     }
-                    parent.internalNodes(elements, elements);
+                    parent.internalNodes(elements);
                     if (currentElement === document.documentElement) {
                         processing.documentElement = parent;
                         break;
@@ -639,20 +638,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                     processing.excluded.add(child);
                 }
                 if (child) {
-                    child.internalSelf(node, childDepth, j++);
-                    child.actualParent = node;
+                    child.internalSelf(node, childDepth, j++, node);
                     if (shadowParent) {
                         child.shadowHost = shadowParent;
                     }
                     children.push(child);
                 }
             }
-            node.internalNodes(children, elements);
-            if (hostElement !== parentElement) {
-                node.shadowRoot = true;
-            }
+            node.internalNodes(children, elements, inlineText && plainText && j > 0, hostElement !== parentElement);
             if (j > 0) {
-                node.inlineText = inlineText && plainText;
                 node.retainAs(children);
                 if (j > 1) {
                     processing.cache.addAll(children);

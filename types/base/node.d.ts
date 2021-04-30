@@ -70,13 +70,11 @@ interface CacheValueUI extends CacheValue {
 }
 
 interface CacheState<T> {
-    inlineText: boolean;
     htmlElement?: boolean;
     svgElement?: boolean;
     styleElement?: boolean;
     naturalElement?: boolean;
     naturalChild?: boolean;
-    actualParent?: Null<T>;
     absoluteParent?: Null<T>;
     wrapperOf?: Null<T>;
     textContent?: string;

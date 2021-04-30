@@ -156,9 +156,6 @@ export default abstract class NodeGroupUI extends NodeUI {
         return result === undefined ? this._cache.rightAligned = this.every(node => node.rightAligned) : result;
     }
 
-    set inlineText(value) {}
-    get inlineText() { return false; }
-
     set multiline(value) {}
     get multiline() { return false; }
 

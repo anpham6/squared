@@ -482,8 +482,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract translateY(value: number, options?: TranslateOptions): boolean;
     public abstract localizeString(value: string): string;
 
-    public abstract set actualParent(value);
-    public abstract get actualParent(): Null<T>;
     public abstract set labelFor(value);
     public abstract get labelFor(): Undef<T>;
     public abstract set innerWrapped(value);
@@ -1261,9 +1259,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public cloneBase(node: T) {
-        node.internalSelf(this.parent, this.depth, this.childIndex);
+        node.internalSelf(this.parent, this.depth, this.childIndex, this.actualParent);
         node.inlineText = this.inlineText;
-        node.actualParent = this.actualParent;
         node.documentRoot = this.documentRoot;
         node.localSettings = this.localSettings;
         node.alignmentType = this.alignmentType;
@@ -1330,14 +1327,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public setCacheState(attr: keyof CacheStateUI<T>, value: any) {
-        switch (attr) {
-            case 'inlineText':
-                this._cacheState.inlineText = value === true;
-                break;
-            default:
-                this._cacheState[attr] = value;
-                break;
-        }
+        this._cacheState[attr] = value;
     }
 
     public unsetCache(...attrs: (CssStyleAttr | keyof CacheValueUI)[]) {
@@ -1574,6 +1564,35 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result === undefined ? this._cache.positionRelative = super.positionRelative : result;
     }
 
+    set parent(value) {
+        if (value) {
+            const parent = this._parent;
+            if (value !== parent) {
+                if (parent) {
+                    parent.remove(this);
+                }
+                this._parent = value;
+                value.add(this);
+            }
+            else if (!value.contains(this)) {
+                value.add(this);
+            }
+            if (this._depth === -1) {
+                this._depth = value.depth + 1;
+            }
+        }
+    }
+    get parent() {
+        return this._parent as Null<T>;
+    }
+
+    set actualParent(value: Null<T>) {
+        this._actualParent = value;
+    }
+    get actualParent() {
+        return super.actualParent as Null<T>;
+    }
+
     set documentParent(value) {
         this._documentParent = value;
     }
@@ -1656,6 +1675,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get inlineFlow() {
         const result = this._cache.inlineFlow;
         return result === undefined ? this._cache.inlineFlow = (this.inline || this.inlineDimension || this.inlineVertical || this.floating || this.imageElement || this.svgElement && this.hasUnit('width', { percent: false }) || this.tableElement && !!this.previousSibling?.floating) && this.pageFlow : result;
+    }
+
+    set inlineText(value) {
+        this._inlineText = value;
+    }
+    get inlineText() {
+        return this._inlineText;
     }
 
     get blockStatic() {

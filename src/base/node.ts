@@ -821,7 +821,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public documentRoot = false;
-    public shadowRoot = false;
     public queryMap: Null<T[][]> = null;
     public pseudoElt?: PseudoElt;
     public shadowHost?: ShadowRoot;
@@ -829,8 +828,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _parent: Null<T> = null;
     protected _depth = -1;
     protected _cache: CacheValue = {};
-    protected _cacheState: CacheState<T> = { inlineText: false };
+    protected _cacheState: CacheState<T> = {};
     protected _preferInitial = false;
+    protected _inlineText = false;
+    protected _shadowRoot = false;
     protected _bounds: Null<BoxRectDimension> = null;
     protected _box: Null<BoxRectDimension> = null;
     protected _linear: Null<BoxRectDimension> = null;
@@ -838,6 +839,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected _styleMap: CssStyleMap = {};
     protected _naturalChildren: Null<T[]> = null;
     protected _naturalElements: Null<T[]> = null;
+    protected _actualParent: Optional<T> = undefined;
     protected _childIndex = Infinity;
     protected _elementData: Null<ElementData> = null;
     protected readonly _element: Null<Element>;
@@ -848,7 +850,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     constructor(
         public readonly id: number,
-        public sessionId = '0',
+        public readonly sessionId = '0',
         element?: Element,
         children?: T[])
     {
@@ -860,17 +862,26 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
     }
 
-    public internalSelf(parent: Null<T>, depth: number, childIndex?: number) {
+    public internalSelf(parent: Null<T>, depth: number, childIndex?: number, actualParent?: Null<T>) {
         this._parent = parent;
         this._depth = depth;
         if (childIndex !== undefined) {
             this._childIndex = childIndex;
         }
+        if (actualParent !== undefined) {
+            this._actualParent = actualParent;
+        }
     }
 
-    public internalNodes(children: T[], elements?: T[]) {
+    public internalNodes(children: T[], elements?: T[], inlineText?: boolean, shadowRoot?: boolean) {
         this._naturalChildren = children;
         this._naturalElements = elements || children.filter((item: T) => item.naturalElement);
+        if (inlineText !== undefined) {
+            this._inlineText = inlineText;
+        }
+        if (shadowRoot !== undefined) {
+            this._shadowRoot = shadowRoot;
+        }
     }
 
     public syncWith(sessionId?: string, cache?: boolean) {
@@ -1088,10 +1099,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const attr = attrs[i];
                 if (attr in cacheState) {
                     switch (attr) {
-                        case 'actualParent':
-                            cacheState.absoluteParent = undefined;
-                            reset = true;
-                            break;
                         case 'absoluteParent':
                             reset = true;
                             break;
@@ -1099,16 +1106,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             cacheState.textEmpty = undefined;
                             reset = true;
                             break;
-                        case 'inlineText':
-                            cacheState.inlineText = false;
-                            continue;
                     }
                     cacheState[attr] = undefined;
                 }
             }
         }
         else {
-            this._cacheState = { inlineText: false };
+            this._cacheState = {};
             reset = true;
         }
         if (reset && !this._preferInitial && this.naturalChild) {
@@ -2072,26 +2076,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get pseudoElement() { return false; }
 
-    set parent(value) {
-        if (value) {
-            const parent = this._parent;
-            if (value !== parent) {
-                if (parent) {
-                    parent.remove(this);
-                }
-                this._parent = value;
-                value.add(this);
-            }
-            else if (!value.contains(this)) {
-                value.add(this);
-            }
-            if (this._depth === -1) {
-                this._depth = value.depth + 1;
-            }
-        }
-    }
     get parent() {
         return this._parent;
+    }
+
+    get shadowRoot() {
+        return this._shadowRoot;
     }
 
     get tagName() {
@@ -2491,11 +2481,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result === undefined ? this._cache.inlineStatic = this.inline && this.pageFlow && !this.floating && !this.imageElement : result;
     }
 
-    set inlineText(value) {
-        this._cacheState.inlineText = value || this.tagName === 'BUTTON' && this.textContent.trim() !== '';
-    }
     get inlineText() {
-        return this._cacheState.inlineText;
+        return this._inlineText;
     }
 
     get block() {
@@ -2822,15 +2809,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
-    set actualParent(value) {
-        this._cacheState.actualParent = value;
-    }
     get actualParent() {
-        const result = this._cacheState.actualParent;
+        const result = this._actualParent;
         if (result === undefined) {
             const element = this.element;
             const parentElement = element && getParentElement(element);
-            return this._cacheState.actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || this.parent;
+            return this._actualParent = parentElement && getElementAsNode<T>(parentElement, this.sessionId) || this.parent;
         }
         return result;
     }

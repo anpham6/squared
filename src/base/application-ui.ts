@@ -702,8 +702,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     else if (item.plainText) {
                                         plainText = j;
                                     }
-                                    item.internalSelf(node, childDepth, j++);
-                                    item.actualParent = node;
+                                    item.internalSelf(node, childDepth, j++, node);
                                     children.push(item);
                                 }
                                 child.excluded = true;
@@ -735,18 +734,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (shadowParent) {
                     child.shadowHost = shadowParent;
                 }
-                child.internalSelf(node, childDepth, j++);
-                child.actualParent = node;
+                child.internalSelf(node, childDepth, j++, node);
                 children.push(child);
             }
-            node.internalNodes(children, elements);
-            if (hostParent !== parentElement) {
-                node.shadowRoot = true;
-            }
+            node.internalNodes(children, elements, inlineText && plainText !== -1, hostParent !== parentElement);
             const contents = display === 'contents';
             const length = children.length;
             if (!inlineText) {
-                node.inlineText = false;
                 if (j > 0) {
                     if (length > 1) {
                         let siblingsLeading: T[] = [],
@@ -811,7 +805,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             else {
-                node.inlineText = plainText !== -1;
                 if (lineBreak !== -1 && lineBreak < plainText) {
                     node.multiline = true;
                 }
