@@ -512,6 +512,7 @@ declare module "base" {
         get display(): string;
         get positionStatic(): boolean;
         get positionRelative(): boolean;
+        get positionFixed(): boolean;
         get top(): number;
         get right(): number;
         get bottom(): number;
@@ -727,6 +728,8 @@ declare module "base" {
         get blockDimension(): boolean;
         get inlineFlow(): boolean;
         get verticalAligned(): boolean;
+        get variableWidth(): boolean;
+        get variableHeight(): boolean;
         get positiveAxis(): boolean;
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;

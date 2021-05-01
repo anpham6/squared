@@ -1727,7 +1727,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public getContainerSize(options?: NodeUnitOptions) {
-        const bounds: Dimension = (!options || options.parent !== false) && (this.valueOf('position') === 'fixed' ? { width: window.innerWidth, height: window.innerHeight } as BoxRectDimension : this.absoluteParent?.box) || this.bounds;
+        const bounds: Dimension = (!options || options.parent !== false) && (this.positionFixed ? { width: window.innerWidth, height: window.innerHeight } as BoxRectDimension : this.absoluteParent?.box) || this.bounds;
         return bounds[options && options.dimension || 'width'];
     }
 
@@ -2245,6 +2245,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.valueOf('position') === 'relative';
     }
 
+    get positionFixed() {
+        return this.valueOf('position') === 'fixed';
+    }
+
     get display() {
         return this.css('display');
     }
@@ -2388,7 +2392,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
     get hasHeight(): boolean {
         const result = this._cache.hasHeight;
-        return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.valueOf('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false }) : result;
+        return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.positionFixed || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false }) : result;
     }
 
     get lineHeight() {
@@ -2726,6 +2730,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
+    get variableWidth() {
+        const percent = this.percentWidth;
+        return percent > 0 && percent < 1 || this.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
+    }
+
+    get variableHeight() {
+        const percent = this.percentHeight;
+        return percent > 0 && percent < 1 || this.has('maxHeight', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && (this.absoluteParent?.hasHeight || this.positionFixed);
+    }
+
     set textBounds(value) {
         this._textBounds = value;
     }
@@ -2825,7 +2839,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.percentHeight;
         if (result === undefined) {
             const value = this.valueOf('height');
-            return this._cache.percentHeight = isPercent(value) && (this.absoluteParent?.hasHeight || this.valueOf('position') === 'fixed') ? convertPercent(value) : 0;
+            return this._cache.percentHeight = isPercent(value) && (this.absoluteParent?.hasHeight || this.positionFixed) ? convertPercent(value) : 0;
         }
         return result;
     }
