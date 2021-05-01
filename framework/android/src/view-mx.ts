@@ -354,18 +354,11 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
     return percentAvailable;
 }
 
-function withinFixedBoxDimension(node: T, dimension: DimensionAttr) {
-    if (node.pageFlow) {
-        const parent = node.actualParent!;
-        return parent.hasUnit(dimension, { percent: false }) && (!parent.flexElement || !parent.flexdata[dimension === 'width' ? 'row' : 'column']);
-    }
-    return false;
-}
 
 function constraintPercentWidth(node: T, percentAvailable = 1) {
     const value = node.percentWidth;
     if (value) {
-        if (withinFixedBoxDimension(node, 'width')) {
+        if (node.hasFixedDimension('width')) {
             if (value < 1) {
                 node.setLayoutWidth(formatPX(node.actualWidth));
             }
@@ -383,7 +376,7 @@ function constraintPercentWidth(node: T, percentAvailable = 1) {
 function constraintPercentHeight(node: T, percentAvailable = 1) {
     const value = node.percentHeight;
     if (value) {
-        if (withinFixedBoxDimension(node, 'height')) {
+        if (node.hasFixedDimension('height')) {
             if (value < 1) {
                 node.setLayoutHeight(formatPX(node.actualHeight));
             }
@@ -861,7 +854,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             if (!layoutHeight) {
                                 if (!this.pageFlow) {
-                                    if (this.cssValue('position') === 'fixed') {
+                                    if (this.positionFixed) {
                                         layoutHeight = 'match_parent';
                                     }
                                     else if (renderParent.layoutConstraint && (this.hasUnit('top') || this.hasUnit('bottom'))) {
@@ -1841,6 +1834,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
+        public hasFixedDimension(dimension: DimensionAttr) {
+            if (this.positionFixed) {
+                return dimension === 'width' ? this.percentWidth === 0 : this.percentHeight === 0;
+            }
+            const parent = this.absoluteParent;
+            return !!parent && parent.hasUnit(dimension, { percent: false }) && (!this.pageFlow || !parent.flexElement || !parent.flexdata[dimension === 'width' ? 'row' : 'column']);
+        }
+
         public hide(options?: HideOptions<T>) {
             if (options) {
                 if (options.hidden) {
@@ -1856,27 +1857,31 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public android(attr: string, value?: string, overwrite = true) {
-            if (value) {
-                if (value = this.attr('android', attr, value, overwrite)) {
-                    return value;
+            if (typeof value === 'string') {
+                if (value) {
+                    if (value = this.attr('android', attr, value, overwrite)) {
+                        return value;
+                    }
                 }
-            }
-            else if (value === '') {
-                this.delete('android', attr);
-                return '';
+                else {
+                    this.delete('android', attr);
+                    return '';
+                }
             }
             return this._namespaces.android![attr] || '';
         }
 
         public app(attr: string, value?: string, overwrite = true) {
-            if (value) {
-                if (value = this.attr('app', attr, value, overwrite)) {
-                    return value;
+            if (typeof value === 'string') {
+                if (value) {
+                    if (value = this.attr('app', attr, value, overwrite)) {
+                        return value;
+                    }
                 }
-            }
-            else if (value === '') {
-                this.delete('app', attr);
-                return '';
+                else {
+                    this.delete('app', attr);
+                    return '';
+                }
             }
             const app = this._namespaces.app;
             return app && app[attr] || '';

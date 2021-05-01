@@ -1718,6 +1718,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return percent > 0 && percent < 1 || this.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
     }
 
+    get variableHeight() {
+        const percent = this.percentHeight;
+        return percent > 0 && percent < 1 || this.has('maxHeight', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && (this.absoluteParent?.hasHeight || this.positionFixed);
+    }
+
     set autoPosition(value) {
         this._cache.autoPosition = value;
     }

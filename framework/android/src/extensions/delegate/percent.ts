@@ -20,7 +20,6 @@ interface PercentData {
 
 const { asPercent, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { startsWith } = squared.lib.util;
 
 function getPercent(value: string) {
     const offset = asPercent(value);
@@ -29,17 +28,16 @@ function getPercent(value: string) {
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.actualParent!.layoutElement && !startsWith(node.display, 'table');
+        return !node.actualParent!.layoutElement && !node.tableElement || !node.pageFlow;
     }
 
     public condition(node: T, parent: T) {
-        const absoluteParent = node.absoluteParent || parent;
         let percentWidth: Undef<boolean>,
             percentHeight: Undef<boolean>,
             marginHorizontal: Undef<boolean>,
             marginVertical: Undef<boolean>;
-        if (!absoluteParent.hasUnit('width', { percent: false })) {
-            percentWidth = node.variableWidth && !parent.layoutConstraint && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
+        if (!node.hasFixedDimension('width')) {
+            percentWidth = node.variableWidth && !parent.layoutConstraint && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0 || parent.blockWidth || parent.flexibleWidth));
             marginHorizontal = (!!getPercent(node.cssValue('marginLeft')) || !!getPercent(node.cssValue('marginRight'))) && (
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
                 parent.layoutFrame ||
@@ -48,10 +46,9 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 !node.pageFlow
             );
         }
-        if (!absoluteParent.hasUnit('height', { percent: false })) {
-            const percent = node.percentHeight;
-            percentHeight = (percent > 0 && percent < 1 || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' }) && parent.hasHeight) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
-            marginVertical = (!!getPercent(node.cssValue('marginTop')) || !!getPercent(node.cssValue('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
+        if (!node.hasFixedDimension('height')) {
+            percentHeight = node.variableHeight && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0 || parent.blockHeight || parent.flexibleHeight);
+            marginVertical = (!!getPercent(node.cssValue('marginTop')) || !!getPercent(node.cssValue('marginBottom'))) && (node.documentParent.percentHeight > 0 || node.positionFixed) && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
         }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
             this.data.set(node, { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
