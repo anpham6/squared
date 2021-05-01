@@ -1,4 +1,3 @@
-import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_TEMPLATE = squared.base.lib.constant.NODE_TEMPLATE;
@@ -12,7 +11,7 @@ import CssGrid = squared.base.extensions.CssGrid;
 
 const { splitSome } = squared.lib.util;
 
-const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasUnit('width') || node.has('width', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && node.cssInitial('minWidth') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
+const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasUnit('width') || node.isResizable('width') && node.cssInitial('minWidth') !== '100%' || node.isResizable('maxWidth');
 const hasFullHeight = (node: View) => node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%';
 const hasMargin = (node: View) => node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0;
 const isParentVisible = (node: View, parent: View) => parent.visibleStyle.background && (hasVisibleWidth(node) || !hasFullHeight(parent) || !hasFullHeight(node));

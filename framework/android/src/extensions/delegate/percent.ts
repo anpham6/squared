@@ -1,4 +1,3 @@
-import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
@@ -37,7 +36,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             marginHorizontal: Undef<boolean>,
             marginVertical: Undef<boolean>;
         if (!node.hasFixedDimension('width')) {
-            percentWidth = node.variableWidth && !parent.layoutConstraint && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0 || parent.blockWidth || parent.flexibleWidth));
+            percentWidth = node.variableWidth && !parent.layoutConstraint && (node.rootElement || (parent.layoutVertical || parent.layoutFrame || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0 || parent.variableWidth || parent.isResizable('minWidth') || parent.blockWidth || parent.flexibleWidth));
             marginHorizontal = (!!getPercent(node.cssValue('marginLeft')) || !!getPercent(node.cssValue('marginRight'))) && (
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
                 parent.layoutFrame ||
@@ -47,7 +46,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             );
         }
         if (!node.hasFixedDimension('height')) {
-            percentHeight = node.variableHeight && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0 || parent.blockHeight || parent.flexibleHeight);
+            percentHeight = node.variableHeight && (node.cssInitial('height') !== '100%' || node.isResizable('maxHeight') && (node.rootElement || parent.percentHeight > 0 || parent.variableHeight || parent.isResizable('minHeight') || parent.blockHeight || parent.flexibleHeight));
             marginVertical = (!!getPercent(node.cssValue('marginTop')) || !!getPercent(node.cssValue('marginBottom'))) && (node.documentParent.percentHeight > 0 || node.positionFixed) && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
         }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {

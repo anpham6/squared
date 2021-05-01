@@ -671,6 +671,7 @@ declare module "base" {
         translateY(value: number, options?: TranslateOptions): boolean;
         getBoxSpacing(): [number, number, number, number];
         getPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
+        isResizable(attr: DimensionSizableAttr): boolean;
         fitToScreen(value: Dimension): Dimension;
         cssValue(attr: CssStyleAttr): string;
         cssValues(...attrs: CssStyleAttr[]): string[];

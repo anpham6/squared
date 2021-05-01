@@ -1,4 +1,3 @@
-import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
@@ -1003,7 +1002,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const outerRenderParent = node.renderParent as T || renderParent;
             const autoMargin = this.autoMargin;
             const setAutoMargin = (target: T) => {
-                if (autoMargin.horizontal && (!target.blockWidth || target.hasWidth || target.hasUnit('maxWidth') || target.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
+                if (autoMargin.horizontal && (!target.blockWidth || target.hasWidth || target.hasUnit('maxWidth') || target.innerMostWrapped.isResizable('width'))) {
                     target.mergeGravity((target.blockWidth || !target.pageFlow) && !target.outerWrapper ? 'gravity' : 'layout_gravity', autoMargin.leftRight ? 'center_horizontal' : autoMargin.left ? 'right' : 'left');
                     return true;
                 }
@@ -2836,12 +2835,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         this.setLayoutHeight('0px');
                                     }
                                     if (parent.innerMostWrapped.documentBody) {
-                                        const options: HasOptions = {
-                                            type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT,
-                                            not: '100%'
-                                        };
                                         do {
-                                            if (!parent.has(dimension, options) && !parent.has(horizontal ? 'maxWidth' : 'maxHeight', options)) {
+                                            if (!parent.isResizable(dimension) && !parent.isResizable(horizontal ? 'maxWidth' : 'maxHeight')) {
                                                 if (horizontal) {
                                                     parent.setLayoutWidth('match_parent', parent.inlineWidth);
                                                 }
