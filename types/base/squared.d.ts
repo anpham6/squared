@@ -465,6 +465,7 @@ declare module "base" {
         toElementString(attr: string, fallback?: string): string;
         setBounds(cache?: boolean): Null<BoxRectDimension>;
         resetBounds(recalibrate?: boolean): void;
+        getContainerSize(options?: NodeUnitOptions): number;
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
@@ -514,6 +515,7 @@ declare module "base" {
         get display(): string;
         get positionStatic(): boolean;
         get positionRelative(): boolean;
+        get positionFixed(): boolean;
         get top(): number;
         get right(): number;
         get bottom(): number;

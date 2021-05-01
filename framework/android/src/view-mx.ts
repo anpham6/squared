@@ -1669,6 +1669,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return value;
         }
 
+        public getContainerSize(options?: NodeUnitOptions) {
+            const bounds: Dimension = (!options || options.parent !== false) && (this.positionFixed ? this.localSettings.screenDimension : this.absoluteParent?.box) || this.bounds;
+            return bounds[options && options.dimension || 'width'];
+        }
+
         public translateX(value: number, options?: TranslateOptions) {
             if (!isNaN(value)) {
                 const node = this.anchorTarget;
