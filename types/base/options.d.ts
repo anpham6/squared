@@ -124,10 +124,12 @@ interface MinMaxOptions extends CssInitialOptions {
     initialValue?: number;
 }
 
-interface NodeParseUnitOptions extends ParseUnitOptions {
+interface NodeUnitOptions {
     dimension?: DimensionAttr;
     parent?: boolean;
 }
+
+interface NodeParseUnitOptions extends ParseUnitOptions, NodeUnitOptions {}
 
 interface NodeConvertUnitOptions extends NodeParseUnitOptions, ConvertUnitOptions {}
 
