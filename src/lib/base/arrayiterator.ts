@@ -8,7 +8,11 @@ export default class Iterator<T = any> implements squared.lib.base.ArrayIterator
     }
 
     public next() {
-        if (this.hasNext()) {
+        if (this._iterating === -1) {
+            this._iterating = 1;
+            return this.children[this._index];
+        }
+        else if (this.hasNext()) {
             this._iterating = 1;
             return this.children[++this._index];
         }
@@ -19,11 +23,12 @@ export default class Iterator<T = any> implements squared.lib.base.ArrayIterator
     }
 
     public remove() {
-        const iterating = this._iterating;
-        if (iterating !== 0) {
+        if (this._length && this._iterating !== 0) {
             this.children.splice(this._index, 1);
-            this._index -= iterating;
+            this._index -= this._iterating;
             --this._length;
+        }
+        else {
             this._iterating = 0;
         }
     }
@@ -31,7 +36,7 @@ export default class Iterator<T = any> implements squared.lib.base.ArrayIterator
     public forEachRemaining(predicate: BindGeneric<T, void>) {
         const children = this.children;
         while (this.hasNext()) {
-            predicate(children[++this._index]);
+            predicate.call(this, children[++this._index]);
         }
     }
 }
