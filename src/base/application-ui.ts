@@ -267,7 +267,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         for (let i = 0, q = documentRoot.length; i < q; ++i) {
             const { node, pathname, filename, documentBase, renderTemplates } = documentRoot[i];
             this.saveDocument(
-                filename!,
+                filename,
                 this._controllerSettings.layout.baseTemplate + controller.writeDocument(renderTemplates, Math.abs(node.depth), this.userSettings.showAttributes),
                 pathname,
                 documentBase ? 0 : -1

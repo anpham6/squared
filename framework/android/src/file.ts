@@ -46,6 +46,7 @@ function getFileAssets(pathname: string, items: string[], document: StringOfArra
 }
 
 function getImageAssets(this: Resource<View>, resourceId: number, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray) {
+    const compress = compressing ? [{ format: 'png' }] : undefined;
     const length = items.length;
     const result: FileAsset[] = new Array(length / 3);
     for (let i = 0, j = 0; i < length; i += 3) {
@@ -79,7 +80,7 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
             filename,
             mimeType,
             commands,
-            compress: compressing ? [{ format: 'png' }] : undefined,
+            compress,
             uri,
             document: File.copyDocument(document),
             tasks: image && image.tasks
@@ -104,6 +105,29 @@ function getRawAssets(this: Resource<View>, resourceId: number, name: ResourceRa
         };
     }
     return result;
+}
+
+function checkLayoutFiles(assets: FileAsset[], mainFileName: string, document?: StringOfArray) {
+    for (let i = 0, length = assets.length, found: Undef<boolean>; i < length; ++i) {
+        const item = assets[i];
+        if (item.content && !item.uri) {
+            if (!endsWith(item.filename, '.xml')) {
+                if (!found) {
+                    item.filename = mainFileName;
+                    found = true;
+                }
+                else {
+                    item.filename += '.xml';
+                }
+            }
+            else if (item.filename === mainFileName) {
+                found = true;
+            }
+            if (document) {
+                item.document ||= document;
+            }
+        }
+    }
 }
 
 const hasFileAction = (options: Undef<FileUniversalOptions>): options is FileUniversalOptions => !!(options && (options.directory || options.filename));
@@ -239,6 +263,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const [fontFamily, fontStyle, fontWeight] = attr.split(';');
                 const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
                 itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
+                if (options?.xmlOnly) {
+                    continue;
+                }
                 const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
                 if (fonts.length) {
                     let uri: Undef<string>,
@@ -445,12 +472,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions) {
         const result: PlainObject = {};
         const assets: FileAsset[] = [];
-        for (let i = 0, length = layouts.length; i < length; ++i) {
-            const { content, filename, pathname } = layouts[i];
+        if (hasFileAction(options)) {
+            checkLayoutFiles(assets, this.userSettings.outputMainFileName);
+        }
+        for (const { content, filename } of layouts) {
             result[filename] = [content];
-            if (hasFileAction(options)) {
-                assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : filename + '.xml', content } as FileAsset);
-            }
         }
         if (hasFileAction(options)) {
             if (options.assets) {
@@ -484,88 +510,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
     protected async processAssets(assets: FileAsset[], options: FileUniversalOptions) {
         const { userSettings, resource, resourceId } = this;
         const documentHandler = userSettings.outputDocumentHandler;
-        for (let i = 0, length = assets.length, first = true; i < length; ++i) {
-            const item = assets[i];
-            if (item.content && !item.uri) {
-                if (!endsWith(item.filename, '.xml')) {
-                    if (first) {
-                        item.filename = userSettings.outputMainFileName;
-                    }
-                    else {
-                        item.filename += '.xml';
-                    }
-                }
-                item.document ||= userSettings.outputDocumentHandler;
-                first = false;
-            }
-        }
+        checkLayoutFiles(assets, this.userSettings.outputMainFileName, documentHandler);
         const data = Resource.ASSETS[resourceId];
         if (data) {
             const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
-            const imageAssets = getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
-            const videoAssets = getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);
-            const audioAssets = getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler);
-            const uri = options.config?.uri;
-            if (uri) {
-                const items = await this.loadConfig(uri, options);
-                if (items) {
-                    for (const item of items) {
-                        const { selector, commands, watch, tasks, document: documentData } = item;
-                        if (selector && (commands || watch || tasks || documentData)) {
-                            document.querySelectorAll(selector).forEach((element: HTMLElement) => {
-                                let src: string;
-                                switch (element.tagName) {
-                                    case 'IMG':
-                                    case 'AUDIO':
-                                    case 'SOURCE':
-                                    case 'EMBED':
-                                    case 'IFRAME':
-                                        src = (element as HTMLImageElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLIFrameElement).src;
-                                        break;
-                                    case 'VIDEO':
-                                        src = (element as HTMLVideoElement)[item.type === 'image' ? 'poster' : 'src'];
-                                        break;
-                                    case 'OBJECT':
-                                        src = (element as HTMLObjectElement).data;
-                                        break;
-                                    default:
-                                        return;
-                                }
-                                if (src = resolvePath(src)) {
-                                    let related: FileAsset[];
-                                    switch (item.type) {
-                                        case 'image':
-                                            related = imageAssets.filter(asset => asset.uri === src);
-                                            break;
-                                        case 'video':
-                                            related = videoAssets.filter(asset => asset.uri === src);
-                                            break;
-                                        case 'audio':
-                                            related = audioAssets.filter(asset => asset.uri === src);
-                                            break;
-                                        default:
-                                            return;
-                                    }
-                                    for (const asset of related) {
-                                        if (commands) {
-                                            asset.commands = commands;
-                                        }
-                                        if (watch) {
-                                            asset.watch = watch;
-                                        }
-                                        if (tasks) {
-                                            asset.tasks = tasks;
-                                        }
-                                        if (documentData) {
-                                            asset.document = documentData;
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }
-            }
             assets.push(
                 ...getFileAssets(outputDirectory, this.resourceStringToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceStringArrayToXml(), documentHandler),
@@ -574,13 +522,81 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 ...getFileAssets(outputDirectory, this.resourceDimenToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceStyleToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceDrawableToXml(), documentHandler),
-                ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler),
-                ...imageAssets,
-                ...videoAssets,
-                ...audioAssets
+                ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler)
             );
-            if (data.other) {
-                assets.push(...data.other);
+            if (!options.xmlOnly) {
+                const imageAssets = getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
+                const videoAssets = getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);
+                const audioAssets = getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler);
+                const uri = options.config?.uri;
+                if (uri) {
+                    const items = await this.loadConfig(uri, options);
+                    if (items) {
+                        for (const item of items) {
+                            const { selector, commands, watch, tasks, document: documentData } = item;
+                            if (selector && (commands || watch || tasks || documentData)) {
+                                document.querySelectorAll(selector).forEach((element: HTMLElement) => {
+                                    let src: string;
+                                    switch (element.tagName) {
+                                        case 'IMG':
+                                        case 'AUDIO':
+                                        case 'SOURCE':
+                                        case 'EMBED':
+                                        case 'IFRAME':
+                                            src = (element as HTMLImageElement | HTMLAudioElement | HTMLSourceElement | HTMLEmbedElement | HTMLIFrameElement).src;
+                                            break;
+                                        case 'VIDEO':
+                                            src = (element as HTMLVideoElement)[item.type === 'image' ? 'poster' : 'src'];
+                                            break;
+                                        case 'OBJECT':
+                                            src = (element as HTMLObjectElement).data;
+                                            break;
+                                        default:
+                                            return;
+                                    }
+                                    if (src = resolvePath(src)) {
+                                        let related: FileAsset[];
+                                        switch (item.type) {
+                                            case 'image':
+                                                related = imageAssets.filter(asset => asset.uri === src);
+                                                break;
+                                            case 'video':
+                                                related = videoAssets.filter(asset => asset.uri === src);
+                                                break;
+                                            case 'audio':
+                                                related = audioAssets.filter(asset => asset.uri === src);
+                                                break;
+                                            default:
+                                                return;
+                                        }
+                                        for (const asset of related) {
+                                            if (commands) {
+                                                asset.commands = commands;
+                                            }
+                                            if (watch) {
+                                                asset.watch = watch;
+                                            }
+                                            if (tasks) {
+                                                asset.tasks = tasks;
+                                            }
+                                            if (documentData) {
+                                                asset.document = documentData;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                assets.push(
+                    ...imageAssets,
+                    ...videoAssets,
+                    ...audioAssets
+                );
+                if (data.other) {
+                    assets.push(...data.other);
+                }
             }
         }
         return assets;
