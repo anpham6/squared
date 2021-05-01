@@ -145,6 +145,7 @@ interface LayoutType {
 interface LayoutRoot<T> extends Partial<LocationUri> {
     node: T;
     renderTemplates: NodeTemplate<T>[];
+    filename: string;
     documentBase?: boolean;
 }
 
