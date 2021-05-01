@@ -543,13 +543,14 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
     let flags = '',
         fromEnd: Undef<boolean>;
     if (options) {
-        if (options.caseSensitive === false) {
+        if (options.ignoreCase) {
             flags += 'i';
         }
         fromEnd = options.fromEnd;
     }
     const trimCurrent = (cwd: string) => fromEnd && startsWith(cwd, './') ? cwd.substring(2) : cwd;
-    const source = ((!fromEnd ? '^' : '') + trimCurrent(value = value.trim()))
+    return new GlobExp(
+        ((!fromEnd ? '^' : '') + trimCurrent(value = value.trim()))
         .replace(/\\\\([^\\])/g, (...match: string[]) => ':' + match[1].charCodeAt(0))
         .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
         .replace(/\{([^}]+)\}/g, (...match: string[]) => {
@@ -591,6 +592,5 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
                     return '\\?';
             }
             return '\\\\' + String.fromCharCode(+match[1]);
-        }) + '$';
-    return new GlobExp(source, flags, value[0] === '!') as IGlobExp;
+        }) + '$', flags, value[0] === '!') as IGlobExp;
 }

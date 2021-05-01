@@ -186,7 +186,7 @@ interface BackgroundPositionOptions extends UnitOptions {
 
 interface ParseGlobOptions {
     fromEnd?: boolean;
-    caseSensitive?: boolean;
+    ignoreCase?: boolean;
 }
 
 interface LoadDataOptions {
