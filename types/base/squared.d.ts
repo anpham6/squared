@@ -768,8 +768,8 @@ declare module "base" {
     class NodeGroupUI extends NodeUI {}
 
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
-        sessionId: string;
-        resourceId: number;
+        readonly sessionId: string;
+        readonly resourceId: number;
         afterAdd?: (this: T, options: NodeListAddOptions) => void;
         add(node: T, options?: NodeListAddOptions): this;
         sort(predicate: FunctionSort<T>): this;

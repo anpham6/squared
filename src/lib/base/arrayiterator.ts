@@ -8,7 +8,11 @@ export default class Iterator<T = unknown> implements squared.lib.base.ArrayIter
     }
 
     public next() {
-        if (this.hasNext()) {
+        if (this._iterating === -1) {
+            this._iterating = 1;
+            return this.children[this._index];
+        }
+        else if (this.hasNext()) {
             this._iterating = 1;
             return this.children[++this._index];
         }

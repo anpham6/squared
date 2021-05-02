@@ -3293,7 +3293,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const clearMap = this.application.clearMap;
         const emptyMap = clearMap.size === 0;
         const floating = node.hasAlign(NODE_ALIGNMENT.FLOAT);
-        const horizontal = NodeUI.partitionRows(children, clearMap);
+        const horizontalRows = NodeUI.partitionRows(children, clearMap);
         const checkClearMap = (item: T) => {
             if (!emptyMap) {
                 if (item.naturalChild) {
@@ -3310,8 +3310,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let checkPercent = !node.hasWidth ? 1 : 0,
             previousRow: Undef<T[]>,
             previousAlignParent: Undef<boolean>;
-        for (let i = 0, length = horizontal.length, start = false; i < length; ++i) {
-            const partition = horizontal[i];
+        for (let i = 0, length = horizontalRows.length, start = false; i < length; ++i) {
+            const partition = horizontalRows[i];
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || !!item.autoMargin.left);
             let alignParent: Undef<boolean>,
                 aboveRowEnd: Undef<T>,
@@ -3497,7 +3497,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 previousRow = partition;
             }
         }
-        node.horizontalRows = horizontal;
+        node.horizontalRows = horizontalRows;
         if (checkPercent === -1) {
             node.setLayoutWidth('match_parent', false);
         }

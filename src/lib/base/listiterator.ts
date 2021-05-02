@@ -23,7 +23,11 @@ export default class ListIterator<T = unknown> extends ArrayIterator<T> implemen
     }
 
     public previous() {
-        if (this.hasPrevious()) {
+        if (this._iterating === 1) {
+            this._iterating = -1;
+            return this.children[this._index];
+        }
+        else if (this.hasPrevious()) {
             this._iterating = -1;
             return this.children[--this._index];
         }

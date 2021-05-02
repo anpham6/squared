@@ -574,7 +574,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         private _controlId = '';
         private _positioned = false;
-        private _anchored = false;
         private _constraint: Null<Constraint> = null;
         private _labelFor?: T;
         private _innerWrapped?: T;
@@ -3149,10 +3148,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         set anchored(value) {
-            this._anchored = value;
+            const constraint = this.constraint;
+            constraint.horizontal = value;
+            constraint.vertical = value;
         }
         get anchored() {
-            return this._anchored ||= this.constraint.horizontal && this.constraint.vertical;
+            const constraint = this.constraint;
+            return constraint.horizontal && constraint.vertical;
         }
 
         get constraint() {

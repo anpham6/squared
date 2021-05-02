@@ -1410,7 +1410,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public isResizable(attr: DimensionSizableAttr) {
-        return this.has(attr, { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
+        return this.has(attr, { type: CSS_UNIT.PERCENT | (attr === 'width' || attr === 'height' ? 0 : CSS_UNIT.LENGTH), not: '100%' });
     }
 
     public fitToScreen(value: Dimension): Dimension {
