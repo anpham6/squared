@@ -310,8 +310,55 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(resourceId, images, prefix, this._imageFormat);
     }
 
-    public addFontProvider(authority: string, packageName: string, certs: string[], fonts: FontProviderFonts) {
-        this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
+    public addFontProvider(authority: string, packageName: string, certs: string[], webfonts: PlainObject, verified?: boolean) {
+        try {
+            let fonts: FontProviderFonts;
+            if (!verified) {
+                if (webfonts.kind === 'webfonts#webfontList' && Array.isArray(webfonts.items)) {
+                    fonts = {};
+                    (webfonts.items as WebFont[]).forEach(({ family, variants }) => {
+                        const normal: string[] = [];
+                        const italic: string[] = [];
+                        const width = family.endsWith('Expanded') ? '125' : family.endsWith('Condensed') ? '75' : '';
+                        for (const weight of variants) {
+                            if (weight === 'regular') {
+                                normal.push('400');
+                            }
+                            else if (weight === 'italic') {
+                                italic.push('400');
+                            }
+                            else if (weight.endsWith('italic')) {
+                                italic.push(weight.substring(0, 3));
+                            }
+                            else {
+                                normal.push(weight);
+                            }
+                        }
+                        const font: FontProviderFontsStyle = {};
+                        if (normal.length) {
+                            font.normal = normal;
+                        }
+                        if (italic.length) {
+                            font.italic = italic;
+                        }
+                        if (width) {
+                            font.width = width;
+                        }
+                        fonts[family] = font;
+                    });
+                }
+                else {
+                    return;
+                }
+            }
+            else {
+                fonts = webfonts as FontProviderFonts;
+            }
+            this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
+        }
+        catch (err) {
+            this.application.writeError(err instanceof Error ? err.message : err, 'FAIL: Unknown WebFont');
+        }
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {

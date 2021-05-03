@@ -87,7 +87,7 @@
     "mime-types": "^2.1.30",
     "request": "^2.88.2",
     "uuid": "^8.3.2",
-    "yargs": "^16.2.0"
+    "yargs": "^17.0.0"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.14.0",
@@ -109,7 +109,7 @@
     "@types/puppeteer": "^5.4.3",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
-    "aws-sdk": "^2.897.0",
+    "aws-sdk": "^2.899.0",
     "clean-css": "^5.1.2",
     "csv-parse": "^4.15.4",
     "cwebp-bin": "^6.1.1",
@@ -126,7 +126,7 @@
     "postcss": "^8.2.13",
     "posthtml": "^0.15.2",
     "prettier": "^2.2.1",
-    "puppeteer": "^9.0.0",
+    "puppeteer": "^9.1.0",
     "readdirp": "^3.6.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.46.0",

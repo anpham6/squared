@@ -32,7 +32,7 @@ interface Deprecations<T> {
 }
 
 interface FontProviderAction {
-    addFontProvider(authority: string, package: string, certs: string[], fonts: FontProviderFonts): void;
+    addFontProvider(authority: string, package: string, certs: string[], webfonts: PlainObject): void;
 }
 
 interface FontProvider {
@@ -50,4 +50,15 @@ interface FontProviderFontsStyle {
     normal?: string[];
     italic?: string[];
     width?: string;
+}
+
+interface WebFont {
+    family: string;
+    variants: string[];
+    subsets: string[];
+    version: string;
+    lastModified: string;
+    files: string[];
+    category: string;
+    kind: string;
 }

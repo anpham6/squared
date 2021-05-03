@@ -253,17 +253,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
         for (let i = 0; i < length; ++i) {
             const [key, value] = items[i];
             const item = value.map(innerText => ({ innerText }));
-            if (key.indexOf(':') !== -1) {
-                const [type, name, translatable] = key.split(':');
-                const data: ArrayValue = { name, item };
-                if (translatable === '0') {
-                    data.translatable = 'false';
-                }
-                (type === '0' ? array : stringArray).push(data);
+            const [name, type, translatable] = key.split(':');
+            const data: ArrayValue = { name, item };
+            if (translatable === '0') {
+                data.translatable = 'false';
             }
-            else {
-                stringArray.push({ name: key, item });
-            }
+            (type === '0' ? array : stringArray).push(data);
         }
         return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'array': array, 'string-array': stringArray }]), this.userSettings.insertSpaces), this.directory.string, 'string_arrays.xml'], options);
     }

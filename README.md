@@ -370,7 +370,9 @@ body.addEvent("click", event => body.element.classList.toggle("example"));
 android.customize(build: number, widget: string, options: {}) // Global attributes applied to specific views
 android.setViewModel(data: {}, sessionId?: string) // Object data for layout bindings
 android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
-android.addFontProvider(authority: string, package: string, certs: string[], fonts: FontProviderFonts) // Add additional font providers (Google Fonts are already included)
+
+// https://developers.google.com/fonts/docs/developer_api
+android.addFontProvider(authority: string, package: string, certs: string[], webfonts: {}) // Add additional Web fonts (Google Fonts already included)
 ```
 
 ```javascript
@@ -562,13 +564,21 @@ if (imageView1 != null) {
 
 ### ANDROID: Downloadable Fonts
 
-Font providers are available as of squared 3.1.0. Google Fonts can already be used without any configuration.
+Font providers are available as of squared 3.1. Google Fonts can be used without any additional configuration.
 
 * [Guide](https://developer.android.com/guide/topics/ui/look-and-feel/downloadable-fonts)
 
 ```xml
-<!-- AndroidManifest.xml -->
+<!-- build.gradle -->
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.2.0' <!-- Required -->
 
+    <!-- OR -->
+    implementation 'com.android.support:appcompat:28.0.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+}
+
+<!-- AndroidManifest.xml -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application android:theme="@style/AppTheme">
         <meta-data android:name="preloaded_fonts" android:resource="@array/preloaded_fonts" /> <!-- Recommended -->

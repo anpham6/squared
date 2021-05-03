@@ -50,7 +50,7 @@ declare namespace base {
         readonly application: Application<T>;
         addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcData[]): string;
         addImageSet(resourceId: number, images: StringMap, prefix?: string): string;
-        addFontProvider(authority: string, package: string, certs: string[], fonts: FontProviderFonts): void;
+        addFontProvider(authority: string, package: string, certs: string[], webfonts: PlainObject, verified?: boolean): void;
         get fontProvider(): ObjectMap<FontProvider>;
     }
 
