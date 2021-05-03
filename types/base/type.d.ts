@@ -6,6 +6,7 @@ type DimensionSizableAttr = DimensionAttr | "minWidth" | "minHeight" | "maxWidth
 type ResourceAssetType = ResourceRawAsset | "image" | "fonts" | "rawData";
 type ResourceAssetTagName = ResourceRawAsset | "object" | "embed" | "iframe";
 type ResourceRawAsset = "video" | "audio";
+type FontStyle = "normal" | "italic";
 type ResourceSessionAsset = Optional<ResourceAssetMap>[];
 type ResourceSessionStored<T = ResourceStoredMap> = Optional<T>[];
 type WatchValue = boolean | WatchInterval;

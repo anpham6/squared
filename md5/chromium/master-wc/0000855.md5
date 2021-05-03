@@ -1,9 +1,13 @@
 178f006ec0d495b00cc0db90bb0d5aca  ./app/src/main/res/drawable/div_linearlayout_1.xml
 109125cd6ed64cdfa3ed42d4392550b3  ./app/src/main/res/drawable/input_text_edittext_1.xml
 7acfc5217bf33f6f2d6313ed2e72c646  ./app/src/main/res/drawable/span_textview_1.xml
+fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
+4f8866f9f2a59d40f184cd0a4198ce5e  ./app/src/main/res/font/roboto_bold.xml
+276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
 c55ce7c02d190127d262158080645f66  ./app/src/main/res/layout/activity_main.xml
 2ada8f5536c7eee63e33f1d422dc2ea5  ./app/src/main/res/values/colors.xml
 8bf697da87fb744db845b66c353e1eae  ./app/src/main/res/values/dimens.xml
+00e923c59075e44f54c44454d11ae355  ./app/src/main/res/values/string_arrays.xml
 28f4ddd53c71b4a05a2261b879628208  ./app/src/main/res/values/strings.xml
-5c83d1f3ea2c80c637db69d719b9724e  ./app/src/main/res/values/styles.xml
+d1efd51325b3eb86e63af52e65211b3b  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

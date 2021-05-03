@@ -30,3 +30,24 @@ interface CustomizationsData<T> {
 interface Deprecations<T> {
     android: ObjectMap<CustomizationResult<T>>;
 }
+
+interface FontProviderAction {
+    addFontProvider(authority: string, package: string, certs: string[], fonts: FontProviderFonts): void;
+}
+
+interface FontProvider {
+    authority: string;
+    package: string;
+    certs: string[];
+    fonts: FontProviderFonts;
+}
+
+interface FontProviderFonts {
+    [name: string]: Undef<FontProviderFontsStyle>;
+}
+
+interface FontProviderFontsStyle {
+    normal?: string[];
+    italic?: string[];
+    width?: string;
+}

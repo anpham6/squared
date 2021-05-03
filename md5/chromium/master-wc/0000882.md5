@@ -4,9 +4,13 @@
 b3217ca0a976377a742691a859700982  ./app/src/main/res/drawable/th_textview_21.xml
 c4ceeec9ff850c957c74695cbe9aa733  ./app/src/main/res/drawable/th_textview_5.xml
 4202a4effdd6cd1bb7408a56c75c9abd  ./app/src/main/res/drawable/th_textview_9.xml
+fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
+4f8866f9f2a59d40f184cd0a4198ce5e  ./app/src/main/res/font/roboto_bold.xml
+276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
 88e77ee3c184b7f3ba2cfaf4da794fcb  ./app/src/main/res/layout/activity_main.xml
 b005efe3ffb59c6507fb6d446025dfd6  ./app/src/main/res/values/colors.xml
 e52190397eda6e3c9aecb4d1d69fc63d  ./app/src/main/res/values/dimens.xml
+00e923c59075e44f54c44454d11ae355  ./app/src/main/res/values/string_arrays.xml
 49973c0bdf6d873dfa8c68fef75f0b5b  ./app/src/main/res/values/strings.xml
-b1eafe4f810d12ed6c2d2d2df40bd20d  ./app/src/main/res/values/styles.xml
+090669ff1175ae88a1ee2e030824dbf4  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

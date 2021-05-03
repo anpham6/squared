@@ -43,6 +43,7 @@ const settings: UserResourceSettingsUI = {
     fontMeasureAdjust: 0.75,
     lineHeightAdjust: 1.1,
     baseLayoutAsFragment: false,
+    createDownloadableFonts: true,
     createElementMap: false,
     createQuerySelectorMap: false,
     pierceShadowRoot: true,

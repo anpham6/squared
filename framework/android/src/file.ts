@@ -27,7 +27,19 @@ interface ItemValue {
     innerText: string;
 }
 
-const { convertBase64, endsWith, isPlainObject, lastItemOf, replaceAll, splitPair, splitPairStart, splitSome, resolvePath } = squared.lib.util;
+interface ArrayValue {
+    name: string;
+    translatable?: string;
+    item: { innerText: string }[];
+}
+
+interface FontValue {
+    font: string;
+    fontStyle: string;
+    fontWeight: string;
+}
+
+const { convertBase64, convertWord, endsWith, isPlainObject, lastItemOf, replaceAll, splitPair, splitPairStart, splitSome, resolvePath } = squared.lib.util;
 
 const { fromMimeType, getComponentEnd, parseMimeType } = squared.base.lib.util;
 
@@ -236,12 +248,24 @@ export default class File<T extends View> extends squared.base.File<T> implement
             return [];
         }
         const items = Array.from(stored.arrays).sort();
-        const itemArray: { name: string; item: { innerText: string }[] }[] = new Array(length);
+        const array: ArrayValue[] = [];
+        const stringArray: ArrayValue[] = [];
         for (let i = 0; i < length; ++i) {
-            const item = items[i];
-            itemArray[i] = { name: item[0], item: item[1].map(innerText => ({ innerText })) };
+            const [key, value] = items[i];
+            const item = value.map(innerText => ({ innerText }));
+            if (key.indexOf(':') !== -1) {
+                const [type, name, translatable] = key.split(':');
+                const data: ArrayValue = { name, item };
+                if (translatable === '0') {
+                    data.translatable = 'false';
+                }
+                (type === '0' ? array : stringArray).push(data);
+            }
+            else {
+                stringArray.push({ name: key, item });
+            }
         }
-        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'string-array': itemArray }]), this.userSettings.insertSpaces), this.directory.string, 'string_arrays.xml'], options);
+        return this.checkFileAssets([replaceTab(applyTemplate('resources', STRINGARRAY_TMPL, [{ 'array': array, 'string-array': stringArray }]), this.userSettings.insertSpaces), this.directory.string, 'string_arrays.xml'], options);
     }
 
     public resourceFontToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions): string[] {
@@ -255,56 +279,79 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const directory = getOutputDirectory(outputDirectory);
         const pathname = this.directory.font;
         const items = Array.from(stored.fonts).sort();
-        const result: string[] = new Array(length * 3);
-        for (let i = 0, j = 0; i < length; ++i) {
-            const [name, font] = items[i];
-            const itemArray: { font: string; fontStyle: string; fontWeight: string }[] = [];
+        const result: string[] = [];
+        for (let i = 0; i < length; ++i) {
+            const [filename, font] = items[i];
+            const itemArray: FontValue[] = [];
             for (const attr in font) {
-                const [fontFamily, fontStyle, fontWeight] = attr.split(';');
-                const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
-                itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
-                if (options?.updateXmlOnly) {
-                    continue;
+                if (attr.indexOf(';') === -1) {
+                    const fontProvider = resource.fontProvider[attr]!;
+                    result.push(
+                        replaceTab(
+                            applyTemplate('font-family', FONTFAMILY_TMPL, [{
+                                'xmlns:app': XML_NAMESPACE.app,
+                                'app:fontProviderAuthority': fontProvider.authority,
+                                'app:fontProviderPackage': fontProvider.package,
+                                'app:fontProviderQuery': font[attr],
+                                'app:fontProviderCerts': `@array/${convertWord(fontProvider.authority.toLowerCase())}_certs`
+                            }]),
+                            insertSpaces
+                        ),
+                        pathname,
+                        filename + '.xml'
+                    );
                 }
-                const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
-                if (fonts.length) {
-                    let uri: Undef<string>,
-                        base64: Undef<string>,
-                        ext: Undef<string>,
-                        data = fonts.find(item => item.srcUrl);
-                    if (data && (uri = data.srcUrl)) {
-                        const rawData = resource.getRawData(resourceId, uri);
-                        if (rawData) {
-                            base64 = rawData.base64;
-                            if (!base64 && rawData.buffer) {
-                                base64 = convertBase64(rawData.buffer);
-                                rawData.base64 = base64;
-                            }
-                            if (rawData.mimeType) {
-                                ext = fromMimeType(rawData.mimeType);
-                            }
-                        }
-                        ext ||= fromMimeType(data.mimeType) || Resource.getExtension(splitPairStart(uri, '?')).toLowerCase();
-                    }
-                    else if (data = fonts.find(item => item.srcBase64)) {
-                        base64 = data.srcBase64;
-                        ext = fromMimeType(data.mimeType);
-                    }
-                    else {
+                else {
+                    const [fontFamily, fontStyle, fontWeight] = attr.split(';');
+                    const fontName = filename + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
+                    itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
+                    if (options?.updateXmlOnly) {
                         continue;
                     }
-                    resource.addAsset(resourceId, {
-                        pathname: directory + pathname,
-                        filename: fontName + '.' + (ext || 'ttf'),
-                        uri: !base64 ? uri : undefined,
-                        base64
-                    });
+                    const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
+                    if (fonts.length) {
+                        let uri: Undef<string>,
+                            base64: Undef<string>,
+                            ext: Undef<string>,
+                            data = fonts.find(item => item.srcUrl);
+                        if (data && (uri = data.srcUrl)) {
+                            const rawData = resource.getRawData(resourceId, uri);
+                            if (rawData) {
+                                base64 = rawData.base64;
+                                if (!base64 && rawData.buffer) {
+                                    base64 = convertBase64(rawData.buffer);
+                                    rawData.base64 = base64;
+                                }
+                                if (rawData.mimeType) {
+                                    ext = fromMimeType(rawData.mimeType);
+                                }
+                            }
+                            ext ||= fromMimeType(data.mimeType) || Resource.getExtension(splitPairStart(uri, '?')).toLowerCase();
+                        }
+                        else if (data = fonts.find(item => item.srcBase64)) {
+                            base64 = data.srcBase64;
+                            ext = fromMimeType(data.mimeType);
+                        }
+                        else {
+                            continue;
+                        }
+                        resource.addAsset(resourceId, {
+                            pathname: directory + pathname,
+                            filename: fontName + '.' + (ext || 'ttf'),
+                            uri: !base64 ? uri : undefined,
+                            base64
+                        });
+                    }
                 }
             }
-            const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
-            result[j++] = targetAPI < BUILD_VERSION.OREO ? output.replace(/\s+android:/g, ' app:') : output;
-            result[j++] = pathname;
-            result[j++] = name + '.xml';
+            if (itemArray.length) {
+                const output = replaceTab(applyTemplate('font-family', FONTFAMILY_TMPL, [{ 'xmlns:android': xmlns, font: itemArray }]), insertSpaces);
+                result.push(
+                    targetAPI < BUILD_VERSION.OREO ? output.replace(/\s+android:/g, ' app:') : output,
+                    pathname,
+                    filename + '.xml'
+                );
+            }
         }
         return this.checkFileAssets(result, options);
     }

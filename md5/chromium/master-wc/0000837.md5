@@ -15,9 +15,13 @@ f7e2c1809c1993f3d07d028c750f5fa9  ./app/src/main/res/drawable/span_textview_6.xm
 47e3647945862ecd67e7b1668d389189  ./app/src/main/res/drawable/span_textview_7.xml
 da2cf3262e75e708c175320e3e78ff42  ./app/src/main/res/drawable/span_textview_8.xml
 9368e8d631488a11ce693fdd61639f87  ./app/src/main/res/drawable/span_textview_9.xml
+fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
+4f8866f9f2a59d40f184cd0a4198ce5e  ./app/src/main/res/font/roboto_bold.xml
+276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
 599e06b4e9c26ef578e711cd7ff11ea8  ./app/src/main/res/layout/activity_main.xml
 7a446a0a80e257998ec4e30e9babd564  ./app/src/main/res/values/colors.xml
 7760ce1fe4abb598a5d035b324e14856  ./app/src/main/res/values/dimens.xml
+00e923c59075e44f54c44454d11ae355  ./app/src/main/res/values/string_arrays.xml
 b2cd80e72c6c752607ef4e2c38e3fe0b  ./app/src/main/res/values/strings.xml
-c2bed5a1e97b1c5fdc6af6d1c8d5409f  ./app/src/main/res/values/styles.xml
+b2cd2488785e67430c856eb7945c4945  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

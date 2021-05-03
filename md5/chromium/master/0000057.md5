@@ -4,9 +4,12 @@ ea4fc296b9abc6d32559458d5e22a208  ./app/src/main/res/drawable/body_linearlayout_
 9f194bbb935b3fae86d4c8620339825e  ./app/src/main/res/drawable/img_imageview_3_viewbox.xml
 6e2453c625178cb5ffbe289df3497ee8  ./app/src/main/res/drawable/img_imageview_4_viewbox.xml
 6e3145e0a788aad697d72c65012e9751  ./app/src/main/res/drawable/linearlayout_1_gradient_1.xml
+b1a4ec949c75487a4729986f44093ad0  ./app/src/main/res/font/alfa_slab_one.xml
+540a26ece47b8fa0a347064364316058  ./app/src/main/res/font/raleway.xml
 55c30af146923537314b8c946336630e  ./app/src/main/res/layout/activity_main.xml
 d4e6d63b3092b696fa01033fe938ec5c  ./app/src/main/res/values/colors.xml
 648cb2bf847e02b14aef629c42ad81c4  ./app/src/main/res/values/dimens.xml
+56739e529691551ec9476e651dd2ee70  ./app/src/main/res/values/string_arrays.xml
 4214b6e5d8544135b4793e3aded95146  ./app/src/main/res/values/strings.xml
-38aa19b7ec7cabafc5c471f81e735dda  ./app/src/main/res/values/styles.xml
+e4d4a28e19dc8f9c7f799887ec316b4d  ./app/src/main/res/values/styles.xml
 390b7af385f06efd51d3d6b4307537df  ./app/src/main/res/values/themes.xml

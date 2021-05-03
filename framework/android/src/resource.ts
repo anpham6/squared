@@ -219,6 +219,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return (isLeadingDigit(value) ? '__' : '') + value.replace(/[^\w]+/g, '_');
     }
 
+    private _fontProvider: ObjectMap<FontProvider> = {};
     private _imageFormat?: MIMEOrAll;
 
     constructor(
@@ -309,7 +310,15 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(resourceId, images, prefix, this._imageFormat);
     }
 
+    public addFontProvider(authority: string, packageName: string, certs: string[], fonts: FontProviderFonts) {
+        this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
+    }
+
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
         return '__' + padStart((++COUNTER_UUID).toString(), 5, '0') + '.' + ext;
+    }
+
+    get fontProvider() {
+        return this._fontProvider;
     }
 }

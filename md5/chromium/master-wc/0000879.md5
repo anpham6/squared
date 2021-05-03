@@ -1,7 +1,10 @@
 da2cf3262e75e708c175320e3e78ff42  ./app/src/main/res/drawable/div_textview_1.xml
+fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
+276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
 93d7fb0ade500d621a58b47b5ce2f64a  ./app/src/main/res/layout/activity_main.xml
 c01cf6dbb7896015315a83786ee48438  ./app/src/main/res/values/colors.xml
 333a7f0f03ce1d0a002fffacc7379f2a  ./app/src/main/res/values/dimens.xml
+f2f37ad0b60de19930b52dde18103dc9  ./app/src/main/res/values/string_arrays.xml
 b39e33ebdeee6bf6edf9af47213e9c05  ./app/src/main/res/values/strings.xml
-54d1eb91de7880e74abff60cb2adc19c  ./app/src/main/res/values/styles.xml
+5f32f756f0e508ce961f6d9d418c2d89  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

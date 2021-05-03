@@ -4,22 +4,25 @@ import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;
 
-declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T> {
-    setViewModel(data?: PlainObject, sessionId?: string): void;
-    addXmlNs(name: string, uri: string): void;
+declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T>, base.AppProxy, FontProviderAction {
     customize(build: number, widget: string, options: ObjectMap<StringMap>): Undef<ObjectMap<StringMap>>;
+    addXmlNs(name: string, uri: string): void;
 }
 
 declare namespace base {
+    interface AppProxy {
+        setViewModel(data?: PlainObject, sessionId?: string): void;
+    }
+
     interface AppViewModel extends PlainObject {
         import?: string[];
         variable?: { name: string; type: string }[];
     }
 
-    class Application<T extends View> extends squared.base.ApplicationUI<T> {
+    class Application<T extends View> extends squared.base.ApplicationUI<T> implements AppProxy {
+        resolveTarget(sessionId: string, target: Null<squared.base.RootElement>): Null<T>;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
-        resolveTarget(sessionId: string, target: Null<squared.base.RootElement>): Null<T>;
         get viewModel(): Map<string, AppViewModel>;
     }
 
@@ -36,7 +39,7 @@ declare namespace base {
         evaluateAnchors(nodes: T[]): void;
     }
 
-    class Resource<T extends View> extends squared.base.ResourceUI<T> {
+    class Resource<T extends View> extends squared.base.ResourceUI<T> implements FontProviderAction {
         static STORED: ResourceSessionStored<Required<ResourceStoredMap>>;
         static formatOptions(resourceId: number, options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         static addTheme(resourceId: number, theme: ThemeAttribute, pathname?: string): boolean;
@@ -47,6 +50,8 @@ declare namespace base {
         readonly application: Application<T>;
         addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcData[]): string;
         addImageSet(resourceId: number, images: StringMap, prefix?: string): string;
+        addFontProvider(authority: string, package: string, certs: string[], fonts: FontProviderFonts): void;
+        get fontProvider(): ObjectMap<FontProvider>;
     }
 
     class File<T extends View> extends squared.base.File<T> {

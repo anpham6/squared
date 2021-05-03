@@ -7,9 +7,13 @@ a932b5f29e12483d77dc6e4e5df98394  ./app/src/main/res/drawable/div_textview_28.xm
 beee87daeed94b4d6843d504b3f5d88b  ./app/src/main/res/drawable/div_textview_31.xml
 6e9e55322c76dbba128ee6c3e6024ce8  ./app/src/main/res/drawable/div_textview_32.xml
 e0da3c8a8aa9c8ffe6b2ed6b16b11eb5  ./app/src/main/res/drawable/hr_view_1.xml
+fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
+4f8866f9f2a59d40f184cd0a4198ce5e  ./app/src/main/res/font/roboto_bold.xml
+276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
 7d8420aab90fb93fbce95ac8a01e2e7a  ./app/src/main/res/layout/activity_main.xml
 53a63d16b52979362502e6264b8535ad  ./app/src/main/res/values/colors.xml
 4bad45f47827b203eb518f8a64c82877  ./app/src/main/res/values/dimens.xml
+00e923c59075e44f54c44454d11ae355  ./app/src/main/res/values/string_arrays.xml
 d92a6d046fc1e0630932c6a1322c92d5  ./app/src/main/res/values/strings.xml
-359ab96ff39ff99be30baa8eb454fa60  ./app/src/main/res/values/styles.xml
+17cd5a819c81599d3a0591a902b0c926  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

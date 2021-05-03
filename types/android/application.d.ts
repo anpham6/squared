@@ -11,6 +11,7 @@ interface UserResourceSettingsUI {
     convertPixels: string;
     fontMeasureAdjust: number;
     lineHeightAdjust: number;
+    createDownloadableFonts: boolean;
     manifestLabelAppName: string;
     manifestThemeName: string;
     manifestParentThemeName: string;

@@ -5,9 +5,12 @@
 f0a3fe0e696d1295cde4f1213360ae5d  ./app/src/main/res/drawable/input_file_button_3.xml
 b35cc01c6ef9a5e0aca8695ac057d8cc  ./app/src/main/res/drawable/label_textview_1.xml
 7acfc5217bf33f6f2d6313ed2e72c646  ./app/src/main/res/drawable/span_textview_9.xml
+fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
+276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
 264b5dda395e24a94f4c8fd0aac47789  ./app/src/main/res/layout/activity_main.xml
 05358fd2282628b0895631b265a402c3  ./app/src/main/res/values/colors.xml
 4bdd5a80298d0a97a15c24cc4513acbe  ./app/src/main/res/values/dimens.xml
+f2f37ad0b60de19930b52dde18103dc9  ./app/src/main/res/values/string_arrays.xml
 949ad7e6ea61a04dc66922fdd6080f77  ./app/src/main/res/values/strings.xml
-9a740768daaf72ce6e5a993e99444927  ./app/src/main/res/values/styles.xml
+f8bd369a47afe6eceb1eb764c4728eff  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

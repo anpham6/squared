@@ -1,10 +1,10 @@
-import { BUILD_VERSION, CONTAINER_NODE } from '../../lib/constant';
+import { BUILD_VERSION, CONTAINER_NODE, FONT_GOOGLE } from '../../lib/constant';
 
 import type View from '../../view';
 
 import Resource from '../../resource';
 
-import { concatString} from '../../lib/util';
+import { concatString } from '../../lib/util';
 
 type StyleList<T> = ObjectMap<T[]>;
 type AttributeMap<T> = ObjectMap<T[]>;
@@ -64,6 +64,15 @@ const FONT_REPLACE = {
     '-webkit-standard': 'sans-serif'
 };
 
+const FONT_STYLE = {
+    'fontFamily': 'fontFamily="',
+    'fontStyle': 'textStyle="',
+    'fontWeight': 'fontWeight="',
+    'fontSize': 'textSize="',
+    'color': 'textColor="@color/',
+    'backgroundColor': 'background="@color/'
+};
+
 const FONT_WEIGHT = {
     '100': 'thin',
     '200': 'extra_light',
@@ -74,15 +83,6 @@ const FONT_WEIGHT = {
     '700': 'bold',
     '800': 'extra_bold',
     '900': 'black'
-};
-
-const FONT_STYLE = {
-    'fontFamily': 'fontFamily="',
-    'fontStyle': 'textStyle="',
-    'fontWeight': 'fontWeight="',
-    'fontSize': 'textSize="',
-    'color': 'textColor="@color/',
-    'backgroundColor': 'background="@color/'
 };
 
 function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], nodes: View[]) {
@@ -116,9 +116,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public afterParseDocument(sessionId: string) {
         const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const resource = this.resource as android.base.Resource<T>;
+        const fontProvider = this.application.getUserSetting<boolean>(sessionId, 'createDownloadableFonts') && resource.fontProvider;
         const convertPixels = this.application.userSettings.convertPixels === 'dp';
         const { resourceId, cache } = this.application.getProcessing(sessionId)!;
-        const { fonts, styles } = Resource.STORED[resourceId]!;
+        const { fonts, arrays, styles } = Resource.STORED[resourceId]!;
         const nameMap: ObjectMapSafe<T[]> = {};
         const textMap: ObjectMapSafe<T[]> = {};
         const groupMap: ObjectMap<StyleList<T>[]> = {};
@@ -146,6 +147,20 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const stored = node.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle')!;
                 let { fontFamily, fontStyle, fontWeight, backgroundColor } = stored,
                     closest: Undef<boolean>;
+                const finalizeFont = (actualWeight: number) => {
+                    if (fontStyle === 'normal' || startsWith(fontStyle, 'oblique')) {
+                        fontStyle = '' as FontStyle;
+                    }
+                    if (actualWeight) {
+                        fontWeight = actualWeight.toString();
+                    }
+                    else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {
+                        fontWeight = '';
+                    }
+                    if (+fontWeight >= 600) {
+                        fontStyle += (fontStyle ? '|' : '') + 'bold';
+                    }
+                };
                 if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     const fontData = companion.data<FontAttribute>(Resource.KEY_NAME, 'fontStyle');
                     if (fontData) {
@@ -156,7 +171,76 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 replaceAll(fontFamily, '"', '').split(',').some((value, index, array) => {
                     value = trimBoth(value, "'", true).toLowerCase();
                     let fontName = value,
-                        actualFontWeight = 0;
+                        actualWeight = 0;
+                    if (startsWith(fontStyle, 'oblique')) {
+                        fontStyle = 'italic';
+                    }
+                    if (fontProvider && api >= BUILD_VERSION.OREO) {
+                        let foundName = '',
+                            foundStyle: Undef<FontProvider>;
+                        for (const authority in fontProvider) {
+                            const item = fontProvider[authority]!;
+                            for (const name in item.fonts) {
+                                if (fontName === name.toLowerCase()) {
+                                    const font = item.fonts[name]!;
+                                    foundName = name;
+                                    if (font[fontStyle]) {
+                                        foundStyle = item;
+                                        break;
+                                    }
+                                    else if (font.normal?.includes(fontWeight)) {
+                                        foundStyle = item;
+                                    }
+                                }
+                            }
+                        }
+                        if (foundStyle) {
+                            const styleData = foundStyle.fonts[foundName]!;
+                            const font = styleData[fontStyle] || styleData.normal!;
+                            if (!font.includes(fontWeight)) {
+                                actualWeight = +fontWeight;
+                                fontWeight = '';
+                                for (const weight of font) {
+                                    if (+weight > actualWeight) {
+                                        fontWeight = weight.toString();
+                                        break;
+                                    }
+                                }
+                                fontWeight ||= font[font.length - 1].toString();
+                                closest = true;
+                            }
+                            let fontData = fonts.get(fontName = convertWord(fontName) + (fontWeight !== '400' ? '_' + FONT_WEIGHT[fontWeight] : '') + (fontStyle === 'italic' ? '_italic' : ''));
+                            if (!fontData) {
+                                fonts.set(fontName, fontData = {});
+                            }
+                            let authority = foundStyle.authority;
+                            const weight = fontWeight !== '400' ? '&amp;weight=' + fontWeight : '';
+                            const italic = fontStyle === 'italic' ? '&amp;italic=1' : '';
+                            const width = styleData.width ? '&amp;width=' + styleData.width : '';
+                            fontData[authority] = weight || italic || width ? 'name=' + foundName + weight  + italic + width : foundName;
+                            fonts.set(fontName, fontData);
+                            let preloaded = arrays.get('0:preloaded_fonts:0');
+                            if (!preloaded) {
+                                arrays.set('0:preloaded_fonts:0', preloaded = []);
+                            }
+                            if (!preloaded.includes(fontFamily = `@font/${fontName}`)) {
+                                preloaded.push(fontFamily);
+                            }
+                            authority = convertWord(authority.toLowerCase()) + '_certs';
+                            const fontKey = `0:${authority}:0`;
+                            if (!arrays.has(fontKey)) {
+                                const items: string[] = [];
+                                foundStyle.certs.forEach((encoded, ordinal) => {
+                                    const key = authority + '_' + (ordinal + 1);
+                                    items.push(`@array/${key}`);
+                                    arrays.set(`1:${key}:0`, [encoded]);
+                                });
+                                arrays.set(fontKey, items);
+                            }
+                            finalizeFont(actualWeight);
+                            return true;
+                        }
+                    }
                     if (!disableFontAlias && FONT_REPLACE[fontName]) {
                         fontName = defaultFontFamily;
                     }
@@ -164,28 +248,25 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         fontFamily = fontName;
                     }
                     else if (fontStyle && fontWeight) {
-                        if (startsWith(fontStyle, 'oblique')) {
-                            fontStyle = 'italic';
-                        }
-                        let foundFontStyle: Undef<string>;
+                        let foundStyle: Undef<string>;
                         if (resource.getFonts(resourceId, value, fontStyle, fontWeight).length) {
-                            foundFontStyle = fontStyle;
+                            foundStyle = fontStyle;
                         }
                         else {
                             let items = resource.getFonts(resourceId, value);
                             if (items.length) {
-                                foundFontStyle = 'normal';
-                                actualFontWeight = +fontWeight;
+                                foundStyle = 'normal';
+                                actualWeight = +fontWeight;
                                 if (fontStyle === 'italic') {
                                     const italic = items.filter(item => item.fontStyle === 'italic');
                                     if (italic.length) {
                                         items = italic;
-                                        foundFontStyle = 'italic';
+                                        foundStyle = 'italic';
                                     }
                                 }
                                 fontWeight = '';
                                 for (const { fontWeight: weight } of items) {
-                                    if (weight >= actualFontWeight) {
+                                    if (weight >= actualWeight) {
                                         fontWeight = weight.toString();
                                         break;
                                     }
@@ -200,28 +281,19 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 fontFamily = defaultFontFamily;
                             }
                         }
-                        if (foundFontStyle) {
-                            const font = fonts.get(fontName = convertWord(fontName)) || {};
-                            font[`${value};${foundFontStyle};${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
-                            fonts.set(fontName, font);
+                        if (foundStyle) {
+                            let fontData = fonts.get(fontName = convertWord(fontName));
+                            if (!fontData) {
+                                fonts.set(fontName, fontData = {});
+                            }
+                            fontData[`${value};${foundStyle};${fontWeight}`] = FONT_WEIGHT[fontWeight] || fontWeight;
                             fontFamily = `@font/${fontName}`;
                         }
                     }
                     else {
                         return false;
                     }
-                    if (fontStyle === 'normal' || startsWith(fontStyle, 'oblique')) {
-                        fontStyle = '';
-                    }
-                    if (actualFontWeight) {
-                        fontWeight = actualFontWeight.toString();
-                    }
-                    else if (fontWeight === '400' || node.api < BUILD_VERSION.OREO) {
-                        fontWeight = '';
-                    }
-                    if (+fontWeight >= 600) {
-                        fontStyle += (fontStyle ? '|' : '') + 'bold';
-                    }
+                    finalizeFont(actualWeight);
                     return true;
                 });
                 const fontSize = truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px');
@@ -540,5 +612,21 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             styles.set(name, { name, parent: '', items } as StyleAttribute);
             nodes.forEach(node => node.android('textAppearance', `@style/${name}`));
         }
+    }
+
+    set application(value: android.base.Application<T>) {
+        super.application = value;
+        (value.resourceHandler as android.base.Resource<T>).addFontProvider(
+            'com.google.android.gms.fonts',
+            'com.google.android.gms',
+            [
+                'MIIEqDCCA5CgAwIBAgIJANWFuGx90071MA0GCSqGSIb3DQEBBAUAMIGUMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UEChMHQW5kcm9pZDEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEiMCAGCSqGSIb3DQEJARYTYW5kcm9pZEBhbmRyb2lkLmNvbTAeFw0wODA0MTUyMzM2NTZaFw0zNTA5MDEyMzM2NTZaMIGUMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UEChMHQW5kcm9pZDEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEiMCAGCSqGSIb3DQEJARYTYW5kcm9pZEBhbmRyb2lkLmNvbTCCASAwDQYJKoZIhvcNAQEBBQADggENADCCAQgCggEBANbOLggKv+IxTdGNs8/TGFy0PTP6DHThvbbR24kT9ixcOd9W+EaBPWW+wPPKQmsHxajtWjmQwWfna8mZuSeJS48LIgAZlKkpFeVyxW0qMBujb8X8ETrWy550NaFtI6t9+u7hZeTfHwqNvacKhp1RbE6dBRGWynwMVX8XW8N1+UjFaq6GCJukT4qmpN2afb8sCjUigq0GuMwYXrFVee74bQgLHWGJwPmvmLHC69EH6kWr22ijx4OKXlSIx2xT1AsSHee70w5iDBiK4aph27yH3TxkXy9V89TDdexAcKk/cVHYNnDBapcavl7y0RiQ4biu8ymM8Ga/nmzhRKya6G0cGw8CAQOjgfwwgfkwHQYDVR0OBBYEFI0cxb6VTEM8YYY6FbBMvAPyT+CyMIHJBgNVHSMEgcEwgb6AFI0cxb6VTEM8YYY6FbBMvAPyT+CyoYGapIGXMIGUMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UEChMHQW5kcm9pZDEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEiMCAGCSqGSIb3DQEJARYTYW5kcm9pZEBhbmRyb2lkLmNvbYIJANWFuGx90071MAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEEBQADggEBABnTDPEF+3iSP0wNfdIjIz1AlnrPzgAIHVvXxunW7SBrDhEglQZBbKJEk5kT0mtKoOD1JMrSu1xuTKEBahWRbqHsXclaXjoBADb0kkjVEJu/Lh5hgYZnOjvlba8Ld7HCKePCVePoTJBdI4fvugnL8TsgK05aIskyY0hKI9L8KfqfGTl1lzOv2KoWD0KWwtAWPoGChZxmQ+nBli+gwYMzM1vAkP+aayLe0a1EQimlOalO762r0GXO0ks+UeXde2Z4e+8S/pf7pITEI/tP+MxJTALw9QUWEv9lKTk+jkbqxbsh8nfBUapfKqYn0eidpwq2AzVp3juYl7//fKnaPhJD9gs=',
+                'MIIEQzCCAyugAwIBAgIJAMLgh0ZkSjCNMA0GCSqGSIb3DQEBBAUAMHQxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtHb29nbGUgSW5jLjEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDAeFw0wODA4MjEyMzEzMzRaFw0zNjAxMDcyMzEzMzRaMHQxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtHb29nbGUgSW5jLjEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDCCASAwDQYJKoZIhvcNAQEBBQADggENADCCAQgCggEBAKtWLgDYO6IIrgqWbxJOKdoR8qtW0I9Y4sypEwPpt1TTcvZApxsdyxMJZ2JORland2qSGT2y5b+3JKkedxiLDmpHpDsz2WCbdxgxRczfey5YZnTJ4VZbH0xqWVW/8lGmPav5xVwnIiJS6HXk+BVKZF+JcWjAsb/GEuq/eFdpuzSqeYTcfi6idkyugwfYwXFU1+5fZKUaRKYCwkkFQVfcAs1fXA5V+++FGfvjJ/CxURaSxaBvGdGDhfXE28LWuT9ozCl5xw4Yq5OGazvV24mZVSoOO0yZ31j7kYvtwYK6NeADwbSxDdJEqO4k//0zOHKrUiGYXtqw/A0LFFtqoZKFjnkCAQOjgdkwgdYwHQYDVR0OBBYEFMd9jMIhF1Ylmn/Tgt9r45jk14alMIGmBgNVHSMEgZ4wgZuAFMd9jMIhF1Ylmn/Tgt9r45jk14aloXikdjB0MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEUMBIGA1UEChMLR29vZ2xlIEluYy4xEDAOBgNVBAsTB0FuZHJvaWQxEDAOBgNVBAMTB0FuZHJvaWSCCQDC4IdGZEowjTAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBAUAA4IBAQBt0lLO74UwLDYKqs6Tm8/yzKkEu116FmH4rkaymUIE0P9KaMftGlMexFlaYjzmB2OxZyl6euNXEsQH8gjwyxCUKRJNexBiGcCEyj6z+a1fuHHvkiaai+KL8W1EyNmgjmyy8AW7P+LLlkR+ho5zEHatRbM/YAnqGcFh5iZBqpknHf1SKMXFh4dd239FJ1jWYfbMDMy3NS5CTMQ2XFI1MvcyUTdZPErjQfTbQe3aDQsQcafEQPD+nqActifKZ0Np0IS9L9kR/wbNvyz6ENwPiTrjV2KRkEjH78ZMcUQXg0L3BYHJ3lc69Vs5Ddf9uUGGMYldX3WfMBEmh/9iFBDAaTCK'
+            ],
+            FONT_GOOGLE
+        );
+    }
+    get application() {
+        return super.application as android.base.Application<T>;
     }
 }

@@ -167,6 +167,7 @@ squared.settings = {
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
     lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
     baseLayoutAsFragment: false, // FragmentContainerView
+    createDownloadableFonts: true,
     createElementMap: false,
     createQuerySelectorMap: false,
     pierceShadowRoot: true,
@@ -367,8 +368,9 @@ body.addEvent("click", event => body.element.classList.toggle("example"));
 
 ```javascript
 android.customize(build: number, widget: string, options: {}) // Global attributes applied to specific views
-android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
 android.setViewModel(data: {}, sessionId?: string) // Object data for layout bindings
+android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
+android.addFontProvider(authority: string, package: string, certs: string[], fonts: FontProviderFonts) // Add additional font providers (Google Fonts are already included)
 ```
 
 ```javascript
@@ -556,6 +558,22 @@ if (imageView1 != null) {
     Animatable animatable = (Animatable) imageView1.getDrawable();
     animatable.start();
 }
+```
+
+### ANDROID: Downloadable Fonts
+
+Font providers are available as of squared 3.1.0. Google Fonts can already be used without any configuration.
+
+* [Guide](https://developer.android.com/guide/topics/ui/look-and-feel/downloadable-fonts)
+
+```xml
+<!-- AndroidManifest.xml -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:theme="@style/AppTheme">
+        <meta-data android:name="preloaded_fonts" android:resource="@array/preloaded_fonts" /> <!-- Recommended -->
+    </application>
+</manifest>
 ```
 
 ### ANDROID: Excluding Procedures / Applied Attributes

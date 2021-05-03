@@ -6,6 +6,7 @@ package-lock.json
 serve.js
 squared.settings.json
 bundle.js
+fonts.js
 md5sum.js
 gulpfile.js
 .DS_Store
