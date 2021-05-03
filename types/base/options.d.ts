@@ -126,10 +126,12 @@ interface MinMaxOptions extends CssInitialOptions {
     initialValue?: number;
 }
 
-interface NodeParseUnitOptions extends ParseUnitOptions {
+interface NodeUnitOptions {
     dimension?: DimensionAttr;
     parent?: boolean;
 }
+
+interface NodeParseUnitOptions extends ParseUnitOptions, NodeUnitOptions {}
 
 interface NodeConvertUnitOptions extends NodeParseUnitOptions, ConvertUnitOptions {}
 
@@ -186,7 +188,7 @@ interface BackgroundPositionOptions extends UnitOptions {
 
 interface ParseGlobOptions {
     fromEnd?: boolean;
-    caseSensitive?: boolean;
+    ignoreCase?: boolean;
 }
 
 interface LoadDataOptions {

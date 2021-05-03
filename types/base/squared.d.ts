@@ -465,6 +465,7 @@ declare module "base" {
         toElementString(attr: string, fallback?: string): string;
         setBounds(cache?: boolean): Null<BoxRectDimension>;
         resetBounds(recalibrate?: boolean): void;
+        getContainerSize(options?: NodeUnitOptions): number;
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
@@ -514,6 +515,7 @@ declare module "base" {
         get display(): string;
         get positionStatic(): boolean;
         get positionRelative(): boolean;
+        get positionFixed(): boolean;
         get top(): number;
         get right(): number;
         get bottom(): number;
@@ -669,6 +671,7 @@ declare module "base" {
         translateY(value: number, options?: TranslateOptions): boolean;
         getBoxSpacing(): [number, number, number, number];
         getPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
+        isResizable(attr: DimensionSizableAttr): boolean;
         fitToScreen(value: Dimension): Dimension;
         cssValue(attr: CssStyleAttr): string;
         cssValues(...attrs: CssStyleAttr[]): string[];
@@ -736,6 +739,7 @@ declare module "base" {
         get inlineFlow(): boolean;
         get verticalAligned(): boolean;
         get variableWidth(): boolean;
+        get variableHeight(): boolean;
         get positiveAxis(): boolean;
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;
@@ -764,8 +768,8 @@ declare module "base" {
     class NodeGroupUI extends NodeUI {}
 
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
-        sessionId: string;
-        resourceId: number;
+        readonly sessionId: string;
+        readonly resourceId: number;
         afterAdd?: (this: T, options: NodeListAddOptions) => void;
         add(node: T, options?: NodeListAddOptions): this;
         sort(predicate: FunctionSort<T>): this;

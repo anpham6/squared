@@ -1409,6 +1409,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
+    public isResizable(attr: DimensionSizableAttr) {
+        return this.has(attr, { type: CSS_UNIT.PERCENT | (attr === 'width' || attr === 'height' ? 0 : CSS_UNIT.LENGTH), not: '100%' });
+    }
+
     public fitToScreen(value: Dimension): Dimension {
         const { width, height } = this.localSettings.screenDimension;
         if (value.width > width) {
@@ -1715,7 +1719,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get variableWidth() {
         const percent = this.percentWidth;
-        return percent > 0 && percent < 1 || this.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
+        return percent > 0 && percent < 1 || this.isResizable('maxWidth');
+    }
+
+    get variableHeight() {
+        const percent = this.percentHeight;
+        return percent > 0 && percent < 1 || this.isResizable('maxHeight') && (this.absoluteParent?.hasHeight || this.positionFixed);
     }
 
     set autoPosition(value) {

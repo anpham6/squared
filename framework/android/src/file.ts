@@ -46,6 +46,7 @@ function getFileAssets(pathname: string, items: string[], document: StringOfArra
 }
 
 function getImageAssets(this: Resource<View>, resourceId: number, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray) {
+    const compress = compressing ? [{ format: 'png' }] : undefined;
     const length = items.length;
     const result: FileAsset[] = new Array(length / 3);
     for (let i = 0, j = 0; i < length; i += 3) {
@@ -79,7 +80,7 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
             filename,
             mimeType,
             commands,
-            compress: compressing ? [{ format: 'png' }] : undefined,
+            compress,
             uri,
             document: File.copyDocument(document),
             tasks: image && image.tasks

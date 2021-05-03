@@ -5,8 +5,8 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
 
     constructor(
         children?: T[],
-        public sessionId = '0',
-        public resourceId = -1) {
+        public readonly sessionId = '0',
+        public readonly resourceId = -1) {
         super(children);
     }
 

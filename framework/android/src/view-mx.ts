@@ -1,4 +1,3 @@
-import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
@@ -354,18 +353,11 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
     return percentAvailable;
 }
 
-function withinFixedBoxDimension(node: T, dimension: DimensionAttr) {
-    if (node.pageFlow) {
-        const parent = node.actualParent!;
-        return parent.hasUnit(dimension, { percent: false }) && (!parent.flexElement || !parent.flexdata[dimension === 'width' ? 'row' : 'column']);
-    }
-    return false;
-}
 
 function constraintPercentWidth(node: T, percentAvailable = 1) {
     const value = node.percentWidth;
     if (value) {
-        if (withinFixedBoxDimension(node, 'width')) {
+        if (node.hasFixedDimension('width')) {
             if (value < 1) {
                 node.setLayoutWidth(formatPX(node.actualWidth));
             }
@@ -383,7 +375,7 @@ function constraintPercentWidth(node: T, percentAvailable = 1) {
 function constraintPercentHeight(node: T, percentAvailable = 1) {
     const value = node.percentHeight;
     if (value) {
-        if (withinFixedBoxDimension(node, 'height')) {
+        if (node.hasFixedDimension('height')) {
             if (value < 1) {
                 node.setLayoutHeight(formatPX(node.actualHeight));
             }
@@ -582,7 +574,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         private _controlId = '';
         private _positioned = false;
-        private _anchored = false;
         private _constraint: Null<Constraint> = null;
         private _labelFor?: T;
         private _innerWrapped?: T;
@@ -861,7 +852,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             if (!layoutHeight) {
                                 if (!this.pageFlow) {
-                                    if (this.cssValue('position') === 'fixed') {
+                                    if (this.positionFixed) {
                                         layoutHeight = 'match_parent';
                                     }
                                     else if (renderParent.layoutConstraint && (this.hasUnit('top') || this.hasUnit('bottom'))) {
@@ -1010,7 +1001,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const outerRenderParent = node.renderParent as T || renderParent;
             const autoMargin = this.autoMargin;
             const setAutoMargin = (target: T) => {
-                if (autoMargin.horizontal && (!target.blockWidth || target.hasWidth || target.hasUnit('maxWidth') || target.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
+                if (autoMargin.horizontal && (!target.blockWidth || target.hasWidth || target.hasUnit('maxWidth') || target.innerMostWrapped.isResizable('width'))) {
                     target.mergeGravity((target.blockWidth || !target.pageFlow) && !target.outerWrapper ? 'gravity' : 'layout_gravity', autoMargin.leftRight ? 'center_horizontal' : autoMargin.left ? 'right' : 'left');
                     return true;
                 }
@@ -1669,6 +1660,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return value;
         }
 
+        public getContainerSize(options?: NodeUnitOptions) {
+            const bounds: Dimension = (!options || options.parent !== false) && (this.positionFixed ? this.localSettings.screenDimension : this.absoluteParent?.box) || this.bounds;
+            return bounds[options && options.dimension || 'width'];
+        }
+
         public translateX(value: number, options?: TranslateOptions) {
             if (!isNaN(value)) {
                 const node = this.anchorTarget;
@@ -1836,6 +1832,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
+        public hasFixedDimension(dimension: DimensionAttr) {
+            if (this.positionFixed) {
+                return dimension === 'width' ? this.percentWidth === 0 : this.percentHeight === 0;
+            }
+            const parent = this.absoluteParent;
+            return !!parent && parent.hasUnit(dimension, { percent: false }) && (!this.pageFlow || !parent.flexElement || !parent.flexdata[dimension === 'width' ? 'row' : 'column']);
+        }
+
         public hide(options?: HideOptions<T>) {
             if (options) {
                 if (options.hidden) {
@@ -1851,27 +1855,31 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public android(attr: string, value?: string, overwrite = true) {
-            if (value) {
-                if (value = this.attr('android', attr, value, overwrite)) {
-                    return value;
+            if (typeof value === 'string') {
+                if (value) {
+                    if (value = this.attr('android', attr, value, overwrite)) {
+                        return value;
+                    }
                 }
-            }
-            else if (value === '') {
-                this.delete('android', attr);
-                return '';
+                else {
+                    this.delete('android', attr);
+                    return '';
+                }
             }
             return this._namespaces.android![attr] || '';
         }
 
         public app(attr: string, value?: string, overwrite = true) {
-            if (value) {
-                if (value = this.attr('app', attr, value, overwrite)) {
-                    return value;
+            if (typeof value === 'string') {
+                if (value) {
+                    if (value = this.attr('app', attr, value, overwrite)) {
+                        return value;
+                    }
                 }
-            }
-            else if (value === '') {
-                this.delete('app', attr);
-                return '';
+                else {
+                    this.delete('app', attr);
+                    return '';
+                }
             }
             const app = this._namespaces.app;
             return app && app[attr] || '';
@@ -2826,12 +2834,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         this.setLayoutHeight('0px');
                                     }
                                     if (parent.innerMostWrapped.documentBody) {
-                                        const options: HasOptions = {
-                                            type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT,
-                                            not: '100%'
-                                        };
                                         do {
-                                            if (!parent.has(dimension, options) && !parent.has(horizontal ? 'maxWidth' : 'maxHeight', options)) {
+                                            if (!parent.isResizable(dimension) && !parent.isResizable(horizontal ? 'maxWidth' : 'maxHeight')) {
                                                 if (horizontal) {
                                                     parent.setLayoutWidth('match_parent', parent.inlineWidth);
                                                 }
@@ -3144,10 +3148,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         set anchored(value) {
-            this._anchored = value;
+            const constraint = this.constraint;
+            constraint.horizontal = value;
+            constraint.vertical = value;
         }
         get anchored() {
-            return this._anchored ||= this.constraint.horizontal && this.constraint.vertical;
+            const constraint = this.constraint;
+            return constraint.horizontal && constraint.vertical;
         }
 
         get constraint() {

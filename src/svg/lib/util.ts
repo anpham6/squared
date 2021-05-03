@@ -1,8 +1,6 @@
 import CSS_TRAITS = squared.lib.constant.CSS_TRAITS;
 import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 
-import Pattern = squared.lib.base.Pattern;
-
 const { CSS_PROPERTIES } = squared.lib.internal;
 const { STRING, TRANSFORM: __TRANSFORM } = squared.lib.regex;
 
@@ -10,12 +8,11 @@ const { asPercent, calculateStyle: calculateCssStyle, calculateVar, calculateVar
 const { getNamedItem } = squared.lib.dom;
 const { convertRadian, hypotenuse, truncateExponential, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
-const { convertCamelCase, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
-
-const RE_PARSE = new Pattern(/(\w+)\([^)]+\)/g);
-const RE_ROTATE = new Pattern(/rotate\((-?[\d.]+)\s*(?:,?\s+(-?[\d.]+))?\s*(?:,?\s+(-?[\d.]+))?\)/g);
+const { convertCamelCase, convertFloat, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_EXPONENT = new RegExp(STRING.DECIMAL_EXPONENT, 'g');
+const REGEXP_PARSE = /(\w+)\([^)]+\)/g;
+const REGEXP_ROTATE = /rotate\((-?[\d.]+)\s*(?:,?\s+(-?[\d.]+))?\s*(?:,?\s+(-?[\d.]+))?\)/g;
 const REGEXP_TRUNCATECACHE = new Map<number, RegExp>();
 
 function setOriginPosition(element: Element, point: Point, attr: string, value: string, dimension: number) {
@@ -387,9 +384,9 @@ export const TRANSFORM = {
     parse(element: SVGElement, value = getDataValue(element, 'transform')): Null<SvgTransform[]> {
         if (value && value !== 'none') {
             const result: SvgTransform[] = [];
-            RE_PARSE.matcher(value);
-            while (RE_PARSE.find()) {
-                const [transform, method] = RE_PARSE.groups();
+            let match: Null<RegExpMatchArray>;
+            while (match = REGEXP_PARSE.exec(value)) {
+                const [transform, method] = match;
                 if (startsWith(method, 'matrix')) {
                     const matrix = TRANSFORM.matrix(element, transform);
                     if (matrix) {
@@ -460,6 +457,7 @@ export const TRANSFORM = {
                     }
                 }
             }
+            REGEXP_PARSE.lastIndex = 0;
             const length = result.length;
             if (length) {
                 for (let i = 0; i < length; ++i) {
@@ -556,13 +554,14 @@ export const TRANSFORM = {
         const value = getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value) {
-            RE_ROTATE.matcher(value);
-            while (RE_ROTATE.find()) {
-                const [angle, x, y] = RE_ROTATE.map(group => +group || 0, 1);
+            let match: Null<RegExpMatchArray>;
+            while (match = REGEXP_ROTATE.exec(value)) {
+                const angle = +match[1];
                 if (angle !== 0) {
-                    result.push({ angle, x, y });
+                    result.push({ angle, x: convertFloat(match[2]), y: convertFloat(match[3]) });
                 }
             }
+            REGEXP_ROTATE.lastIndex = 0;
         }
         return result;
     },

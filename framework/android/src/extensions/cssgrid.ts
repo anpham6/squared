@@ -1,4 +1,3 @@
-import CSS_UNIT = squared.lib.constant.CSS_UNIT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
 import NODE_PROCEDURE = squared.base.lib.constant.NODE_PROCEDURE;
@@ -616,7 +615,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         const data = rowData[i];
                         for (let j = 0, length = data.length; j < length; ++j) {
                             const cell = data[j];
-                            if (cell && cell.length === 1 && !cell[0].has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) {
+                            if (cell && cell.length === 1 && !cell[0].isResizable('maxHeight')) {
                                 nodes.push(cell[0]);
                             }
                             else {

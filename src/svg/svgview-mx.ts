@@ -8,8 +8,6 @@ import SvgBuild from './svgbuild';
 
 import { CACHE_VIEWNAME, PATTERN_CUBICBEZIER, TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
-import Pattern = squared.lib.base.Pattern;
-
 type AttributeMap = ObjectMap<AttributeData[]>;
 
 interface AttributeData extends NumberValue {
@@ -24,8 +22,6 @@ const { convertCamelCase, convertWord, iterateArray, splitEnclosing, splitPairEn
 
 const { getKeyframesRules } = squared.base.lib.css;
 
-const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
-
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
     'animation-duration': '0s',
@@ -37,15 +33,17 @@ const ANIMATION_DEFAULT = {
 };
 
 const REGEXP_PERCENT = new RegExp(STRING.PERCENT, 'g');
+const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`, 'g');
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
         const result: string[] = [];
-        RE_TIMINGFUNCTION.matcher(value);
-        while (RE_TIMINGFUNCTION.find()) {
-            result.push(RE_TIMINGFUNCTION.group(1)!);
+        let match: Null<RegExpExecArray>;
+        while (match = REGEXP_TIMINGFUNCTION.exec(value)) {
+            result.push(match[1]);
         }
+        REGEXP_TIMINGFUNCTION.lastIndex = 0;
         return result;
     }
     return value.split(/\s*,\s*/);

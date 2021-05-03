@@ -771,11 +771,6 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
     return result || node;
 }
 
-function getBoundsSize(node: T, options?: NodeParseUnitOptions) {
-    const bounds: BoxRectDimension = (!options || options.parent !== false) && node.absoluteParent?.box || node.bounds;
-    return bounds[options && options.dimension || 'width'];
-}
-
 const aboveRange = (a: number, b: number, offset = 1) => a + offset >= b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset <= b;
 const sortById = (a: T, b: T) => a.id - b.id;
@@ -1627,7 +1622,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return n;
         }
         else if (!isNaN(n = asPercent(value))) {
-            return n * getBoundsSize(this, options);
+            return n * this.getContainerSize(options);
         }
         if (!options) {
             options = { fontSize: this.fontSize };
@@ -1641,7 +1636,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public convertUnit(value: unknown, unit = 'px', options?: NodeConvertUnitOptions) {
         let result = this.parseUnit(value, options);
         if (unit === '%' || unit === 'percent') {
-            result *= 100 / getBoundsSize(this, options);
+            result *= 100 / this.getContainerSize(options);
             return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
         }
         return convertUnit(result, unit, options);
@@ -1688,6 +1683,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         }
         this._box = null;
         this._linear = null;
+    }
+
+    public getContainerSize(options?: NodeUnitOptions) {
+        const bounds: Dimension = (!options || options.parent !== false) && (this.positionFixed ? { width: window.innerWidth, height: window.innerHeight } as BoxRectDimension : this.absoluteParent?.box) || this.bounds;
+        return bounds[options && options.dimension || 'width'];
     }
 
     public min(attr: string, options?: MinMaxOptions) {
@@ -2185,6 +2185,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this.valueOf('position') === 'relative';
     }
 
+    get positionFixed() {
+        return this.valueOf('position') === 'fixed';
+    }
+
     get display() {
         return this.css('display');
     }
@@ -2328,7 +2332,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
     get hasHeight(): boolean {
         const result = this._cache.hasHeight;
-        return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.valueOf('position') === 'fixed' || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
+        return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? this.actualParent?.hasHeight || this.documentBody : this.positionFixed || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
     }
 
     get lineHeight() {
@@ -2755,7 +2759,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.percentHeight;
         if (result === undefined) {
             const value = asPercent(this.valueOf('height'));
-            return this._cache.percentHeight = !isNaN(value) && (this.actualParent?.hasHeight || this.valueOf('position') === 'fixed') ? value : 0;
+            return this._cache.percentHeight = !isNaN(value) && (this.absoluteParent?.hasHeight || this.positionFixed) ? value : 0;
         }
         return result;
     }
