@@ -9,6 +9,8 @@ import type NodeList from './nodelist';
 
 import Controller from './controller';
 
+import { CSS } from './lib/regex';
+
 import { trimEnd } from './lib/util';
 
 const { CSS_BORDER_SET } = squared.lib.internal;
@@ -225,7 +227,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 }
                 case 'BODY':
-                    if (hasEmptyStyle(style.backgroundColor) && (getStyle(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
+                    if (hasEmptyStyle(style.backgroundColor) && CSS.TRANSPARENT.test(getStyle(document.documentElement).backgroundColor)) {
                         style.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
