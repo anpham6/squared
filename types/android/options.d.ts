@@ -1,6 +1,6 @@
 interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.base.FileArchivingOptions {
     pathname?: string;
-    xmlOnly?: boolean;
+    updateXmlOnly?: boolean;
 }
 
 interface GuidelineOptions<T> {

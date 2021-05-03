@@ -263,7 +263,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const [fontFamily, fontStyle, fontWeight] = attr.split(';');
                 const fontName = name + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
                 itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
-                if (options?.xmlOnly) {
+                if (options?.updateXmlOnly) {
                     continue;
                 }
                 const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
@@ -524,7 +524,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 ...getFileAssets(outputDirectory, this.resourceDrawableToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler)
             );
-            if (!options.xmlOnly) {
+            if (!options.updateXmlOnly) {
                 const imageAssets = getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
                 const videoAssets = getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);
                 const audioAssets = getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler);
