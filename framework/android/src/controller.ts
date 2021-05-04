@@ -489,7 +489,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
     if (!isNaN(bias)) {
         if (biasOnly) {
             node.app('layout_constraintVertical_bias', bias.toString(), false);
-            node.delete('layout_constraintVertical_chainStyle');
+            node.deleteOne('app', 'layout_constraintVertical_chainStyle');
         }
         else {
             node.anchorStyle('vertical', bias, onlyChild ? undefined : 'packed', false);
@@ -1830,7 +1830,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if ((node.element as HTMLInputElement).list?.children.length) {
                     controlName = CONTAINER_TAGNAME.EDIT_LIST;
                     node.controlName = controlName;
-                    node.delete('android', 'inputType');
+                    node.deleteOne('android', 'inputType');
                 }
                 else if (node.api >= BUILD_VERSION.OREO) {
                     node.android('importantForAutofill', 'no');

@@ -311,23 +311,22 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public addFontProvider(authority: string, packageName: string, certs: string[], webFonts: string | PlainObject, verified?: boolean): Void<Promise<void>> {
+        const setFont = (fonts: Undef<FontProviderFonts>) => {
+            if (fonts) {
+                this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
+            }
+        };
         if (typeof webFonts === 'string') {
             return fetch(webFonts)
                 .then(async res => {
                     const result: unknown = await res.json();
                     if (isPlainObject(result)) {
-                        const fonts = this.parseWebFonts(result);
-                        if (fonts) {
-                            this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
-                        }
+                        setFont(this.parseWebFonts(result));
                     }
                 })
                 .catch(err => this.errorWebFonts(err));
         }
-        const fonts = !verified ? this.parseWebFonts(webFonts) : webFonts as FontProviderFonts;
-        if (fonts) {
-            this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
-        }
+        setFont(!verified ? this.parseWebFonts(webFonts) : webFonts as FontProviderFonts);
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {

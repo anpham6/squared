@@ -1697,7 +1697,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         node.android('translationX', formatPX(x));
                     }
                     else {
-                        node.delete('android', 'translationX');
+                        node.deleteOne('android', 'translationX');
                     }
                     return true;
                 }
@@ -1737,7 +1737,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         node.android('translationY', formatPX(y));
                     }
                     else {
-                        node.delete('android', 'translationY');
+                        node.deleteOne('android', 'translationY');
                     }
                     return true;
                 }
@@ -1862,7 +1862,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else {
-                    this.delete('android', attr);
+                    this.deleteOne('android', attr);
                     return '';
                 }
             }
@@ -1877,7 +1877,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else {
-                    this.delete('app', attr);
+                    this.deleteOne('app', attr);
                     return '';
                 }
             }
@@ -2452,10 +2452,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (renderParent.layoutConstraint) {
                 if (this.blockWidth && this.alignParent('right') && this.alignParent('left')) {
-                    this.delete('app', 'layout_constraintHorizontal_bias');
+                    this.deleteOne('app', 'layout_constraintHorizontal_bias');
                 }
                 if (this.blockHeight && this.alignParent('bottom') && this.alignParent('top')) {
-                    this.delete('app', 'layout_constraintVertical_bias');
+                    this.deleteOne('app', 'layout_constraintVertical_bias');
                 }
             }
             if (this.textElement) {

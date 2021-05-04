@@ -632,6 +632,7 @@ declare module "base" {
         namespaces(): [string, StringMap][];
         unsafe<T = unknown>(name: string | PlainObject, value?: unknown): Undef<T>;
         delete(name: string, ...attrs: string[]): void;
+        deleteOne(name: string, attr: string): void;
         apply(options: PlainObject): void;
         lockAttr(name: string, attr: string): void;
         unlockAttr(name: string, attr: string): void;

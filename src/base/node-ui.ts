@@ -533,10 +533,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         delete obj[item[0]];
                     }
                 }
-                else {
+                else if (attr in obj) {
                     delete obj[attr];
                 }
             }
+        }
+    }
+
+    public deleteOne(name: string, attr: string) {
+        const obj = this._namespaces[name];
+        if (obj && attr in obj) {
+            delete obj[attr];
         }
     }
 

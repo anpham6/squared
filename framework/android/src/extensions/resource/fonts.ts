@@ -607,7 +607,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             let letterSpacing: Set<string> | string = new Set(nodes.map(item => item.android('letterSpacing')));
             if (letterSpacing.size === 1 && (letterSpacing = letterSpacing.values().next().value as string)) {
                 items.push({ key: 'android:letterSpacing', value: letterSpacing });
-                nodes.forEach(node => node.delete('android', 'letterSpacing'));
+                nodes.forEach(node => node.deleteOne('android', 'letterSpacing'));
             }
             styles.set(name, { name, parent: '', items } as StyleAttribute);
             nodes.forEach(node => node.android('textAppearance', `@style/${name}`));
