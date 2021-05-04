@@ -2319,8 +2319,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 bottom = true;
                             }
                             else {
+                                const next = i < q - 1 && horizontalRows[i + 1];
                                 top = i > 0 || row[0].lineBreakLeading;
-                                bottom = i < q - 1 && !horizontalRows[i + 1][0].lineBreakLeading;
+                                bottom = next && !next[0].lineBreakLeading && (hasOwnStyle || onlyChild || next.length === 1 && !next[0].multiline);
                                 if (!top && !bottom) {
                                     continue;
                                 }
