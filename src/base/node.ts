@@ -347,11 +347,13 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     }
                     break;
                 }
-                case ':empty':
-                    if (element.hasChildNodes()) {
+                case ':empty': {
+                    const childNodes = element.childNodes;
+                    if (childNodes.length && iterateArray(childNodes, item => item.nodeName[0] !== '#' || item.nodeName === '#text') === Infinity) {
                         return false;
                     }
                     break;
+                }
                 case ':checked':
                     if (!this.checked) {
                         return false;
@@ -477,13 +479,18 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     }
                     break;
                 }
+                case ':any-link':
+                    if (!((tagName === 'A' || tagName === 'AREA') && (element as HTMLAnchorElement).href)) {
+                        return false;
+                    }
+                    break;
                 case ':default':
                 case ':defined':
                 case ':link':
                 case ':visited':
                 case ':hover':
                 case ':active':
-                case ':any-link':
+                case ':focus-visible':
                 case ':fullscreen':
                 case ':valid':
                 case ':invalid':
