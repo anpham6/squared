@@ -32,7 +32,7 @@ interface Deprecations<T> {
 }
 
 interface FontProviderAction {
-    addFontProvider(authority: string, package: string, certs: string[], webfonts: PlainObject): void;
+    addFontProvider(authority: string, package: string, certs: string[], webFonts: PlainObject): Void<Promise<void>>;
 }
 
 interface FontProvider {

@@ -342,9 +342,9 @@ const appBase: android.AppFramework<View> = {
     addXmlNs(name: string, uri: string) {
         constant.XML_NAMESPACE[name] = uri;
     },
-    addFontProvider(authority: string, packageName: string, certs: string[], webfonts: PlainObject) {
+    addFontProvider(authority: string, packageName: string, certs: string[], webFonts: string | PlainObject) {
         if (application) {
-            (application.resourceHandler as Resource<View>).addFontProvider(authority, packageName, certs, webfonts);
+            return (application.resourceHandler as Resource<View>).addFontProvider(authority, packageName, certs, webFonts);
         }
     }
 };

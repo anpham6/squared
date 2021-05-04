@@ -370,9 +370,7 @@ body.addEvent("click", event => body.element.classList.toggle("example"));
 android.customize(build: number, widget: string, options: {}) // Global attributes applied to specific views
 android.setViewModel(data: {}, sessionId?: string) // Object data for layout bindings
 android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
-
-// https://developers.google.com/fonts/docs/developer_api
-android.addFontProvider(authority: string, package: string, certs: string[], webfonts: {}) // Add additional Web fonts (Google Fonts already included)
+android.addFontProvider(authority: string, package: string, certs: string[], webFonts: string | {}) // Add additional Web fonts (Google Fonts already included)
 ```
 
 ```javascript
@@ -584,6 +582,19 @@ dependencies {
         <meta-data android:name="preloaded_fonts" android:resource="@array/preloaded_fonts" /> <!-- Recommended -->
     </application>
 </manifest>
+```
+
+```javascript
+// https://developers.google.com/fonts/docs/developer_api
+
+squared.setFramework(android);
+await android.addFontProvider(
+    "com.google.android.gms.fonts",
+    "com.google.android.gms",
+    ["MIIEqDCCA5CgAwIBAgIJANWFuGx9007...", "MIIEQzCCAyugAwIBAgIJAMLgh0Zk..."],
+    "https://www.googleapis.com/webfonts/v1/webfonts?key=1234567890" // JSON object is synchronous
+);
+squared.parseDocument();
 ```
 
 ### ANDROID: Excluding Procedures / Applied Attributes

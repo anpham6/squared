@@ -148,17 +148,17 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 method: 'GET',
                 headers: new Headers({ Accept: options.accept || '*/*' })
             })
-            .then(response => {
+            .then(res => {
                 switch (type) {
                     case 'json':
-                        return response.json();
+                        return res.json();
                     case 'blob':
-                        return response.blob();
+                        return res.blob();
                     case 'text':
                     case 'document':
-                        return response.text();
+                        return res.text();
                     case 'arraybuffer':
-                        return response.arrayBuffer();
+                        return res.arrayBuffer();
                     default:
                         return null;
                 }
@@ -182,8 +182,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
                             body: JSON.stringify(body)
                         }
                     )
-                    .then(async response => {
-                        const result: ResponseData = await response.json();
+                    .then(async res => {
+                        const result: ResponseData = await res.json();
                         if (typeof options.callback === 'function') {
                             options.callback.call(null, result);
                         }
@@ -239,8 +239,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
                         body: JSON.stringify(body)
                     }
                 )
-                .then(async response => {
-                    const result: ResponseData = await response.json();
+                .then(async res => {
+                    const result: ResponseData = await res.json();
                     if (typeof options.callback === 'function') {
                         options.callback.call(null, result);
                     }

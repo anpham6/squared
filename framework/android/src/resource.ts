@@ -310,59 +310,74 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(resourceId, images, prefix, this._imageFormat);
     }
 
-    public addFontProvider(authority: string, packageName: string, certs: string[], webfonts: PlainObject, verified?: boolean) {
-        try {
-            let fonts: FontProviderFonts;
-            if (!verified) {
-                if (webfonts.kind === 'webfonts#webfontList' && Array.isArray(webfonts.items)) {
-                    fonts = {};
-                    (webfonts.items as WebFont[]).forEach(({ family, variants }) => {
-                        const normal: string[] = [];
-                        const italic: string[] = [];
-                        const width = family.endsWith('Expanded') ? '125' : family.endsWith('Condensed') ? '75' : '';
-                        for (const weight of variants) {
-                            if (weight === 'regular') {
-                                normal.push('400');
-                            }
-                            else if (weight === 'italic') {
-                                italic.push('400');
-                            }
-                            else if (weight.endsWith('italic')) {
-                                italic.push(weight.substring(0, 3));
-                            }
-                            else {
-                                normal.push(weight);
-                            }
+    public addFontProvider(authority: string, packageName: string, certs: string[], webFonts: string | PlainObject, verified?: boolean): Void<Promise<void>> {
+        if (typeof webFonts === 'string') {
+            return fetch(webFonts)
+                .then(async res => {
+                    const result: unknown = await res.json();
+                    if (isPlainObject(result)) {
+                        const fonts = this.parseWebFonts(result);
+                        if (fonts) {
+                            this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
                         }
-                        const font: FontProviderFontsStyle = {};
-                        if (normal.length) {
-                            font.normal = normal;
-                        }
-                        if (italic.length) {
-                            font.italic = italic;
-                        }
-                        if (width) {
-                            font.width = width;
-                        }
-                        fonts[family] = font;
-                    });
-                }
-                else {
-                    return;
-                }
-            }
-            else {
-                fonts = webfonts as FontProviderFonts;
-            }
-            this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
+                    }
+                })
+                .catch(err => this.errorWebFonts(err));
         }
-        catch (err) {
-            this.application.writeError(err instanceof Error ? err.message : err, 'FAIL: Unknown WebFont');
+        const fonts = !verified ? this.parseWebFonts(webFonts) : webFonts as FontProviderFonts;
+        if (fonts) {
+            this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
         }
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
         return '__' + padStart((++COUNTER_UUID).toString(), 5, '0') + '.' + ext;
+    }
+
+    private parseWebFonts(value: PlainObject) {
+        try {
+            if (value.kind === 'webfonts#webfontList' && Array.isArray(value.items)) {
+                const fonts: FontProviderFonts = {};
+                (value.items as WebFont[]).forEach(({ family, variants }) => {
+                    const normal: string[] = [];
+                    const italic: string[] = [];
+                    const width = family.endsWith('Expanded') ? '125' : family.endsWith('Condensed') ? '75' : '';
+                    for (const weight of variants) {
+                        if (weight === 'regular') {
+                            normal.push('400');
+                        }
+                        else if (weight === 'italic') {
+                            italic.push('400');
+                        }
+                        else if (weight.endsWith('italic')) {
+                            italic.push(weight.substring(0, 3));
+                        }
+                        else {
+                            normal.push(weight);
+                        }
+                    }
+                    const font: FontProviderFontsStyle = {};
+                    if (normal.length) {
+                        font.normal = normal;
+                    }
+                    if (italic.length) {
+                        font.italic = italic;
+                    }
+                    if (width) {
+                        font.width = width;
+                    }
+                    fonts[family] = font;
+                });
+                return fonts;
+            }
+        }
+        catch (err) {
+            this.errorWebFonts(err);
+        }
+    }
+
+    private errorWebFonts(err: unknown) {
+        this.application.writeError(err instanceof Error ? err.message : err as string, 'FAIL: Unknown WebFont');
     }
 
     get fontProvider() {
