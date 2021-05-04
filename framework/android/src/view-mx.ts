@@ -2319,8 +2319,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 bottom = true;
                             }
                             else {
+                                const next = i < q - 1 && horizontalRows[i + 1];
                                 top = i > 0 || row[0].lineBreakLeading;
-                                bottom = i < q - 1 && !horizontalRows[i + 1][0].lineBreakLeading;
+                                bottom = next && !next[0].lineBreakLeading && (hasOwnStyle || onlyChild || next.length === 1 && !next[0].multiline);
                                 if (!top && !bottom) {
                                     continue;
                                 }
@@ -2448,6 +2449,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.alignedWithY) {
                 this.translateY(safeFloat(this.alignedWithY.android('translationY')));
+            }
+            if (renderParent.layoutConstraint) {
+                if (this.blockWidth && this.alignParent('right') && this.alignParent('left')) {
+                    this.delete('app', 'layout_constraintHorizontal_bias');
+                }
+                if (this.blockHeight && this.alignParent('bottom') && this.alignParent('top')) {
+                    this.delete('app', 'layout_constraintVertical_bias');
+                }
             }
             if (this.textElement) {
                 if (this.multiline) {
