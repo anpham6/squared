@@ -1058,6 +1058,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return traverseElementSibling(this.innerMostWrapped.element, 'nextSibling', this.sessionId, options);
     }
 
+    public actualSpacing(region: BOX_STANDARD) {
+        const index = getBoxSpacing(region);
+        return (!this._boxReset || this._boxReset[index] === 0 ? getBoxOffset(this, index) : 0) + (this._boxAdjustment ? this._boxAdjustment[index] : 0);
+    }
+
     public modifyBox(region: BOX_STANDARD, value: number, negative = true) {
         if (value !== 0) {
             const index = getBoxSpacing(region);

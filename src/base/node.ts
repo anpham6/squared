@@ -139,14 +139,14 @@ function setDimension(node: T, style: CssStyleMap, dimension: DimensionAttr) {
     return result;
 }
 
-function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[]) {
+function convertBorderWidth(node: T, dimension: DimensionAttr, border: CssStyleAttr[]) {
     if (!node.plainText) {
-        switch (node.css(border[0] as CssStyleAttr)) {
+        switch (node.css(border[0])) {
             case 'none':
             case 'hidden':
                 return 0;
         }
-        const width = node.css(border[1] as CssStyleAttr);
+        const width = node.css(border[1]);
         let result = asPx(width);
         if (isNaN(result)) {
             result = isLength(width, true) ? node.parseUnit(width, { dimension }) : safeFloat(node.style[border[1]]);
@@ -853,11 +853,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     constructor(
         public readonly id: number,
         public readonly sessionId = '0',
-        element?: Element,
+        element: Null<Element> = null,
         children?: T[])
     {
         super(children);
-        this._element = element || null;
+        this._element = element;
         if (element && sessionId !== '0') {
             this.syncWith(sessionId);
             setElementCache(element, 'node', this, sessionId);
@@ -1033,6 +1033,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         cache.preserveWhiteSpace = undefined;
                         cache.textStyle = undefined;
                         this._cacheState.textEmpty = undefined;
+                        this._cacheState.textBounds = undefined;
                         continue;
                     default:
                         if (startsWith(attr, 'background')) {
@@ -1101,11 +1102,13 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const attr = attrs[i];
                 if (attr in cacheState) {
                     switch (attr) {
+                        case 'dir':
                         case 'absoluteParent':
                             reset = true;
                             break;
                         case 'textContent':
                             cacheState.textEmpty = undefined;
+                            cacheState.textBounds = undefined;
                             reset = true;
                             break;
                     }
@@ -1290,8 +1293,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public css(attr: CssStyleAttr, value?: string, cache = true) {
         const style = this.style;
-        if (this.styleElement && attr in style) {
-            if (value === '') {
+        if (this.styleElement && attr in style && typeof value === 'string') {
+            if (value) {
+                const current = style[attr];
+                style[attr] = value;
+                if (current !== style[attr]) {
+                    this._styleMap[attr] = value;
+                    if (cache) {
+                        this.unsetCache(attr);
+                    }
+                    return value;
+                }
+                return current;
+            }
+            else {
                 style[attr] = 'initial';
                 const property = CSS_PROPERTIES[attr];
                 if (property && typeof property.value === 'string') {
@@ -1303,18 +1318,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (cache) {
                     this.unsetCache(attr);
                 }
-            }
-            else if (value) {
-                const current = style[attr];
-                this.style[attr] = value;
-                if (current !== style[attr]) {
-                    this._styleMap[attr] = value;
-                    if (cache) {
-                        this.unsetCache(attr);
-                    }
-                    return value;
-                }
-                return current;
             }
         }
         return this._styleMap[attr] || style[attr] || '';

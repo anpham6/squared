@@ -2451,11 +2451,57 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.translateY(safeFloat(this.alignedWithY.android('translationY')));
             }
             if (renderParent.layoutConstraint) {
-                if (this.blockWidth && this.alignParent('right') && this.alignParent('left')) {
-                    this.deleteOne('app', 'layout_constraintHorizontal_bias');
+                if (this.blockWidth) {
+                    if (this.alignParent('right') && this.alignParent('left')) {
+                        this.deleteOne('app', 'layout_constraintHorizontal_bias');
+                    }
                 }
-                if (this.blockHeight && this.alignParent('bottom') && this.alignParent('top')) {
-                    this.deleteOne('app', 'layout_constraintVertical_bias');
+                else if (this.inlineWidth || !this.flexibleWidth) {
+                    const alignLeft = this.alignParent('left');
+                    const alignRight = this.alignParent('right');
+                    if (alignLeft && alignRight) {
+                        switch (this.app('layout_constraintHorizontal_bias')) {
+                            case '0':
+                                if (this.actualSpacing(BOX_STANDARD.MARGIN_RIGHT) === 0) {
+                                    this.delete('app', this.localizeString('layout_constraintRight_toRightOf'), 'layout_constraintHorizontal_bias');
+                                }
+                                break;
+                            case '1':
+                                if (this.actualSpacing(BOX_STANDARD.MARGIN_LEFT) === 0) {
+                                    this.delete('app', this.localizeString('layout_constraintLeft_toLeftOf'), 'layout_constraintHorizontal_bias');
+                                }
+                                break;
+                        }
+                    }
+                    else if (!alignRight && alignLeft && !this.alignSibling('rightLeft') || !alignLeft && alignRight && !this.alignSibling('leftRight')) {
+                        this.deleteOne('app', 'layout_constraintHorizontal_bias');
+                    }
+                }
+                if (this.blockHeight) {
+                    if (this.alignParent('bottom') && this.alignParent('top')) {
+                        this.deleteOne('app', 'layout_constraintVertical_bias');
+                    }
+                }
+                else if (this.inlineHeight || !this.flexibleHeight) {
+                    const alignTop = this.alignParent('top');
+                    const alignBottom = this.alignParent('bottom');
+                    if (alignTop && alignBottom) {
+                        switch (this.app('layout_constraintVertical_bias')) {
+                            case '0':
+                                if (this.actualSpacing(BOX_STANDARD.MARGIN_BOTTOM) === 0) {
+                                    this.delete('app', 'layout_constraintBottom_toBottomOf', 'layout_constraintVertical_bias');
+                                }
+                                break;
+                            case '1':
+                                if (this.actualSpacing(BOX_STANDARD.MARGIN_TOP) === 0) {
+                                    this.delete('app', 'layout_constraintTop_toTopOf', 'layout_constraintVertical_bias');
+                                }
+                                break;
+                        }
+                    }
+                    else if (!alignBottom && alignTop && !this.alignSibling('bottomTop') || !alignTop && alignBottom && !this.alignSibling('topBottom')) {
+                        this.deleteOne('app', 'layout_constraintVertical_bias');
+                    }
                 }
             }
             if (this.textElement) {

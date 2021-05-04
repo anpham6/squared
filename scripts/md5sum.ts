@@ -147,7 +147,7 @@ if (master) {
                             modified = 0;
                         for (const row of csv) {
                             const id = parseInt(row[0]);
-                            if (id > 0 && (flags & id) === id) {
+                            if (id > 0 && (flags & id)) {
                                 const filename = row[1];
                                 const file = path.resolve(masterDir, filename);
                                 if (fs.existsSync(file)) {
@@ -245,7 +245,7 @@ if (master) {
                     if (data && host) {
                         parse(fs.readFileSync(path.resolve(__dirname, data)), (err, csv: string[][]) => {
                             if (!err) {
-                                let html = '<html><body><ol>';
+                                let html = '<html><body><ul>';
                                 for (const row of csv) {
                                     const filename = row[1];
                                     const url = row[2];
@@ -258,9 +258,9 @@ if (master) {
                                         warnMessage('MD5 not found', filename);
                                     }
                                 }
-                                html += '</ol></body></html>';
+                                html += '</ul></body></html>';
                                 fs.writeFileSync(path.resolve(__dirname, snapshot!, 'errors.html'), html);
-                                failMessage((errors.length + notFound.length) + ' errors', host + snapshot!.replace(/^[.]/, '') + '/errors.html');
+                                failMessage('URL', host + snapshot!.replace(/^[.]/, '') + '/errors.html');
                             }
                             else {
                                 failMessage("Unable to read CSV data file", data);
@@ -316,7 +316,7 @@ else if (host && data && browserName && snapshot) {
                     for (const row of csv) {
                         const [flag, filename, url] = row;
                         const id = parseInt(flag);
-                        if (id > 0 && (flags & id) === id) {
+                        if (id > 0 && (flags & id)) {
                             const name = filename.substring(0, filename.lastIndexOf('.'));
                             const filepath = path.resolve(__dirname, snapshot!, name);
                             const href = host + url;

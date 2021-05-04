@@ -658,6 +658,7 @@ declare module "base" {
         alignedVertically(siblings?: Node[], cleared?: Null<Map<Node, string>>, horizontal?: boolean): number;
         previousSiblings(options?: TraverseSiblingsOptions): NodeUI[];
         nextSiblings(options?: TraverseSiblingsOptions): NodeUI[];
+        actualSpacing(region: lib.constant.BOX_STANDARD): number;
         modifyBox(region: lib.constant.BOX_STANDARD, value: number, negative?: boolean): void;
         setBox(region: lib.constant.BOX_STANDARD, options: BoxOptions): void;
         getBox(region: lib.constant.BOX_STANDARD): [number, number];
