@@ -1,4 +1,4 @@
-/* squared 2.5.10
+/* squared 2.5.11
    https://github.com/anpham6/squared */
 
 var squared = (function (exports) {
@@ -5587,7 +5587,11 @@ var squared = (function (exports) {
             this._length = children.length;
         }
         next() {
-            if (this.hasNext()) {
+            if (this._iterating === -1) {
+                this._iterating = 1;
+                return this.children[this._index];
+            }
+            else if (this.hasNext()) {
                 this._iterating = 1;
                 return this.children[++this._index];
             }
@@ -5596,51 +5600,53 @@ var squared = (function (exports) {
             return this._index < this._length - 1;
         }
         remove() {
-            const iterating = this._iterating;
-            if (iterating !== 0) {
+            if (this._length && this._iterating !== 0) {
                 this.children.splice(this._index, 1);
-                this._index -= iterating;
+                this._index -= this._iterating;
                 --this._length;
+            }
+            else {
                 this._iterating = 0;
             }
         }
         forEachRemaining(predicate) {
             const children = this.children;
             while (this.hasNext()) {
-                predicate(children[++this._index]);
+                predicate.call(this, children[++this._index]);
             }
         }
     }
 
     class ListIterator extends Iterator {
         add(item) {
-            const iterating = this._iterating;
-            if (iterating !== 0) {
-                this.children.splice(iterating === 1 ? Math.min(++this._index, this._length) : Math.max(--this._index, 0), 0, item);
+            if (this._iterating !== 0) {
+                this.children.splice(this._iterating === 1 ? Math.min(this._index + 1, this._length) : Math.max(this._index - 1, 0), 0, item);
                 ++this._length;
-                this._iterating = 0;
             }
         }
         set(item) {
             if (this._iterating !== 0) {
                 this.children[this._index] = item;
-                this._iterating = 0;
             }
         }
         nextIndex() {
-            return Math.min(this._index + 1, this._length);
+            return this._index + 1;
         }
         hasPrevious() {
-            return this.previousIndex() > 0;
+            return this._index > 0;
         }
         previous() {
-            if (this.hasPrevious()) {
+            if (this._iterating === 1) {
+                this._iterating = -1;
+                return this.children[this._index];
+            }
+            else if (this.hasPrevious()) {
                 this._iterating = -1;
                 return this.children[--this._index];
             }
         }
         previousIndex() {
-            return Math.max(this._index - 1, -1);
+            return this._index - 1;
         }
     }
 

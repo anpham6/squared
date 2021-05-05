@@ -1,4 +1,4 @@
-/* squared.base 2.5.10
+/* squared.base 2.5.11
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -2323,11 +2323,13 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     }
-                    case ':empty':
-                        if (element.hasChildNodes()) {
+                    case ':empty': {
+                        const childNodes = element.childNodes;
+                        if (childNodes.length && iterateArray(childNodes, item => item.nodeName[0] !== '#' || item.nodeName === '#text') === Infinity) {
                             return false;
                         }
                         break;
+                    }
                     case ':checked':
                         if (!this.checked) {
                             return false;
@@ -2453,13 +2455,18 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     }
+                    case ':any-link':
+                        if (!((tagName === 'A' || tagName === 'AREA') && element.href)) {
+                            return false;
+                        }
+                        break;
                     case ':default':
                     case ':defined':
                     case ':link':
                     case ':visited':
                     case ':hover':
                     case ':active':
-                    case ':any-link':
+                    case ':focus-visible':
                     case ':fullscreen':
                     case ':valid':
                     case ':invalid':
@@ -2732,11 +2739,6 @@ this.squared.base = (function (exports) {
             }
         });
         return result || node;
-    }
-    function getBoundsSize(node, options) {
-        var _a;
-        const bounds = (!options || options.parent !== false) && ((_a = node.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || node.bounds;
-        return bounds[options && options.dimension || 'width'];
     }
     const aboveRange = (a, b, offset = 1) => a + offset > b;
     const belowRange = (a, b, offset = 1) => a - offset < b;
@@ -3529,7 +3531,7 @@ this.squared.base = (function (exports) {
                 return parseFloat(value);
             }
             else if (isPercent(value)) {
-                return convertPercent(value) * getBoundsSize(this, options);
+                return convertPercent(value) * this.getContainerSize(options);
             }
             if (!options) {
                 options = { fontSize: this.fontSize };
@@ -3542,7 +3544,7 @@ this.squared.base = (function (exports) {
         convertUnit(value, unit = 'px', options) {
             let result = typeof value === 'string' ? this.parseUnit(value, options) : value;
             if (unit === 'percent' || unit === '%') {
-                result *= 100 / getBoundsSize(this, options);
+                result *= 100 / this.getContainerSize(options);
                 return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
             }
             return convertUnit(result, unit, options);
@@ -3612,6 +3614,11 @@ this.squared.base = (function (exports) {
             }
             this._box = null;
             this._linear = null;
+        }
+        getContainerSize(options) {
+            var _a;
+            const bounds = (!options || options.parent !== false) && (this.positionFixed ? { width: window.innerWidth, height: window.innerHeight } : (_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || this.bounds;
+            return bounds[options && options.dimension || 'width'];
         }
         min(attr, options) {
             return getMinMax(this, true, attr, options);
@@ -4082,6 +4089,9 @@ this.squared.base = (function (exports) {
         get positionRelative() {
             return this.valueOf('position') === 'relative';
         }
+        get positionFixed() {
+            return this.valueOf('position') === 'fixed';
+        }
         get display() {
             return this.css('display');
         }
@@ -4213,7 +4223,7 @@ this.squared.base = (function (exports) {
         get hasHeight() {
             var _a;
             const result = this._cache.hasHeight;
-            return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.valueOf('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false }) : result;
+            return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.positionFixed || this.hasPX('top') || this.hasPX('bottom') : this.height > 0 || this.hasPX('height', { percent: false }) : result;
         }
         get lineHeight() {
             let result = this._cache.lineHeight;
@@ -4529,6 +4539,15 @@ this.squared.base = (function (exports) {
             }
             return result;
         }
+        get variableWidth() {
+            const percent = this.percentWidth;
+            return percent > 0 && percent < 1 || this.has('maxWidth', { type: 1 /* LENGTH */ | 2 /* PERCENT */, not: '100%' });
+        }
+        get variableHeight() {
+            var _a;
+            const percent = this.percentHeight;
+            return percent > 0 && percent < 1 || this.has('maxHeight', { type: 1 /* LENGTH */ | 2 /* PERCENT */, not: '100%' }) && (((_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.positionFixed);
+        }
         set textBounds(value) {
             this._textBounds = value;
         }
@@ -4622,7 +4641,7 @@ this.squared.base = (function (exports) {
             const result = this._cache.percentHeight;
             if (result === undefined) {
                 const value = this.valueOf('height');
-                return this._cache.percentHeight = isPercent(value) && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.valueOf('position') === 'fixed') ? convertPercent(value) : 0;
+                return this._cache.percentHeight = isPercent(value) && (((_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.positionFixed) ? convertPercent(value) : 0;
             }
             return result;
         }
