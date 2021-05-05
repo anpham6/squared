@@ -5,17 +5,16 @@ this.squared = this.squared || {};
 this.squared.svg = (function (exports) {
     'use strict';
 
-    var Pattern$1 = squared.lib.base.Pattern;
     const { CSS_PROPERTIES } = squared.lib.internal;
     const { STRING: STRING$3, TRANSFORM: __TRANSFORM } = squared.lib.regex;
     const { asPercent: asPercent$3, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize: getFontSize$3, getStyle: getStyle$2, hasEm: hasEm$3, isLength: isLength$4, parseUnit: parseUnit$3 } = squared.lib.css;
     const { getNamedItem: getNamedItem$a } = squared.lib.dom;
     const { convertRadian, hypotenuse, truncateExponential, truncateFraction: truncateFraction$3, truncateTrailingZero } = squared.lib.math;
     const { getElementCache } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$2, lastItemOf: lastItemOf$3, resolvePath: resolvePath$1, splitPair: splitPair$1, startsWith: startsWith$2 } = squared.lib.util;
-    const RE_PARSE = new Pattern$1(/(\w+)\([^)]+\)/g);
-    const RE_ROTATE = new Pattern$1(/rotate\((-?[\d.]+)\s*(?:,?\s+(-?[\d.]+))?\s*(?:,?\s+(-?[\d.]+))?\)/g);
+    const { convertCamelCase: convertCamelCase$2, convertFloat: convertFloat$1, lastItemOf: lastItemOf$3, resolvePath: resolvePath$1, splitPair: splitPair$1, startsWith: startsWith$2 } = squared.lib.util;
     const REGEXP_EXPONENT = new RegExp(STRING$3.DECIMAL_EXPONENT, 'g');
+    const REGEXP_PARSE = /(\w+)\([^)]+\)/g;
+    const REGEXP_ROTATE = /rotate\((-?[\d.]+)\s*(?:,?\s+(-?[\d.]+))?\s*(?:,?\s+(-?[\d.]+))?\)/g;
     const REGEXP_TRUNCATECACHE = new Map();
     function setOriginPosition(element, point, attr, value, dimension) {
         if (isLength$4(value)) {
@@ -380,9 +379,9 @@ this.squared.svg = (function (exports) {
         parse(element, value = getDataValue(element, 'transform')) {
             if (value && value !== 'none') {
                 const result = [];
-                RE_PARSE.matcher(value);
-                while (RE_PARSE.find()) {
-                    const [transform, method] = RE_PARSE.groups();
+                let match;
+                while (match = REGEXP_PARSE.exec(value)) {
+                    const [transform, method] = match;
                     if (startsWith$2(method, 'matrix')) {
                         const matrix = TRANSFORM.matrix(element, transform);
                         if (matrix) {
@@ -453,6 +452,7 @@ this.squared.svg = (function (exports) {
                         }
                     }
                 }
+                REGEXP_PARSE.lastIndex = 0;
                 const length = result.length;
                 if (length) {
                     for (let i = 0; i < length; ++i) {
@@ -548,13 +548,14 @@ this.squared.svg = (function (exports) {
             const value = getNamedItem$a(element, attr);
             const result = [];
             if (value) {
-                RE_ROTATE.matcher(value);
-                while (RE_ROTATE.find()) {
-                    const [angle, x, y] = RE_ROTATE.map(group => +group || 0, 1);
+                let match;
+                while (match = REGEXP_ROTATE.exec(value)) {
+                    const angle = +match[1];
                     if (angle !== 0) {
-                        result.push({ angle, x, y });
+                        result.push({ angle, x: convertFloat$1(match[2]), y: convertFloat$1(match[3]) });
                     }
                 }
+                REGEXP_ROTATE.lastIndex = 0;
             }
             return result;
         },
@@ -5521,13 +5522,11 @@ this.squared.svg = (function (exports) {
         }
     }
 
-    var Pattern = squared.lib.base.Pattern;
     const { STRING: STRING$1 } = squared.lib.regex;
     const { asPercent: asPercent$1, hasCalc: hasCalc$1, isAngle, hasCustomProperty: hasCustomProperty$1, parseAngle, parseVar: parseVar$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$3 } = squared.lib.dom;
     const { convertCamelCase: convertCamelCase$1, convertWord, iterateArray: iterateArray$1, splitEnclosing, splitPairEnd, spliceString, startsWith: startsWith$1 } = squared.lib.util;
     const { getKeyframesRules: getKeyframesRules$1 } = squared.base.lib.css;
-    const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
     const ANIMATION_DEFAULT = {
         'animation-delay': '0s',
         'animation-duration': '0s',
@@ -5538,14 +5537,16 @@ this.squared.svg = (function (exports) {
         'animation-timing-function': 'ease'
     };
     const REGEXP_PERCENT = new RegExp(STRING$1.PERCENT, 'g');
+    const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`, 'g');
     function parseAttribute(element, attr) {
         const value = getAttribute(element, attr);
         if (attr === 'animation-timing-function') {
             const result = [];
-            RE_TIMINGFUNCTION.matcher(value);
-            while (RE_TIMINGFUNCTION.find()) {
-                result.push(RE_TIMINGFUNCTION.group(1));
+            let match;
+            while (match = REGEXP_TIMINGFUNCTION.exec(value)) {
+                result.push(match[1]);
             }
+            REGEXP_TIMINGFUNCTION.lastIndex = 0;
             return result;
         }
         return value.split(/\s*,\s*/);

@@ -505,161 +505,18 @@ var squared = (function (exports) {
             return COLOR_CSS3.get('lightpink');
         }
     }
-    const COLOR_HEX = {};
-    const COLOR_CSS3 = new Map([
-        ['black', '#000000'],
-        ['dimgray', '#696969'],
-        ['dimgrey', '#696969'],
-        ['gray', '#808080'],
-        ['grey', '#808080'],
-        ['darkgray', '#a9a9a9'],
-        ['darkgrey', '#a9a9a9'],
-        ['silver', '#c0c0c0'],
-        ['lightgray', '#d3d3d3'],
-        ['lightgrey', '#d3d3d3'],
-        ['gainsboro', '#dcdcdc'],
-        ['whitesmoke', '#f5f5f5'],
-        ['white', '#ffffff'],
-        ['rosybrown', '#bc8f8f'],
-        ['indianred', '#cd5c5c'],
-        ['brown', '#a52a2a'],
-        ['firebrick', '#b22222'],
-        ['lightcoral', '#f08080'],
-        ['maroon', '#800000'],
-        ['darkred', '#8b0000'],
-        ['red', '#ff0000'],
-        ['snow', '#fffafa'],
-        ['mistyrose', '#ffe4e1'],
-        ['salmon', '#fa8072'],
-        ['tomato', '#ff6347'],
-        ['darksalmon', '#e9967a'],
-        ['coral', '#ff7f50'],
-        ['orangered', '#ff4500'],
-        ['lightsalmon', '#ffa07a'],
-        ['sienna', '#a0522d'],
-        ['seashell', '#fff5ee'],
-        ['chocolate', '#d2691e'],
-        ['saddlebrown', '#8b4513'],
-        ['sandybrown', '#f4a460'],
-        ['peachpuff', '#ffdab9'],
-        ['peru', '#cd853f'],
-        ['linen', '#faf0e6'],
-        ['bisque', '#ffe4c4'],
-        ['darkorange', '#ff8c00'],
-        ['burlywood', '#deb887'],
-        ['antiquewhite', '#faebd7'],
-        ['tan', '#d2b48c'],
-        ['navajowhite', '#ffdead'],
-        ['blanchedalmond', '#ffebcd'],
-        ['papayawhip', '#ffefd5'],
-        ['moccasin', '#ffe4b5'],
-        ['orange', '#ffa500'],
-        ['wheat', '#f5deb3'],
-        ['oldlace', '#fdf5e6'],
-        ['floralwhite', '#fffaf0'],
-        ['darkgoldenrod', '#b8860b'],
-        ['goldenrod', '#daa520'],
-        ['cornsilk', '#fff8dc'],
-        ['gold', '#ffd700'],
-        ['lemonchiffon', '#fffacd'],
-        ['khaki', '#f0e68c'],
-        ['palegoldenrod', '#eee8aa'],
-        ['darkkhaki', '#bdb76b'],
-        ['beige', '#f5f5dc'],
-        ['lightgoldenrodyellow', '#fafad2'],
-        ['olive', '#808000'],
-        ['yellow', '#ffff00'],
-        ['lightyellow', '#ffffe0'],
-        ['ivory', '#fffff0'],
-        ['olivedrab', '#6b8e23'],
-        ['yellowgreen', '#9acd32'],
-        ['darkolivegreen', '#556b2f'],
-        ['greenyellow', '#adff2f'],
-        ['chartreuse', '#7fff00'],
-        ['lawngreen', '#7cfc00'],
-        ['darkseagreen', '#8fbc8f'],
-        ['forestgreen', '#228b22'],
-        ['limegreen', '#32cd32'],
-        ['lightgreen', '#90ee90'],
-        ['palegreen', '#98fb98'],
-        ['darkgreen', '#006400'],
-        ['green', '#008000'],
-        ['lime', '#00ff00'],
-        ['honeydew', '#f0fff0'],
-        ['seagreen', '#2e8b57'],
-        ['mediumseagreen', '#3cb371'],
-        ['springgreen', '#00ff7f'],
-        ['mintcream', '#f5fffa'],
-        ['mediumspringgreen', '#00fa9a'],
-        ['mediumaquamarine', '#66cdaa'],
-        ['aquamarine', '#7fffd4'],
-        ['turquoise', '#40e0d0'],
-        ['lightseagreen', '#20b2aa'],
-        ['mediumturquoise', '#48d1cc'],
-        ['darkslategray', '#2f4f4f'],
-        ['darkslategrey', '#2f4f4f'],
-        ['paleturquoise', '#afeeee'],
-        ['teal', '#008080'],
-        ['darkcyan', '#008b8b'],
-        ['aqua', '#00ffff'],
-        ['cyan', '#00ffff'],
-        ['lightcyan', '#e0ffff'],
-        ['azure', '#f0ffff'],
-        ['darkturquoise', '#00ced1'],
-        ['cadetblue', '#5f9ea0'],
-        ['powderblue', '#b0e0e6'],
-        ['lightblue', '#add8e6'],
-        ['deepskyblue', '#00bfff'],
-        ['skyblue', '#87ceeb'],
-        ['lightskyblue', '#87cefa'],
-        ['steelblue', '#4682b4'],
-        ['aliceblue', '#f0f8ff'],
-        ['dodgerblue', '#1e90ff'],
-        ['slategray', '#708090'],
-        ['slategrey', '#708090'],
-        ['lightslategray', '#778899'],
-        ['lightslategrey', '#778899'],
-        ['lightsteelblue', '#b0c4de'],
-        ['cornflower', '#6495ed'],
-        ['royalblue', '#4169e1'],
-        ['midnightblue', '#191970'],
-        ['lavender', '#e6e6fa'],
-        ['navy', '#000080'],
-        ['darkblue', '#00008b'],
-        ['mediumblue', '#0000cd'],
-        ['blue', '#0000ff'],
-        ['ghostwhite', '#f8f8ff'],
-        ['slateblue', '#6a5acd'],
-        ['darkslateblue', '#483d8b'],
-        ['mediumslateblue', '#7b68ee'],
-        ['mediumpurple', '#9370db'],
-        ['rebeccapurple', '#663399'],
-        ['blueviolet', '#8a2be2'],
-        ['indigo', '#4b0082'],
-        ['darkorchid', '#9932cc'],
-        ['darkviolet', '#9400d3'],
-        ['mediumorchid', '#ba55d3'],
-        ['thistle', '#d8bfd8'],
-        ['plum', '#dda0dd'],
-        ['violet', '#ee82ee'],
-        ['purple', '#800080'],
-        ['darkmagenta', '#8b008b'],
-        ['fuchsia', '#ff00ff'],
-        ['magenta', '#ff00ff'],
-        ['orchid', '#da70d6'],
-        ['mediumvioletred', '#c71585'],
-        ['deeppink', '#ff1493'],
-        ['hotpink', '#ff69b4'],
-        ['lavenderblush', '#fff0f5'],
-        ['palevioletred', '#db7093'],
-        ['crimson', '#dc143c'],
-        ['pink', '#ffc0cb'],
-        ['lightpink', '#ffb6c1']
-    ]);
-    for (const [key, value] of COLOR_CSS3) {
-        COLOR_HEX[value] = key;
-        COLOR_CSS3.set(key, Object.freeze(new Color(key, value)));
-    }
+    const [COLOR_HEX, COLOR_CSS3] = (function () {
+        const items = ['black', '#000000', 'dimgray', '#696969', 'dimgrey', '#696969', 'gray', '#808080', 'grey', '#808080', 'darkgray', '#a9a9a9', 'darkgrey', '#a9a9a9', 'silver', '#c0c0c0', 'lightgray', '#d3d3d3', 'lightgrey', '#d3d3d3', 'gainsboro', '#dcdcdc', 'whitesmoke', '#f5f5f5', 'white', '#ffffff', 'rosybrown', '#bc8f8f', 'indianred', '#cd5c5c', 'brown', '#a52a2a', 'firebrick', '#b22222', 'lightcoral', '#f08080', 'maroon', '#800000', 'darkred', '#8b0000', 'red', '#ff0000', 'snow', '#fffafa', 'mistyrose', '#ffe4e1', 'salmon', '#fa8072', 'tomato', '#ff6347', 'darksalmon', '#e9967a', 'coral', '#ff7f50', 'orangered', '#ff4500', 'lightsalmon', '#ffa07a', 'sienna', '#a0522d', 'seashell', '#fff5ee', 'chocolate', '#d2691e', 'saddlebrown', '#8b4513', 'sandybrown', '#f4a460', 'peachpuff', '#ffdab9', 'peru', '#cd853f', 'linen', '#faf0e6', 'bisque', '#ffe4c4', 'darkorange', '#ff8c00', 'burlywood', '#deb887', 'antiquewhite', '#faebd7', 'tan', '#d2b48c', 'navajowhite', '#ffdead', 'blanchedalmond', '#ffebcd', 'papayawhip', '#ffefd5', 'moccasin', '#ffe4b5', 'orange', '#ffa500', 'wheat', '#f5deb3', 'oldlace', '#fdf5e6', 'floralwhite', '#fffaf0', 'darkgoldenrod', '#b8860b', 'goldenrod', '#daa520', 'cornsilk', '#fff8dc', 'gold', '#ffd700', 'lemonchiffon', '#fffacd', 'khaki', '#f0e68c', 'palegoldenrod', '#eee8aa', 'darkkhaki', '#bdb76b', 'beige', '#f5f5dc', 'lightgoldenrodyellow', '#fafad2', 'olive', '#808000', 'yellow', '#ffff00', 'lightyellow', '#ffffe0', 'ivory', '#fffff0', 'olivedrab', '#6b8e23', 'yellowgreen', '#9acd32', 'darkolivegreen', '#556b2f', 'greenyellow', '#adff2f', 'chartreuse', '#7fff00', 'lawngreen', '#7cfc00', 'darkseagreen', '#8fbc8f', 'forestgreen', '#228b22', 'limegreen', '#32cd32', 'lightgreen', '#90ee90', 'palegreen', '#98fb98', 'darkgreen', '#006400', 'green', '#008000', 'lime', '#00ff00', 'honeydew', '#f0fff0', 'seagreen', '#2e8b57', 'mediumseagreen', '#3cb371', 'springgreen', '#00ff7f', 'mintcream', '#f5fffa', 'mediumspringgreen', '#00fa9a', 'mediumaquamarine', '#66cdaa', 'aquamarine', '#7fffd4', 'turquoise', '#40e0d0', 'lightseagreen', '#20b2aa', 'mediumturquoise', '#48d1cc', 'darkslategray', '#2f4f4f', 'darkslategrey', '#2f4f4f', 'paleturquoise', '#afeeee', 'teal', '#008080', 'darkcyan', '#008b8b', 'aqua', '#00ffff', 'cyan', '#00ffff', 'lightcyan', '#e0ffff', 'azure', '#f0ffff', 'darkturquoise', '#00ced1', 'cadetblue', '#5f9ea0', 'powderblue', '#b0e0e6', 'lightblue', '#add8e6', 'deepskyblue', '#00bfff', 'skyblue', '#87ceeb', 'lightskyblue', '#87cefa', 'steelblue', '#4682b4', 'aliceblue', '#f0f8ff', 'dodgerblue', '#1e90ff', 'slategray', '#708090', 'slategrey', '#708090', 'lightslategray', '#778899', 'lightslategrey', '#778899', 'lightsteelblue', '#b0c4de', 'cornflower', '#6495ed', 'royalblue', '#4169e1', 'midnightblue', '#191970', 'lavender', '#e6e6fa', 'navy', '#000080', 'darkblue', '#00008b', 'mediumblue', '#0000cd', 'blue', '#0000ff', 'ghostwhite', '#f8f8ff', 'slateblue', '#6a5acd', 'darkslateblue', '#483d8b', 'mediumslateblue', '#7b68ee', 'mediumpurple', '#9370db', 'rebeccapurple', '#663399', 'blueviolet', '#8a2be2', 'indigo', '#4b0082', 'darkorchid', '#9932cc', 'darkviolet', '#9400d3', 'mediumorchid', '#ba55d3', 'thistle', '#d8bfd8', 'plum', '#dda0dd', 'violet', '#ee82ee', 'purple', '#800080', 'darkmagenta', '#8b008b', 'fuchsia', '#ff00ff', 'magenta', '#ff00ff', 'orchid', '#da70d6', 'mediumvioletred', '#c71585', 'deeppink', '#ff1493', 'hotpink', '#ff69b4', 'lavenderblush', '#fff0f5', 'palevioletred', '#db7093', 'crimson', '#dc143c', 'pink', '#ffc0cb', 'lightpink', '#ffb6c1'];
+        const hex = {};
+        const css3 = new Map();
+        for (let i = 0, length = items.length; i < length; i += 2) {
+            const key = items[i];
+            const value = items[i + 1];
+            hex[value] = key;
+            css3.set(key, Object.freeze(new Color(key, value)));
+        }
+        return [hex, css3];
+    })();
     function hue2rgb(t, p, q) {
         if (t < 0) {
             t += 1;
@@ -5215,7 +5072,11 @@ var squared = (function (exports) {
             this._length = children.length;
         }
         next() {
-            if (this.hasNext()) {
+            if (this._iterating === -1) {
+                this._iterating = 1;
+                return this.children[this._index];
+            }
+            else if (this.hasNext()) {
                 this._iterating = 1;
                 return this.children[++this._index];
             }
@@ -5224,11 +5085,12 @@ var squared = (function (exports) {
             return this._index < this._length - 1;
         }
         remove() {
-            const iterating = this._iterating;
-            if (iterating !== 0) {
+            if (this._length && this._iterating !== 0) {
                 this.children.splice(this._index, 1);
-                this._index -= iterating;
+                this._index -= this._iterating;
                 --this._length;
+            }
+            else {
                 this._iterating = 0;
             }
         }
@@ -5242,33 +5104,34 @@ var squared = (function (exports) {
 
     class ListIterator extends Iterator {
         add(item) {
-            const iterating = this._iterating;
-            if (iterating !== 0) {
-                this.children.splice(iterating === 1 ? Math.min(++this._index, this._length) : Math.max(--this._index, 0), 0, item);
+            if (this._iterating !== 0) {
+                this.children.splice(this._iterating === 1 ? Math.min(this._index + 1, this._length) : Math.max(this._index - 1, 0), 0, item);
                 ++this._length;
-                this._iterating = 0;
             }
         }
         set(item) {
             if (this._iterating !== 0) {
                 this.children[this._index] = item;
-                this._iterating = 0;
             }
         }
         nextIndex() {
-            return Math.min(this._index + 1, this._length);
+            return this._index + 1;
         }
         hasPrevious() {
-            return this.previousIndex() > 0;
+            return this._index > 0;
         }
         previous() {
-            if (this.hasPrevious()) {
+            if (this._iterating === 1) {
+                this._iterating = -1;
+                return this.children[this._index];
+            }
+            else if (this.hasPrevious()) {
                 this._iterating = -1;
                 return this.children[--this._index];
             }
         }
         previousIndex() {
-            return Math.max(this._index - 1, -1);
+            return this._index - 1;
         }
     }
 

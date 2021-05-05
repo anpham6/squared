@@ -1699,13 +1699,13 @@ this.squared.base = (function (exports) {
     function parseGlob(value, options) {
         let flags = '', fromEnd;
         if (options) {
-            if (options.caseSensitive === false) {
+            if (options.ignoreCase) {
                 flags += 'i';
             }
             fromEnd = options.fromEnd;
         }
         const trimCurrent = (cwd) => fromEnd && startsWith$9(cwd, './') ? cwd.substring(2) : cwd;
-        const source = ((!fromEnd ? '^' : '') + trimCurrent(value = value.trim()))
+        return new GlobExp(((!fromEnd ? '^' : '') + trimCurrent(value = value.trim()))
             .replace(/\\\\([^\\])/g, (...match) => ':' + match[1].charCodeAt(0))
             .replace(/\\|\/\.\/|\/[^/]+\/\.\.\//g, '/')
             .replace(/\{([^}]+)\}/g, (...match) => {
@@ -1747,8 +1747,7 @@ this.squared.base = (function (exports) {
                     return '\\?';
             }
             return '\\\\' + String.fromCharCode(+match[1]);
-        }) + '$';
-        return new GlobExp(source, flags, value[0] === '!');
+        }) + '$', flags, value[0] === '!');
     }
 
     var util = /*#__PURE__*/Object.freeze({
@@ -2457,11 +2456,13 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     }
-                    case ':empty':
-                        if (element.hasChildNodes()) {
+                    case ':empty': {
+                        const childNodes = element.childNodes;
+                        if (childNodes.length && iterateArray$4(childNodes, item => item.nodeName[0] !== '#' || item.nodeName === '#text') === Infinity) {
                             return false;
                         }
                         break;
+                    }
                     case ':checked':
                         if (!this.checked) {
                             return false;
@@ -2587,13 +2588,18 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     }
+                    case ':any-link':
+                        if (!((tagName === 'A' || tagName === 'AREA') && element.href)) {
+                            return false;
+                        }
+                        break;
                     case ':default':
                     case ':defined':
                     case ':link':
                     case ':visited':
                     case ':hover':
                     case ':active':
-                    case ':any-link':
+                    case ':focus-visible':
                     case ':fullscreen':
                     case ':valid':
                     case ':invalid':
@@ -2866,11 +2872,6 @@ this.squared.base = (function (exports) {
             }
         });
         return result || node;
-    }
-    function getBoundsSize(node, options) {
-        var _a;
-        const bounds = (!options || options.parent !== false) && ((_a = node.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || node.bounds;
-        return bounds[options && options.dimension || 'width'];
     }
     const aboveRange = (a, b, offset = 1) => a + offset >= b;
     const belowRange = (a, b, offset = 1) => a - offset <= b;
@@ -3645,7 +3646,7 @@ this.squared.base = (function (exports) {
                 return n;
             }
             else if (!isNaN(n = asPercent$3(value))) {
-                return n * getBoundsSize(this, options);
+                return n * this.getContainerSize(options);
             }
             if (!options) {
                 options = { fontSize: this.fontSize };
@@ -3658,7 +3659,7 @@ this.squared.base = (function (exports) {
         convertUnit(value, unit = 'px', options) {
             let result = this.parseUnit(value, options);
             if (unit === '%' || unit === 'percent') {
-                result *= 100 / getBoundsSize(this, options);
+                result *= 100 / this.getContainerSize(options);
                 return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
             }
             return convertUnit(result, unit, options);
@@ -3702,6 +3703,11 @@ this.squared.base = (function (exports) {
             }
             this._box = null;
             this._linear = null;
+        }
+        getContainerSize(options) {
+            var _a;
+            const bounds = (!options || options.parent !== false) && (this.positionFixed ? { width: window.innerWidth, height: window.innerHeight } : (_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || this.bounds;
+            return bounds[options && options.dimension || 'width'];
         }
         min(attr, options) {
             return getMinMax(this, true, attr, options);
@@ -4153,6 +4159,9 @@ this.squared.base = (function (exports) {
         get positionRelative() {
             return this.valueOf('position') === 'relative';
         }
+        get positionFixed() {
+            return this.valueOf('position') === 'fixed';
+        }
         get display() {
             return this.css('display');
         }
@@ -4284,7 +4293,7 @@ this.squared.base = (function (exports) {
         get hasHeight() {
             var _a;
             const result = this._cache.hasHeight;
-            return result === undefined ? this._cache.hasHeight = isPercent$3(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.valueOf('position') === 'fixed' || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
+            return result === undefined ? this._cache.hasHeight = isPercent$3(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.positionFixed || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
         }
         get lineHeight() {
             let result = this._cache.lineHeight;
@@ -4682,7 +4691,7 @@ this.squared.base = (function (exports) {
             const result = this._cache.percentHeight;
             if (result === undefined) {
                 const value = asPercent$3(this.valueOf('height'));
-                return this._cache.percentHeight = !isNaN(value) && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.valueOf('position') === 'fixed') ? value : 0;
+                return this._cache.percentHeight = !isNaN(value) && (((_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.positionFixed) ? value : 0;
             }
             return result;
         }
@@ -8632,6 +8641,9 @@ this.squared.base = (function (exports) {
                 }
             }
         }
+        isResizable(attr) {
+            return this.has(attr, { type: 2 /* PERCENT */ | (attr === 'width' || attr === 'height' ? 0 : 1 /* LENGTH */), not: '100%' });
+        }
         fitToScreen(value) {
             const { width, height } = this.localSettings.screenDimension;
             if (value.width > width) {
@@ -8905,7 +8917,12 @@ this.squared.base = (function (exports) {
         }
         get variableWidth() {
             const percent = this.percentWidth;
-            return percent > 0 && percent < 1 || this.has('maxWidth', { type: 1 /* LENGTH */ | 2 /* PERCENT */, not: '100%' });
+            return percent > 0 && percent < 1 || this.isResizable('maxWidth');
+        }
+        get variableHeight() {
+            var _a;
+            const percent = this.percentHeight;
+            return percent > 0 && percent < 1 || this.isResizable('maxHeight') && (((_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.positionFixed);
         }
         set autoPosition(value) {
             this._cache.autoPosition = value;
@@ -11927,7 +11944,7 @@ this.squared.base = (function (exports) {
                         break;
                     }
                     case 'BODY':
-                        if (hasEmptyStyle(style.backgroundColor) && (getStyle$1(document.documentElement).backgroundColor === 'rgba(0, 0, 0, 0)')) {
+                        if (hasEmptyStyle(style.backgroundColor) && CSS$2.TRANSPARENT.test(getStyle$1(document.documentElement).backgroundColor)) {
                             style.backgroundColor = 'rgb(255, 255, 255)';
                         }
                         break;
