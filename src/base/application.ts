@@ -255,12 +255,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
                     }
                 }
-                for (let i = 0, length = preloaded.length; i < length; ++i) {
-                    const image = preloaded[i];
-                    if (image.parentElement) {
-                        documentRoot.removeChild(image);
-                    }
-                }
+                preloaded.forEach(image => image.parentElement && documentRoot.removeChild(image));
                 return this.resumeThread(processing, rootElements, elements.length);
             });
         }
@@ -303,7 +298,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 rootElements.push(item);
                 customSettings.push(settings);
                 if (!sync && resourceHandler && isEnabled(settings as UserSettings, 'pierceShadowRoot') && isEnabled(settings as UserResourceSettings, 'preloadCustomElements')) {
-                    item.querySelectorAll('*').forEach(host => {
+                    item.querySelectorAll('*').forEach((host: Element) => {
                         const shadowRoot = host.shadowRoot;
                         if (shadowRoot) {
                             shadowRoot.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child: HTMLLinkElement) => (styleSheets ||= []).push(child.href));
@@ -1000,13 +995,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const children: T[] = [];
         for (const processing of active.values()) {
             if (extensions.length) {
-                const items = processing.extensions;
-                for (let i = 0, length = items.length; i < length; ++i) {
-                    const item = items[i] as Extension<T>;
-                    if (!extensions.includes(item)) {
-                        extensions.push(item);
-                    }
-                }
+                processing.extensions.forEach((item: Extension<T>) => !extensions.includes(item) && extensions.push(item));
             }
             else {
                 extensions.push(...processing.extensions as Extension<T>[]);
