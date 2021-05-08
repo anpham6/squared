@@ -1306,18 +1306,16 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 return current;
             }
+            style[attr] = 'initial';
+            const property = CSS_PROPERTIES[attr];
+            if (property && typeof property.value === 'string') {
+                this._styleMap[attr] = getInitialValue(this._element!, attr) + (property.trait & CSS_TRAITS.UNIT ? 'px' : '');
+            }
             else {
-                style[attr] = 'initial';
-                const property = CSS_PROPERTIES[attr];
-                if (property && typeof property.value === 'string') {
-                    this._styleMap[attr] = getInitialValue(this._element!, attr) + (property.trait & CSS_TRAITS.UNIT ? 'px' : '');
-                }
-                else {
-                    delete this._styleMap[attr];
-                }
-                if (cache) {
-                    this.unsetCache(attr);
-                }
+                delete this._styleMap[attr];
+            }
+            if (cache) {
+                this.unsetCache(attr);
             }
         }
         return this._styleMap[attr] || style[attr] || '';

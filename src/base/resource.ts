@@ -48,9 +48,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     encoding = leading;
                 }
             }
-            const result = { mimeType, encoding } as RawDataOptions;
-            result[encoding === 'base64' ? 'base64' : 'content'] = data;
-            return result;
+            return { mimeType, encoding, [encoding === 'base64' ? 'base64' : 'content']: data } as RawDataOptions;
         }
     }
 

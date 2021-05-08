@@ -112,6 +112,7 @@ interface XmlTagNode extends XmlNode, TagData {
 }
 
 interface WatchInterval {
+    id?: string;
     interval?: number;
     expires?: string;
     reload?: boolean | WatchReload;
