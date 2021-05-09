@@ -173,8 +173,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract resource: ResourceUI<T>;
     public abstract userSettings: UserResourceSettingsUI;
 
-    private _resourceId = -1;
     private _layouts: LayoutAsset[] = [];
+    private _resourceId!: number;
     private _controllerSettings!: ControllerSettingsUI;
     private _excludedElements!: string[];
 

@@ -1,12 +1,11 @@
 ba33c0153a12a1e37297efc719ada145  ./app/src/main/res/drawable/button_button_1.xml
+286d29f2ecfcd9edbfd66af9b5cde131  ./app/src/main/res/drawable/div_.xml
 1e602dc6b28b6bc7df70a1d30518dfc0  ./app/src/main/res/drawable/div_constraintlayout_30.xml
 0778505a491ce4e1bffec187144d35d2  ./app/src/main/res/drawable/div_framelayout_17.xml
 5ccd71b06778b17609679ea18b5d4678  ./app/src/main/res/drawable/div_framelayout_18.xml
 c71ad8ca48769743ca6e8a1e98d9abaf  ./app/src/main/res/drawable/div_framelayout_31.xml
-ec9cbf97dee27958df248c528f7d74e2  ./app/src/main/res/drawable/div_framelayout_32.xml
 22b4ce66edb4d9d41ebd7a57530d01ea  ./app/src/main/res/drawable/div_framelayout_33.xml
 178f006ec0d495b00cc0db90bb0d5aca  ./app/src/main/res/drawable/div_framelayout_42.xml
-286d29f2ecfcd9edbfd66af9b5cde131  ./app/src/main/res/drawable/div_framelayout_43.xml
 75bc45b26516c52ae6be0fae86435acf  ./app/src/main/res/drawable/input_range_seekbar_1.xml
 a76fe062b42d76761c9833b8dd88e349  ./app/src/main/res/drawable/input_range_seekbar_1_main.xml
 87bf2a6aa02f9e4d02381deb5be571a3  ./app/src/main/res/drawable/input_range_seekbar_1_main_thumb.xml
@@ -24,9 +23,9 @@ a1c080407bedb326eeac42e06daf9dc7  ./app/src/main/res/drawable/span_framelayout_2
 cd973755eb1116d4eecd4e25c747424d  ./app/src/main/res/drawable/span_inputgroupprepend.xml
 fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
 276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
-e55210816477fecb0608f5ae0291a34e  ./app/src/main/res/layout/activity_main.xml
+c6b28eb11156789c0e10e1d3fc8535d8  ./app/src/main/res/layout/activity_main.xml
 07ffd70bc23592d83fef3d441ddfe006  ./app/src/main/res/values/colors.xml
-79a03da9a090498a4f2b42d8c95982e4  ./app/src/main/res/values/dimens.xml
+5bc9d7756e65924b0f03d22f04c30c28  ./app/src/main/res/values/dimens.xml
 f2f37ad0b60de19930b52dde18103dc9  ./app/src/main/res/values/string_arrays.xml
 73a66ef9b348e1de8343896b2c5e16ee  ./app/src/main/res/values/strings.xml
 7d109da536db65f1ba2f9f61b42c961b  ./app/src/main/res/values/styles.xml

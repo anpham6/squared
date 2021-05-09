@@ -409,7 +409,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                 content = undefined;
             }
             if (content) {
-                content = content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
+                content = unescape(content).replace(/\\(["'])/g, (...match: string[]) => match[1]);
             }
             if (content || base64 || buffer) {
                 const url = splitPairStart(uri, '?');

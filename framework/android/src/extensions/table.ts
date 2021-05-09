@@ -77,7 +77,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         else {
             const item = node.item(0) as Undef<T>;
             if (item) {
-                if (item.percentWidth && !node.hasWidth) {
+                if (item.percentWidth > 0 && !node.hasWidth) {
                     item.setLayoutWidth('wrap_content');
                     requireWidth = true;
                 }

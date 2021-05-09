@@ -113,5 +113,5 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => console.log(err));
             
-    }, 100);
+    }, 500);
 });

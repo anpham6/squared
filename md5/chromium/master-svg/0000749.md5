@@ -1,5 +1,6 @@
 a3d3290126480374dfa140351e00bbe4  ./app/src/main/res/drawable/div_framelayout_1.xml
-a3ab9f13cfd96d8c79bc8faa69211076  ./app/src/main/res/drawable/div_framelayout_2.xml
+5456e7c9f2fe97456dcab07574f7a476  ./app/src/main/res/drawable/div_framelayout_2.xml
+ddd429b0bb340eec1ac08ad74edeb10a  ./app/src/main/res/drawable/div_framelayout_2_viewbox.xml
 e47e877c5ea66dadf6b22e6f26c71c5e  ./app/src/main/res/drawable/div_linearlayout_1.xml
 e8dd8e5053371fdf9029e42d7f09b6ab  ./app/src/main/res/drawable/icons8_google_docs.png
 a9a34fe658385bf8349c02b202b93fae  ./app/src/main/res/drawable/icons8_google_news.png
@@ -8,7 +9,7 @@ a9a34fe658385bf8349c02b202b93fae  ./app/src/main/res/drawable/icons8_google_news
 3df0a625ba5050c6b872f93c6b038b8d  ./app/src/main/res/drawable/img_imageview_2_viewbox.xml
 616d2738d21ff05b06d59b7a627d0a36  ./app/src/main/res/drawable/svg_imageview_1_viewbox.xml
 500b63558d83f6ad25a891df52f3213d  ./app/src/main/res/drawable/svg_imageview_1_viewbox_vector.xml
-864a549f28cf9bd00ea11752d7a09b55  ./app/src/main/res/layout/activity_main.xml
+2c33640becc93dd39a9dd8f44a7494af  ./app/src/main/res/layout/activity_main.xml
 9ac3c23ab28b6a34f5e4701c80b4c0cd  ./app/src/main/res/values/colors.xml
 9b2fa9a8f5f2e85b6245eb56f694f4ec  ./app/src/main/res/values/dimens.xml
 19443c47d8f34ca6107672cca9253722  ./app/src/main/res/values/strings.xml

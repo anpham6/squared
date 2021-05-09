@@ -84,16 +84,21 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             for (let i = 0; i < length; ++i) {
                 const item = scrollView[i];
                 switch (item.controlName) {
-                    case verticalScroll:
+                    case verticalScroll: {
                         node.setLayoutHeight('wrap_content');
                         item.setLayoutHeight(formatPX(node.actualHeight));
                         item.android('scrollbars', 'vertical');
+                        const width = length === 1 && node.cssInitial('width') || 'auto';
                         item.cssApply({
-                            width: length === 1 && node.cssInitial('width') || 'auto',
+                            width,
                             overflowX: 'visible',
                             overflowY: 'scroll'
                         });
+                        if (width === 'auto' && node.blockStatic) {
+                            item.setLayoutWidth('match_parent');
+                        }
                         break;
+                    }
                     case horizontalScroll:
                         node.setLayoutWidth('wrap_content');
                         item.setLayoutWidth(formatPX(node.actualWidth));

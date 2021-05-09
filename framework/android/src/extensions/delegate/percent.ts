@@ -117,7 +117,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 let percentWidth = node.percentWidth,
                     leftPercent = getPercent(marginLeft),
                     rightPercent = getPercent(marginRight);
-                if (percentWidth) {
+                if (percentWidth > 0) {
                     if (rightAligned) {
                         if (percentWidth + rightPercent < 1) {
                             leftPercent = 1 - (percentWidth + rightPercent);
@@ -232,7 +232,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 let percentHeight = node.percentHeight,
                     topPercent = getPercent(marginTop),
                     bottomPercent = getPercent(marginBottom);
-                if (percentHeight) {
+                if (percentHeight > 0) {
                     if (bottomAligned) {
                         if (percentHeight + bottomPercent < 1) {
                             topPercent = 1 - (percentHeight + bottomPercent);

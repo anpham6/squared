@@ -65,6 +65,7 @@ interface LayerData {
 }
 
 interface DrawableData {
+    node?: View;
     images?: BackgroundImageData[];
     indentWidth?: number;
     borderOnly?: boolean;
@@ -452,7 +453,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     }
 
     public afterResources(sessionId: string, resourceId: number) {
-        const application = this.application;
         let themeBackground: Undef<boolean>;
         const deleteBodyWrapper = (body: T, wrapper: T) => {
             if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
@@ -470,7 +470,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         };
         const setBodyBackground = (value: string) => {
-            const { manifestThemeName: name, manifestParentThemeName: parent } = application.userSettings;
+            const { manifestThemeName: name, manifestParentThemeName: parent } = this.application.userSettings;
             Resource.addTheme(resourceId, {
                 name,
                 parent,
@@ -503,7 +503,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 node.android('background', drawable, false);
             }
         };
-        application.getProcessingCache(sessionId).each(node => {
+        this.application.getProcessingCache(sessionId).each(node => {
             let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle'),
                 boxImage: Undef<T[]>;
             if (node.inputElement) {
@@ -526,7 +526,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const width = Math.round(outline.width);
                     indentWidth = width === 2 && outline.style === 'double' ? 3 : width;
                 }
-                let [shapeData, layerList] = this.getDrawableBackground(resourceId, stored, { indentWidth, images });
+                let [shapeData, layerList] = this.getDrawableBackground(resourceId, stored, { indentWidth, images, node });
                 const emptyBackground = !shapeData && !layerList;
                 if (outline && (this.options.outlineAsInsetBorder || emptyBackground)) {
                     const [outlineShapeData, outlineLayerList] = this.getDrawableBackground(resourceId, stored, { images: emptyBackground ? images : undefined, borderOnly: !emptyBackground, outline });
@@ -606,7 +606,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         return result;
     }
 
-    public getDrawableBackground(resourceId: number, boxStyle: BoxStyle, { indentWidth = 0, images, borderOnly = false, outline }: DrawableData): [Null<StandardMap[]>, Null<LayerList[]>, Undef<StringMap>] {
+    public getDrawableBackground(resourceId: number, boxStyle: BoxStyle, { node, indentWidth = 0, images, borderOnly = false, outline }: DrawableData): [Null<StandardMap[]>, Null<LayerList[]>, Undef<StringMap>] {
         const borderVisible: boolean[] = new Array(4);
         const indentOffset = indentWidth ? formatPX(indentWidth) : '';
         let shapeData: Null<StandardMap[]> = null,
@@ -656,11 +656,34 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             for (let i = 0; i < 4; ++i) {
                 const item = borders[i];
                 if (item) {
-                    if (borderStyle && borderData) {
-                        borderStyle = isBorderEqual(borderData, item);
-                        if (!borderStyle) {
-                            borderAll = false;
+                    if (node && item.color.transparent && node.isEmpty() && !node.inputElement && !node.controlElement) {
+                        let attr: Undef<keyof CacheValueUI>,
+                            region!: number;
+                        switch (i) {
+                            case 0:
+                            case 2:
+                                if (node.hasUnit('height', { percent: false }) && node.height > 0) {
+                                    [attr, region] = i === 0 ? ['borderTopWidth', BOX_STANDARD.MARGIN_TOP] : ['borderBottomWidth', BOX_STANDARD.MARGIN_BOTTOM];
+                                }
+                                break;
+                            case 1:
+                            case 3:
+                                if (node.hasUnit('width', { percent: false }) && node.width > 0) {
+                                    [attr, region] = i === 1 ? ['borderRightWidth', BOX_STANDARD.MARGIN_RIGHT] : ['borderLeftWidth', BOX_STANDARD.MARGIN_LEFT];
+                                }
+                                break;
                         }
+                        if (attr) {
+                            node.modifyBox(region, item.width);
+                            node.setCacheValue(attr, 0);
+                            borderAll = false;
+                            borderVisible[i] = false;
+                            borders[i] = undefined;
+                            continue;
+                        }
+                    }
+                    if (borderStyle && borderData && !(borderStyle = isBorderEqual(borderData, item))) {
+                        borderAll = false;
                     }
                     borderData = item;
                     borderVisible[i] = true;

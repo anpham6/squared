@@ -113,6 +113,7 @@ interface VisibleStyle {
     backgroundRepeat: boolean;
     backgroundRepeatX: boolean;
     backgroundRepeatY: boolean;
+    borderRadius: boolean;
     outline: boolean;
 }
 

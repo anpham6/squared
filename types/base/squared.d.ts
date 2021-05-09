@@ -613,6 +613,7 @@ declare module "base" {
         horizontalRowStart?: boolean;
         horizontalRowEnd?: boolean;
         horizontalRows?: NodeUI[][];
+        bottomResetChild?: NodeUI;
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
         setLayout(): void;
@@ -621,6 +622,7 @@ declare module "base" {
         attr(name: string, attr: string, value?: string, overwrite?: boolean): string;
         alignParent(position: AnchorPositionAttr): boolean;
         alignSibling(position: AnchorPositionAttr, documentId?: string): string;
+        anchorChain(direction: PositionAttr): NodeUI[];
         localizeString(value: string): string;
         inherit(node: Node, ...modules: string[]): Null<PlainObject>;
         inheritApply(module: string, data: PlainObject): void;

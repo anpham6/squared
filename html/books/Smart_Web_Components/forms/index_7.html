@@ -16,85 +16,55 @@
     <script src="/common/babel-transform.js"></script>
     <script src="/dist/squared.js"></script>
     <script src="/dist/squared.base.js"></script>
+	<script src="/dist/squared.svg.js"></script>
     <script src="/dist/android.framework.js"></script>
     <script src="/common/loader_delayed.js"></script>
 </head>
 <body class="smart viewport">
 
-	<h3>Select menu</h3>
+	<h2>Custom forms</h2>
 
 	<p>
-		Custom &lt;select&gt; menus need only a custom class, .select to trigger the custom styles.
-		Custom
-		styles are limited to the &lt;select&gt;’s initial appearance and cannot modify the &lt;option&gt;s
-		due to
-		browser limitatio
+		For even more customization and cross browser consistency, use our completely custom form elements
+		to replace the browser defaults. They’re built on top of semantic and accessible markup, so they’re
+		solid replacements for any default form component.
 	</p>
 
-	<div class="group">
-		<select class="select select-lg mb-3">
-			<option selected>Open this select menu</option>
-			<option value="1">One</option>
-			<option value="2">Two</option>
-			<option value="3">Three</option>
-		</select>
+	<h3>Checkboxes and radios</h3>
 
-		<select class="select select-sm">
-			<option selected>Open this select menu</option>
-			<option value="1">One</option>
-			<option value="2">Two</option>
-			<option value="3">Three</option>
-		</select>
+	<p>
+		The "bootstrap-check-box" and "bootstrap-radio-button" tags display checkboxes and radiobuttons.
+	</p>
+
+	<h3>Checkboxes</h3>
+
+	<div class="group">
+			<bootstrap-check-box>Check me</bootstrap-check-box>
+	</div>
+
+	<p>The following code should set the checkbox input to inditerminate state</p>
+
+	<div class="group">
+		<bootstrap-check-box indeterminate>Check me</bootstrap-check-box>
+	</div>
+
+	<h3>Radios</h3>
+
+	<div class="group">
+		<bootstrap-radio-button>Radio 1</bootstrap-radio-button>
+		<bootstrap-radio-button>Radio 2</bootstrap-radio-button>
 	</div>
 	
 
-	<h2>Range</h2>
+	<h3>Switches</h3>
 
 	<p>
-		Create custom &lt;input type="range"&gt; components with .range. The track (the background) and
-		thumb
-		(the value) are both styled to appear the same across browsers. As only IE and Firefox support
-		“filling” their track from the left or right of the thumb as a means to visually indicate progress,
-		we do not currently support it.
+		The "bootstrap-switch-button" tag renders a custom switch.
 	</p>
 
 	<div class="group">
-		<bootstrap-range></bootstrap-range>
-	</div>
-
-
-	<h2>File browser</h2>
-
-	<p>
-		The file input is the most gnarly of the bunch and requires additional JavaScript if you’d like to
-		hook them up with functional Choose file… and selected file name text.
-	</p>
-
-	<div class="group">
-		<div class="file">
-			<input type="file" class="file-input" id="customFile">
-			<label class="file-label" for="customFile">Choose file</label>
-		</div>
-	</div>
-
-
-	<p>
-		We hide the default file &lt;input&gt; via opacity and instead style the &lt;label&gt;. The button
-		is generated
-		and positioned with ::after. Lastly, we declare a width and height on the &lt;input&gt; for proper
-		spacing for surrounding content.
-	</p>
-	<h3>Progress</h3>
-	The "bootstrap-progress-bar" is the custom element which displays a Progress bar.
-	<div>
-		<bootstrap-progress-bar value=25 max=100 min=0></bootstrap-progress-bar><br/>
-		<bootstrap-progress-bar style-mode="info" value=50 max=100 min=0></bootstrap-progress-bar><br/>
-		<bootstrap-progress-bar style-mode="success" value=75 max=100 min=0></bootstrap-progress-bar><br/>
-		<bootstrap-progress-bar style-mode="warning" value=100 max=100 min=0></bootstrap-progress-bar><br/>
-	</div>			
-	By adding the 'striped' attribute adds stripes to the progress.
-	<div>
-		<bootstrap-progress-bar striped style-mode="danger" value=50 max=100 min=0></bootstrap-progress-bar>
+		<bootstrap-switch-button>Off</bootstrap-switch-button>
+		<bootstrap-switch-button checked>On</bootstrap-switch-button>
 	</div>
 
 </body>

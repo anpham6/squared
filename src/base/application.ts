@@ -247,12 +247,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 if (errors) {
-                    const length = errors.length;
-                    if (length === 1) {
+                    if (errors.length === 1) {
                         this.writeError('FAIL: ' + errors[0]);
                     }
                     else {
-                        this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
+                        this.writeError(getErrorMessage(errors), `FAIL: ${errors.length} errors`);
                     }
                 }
                 preloaded.forEach(image => image.parentElement && documentRoot.removeChild(image));

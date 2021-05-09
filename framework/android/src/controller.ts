@@ -426,7 +426,7 @@ export function setHorizontalAlignment(node: View) {
                 node.anchor('left', 'parent');
                 node.anchorStyle('horizontal', 0);
             }
-            if (node.blockStatic || node.percentWidth || node.block && node.multiline && node.floating) {
+            if (node.blockStatic || node.percentWidth > 0 || node.block && node.multiline && node.floating) {
                 node.anchor(node.rightAligned ? 'left' : 'right', 'parent');
             }
         }
@@ -894,11 +894,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.naturalChild &&
             node.naturalElements.length === 0 &&
             node.marginTop === 0 &&
-            node.marginRight === 0 &&
+            node.marginRight <= 0 &&
             node.marginBottom === 0 &&
             node.marginLeft === 0 &&
-            !background &&
-            !node.elementId.trim() &&
             !node.rootElement &&
             !node.use)
         {
@@ -1447,7 +1445,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     container.cssCopy(node, 'position', 'zIndex');
                     container.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
                     container.autoPosition = false;
-                    if (node.percentWidth && parent.layoutConstraint && (parent.blockStatic || parent.hasWidth)) {
+                    if (node.percentWidth > 0 && parent.layoutConstraint && (parent.blockStatic || parent.hasWidth)) {
                         container.app('layout_constraintWidth_percent', truncate(node.percentWidth, node.localSettings.floatPrecision));
                         container.setLayoutHeight('0px');
                     }
@@ -1457,7 +1455,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         container.setLayoutWidth('wrap_content');
                     }
-                    if (node.percentHeight && parent.layoutConstraint) {
+                    if (node.percentHeight > 0 && parent.layoutConstraint) {
                         container.app('layout_constraintHeight_percent', truncate(node.percentHeight, node.localSettings.floatPrecision));
                         container.setLayoutHeight('0px');
                     }
@@ -3108,7 +3106,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     textBottom = getTextBottom(children)[0] as Undef<T> || null;
                                 }
                                 if (Math.ceil(item.linear.bottom) >= Math.floor(node.box.bottom)) {
-                                    item.anchor('bottom', 'parent');
+                                    item.anchorParent('vertical', 1);
                                 }
                                 else if (textBottom || baseline && !baseline.textElement) {
                                     constraintAlignTop(item, boxTop);
@@ -3193,7 +3191,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     item.anchored = true;
                 }
             }
-            if (checkPercent && item.percentWidth) {
+            if (checkPercent && item.percentWidth > 0) {
                 node.setLayoutWidth('match_parent');
                 checkPercent = false;
             }
@@ -3393,7 +3391,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     percentWidth = chain.setConstraintDimension(percentWidth);
-                    if (checkPercent === 1 && chain.percentWidth) {
+                    if (checkPercent === 1 && chain.percentWidth > 0) {
                         checkPercent = -1;
                     }
                     if (previousRow && k === 0) {
@@ -3654,10 +3652,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     const TL = horizontal ? 'top' : 'left';
                     const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
-                        if (node.has('transform')) {
-                            const translate = parseTransform(node.cssValue('transform'), { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.group === 'translate');
-                            if (translate.length) {
-                                adjustment -= translate[0].values[horizontal ? 0 : 1];
+                        const transform = node.cssValue('transform');
+                        if (transform) {
+                            const translate = parseTransform(transform, { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.group === 'translate')[0];
+                            if (translate) {
+                                adjustment -= translate.values[horizontal ? 0 : 1];
                             }
                         }
                         setAlignedWidth(sibling, position);
@@ -3805,11 +3804,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected setPositionAbsolute(target: T, parent: T) {
         const constraint = target.constraint;
         if (target.outerWrapper === parent) {
+            const autoMargin = target.autoMargin;
             if (!constraint.horizontal) {
-                target.anchorParent('horizontal', 0);
+                target.anchorParent('horizontal', autoMargin.leftRight ? 0.5 : autoMargin.left ? 1 : 0);
             }
             if (!constraint.vertical) {
-                target.anchorParent('vertical', 0);
+                target.anchorParent('vertical', autoMargin.topBottom ? 0.5 : autoMargin.top ? 1 : 0);
             }
         }
         else {
@@ -3829,6 +3829,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             target.positioned = true;
         }
+        target.setConstraintDimension(1);
     }
 
     protected createLayoutGroup(layout: LayoutUI<T>) {

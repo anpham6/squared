@@ -460,7 +460,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else {
-                                if (!td.hasUnit('width', { percent: false }) || td.percentWidth) {
+                                if (!td.hasUnit('width', { percent: false }) || td.percentWidth > 0) {
                                     setBoundsWidth(td);
                                 }
                                 flags |= LAYOUT_TABLECELL.SHRINK;

@@ -119,7 +119,7 @@ function setDimension(node: T, style: CssStyleMap, dimension: DimensionAttr) {
         const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
         const max = style[attr];
         if (max) {
-            if (value === max) {
+            if (value === max || max === 'auto') {
                 delete style[attr];
             }
             else {
@@ -782,7 +782,7 @@ const aboveRange = (a: number, b: number, offset = 1) => a + offset >= b;
 const belowRange = (a: number, b: number, offset = 1) => a - offset <= b;
 const sortById = (a: T, b: T) => a.id - b.id;
 const isInlineVertical = (value: string) => startsWith(value, 'inline') || value === 'table-cell';
-const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
+const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display) && node.percentWidth < 1) && !node.floating && node.autoMargin.horizontal !== true;
 const newBoxRectDimension = (): BoxRectDimension => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 });
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -2759,15 +2759,42 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     get percentWidth() {
         const result = this._cache.percentWidth;
         if (result === undefined) {
-            return this._cache.percentWidth = asPercent(this.valueOf('width')) || 0;
+            let value = asPercent(this.valueOf('width'));
+            if (value > 0) {
+                const min = asPercent(this.valueOf('minWidth'));
+                const max = asPercent(this.valueOf('maxWidth'));
+                if (!isNaN(min)) {
+                    value = Math.max(value, min);
+                }
+                if (!isNaN(max)) {
+                    value = Math.min(value, max);
+                }
+            }
+            else {
+                value = 0;
+            }
+            return this._cache.percentWidth = value;
         }
         return result;
     }
     get percentHeight() {
         const result = this._cache.percentHeight;
         if (result === undefined) {
-            const value = asPercent(this.valueOf('height'));
-            return this._cache.percentHeight = !isNaN(value) && (this.absoluteParent?.hasHeight || this.positionFixed) ? value : 0;
+            let value = asPercent(this.valueOf('height'));
+            if (value > 0 && (this.absoluteParent?.hasHeight || this.positionFixed)) {
+                const min = asPercent(this.valueOf('minHeight'));
+                const max = asPercent(this.valueOf('maxHeight'));
+                if (!isNaN(min)) {
+                    value = Math.max(value, min);
+                }
+                if (!isNaN(max)) {
+                    value = Math.min(value, max);
+                }
+            }
+            else {
+                value = 0;
+            }
+            return this._cache.percentHeight = value;
         }
         return result;
     }
@@ -2779,6 +2806,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
                 const backgroundColor = this.backgroundColor !== '';
                 const backgroundImage = this.backgroundImage !== '';
+                const background = backgroundColor || borderWidth || backgroundImage;
+                const borderRadius = (background || this.imageElement || this.svgElement) && this.css('borderRadius') !== '0px';
                 let backgroundRepeatX = false,
                     backgroundRepeatY = false;
                 if (backgroundImage) {
@@ -2789,8 +2818,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     });
                 }
                 result = {
-                    background: borderWidth || backgroundImage || backgroundColor,
+                    background: background || borderRadius,
                     borderWidth,
+                    borderRadius,
                     backgroundImage,
                     backgroundColor,
                     backgroundRepeat: backgroundRepeatX || backgroundRepeatY,

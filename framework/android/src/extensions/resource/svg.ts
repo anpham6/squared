@@ -760,7 +760,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const drawable = this.createSvgDrawable(node, element, keyFrames, contentMap);
                 if (drawable) {
                     if (node.api >= BUILD_VERSION.LOLLIPOP) {
-                        node.android('src', getDrawableSrc(drawable));
+                        node.android((node.percentWidth > 0 && !node.hasFixedDimension('width') || node.percentHeight > 0 && !node.hasFixedDimension('height')) && !node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle') ? 'background' : 'src', getDrawableSrc(drawable));
                     }
                     else {
                         node.app('srcCompat', getDrawableSrc(drawable));
@@ -853,7 +853,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const imageLength = imageData.length;
         let vectorName: Undef<string>;
         if (vectorData) {
-            const { width, height } = node.fitToScreen({ width: svg.width, height: svg.height });
+            const { width, height } = node.fitToScreen(node.imageElement ? { width: svg.width, height: svg.height } : { width: node.width || svg.width, height: node.height || svg.height });
             vectorName = Resource.insertStoredAsset(
                 resourceId,
                 'drawables',
@@ -1768,18 +1768,18 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         let previousPathData = pathData,
             index = 0;
         for (let i = 0, length = animations.length; i < length; ++i) {
-            const item = animations[i];
-            if (SvgBuild.asAnimateTransform(item) && !item.additiveSum && item.transformFrom) {
-                let time = Math.max(0, item.delay - 1);
+            const animate = animations[i];
+            if (SvgBuild.asAnimateTransform(animate) && !animate.additiveSum && animate.transformFrom) {
+                let time = Math.max(0, animate.delay - 1);
                 fillReplaceMap.set(time, {
                     index,
                     time,
-                    to: item.transformFrom,
+                    to: animate.transformFrom,
                     reset: false,
-                    animate: item
+                    animate
                 });
-                if (item.iterationCount !== -1 && item.fillReplace) {
-                    time = item.delay + item.iterationCount * item.duration;
+                if (animate.iterationCount !== -1 && animate.fillReplace) {
+                    time = animate.delay + animate.iterationCount * animate.duration;
                     if (!fillReplaceMap.has(time)) {
                         fillReplaceMap.set(time, {
                             index,

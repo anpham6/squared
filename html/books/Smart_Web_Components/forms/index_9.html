@@ -20,45 +20,64 @@
     <script src="/common/loader_delayed.js"></script>
 </head>
 <body class="smart viewport">
-	<h3>Custom styles</h3>
 
-	<p>
-		For custom Material Bootstrap form validation messages, you’ll need to add the novalidate boolean attribute
-		to your &lt;form&gt;. This disables the browser default feedback tooltips, but still provides access
-		to
-		the form validation APIs in JavaScript. Try to submit the form below; our JavaScript will
-		intercept the submit button and relay feedback to you. When attempting to submit, you’ll see the
-		:invalid and :valid styles applied to your form components.
-	</p>
-
-	<div class="group">
+	<h2>Material Design</h2>
+	<h3>Switches</h3><br/>
+	<div class="smart material">
+		<bootstrap-switch-button>Off</bootstrap-switch-button>
+		<bootstrap-switch-button checked>On</bootstrap-switch-button>
+	</div><br/>
+	<h3>Radio Buttons</h3><br/>
+	<div class="smart material">
+		<bootstrap-radio-button>Off</bootstrap-radio-button>
+		<bootstrap-radio-button checked>On</bootstrap-radio-button>
+	</div>			<br/>	
+	<h3>Checkbox</h3><br/>
+	<div class="smart material">
+		<bootstrap-check-box>Off</bootstrap-check-box>
+		<bootstrap-check-box checked>On</bootstrap-check-box>
+	</div>		<br/>
+	<h3>Range</h3><br/>
+	<div class="smart material">
+		<bootstrap-range value=5 max=15 min=0></bootstrap-range>
+	</div>		<br/>
+	<h3>Progress</h3>
+	<br/>
+	Linear progress bar
+	<br/><br/>
+	<div class="smart material">
+		<bootstrap-progress-bar value=25 max=100 min=0></bootstrap-progress-bar><br/>
+		<bootstrap-progress-bar style-mode="info" value=50 max=100 min=0></bootstrap-progress-bar><br/>
+		<bootstrap-progress-bar style-mode="success" value=75 max=100 min=0></bootstrap-progress-bar><br/>
+		<bootstrap-progress-bar style-mode="warning" value=100 max=100 min=0></bootstrap-progress-bar><br/>
+	</div>		
+	<br/>
+	Text Fields
+	<br/>
+				
+	<div class="smart material group">
 		<form class="needs-validation" novalidate>
 			<div class="form-row">
 				<div class="col-md-4 mb-3">
-					<label for="validationCustom01">First name</label>
-					<bootstrap-input type="text" id="validationCustom01" placeholder="First name"
-						value="Mark" required></bootstrap-input>
+					<bootstrap-input outlined placeholder="First Name" required value="Mark"></bootstrap-input>
+						
 					<div class="valid-feedback">
 						Looks good!
 					</div>
 				</div>
 				<div class="col-md-4 mb-3">
-					<label for="validationCustom02">Last name</label>
-					<bootstrap-input type="text" id="validationCustom02" placeholder="Last name"
-						value="Otto" required></bootstrap-input>
+					<bootstrap-input outlined placeholder="Last Name" required value="Andrews"></bootstrap-input>
 					<div class="valid-feedback">
 						Looks good!
 					</div>
 				</div>
 				<div class="col-md-4 mb-3">
-					<label for="validationCustomUsername">Username</label>
 					<div class="input-group">
 						<div class="input-group-prepend">
 							<span class="input-group-text" id="inputGroupPrepend">@</span>
 						</div>
-						<bootstrap-input type="text" id="validationCustomUsername"
-							placeholder="Username" aria-describedby="inputGroupPrepend" required></bootstrap-input>
-
+							<bootstrap-input outlined placeholder="Username" required value=""></bootstrap-input>
+				
 						<div class="invalid-feedback">
 							Please choose a username.
 						</div>
@@ -67,25 +86,22 @@
 			</div>
 			<div class="form-row">
 				<div class="col-md-6 mb-3">
-					<label for="validationCustom03">City</label>
-					<bootstrap-input type="text" id="validationCustom03" placeholder="City"
-						required></bootstrap-input>
+					<bootstrap-input outlined placeholder="City" required value=""></bootstrap-input>
+			
 					<div class="invalid-feedback">
 						Please provide a valid city.
 					</div>
 				</div>
 				<div class="col-md-3 mb-3">
-					<label for="validationCustom04">State</label>
-					<bootstrap-input type="text" id="validationCustom04" placeholder="State"
-						required></bootstrap-input>
+					<bootstrap-input outlined placeholder="State" required value=""></bootstrap-input>
+			
 					<div class="invalid-feedback">
 						Please provide a valid state.
 					</div>
 				</div>
 				<div class="col-md-3 mb-3">
-					<label for="validationCustom05">Zip</label>
-					<bootstrap-input type="text" id="validationCustom05" placeholder="Zip"
-						required></bootstrap-input>
+					<bootstrap-input outlined placeholder="Zip" required value=""></bootstrap-input>
+			
 					<div class="invalid-feedback">
 						Please provide a valid zip.
 					</div>
@@ -93,15 +109,15 @@
 			</div>
 			<div class="form-group">
 				<div class="form-check">
-					<bootstrap-check-box type="checkbox" value="" id="invalidCheck" required>Agree to terms and conditions</bootstrap-check-box>
+				<br/>
+					<bootstrap-check-box id="invalidCheck">Agree to terms and conditions</bootstraph-check-box>
 					<div class="invalid-feedback">
 						You must agree before submitting.
 					</div>
 				</div>
 			</div>
-			<button class="button button-success" type="submit">Submit form</button>
+			<button class="btn btn-success" type="submit">Submit form</button>
 		</form>
 	</div>
-
 </body>
 </html>

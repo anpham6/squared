@@ -1100,8 +1100,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (visibleStyle.background) {
             const boxStyle = {} as BoxStyle;
             let borderWidth = visibleStyle.borderWidth,
-                backgroundColor = node.backgroundColor,
-                backgroundImage: Undef<(string | Gradient)[]>;
+                backgroundColor = node.backgroundColor;
             if (borderWidth) {
                 setBorderStyle(node, boxStyle, 'borderTop', BORDER_TOP);
                 setBorderStyle(node, boxStyle, 'borderRight', BORDER_RIGHT);
@@ -1117,39 +1116,38 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                 const value = node.backgroundImage;
                 if (value) {
-                    backgroundImage = ResourceUI.parseBackgroundImage(node, value);
+                    boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, value);
                 }
             }
-            if (backgroundColor || backgroundImage || borderWidth) {
+            if (visibleStyle.borderRadius) {
+                const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
+                const [A, B] = splitPair(borderTopLeftRadius, ' ');
+                const [C, D] = splitPair(borderTopRightRadius, ' ');
+                const [E, F] = splitPair(borderBottomRightRadius, ' ');
+                const [G, H] = splitPair(borderBottomLeftRadius, ' ');
+                const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
+                const horizontal = node.actualWidth >= node.actualHeight;
+                const radius = borderRadius[0];
+                if (borderRadius.every(value => value === radius)) {
+                    borderRadius.length = !radius || radius === '0px' ? 0 : 1;
+                }
+                const length = borderRadius.length;
+                if (length) {
+                    const dimension = horizontal ? 'width' : 'height';
+                    for (let i = 0; i < length; ++i) {
+                        borderRadius[i] = formatPX(node.parseUnit(borderRadius[i], { dimension, parent: false }));
+                    }
+                    boxStyle.borderRadius = borderRadius;
+                }
+            }
+            if (backgroundColor || borderWidth || boxStyle.backgroundImage || boxStyle.borderRadius) {
                 const color = parseColor(backgroundColor);
                 if (color && (!color.transparent || node.inputElement)) {
                     boxStyle.backgroundColor = color;
                 }
-                boxStyle.backgroundImage = backgroundImage;
                 Object.assign(boxStyle, node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY'));
                 if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
                     setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
-                }
-                if (node.css('borderRadius') !== '0px') {
-                    const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
-                    const [A, B] = splitPair(borderTopLeftRadius, ' ');
-                    const [C, D] = splitPair(borderTopRightRadius, ' ');
-                    const [E, F] = splitPair(borderBottomRightRadius, ' ');
-                    const [G, H] = splitPair(borderBottomLeftRadius, ' ');
-                    const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
-                    const horizontal = node.actualWidth >= node.actualHeight;
-                    const radius = borderRadius[0];
-                    if (borderRadius.every(value => value === radius)) {
-                        borderRadius.length = !radius || radius === '0px' ? 0 : 1;
-                    }
-                    const length = borderRadius.length;
-                    if (length) {
-                        const dimension = horizontal ? 'width' : 'height';
-                        for (let i = 0; i < length; ++i) {
-                            borderRadius[i] = formatPX(node.parseUnit(borderRadius[i], { dimension, parent: false }));
-                        }
-                        boxStyle.borderRadius = borderRadius;
-                    }
                 }
                 node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
             }

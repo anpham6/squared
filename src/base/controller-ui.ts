@@ -14,6 +14,7 @@ import { CSS } from './lib/regex';
 import { trimEnd } from './lib/util';
 
 const { CSS_BORDER_SET } = squared.lib.internal;
+const { STRING } = squared.lib.regex;
 
 const { isUserAgent } = squared.lib.client;
 const { formatPX, getFontSize, getStyle, hasCoords, isLength, isPercent, parseUnit } = squared.lib.css;
@@ -46,9 +47,9 @@ function pushIndentArray(values: string[], depth: number) {
 
 function setDimension(element: DimensionElement, style: CssStyleMap, attr: DimensionAttr) {
     if (hasEmptyDimension(style[attr])) {
-        const match = new RegExp(`\\s${attr}="([^"]+)"`).exec(element.outerHTML);
+        const match = new RegExp((element.tagName.toLowerCase() === 'svg' ? `^\\s*<svg${STRING.TAG_OPEN}+?` : '\\s') + `${attr}="([^"]+)"`).exec(element.outerHTML);
         if (match) {
-            const value = match[1];
+            const value = match.pop()!;
             if (isPercent(value)) {
                 style[attr] = value;
                 return;

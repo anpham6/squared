@@ -452,6 +452,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public companion?: T;
     public documentChildren?: T[];
     public horizontalRows?: T[][];
+    public bottomResetChild?: T;
 
     protected _preferInitial = true;
     protected _boxRegister: Null<T[]> = null;
@@ -477,6 +478,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
+    public abstract anchorChain(direction: PositionAttr): T[];
     public abstract actualRect(direction: string, dimension?: BoxType): number;
     public abstract translateX(value: number, options?: TranslateOptions): boolean;
     public abstract translateY(value: number, options?: TranslateOptions): boolean;
@@ -1859,7 +1861,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get flexbox(): FlexBox {
-        return this.naturalChild ? super.flexbox : this.innerMostWrapped.flexbox;
+        return this.naturalChild || !this.innerWrapped ? super.flexbox : this.innerMostWrapped.flexbox;
     }
 
     get previousSibling() {
@@ -1981,7 +1983,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             result = super.backgroundColor;
             if (result && this.styleElement && !this.inputElement && this.opacity === 1 && this.pageFlow) {
                 let parent = this.actualParent;
-                while (parent) {
+                while (parent && parent.pageFlow) {
                     const backgroundImage = parent.backgroundImage;
                     if (!backgroundImage) {
                         const color = parent.backgroundColor;
