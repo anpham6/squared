@@ -198,8 +198,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (preloadItems.length) {
             processing.initializing = true;
-            return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
-                return new Promise((success, error) => {
+            return (Promise.allSettled || allSettled).bind(Promise)(
+                preloadItems.map(item => new Promise((success, error) => {
                     if (typeof item === 'string') {
                         fetch(item)
                             .then(async result => {
@@ -225,8 +225,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                         item.addEventListener('load', () => success(item));
                         item.addEventListener('error', err => error(err));
                     }
-                });
-            }))
+                })
+            ))
             .then((result: PromiseSettledResult<HTMLImageElement | RawDataOptions>[]) => {
                 let errors: Undef<string[]>;
                 for (let i = 0, length = result.length; i < length; ++i) {
@@ -471,14 +471,14 @@ export default abstract class Application<T extends Node> implements squared.bas
     public setExtensions(namespaces: string[] = this.userSettings.builtInExtensions) {
         const { builtInExtensions, extensions } = this;
         extensions.length = 0;
-        for (let i = 0, length = namespaces.length; i < length; ++i) {
-            let ext = builtInExtensions.get(namespaces[i]);
-            if (ext) {
+        for (let i = 0, length = namespaces.length, ext: Undef<Extension<T>>; i < length; ++i) {
+            let namespace = namespaces[i];
+            if (ext = builtInExtensions.get(namespace)) {
                 ext.application = this;
                 extensions.push(ext);
             }
             else {
-                const namespace = namespaces[i] + '.';
+                namespace += '.';
                 for (const data of builtInExtensions) {
                     if (startsWith(data[0], namespace) && !extensions.includes(ext = data[1])) {
                         ext.application = this;

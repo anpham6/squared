@@ -3123,7 +3123,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     if (textBottom === undefined) {
                                         textBottom = getTextBottom(children)[0] as Undef<T> || null;
                                     }
-                                    if (item !== textBottom) {
+                                    if (item !== textBottom || textBaseline.bounds.bottom === item.bounds.bottom) {
                                         item.anchor('bottom', textBaseline.documentId);
                                     }
                                     else if (textBottom) {

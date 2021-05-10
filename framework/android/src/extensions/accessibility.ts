@@ -54,47 +54,44 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                     }
                 }
                 switch (node.tagName) {
-                    case 'INPUT':
-                        switch (node.toElementString('type')) {
-                            case 'radio':
-                            case 'checkbox':
-                                if (!node.rightAligned && !node.centerAligned) {
-                                    const id = node.elementId;
-                                    for (const sibling of [node.nextSibling, node.previousSibling] as Null<T>[]) {
-                                        if (sibling && sibling.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible && node.opacity === sibling.opacity) {
-                                            let valid: Undef<boolean>;
-                                            if (id && id === sibling.toElementString('htmlFor')) {
-                                                valid = true;
-                                            }
-                                            else if (sibling.textElement) {
-                                                const parent = sibling.actualParent!;
-                                                if (parent.tagName === 'LABEL') {
-                                                    parent.renderAs = node;
-                                                    valid = true;
-                                                }
-                                                else if (sibling.plainText) {
-                                                    valid = true;
-                                                }
-                                            }
-                                            if (valid) {
-                                                sibling.labelFor = node;
-                                                if (!this.options.displayLabel) {
-                                                    sibling.hide();
-                                                    if (node.hasUnit('width')) {
-                                                        if (!node.hasUnit('minWidth')) {
-                                                            node.css('minWidth', node.cssValue('width'));
-                                                        }
-                                                        node.css('width', 'auto', true);
-                                                    }
-                                                }
-                                                break;
-                                            }
+                    case 'INPUT': {
+                        const type = (node.element as HTMLInputElement).type;
+                        if ((type === 'radio' || type === 'checkbox') && node.float !== 'right') {
+                            const id = node.elementId;
+                            for (const sibling of [node.nextSibling, node.previousSibling] as Null<T>[]) {
+                                if (sibling && sibling.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible && node.opacity === sibling.opacity) {
+                                    let valid: Undef<boolean>;
+                                    if (id && id === sibling.toElementString('htmlFor')) {
+                                        valid = true;
+                                    }
+                                    else if (sibling.textElement) {
+                                        const parent = sibling.actualParent!;
+                                        if (parent.tagName === 'LABEL') {
+                                            parent.renderAs = node;
+                                            valid = true;
+                                        }
+                                        else if (sibling.plainText) {
+                                            valid = true;
                                         }
                                     }
+                                    if (valid) {
+                                        sibling.labelFor = node;
+                                        if (!this.options.displayLabel) {
+                                            sibling.hide();
+                                            if (node.hasUnit('width')) {
+                                                if (!node.hasUnit('minWidth')) {
+                                                    node.css('minWidth', node.cssValue('width'));
+                                                }
+                                                node.css('width', 'auto', true);
+                                            }
+                                        }
+                                        break;
+                                    }
                                 }
-                                break;
+                            }
                         }
                         break;
+                    }
                     case 'BUTTON':
                         this.subscribers.add(node);
                         node.naturalChildren.forEach((item: T) => {
