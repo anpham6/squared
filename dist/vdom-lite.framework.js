@@ -173,7 +173,7 @@ var vdom = (function () {
             }
             if (preloadItems.length) {
                 processing.initializing = true;
-                return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
+                return (Promise.allSettled || allSettled).bind(Promise)(preloadItems.map(item => {
                     return new Promise((success, error) => {
                         if (typeof item === 'string') {
                             fetch(item)

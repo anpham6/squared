@@ -251,6 +251,7 @@ var android = (function () {
         aapt: 'http://schemas.android.com/aapt'
     };
     const RESERVED_JAVA = [
+        '_',
         'abstract',
         'assert',
         'boolean',
