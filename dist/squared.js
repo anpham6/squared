@@ -1,4 +1,4 @@
-/* squared 2.5.11
+/* squared 2.5.12
    https://github.com/anpham6/squared */
 
 var squared = (function (exports) {

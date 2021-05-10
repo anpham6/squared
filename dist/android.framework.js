@@ -1,4 +1,4 @@
-/* android-framework 2.5.11
+/* android-framework 2.5.12
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -246,6 +246,7 @@ var android = (function () {
         aapt: 'http://schemas.android.com/aapt'
     };
     const RESERVED_JAVA = [
+        '_',
         'abstract',
         'assert',
         'boolean',

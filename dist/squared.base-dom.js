@@ -1,4 +1,4 @@
-/* squared.base 2.5.11
+/* squared.base 2.5.12
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -182,7 +182,7 @@ this.squared.base = (function (exports) {
             }
             if (preloadItems.length) {
                 processing.initializing = true;
-                return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
+                return (Promise.allSettled || allSettled).bind(Promise)(preloadItems.map(item => {
                     return new Promise((success, error) => {
                         if (typeof item === 'string') {
                             fetch(item)
@@ -5078,9 +5078,7 @@ this.squared.base = (function (exports) {
                         encoding = leading;
                     }
                 }
-                const result = { mimeType, encoding };
-                result[encoding === 'base64' ? 'base64' : 'content'] = data;
-                return result;
+                return { mimeType, encoding, [encoding === 'base64' ? 'base64' : 'content']: data };
             }
         }
         init(resourceId) {

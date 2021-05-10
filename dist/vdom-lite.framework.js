@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.5.11
+/* vdom-lite-framework 2.5.12
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -181,7 +181,7 @@ var vdom = (function () {
             }
             if (preloadItems.length) {
                 processing.initializing = true;
-                return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
+                return (Promise.allSettled || allSettled).bind(Promise)(preloadItems.map(item => {
                     return new Promise((success, error) => {
                         if (typeof item === 'string') {
                             fetch(item)
