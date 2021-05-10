@@ -211,6 +211,7 @@ export const XML_NAMESPACE = {
 };
 
 export const RESERVED_JAVA = [
+    '_',
     'abstract',
     'assert',
     'boolean',
