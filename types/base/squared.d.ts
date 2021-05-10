@@ -427,7 +427,7 @@ declare module "base" {
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
         data<T = unknown>(name: string, attr: string, value?: unknown, overwrite?: boolean): Undef<T>;
-        unsetCache(...attrs: (CssStyleAttr | string)[]): void;
+        unsetCache(...attrs: (CssStyleAttr | keyof CacheValue)[]): void;
         unsetState(...attrs: (keyof CacheState<Node>)[]) : void;
         ascend(options?: AscendOptions<Node>): Node[];
         descend(options?: DescendOptions<Node>): Node[];
@@ -639,6 +639,7 @@ declare module "base" {
         lockAttr(name: string, attr: string): void;
         unlockAttr(name: string, attr: string): void;
         lockedAttr(name: string, attr: string): boolean;
+        unsetCache(...attrs: (CssStyleAttr | keyof CacheValueUI)[]): void;
         addAlign(value: number): void;
         removeAlign(value: number): void;
         hasAlign(value: number): boolean;

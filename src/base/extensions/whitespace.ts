@@ -50,158 +50,6 @@ function adjustRegion(item: NodeUI, region: number, adjustment: number) {
     item.setBox(region, { reset: 1, adjustment });
 }
 
-function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
-    if (!direction || isBlockElement(child, true)) {
-        let marginName: CssStyleAttr,
-            borderWidth: string,
-            paddingName: string,
-            region: number;
-        if (direction) {
-            marginName = 'marginTop';
-            borderWidth = 'borderTopWidth';
-            paddingName = 'paddingTop';
-            region = BOX_STANDARD.MARGIN_TOP;
-        }
-        else {
-            marginName = 'marginBottom';
-            borderWidth = 'borderBottomWidth';
-            paddingName = 'paddingBottom';
-            region = BOX_STANDARD.MARGIN_BOTTOM;
-        }
-        if (node[borderWidth] === 0 && !node.getBox(region)[0]) {
-            if (node[paddingName] === 0) {
-                let target = child,
-                    targetParent: Undef<NodeUI[]>;
-                if (DOCTYPE_HTML) {
-                    while (target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && !target.getBox(region)[0] && canResetChild(target)) {
-                        if (direction) {
-                            const endChild = target.firstStaticChild as NodeUI;
-                            if (isBlockElement(endChild, direction)) {
-                                (targetParent ||= []).push(target);
-                                target = endChild;
-                            }
-                            else {
-                                break;
-                            }
-                        }
-                        else {
-                            const endChild = getBottomChild(target);
-                            if (endChild) {
-                                (targetParent ||= []).push(target);
-                                target = endChild;
-                            }
-                            else {
-                                break;
-                            }
-                        }
-                    }
-                }
-                const offsetParent: number = node[marginName];
-                const offsetChild: number = target[marginName];
-                if (offsetParent >= 0 && offsetChild >= 0) {
-                    const height = target.bounds.height;
-                    let resetChild: Undef<boolean>;
-                    if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && !target.valueOf(marginName)) {
-                        resetChild = true;
-                    }
-                    else {
-                        const outside = offsetParent >= offsetChild;
-                        if (height === 0 && outside && target.textEmpty && target.extensions.length === 0) {
-                            target.hide({ collapse: true });
-                        }
-                        else {
-                            const registered = target.registerBox(region);
-                            if (registered) {
-                                const value = registered.getBox(region)[1];
-                                if (value > 0) {
-                                    if (value > offsetParent) {
-                                        adjustRegion(node, region, value);
-                                    }
-                                    registered.setBox(region, { reset: 1, adjustment: 0 });
-                                }
-                            }
-                            else if (!target.getBox(region)[0]) {
-                                if (outside) {
-                                    resetChild = offsetChild > 0;
-                                }
-                                else if (node.documentBody) {
-                                    resetBox(node, region);
-                                    if (direction) {
-                                        if (node.bounds.top > 0) {
-                                            node.bounds.top = 0;
-                                            node.resetBounds(true);
-                                        }
-                                        if (node.layoutVertical) {
-                                            const firstChild = node.renderChildren.find(item => item.pageFlow);
-                                            if (firstChild && firstChild !== child.outerMostWrapper && (target.positionStatic || target.top >= 0 && !target.hasUnit('bottom'))) {
-                                                adjustRegion(firstChild, region, offsetChild);
-                                                adjustRegion(target, region, 0);
-                                                resetChild = true;
-                                            }
-                                        }
-                                    }
-                                }
-                                else {
-                                    adjustRegion(node, region, offsetChild);
-                                    resetChild = true;
-                                }
-                            }
-                        }
-                    }
-                    if (resetChild) {
-                        resetBox(target, region, undefined, targetParent);
-                        if (height === 0 && !target.every(item => item.floating || !item.pageFlow)) {
-                            resetBox(target, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
-                        }
-                        if (!direction) {
-                            const parent = target.renderParent || target.parent;
-                            if (parent?.layoutHorizontal) {
-                                parent.bottomResetChild = target;
-                            }
-                        }
-                    }
-                }
-                else if (offsetParent < 0 && offsetChild < 0) {
-                    if (!direction) {
-                        if (offsetChild < offsetParent) {
-                            adjustRegion(node, region, offsetChild);
-                        }
-                        resetBox(target, region, undefined, targetParent);
-                    }
-                }
-            }
-            else if (child[marginName] === 0 && child[borderWidth] === 0 && canResetChild(child)) {
-                let blockAll = true;
-                do {
-                    const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as NodeUI;
-                    if (endChild && endChild[marginName] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
-                        const value = endChild[paddingName];
-                        if (value) {
-                            if (value >= node[paddingName]) {
-                                node.setBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, { reset: 1 });
-                            }
-                            else if (blockAll) {
-                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, value * -1, false);
-                            }
-                            break;
-                        }
-                        else {
-                            if (!isBlockElement(endChild, direction)) {
-                                blockAll = false;
-                            }
-                            child = endChild;
-                        }
-                    }
-                    else {
-                        break;
-                    }
-                }
-                while (true);
-            }
-        }
-    }
-}
-
 function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
     if (!node || !node.styleElement || node.floating || node.lineBreak) {
         return false;
@@ -690,11 +538,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                 }
                 if (firstChild && firstChild.naturalElement) {
-                    applyMarginCollapse(node, firstChild, true);
+                    this.applyMarginCollapse(node, firstChild, true);
                 }
                 if (lastChild && (!belowFloating || isLowestElement(lastChild, belowFloating))) {
                     if (lastChild.naturalElement) {
-                        applyMarginCollapse(node, lastChild, false);
+                        this.applyMarginCollapse(node, lastChild, false);
                         if (lastChild.marginTop < 0) {
                             const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
                             if (offset < 0) {
@@ -989,5 +837,157 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
             }
         });
+    }
+
+    protected applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
+        if (!direction || isBlockElement(child, true)) {
+            let marginName: CssStyleAttr,
+                borderWidth: string,
+                paddingName: string,
+                region: number;
+            if (direction) {
+                marginName = 'marginTop';
+                borderWidth = 'borderTopWidth';
+                paddingName = 'paddingTop';
+                region = BOX_STANDARD.MARGIN_TOP;
+            }
+            else {
+                marginName = 'marginBottom';
+                borderWidth = 'borderBottomWidth';
+                paddingName = 'paddingBottom';
+                region = BOX_STANDARD.MARGIN_BOTTOM;
+            }
+            if (node[borderWidth] === 0 && !node.getBox(region)[0]) {
+                if (node[paddingName] === 0) {
+                    let target = child,
+                        targetParent: Undef<NodeUI[]>;
+                    if (DOCTYPE_HTML) {
+                        while (target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && !target.getBox(region)[0] && canResetChild(target)) {
+                            if (direction) {
+                                const endChild = target.firstStaticChild as NodeUI;
+                                if (isBlockElement(endChild, direction)) {
+                                    (targetParent ||= []).push(target);
+                                    target = endChild;
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                            else {
+                                const endChild = getBottomChild(target);
+                                if (endChild) {
+                                    (targetParent ||= []).push(target);
+                                    target = endChild;
+                                }
+                                else {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    const offsetParent: number = node[marginName];
+                    const offsetChild: number = target[marginName];
+                    if (offsetParent >= 0 && offsetChild >= 0) {
+                        const height = target.bounds.height;
+                        let resetChild: Undef<boolean>;
+                        if (!DOCTYPE_HTML && offsetParent === 0 && offsetChild > 0 && !target.valueOf(marginName)) {
+                            resetChild = true;
+                        }
+                        else {
+                            const outside = offsetParent >= offsetChild;
+                            if (height === 0 && outside && target.textEmpty && target.extensions.length === 0) {
+                                target.hide({ collapse: true });
+                            }
+                            else {
+                                const registered = target.registerBox(region);
+                                if (registered) {
+                                    const value = registered.getBox(region)[1];
+                                    if (value > 0) {
+                                        if (value > offsetParent) {
+                                            adjustRegion(node, region, value);
+                                        }
+                                        registered.setBox(region, { reset: 1, adjustment: 0 });
+                                    }
+                                }
+                                else if (!target.getBox(region)[0]) {
+                                    if (outside) {
+                                        resetChild = offsetChild > 0;
+                                    }
+                                    else if (node.documentBody) {
+                                        resetBox(node, region);
+                                        if (direction) {
+                                            if (node.bounds.top > 0) {
+                                                node.bounds.top = 0;
+                                                node.resetBounds(true);
+                                            }
+                                            if (node.layoutVertical) {
+                                                const firstChild = node.renderChildren.find(item => item.pageFlow);
+                                                if (firstChild && firstChild !== child.outerMostWrapper && (target.positionStatic || target.top >= 0 && !target.hasUnit('bottom'))) {
+                                                    adjustRegion(firstChild, region, offsetChild);
+                                                    adjustRegion(target, region, 0);
+                                                    resetChild = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        adjustRegion(node, region, offsetChild);
+                                        resetChild = true;
+                                    }
+                                }
+                            }
+                        }
+                        if (resetChild) {
+                            resetBox(target, region, undefined, targetParent);
+                            if (height === 0 && !target.every(item => item.floating || !item.pageFlow)) {
+                                resetBox(target, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
+                            }
+                            if (!direction) {
+                                const parent = target.renderParent || target.parent;
+                                if (parent?.layoutHorizontal) {
+                                    parent.bottomResetChild = target;
+                                }
+                            }
+                        }
+                    }
+                    else if (offsetParent < 0 && offsetChild < 0) {
+                        if (!direction) {
+                            if (offsetChild < offsetParent) {
+                                adjustRegion(node, region, offsetChild);
+                            }
+                            resetBox(target, region, undefined, targetParent);
+                        }
+                    }
+                }
+                else if (child[marginName] === 0 && child[borderWidth] === 0 && canResetChild(child) && !node.documentBody) {
+                    let blockAll = true;
+                    do {
+                        const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as NodeUI;
+                        if (endChild && endChild[marginName] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
+                            const value = endChild[paddingName];
+                            if (value) {
+                                if (value >= node[paddingName]) {
+                                    node.setBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, { reset: 1 });
+                                }
+                                else if (blockAll) {
+                                    node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, value * -1, false);
+                                }
+                                break;
+                            }
+                            else {
+                                if (!isBlockElement(endChild, direction)) {
+                                    blockAll = false;
+                                }
+                                child = endChild;
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    while (true);
+                }
+            }
+        }
     }
 }

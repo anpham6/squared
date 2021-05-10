@@ -659,23 +659,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (node && item.color.transparent && node.isEmpty() && !node.inputElement && !node.controlElement) {
                         let attr: Undef<keyof CacheValueUI>,
                             region!: number;
-                        switch (i) {
-                            case 0:
-                            case 2:
-                                if (node.hasUnit('height', { percent: false }) && node.height > 0) {
-                                    [attr, region] = i === 0 ? ['borderTopWidth', BOX_STANDARD.MARGIN_TOP] : ['borderBottomWidth', BOX_STANDARD.MARGIN_BOTTOM];
-                                }
-                                break;
-                            case 1:
-                            case 3:
-                                if (node.hasUnit('width', { percent: false }) && node.width > 0) {
-                                    [attr, region] = i === 1 ? ['borderRightWidth', BOX_STANDARD.MARGIN_RIGHT] : ['borderLeftWidth', BOX_STANDARD.MARGIN_LEFT];
-                                }
-                                break;
+                        if (i === 0 || i === 2) {
+                            if (node.hasUnit('height', { percent: false }) && node.height > 0) {
+                                [attr, region] = i === 0 ? ['borderTopWidth', BOX_STANDARD.MARGIN_TOP] : ['borderBottomWidth', BOX_STANDARD.MARGIN_BOTTOM];
+                            }
+                        }
+                        else if (node.hasUnit('width', { percent: false }) && node.width > 0) {
+                            [attr, region] = i === 1 ? ['borderRightWidth', BOX_STANDARD.MARGIN_RIGHT] : ['borderLeftWidth', BOX_STANDARD.MARGIN_LEFT];
                         }
                         if (attr) {
                             node.modifyBox(region, item.width);
                             node.setCacheValue(attr, 0);
+                            node.unsetCache(i === 0 || i === 2 ? 'actualHeight' : 'actualWidth');
                             borderAll = false;
                             borderVisible[i] = false;
                             borders[i] = undefined;

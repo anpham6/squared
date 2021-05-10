@@ -54,8 +54,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             if (item.pageFlow || !contentBox && !fixed) {
                 return;
             }
-            const fixedPosition = fixed && item.autoPosition;
-            if (item.hasUnit('left') || fixedPosition) {
+            if (item.hasUnit('left') || fixed && item.autoPosition) {
                 if (documentBody && (item.cssInitial('width') === '100%' || item.cssInitial('minWidth') === '100%')) {
                     if (paddingLeft || paddingRight) {
                         children.add(item);
@@ -90,7 +89,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             else if (checkMarginLeft(node, item)) {
                 children.add(item);
             }
-            if (item.hasUnit('top') || fixedPosition) {
+            if (item.hasUnit('top') || fixed && item.autoPosition) {
                 if (documentBody && (item.cssInitial('height') === '100%' || item.cssInitial('minHeight') === '100%')) {
                     if (paddingTop || paddingBottom) {
                         children.add(item);

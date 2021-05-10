@@ -34,7 +34,6 @@ const TEXT_STYLE: CssStyleAttr[] = [
 
 const [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT, BORDER_OUTLINE] = CSS_BORDER_SET;
 
-const REGEXP_EM = /\dem$/i;
 const REGEXP_NOT = /^:not\((.+)\)$/i;
 const REGEXP_ENCLOSING = /^:(not|is|where)\((.+)\)$/i;
 const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
@@ -42,6 +41,7 @@ const REGEXP_NOTINDEX = /:not-(x+)/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
+const REGEXP_EM = /\dem$/;
 
 function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, sessionId: string) {
     const current = style[attr];
@@ -963,6 +963,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const length = attrs.length;
         if (length) {
             const cache = this._cache;
+            const resetWidth = () => {
+                cache.actualHeight = undefined;
+                cache.contentBoxWidth = undefined;
+            };
+            const resetHeight = () => {
+                cache.actualHeight = undefined;
+                cache.contentBoxHeight = undefined;
+            };
             for (let i = 0; i < length; ++i) {
                 const attr = attrs[i];
                 switch (attr) {
@@ -997,6 +1005,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             this.cascade(item => item.unsetCache('height', 'bottomAligned'));
                         }
                         break;
+                    case 'actualWidth':
+                    case 'contentBoxWidth':
+                        resetWidth();
+                        break;
+                    case 'actualHeight':
+                    case 'contentBoxHeight':
+                        resetHeight();
+                        continue;
                     case 'verticalAlign':
                         cache.baseline = undefined;
                         break;
@@ -1012,7 +1028,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                     case 'paddingLeft':
                     case 'paddingRight':
-                        cache.contentBoxWidth = undefined;
+                        resetWidth();
                         break;
                     case 'marginLeft':
                     case 'marginRight':
@@ -1027,7 +1043,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         break;
                     case 'paddingTop':
                     case 'paddingBottom':
-                        cache.contentBoxHeight = undefined;
+                        resetHeight();
                         break;
                     case 'whiteSpace':
                         cache.preserveWhiteSpace = undefined;
@@ -1042,19 +1058,19 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         else if (startsWith(attr, 'border')) {
                             if (startsWith(attr, 'borderTop')) {
                                 cache.borderTopWidth = undefined;
-                                cache.contentBoxHeight = undefined;
+                                resetHeight();
                             }
                             else if (startsWith(attr, 'borderRight')) {
                                 cache.borderRightWidth = undefined;
-                                cache.contentBoxWidth = undefined;
+                                resetWidth();
                             }
                             else if (startsWith(attr, 'borderBottom')) {
                                 cache.borderBottomWidth = undefined;
-                                cache.contentBoxHeight = undefined;
+                                resetHeight();
                             }
                             else {
                                 cache.borderLeftWidth = undefined;
-                                cache.contentBoxWidth = undefined;
+                                resetWidth();
                             }
                             cache.visibleStyle = undefined;
                         }

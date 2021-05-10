@@ -56,14 +56,6 @@ const FONT_ALIAS = {
     'courier new': 'serif-monospace'
 };
 
-const FONT_REPLACE = {
-    'arial black': 'sans-serif',
-    'ms shell dlg \\32': 'sans-serif',
-    'system-ui': 'sans-serif',
-    '-apple-system': 'sans-serif',
-    '-webkit-standard': 'sans-serif'
-};
-
 const FONT_WEIGHT = {
     '100': 'thin',
     '200': 'extra_light',
@@ -107,6 +99,7 @@ function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], nod
 
 export default class ResourceFonts<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceFontsOptions = {
+        systemFonts: ['arial black', 'sans-serif', 'ms shell dlg \\32', 'system-ui', '-apple-system', '-webkit-standard'],
         defaultFontFamily: 'sans-serif',
         floatPrecision: 2,
         disableFontAlias: false
@@ -114,7 +107,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public readonly eventOnly = true;
 
     public afterParseDocument(sessionId: string) {
-        const { defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
+        const { systemFonts, defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const resource = this.resource as android.base.Resource<T>;
         const fontProvider = this.application.getUserSetting<boolean>(sessionId, 'createDownloadableFonts') && resource.fontProvider;
         const convertPixels = this.application.userSettings.convertPixels === 'dp';
@@ -241,7 +234,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             return true;
                         }
                     }
-                    if (!disableFontAlias && FONT_REPLACE[fontName]) {
+                    if (!disableFontAlias && systemFonts.includes(fontName)) {
                         fontName = defaultFontFamily;
                     }
                     if (api >= FONT_NAME[fontName] || !disableFontAlias && api >= FONT_NAME[FONT_ALIAS[fontName]]) {

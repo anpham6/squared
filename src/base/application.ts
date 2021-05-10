@@ -208,14 +208,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 }
                                 else {
                                     const mimeType = result.headers.get('content-type') || '';
-                                    if (startsWith(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
+                                    if (styleSheets && styleSheets.includes(item) || mimeType.indexOf('text/css') !== -1) {
                                         success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() } as RawDataOptions);
                                     }
-                                    else if (startsWith(mimeType, 'image/svg+xml') || FILE.SVG.test(item)) {
+                                    else if (FILE.SVG.test(item) || mimeType.indexOf('image/svg+xml') !== -1) {
                                         success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() } as RawDataOptions);
                                     }
                                     else {
-                                        success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
+                                        success({ mimeType: mimeType || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
                                     }
                                 }
                             })

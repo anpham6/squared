@@ -23,6 +23,7 @@ interface ResourceStringsOptions {
 
 interface ResourceFontsOptions {
     defaultFontFamily: string;
+    systemFonts: string[];
     disableFontAlias: boolean;
     floatPrecision: number;
 }

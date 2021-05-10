@@ -803,7 +803,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 if (containsWidth && (this.layoutFrame && this.find(item => item.autoMargin.horizontal) || this.tagName === 'PICTURE' && this.renderChildren.some(item => item.percentWidth > 0))) {
                                     layoutWidth = this.getMatchConstraint(renderParent);
                                 }
-                                else if (this.floating && this.block && this.alignParent('left') && this.alignParent('right') && !this.rightAligned) {
+                                else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
                                     layoutWidth = 'match_parent';
                                 }
                                 else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
