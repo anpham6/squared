@@ -8,7 +8,7 @@ const { asPercent, calculateStyle: calculateCssStyle, calculateVar, calculateVar
 const { getNamedItem } = squared.lib.dom;
 const { convertRadian, hypotenuse, truncateExponential, truncateFraction, truncateTrailingZero } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
-const { convertCamelCase, convertFloat, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
+const { convertCamelCase, convertFloat, escapePattern, lastItemOf, resolvePath, splitPair, startsWith } = squared.lib.util;
 
 const REGEXP_EXPONENT = new RegExp(STRING.DECIMAL_EXPONENT, 'g');
 const REGEXP_PARSE = /(\w+)\([^)]+\)/g;
@@ -28,15 +28,23 @@ function setOriginPosition(element: Element, point: Point, attr: string, value: 
 }
 
 function getDataSetValue(element: SVGElement, attr: string) {
-    const data = element.dataset.baseValue;
-    if (data) {
-        try {
-            const obj: SvgDataSet = JSON.parse(data);
-            if (obj) {
-                return obj[attr]?.toString().trim() || '';
+    let value = element.dataset.baseValue;
+    if (value && (value = value.trim())) {
+        if (value[0] === '{' && lastItemOf(value) === '}') {
+            try {
+                const obj: SvgDataSet = JSON.parse(value);
+                if (obj) {
+                    return obj[attr]?.toString().trim() || '';
+                }
+            }
+            catch {
             }
         }
-        catch {
+        else {
+            const match = new RegExp(`\\b${escapePattern(attr)}\\s*:([^;]+)`).exec(value);
+            if (match) {
+                return match[1].trim();
+            }
         }
     }
     return '';

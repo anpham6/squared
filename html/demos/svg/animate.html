@@ -22,7 +22,7 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
-        <svg width="120" height="120" viewBox="0 0 240 240" data-base-value='{ "width": 120, "height": 120, "opacity": "1" }'>
+        <svg width="120" height="120" viewBox="0 0 240 240" data-base-value="width: 120; height: 120; opacity: 1;">
             <animate attributeName="opacity" values="1; 0.5" keyTimes="0; 1" dur="10s" repeatCount="1" />
             <circle id="circle1" cx="60" cy="60" r="50" fill="yellow">
                 <animate attributeName="r" values="10; 75; 100" keyTimes="0; 0.5; 1" dur="7s" repeatCount="1" />
@@ -30,7 +30,7 @@
             <ellipse cx="100" cy="50" rx="100" ry="50">
                 <animate attributeName="ry" values="50; 25; 10" keyTimes="0; 0.75; 1" dur="5s" repeatCount="1" />
             </ellipse>
-            <rect x="10" y="0" width="100" height="50" stroke="black" stroke-width="2" fill="purple" data-base-value='{ "x": 10, "y": 0, "width": 100, "fill": "purple", "opacity": 1, "stroke-opacity": 1, "fill-opacity": 1 }'>
+            <rect x="10" y="0" width="100" height="50" stroke="black" stroke-width="2" fill="purple" data-base-value="x: 10; y: 0; width: 100; fill: purple; opacity: 1; stroke-opacity: 1; fill-opacity: 1;">
                 <animate attributeName="x" from="0" to="100" begin="5s" dur="5s" repeatCount="3" additive="sum" accumulate="sum" />
                 <animate attributeName="x" values="0; 100;" keyTimes="0; 1" begin="0s" dur="10s" repeatCount="indefinite" />
                 <animate attributeName="y" values="0; 100" keyTimes="0; 1" begin="0s; 5s; 10s" dur="10s" repeatCount="1" />

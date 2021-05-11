@@ -13,10 +13,10 @@ Option #1 - [Node.js](http://www.nodejs.org)
 > git clone https://github.com/anpham6/squared
 > cd squared
 
-> npm install --only=prod
+> npm install
+
 > npm run prod
   <!-- OR -->
-> npm install
 > npm run dev
 
 > cd ..
