@@ -123,15 +123,6 @@ function getCounterValue(value: Undef<string>, counterName: string, fallback = 1
     return null;
 }
 
-function setColumnMaxWidth(nodes: NodeUI[], offset: number) {
-    for (let i = 0, length = nodes.length; i < length; ++i) {
-        const child = nodes[i];
-        if (!child.hasUnit('width') && !child.hasUnit('maxWidth') && !child.imageElement && !child.svgElement) {
-            child.css('maxWidth', formatPX(offset));
-        }
-    }
-}
-
 function setElementState(node: NodeUI, type?: number) {
     const cacheState = node.unsafe<CacheStateUI<NodeUI>>('cacheState')!;
     cacheState.naturalChild = true;
@@ -160,6 +151,7 @@ function isDocumentBase(node: NodeUI) {
 }
 
 const getStyleMap = (sessionId: string, element: Element, pseudoElt = '') => getElementCache<CSSStyleDeclaration>(element, 'styleMap' + pseudoElt, sessionId) || getStyle(element, pseudoElt as PseudoElt);
+const setColumnMaxWidth = (nodes: NodeUI[], value: number) => nodes.forEach(child => !child.hasUnit('width') && !child.hasUnit('maxWidth') && !child.imageContainer && child.css('maxWidth', formatPX(value)));
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public builtInExtensions!: Map<string, ExtensionUI<T>>;

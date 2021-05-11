@@ -153,32 +153,41 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public copyTo(pathname: string, options?: FileActionOptions) {
-        return this.fileHandler?.copyTo(pathname, options) || reject(OPERATION_NOT_SUPPORTED);
+        const fileHandler = this.fileHandler;
+        return fileHandler ? fileHandler.copyTo(pathname, options) : reject(OPERATION_NOT_SUPPORTED);
     }
 
     public appendTo(pathname: string, options?: FileActionOptions) {
-        return this.fileHandler?.appendTo(pathname, options) || reject(OPERATION_NOT_SUPPORTED);
+        const fileHandler = this.fileHandler;
+        return fileHandler ? fileHandler.appendTo(pathname, options) : reject(OPERATION_NOT_SUPPORTED);
     }
 
     public saveAs(filename: string, options?: FileActionOptions) {
-        return this.fileHandler?.saveAs(filename, options) || reject(OPERATION_NOT_SUPPORTED);
+        const fileHandler = this.fileHandler;
+        return fileHandler ? fileHandler.saveAs(filename, options) : reject(OPERATION_NOT_SUPPORTED);
     }
 
     public saveFiles(filename: string, options: FileActionOptions) {
-        return this.fileHandler?.saveFiles(filename, options) || reject(OPERATION_NOT_SUPPORTED);
+        const fileHandler = this.fileHandler;
+        return fileHandler ? fileHandler.saveFiles(filename, options) : reject(OPERATION_NOT_SUPPORTED);
     }
 
     public appendFiles(filename: string, options: FileActionOptions) {
-        return this.fileHandler?.appendFiles(filename, options) || reject(OPERATION_NOT_SUPPORTED);
+        const fileHandler = this.fileHandler;
+        return fileHandler ? fileHandler.appendFiles(filename, options) : reject(OPERATION_NOT_SUPPORTED);
     }
 
     public copyFiles(pathname: string, options: FileActionOptions) {
-        return this.fileHandler?.copyFiles(pathname, options) || reject(OPERATION_NOT_SUPPORTED);
+        const fileHandler = this.fileHandler;
+        return fileHandler ? fileHandler.copyFiles(pathname, options) : reject(OPERATION_NOT_SUPPORTED);
     }
 
     public reset() {
         this.controllerHandler.reset();
-        this.resourceHandler?.reset();
+        const resourceHandler = this.resourceHandler;
+        if (resourceHandler) {
+            resourceHandler.reset();
+        }
         this.extensions.forEach(ext => ext.reset());
         this.elementMap = new WeakMap();
         this.closed = false;
@@ -378,11 +387,15 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         for (let i = 0; i < rootElements.length; ++i) {
-            processing.settings = processing.customSettings[i];
+            const settings = processing.customSettings[i];
+            processing.settings = settings;
             controllerHandler.processUserSettings(processing);
+            if (settings && settings.beforeCascade) {
+                settings.beforeCascade(processing.sessionId);
+            }
             if (length) {
                 const current: Extension<T>[] = [];
-                const exclude = processing.settings?.exclude;
+                const exclude = settings && settings.exclude;
                 for (let j = 0; j < length; ++j) {
                     const ext = extensions[j];
                     if (!(exclude === ext.name || Array.isArray(exclude) && exclude.find(name => name === ext.name))) {
@@ -397,6 +410,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             const node = this.createCache(processing, rootElements[i]);
             if (node) {
                 this.afterCreateCache(processing, node);
+                if (settings && settings.afterCascade) {
+                    settings.afterCascade(processing.sessionId, node);
+                }
                 success.push(node);
             }
         }
@@ -977,7 +993,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     get fileHandler() {
-        return this.resourceHandler?.fileHandler || null;
+        const resourceHandler = this.resourceHandler;
+        return resourceHandler ? resourceHandler.fileHandler : null;
     }
 
     get extensionManager() {

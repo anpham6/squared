@@ -2122,7 +2122,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get elementId() {
-        return this._element?.id || '';
+        const element = this._element;
+        return element ? element.id : '';
     }
 
     get htmlElement() {
@@ -2146,7 +2147,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get parentElement() {
-        return this._element ? getParentElement(this._element) : this.actualParent?.element || null;
+        return this._element && getParentElement(this._element) || this.actualParent?.element || null;
     }
 
     get textElement() {

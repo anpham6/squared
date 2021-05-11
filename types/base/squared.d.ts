@@ -12,6 +12,8 @@ declare module "base" {
     interface ElementSettings extends Partial<UserResourceSettingsUI>, Partial<LocationUri> {
         element?: string | HTMLElement;
         exclude?: StringOfArray;
+        beforeCascade?: (sessionId: string) => void;
+        afterCascade?: (sessionId: string, node: Node) => void;
     }
 
     interface FileCopyingOptions extends squared.FileActionOptions {
