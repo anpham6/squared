@@ -63,14 +63,14 @@ const CHAR_SEPARATOR = /\s*,\s*/;
 
 function calculatePosition(element: StyleElement, value: string, boundingBox?: Null<Dimension>) {
     const alignment: string[] = [];
-    splitEnclosing(value, REGEXP_CALCENCLOSING).forEach(seg => {
+    for (let seg of splitEnclosing(value, REGEXP_CALCENCLOSING)) {
         if ((seg = seg.trim()).indexOf(' ') !== -1 && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR_SPACE));
         }
         else if (seg) {
             alignment.push(seg);
         }
-    });
+    }
     const length = alignment.length;
     switch (length) {
         case 1:

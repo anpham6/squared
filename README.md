@@ -106,7 +106,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
                 filename: "fragment.xml",
                 baseLayoutAsFragment: true,
                 beforeCascade: function(sessionId: string) {
-                    document.getElementById("fragment-id").style.display = 'block';
+                    document.getElementById("fragment-id").style.display = "block"; // Use inline styles
                 }
             }
         );

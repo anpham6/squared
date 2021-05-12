@@ -200,9 +200,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const controller = this.controllerHandler;
         const [extensions, children] = this.sessionAll as [ExtensionUI<T>[], T[]];
-        let itemCount = 0,
-            length = children.length;
+        const length = children.length;
         const rendered: T[] = new Array(length - 1);
+        let itemCount = 0;
         for (let i = 0; i < length; ++i) {
             const node = children[i];
             if (node.renderParent && node.visible) {
@@ -219,11 +219,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             rendered.length = itemCount;
         }
         controller.optimize(rendered);
-        length = extensions.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, q = extensions.length; i < q; ++i) {
             const ext = extensions[i];
-            const postOptimize = ext.postOptimize?.bind(ext);
-            if (postOptimize) {
+            if (ext.postOptimize) {
+                const postOptimize = ext.postOptimize.bind(ext);
                 for (const node of ext.subscribers) {
                     postOptimize(node, rendered);
                 }
@@ -246,10 +245,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, q = extensions.length; i < q; ++i) {
             const ext = extensions[i];
-            const postBoxSpacing = ext.postBoxSpacing?.bind(ext);
-            if (postBoxSpacing) {
+            if (ext.postBoxSpacing) {
+                const postBoxSpacing = ext.postBoxSpacing.bind(ext);
                 for (const node of ext.subscribers) {
                     postBoxSpacing(node, rendered);
                 }
@@ -266,7 +265,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             );
         }
         controller.finalize(this._layouts);
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, q = extensions.length; i < q; ++i) {
             extensions[i].afterFinalize(finalizeData);
         }
         removeElementsByClassName('__squared-pseudo');
@@ -900,8 +899,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 });
             }
         };
-        const length = extensions.length;
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = extensions.length; i < length; ++i) {
             (extensions[i] as ExtensionUI<T>).beforeBaseLayout(sessionId);
         }
         let extensionsTraverse = extensions.filter((item: ExtensionUI<T>) => !item.eventOnly) as ExtensionUI<T>[];
@@ -1191,10 +1189,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return depth;
         });
-        for (let i = 0; i < length; ++i) {
+        for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            const postBaseLayout = ext.postBaseLayout?.bind(ext);
-            if (postBaseLayout) {
+            if (ext.postBaseLayout) {
+                const postBaseLayout = ext.postBaseLayout.bind(ext);
                 for (const node of ext.subscribers) {
                     if (node.sessionId === sessionId) {
                         postBaseLayout(node);
@@ -1210,8 +1208,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.controllerHandler.setConstraints(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            const postConstraints = ext.postConstraints?.bind(ext);
-            if (postConstraints) {
+            if (ext.postConstraints) {
+                const postConstraints = ext.postConstraints.bind(ext);
                 for (const node of ext.subscribers) {
                     if (node.sessionId === sessionId) {
                         postConstraints(node);
@@ -1227,8 +1225,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.resourceHandler.setData(cache);
         for (let i = 0, length = extensions.length; i < length; ++i) {
             const ext = extensions[i] as ExtensionUI<T>;
-            const postResources = ext.postResources?.bind(ext);
-            if (postResources) {
+            if (ext.postResources) {
+                const postResources = ext.postResources.bind(ext);
                 for (const node of ext.subscribers) {
                     if (node.sessionId === sessionId) {
                         postResources(node);

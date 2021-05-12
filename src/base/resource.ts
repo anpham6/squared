@@ -77,24 +77,45 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
         const images: HTMLImageElement[] = [];
         const preloadMap: string[] = [];
         for (const element of elements) {
-            element.querySelectorAll('img[srcset], picture > source[srcset]').forEach((source: HTMLImageElement | HTMLSourceElement) => splitSome(source.srcset, uri => this.addImage(resourceId, resolvePath(splitPairStart(uri, ' ', false, true)))));
-            element.querySelectorAll('video').forEach((source: HTMLVideoElement) => this.addImage(resourceId, source.poster));
-            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => this.addImage(resourceId, image.src, image.width || NaN, image.height || NaN));
-            element.querySelectorAll('object, embed').forEach((source: HTMLObjectElement & HTMLEmbedElement) => {
-                const src = source.data || source.src;
-                if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
-                    this.addImage(resourceId, src.trim());
+            let items = element.querySelectorAll('img[srcset], picture > source[srcset]'),
+                length = items.length;
+            if (length) {
+                for (let i = 0; i < length; ++i) {
+                    splitSome((items[i] as HTMLImageElement | HTMLSourceElement).srcset, uri => this.addImage(resourceId, resolvePath(splitPairStart(uri, ' ', false, true))));
                 }
-            });
-            element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
-                const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
-                if (href && href.indexOf('#') > 0) {
-                    const src = resolvePath(splitPairStart(href, '#'));
-                    if (FILE.SVG.test(src)) {
-                        this.addImage(resourceId, src);
+            }
+            if (length = (items = element.querySelectorAll('video')).length) {
+                for (let i = 0; i < length; ++i) {
+                    this.addImage(resourceId, (items[i] as HTMLVideoElement).poster);
+                }
+            }
+            if (length = (items = element.querySelectorAll('input[type=image]')).length) {
+                for (let i = 0; i < length; ++i) {
+                    const image = items[i] as HTMLInputElement;
+                    this.addImage(resourceId, image.src, image.width || NaN, image.height || NaN);
+                }
+            }
+            if (length = (items = element.querySelectorAll('object, embed')).length) {
+                for (let i = 0; i < length; ++i) {
+                    const source = items[i] as HTMLObjectElement & HTMLEmbedElement;
+                    const src = source.data || source.src;
+                    if (src && (startsWith(source.type, 'image/') || startsWith(parseMimeType(src), 'image/'))) {
+                        this.addImage(resourceId, src.trim());
                     }
                 }
-            });
+            }
+            if (length = (items = element.querySelectorAll('svg use')).length) {
+                for (let i = 0; i < length; ++i) {
+                    const use = items[i] as SVGUseElement;
+                    const href = use.href.baseVal || use.getAttributeNS('xlink', 'href');
+                    if (href && href.indexOf('#') > 0) {
+                        const src = resolvePath(splitPairStart(href, '#'));
+                        if (FILE.SVG.test(src)) {
+                            this.addImage(resourceId, src);
+                        }
+                    }
+                }
+            }
         }
         if (preloadImages) {
             const { image, rawData } = assets;
@@ -160,7 +181,9 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             }
         }
         for (const element of elements) {
-            element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
+            const items = element.querySelectorAll('img');
+            for (let i = 0, length = items.length; i < length; ++i) {
+                const image = items[i];
                 if (!preloadImages) {
                     this.addImageElement(resourceId, image);
                 }
@@ -179,7 +202,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                         preloadMap.push(src);
                     }
                 }
-            });
+            }
         }
         return [result, images];
     }
@@ -498,7 +521,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             return [data as ImageAsset];
         }
         const result: ImageAsset[] = [];
-        splitEnclosing(value, 'url').forEach(seg => {
+        for (const seg of splitEnclosing(value, 'url')) {
             const url = resolveURL(seg);
             if (url) {
                 const image = this.getImage(resourceId, url);
@@ -506,7 +529,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
                     result.push(image);
                 }
             }
-        });
+        }
         return result;
     }
 

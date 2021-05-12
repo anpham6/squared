@@ -577,7 +577,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         for (const item of items) {
                             const { selector, commands, watch, tasks, document: documentData } = item;
                             if (selector && (commands || watch || tasks || documentData)) {
-                                document.querySelectorAll(selector).forEach((element: HTMLElement) => {
+                                const elements = document.querySelectorAll(selector);
+                                for (let i = 0, length = elements.length; i < length; ++i) {
+                                    const element = elements[i] as HTMLElement;
                                     let src: string;
                                     switch (element.tagName) {
                                         case 'IMG':
@@ -626,7 +628,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                                             }
                                         }
                                     }
-                                });
+                                }
                             }
                         }
                     }

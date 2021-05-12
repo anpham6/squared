@@ -106,8 +106,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     const begin = getNamedItem(item, 'begin');
                     let times: number[];
                     if (begin) {
-                        times = SvgAnimation.getClockTimes(begin);
-                        if (times.length === 0) {
+                        if ((times = SvgAnimation.getClockTimes(begin)).length === 0) {
                             return;
                         }
                     }
@@ -220,12 +219,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         }
                     }
                     if (attrData.transform) {
-                        const transforms = sortAttribute(attrData.transform);
-                        for (let j = 0, q = transforms.length; j < q; ++j) {
-                            const transform = transforms[j];
-                            const key = transform.key;
+                        for (const { key, value: transform } of sortAttribute(attrData.transform)) {
+                            const items = TRANSFORM.parse(element, transform);
+                            if (!items) {
+                                continue;
+                            }
                             const origin = getKeyframeOrigin(attrData, element, key) || TRANSFORM.origin(element);
-                            TRANSFORM.parse(element, transform.value)?.forEach(item => {
+                            for (let j = 0, q = items.length; j < q; ++q) {
+                                const item = items[j];
                                 const m = item.matrix;
                                 let name: string,
                                     value: string,
@@ -270,7 +271,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         }
                                         break;
                                     default:
-                                        return;
+                                        continue;
                                 }
                                 const itemData = attrData[name] ||= [];
                                 const index = itemData.findIndex(previous => previous.key === key);
@@ -280,13 +281,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     indexData.transformOrigin = transformOrigin;
                                 }
                                 else {
-                                    itemData.push({
-                                        key,
-                                        value,
-                                        transformOrigin
-                                    });
+                                    itemData.push({ key, value, transformOrigin });
                                 }
-                            });
+                            }
                         }
                         delete attrData.transform;
                         delete attrData['transform-origin'];

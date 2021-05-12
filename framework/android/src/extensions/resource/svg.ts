@@ -1644,7 +1644,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (hasKeys(baseData)) {
             renderData.push(baseData);
         }
-        path.transformResidual?.forEach(item => renderData.push(createTransformData(item)));
+        if (path.transformResidual) {
+            path.transformResidual.forEach(item => renderData.push(createTransformData(item)));
+        }
         for (let i = 0, length = PATH_ATTRIBUTES.length; i < length; ++i) {
             let attr = PATH_ATTRIBUTES[i],
                 value: string = path[attr] || useTarget && target[attr];
@@ -1883,7 +1885,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             const definitions = this._svgInstance.definitions;
             const keyTimeMode = this._synchronizeMode;
             const { transformExclude: exclude, floatPrecision: precision } = this.options;
-            clipPath.split(';').forEach((value, index, array) => {
+            const items = clipPath.split(';');
+            for (let i = 0, length = items.length; i < length; ++i) {
+                const value = items[i];
                 if (value[0] === '#') {
                     const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;
                     if (element) {
@@ -1895,7 +1899,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             if (path) {
                                 const pathData = path.value;
                                 if (pathData) {
-                                    let name = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);
+                                    let name = getVectorName(child, 'clip_path', length > 1 ? i + 1 : -1);
                                     if (!this.queueAnimations(child, name, item => SvgBuild.asAnimate(item) || SvgBuild.asSet(item), pathData)) {
                                         name = '';
                                     }
@@ -1907,14 +1911,14 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                 }
                 else {
-                    let name = getVectorName(target, 'clip_path', array.length > 1 ? index + 1 : -1);
+                    let name = getVectorName(target, 'clip_path', length > 1 ? i + 1 : -1);
                     if (!this.queueAnimations(target, name, item => item.attributeName === 'clip-path' && (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)), value)) {
                         name = '';
                     }
                     clipArray.push({ name, pathData: value, fillType: getAttribute(target.element, 'fill-rule', true) === 'evenodd' ? 'evenOdd' : '' });
                     valid = true;
                 }
-            });
+            }
         }
         return valid;
     }

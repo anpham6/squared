@@ -94,11 +94,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                     }
                     case 'BUTTON':
                         this.subscribers.add(node);
-                        node.naturalChildren.forEach((item: T) => {
-                            if (!item.pageFlow && item.zIndex >= 0) {
-                                item.android('elevation', '2px');
-                            }
-                        });
+                        node.naturalChildren.forEach((item: T) => !item.pageFlow && item.zIndex >= 0 && item.android('elevation', '2px'));
                         break;
                     case 'DEL':
                         addTextDecorationLine(node, 'line-through');

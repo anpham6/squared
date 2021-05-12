@@ -141,7 +141,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public removeState(...values: number[]) {
-        values.forEach(value => this.synchronizeState &= ~value);
+        for (const value of values) {
+            this.synchronizeState &= ~value;
+        }
     }
 
     public hasState(...values: number[]) {

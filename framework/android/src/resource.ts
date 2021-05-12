@@ -337,7 +337,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         try {
             if (value.kind === 'webfonts#webfontList' && Array.isArray(value.items)) {
                 const fonts: FontProviderFonts = {};
-                (value.items as WebFont[]).forEach(({ family, variants }) => {
+                for (const { family, variants } of value.items as WebFont[]) {
                     const normal: string[] = [];
                     const italic: string[] = [];
                     const width = family.endsWith('Expanded') ? '125' : family.endsWith('Condensed') ? '75' : '';
@@ -366,7 +366,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                         font.width = width;
                     }
                     fonts[family] = font;
-                });
+                }
                 return fonts;
             }
         }

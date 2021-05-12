@@ -917,7 +917,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 }
             }
             if (maxWidth && q * asPercent(maxWidth) >= 0.999) {
-                groupGrow.forEach(({ item }) => item.css('maxWidth', 'auto', true));
+                groupGrow.forEach(group => group.item.css('maxWidth', 'auto', true));
             }
         }
         return [result, basisSize];

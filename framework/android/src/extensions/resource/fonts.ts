@@ -161,8 +161,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         backgroundColor ||= fontData.backgroundColor;
                     }
                 }
-                replaceAll(fontFamily, '"', '').split(',').some((value, index, array) => {
-                    value = trimBoth(value, "'", true).toLowerCase();
+                const items = replaceAll(fontFamily, '"', '').split(',');
+                for (let j = 0, q = items.length; j < q; ++j) {
+                    const value = trimBoth(items[j], "'", true).toLowerCase();
                     let fontName = value,
                         actualWeight = 0;
                     if (startsWith(fontStyle, 'oblique')) {
@@ -222,16 +223,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             authority = convertWord(authority.toLowerCase()) + '_certs';
                             const fontKey = authority + ':0:0';
                             if (!arrays.has(fontKey)) {
-                                const items: string[] = [];
-                                foundStyle.certs.forEach((encoded, ordinal) => {
-                                    const key = authority + '_' + (ordinal + 1);
-                                    items.push(`@array/${key}`);
+                                const certs: string[] = [];
+                                foundStyle.certs.forEach((encoded, index) => {
+                                    const key = authority + '_' + (index + 1);
+                                    certs.push(`@array/${key}`);
                                     arrays.set(key + ':1:0', [encoded]);
                                 });
-                                arrays.set(fontKey, items);
+                                arrays.set(fontKey, certs);
                             }
                             finalizeFont(actualWeight);
-                            return true;
+                            break;
                         }
                     }
                     if (!disableFontAlias && systemFonts.includes(fontName)) {
@@ -246,29 +247,29 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             foundStyle = fontStyle;
                         }
                         else {
-                            let items = resource.getFonts(resourceId, value);
-                            if (items.length) {
+                            let fontData = resource.getFonts(resourceId, value);
+                            if (fontData.length) {
                                 foundStyle = 'normal';
                                 actualWeight = +fontWeight;
                                 if (fontStyle === 'italic') {
-                                    const italic = items.filter(item => item.fontStyle === 'italic');
+                                    const italic = fontData.filter(item => item.fontStyle === 'italic');
                                     if (italic.length) {
-                                        items = italic;
+                                        fontData = italic;
                                         foundStyle = 'italic';
                                     }
                                 }
                                 fontWeight = '';
-                                for (const { fontWeight: weight } of items) {
+                                for (const { fontWeight: weight } of fontData) {
                                     if (weight >= actualWeight) {
                                         fontWeight = weight.toString();
                                         break;
                                     }
                                 }
-                                fontWeight ||= items.pop()!.fontWeight.toString();
+                                fontWeight ||= fontData.pop()!.fontWeight.toString();
                                 closest = true;
                             }
-                            else if (index < array.length - 1) {
-                                return false;
+                            else if (j < q - 1) {
+                                continue;
                             }
                             else {
                                 fontFamily = defaultFontFamily;
@@ -284,11 +285,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                     }
                     else {
-                        return false;
+                        continue;
                     }
                     finalizeFont(actualWeight);
-                    return true;
-                });
+                    break;
+                }
                 const fontSize = truncate(stored.fontSize, floatPrecision) + (convertPixels ? 'sp' : 'px');
                 const fontColor = stored.color && Resource.addColor(resourceId, stored.color) || '';
                 if (node.is(CONTAINER_NODE.TEXT) && api >= BUILD_VERSION.PIE) {
@@ -603,7 +604,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 nodes.forEach(node => node.deleteOne('android', 'letterSpacing'));
             }
             styles.set(name, { name, parent: '', items } as StyleAttribute);
-            nodes.forEach(node => node.android('textAppearance', `@style/${name}`));
+            for (let j = 0, length = nodes.length; j < length; ++j) {
+                nodes[j].android('textAppearance', `@style/${name}`);
+            }
         }
     }
 

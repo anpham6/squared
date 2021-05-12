@@ -55,12 +55,12 @@ export function parseKeyframes(rules: CSSRuleList) {
                     break;
             }
             const keyframe: StringMap = {};
-            items.forEach(frame => {
-                const [attr, value] = splitPair(frame, ':', true);
+            for (let j = 0, q = items.length; j < q; ++j) {
+                const [attr, value] = splitPair(items[j], ':', true);
                 if (value) {
                     keyframe[attr] = value;
                 }
-            });
+            }
             result[percent] = keyframe;
             valid = true;
         });

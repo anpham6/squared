@@ -20,13 +20,18 @@ updateDocumentFont();
 
 function calculateSpecificity(value: string) {
     const result: Specificity = [0, 0, 0];
+    const items = splitEnclosing(value, ':not');
+    const length = items.length;
     let match: Null<RegExpExecArray>;
-    splitEnclosing(value, ':not').forEach(seg => {
-        if (seg[0] === ':' && (match = SPEC_NOT.exec(seg))) {
-            addSpecificity(result, getSelectorValue(match[1]));
-            value = spliceString(value, match.index, match[0].length);
+    if (length > 1) {
+        for (let i = 0; i < length; ++i) {
+            const seg = items[i];
+            if (seg[0] === ':' && (match = SPEC_NOT.exec(seg))) {
+                addSpecificity(result, getSelectorValue(match[1]));
+                value = spliceString(value, match.index, match[0].length);
+            }
         }
-    });
+    }
     CSS.SELECTOR_G.lastIndex = 0;
     while (match = CSS.SELECTOR_G.exec(value)) {
         let segment = match[1];
@@ -1487,8 +1492,10 @@ export function compareSpecificity(value: Specificity, preceding: Undef<Specific
 }
 
 export function getSpecificity(value: string) {
+    const items = splitEnclosing(value, SPEC_GROUP);
     let result: Undef<Specificity>;
-    splitEnclosing(value, SPEC_GROUP).forEach(seg => {
+    for (let i = 0, length = items.length; i < length; ++i) {
+        const seg = items[i];
         let group: Undef<Specificity>;
         if (seg[0] === ':') {
             if (startsWith(seg, ':where(')) {
@@ -1506,7 +1513,7 @@ export function getSpecificity(value: string) {
         else {
             addSpecificity(result, group);
         }
-    });
+    }
     return result || [0, 0, 0];
 }
 

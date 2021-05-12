@@ -263,7 +263,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                         this.writeError(getErrorMessage(errors), `FAIL: ${errors.length} errors`);
                     }
                 }
-                preloaded.forEach(image => image.parentElement && documentRoot.removeChild(image));
+                for (let i = 0, length = preloaded.length; i < length; ++i) {
+                    const image = preloaded[i];
+                    if (image.parentElement) {
+                        documentRoot.removeChild(image);
+                    }
+                }
                 return this.resumeThread(processing, rootElements, elements.length);
             });
         }
@@ -306,13 +311,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                 rootElements.push(item);
                 customSettings.push(settings);
                 if (!sync && resourceHandler && isEnabled(settings as UserSettings, 'pierceShadowRoot') && isEnabled(settings as UserResourceSettings, 'preloadCustomElements')) {
-                    item.querySelectorAll('*').forEach((host: Element) => {
-                        const shadowRoot = host.shadowRoot;
+                    const items = item.querySelectorAll('*');
+                    for (let j = 0, q = items.length; j < q; ++j) {
+                        const shadowRoot = items[j].shadowRoot;
                         if (shadowRoot) {
                             shadowRoot.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child: HTMLLinkElement) => (styleSheets ||= []).push(child.href));
                             (shadowElements ||= []).push(shadowRoot);
                         }
-                    });
+                    }
                 }
             }
         }
@@ -351,15 +357,19 @@ export default abstract class Application<T extends Node> implements squared.bas
                 queryElements.push(...shadowElements);
             }
             for (const element of queryElements) {
-                element.querySelectorAll('[style]').forEach((child: HTMLElement) => {
-                    const { backgroundImage, listStyleImage } = child.style;
-                    if (backgroundImage) {
-                        parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
+                const items = element.querySelectorAll('[style]');
+                const q = items.length;
+                if (q) {
+                    for (let i = 0; i < q; ++i) {
+                        const { backgroundImage, listStyleImage } = (items[i] as HTMLElement).style;
+                        if (backgroundImage) {
+                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
+                        }
+                        if (listStyleImage) {
+                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
+                        }
                     }
-                    if (listStyleImage) {
-                        parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
-                    }
-                });
+                }
             }
         }
         return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
@@ -1011,7 +1021,11 @@ export default abstract class Application<T extends Node> implements squared.bas
         const children: T[] = [];
         for (const processing of active.values()) {
             if (extensions.length) {
-                processing.extensions.forEach((item: Extension<T>) => !extensions.includes(item) && extensions.push(item));
+                for (const item of processing.extensions as Extension<T>[]) {
+                    if (!extensions.includes(item)) {
+                        extensions.push(item);
+                    }
+                }
             }
             else {
                 extensions.push(...processing.extensions as Extension<T>[]);

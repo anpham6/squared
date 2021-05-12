@@ -1458,7 +1458,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         const styled = element.children.length > 0 || element.tagName === 'CODE';
         const attr = styled ? 'innerHTML' : 'textContent';
         let value: string = element[attr] || '';
-        element.childNodes.forEach((item: Element, index: number) => {
+        const childNodes = element.childNodes;
+        for (let i = 0, length = childNodes.length; i < length; ++i) {
+            const item = childNodes[i] as Element;
             const child = getElementAsNode<NodeUI>(item, sessionId);
             if (!child || !child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
                 if (child) {
@@ -1476,29 +1478,29 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         else if (!preserveWhiteSpace) {
                             value = replaceAll(value, item.outerHTML, child.pageFlow && isString(child.textContent) ? this.STRING_SPACE : '', 1);
                         }
-                        return;
+                        continue;
                     }
                     const textContent = child.plainText ? child.textContent : child[attr] as string;
                     if (textContent) {
                         if (!preserveWhiteSpace) {
                             value = replaceAll(value, textContent, '', 1);
                         }
-                        return;
+                        continue;
                     }
                 }
                 else if (item.nodeName[0] !== '#') {
                     value = replaceAll(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '', 1);
                 }
                 if (!preserveWhiteSpace) {
-                    if (index === 0) {
+                    if (i === 0) {
                         value = value.replace(CHAR_LEADINGSPACE, '');
                     }
-                    else if (index === length - 1) {
+                    else if (i === length - 1) {
                         value = value.replace(CHAR_TRAILINGSPACE, '');
                     }
                 }
             }
-        });
+        }
         if (!styled) {
             return value;
         }
