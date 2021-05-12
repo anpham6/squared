@@ -41,10 +41,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     };
     public readonly eventOnly = true;
 
-    public afterResources(sessionId: string, resourceId: number) {
+    public afterResources(sessionId: string, resourceId: number, cache = this.application.getProcessingCache(sessionId)) {
         const numberAsResource = this.options.numberAsResource;
         const resource = this.resource;
-        this.application.getProcessingCache(sessionId).each(node => {
+        cache.each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 if (node.styleElement) {
                     const title = node.data<string>(Resource.KEY_NAME, 'titleString') || node.toElementString('title');

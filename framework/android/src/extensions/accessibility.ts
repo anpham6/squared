@@ -39,8 +39,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
     };
     public readonly eventOnly = true;
 
-    public beforeBaseLayout(sessionId: string) {
-        const cache = this.application.getProcessingCache(sessionId);
+    public beforeBaseLayout(sessionId: string, cache = this.application.getProcessingCache(sessionId)) {
         cache.each(node => {
             if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 const describedby = node.attributes['aria-describedby'];

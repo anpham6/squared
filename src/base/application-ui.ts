@@ -900,7 +900,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         };
         for (let i = 0, length = extensions.length; i < length; ++i) {
-            (extensions[i] as ExtensionUI<T>).beforeBaseLayout(sessionId);
+            (extensions[i] as ExtensionUI<T>).beforeBaseLayout(sessionId, cache);
         }
         let extensionsTraverse = extensions.filter((item: ExtensionUI<T>) => !item.eventOnly) as ExtensionUI<T>[];
         for (const depth of mapData.values()) {
@@ -1199,7 +1199,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
-            ext.afterBaseLayout(sessionId);
+            ext.afterBaseLayout(sessionId, cache);
         }
     }
 
@@ -1216,7 +1216,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
-            ext.afterConstraints(sessionId);
+            ext.afterConstraints(sessionId, cache);
         }
     }
 
@@ -1233,7 +1233,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             }
-            ext.afterResources(sessionId, resourceId);
+            ext.afterResources(sessionId, resourceId, cache);
         }
     }
 

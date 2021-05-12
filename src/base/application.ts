@@ -482,8 +482,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const parentSlot = slot.parentElement;
                 if (parentSlot) {
                     const childNodes = parentSlot.childNodes;
-                    for (let k = 0, q = childNodes.length; k < q; ++k) {
-                        const item = childNodes[k];
+                    for (let j = 0, q = childNodes.length; j < q; ++j) {
+                        const item = childNodes[j];
                         if (item === slot) {
                             parentSlot.insertBefore(hostChild.cloneNode(true), item);
                             parentSlot.removeChild(item);

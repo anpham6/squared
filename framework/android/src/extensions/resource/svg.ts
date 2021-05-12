@@ -743,7 +743,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this.enabled = this.application.getUserSetting<boolean>(processing, 'enabledSVG');
     }
 
-    public afterResources(sessionId: string, resourceId: number) {
+    public afterResources(sessionId: string, resourceId: number, cache = this.application.getProcessingCache(sessionId)) {
         if (SvgBuild) {
             const { rawData, keyFrames } = Resource.ASSETS[resourceId]!;
             const contentMap: StringMap = {};
@@ -755,7 +755,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                 }
             }
-            const cache = this.application.getProcessingCache(sessionId);
             const addSvgElement = (node: T, element: SVGSVGElement, parentElement?: HTMLElement) => {
                 const drawable = this.createSvgDrawable(node, element, keyFrames, contentMap);
                 if (drawable) {

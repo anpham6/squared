@@ -2,6 +2,7 @@ import type ApplicationUI from './application-ui';
 import type ControllerUI from './controller-ui';
 import type ResourceUI from './resource-ui';
 import type NodeUI from './node-ui';
+import type NodeList from './nodelist';
 
 import Extension from './extension';
 
@@ -75,11 +76,11 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
         }
     }
 
-    public afterBaseLayout(sessionId: string) {}
-    public afterConstraints(sessionId: string) {}
-    public afterResources(sessionId: string, resourceId: number) {}
-    public afterFinalize(data: FinalizeDataExtensionUI<T>) {}
+    public afterBaseLayout(sessionId: string, cache?: NodeList<T>) {}
+    public afterConstraints(sessionId: string, cache?: NodeList<T>) {}
+    public afterResources(sessionId: string, resourceId: number, cache?: NodeList<T>) {}
+    public beforeBaseLayout(sessionId: string, cache?: NodeList<T>) {}
 
-    public beforeBaseLayout(sessionId: string) {}
     public beforeFinalize(data: FinalizeDataExtensionUI<T>) {}
+    public afterFinalize(data: FinalizeDataExtensionUI<T>) {}
 }

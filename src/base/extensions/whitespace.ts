@@ -322,8 +322,7 @@ const isLowestElement = (node: NodeUI, siblings: NodeUI[]) => node.linear.bottom
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public readonly eventOnly = true;
 
-    public afterBaseLayout(sessionId: string) {
-        const { cache, excluded } = this.application.getProcessing(sessionId)!;
+    public afterBaseLayout(sessionId: string, cache = this.application.getProcessingCache(sessionId)) {
         const clearMap = this.application.clearMap;
         const processed = new WeakSet<T>();
         cache.each(node => {
@@ -560,7 +559,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
             }
         });
-        excluded.each(node => {
+        this.application.getProcessing(sessionId)!.excluded.each(node => {
             if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node)) {
                 let valid: Undef<boolean>;
                 const previousSiblings = node.previousSiblings() as T[];
@@ -698,8 +697,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         });
     }
 
-    public afterConstraints(sessionId: string) {
-        this.application.getProcessingCache(sessionId).each(node => {
+    public afterConstraints(sessionId: string, cache = this.application.getProcessingCache(sessionId)) {
+        cache.each(node => {
             if (node.bottomResetChild) {
                 node.bottomResetChild.anchorChain('left').forEach(sibling => resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM));
             }

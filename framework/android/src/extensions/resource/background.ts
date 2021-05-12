@@ -452,7 +452,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         this._resourceSvgInstance = this.application.builtInExtensions.get(internal.android.EXT_ANDROID.RESOURCE_SVG) as Undef<ResourceSvg<T>>;
     }
 
-    public afterResources(sessionId: string, resourceId: number) {
+    public afterResources(sessionId: string, resourceId: number, cache = this.application.getProcessingCache(sessionId)) {
         let themeBackground: Undef<boolean>;
         const deleteBodyWrapper = (body: T, wrapper: T) => {
             if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
@@ -503,7 +503,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 node.android('background', drawable, false);
             }
         };
-        this.application.getProcessingCache(sessionId).each(node => {
+        cache.each(node => {
             let stored = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle'),
                 boxImage: Undef<T[]>;
             if (node.inputElement) {
@@ -1114,25 +1114,25 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         break;
                     default:
                         if (size) {
-                            size.split(' ').forEach((dimen, index) => {
-                                if (dimen === '100%') {
-                                    gravityAlign = index === 0 ? 'fill_horizontal' : delimitString({ value: gravityAlign, delimiter: '|' }, 'fill_vertical');
+                            const [horizontal, vertical] = splitPair(size, ' ');
+                            if (horizontal === '100%') {
+                                gravityAlign = 'fill_horizontal';
+                            }
+                            else if (horizontal !== 'auto') {
+                                const unit = node.parseWidth(horizontal, false);
+                                if (tileModeX !== 'repeat' || withinBorderWidth(unit) || !bitmap) {
+                                    width = unit;
                                 }
-                                else if (dimen !== 'auto') {
-                                    if (index === 0) {
-                                        const unit = node.parseWidth(dimen, false);
-                                        if (tileModeX !== 'repeat' || withinBorderWidth(unit) || !bitmap) {
-                                            width = unit;
-                                        }
-                                    }
-                                    else {
-                                        const unit = node.parseHeight(dimen, false);
-                                        if (tileModeY !== 'repeat' || withinBorderHeight(unit) || !bitmap) {
-                                            height = unit;
-                                        }
-                                    }
+                            }
+                            if (vertical === '100%') {
+                                gravityAlign = (gravityAlign ? '|' : '') + 'fill_vertical';
+                            }
+                            else if (vertical !== 'auto') {
+                                const unit = node.parseHeight(vertical, false);
+                                if (tileModeY !== 'repeat' || withinBorderHeight(unit) || !bitmap) {
+                                    height = unit;
                                 }
-                            });
+                            }
                         }
                         break;
                 }

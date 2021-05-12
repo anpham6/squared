@@ -323,10 +323,10 @@ declare module "base" {
         processNode(node: T, parent: T): Void<ExtensionResult<T>>;
         processChild(node: T, parent: T): Void<ExtensionResult<T>>;
         addDescendant(node: T): void;
-        afterBaseLayout(sessionId: string): void;
-        afterConstraints(sessionId: string): void;
-        afterResources(sessionId: string, resourceId: number): void;
-        beforeBaseLayout(sessionId: string): void;
+        afterBaseLayout(sessionId: string, cache?: NodeList<T>): void;
+        afterConstraints(sessionId: string, cache?: NodeList<T>): void;
+        afterResources(sessionId: string, resourceId: number, cache?: NodeList<T>): void;
+        beforeBaseLayout(sessionId: string, cache?: NodeList<T>): void;
         beforeFinalize(data: FinalizeDataExtensionUI<T>): void;
         afterFinalize(data: FinalizeDataExtensionUI<T>): void;
         postBaseLayout?(node: T): void;
