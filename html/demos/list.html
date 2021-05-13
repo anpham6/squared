@@ -31,8 +31,19 @@
             border: solid 1px #ccc;
             border-bottom: none;
         }
+        div > ul > li > ul > li > ul > li::marker {
+            color: blue;
+            font-size: 1em;
+            font-family: Roboto;
+            white-space: nowrap;
+        }
         div > ul > li > ul > li > ul > li:last-child {
             border-bottom: solid 1px #ccc;
+        }
+        div > ul > li > ul > li > ul > li:last-child::marker {
+            color: red;
+            font-size: 1.5em;
+            letter-spacing: 1px;
         }
     </style>
     <script src="/common/system.js"></script>

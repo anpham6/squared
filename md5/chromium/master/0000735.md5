@@ -5,10 +5,11 @@ a885d4d205dd953611d836e7fc1c75b8  ./app/src/main/res/drawable/li_textview_12.xml
 70f78b3e7295414fd3db20b7c6fa2cdc  ./app/src/main/res/drawable/li_textview_2.xml
 74bf088a1f0d4a5c3a5312e7ed1e22df  ./app/src/main/res/drawable/li_textview_6.xml
 71c642f8e3cc888f5fa119dd98a77972  ./app/src/main/res/drawable/li_textview_7.xml
-cd51d87fc6b64178d9705ff474e642d4  ./app/src/main/res/layout/activity_main.xml
-bc3f3d7f54980043f300a112cd1af3ac  ./app/src/main/res/values/colors.xml
+fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
+c741586a280cedc61f6153dcfb533132  ./app/src/main/res/layout/activity_main.xml
+73f8bbde1d181c8c4d633100469e3f49  ./app/src/main/res/values/colors.xml
 da078762d460b471b3333713c1df9c58  ./app/src/main/res/values/dimens.xml
-3edea0b54082806f2f26841ed8859604  ./app/src/main/res/values/string_arrays.xml
+caf712961bac1f564c4bc55093ec5a9a  ./app/src/main/res/values/string_arrays.xml
 39d6b6f3bf8f2b8fa241abbe662129c7  ./app/src/main/res/values/strings.xml
-04d5115702ed7337e9f7b2b4a3f313a0  ./app/src/main/res/values/styles.xml
+ba590678b975440be017dc7dbf3b1af9  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

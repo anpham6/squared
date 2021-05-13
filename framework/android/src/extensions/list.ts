@@ -13,7 +13,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 import { createViewAttribute } from '../lib/util';
 
-const { formatPX, isPercent } = squared.lib.css;
+const { asPx, formatPX, isPercent } = squared.lib.css;
 
 const { getTextMetrics } = squared.base.lib.dom;
 
@@ -50,13 +50,29 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const mainData = this.data.get(node) as Undef<ListData>;
         if (mainData) {
             const application = this.application;
-            const marginTop = node.marginTop;
+            const setStyle = (target: T, content?: string) => {
+                const { style, styleMap } = mainData;
+                let fontSize = NaN;
+                if (style) {
+                    target.unsafe('style', style);
+                    target.setCacheState('dir', style.direction);
+                    fontSize = asPx(style.fontSize);
+                }
+                if (content && !/[a-z\d]/i.test(content)) {
+                    target.setCacheValue('fontSize', (fontSize || node.fontSize) * this.options.ordinalFontSizeAdjust);
+                }
+                if (styleMap) {
+                    target.cssApply(styleMap);
+                }
+            };
             let value = mainData.ordinal,
                 minWidth = node.marginLeft,
+                ordinal = !value && node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T>,
                 marginLeft = 0,
                 columnCount = 0,
-                adjustPadding: Undef<boolean>,
-                container: Undef<T>;
+                containerType = 0,
+                container: Undef<T>,
+                adjustPadding: Undef<boolean>;
             if (parent.layoutGrid) {
                 columnCount = +parent.android('columnCount') || 1;
                 adjustPadding = true;
@@ -67,8 +83,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (adjustPadding) {
                 minWidth += parent.paddingLeft || parent.marginLeft;
             }
-            let ordinal = !value && node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T>,
-                containerType = 0;
             if (ordinal) {
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
@@ -83,6 +97,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal.setControlType(CONTAINER_TAGNAME.TEXT, CONTAINER_NODE.INLINE);
                 ordinal.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
                 ordinal.render(parent);
+                setStyle(ordinal);
                 const layout = new LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.isEmpty()) {
                     layout.containerType = CONTAINER_NODE.TEXT;
@@ -162,14 +177,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     container = node.outerMostWrapper as T;
                 }
                 const tagName = node.tagName;
-                const options = createViewAttribute();
                 ordinal = application.createNode(node.sessionId, { parent, childIndex: node.childIndex });
                 ordinal.setCacheValue('tagName', tagName);
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 ordinal.inherit(node, 'textStyle');
-                if (value && !/\w/.test(value)) {
-                    ordinal.setCacheValue('fontSize', node.fontSize * this.options.ordinalFontSizeAdjust);
-                }
+                setStyle(ordinal, value);
                 const inside = node.cssValue('listStylePosition') === 'inside';
                 if (columnCount === 3) {
                     if (inside) {
@@ -198,6 +210,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     container.android('layout_columnSpan', columnCount.toString());
                 }
                 else {
+                    const options = createViewAttribute();
                     if (image) {
                         ordinal.setControlType(CONTAINER_TAGNAME.IMAGE, CONTAINER_NODE.IMAGE);
                         Object.assign(options.android, {
@@ -254,6 +267,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             ordinal.positioned = true;
+            const marginTop = node.marginTop;
             const target = container || node.outerMostWrapper as T;
             if (marginTop !== 0) {
                 ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);

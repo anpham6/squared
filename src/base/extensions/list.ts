@@ -4,6 +4,12 @@ import type NodeUI from '../node-ui';
 
 import ExtensionUI from '../extension-ui';
 
+const { getStyle } = squared.lib.css;
+const { getElementCache } = squared.lib.session;
+
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+let NUMERALS: string[];
+
 function getItemType(node: NodeUI, checked?: boolean) {
     if (node.display === 'list-item') {
         const value = node.css('listStyleType');
@@ -14,9 +20,6 @@ function getItemType(node: NodeUI, checked?: boolean) {
     }
     return node.marginLeft < 0 && node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat && (checked || node.actualParent!.every(item => item.blockStatic)) ? 2 : 0;
 }
-
-const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-let NUMERALS: string[];
 
 function convertAlpha(value: number) {
     if (value >= 0) {
@@ -129,6 +132,9 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                     break;
                             }
                         }
+                        const element = item.element as HTMLElement;
+                        mainData.style = getStyle(element, '::marker');
+                        mainData.styleMap = getElementCache<CssStyleMap>(element, 'styleMap::marker', item.sessionId);
                         mainData.ordinal = ordinal;
                     }
                     if (inside && !item.valueOf('listStylePosition')) {

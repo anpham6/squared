@@ -55,6 +55,8 @@ interface GridCellData<T> {
 
 interface ListData {
     ordinal?: string;
+    style?: CSSStyleDeclaration;
+    styleMap?: CssStyleMap;
     imageSrc?: string;
     imagePosition?: string;
 }
