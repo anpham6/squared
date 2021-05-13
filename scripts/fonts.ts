@@ -19,23 +19,20 @@ let key: String;
 let input: String;
 let output: String;
 {
-    const ARGV = process.argv;
-    let i = 2;
-    while (i < ARGV.length) {
-        const option = ARGV[i++];
-        const value = ARGV[i++];
-        switch (option) {
+    const args = process.argv.slice(2).reverse();
+    while (args.length) {
+        switch (args.pop()!) {
             case '-k':
             case '--key':
-                key = value;
+                key = args.pop()!;
                 break;
             case '-i':
             case '--input':
-                input = path.resolve(value);
+                input = path.resolve(args.pop()!);
                 break;
             case '-o':
             case '--output':
-                output = path.resolve(value);
+                output = path.resolve(args.pop()!);
                 break;
         }
     }

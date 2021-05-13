@@ -30,22 +30,21 @@ let screenshot = false;
 let rebase = false;
 let extension = 'md5';
 {
-    const ARGV = process.argv;
-    let i = 2;
-    while (i < ARGV.length) {
-        const option = ARGV[i++];
+    const args = process.argv.slice(2).reverse();
+    while (args.length) {
+        const option = args.pop()!;
         switch (option) {
             case '-h':
             case '--host':
-                host = ARGV[i++].replace(/\/+$/, '');
+                host = args.pop()!.replace(/\/+$/, '');
                 break;
             case '-d':
             case '--data':
-                data = ARGV[i++];
+                data = args.pop()!;
                 break;
             case '-b':
             case '--browser': {
-                const value = ARGV[i++];
+                const value = args.pop()!;
                 switch (value) {
                     case 'chromium':
                     case 'firefox':
@@ -57,7 +56,7 @@ let extension = 'md5';
             }
             case '-f':
             case '--flags': {
-                const f = parseInt(ARGV[i++]);
+                const f = parseInt(args.pop()!);
                 if (!isNaN(f)) {
                     flags = f;
                 }
@@ -65,13 +64,13 @@ let extension = 'md5';
             }
             case '-o':
             case '--output':
-                snapshot = ARGV[i++];
+                snapshot = args.pop()!;
                 break;
             case '-v':
             case '--viewport':
             case '-s':
             case '--screenshot': {
-                const [w, h] = ARGV[i++].split('x').map(dimension => parseInt(dimension));
+                const [w, h] = args.pop()!.split('x').map(dimension => parseInt(dimension));
                 if (!isNaN(w) && !isNaN(h)) {
                     width = w;
                     height = h;
@@ -83,12 +82,11 @@ let extension = 'md5';
             }
             case '-e':
             case '--executable':
-                executablePath = decodeURIComponent(ARGV[i++]);
+                executablePath = decodeURIComponent(args.pop()!);
                 break;
             case '-c':
             case '--compare':
-                master = ARGV[i++];
-                snapshot = ARGV[i++];
+                [master, snapshot] = args.splice(0, 2);
                 break;
             case '-z':
             case '--rebase':
@@ -96,7 +94,7 @@ let extension = 'md5';
                 break;
             case '-x':
             case '--extension':
-                extension = ARGV[i++];
+                extension = args.pop()!;
                 break;
             case '-r':
             case '--raw':
@@ -104,12 +102,12 @@ let extension = 'md5';
                 break;
             case '-m':
             case '--modified':
-                master = ARGV[i++];
-                modifiedDate = new Date(ARGV[i++]);
+                master = args.pop()!;
+                modifiedDate = new Date(args.pop()!);
                 break;
             case '-t':
             case '--timeout': {
-                const t = parseFloat(ARGV[i++]);
+                const t = parseFloat(args.pop()!);
                 if (!isNaN(t) && t > 0) {
                     timeout = t * 1000;
                 }

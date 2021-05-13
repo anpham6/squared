@@ -12,15 +12,12 @@ let framework: String;
 let install: String;
 let output: String;
 {
-    const ARGV = process.argv;
-    let i = 2;
-    while (i < ARGV.length) {
-        const option = ARGV[i++];
-        const value = ARGV[i++];
-        switch (option) {
+    const args = process.argv.slice(2).reverse();
+    while (args.length) {
+        switch (args.pop()!) {
             case '-f':
             case '--framework': {
-                const name = value.toLowerCase();
+                const name = args.pop()!.toLowerCase();
                 switch (name) {
                     case 'base':
                         files[1] = 'squared.base';
@@ -50,7 +47,7 @@ let output: String;
             }
             case '-m':
             case '--modules':
-                for (const item of value.split(',')) {
+                for (const item of args.pop()!.split(',')) {
                     const module = item.toLowerCase();
                     switch (module) {
                         case 'svg':
@@ -61,7 +58,7 @@ let output: String;
                 break;
             case '-e':
             case '--extensions':
-                for (const item of value.split(',')) {
+                for (const item of args.pop()!.split(',')) {
                     const include: string[] = [];
                     if (item.includes('*')) {
                         for (const filepath of glob.sync(path.resolve(`dist/extensions/${item}`))) {
@@ -82,7 +79,7 @@ let output: String;
                 break;
             case '-o':
             case '--output':
-                output = path.resolve(value);
+                output = path.resolve(args.pop()!);
                 break;
         }
     }
