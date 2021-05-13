@@ -338,7 +338,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (maxA !== maxB) {
                     return maxB - maxA;
                 }
-                else if (countA !== countB) {
+                if (countA !== countB) {
                     return countB - countA;
                 }
                 return 0;

@@ -46,15 +46,17 @@ function sortHorizontalFloat(list: View[]) {
             if (floatA !== floatB) {
                 return floatA === 'left' ? -1 : 1;
             }
-            else if (floatA === 'right' && floatB === 'right') {
+            if (floatA === 'right' && floatB === 'right') {
                 return 1;
             }
         }
-        else if (floatA !== 'none') {
-            return floatA === 'left' ? -1 : 1;
-        }
-        else if (floatB !== 'none') {
-            return floatB === 'left' ? 1 : -1;
+        else {
+            if (floatA !== 'none') {
+                return floatA === 'left' ? -1 : 1;
+            }
+            if (floatB !== 'none') {
+                return floatB === 'left' ? 1 : -1;
+            }
         }
         return 0;
     });
@@ -66,7 +68,7 @@ function doOrderStandard(above: View, below: View): number {
     if (above === parentB) {
         return -1;
     }
-    else if (parentA === below) {
+    if (parentA === below) {
         return 1;
     }
     const { pageFlow: pA, zIndex: zA } = above;
@@ -74,10 +76,10 @@ function doOrderStandard(above: View, below: View): number {
     if (!pA && pB) {
         return zA >= 0 ? 1 : -1;
     }
-    else if (!pB && pA) {
+    if (!pB && pA) {
         return zB >= 0 ? -1 : 1;
     }
-    else if (zA === zB) {
+    if (zA === zB) {
         return above.childIndex - below.childIndex;
     }
     return zA - zB;
@@ -234,22 +236,21 @@ function setObjectContainer(layout: ContentUI<View>) {
 }
 
 function setConstraintFloatAligmnment(layout: LayoutUI<View>) {
-    let left: Undef<boolean>,
-        right: Undef<boolean>;
+    let block = 0;
     for (const node of layout) {
         switch (node.float) {
             case 'left':
-                left = true;
+                block |= 1;
                 break;
             case 'right':
-                right = true;
+                block |= 2;
                 break;
             default:
                 return false;
         }
     }
     layout.addAlign(NODE_ALIGNMENT.FLOAT);
-    if (left && right) {
+    if (block === 3) {
         layout.addAlign(NODE_ALIGNMENT.BLOCK);
     }
     return true;
@@ -370,13 +371,13 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
             if (above === parentB) {
                 return -1;
             }
-            else if (parentA === below) {
+            if (parentA === below) {
                 return 1;
             }
-            else if (parentA === parentB) {
+            if (parentA === parentB) {
                 return doOrderStandard(above, below);
             }
-            else if (parentA.actualParent === parentB.actualParent) {
+            if (parentA.actualParent === parentB.actualParent) {
                 return doOrderStandard(parentA, parentB);
             }
         }
@@ -1109,7 +1110,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (layout.node.cssAscend('textAlign') === 'center' && layout.find(item => !item.block && !item.floating)) {
                         return true;
                     }
-                    else if (floated.has('right')) {
+                    if (floated.has('right')) {
                         let pageFlow = 0,
                             multiline: Undef<boolean>;
                         for (const node of layout) {
@@ -1126,7 +1127,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         return pageFlow > 0 && !layout.singleRowAligned;
                     }
-                    else if (layout.item(0)!.floating) {
+                    if (layout.item(0)!.floating) {
                         return layout.linearY || !!layout.find(item => !item.inlineFlow, { start: 1 });
                     }
                     break;
@@ -1201,7 +1202,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public checkLinearHorizontal(layout: LayoutUI<T>) {
         if (layout.singleRowAligned) {
             const parent = layout.parent;
-            if (parent.display === 'list-item' && layout.every(item => item.baselineElement) && (parent.renderParent as Null<T>)?.layoutGrid) {
+            if (parent.display === 'list-item' && layout.every(item => item.baselineElement) && parent.renderParent?.layoutGrid) {
                 return true;
             }
             else if (layout.node.lineHeight === 0 && (!layout.floated || !layout.floated.has('right'))) {
@@ -2555,10 +2556,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     if (floatA === 'left' && floatB === 'left') {
                                         return 0;
                                     }
-                                    else if (floatA === 'left') {
+                                    if (floatA === 'left') {
                                         return -1;
                                     }
-                                    else if (floatB === 'left') {
+                                    if (floatB === 'left') {
                                         return 1;
                                     }
                                     return 0;
@@ -2953,7 +2954,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!a.pageFlow && b.pageFlow) {
                     return 1;
                 }
-                else if (!b.pageFlow && a.pageFlow) {
+                if (!b.pageFlow && a.pageFlow) {
                     return -1;
                 }
                 return 0;
@@ -2964,7 +2965,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!flowA && flowB) {
                     return 1;
                 }
-                else if (!flowB && flowA) {
+                if (!flowB && flowA) {
                     return -1;
                 }
                 return 0;
@@ -3300,7 +3301,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (item.naturalChild) {
                     return clearMap.has(item);
                 }
-                else if (item.nodeGroup) {
+                if (item.nodeGroup) {
                     return !!item.find((child: T) => child.naturalChild && clearMap.has(child), { cascade: true });
                 }
                 return clearMap.has(item.innerMostWrapped as T);

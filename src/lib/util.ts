@@ -588,13 +588,13 @@ export function sortByArray<T = unknown>(list: T[], ...attrs: [...string[], bool
                     valueA = vA;
                     valueB = vB;
                 }
-                else if (!oA && !oB) {
-                    return 0;
-                }
-                else if (oA) {
-                    return ascending ? -1 : 1;
-                }
                 else {
+                    if (!oA && !oB) {
+                        return 0;
+                    }
+                    if (oA) {
+                        return ascending ? -1 : 1;
+                    }
                     return ascending ? 1 : -1;
                 }
             }

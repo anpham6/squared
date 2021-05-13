@@ -43,7 +43,7 @@ const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
 const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
 const REGEXP_EM = /\dem$/;
 
-function setStyleCache(element: HTMLElement, attr: CssStyleAttr, value: string, style: CSSStyleDeclaration, sessionId: string) {
+function setStyleCache(sessionId: string, style: CSSStyleDeclaration, element: HTMLElement, attr: CssStyleAttr, value: string) {
     const current = style[attr];
     if (value !== current) {
         const restore = element.style[attr];
@@ -1426,7 +1426,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (valueA === valueB) {
                 return 0;
             }
-            else if (ascending !== false) {
+            if (ascending !== false) {
                 return valueA < valueB ? -1 : 1;
             }
             return valueA > valueB ? -1 : 1;
@@ -1449,7 +1449,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public cssTry(attr: CssStyleAttr, value: string, callback?: FunctionBind<this>) {
         if (this.styleElement) {
             const element = this._element as HTMLElement;
-            if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this.sessionId)) {
+            if (setStyleCache(this.sessionId, !this.pseudoElement ? this.style : getStyle(element), element, attr, value)) {
                 if (callback) {
                     callback.call(this, attr);
                     this.cssFinally(attr);
@@ -1468,7 +1468,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const style = !this.pseudoElement ? this.style : getStyle(element);
             for (const attr in values) {
                 const value = values[attr]!;
-                switch (setStyleCache(element, attr as CssStyleAttr, value, style, sessionId)) {
+                switch (setStyleCache(sessionId, style, element, attr as CssStyleAttr, value)) {
                     case STYLE_STATE.FAIL:
                         this.cssFinally(result);
                         return false;
@@ -1645,7 +1645,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (!isNaN(n)) {
             return n;
         }
-        else if (!isNaN(n = asPercent(value))) {
+        if (!isNaN(n = asPercent(value))) {
             return n * this.getContainerSize(options);
         }
         if (!options) {

@@ -505,7 +505,7 @@ export function querySelectorAll(value: string, sync?: boolean, cache = true) {
                 if (length === 1) {
                     return [findElement(query[0] as HTMLElement, true, cache) as Node];
                 }
-                else if (cache) {
+                if (cache) {
                     return findElementAll(query, length);
                 }
                 return main.parseDocumentSync(...Array.from(query) as HTMLElement[]) as Node[];
@@ -513,7 +513,7 @@ export function querySelectorAll(value: string, sync?: boolean, cache = true) {
             if (length === 1) {
                 return util.promisify<Node[]>(findElementAsync)(query[0] as HTMLElement, cache);
             }
-            else if (cache) {
+            if (cache) {
                 return util.promisify<Node[]>(findElementAllAsync)(query, length);
             }
             return main.parseDocument(...Array.from(query) as HTMLElement[]) as Promise<Node[]>;

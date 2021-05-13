@@ -23,7 +23,7 @@ export function truncate(value: NumString, precision = 3) {
     if (value === base) {
         return value.toString();
     }
-    else if (isNaN(value) || (value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
+    if (isNaN(value) || (value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
         return '0';
     }
     if (base !== 0) {

@@ -35,7 +35,7 @@ function isTextElement(node: View) {
     if (!node.visible || node.textEmpty || node.contentAltered) {
         return false;
     }
-    else if (node.plainText) {
+    if (node.plainText) {
         return true;
     }
     const wrapperOf = node.wrapperOf;

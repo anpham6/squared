@@ -302,7 +302,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     if (percent) {
         return percent * 100 + (content / dimension * 100);
     }
-    else if (size) {
+    if (size) {
         return content < dimension ? -1 : 0;
     }
     return 0;
@@ -1108,9 +1108,9 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     }
 
     private isFlexibleContainer(node: T) {
-        const parent = node.actualParent as Null<T>;
+        const parent = node.actualParent;
         if (parent && parent.gridElement) {
-            const mainData = this.data.get(parent) as Undef<CssGridData<T>>;
+            const mainData = this.data.get(parent as T) as Undef<CssGridData<T>>;
             const cellData = this.data.get(node) as Undef<CssGridCellData>;
             if (mainData && cellData) {
                 const unit = mainData.column.unit;

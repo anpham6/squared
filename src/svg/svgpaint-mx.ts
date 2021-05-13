@@ -260,7 +260,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             if (!isNaN(n)) {
                 return n;
             }
-            else if (isLength(value)) {
+            if (isLength(value)) {
                 return parseUnit(value, hasEm(value) ? { fontSize: getFontSize(this.element) } : undefined);
             }
             return !isNaN(n = asPercent(value)) ? Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * n) : 0;

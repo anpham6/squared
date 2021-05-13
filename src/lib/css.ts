@@ -1118,7 +1118,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             if (alias !== attr) {
                 return calculateStyle(element, typeof alias === 'string' ? alias : alias[0], value, boundingBox);
             }
-            else if (attr in style) {
+            if (attr in style) {
                 return style[attr] as string;
             }
         }
@@ -1187,7 +1187,7 @@ export function checkStyleValue(element: StyleElement, attr: string, value: stri
         if (hasCalc(value)) {
             return calculateStyle(element, attr, value) || getStyle(element)[attr] as string;
         }
-        else if (hasCustomProperty(value)) {
+        if (hasCustomProperty(value)) {
             return parseVar(element, value) || getStyle(element)[attr] as string;
         }
     }
@@ -1378,7 +1378,7 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
             if (options.precision !== undefined) {
                 return options.precision === 0 ? Math.floor(result) : +truncate(result, options.precision);
             }
-            else if (options.roundValue) {
+            if (options.roundValue) {
                 return Math.round(result);
             }
             return result;

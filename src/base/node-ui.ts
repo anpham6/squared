@@ -218,7 +218,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (vA && !vB) {
                     return -1;
                 }
-                else if (vB && !vA) {
+                if (vB && !vA) {
                     return 1;
                 }
                 const renderA = a.rendering;
@@ -242,7 +242,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (!imageA && imageB) {
                     return -1;
                 }
-                else if (!imageB && imageA) {
+                if (!imageB && imageA) {
                     return 1;
                 }
                 const heightA = a.baselineHeight;
@@ -257,24 +257,26 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (!a.pseudoElement && b.pseudoElement) {
                             return -1;
                         }
-                        else if (a.pseudoElement && !b.pseudoElement) {
+                        if (a.pseudoElement && !b.pseudoElement) {
                             return 1;
                         }
-                        else if (!a.plainText && b.plainText) {
+                        if (!a.plainText && b.plainText) {
                             return -1;
                         }
-                        else if (a.plainText && !b.plainText) {
+                        if (a.plainText && !b.plainText) {
                             return 1;
                         }
                     }
-                    else if (a.containerType !== b.containerType && a.inputElement && b.inputElement) {
-                        return b.containerType - a.containerType;
-                    }
-                    else if (textA && !textB && a.childIndex < b.childIndex) {
-                        return -1;
-                    }
-                    else if (textB && !textA && b.childIndex < a.childIndex) {
-                        return 1;
+                    else {
+                        if (a.containerType !== b.containerType && a.inputElement && b.inputElement) {
+                            return b.containerType - a.containerType;
+                        }
+                        if (textA && !textB && a.childIndex < b.childIndex) {
+                            return -1;
+                        }
+                        if (textB && !textA && b.childIndex < a.childIndex) {
+                            return 1;
+                        }
                     }
                 }
                 return 0;
@@ -950,59 +952,61 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         return NODE_TRAVERSE.FLOAT_WRAP;
                     }
                 }
-                else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / this.actualParent!.box.width >= 0.8) {
-                    return NODE_TRAVERSE.FLOAT_INTERSECT;
-                }
-                else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
-                    return NODE_TRAVERSE.FLOAT_BLOCK;
-                }
-                else if (horizontal !== undefined) {
-                    if (floating && !horizontal && previous.blockStatic) {
-                        return NODE_TRAVERSE.HORIZONTAL;
+                else {
+                    if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / this.actualParent!.box.width >= 0.8) {
+                        return NODE_TRAVERSE.FLOAT_INTERSECT;
                     }
-                    else if (!startsWith(this.display, 'inline-')) {
-                        let { top, bottom } = this.bounds;
-                        if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
-                            return NODE_TRAVERSE.FLOAT_INTERSECT;
+                    if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
+                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                    }
+                    if (horizontal !== undefined) {
+                        if (floating && !horizontal && previous.blockStatic) {
+                            return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (siblings[0].floating) {
-                            const length = siblings.length;
-                            if (length > 1) {
-                                const float = siblings[0].float;
-                                let maxBottom = -Infinity,
-                                    contentWidth = 0;
-                                for (let i = 0; i < length; ++i) {
-                                    const item = siblings[i];
-                                    if (item.floating) {
-                                        if (item.float === float) {
-                                            maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
+                        if (!startsWith(this.display, 'inline-')) {
+                            let { top, bottom } = this.bounds;
+                            if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
+                                return NODE_TRAVERSE.FLOAT_INTERSECT;
+                            }
+                            if (siblings[0].floating) {
+                                const length = siblings.length;
+                                if (length > 1) {
+                                    const float = siblings[0].float;
+                                    let maxBottom = -Infinity,
+                                        contentWidth = 0;
+                                    for (let i = 0; i < length; ++i) {
+                                        const item = siblings[i];
+                                        if (item.floating) {
+                                            if (item.float === float) {
+                                                maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
+                                            }
+                                            contentWidth += item.linear.width;
                                         }
-                                        contentWidth += item.linear.width;
                                     }
+                                    if (Math.ceil(contentWidth) >= this.actualParent!.box.width) {
+                                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                                    }
+                                    else if (this.multiline) {
+                                        if (this.styleText) {
+                                            const textBounds = this.textBounds;
+                                            if (textBounds) {
+                                                bottom = textBounds.bottom;
+                                            }
+                                        }
+                                        const offset = bottom - maxBottom;
+                                        top = offset <= 0 || offset / (bottom - top) < 0.5 ? -Infinity : Infinity;
+                                    }
+                                    else {
+                                        top = Math.ceil(top);
+                                    }
+                                    if (top < Math.floor(maxBottom)) {
+                                        return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
+                                    }
+                                    return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
                                 }
-                                if (Math.ceil(contentWidth) >= this.actualParent!.box.width) {
+                                if (!horizontal) {
                                     return NODE_TRAVERSE.FLOAT_BLOCK;
                                 }
-                                else if (this.multiline) {
-                                    if (this.styleText) {
-                                        const textBounds = this.textBounds;
-                                        if (textBounds) {
-                                            bottom = textBounds.bottom;
-                                        }
-                                    }
-                                    const offset = bottom - maxBottom;
-                                    top = offset <= 0 || offset / (bottom - top) < 0.5 ? -Infinity : Infinity;
-                                }
-                                else {
-                                    top = Math.ceil(top);
-                                }
-                                if (top < Math.floor(maxBottom)) {
-                                    return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
-                                }
-                                return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
-                            }
-                            else if (!horizontal) {
-                                return NODE_TRAVERSE.FLOAT_BLOCK;
                             }
                         }
                     }
@@ -1026,13 +1030,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (previous.excluded && cleared && cleared.has(previous)) {
                 return NODE_TRAVERSE.FLOAT_CLEAR;
             }
-            else if (previous.blockStatic || previous.autoMargin.leftRight || (horizontal === false || floating && previous.childIndex === 0) && previous.plainText && previous.multiline) {
+            if (previous.blockStatic || previous.autoMargin.leftRight || (horizontal === false || floating && previous.childIndex === 0) && previous.plainText && previous.multiline) {
                 return NODE_TRAVERSE.VERTICAL;
             }
-            else if (blockStatic && (!previous.floating || cleared && cleared.has(previous) || i === length - 1 && !previous.pageFlow)) {
+            if (blockStatic && (!previous.floating || cleared && cleared.has(previous) || i === length - 1 && !previous.pageFlow)) {
                 return NODE_TRAVERSE.VERTICAL;
             }
-            else if (previous.floating) {
+            if (previous.floating) {
                 if (previous.float === 'left') {
                     if (this.autoMargin.right) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
@@ -1432,7 +1436,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (value.width > width) {
             return { width, height: Math.round(value.height * width / value.width) };
         }
-        else if (value.height > height) {
+        if (value.height > height) {
             return { width: Math.round(value.width * height / value.height), height };
         }
         return value;

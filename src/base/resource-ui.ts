@@ -1454,41 +1454,19 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public removeExcludedText(node: T, element: Element) {
-        const { preserveWhiteSpace, sessionId } = node;
         const styled = element.children.length > 0 || element.tagName === 'CODE';
         const attr = styled ? 'innerHTML' : 'textContent';
-        let value: string = element[attr] || '';
+        let value = element[attr];
+        if (!value) {
+            return '';
+        }
+        const { preserveWhiteSpace, sessionId } = node;
         const childNodes = element.childNodes;
         for (let i = 0, length = childNodes.length; i < length; ++i) {
             const item = childNodes[i] as Element;
             const child = getElementAsNode<NodeUI>(item, sessionId);
-            if (!child || !child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
-                if (child) {
-                    if (styled && child.htmlElement) {
-                        if (child.lineBreak) {
-                            const previousSibling = child.previousSibling;
-                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
-                        }
-                        else if (child.positioned) {
-                            value = replaceAll(value, item.outerHTML, '', 1);
-                        }
-                        else if (child.display === 'contents') {
-                            value = replaceAll(value, item.outerHTML, child.textContent, 1);
-                        }
-                        else if (!preserveWhiteSpace) {
-                            value = replaceAll(value, item.outerHTML, child.pageFlow && isString(child.textContent) ? this.STRING_SPACE : '', 1);
-                        }
-                        continue;
-                    }
-                    const textContent = child.plainText ? child.textContent : child[attr] as string;
-                    if (textContent) {
-                        if (!preserveWhiteSpace) {
-                            value = replaceAll(value, textContent, '', 1);
-                        }
-                        continue;
-                    }
-                }
-                else if (item.nodeName[0] !== '#') {
+            if (!child) {
+                if (item.nodeName[0] !== '#') {
                     value = replaceAll(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '', 1);
                 }
                 if (!preserveWhiteSpace) {
@@ -1500,11 +1478,34 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     }
                 }
             }
+            else if (!child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
+                if (styled) {
+                    if (child.lineBreak) {
+                        const previousSibling = child.previousSibling;
+                        value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
+                    }
+                    else if (child.positioned) {
+                        value = replaceAll(value, item.outerHTML, '', 1);
+                    }
+                    else if (child.display === 'contents') {
+                        value = replaceAll(value, item.outerHTML, child.textContent, 1);
+                    }
+                    else if (!preserveWhiteSpace) {
+                        value = replaceAll(value, item.outerHTML, child.pageFlow && isString(child.textContent) ? this.STRING_SPACE : '', 1);
+                    }
+                }
+                else if (!preserveWhiteSpace) {
+                    const textContent = child.textContent;
+                    if (textContent) {
+                        value = replaceAll(value, textContent, '', 1);
+                    }
+                }
+            }
         }
         if (!styled) {
             return value;
         }
-        else if (!preserveWhiteSpace && !value.trim()) {
+        if (!preserveWhiteSpace && !value.trim()) {
             return node.blockStatic ? this.STRING_SPACE : '';
         }
         return value;

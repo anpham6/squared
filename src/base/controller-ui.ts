@@ -731,7 +731,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 if (depth !== 0) {
                     return depth;
                 }
-                else if (parentA.actualParent === parentB.actualParent) {
+                if (parentA.actualParent === parentB.actualParent) {
                     return parentA.childIndex - parentB.childIndex;
                 }
                 return parentA.id - parentB.id;

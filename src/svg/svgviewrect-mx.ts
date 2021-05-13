@@ -7,7 +7,7 @@ function hasUnsupportedAccess(element: SVGElement) {
         if (isUserAgent(USER_AGENT.FIREFOX)) {
             return element.parentElement instanceof HTMLElement;
         }
-        else if (isUserAgent(USER_AGENT.SAFARI)) {
+        if (isUserAgent(USER_AGENT.SAFARI)) {
             return !(element.parentElement instanceof HTMLElement);
         }
     }

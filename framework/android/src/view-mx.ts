@@ -494,7 +494,7 @@ function calculateBias(start: number, end: number, precision = 3) {
     if (start === 0) {
         return 0;
     }
-    else if (end === 0) {
+    if (end === 0) {
         return 1;
     }
     return +truncate(Math.max(start / (start + end), 0), precision);
@@ -2596,8 +2596,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const getContainerHeight = (node: T) => Math.max(convertFloat(node.layoutHeight), convertFloat(node.android('minHeight')));
                     const height = getContainerHeight(this);
                     if (height) {
-                        const wrapperOf = this.wrapperOf as Null<T>;
-                        if (wrapperOf && !wrapperOf.positionRelative && height <= getContainerHeight(wrapperOf)) {
+                        const wrapperOf = this.wrapperOf;
+                        if (wrapperOf && !wrapperOf.positionRelative && height <= getContainerHeight(wrapperOf as T)) {
                             this.setLayoutHeight('wrap_content');
                         }
                     }
@@ -3113,7 +3113,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     if (item === this || !item.pageFlow) {
                                         return true;
                                     }
-                                    else if (item.pseudoElement) {
+                                    if (item.pseudoElement) {
                                         return excludeHorizontal(item) || excludeVertical(item);
                                     }
                                     return item.renderExclude;

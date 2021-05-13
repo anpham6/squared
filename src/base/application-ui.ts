@@ -68,7 +68,7 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
         found = 0,
         i = 0, j = -1;
     while (current && current.tagName === 'Q') {
-        const quotes = getStyleMap(sessionId, current, 'styleMap').quotes;
+        const quotes = getStyleAttr(sessionId, current, 'quotes', pseudoElt);
         if (quotes && quotes !== 'auto') {
             const match = REGEXP_QUOTE.exec(quotes);
             if (match) {
@@ -101,11 +101,13 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: PseudoElt, outside
     if (found === 0) {
         --i;
     }
-    else if (j === 0) {
-        return outside;
-    }
-    else if (j > 0) {
-        return inside;
+    else {
+        if (j === 0) {
+            return outside;
+        }
+        if (j > 0) {
+            return inside;
+        }
     }
     return i % 2 === 0 ? outside : inside;
 }
@@ -148,6 +150,11 @@ function setElementState(node: NodeUI, type?: number) {
 function isDocumentBase(node: NodeUI) {
     const renderExtension = node.renderExtension;
     return !!renderExtension && renderExtension.some(item => item.documentBase);
+}
+
+function getStyleAttr(sessionId: string, element: Element, attr: CssStyleAttr, pseudoElt = '') {
+    const styleMap = getElementCache<CSSStyleDeclaration>(element, 'styleMap' + pseudoElt, sessionId);
+    return styleMap && styleMap[attr] || getStyle(element, pseudoElt as PseudoElt)[attr];
 }
 
 const getStyleMap = (sessionId: string, element: Element, pseudoElt = '') => getElementCache<CSSStyleDeclaration>(element, 'styleMap' + pseudoElt, sessionId) || getStyle(element, pseudoElt as PseudoElt);
@@ -423,7 +430,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const node = this.createRootNode(processing, documentRoot);
         if (node) {
             const { cache, excluded } = processing;
-            const parent = node.parent as Null<T>;
+            const parent = node.parent;
             if (parent) {
                 parent.visible = false;
                 node.documentParent = parent;
@@ -431,7 +438,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (parent.element === document.documentElement) {
                     parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                     parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
-                    cache.add(parent);
+                    cache.add(parent as T);
                 }
             }
             node.rootElement = true;
@@ -1164,16 +1171,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (a.nodeGroup && b.nodeGroup) {
                         return a.id - b.id;
                     }
-                    else if (a.nodeGroup) {
+                    if (a.nodeGroup) {
                         return -1;
                     }
-                    else if (b.nodeGroup) {
+                    if (b.nodeGroup) {
                         return 1;
                     }
                     if (a.innerWrapped === b) {
                         return -1;
                     }
-                    else if (a === b.innerWrapped) {
+                    if (a === b.innerWrapped) {
                         return 1;
                     }
                     const outerA = a.outerWrapper;
@@ -1181,7 +1188,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (a === outerB || !outerA && outerB) {
                         return -1;
                     }
-                    else if (b === outerA || !outerB && outerA) {
+                    if (b === outerA || !outerB && outerA) {
                         return 1;
                     }
                 }
@@ -1596,10 +1603,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     case 'initial':
                     case 'unset':
                     case 'revert':
-                        value = getStyleMap(sessionId, element, pseudoElt).content;
+                        value = getStyle(element, pseudoElt).content;
                         break;
                     case 'inherit':
-                        value = getStyleMap(sessionId, element).content;
+                        value = getStyle(element).content;
                         break;
                 }
                 switch (value) {
@@ -1671,7 +1678,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                         if (startsWith(attr, 'padding')) {
                                                             return true;
                                                         }
-                                                        else if (!absolute && startsWith(attr, 'margin')) {
+                                                        if (!absolute && startsWith(attr, 'margin')) {
                                                             return true;
                                                         }
                                                     }
@@ -1708,7 +1715,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (hasCoords(position)) {
                                                 continue;
                                             }
-                                            else if (float !== 'none') {
+                                            if (float !== 'none') {
                                                 return;
                                             }
                                             break;

@@ -228,7 +228,7 @@ function checkSaveAs(uri: Undef<string>, pathname: Undef<string>, filename: Unde
     if (value) {
         return [value, false];
     }
-    else if (pathname && pathname !== '~') {
+    if (pathname && pathname !== '~') {
         return [pathname, true];
     }
     return ['', false];

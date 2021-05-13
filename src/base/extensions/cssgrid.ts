@@ -440,7 +440,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (!withinRange(linearA.top, linearB.top)) {
                     return linearA.top - linearB.top;
                 }
-                else if (!withinRange(linearA.left, linearB.left)) {
+                if (!withinRange(linearA.left, linearB.left)) {
                     return linearA.left - linearB.left;
                 }
                 return 0;
@@ -453,7 +453,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (!withinRange(linearA.left, linearB.left)) {
                     return linearA.left - linearB.left;
                 }
-                else if (!withinRange(linearA.top, linearB.top)) {
+                if (!withinRange(linearA.top, linearB.top)) {
                     return linearA.top - linearB.top;
                 }
                 return 0;

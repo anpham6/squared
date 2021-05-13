@@ -158,10 +158,10 @@ function hue2rgb(t: number, p: number, q: number) {
     if (t < 1/6) {
         return p + (q - p) * 6 * t;
     }
-    else if (t < 1/2) {
+    if (t < 1/2) {
         return q;
     }
-    else if (t < 2/3) {
+    if (t < 2/3) {
         return p + (q - p) * (2/3 - t) * 6;
     }
     return p;

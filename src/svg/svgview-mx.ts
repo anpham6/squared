@@ -225,7 +225,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 continue;
                             }
                             const origin = getKeyframeOrigin(attrData, element, key) || TRANSFORM.origin(element);
-                            for (let j = 0, q = items.length; j < q; ++q) {
+                            for (let j = 0, q = items.length; j < q; ++j) {
                                 const item = items[j];
                                 const m = item.matrix;
                                 let name: string,

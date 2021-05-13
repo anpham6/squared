@@ -359,7 +359,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 if (layoutFixed && mapWidth.reduce((a, b) => a + (b !== '0px' && isLength(b) ? node.parseWidth(b, false) : 0), 0) >= node.actualWidth) {
                     return LAYOUT_TABLETYPE.COMPRESS;
                 }
-                else if (mapWidth.length > 1 && mapWidth.some(value => isPercent(value)) || mapWidth.every(value => isLength(value) && value !== '0px')) {
+                if (mapWidth.length > 1 && mapWidth.some(value => isPercent(value)) || mapWidth.every(value => isLength(value) && value !== '0px')) {
                     return LAYOUT_TABLETYPE.VARIABLE;
                 }
                 const baseWidth = mapWidth[0];
@@ -368,13 +368,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         mainData.flags |= LAYOUT_TABLE.EXPAND;
                         return LAYOUT_TABLETYPE.VARIABLE;
                     }
-                    else if (baseWidth === 'auto') {
+                    if (baseWidth === 'auto') {
                         return hasWidth ? LAYOUT_TABLETYPE.VARIABLE : table.some(tr => tr.find(td => td.multiline)) ? LAYOUT_TABLETYPE.VARIABLE : LAYOUT_TABLETYPE.NONE;
                     }
-                    else if (hasWidth) {
+                    if (hasWidth) {
                         return LAYOUT_TABLETYPE.FIXED;
                     }
-                    else if (baseWidth === '0px') {
+                    if (baseWidth === '0px') {
                         return LAYOUT_TABLETYPE.NONE;
                     }
                 }

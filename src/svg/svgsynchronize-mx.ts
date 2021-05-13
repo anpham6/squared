@@ -642,13 +642,13 @@ function sortIncomplete(incomplete: SvgAnimation[], maxTime = Infinity) {
             if (maxTime === delayA && maxTime !== delayB) {
                 return -1;
             }
-            else if (maxTime !== delayA && maxTime === delayB) {
+            if (maxTime !== delayA && maxTime === delayB) {
                 return 1;
             }
-            else if (delayA > maxTime && delayB < maxTime) {
+            if (delayA > maxTime && delayB < maxTime) {
                 return 1;
             }
-            else if (delayA < maxTime && delayB > maxTime) {
+            if (delayA < maxTime && delayB > maxTime) {
                 return -1;
             }
         }
@@ -682,13 +682,13 @@ function sortEvaluateStart(incomplete: SvgAnimate[], maxTime: number) {
         if (delayA === delayB) {
             return b.group.id - a.group.id;
         }
-        else if (delayA === maxTime) {
+        if (delayA === maxTime) {
             return -1;
         }
-        else if (delayB === maxTime) {
+        if (delayB === maxTime) {
             return 1;
         }
-        else if (delayA < maxTime && delayB < maxTime) {
+        if (delayA < maxTime && delayB < maxTime) {
             return delayB - delayA;
         }
         return delayA - delayB;
@@ -981,7 +981,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         if (previous.name === name) {
                                             return true;
                                         }
-                                        else if (SvgAnimationIntervalMap.getGroupEndTime(previous) >= duration) {
+                                        if (SvgAnimationIntervalMap.getGroupEndTime(previous) >= duration) {
                                             return false;
                                         }
                                     }

@@ -35,10 +35,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (keySpline) {
             return keySpline;
         }
-        else if (REGEXP_BEZIER.test(value)) {
+        if (REGEXP_BEZIER.test(value)) {
             return value.trim();
         }
-        else if (value.startsWith('step')) {
+        if (value.startsWith('step')) {
             return SvgAnimate.KEYSPLINE_NAME.linear;
         }
         const match = REGEXP_BEZIERCSS.exec(value);
