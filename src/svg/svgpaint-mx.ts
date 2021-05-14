@@ -208,15 +208,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         }
                         else {
                             let color: Null<ColorData>;
-                            switch (value) {
+                            switch (value = value.toLowerCase()) {
                                 case 'none':
                                 case 'transparent':
                                 case 'rgba(0, 0, 0, 0)':
                                     this[attr] = 'none';
                                     return;
                                 case 'currentcolor':
-                                case 'currentColor':
-                                    value = this.color || getAttribute(element, 'color', true);
+                                    value = this.color || getAttribute(this.parent && SvgBuild.asUseSymbol(this.parent) ? this.parent.element : element, 'color', true);
                                 default:
                                     color = parseColor(value);
                                     break;

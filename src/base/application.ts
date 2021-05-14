@@ -24,7 +24,23 @@ const REGEXP_CSSHOST = /^:(?:host|host-context)\(([^)]+)\)/;
 const REGEXP_DATAURI = new RegExp(`url\\("(${STRING.DATAURI})"\\)`, 'g');
 const CSS_SHORTHANDNONE = getPropertiesAsTraits(CSS_TRAITS.NONE);
 
-function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number) {
+function parseError(error: unknown) {
+    if (typeof error === 'string') {
+        return error;
+    }
+    if (error instanceof Error) {
+        return error.message;
+    }
+    if (error instanceof Event) {
+        error = error.target;
+    }
+    return error instanceof HTMLImageElement ? error.src : '';
+}
+
+const getErrorMessage = (errors: string[]) => errors.map(value => '- ' + value).join('\n');
+
+export function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number, dataUri?: boolean) {
+    REGEXP_DATAURI.lastIndex = 0;
     let result: Undef<string>,
         match: Null<RegExpExecArray>;
     while (match = REGEXP_DATAURI.exec(value)) {
@@ -41,6 +57,9 @@ function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource
                     content = match[5];
                 }
                 resource.addRawData(resourceId, match[1], { mimeType: leading && leading.indexOf('/') !== -1 ? leading : 'image/unknown', encoding, content, base64 });
+                if (dataUri) {
+                    return match[1];
+                }
             }
         }
         else {
@@ -53,24 +72,8 @@ function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource
             }
         }
     }
-    REGEXP_DATAURI.lastIndex = 0;
     return result || value;
 }
-
-function parseError(error: unknown) {
-    if (typeof error === 'string') {
-        return error;
-    }
-    if (error instanceof Error) {
-        return error.message;
-    }
-    if (error instanceof Event) {
-        error = error.target;
-    }
-    return error instanceof HTMLImageElement ? error.src : '';
-}
-
-const getErrorMessage = (errors: string[]) => errors.map(value => '- ' + value).join('\n');
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
     public static readonly KEY_NAME = 'squared.base.application';

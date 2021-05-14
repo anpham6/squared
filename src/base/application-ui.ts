@@ -16,6 +16,7 @@ import ResourceUI from './resource-ui';
 import ContentUI from './content-ui';
 import LayoutUI from './layout-ui';
 
+import { parseImageUrl } from './application';
 import { convertListStyle } from './extensions/list';
 
 import { STRING } from './lib/regex';
@@ -1723,6 +1724,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                 }
                             }
+                        }
+                        else if (startsWith(value = parseImageUrl(value, location.href, this.resourceHandler, resourceId, true), 'data:image/')) {
+                            tagName = 'img';
+                            content = value;
                         }
                         else {
                             const url = resolveURL(value);

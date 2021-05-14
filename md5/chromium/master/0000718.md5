@@ -5,9 +5,9 @@ a885d4d205dd953611d836e7fc1c75b8  ./app/src/main/res/drawable/div_squared_ui.xml
 df444bee0bf9b2051fb72d8cf5ba92ce  ./app/src/main/res/drawable/icons8_browse_page_24.png
 357b09fafc7e5b8c31226f6edd8babc6  ./app/src/main/res/drawable/icons8_left_24.png
 9e20f5dd2f7f4e6db1b3d27e1e8580c6  ./app/src/main/res/drawable/icons8_web_24.png
-df877c8b06689c73f3bcacbb9bdefaff  ./app/src/main/res/layout/activity_main.xml
+bddc6f055bb32bf69c7a6ee189181286  ./app/src/main/res/layout/activity_main.xml
 4ecbebc67b4fa3e7ea601fb5e889a15d  ./app/src/main/res/values/colors.xml
-490e98bdc32e293cead3454d2cbc5f4b  ./app/src/main/res/values/dimens.xml
+a9ebea8cf38daa77cf514b5d5d06538f  ./app/src/main/res/values/dimens.xml
 4608aa634ddd4e2b70e9dcc44b932a0d  ./app/src/main/res/values/strings.xml
 2818461a9b9c6b2b51b1a534c2a36a93  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

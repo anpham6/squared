@@ -325,6 +325,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     public afterBaseLayout(sessionId: string, cache = this.application.getProcessingCache(sessionId)) {
         const clearMap = this.application.clearMap;
         const processed = new WeakSet<T>();
+        const resetting: T[] = [];
         cache.each(node => {
             if (node.naturalElement && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const children = node.naturalChildren as T[];
@@ -541,7 +542,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
                 if (lastChild && (!belowFloating || isLowestElement(lastChild, belowFloating))) {
                     if (lastChild.naturalElement) {
-                        this.applyMarginCollapse(node, lastChild, false);
+                        const bottomResetChild = this.applyMarginCollapse(node, lastChild, false);
+                        if (bottomResetChild) {
+                            resetting.push(bottomResetChild);
+                        }
                         if (lastChild.marginTop < 0) {
                             const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
                             if (offset < 0) {
@@ -559,6 +563,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
             }
         });
+        if (resetting.length) {
+            this.data.set(cache, resetting);
+        }
         this.application.getProcessing(sessionId)!.excluded.each(node => {
             if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node)) {
                 let valid: Undef<boolean>;
@@ -698,10 +705,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     }
 
     public afterConstraints(sessionId: string, cache = this.application.getProcessingCache(sessionId)) {
+        const resetting = this.data.get(cache) as Undef<T[]>;
+        if (resetting) {
+            resetting.forEach(node => node.anchorChain('left').forEach(sibling => resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM)));
+        }
         cache.each(node => {
-            if (node.bottomResetChild) {
-                node.bottomResetChild.anchorChain('left').forEach(sibling => resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM));
-            }
             if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned) {
                 const actualParent = node.actualParent as T;
                 if (actualParent.layoutElement) {
@@ -838,7 +846,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         });
     }
 
-    protected applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
+    protected applyMarginCollapse(node: T, child: T, direction: boolean) {
         if (!direction || isBlockElement(child, true)) {
             let marginName: CssStyleAttr,
                 borderWidth: string,
@@ -859,11 +867,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             if (node[borderWidth] === 0 && !node.getBox(region)[0]) {
                 if (node[paddingName] === 0) {
                     let target = child,
-                        targetParent: Undef<NodeUI[]>;
+                        targetParent: Undef<T[]>;
                     if (DOCTYPE_HTML) {
                         while (target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && !target.getBox(region)[0] && canResetChild(target)) {
                             if (direction) {
-                                const endChild = target.firstStaticChild as NodeUI;
+                                const endChild = target.firstStaticChild as T;
                                 if (isBlockElement(endChild, direction)) {
                                     (targetParent ||= []).push(target);
                                     target = endChild;
@@ -873,7 +881,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                             }
                             else {
-                                const endChild = getBottomChild(target);
+                                const endChild = getBottomChild(target) as Undef<T>;
                                 if (endChild) {
                                     (targetParent ||= []).push(target);
                                     target = endChild;
@@ -944,7 +952,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             if (!direction) {
                                 const parent = target.renderParent || target.parent;
                                 if (parent?.layoutHorizontal) {
-                                    parent.bottomResetChild = target;
+                                    return target;
                                 }
                             }
                         }
@@ -961,7 +969,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 else if (child[marginName] === 0 && child[borderWidth] === 0 && canResetChild(child) && !node.documentBody) {
                     let blockAll = true;
                     do {
-                        const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as NodeUI;
+                        const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as T;
                         if (endChild && endChild[marginName] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
                             const value = endChild[paddingName];
                             if (value) {

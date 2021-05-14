@@ -694,8 +694,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         inlineWidth = false;
                         break;
                 }
-                if (!node.hasWidth) {
-                    node.setLayoutWidth(inlineWidth ? 'wrap_content' : 'match_parent', false);
+                if (!node.hasWidth && inlineWidth) {
+                    node.setLayoutWidth('wrap_content');
                 }
                 switch (alignSelf) {
                     case 'first baseline':
@@ -915,7 +915,9 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                             }
                             else {
                                 item.anchor('left', 'parent');
-                                item.anchorStyle('horizontal', 0, 'packed');
+                                if (length > 1) {
+                                    item.anchorStyle('horizontal', 0, 'packed');
+                                }
                             }
                             item.anchored = true;
                             item.positioned = true;

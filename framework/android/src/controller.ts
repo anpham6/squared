@@ -1,4 +1,3 @@
-import PLATFORM = squared.lib.constant.PLATFORM;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
@@ -24,7 +23,7 @@ import NodeUI = squared.base.NodeUI;
 
 import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor, replaceTab } from './lib/util';
 
-const { isPlatform, isUserAgent } = squared.lib.client;
+const { isUserAgent } = squared.lib.client;
 const { asPercent, formatPX, getStyle, hasCoords } = squared.lib.css;
 const { getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
@@ -544,15 +543,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             inputBorderWidth: '2px',
             inputBorderStyle: 'inset',
             inputDisabledBorderColor: 'rgba(118, 118, 118, 0.3)',
-            inputDisabledBackgroundColor: 'rgba(239, 239, 239, 0.3)',
             buttonBorderColor: 'rgb(118, 118, 118)',
             buttonBorderWidth: '2px',
             buttonBorderStyle: 'inset',
             buttonPaddingVertical: '1px',
             buttonPaddingHorizontal: '6px',
-            buttonBackgroundColor: isPlatform(PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(239, 239, 239)',
             buttonDisabledBorderColor: 'rgba(118, 118, 118, 0.3)',
-            buttonDisabledBackgroundColor: 'rgba(239, 239, 239, 0.3)',
             hrBorderColor: 'rgb(192, 192, 192)',
             rangeForegroundColor: 'rgb(0, 117, 255)',
             rangeBackgroundColor: 'rgb(239, 239, 239)',
@@ -798,7 +794,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     const parent = layout.parent;
-                    if (child.baselineElement && (parent.layoutHorizontal || parent.layoutGrid && !parent.tableElement || parent.flexElement && parent.flexdata.row && node.flexbox.alignSelf === 'baseline')) {
+                    if (child.baselineElement && (parent.layoutHorizontal || parent.layoutGrid && !parent.tableElement || parent.flexRow && node.flexbox.alignSelf === 'baseline')) {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                     }
                     else {
@@ -3127,7 +3123,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     if (textBottom === undefined) {
                                         textBottom = getTextBottom(children)[0] as Undef<T> || null;
                                     }
-                                    if (item !== textBottom || textBaseline.bounds.bottom === item.bounds.bottom) {
+                                    if (item !== textBottom || withinRange(textBaseline.bounds.bottom, item.bounds.bottom)) {
                                         item.anchor('bottom', textBaseline.documentId);
                                     }
                                     else if (textBottom) {
@@ -3270,7 +3266,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const chain = children[i];
             if (i === 0) {
                 chain.anchor('top', 'parent');
-                chain.anchorStyle('vertical', 0, 'packed');
+                if (length > 1) {
+                    chain.anchorStyle('vertical', 0, 'packed');
+                }
             }
             if (i > 0) {
                 const previous = children[i - 1];
@@ -3361,7 +3359,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else {
                             chain.anchor('top', 'parent');
-                            chain.anchorStyle('vertical', 0, 'packed');
+                            if (q > 1) {
+                                chain.anchorStyle('vertical', 0, 'packed');
+                            }
                         }
                     }
                     else if (i === length - 1 && !currentRowTop) {
@@ -3853,7 +3853,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     private isConstraintLayout(layout: LayoutUI<T>, vertical?: boolean) {
         const { parent, node } = layout;
-        if (parent.flexElement && parent.flexdata.row && (parent.cssValue('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(node.box.bottom))) {
+        if (parent.flexRow && (parent.cssValue('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(node.box.bottom))) {
             return false;
         }
         return layout.find(item => (item.rightAligned || item.centerAligned) && layout.size() > 1 && (item.positionStatic && item.marginTop >= 0 || item.positionRelative && Math.floor(item.actualRect('bottom', 'bounds')) <= Math.ceil(node.box.bottom)) && layout.singleRowAligned || item.percentWidth > 0 && item.percentWidth < 1 || item.hasUnit('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0)) || this.hasClippedBackground(node);

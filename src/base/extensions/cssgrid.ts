@@ -433,6 +433,39 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
         }
+        const resetting: T[] = [];
+        const boundsMap = startsWith(mainData.alignContent, 'space') && new Map<T, BoxRectDimension>();
+        const willReset = (item: T) => item.styleElement && item.textElement || item.inputElement;
+        node.each((item: T) => {
+            if (willReset(item)) {
+                resetting.push(item);
+            }
+            else {
+                const children = item.cascade((child: T) => {
+                    if (willReset(child)) {
+                        return true;
+                    }
+                }) as T[];
+                if (children.length) {
+                    resetting.push(...children);
+                }
+            }
+        });
+        if (resetting.length) {
+            const options: CssStyleMap = { lineHeight: 'normal', padding: '0px', border: 'none' };
+            for (let i = 0, length = resetting.length; i < length; ++i) {
+                resetting[i].cssTryAll(options);
+            }
+            node.each((item: T) => {
+                if (boundsMap) {
+                    boundsMap.set(item, item.bounds);
+                }
+                item.setBounds(false);
+            });
+            for (let i = 0, length = resetting.length; i < length; ++i) {
+                resetting[i].cssFinally(options);
+            }
+        }
         if (horizontal) {
             node.children.sort((a, b) => {
                 const linearA = a.linear;
@@ -458,6 +491,12 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 return 0;
             });
+        }
+        if (boundsMap) {
+            for (const [item, bounds] of boundsMap) {
+                item.unsafe('bounds', bounds);
+                item.resetBounds(true);
+            }
         }
         if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
             let rowIndex = 0,

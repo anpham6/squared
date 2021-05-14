@@ -252,7 +252,7 @@ function getLineSpacingExtra(node: T, value: number) {
 }
 
 function constraintMinMax(node: T) {
-    if (!node.inputElement && !node.imageContainer) {
+    if (!node.imageContainer) {
         const [minWidth, minHeight, maxWidth, maxHeight] = node.cssValues('minWidth', 'minHeight', 'maxWidth', 'maxHeight');
         if (minWidth && isLength(minWidth, true) && minWidth !== '100%' && ascendFlexibleWidth(node)) {
             const value = node.parseUnit(minWidth);
@@ -295,18 +295,20 @@ function constraintMinMax(node: T) {
 
 function setConstraintPercent(node: T, value: number, horizontal: boolean, percentAvailable: number) {
     if (value < 1 && !isNaN(percentAvailable) && node.pageFlow) {
-        const parent = node.actualParent || node.documentParent;
-        let boxPercent: number,
-            marginPercent: number;
-        if (horizontal) {
-            const width = parent.box.width;
-            boxPercent = !parent.gridElement ? node.contentBoxWidth / width : 0;
-            marginPercent = (Math.max(!node.getBox(BOX_STANDARD.MARGIN_LEFT)[0] ? node.marginLeft : 0, 0) + (!node.getBox(BOX_STANDARD.MARGIN_RIGHT)[0] ? node.marginRight : 0)) / width;
-        }
-        else {
-            const height = parent.box.height;
-            boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
-            marginPercent = (Math.max(!node.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? node.marginTop : 0, 0) + (!node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? node.marginBottom : 0)) / height;
+        const parent = node.actualParent;
+        let boxPercent = 0,
+            marginPercent = 0;
+        if (parent) {
+            if (horizontal) {
+                const width = parent.box.width;
+                boxPercent = !parent.gridElement ? node.contentBoxWidth / width : 0;
+                marginPercent = (Math.max(!node.getBox(BOX_STANDARD.MARGIN_LEFT)[0] ? node.marginLeft : 0, 0) + (!node.getBox(BOX_STANDARD.MARGIN_RIGHT)[0] ? node.marginRight : 0)) / width;
+            }
+            else {
+                const height = parent.box.height;
+                boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
+                marginPercent = (Math.max(!node.getBox(BOX_STANDARD.MARGIN_TOP)[0] ? node.marginTop : 0, 0) + (!node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? node.marginBottom : 0)) / height;
+            }
         }
         if (percentAvailable === 1 && value + marginPercent >= 1) {
             value = 1 - marginPercent;
@@ -335,24 +337,23 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
         outerWrapper = node;
     }
     if (value === 1 && !node.hasUnit(horizontal ? 'maxWidth' : 'maxHeight')) {
-        setLayoutDimension(outerWrapper, horizontal ? outerWrapper.getMatchConstraint() : 'match_parent', horizontal, false);
+        setLayoutDimension(outerWrapper, node.isAnchored({ orientation: horizontal ? 'horizontal' : 'vertical', chained: true }) ? '0px' : horizontal ? outerWrapper.getMatchConstraint() : 'match_parent', horizontal);
         if (node !== outerWrapper) {
-            setLayoutDimension(node, horizontal ? node.getMatchConstraint() : 'match_parent', horizontal, false);
+            setLayoutDimension(node, horizontal ? node.getMatchConstraint() : 'match_parent', horizontal);
         }
     }
     else {
-        let unit: Undef<string>;
-        if (value === 1 && node.onlyChild && !node.layoutGrid) {
-            if (!(node.centerAligned && node.hasUnit('maxWidth'))) {
-                unit = 'match_parent';
-            }
+        let unit: string;
+        if (value === 1 && (!node.pageFlow || !node.isAnchored({ orientation: horizontal ? 'horizontal' : 'vertical', chained: true })) && (!horizontal || !(node.centerAligned && node.hasUnit('maxWidth')) && !node.layoutGrid)) {
+            unit = 'match_parent';
         }
         else {
-            outerWrapper.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', truncate(value, node.localSettings.floatPrecision));
+            unit = '0px';
+            outerWrapper.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', value === 1 ? '1' : truncate(value, node.localSettings.floatPrecision));
         }
-        setLayoutDimension(outerWrapper, unit || '0px', horizontal, false);
+        setLayoutDimension(outerWrapper, unit, horizontal);
         if (node !== outerWrapper) {
-            setLayoutDimension(node, '0px', horizontal, false);
+            setLayoutDimension(node, '0px', horizontal);
         }
     }
     return percentAvailable;
@@ -395,7 +396,7 @@ function constraintPercentHeight(node: T, percentAvailable = 1) {
     return percentAvailable;
 }
 
-function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite: boolean) {
+function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite = false) {
     if (horizontal) {
         node.setLayoutWidth(value, overwrite);
     }
@@ -510,11 +511,10 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
         if (current.hasWidth || safeFloat(current.layoutWidth) || (current.blockStatic || current.blockWidth) && current.innerMostWrapped.rootElement || current.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
-        const flexRow = current.flexElement && current.flexdata.row;
-        if (flexRow && current.flexdata.wrap) {
+        if (current.flexRow && current.flexdata.wrap) {
             return true;
         }
-        if (current.inlineVertical && current.naturalElement || current.flexibleWidth && i++ === 1 || flexRow && current.flexbox.grow === 0 && !current.onlyChild && !current.flexibleWidth) {
+        if (current.inlineVertical && current.naturalElement || current.flexibleWidth && i++ === 1 || current.flexRow && current.flexbox.grow === 0 && !current.onlyChild && !current.flexibleWidth) {
             return false;
         }
         current = current.renderParent as Null<T>;
@@ -524,7 +524,7 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
 
 export function ascendFlexibleHeight(node: T, container?: boolean) {
     let current = container ? node : node.actualParent as Null<T>;
-    if (current && hasFlexibleHeight(current) || container && node.flexElement && node.flexdata.column && (current = node.actualParent as Null<T>) && hasFlexibleHeight(current)) {
+    if (current && hasFlexibleHeight(current) || container && (node.flexColumn && (current = node.actualParent as Null<T>) && hasFlexibleHeight(current))) {
         return true;
     }
     return false;
@@ -626,10 +626,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (isPercent(width)) {
                         const expandable = (override?: boolean) => width === '100%' && (containsWidth || override) && (this.support.maxDimension || !this.hasUnit('maxWidth'));
                         const setActualWidth = (boundsWidth?: number) => {
-                            if (width === '100%' && (!this.onlyChild || containsWidth) && this.isEmpty() && !this.hasUnit('maxWidth')) {
-                                layoutWidth = 'match_parent';
+                            if (width === '100%' && !this.rendering) {
+                                if (this.isAnchored({ orientation: 'horizontal', chained: true })) {
+                                    layoutWidth = '0px';
+                                }
+                                else if ((containsWidth || this.alignParent('left') && this.alignParent('right')) && !this.hasUnit('maxWidth') && !(this.inputElement && this.onlyChild)) {
+                                    layoutWidth = 'match_parent';
+                                }
                             }
-                            else {
+                            if (!layoutWidth) {
                                 value = boundsWidth ?? this.actualWidth;
                             }
                         };
@@ -748,7 +753,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         layoutWidth = formatPX(this.actualWidth);
                     }
                     else if (
-                        containsWidth && (
+                        containsWidth && !(actualParent.flexRow && this.flexbox.grow === 0 && !this.onlyChild) && (
                             this.nodeGroup && (this.hasAlign(NODE_ALIGNMENT.FLOAT) && (this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.hasAlign(NODE_ALIGNMENT.RIGHT)) || this.hasAlign(NODE_ALIGNMENT.PERCENT)) ||
                             actualParent.flexElement && this.find(item => item.multiline, { cascade: item => !item.hasUnit('width', { percent: false }) }) ||
                             this.layoutGrid && this.find((node: T) => node.flexibleWidth)
@@ -756,7 +761,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     {
                         layoutWidth = this.getMatchConstraint(renderParent);
                     }
-                    else if (!this.imageElement && !this.inputElement && !this.controlElement) {
+                    else if (!this.imageElement && !this.controlElement && (!this.inputElement || this.buttonElement && this.rendering)) {
                         const checkParentWidth = (block: boolean) => {
                             if (!actualParent.pageFlow && this.find(node => node.textElement)) {
                                 return;
@@ -770,8 +775,26 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                                 else if (this.cssTry('display', 'inline-block')) {
                                     const bounds = getRangeClientRect(this.element!);
-                                    layoutWidth = (bounds ? bounds.width : 0) >= actualParent.box.width ? 'wrap_content' : 'match_parent';
+                                    layoutWidth = bounds && bounds.width >= actualParent.box.width ? 'wrap_content' : 'match_parent';
                                     this.cssFinally('display');
+                                    return;
+                                }
+                            }
+                            else if (this.layoutVertical && renderParent.layoutVertical && !renderParent.layoutConstraint && renderParent.renderChildren.length > 1 && Math.ceil(this.linear.right) >= Math.floor(renderParent.box.right)) {
+                                const right = Math.floor(this.box.right);
+                                const options: ContainerCascadeOptions<T> = { error: (item: T) => item.layoutGrid };
+                                let valid = false;
+                                for (const child of this.renderChildren) {
+                                    if (child.layoutGrid || options.hadError) {
+                                        valid = false;
+                                        break;
+                                    }
+                                    if (child.cascade((item: T) => !item.rendering && !item.blockStatic && !item.rightAligned && Math.ceil(item.linear.right) >= right, options).length) {
+                                        valid = true;
+                                    }
+                                }
+                                if (valid && !options.hadError) {
+                                    layoutWidth = 'wrap_content';
                                     return;
                                 }
                             }
@@ -784,10 +807,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else {
                             if (this.blockStatic) {
+                                const hasFlexAlign = (value: string) => value === 'normal' || value === 'stretch';
                                 if (this.documentRoot) {
                                     layoutWidth = 'match_parent';
                                 }
-                                else if (!actualParent.layoutElement || actualParent.flexElement && actualParent.flexdata.column && (this.flexbox.alignSelf === 'normal' || this.flexbox.alignSelf === 'stretch')) {
+                                else if (!actualParent.layoutElement || actualParent.flexColumn && hasFlexAlign(this.flexbox.alignSelf)) {
                                     if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.rootElement) {
                                         layoutWidth = this.getMatchConstraint(renderParent);
                                     }
@@ -803,7 +827,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 if (containsWidth && (this.layoutFrame && this.find(item => item.autoMargin.horizontal) || this.tagName === 'PICTURE' && this.renderChildren.some(item => item.percentWidth > 0))) {
                                     layoutWidth = this.getMatchConstraint(renderParent);
                                 }
-                                else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
+                                else if (!this.naturalChild && this.onlyChild && this.ascend({ condition: (item: T) => item.hasWidth || +item.app('layout_constraintHorizontal_weight') > 0, error: (item: T) => item.inlineWidth }).length || this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
                                     layoutWidth = 'match_parent';
                                 }
                                 else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.find(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
@@ -1830,7 +1854,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             current = parent;
                             parent = parent.actualParent as Null<T>;
                             if (parent && !parent.hasHeight) {
-                                if (parent.flexElement && parent.flexdata.row) {
+                                if (parent.flexRow) {
                                     if (checkDimension('height')) {
                                         return 0;
                                     }
@@ -2197,6 +2221,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return result;
         }
 
+        public isAnchored(options: IsUnanchoredOptions) {
+            const { orientation, chained, parent, relative } = options;
+            if ((!orientation || orientation === 'horizontal') && (chained && (this.alignSibling('leftRight') || this.alignSibling('rightLeft') || this.app('layout_constraintHorizontal_chainStyle')) || parent && (this.alignParent('left') || !this.alignParent('right')) || relative && (this.alignSibling('left') || this.alignSibling('right')))) {
+                return true;
+            }
+            if ((!orientation || orientation === 'vertical') && (chained && (this.alignSibling('topBottom') || this.alignSibling('bottomTop') || this.app('layout_constraintVertical_chainStyle')) || parent && (this.alignParent('top') || this.alignParent('bottom')) || relative && (this.alignSibling('top') || this.alignSibling('bottom')))) {
+                return true;
+            }
+            return false;
+        }
+
         public mergeGravity(attr: LayoutGravityAttr, alignment: LayoutGravityDirectionAttr, overwrite = true) {
             if (attr === 'layout_gravity') {
                 const renderParent = this.renderParent;
@@ -2294,11 +2329,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public applyOptimizations() {
             const renderParent = this.renderParent!;
             if (this.renderExclude || renderParent.layoutLinear && renderParent.layoutVertical && this.layoutFrame && !this.rendering && this.inlineHeight && this.getBoxSpacing().every((value, index) => value === 0 || index % 2 === 1)) {
-                if (!this.alignSibling('topBottom') && !this.alignSibling('bottomTop') && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft') && this.hide({ remove: true })) {
+                if (!this.isAnchored({ chained: true }) && this.hide({ remove: true })) {
                     return false;
                 }
                 this.hide({ collapse: true });
                 return true;
+            }
+            else if (renderParent.layoutConstraint && !this.onlyChild && !this.rendering && !this.isAnchored({ chained: true, parent: true, relative: true }) && this.hide({ remove: true })) {
+                return false;
             }
             const lineHeight = this.lineHeight;
             if (lineHeight) {
@@ -2589,7 +2627,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                else if (this.layoutConstraint && this.onlyChild && this.flexibleWidth && (renderParent.inlineWidth || renderParent.flexElement && renderParent.flexdata.row && this.flexbox.grow === 0 && !this.app('layout_constraintWidth_percent') && !this.centerAligned && !this.rightAligned)) {
+                else if (this.layoutConstraint && this.onlyChild && this.flexibleWidth && (renderParent.inlineWidth || renderParent.flexRow && this.flexbox.grow === 0 && !this.app('layout_constraintWidth_percent') && !this.centerAligned && !this.rightAligned)) {
                     this.setLayoutWidth(this.app('layout_constraintWidth_min') || this.app('layout_constraintWidth_max') ? 'match_parent' : 'wrap_content');
                 }
                 if (this.naturalChild) {
@@ -2732,24 +2770,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (this.pageFlow && this.percentWidth === 0 && !override) {
                     let current: Null<T> = parent;
                     while (current && (current.blockWidth || current.blockStatic && !current.hasWidth)) {
-                        if (current.flexElement) {
-                            const flexdata = current.flexdata;
-                            if (flexdata.row) {
-                                if (flexdata.wrap) {
-                                    return 'wrap_content';
-                                }
+                        if (current.flexRow) {
+                            if (current.flexdata.wrap) {
+                                return 'wrap_content';
                             }
-                            else {
-                                break;
-                            }
+                            current = current.actualParent as Null<T>;
                         }
-                        current = current.actualParent as Null<T>;
+                        else {
+                            break;
+                        }
                     }
                 }
-                return parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && !this.onlyChild && !this.positionFixed && !(parent.documentRoot && this.blockStatic) && (!this.rendering || !this.renderChildren.some(item => item.percentWidth > 0)) && (
-                    this.alignSibling('leftRight') ||
-                    this.alignSibling('rightLeft') ||
-                    this.alignParent('left') && this.alignParent('right') && !this.textElement && !this.inputElement && !this.controlElement ||
+                return parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && (!parent.layoutVertical || !this.blockStatic || this.variableWidth) && !this.positionFixed && (
+                    this.isAnchored({ orientation: 'horizontal', chained: true }) ||
+                    !this.textElement && !this.inputElement && !this.controlElement && !this.isAnchored({ orientation: 'horizontal', parent: true }) ||
                     this.hasUnit('minWidth') && parent.inlineWidth)
                     ? '0px'
                     : 'match_parent';
@@ -3190,9 +3224,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         set innerWrapped(value) {
             if (!this.naturalChild && value) {
-                value = value.outerMostWrapper as T;
-                this._innerWrapped = value;
+                const outerWrapper = value.outerWrapper;
+                if (outerWrapper) {
+                    outerWrapper.innerWrapped = this;
+                    this.outerWrapper = outerWrapper;
+                }
                 value.outerWrapper = this;
+                this._innerWrapped = value;
             }
         }
 

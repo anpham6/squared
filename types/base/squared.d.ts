@@ -290,7 +290,7 @@ declare module "base" {
         enabled: boolean;
         controller: Controller<T>;
         resource: Null<Resource<T>>;
-        data: WeakMap<T, unknown>;
+        data: WeakMap<object, unknown>; // eslint-disable-line @typescript-eslint/ban-types
         readonly framework: number;
         readonly name: string;
         readonly options: StandardMap;
@@ -615,7 +615,6 @@ declare module "base" {
         horizontalRowStart?: boolean;
         horizontalRowEnd?: boolean;
         horizontalRows?: NodeUI[][];
-        bottomResetChild?: NodeUI;
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
         setLayout(): void;
@@ -751,6 +750,8 @@ declare module "base" {
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;
         get flowElement(): boolean;
+        get flexRow(): boolean;
+        get flexColumn(): boolean;
         get previousSibling(): Null<NodeUI>;
         get nextSibling(): Null<NodeUI>;
         get firstStaticChild(): Null<NodeUI>;

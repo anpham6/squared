@@ -1,9 +1,9 @@
 29e9459f1a0bfd1fa2f138c5a01f2770  ./app/src/main/res/drawable/bg.jpg
 54a9a39e99e1b442ac393a543061e88b  ./app/src/main/res/drawable/bg_header.jpg
 4fb4ff4e4cbe46f448aeb7408f89daa7  ./app/src/main/res/drawable/bg_triangle.png
-5fd11eb09e324434fffb90c36387b4c2  ./app/src/main/res/drawable/body_constraintlayout_4.xml
+5fd11eb09e324434fffb90c36387b4c2  ./app/src/main/res/drawable/body_constraintlayout_2.xml
 a21c3d4443d12098f42800f5828e84eb  ./app/src/main/res/drawable/div_constraintlayout_1.xml
-d569c5e3754e1bf28f6b026e08e1602e  ./app/src/main/res/drawable/div_constraintlayout_2.xml
+d569c5e3754e1bf28f6b026e08e1602e  ./app/src/main/res/drawable/div_constraintlayout_3.xml
 c5cf269627e37ab51a07d8e6133697c9  ./app/src/main/res/drawable/div_constraintlayout_6.xml
 0a055ad95c1e5d5dec4a4c95bb438799  ./app/src/main/res/drawable/div_constraintlayout_7.xml
 c24a713d247a4a479557b1345e804d5a  ./app/src/main/res/drawable/header_triangle.png
@@ -14,9 +14,9 @@ f085635504d46dfa5ee6c9f371dcc540  ./app/src/main/res/drawable/more3.jpg
 6c011265250e927bc4a0e8e918bf7021  ./app/src/main/res/drawable/more4.jpg
 9e0af30ac8acc5a5a87bf387c8bc1e68  ./app/src/main/res/drawable/p_framelayout_4.xml
 02c42180d1dc54bd897cdb96c8128bd8  ./app/src/main/res/drawable/triangles.png
-b29c714ee71f6f880d35bbc9c6f5bdf8  ./app/src/main/res/layout/activity_main.xml
+3720877772c8965b5822066251b76da1  ./app/src/main/res/layout/activity_main.xml
 d1219a8967436bb9cc272da2304ce65c  ./app/src/main/res/values/colors.xml
 311081f6f648da04b68a7974854ed7bc  ./app/src/main/res/values/dimens.xml
 c56278e5488b21ecd4e75fe0589651ef  ./app/src/main/res/values/strings.xml
 9ce9bb7538541dd8fab9847b81b7fef1  ./app/src/main/res/values/styles.xml
-a23e65afcf26a6a886ef163df589f0b7  ./app/src/main/res/values/themes.xml
+4fd015ce5cf764df548d07912dfb5acc  ./app/src/main/res/values/themes.xml

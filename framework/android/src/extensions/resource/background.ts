@@ -356,7 +356,7 @@ function createLayerList(resourceId: number, images: Undef<BackgroundImageData[]
     if (images) {
         for (let i = 0, length = images.length; i < length; ++i) {
             const image = images[i];
-            item.push(image.gradient ? { shape: { 'android:shape': 'rectangle', gradient: image.gradient, corners } } : image);
+            item.push(image.gradient ? { shape: { 'android:shape': 'rectangle', gradient: image.gradient, corners, solid: i === 0 ? solid : undefined } } : image);
         }
     }
     if (stroke) {

@@ -148,17 +148,16 @@ export default class Container<T = unknown> implements squared.lib.base.Containe
             also: Undef<FunctionSelf<T, unknown>>,
             error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
-            ({ count, cascade, also, error } = options);
+            ({ cascade, also, error } = options);
         }
-        if (!count || count < 0) {
-            count = Infinity;
-        }
+        count ||= 0;
         let complete: Undef<boolean>;
         return (function recurse(container: Container<T>, result: T[]) {
             const children = container.children;
             for (let i = 0; i < children.length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
+                    options!.hadError = true;
                     complete = true;
                     break;
                 }
@@ -187,12 +186,9 @@ export default class Container<T = unknown> implements squared.lib.base.Containe
 
     public find(predicate: IteratorPredicate<T, unknown>, options?: ContainerFindOptions<T>) {
         if (options) {
-            let { also, error, cascade, start, end, count } = options; // eslint-disable-line prefer-const
+            let { count = 0, also, error, cascade, start, end } = options; // eslint-disable-line prefer-const
             start &&= Math.max(start, 0);
             end &&= Math.min(this.size(), end);
-            if (!count || count < 0) {
-                count = 0;
-            }
             let complete: Undef<boolean>;
             return (function recurse(container: Container<T>, level: number): Undef<T> {
                 const children = container.children;
@@ -209,6 +205,7 @@ export default class Container<T = unknown> implements squared.lib.base.Containe
                 for ( ; i < length; ++i) {
                     const item = children[i];
                     if (error && error(item, i, children)) {
+                        options.hadError = true;
                         complete = true;
                         break;
                     }
@@ -243,15 +240,14 @@ export default class Container<T = unknown> implements squared.lib.base.Containe
         if (options) {
             ({ count, also, error } = options);
         }
-        if (!count || count < 0) {
-            count = Infinity;
-        }
+        count ||= 0;
         let complete: Undef<boolean>;
         return (function recurse(container: Container<T>, result: T[]) {
             const children = container.children;
             for (let i = 0, length = children.length; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
+                    options!.hadError = true;
                     complete = true;
                     break;
                 }

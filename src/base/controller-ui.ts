@@ -54,8 +54,8 @@ function setDimension(element: DimensionElement, style: CssStyleMap, attr: Dimen
                 style[attr] = value;
                 return;
             }
-            const unit = parseFloat(value);
-            if (!isNaN(unit)) {
+            let unit = +value;
+            if (!isNaN(unit) || !isNaN(unit = parseUnit(value, { fontSize: getFontSize(element) }))) {
                 style[attr] = unit + 'px';
                 return;
             }
@@ -203,28 +203,27 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'reset':
                         case 'submit':
                         case 'button':
-                            this.setButtonStyle(style, disabled);
+                            this.setButtonStyle(element, style, disabled);
                             break;
                         case 'range':
                             if (!disabled && hasEmptyStyle(style.backgroundColor)) {
                                 style.backgroundColor = settings.rangeBackgroundColor;
                             }
                         default:
-                            this.setInputStyle(style, disabled, settings.inputBorderWidth);
+                            this.setInputStyle(element, style, disabled, settings.inputBorderWidth);
                             break;
                     }
                     break;
                 }
                 case 'BUTTON': {
-                    const disabled = (element as HTMLButtonElement).disabled;
                     style.fontSize ||= this._settingsStyle.formFontSize;
-                    this.setButtonStyle(style, disabled);
+                    this.setButtonStyle(element, style, (element as HTMLButtonElement).disabled);
                     break;
                 }
                 case 'TEXTAREA':
                 case 'SELECT': {
                     style.fontSize ||= this._settingsStyle.formFontSize;
-                    this.setInputStyle(style, (element as HTMLTextAreaElement | HTMLSelectElement).disabled);
+                    this.setInputStyle(element, style, (element as HTMLTextAreaElement | HTMLSelectElement).disabled);
                     break;
                 }
                 case 'BODY':
@@ -779,22 +778,22 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return '<' + controlName + attributes + (content || this._layoutInnerXmlTags.includes(controlName) ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
-    protected setInputStyle(style: CssStyleMap, disabled: boolean, width = '1px') {
+    protected setInputStyle(element: Element, style: CssStyleMap, disabled: boolean, width = '1px') {
         const settings = this._settingsStyle;
         this.setBorderStyle(style, settings.inputBorderStyle, width, disabled ? settings.inputDisabledBorderColor : settings.inputBorderColor);
         if (hasEmptyStyle(style.backgroundColor)) {
-            const backgroundColor = disabled ? settings.inputDisabledBackgroundColor : settings.inputBackgroundColor;
+            const backgroundColor = (disabled ? settings.inputDisabledBackgroundColor : settings.inputBackgroundColor) || getStyle(element).backgroundColor;
             if (backgroundColor) {
                 style.backgroundColor = backgroundColor;
             }
         }
     }
 
-    protected setButtonStyle(style: CssStyleMap, disabled: boolean) {
+    protected setButtonStyle(element: Element, style: CssStyleMap, disabled: boolean) {
         const settings = this._settingsStyle;
         this.setBorderStyle(style, settings.buttonBorderStyle, settings.buttonBorderWidth, disabled ? settings.buttonDisabledBorderColor : settings.buttonBorderColor);
         if (hasEmptyStyle(style.backgroundColor)) {
-            style.backgroundColor = disabled ? settings.buttonDisabledBackgroundColor : settings.buttonBackgroundColor;
+            style.backgroundColor = (disabled ? settings.buttonDisabledBackgroundColor : settings.buttonBackgroundColor) || getStyle(element).backgroundColor;
         }
         style.textAlign ||= 'center';
         style.paddingTop ||= settings.buttonPaddingVertical;

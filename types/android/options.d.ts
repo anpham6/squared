@@ -15,3 +15,10 @@ interface CloneOptions {
     position?: boolean;
     attributes?: boolean;
 }
+
+interface IsUnanchoredOptions {
+    orientation?: OrientationAttr;
+    chained?: boolean;
+    parent?: boolean;
+    relative?: boolean;
+}

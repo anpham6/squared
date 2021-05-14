@@ -7,6 +7,7 @@ interface ContainerCascadeOptions<T> {
     count?: number;
     also?: FunctionSelf<T, unknown>;
     error?: IteratorPredicate<T, boolean>;
+    hadError?: boolean;
 }
 
 interface ContainerFindOptions<T> extends ContainerCascadeOptions<T>, ContainerRangeOptions {

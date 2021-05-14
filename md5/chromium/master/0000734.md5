@@ -1,12 +1,12 @@
 a885d4d205dd953611d836e7fc1c75b8  ./app/src/main/res/drawable/form_entry_1.xml
-aa540ddb1501838de9bd182ac7b962d5  ./app/src/main/res/drawable/h2_textview_1.xml
+aa540ddb1501838de9bd182ac7b962d5  ./app/src/main/res/drawable/h2_textview_16.xml
 f13b87609592314f826e92661ad34228  ./app/src/main/res/drawable/input_button_button_1.xml
 5963cd87a39fc9ad5858ea2d9e3a76c5  ./app/src/main/res/drawable/input_button_button_3.xml
 98dae66cba2667da275179c994ffeed8  ./app/src/main/res/drawable/input_text_order.xml
-72f38dde31a6a5b1178c1e9da7da8a38  ./app/src/main/res/layout/activity_main.xml
+aa48a66f29fa3aeb0c9310681d2aaa2c  ./app/src/main/res/layout/activity_main.xml
 2c979b502f4c20c705ec25902e9bcd5e  ./app/src/main/res/values/colors.xml
-fdcb8ce00013d27b617a52aac3c1f002  ./app/src/main/res/values/dimens.xml
+87a8a38f68ff1edca78d34c96424e01c  ./app/src/main/res/values/dimens.xml
 73f378ab39ad23eab2c472c6f1f3bbf5  ./app/src/main/res/values/string_arrays.xml
 69bf78e60bca376b71ff0fa302d35b16  ./app/src/main/res/values/strings.xml
-d63fd7a09c25d2625966f3b8db4f92fa  ./app/src/main/res/values/styles.xml
+791585986039bc71a7b9735aeb1ac41d  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

@@ -1,4 +1,5 @@
 f0a3fe0e696d1295cde4f1213360ae5d  ./app/src/main/res/drawable/button_button_1.xml
+5963cd87a39fc9ad5858ea2d9e3a76c5  ./app/src/main/res/drawable/button_button_2.xml
 178f006ec0d495b00cc0db90bb0d5aca  ./app/src/main/res/drawable/div_framelayout_2.xml
 c8d73cb38f124116ea4c9d41ced9467d  ./app/src/main/res/drawable/div_textview_1.xml
 d989080e3ad3fcf4faf3c100dadd03b1  ./app/src/main/res/drawable/input_text_disabledtextinput.xml
@@ -7,9 +8,9 @@ f0eec862980224f5c9576ed88b90e0d4  ./app/src/main/res/drawable/input_text_inlinef
 fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
 4f8866f9f2a59d40f184cd0a4198ce5e  ./app/src/main/res/font/roboto_bold.xml
 276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
-a35543f409bbd86f0ea77246502a89e9  ./app/src/main/res/layout/activity_main.xml
-fa7e7f600acb156f6fb2769958889941  ./app/src/main/res/values/colors.xml
-a38cab760706f3771452977aa2d548eb  ./app/src/main/res/values/dimens.xml
+8de56ed96f05592a586b7d4efc9e7028  ./app/src/main/res/layout/activity_main.xml
+b5dd8e9e6d6066dc9e8d0a4f7229a8af  ./app/src/main/res/values/colors.xml
+81cf6d86a6c7a6c81667ea73266a773d  ./app/src/main/res/values/dimens.xml
 f8f0f486863e10fcb6c5ca96d678a036  ./app/src/main/res/values/string_arrays.xml
 a85c4404e2ff64ee5986e08482588ea3  ./app/src/main/res/values/strings.xml
 ffea547dbe0cde63eed270d8c25982ad  ./app/src/main/res/values/styles.xml

@@ -7,7 +7,7 @@ export default class Extension<T extends Node> implements squared.base.Extension
     public enabled = true;
     public controller!: Controller<T>;
     public resource: Null<Resource<T>> = null;
-    public readonly data = new WeakMap<T, unknown>();
+    public readonly data = new WeakMap<object, unknown>(); // eslint-disable-line @typescript-eslint/ban-types
     public readonly options: StandardMap = {};
     public readonly dependencies: ExtensionDependency[] = [];
     public readonly subscribers = new Set<T>();

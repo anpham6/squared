@@ -454,7 +454,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public companion?: T;
     public documentChildren?: T[];
     public horizontalRows?: T[][];
-    public bottomResetChild?: T;
 
     protected _preferInitial = true;
     protected _boxRegister: Null<T[]> = null;
@@ -1743,6 +1742,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get variableHeight() {
         const percent = this.percentHeight;
         return percent > 0 && percent < 1 || this.isResizable('maxHeight') && (this.absoluteParent?.hasHeight || this.positionFixed);
+    }
+
+    get flexRow() {
+        return this.flexElement && !!this.flexdata.row;
+    }
+
+    get flexColumn() {
+        return this.flexElement && !!this.flexdata.column;
     }
 
     set autoPosition(value) {

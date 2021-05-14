@@ -36,7 +36,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     const item = row[0];
                     if (i === 0) {
                         item.anchor('top', 'parent');
-                        item.anchorStyle('vertical', 0, 'packed');
+                        item.anchorStyle('vertical', 0, length > 1 ? 'packed' : undefined);
                     }
                     else {
                         previousRow.anchor('bottomTop', item.documentId);
@@ -186,7 +186,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         const item = above[j];
                         if (j === 0) {
                             item.anchor('left', 'parent');
-                            item.anchorStyle('horizontal', 0, 'packed');
+                            if (r > 1) {
+                                item.anchorStyle('horizontal', 0, 'packed');
+                            }
                         }
                         else {
                             const previous = above[j - 1];
@@ -229,7 +231,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     previousRow.anchor('bottomTop', item.documentId);
                                     item.anchor('topBottom', previousRow.documentId);
                                 }
-                                item.anchorStyle('vertical', 0, 'packed');
+                                if (s > 1) {
+                                    item.anchorStyle('vertical', 0, 'packed');
+                                }
                                 item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                             }
                             else {
@@ -240,7 +244,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 item.anchor('left', seg[0].documentId);
                             }
                             if (k === s - 1) {
-                                if (i === length - 1) {
+                                if (s > 1 && i === length - 1) {
                                     item.anchor('bottom', 'parent');
                                 }
                                 item.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1 });

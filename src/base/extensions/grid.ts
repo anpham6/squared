@@ -58,24 +58,24 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
             else if (node.percentWidth === 0 || node.documentParent.hasWidth) {
-                let itemCount = 0,
-                    minLength = false;
+                const textAlign = node.css('textAlign');
+                let minLength = false;
                 const children = node.children;
                 for (let i = 0; i < size; ++i) {
                     const item = children[i];
-                    if (item.blockStatic && !item.visibleStyle.background && (item.percentWidth === 0 || item.percentWidth === 1) && !item.autoMargin.leftRight && !item.autoMargin.left && item.pageFlow && !item.find((child: T) => !checkAlignment(child) || child.percentWidth > 0)) {
+                    if (item.blockStatic && !item.visibleStyle.background && (item.percentWidth === 0 || item.percentWidth === 1) && item.pageFlow && !item.find((child: T) => !checkAlignment(child) || child.percentWidth > 0)) {
                         if (item.size() > 1) {
+                            if (item.autoMargin.leftRight || !item.autoMargin.left || !(textAlign === 'left' || textAlign === 'start')) {
+                                return false;
+                            }
                             minLength = true;
-                        }
-                        if (item.display === 'list-item' && !item.has('listStyleType')) {
-                            ++itemCount;
                         }
                     }
                     else {
                         return false;
                     }
                 }
-                return itemCount === size || minLength && node.every(item => !item.isEmpty() && NodeUI.linearData(item.children as T[]).linearX);
+                return minLength && node.every(item => !item.isEmpty() && NodeUI.linearData(item.children as T[]).linearX);
             }
         }
         return false;

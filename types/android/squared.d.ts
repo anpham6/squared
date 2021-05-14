@@ -102,6 +102,7 @@ declare namespace base {
         getMatchConstraint(parent?: View, override?: boolean): string;
         getAnchorPosition(parent: View, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         isUnstyled(checkMargin?: boolean): boolean;
+        isAnchored(options: IsUnanchoredOptions): boolean;
         getHorizontalBias(rect?: BoxRect): number;
         getVerticalBias(rect?: BoxRect): number;
         getAbsolutePaddingOffset(direction: number, value: number): number;

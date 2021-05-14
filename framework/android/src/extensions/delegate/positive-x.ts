@@ -271,12 +271,6 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         }
     }
 
-    public postConstraints(node: T) {
-        if (!node.hasUnit('width')) {
-            node.setLayoutWidth(node.getMatchConstraint(), false);
-        }
-    }
-
     public postOptimize(node: T) {
         const container = (this.data.get(node) as Undef<PositiveXData>)?.container;
         if (container) {
