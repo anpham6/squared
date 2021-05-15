@@ -46,7 +46,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             );
         }
         if (!node.hasFixedDimension('height')) {
-            percentHeight = node.variableHeight && (node.cssInitial('height') !== '100%' || node.isResizable('maxHeight') && (node.rootElement || parent.percentHeight > 0 || parent.variableHeight || parent.isResizable('minHeight') || parent.blockHeight || parent.flexibleHeight));
+            percentHeight = node.variableHeight && !node.fullHeight && (node.rootElement || parent.percentHeight > 0 || parent.variableHeight || parent.isResizable('minHeight') || parent.blockHeight || parent.flexibleHeight);
             marginVertical = (!!getPercent(node.cssValue('marginTop')) || !!getPercent(node.cssValue('marginBottom'))) && (node.documentParent.percentHeight > 0 || node.positionFixed) && !node.inlineStatic && (node.documentParent.size() === 1 || !node.pageFlow);
         }
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
@@ -70,7 +70,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 target.css('display', 'block');
                 target.setLayoutWidth('match_parent');
             }
-            node.setLayoutWidth(node.cssInitial('width') === '100%' && !node.hasUnit('maxWidth') ? 'match_parent' : '0px');
+            node.setLayoutWidth(node.fullWidth ? 'match_parent' : '0px');
         }
         else if (container && !mainData.marginHorizontal) {
             container.setLayoutWidth('wrap_content');
@@ -80,7 +80,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 target.setCacheValue('hasHeight', true);
                 target.setLayoutHeight('match_parent');
             }
-            node.setLayoutHeight(node.cssInitial('height') === '100%' && !node.hasUnit('maxHeight') ? 'match_parent' : '0px');
+            node.setLayoutHeight(node.fullHeight ? 'match_parent' : '0px');
         }
         else if (container && !mainData.marginVertical) {
             container.setLayoutHeight('wrap_content');
@@ -312,7 +312,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                         controller.addAfterInsideTemplate(renderNode, output);
                     }
                 }
-                if (node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%') {
+                if (node.fullHeight) {
                     node.app('layout_constraintHeight_percent', (1 - (topPercent + bottomPercent)).toString());
                     node.setLayoutHeight('0px');
                     node.setCacheValue('contentBoxHeight', 0);

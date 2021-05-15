@@ -2854,106 +2854,103 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     result[posB] = this[posB];
                 }
             }
-            else {
-                const matchParent = (this.css(dimension) === '100%' || this.css(horizontal ? 'minWidth' : 'minHeight') === '100%') && !this.isResizable(horizontal ? 'maxWidth' : 'maxHeight');
-                if (matchParent) {
-                    const offsetA = hasA && parent.getAbsolutePaddingOffset(paddingA, this[posA]);
-                    const offsetB = hasB && parent.getAbsolutePaddingOffset(paddingB, this[posB]);
-                    if (modifyAnchor) {
-                        this.anchorParent(orientation);
-                        if (horizontal) {
-                            this.setLayoutWidth(this.getMatchConstraint(parent));
-                        }
-                        else {
-                            this.setLayoutHeight('0px');
-                        }
-                        if (offsetA) {
-                            this.modifyBox(marginA, offsetA);
-                        }
-                        if (offsetB) {
-                            this.modifyBox(marginB, offsetB);
-                        }
+            else if (horizontal ? this.fullWidth : this.fullHeight) {
+                const offsetA = hasA && parent.getAbsolutePaddingOffset(paddingA, this[posA]);
+                const offsetB = hasB && parent.getAbsolutePaddingOffset(paddingB, this[posB]);
+                if (modifyAnchor) {
+                    this.anchorParent(orientation);
+                    if (horizontal) {
+                        this.setLayoutWidth(this.getMatchConstraint(parent));
                     }
                     else {
-                        if (offsetA) {
-                            result[posA] = offsetA;
-                        }
-                        if (offsetB) {
-                            result[posB] = offsetB;
-                        }
+                        this.setLayoutHeight('0px');
+                    }
+                    if (offsetA) {
+                        this.modifyBox(marginA, offsetA);
+                    }
+                    if (offsetB) {
+                        this.modifyBox(marginB, offsetB);
                     }
                 }
                 else {
-                    let expand = 0;
-                    if (hasA) {
-                        const value = parent.getAbsolutePaddingOffset(paddingA, this[posA]);
+                    if (offsetA) {
+                        result[posA] = offsetA;
+                    }
+                    if (offsetB) {
+                        result[posB] = offsetB;
+                    }
+                }
+            }
+            else {
+                let expand = 0;
+                if (hasA) {
+                    const value = parent.getAbsolutePaddingOffset(paddingA, this[posA]);
+                    if (modifyAnchor) {
+                        this.anchor(posA, 'parent');
+                        this.modifyBox(marginA, value);
+                        ++expand;
+                    }
+                    else {
+                        result[posA] = value;
+                    }
+                }
+                if (hasB) {
+                    if (!hasA || !hasDimension) {
+                        const value = parent.getAbsolutePaddingOffset(paddingB, this[posB]);
                         if (modifyAnchor) {
-                            this.anchor(posA, 'parent');
-                            this.modifyBox(marginA, value);
+                            this.anchor(posB, 'parent');
+                            this.modifyBox(marginB, value);
                             ++expand;
                         }
                         else {
-                            result[posA] = value;
+                            result[posB] = value;
                         }
                     }
-                    if (hasB) {
-                        if (!hasA || !hasDimension) {
-                            const value = parent.getAbsolutePaddingOffset(paddingB, this[posB]);
-                            if (modifyAnchor) {
-                                this.anchor(posB, 'parent');
-                                this.modifyBox(marginB, value);
-                                ++expand;
-                            }
-                            else {
-                                result[posB] = value;
-                            }
-                        }
-                    }
-                    if (modifyAnchor) {
-                        switch (expand) {
-                            case 0:
-                                if (horizontal) {
-                                    if (this.centerAligned) {
-                                        this.anchorParent('horizontal', 0.5);
-                                    }
-                                    else if (this.rightAligned) {
-                                        if (this.blockStatic) {
-                                            this.anchorParent('horizontal', 1);
-                                        }
-                                        else {
-                                            this.anchor('right', 'parent');
-                                        }
-                                    }
+                }
+                if (modifyAnchor) {
+                    switch (expand) {
+                        case 0:
+                            if (horizontal) {
+                                if (this.centerAligned) {
+                                    this.anchorParent('horizontal', 0.5);
                                 }
-                                break;
-                            case 2:
-                                if (!hasDimension && !(autoMargin[orientation] && !autoMargin[posA] && !autoMargin[posB])) {
-                                    if (horizontal) {
-                                        this.setLayoutWidth(this.getMatchConstraint(parent));
+                                else if (this.rightAligned) {
+                                    if (this.blockStatic) {
+                                        this.anchorParent('horizontal', 1);
                                     }
                                     else {
-                                        this.setLayoutHeight(this.positionFixed ? 'match_parent' : '0px');
-                                    }
-                                    if (parent.innerMostWrapped.documentBody) {
-                                        do {
-                                            if (!parent.isResizable(dimension) && !parent.isResizable(horizontal ? 'maxWidth' : 'maxHeight')) {
-                                                if (horizontal) {
-                                                    parent.setLayoutWidth('match_parent', parent.inlineWidth);
-                                                }
-                                                else {
-                                                    parent.setLayoutHeight('match_parent', parent.inlineWidth);
-                                                }
-                                                parent = parent.outerWrapper as T;
-                                            }
-                                            else {
-                                                break;
-                                            }
-                                        }
-                                        while (parent);
+                                        this.anchor('right', 'parent');
                                     }
                                 }
-                                break;
-                        }
+                            }
+                            break;
+                        case 2:
+                            if (!hasDimension && !(autoMargin[orientation] && !autoMargin[posA] && !autoMargin[posB])) {
+                                if (horizontal) {
+                                    this.setLayoutWidth(this.getMatchConstraint(parent));
+                                }
+                                else {
+                                    this.setLayoutHeight(this.positionFixed ? 'match_parent' : '0px');
+                                }
+                                if (parent.innerMostWrapped.documentBody) {
+                                    do {
+                                        if (!parent.isResizable(dimension) && !parent.isResizable(horizontal ? 'maxWidth' : 'maxHeight')) {
+                                            if (horizontal) {
+                                                parent.setLayoutWidth('match_parent', parent.inlineWidth);
+                                            }
+                                            else {
+                                                parent.setLayoutHeight('match_parent', parent.inlineWidth);
+                                            }
+                                            parent = parent.outerWrapper as T;
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                    }
+                                    while (parent);
+                                }
+                            }
+                            break;
                     }
                 }
             }

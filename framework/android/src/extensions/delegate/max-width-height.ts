@@ -17,13 +17,13 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
-        const maxWidth = node.hasUnit('maxWidth') && !parent.layoutConstraint && !parent.layoutElement && (
+        const maxWidth = node.isResizable('maxWidth') && !parent.layoutConstraint && !parent.layoutElement && (
             parent.layoutVertical ||
             parent.layoutFrame ||
             node.blockStatic ||
             node.onlyChild && (parent.blockStatic || parent.hasWidth)
         );
-        const maxHeight = node.hasUnit('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
+        const maxHeight = node.isResizable('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
         if (maxWidth || maxHeight) {
             this.data.set(node, { maxWidth, maxHeight } as MaxWidthHeightData);
             return true;
@@ -35,7 +35,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         const { maxWidth, maxHeight } = this.data.get(node) as MaxWidthHeightData;
         const container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK | NODE_ALIGNMENT.VERTICAL, flags: CREATE_NODE.RESET_MARGIN });
         if (maxWidth) {
-            node.setLayoutWidth('0px');
+            node.setLayoutWidth(node.fullWidth ? 'match_parent' : '0px');
             container.setLayoutWidth('match_parent');
             if (parent.layoutElement) {
                 const autoMargin = node.autoMargin;
@@ -46,7 +46,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
             }
         }
         if (maxHeight) {
-            node.setLayoutHeight('0px');
+            node.setLayoutHeight(node.fullHeight ? 'match_parent' : '0px');
             container.setLayoutHeight('match_parent');
             if (parent.layoutElement) {
                 const autoMargin = node.autoMargin;

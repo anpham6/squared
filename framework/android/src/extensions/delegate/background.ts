@@ -12,11 +12,10 @@ import CssGrid = squared.base.extensions.CssGrid;
 const { splitSome } = squared.lib.util;
 
 const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasUnit('width') || node.isResizable('width') && node.cssInitial('minWidth') !== '100%' || node.isResizable('maxWidth');
-const hasFullHeight = (node: View) => node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%';
 const hasMargin = (node: View) => node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0;
-const isParentVisible = (node: View, parent: View) => parent.visibleStyle.background && (hasVisibleWidth(node) || !hasFullHeight(parent) || !hasFullHeight(node));
+const isParentVisible = (node: View, parent: View) => parent.visibleStyle.background && (hasVisibleWidth(node) || !parent.fullHeight || !node.fullHeight);
 const isParentTransfer = (parent: View) => parent.tagName === 'HTML' && (parent.contentBoxWidth > 0 || parent.contentBoxHeight > 0 || hasMargin(parent));
-const isBackgroundSeparate = (node: View, parent: View, backgroundColor: boolean, backgroundImage: boolean, backgroundRepeatX: boolean, backgroundRepeatY: boolean, borderWidth: boolean) => backgroundColor && backgroundImage && (!backgroundRepeatY && node.has('backgroundPositionY') || borderWidth && (!backgroundRepeatX || !backgroundRepeatY) && (hasVisibleWidth(node) || !hasFullHeight(parent) || !hasFullHeight(node)) || node.cssValue('backgroundAttachment') === 'fixed');
+const isBackgroundSeparate = (node: View, parent: View, backgroundColor: boolean, backgroundImage: boolean, backgroundRepeatX: boolean, backgroundRepeatY: boolean, borderWidth: boolean) => backgroundColor && backgroundImage && (!backgroundRepeatY && node.has('backgroundPositionY') || borderWidth && (!backgroundRepeatX || !backgroundRepeatY) && (hasVisibleWidth(node) || !parent.fullHeight || !node.fullHeight) || node.cssValue('backgroundAttachment') === 'fixed');
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -87,7 +86,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                 container.setLayoutHeight(!parentVisible && (fixed || !(backgroundSeparate && hasHeight) && (visibleStyle.backgroundRepeatY || node.has('backgroundSize') || splitSome(node.css('backgroundPosition'), value => value.indexOf('%') === -1 && parseInt(value) > 0, ' '))) ? 'match_parent' : 'wrap_content');
             }
             else {
-                if (height !== '100%' && minHeight !== '100%') {
+                if (!node.fullHeight) {
                     const offsetHeight = parent.toElementInt('offsetHeight');
                     if (offsetHeight < window.innerHeight) {
                         backgroundSize = `auto ${offsetHeight}px`;

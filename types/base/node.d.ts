@@ -62,6 +62,10 @@ interface CacheValueUI extends CacheValue {
     inlineDimension?: boolean;
     blockDimension?: boolean;
     blockVertical?: boolean;
+    variableWidth?: boolean;
+    variableHeight?: boolean;
+    fullWidth?: boolean;
+    fullHeight?: boolean;
     verticalAligned?: boolean;
     overflow?: number;
     textIndent?: number;

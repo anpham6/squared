@@ -677,7 +677,7 @@ declare module "base" {
         translateY(value: number, options?: TranslateOptions): boolean;
         getBoxSpacing(): [number, number, number, number];
         getPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
-        isResizable(attr: DimensionSizableAttr): boolean;
+        isResizable(attr: DimensionSizableAttr, not?: StringOfArray): boolean;
         fitToScreen(value: Dimension): Dimension;
         cssValue(attr: CssStyleAttr): string;
         cssValues(...attrs: CssStyleAttr[]): string[];
@@ -746,6 +746,8 @@ declare module "base" {
         get verticalAligned(): boolean;
         get variableWidth(): boolean;
         get variableHeight(): boolean;
+        get fullWidth(): boolean;
+        get fullHeight(): boolean;
         get positiveAxis(): boolean;
         get leftTopAxis(): boolean;
         get baselineElement(): boolean;

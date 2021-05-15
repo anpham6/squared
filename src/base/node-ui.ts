@@ -1426,8 +1426,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public isResizable(attr: DimensionSizableAttr) {
-        return this.has(attr, { type: CSS_UNIT.PERCENT | (attr === 'width' || attr === 'height' ? 0 : CSS_UNIT.LENGTH), not: '100%' });
+    public isResizable(attr: DimensionSizableAttr, not?: StringOfArray) {
+        return this.has(attr, { type: CSS_UNIT.PERCENT | (attr === 'width' || attr === 'height' ? 0 : CSS_UNIT.LENGTH), not: not || '100%' });
     }
 
     public fitToScreen(value: Dimension): Dimension {
@@ -1735,13 +1735,43 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get variableWidth() {
-        const percent = this.percentWidth;
-        return percent > 0 && percent < 1 || this.isResizable('maxWidth');
+        const result = this._cache.variableWidth;
+        if (result === undefined) {
+            const percent = this.percentWidth;
+            return this._cache.variableWidth = percent > 0 && percent < 1 || this.isResizable('maxWidth');
+        }
+        return result;
     }
 
     get variableHeight() {
-        const percent = this.percentHeight;
-        return percent > 0 && percent < 1 || this.isResizable('maxHeight') && (this.absoluteParent?.hasHeight || this.positionFixed);
+        const result = this._cache.variableHeight;
+        if (result === undefined) {
+            const percent = this.percentHeight;
+            return this._cache.variableHeight = percent > 0 && percent < 1 || this.isResizable('maxHeight') && (this.absoluteParent?.hasHeight || this.positionFixed);
+        }
+        return result;
+    }
+
+    get fullWidth() {
+        const result = this._cache.fullWidth;
+        if (result === undefined) {
+            const width = this.valueOf('width');
+            const minWidth = this.valueOf('minWidth');
+            const documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody;
+            return this._cache.fullWidth = (width === '100%' || minWidth === '100%' || documentBody && (width === '100vw' || minWidth === '100vw')) && !this.isResizable('maxWidth', documentBody ? ['100%', '100vw'] : undefined);
+        }
+        return result;
+    }
+
+    get fullHeight() {
+        const result = this._cache.fullHeight;
+        if (result === undefined) {
+            const height = this.valueOf('height');
+            const minHeight = this.valueOf('minHeight');
+            const documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody;
+            return this._cache.fullHeight = (height === '100%' || minHeight === '100%' || documentBody && (height === '100vh' || minHeight === '100vh')) && !this.isResizable('maxHeight', documentBody ? ['100%', '100vh'] : undefined);
+        }
+        return result;
     }
 
     get flexRow() {
