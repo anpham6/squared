@@ -5,7 +5,6 @@ import type NodeUI from '../node-ui';
 import ExtensionUI from '../extension-ui';
 
 const { getStyle } = squared.lib.css;
-const { getElementCache } = squared.lib.session;
 
 const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 let NUMERALS: string[];
@@ -132,9 +131,11 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                     break;
                             }
                         }
-                        const element = item.element as HTMLElement;
-                        mainData.style = getStyle(element, '::marker');
-                        mainData.styleMap = getElementCache<CssStyleMap>(element, 'styleMap::marker', item.sessionId);
+                        mainData.style = getStyle(item.element as HTMLElement, '::marker');
+                        const elementData = item.elementData;
+                        if (elementData) {
+                            mainData.styleMap = elementData['styleMap::marker'];
+                        }
                         mainData.ordinal = ordinal;
                     }
                     if (inside && !item.valueOf('listStylePosition')) {

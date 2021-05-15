@@ -8,7 +8,7 @@ type PositionAttr = "top" | "right" | "bottom" | "left";
 type PositionDirectionAttr = "start" | "end";
 type PositionAllAttr = PositionAttr | PositionDirectionAttr;
 type DimensionAttr = "width" | "height";
-type PseudoElt = "::before" | "::after" | "::first-letter" | "::first-line" | "::marker";
+type PseudoElt = "::before" | "::after" | "::first-letter" | "::first-line" | "::marker" | "::placeholder";
 type CssStyleMap = Partial<MapOfType<CSSStyleDeclaration, CssStyleAttr, string>>;
 type CssStyleAttr = KeyOfType<CSSStyleDeclaration, string, string>;
 

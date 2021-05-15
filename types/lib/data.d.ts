@@ -31,12 +31,20 @@ interface ElementData {
     styleSpecificity?: ObjectMap<Specificity>;
     'style::before'?: CSSStyleDeclaration;
     'style::after'?: CSSStyleDeclaration;
+    'style::first-letter'?: CSSStyleDeclaration;
+    'style::first-line'?: CSSStyleDeclaration;
+    'style::marker'?: CSSStyleDeclaration;
+    'style::placeholder'?: CSSStyleDeclaration;
     'styleMap::before'?: CssStyleMap;
     'styleMap::after'?: CssStyleMap;
     'styleMap::first-letter'?: CssStyleMap;
     'styleMap::first-line'?: CssStyleMap;
+    'styleMap::marker'?: CssStyleMap;
+    'styleMap::placeholder'?: CssStyleMap;
     'styleSpecificity::before'?: ObjectMap<number>;
     'styleSpecificity::after'?: ObjectMap<number>;
     'styleSpecificity::first-letter'?: ObjectMap<number>;
     'styleSpecificity::first-line'?: ObjectMap<number>;
+    'styleSpecificity::marker'?: ObjectMap<number>;
+    'styleSpecificity::placeholder'?: ObjectMap<number>;
 }

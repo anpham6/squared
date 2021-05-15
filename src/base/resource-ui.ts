@@ -1193,7 +1193,17 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             inlined: Undef<boolean>;
         if (node.naturalChild) {
             const element = node.element as HTMLInputElement;
-            let hint: Undef<string>;
+            let hint: Undef<string>,
+                hintColor: Optional<ColorData>;
+            const setHintColor = () => {
+                const elementData = node.elementData;
+                if (elementData) {
+                    const styleMap = elementData['styleMap::placeholder'];
+                    if (styleMap && styleMap.color) {
+                        hintColor = parseColor(styleMap.color, isNumber(styleMap.opacity) ? +styleMap.opacity! : 1);
+                    }
+                }
+            };
             switch (element.tagName) {
                 case 'INPUT':
                     value = getNamedItem(element, 'value');
@@ -1256,6 +1266,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         case 'tel':
                             if (!value) {
                                 hint = element.placeholder;
+                                setHintColor();
                             }
                             break;
                         case 'file':
@@ -1303,6 +1314,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 case 'TEXTAREA':
                     value = element.value;
                     hint = element.placeholder;
+                    setHintColor();
                     break;
                 case 'IFRAME':
                     value = element.src;
@@ -1320,6 +1332,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             }
             if (hint) {
                 node.data(ResourceUI.KEY_NAME, 'hintString', hint);
+                if (hintColor) {
+                    node.data(ResourceUI.KEY_NAME, 'hintColor', hintColor);
+                }
             }
         }
         else if (node.inlineText) {

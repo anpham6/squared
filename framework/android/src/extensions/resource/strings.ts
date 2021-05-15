@@ -32,6 +32,12 @@ function getFontVariationStyle(value: string) {
 function setTextValue(node: View, attr: string, name: string) {
     if (name) {
         node.android(attr, name, false);
+        if (attr === 'hint') {
+            const color = node.data<ColorData>(Resource.KEY_NAME, 'hintColor');
+            if (color && !color.transparent) {
+                node.android('textColorHint', `@color/${Resource.addColor(node.localSettings.resourceId, color)}`);
+            }
+        }
     }
 }
 
