@@ -17,6 +17,10 @@ interface ResourceBackgroundOptions {
     outlineAsInsetBorder: boolean;
 }
 
+interface ResourceDimensOptions {
+    percentAsResource: boolean;
+}
+
 interface ResourceStringsOptions {
     numberAsResource: boolean;
 }

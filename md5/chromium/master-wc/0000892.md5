@@ -9,8 +9,6 @@ bddd1c771c954af4277ee0d8b6bef6e3  ./app/src/main/res/drawable/__8.jpg
 63933c3124c46133da019eb9cdc522c2  ./app/src/main/res/drawable/angularjs.png
 da2cf3262e75e708c175320e3e78ff42  ./app/src/main/res/drawable/div_framelayout_42.xml
 c42b7c1740b63a7b3e39336c5ed80fcb  ./app/src/main/res/drawable/git.png
-489d283b5e65c8d1f547e0f695b480db  ./app/src/main/res/drawable/img_imageview_1.xml
-7a71a29f0207e8cd690fbba735765170  ./app/src/main/res/drawable/img_imageview_50.xml
 c7140ae897077ae303aa769001cd0619  ./app/src/main/res/drawable/javascript.png
 873f23b18bf48d7d8281dd2b9ef8f3d0  ./app/src/main/res/drawable/laravel_64.png
 350ea377dddd525f530aa988675b82a5  ./app/src/main/res/drawable/nodejs.png
@@ -26,9 +24,9 @@ a78c9d689fcd0debe36f7ab31063b4f3  ./app/src/main/res/drawable/svg_imageview_25_v
 0e44c80cd3dd2d3563dbee284cdf83bb  ./app/src/main/res/drawable/td_framelayout_43.xml
 e2aa06c96cee626bd1f337148106d5eb  ./app/src/main/res/drawable/td_framelayout_48.xml
 391caa03f69b2441d1b307b51e728733  ./app/src/main/res/drawable/vue_js.png
-61b98e964e3958217f3b7324b84dd106  ./app/src/main/res/layout/activity_main.xml
+63a3bc182bc3af8a1192978bc8a3a773  ./app/src/main/res/layout/activity_main.xml
 7f69eff33398379add126aa69fdf7da6  ./app/src/main/res/values/colors.xml
-f58668d241e203d7177ab8bd681da76e  ./app/src/main/res/values/dimens.xml
+0ac285d119d3c1bb57baa4882f241f92  ./app/src/main/res/values/dimens.xml
 daf450eb45d9afe8199516a8f526d834  ./app/src/main/res/values/strings.xml
-10e0eb676ff3b797a67c78bbb6e7443b  ./app/src/main/res/values/styles.xml
+06d4b76e9f731adc6116fbf19bc41818  ./app/src/main/res/values/styles.xml
 d9ba08258a8cabc1b4b5c94d4c8ad6d9  ./app/src/main/res/values/themes.xml

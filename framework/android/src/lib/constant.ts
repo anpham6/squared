@@ -154,7 +154,8 @@ export const SUPPORT_TAGNAME_X = {
     COLLAPSING_TOOLBAR: 'com.google.android.material.appbar.CollapsingToolbarLayout',
     TOOLBAR: 'androidx.appcompat.widget.Toolbar',
     FLOATING_ACTION_BUTTON: 'com.google.android.material.floatingactionbutton.FloatingActionButton',
-    BOTTOM_NAVIGATION: 'com.google.android.material.bottomnavigation.BottomNavigationView'
+    BOTTOM_NAVIGATION: 'com.google.android.material.bottomnavigation.BottomNavigationView',
+	SHAPEABLE_IMAGE_VIEW: 'com.google.android.material.imageview.ShapeableImageView'
 };
 
 export const LAYOUT_MAP = {

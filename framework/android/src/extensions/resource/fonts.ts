@@ -110,7 +110,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const { systemFonts, defaultFontFamily, floatPrecision, disableFontAlias } = this.options;
         const resource = this.resource as android.base.Resource<T>;
         const fontProvider = this.application.getUserSetting<boolean>(sessionId, 'createDownloadableFonts') && resource.fontProvider;
-        const convertPixels = this.application.userSettings.convertPixels === 'dp';
+        const convertPixels = this.application.userSettings.convertPixels;
         const { resourceId, cache } = this.application.getProcessing(sessionId)!;
         const { fonts, arrays, styles } = Resource.STORED[resourceId]!;
         const nameMap: ObjectMapSafe<T[]> = {};

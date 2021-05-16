@@ -322,6 +322,7 @@ declare namespace lib {
             TOOLBAR: string;
             FLOATING_ACTION_BUTTON: string;
             BOTTOM_NAVIGATION: string;
+            SHAPEABLE_IMAGE_VIEW: string;
         };
         const LAYOUT_MAP: {
             relativeParent: {

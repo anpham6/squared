@@ -4,7 +4,7 @@ import Resource from '../../resource';
 
 type GroupData = ObjectMap<View[]>;
 
-const { isPx } = squared.lib.css;
+const { isPx, isPercent } = squared.lib.css;
 const { convertHyphenated, fromLastIndexOf, startsWith } = squared.lib.util;
 
 const CACHE_UNDERSCORE: StringMap = {};
@@ -25,9 +25,13 @@ function getResourceName(resourceId: number, map: Map<string, string>, name: str
 const removePrefix = (attr: string) => startsWith(attr, 'layout_') ? attr.substring(7) : attr;
 
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
+    public readonly options: ResourceDimensOptions = {
+        percentAsResource: true
+    };
     public readonly eventOnly = true;
 
     public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
+        const percentAsResource = this.options.percentAsResource;
         const { rendered, resourceId } = data;
         const dimens = Resource.STORED[resourceId]!.dimens;
         const groups: ObjectMapNested<T[]> = {};
@@ -41,25 +45,23 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     switch (attr) {
                         case 'id':
                         case 'text':
+                        case 'src':
                             continue;
                     }
                     const value = obj[attr]!;
-                    if (isPx(value)) {
+                    const ch = value[0];
+                    if ((ch >= '0' && ch <= '9' || ch === '-') && (isPx(value) || percentAsResource && isPercent(value))) {
                         const name = 'android,' + attr + ',' + value;
                         (group[name] ||= []).push(node);
                     }
                 }
                 obj = node.namespace('app');
                 for (const attr in obj) {
-                    switch (attr) {
-                        case 'layout_constraintWidth_min':
-                        case 'layout_constraintWidth_max':
-                        case 'layout_constraintHeight_min':
-                        case 'layout_constraintHeight_max': {
-                            const name = 'app,' + attr + ',' + obj[attr]!;
-                            (group[name] ||= []).push(node);
-                            break;
-                        }
+                    const value = obj[attr]!;
+                    const ch = value[0];
+                    if ((ch >= '0' && ch <= '9' || ch === '-') && (isPx(value) || percentAsResource && isPercent(value))) {
+                        const name = 'app,' + attr + ',' + obj[attr]!;
+                        (group[name] ||= []).push(node);
                     }
                 }
             }
