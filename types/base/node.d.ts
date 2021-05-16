@@ -27,7 +27,8 @@ interface CacheValue extends Partial<BoxModel>, Partial<Dimension>, Partial<BoxR
     lineHeight?: number;
     tagName?: string;
     actualWidth?: number;
-    actualHeight?: number;
+    actualHeight?: number
+    containerHeight?: boolean;
     percentWidth?: number;
     percentHeight?: number;
     flexdata?: FlexData;

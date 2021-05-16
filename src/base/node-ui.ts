@@ -1747,7 +1747,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result = this._cache.variableHeight;
         if (result === undefined) {
             const percent = this.percentHeight;
-            return this._cache.variableHeight = percent > 0 && percent < 1 || this.isResizable('maxHeight') && (this.absoluteParent?.hasHeight || this.positionFixed);
+            return this._cache.variableHeight = percent > 0 && percent < 1 || this.isResizable('maxHeight') && this.containerHeight;
         }
         return result;
     }
@@ -1757,8 +1757,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             const width = this.valueOf('width');
             const minWidth = this.valueOf('minWidth');
-            const documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody;
-            return this._cache.fullWidth = (width === '100%' || minWidth === '100%' || documentBody && (width === '100vw' || minWidth === '100vw')) && !this.isResizable('maxWidth', documentBody ? ['100%', '100vw'] : undefined);
+            let documentBody: Undef<boolean>;
+            return this._cache.fullWidth = (width === '100%' || minWidth === '100%' || (width === '100vw' || minWidth === '100vw') && (documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody)) && !this.isResizable('maxWidth', documentBody ? ['100%', '100vw'] : undefined);
         }
         return result;
     }
@@ -1768,8 +1768,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             const height = this.valueOf('height');
             const minHeight = this.valueOf('minHeight');
-            const documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody;
-            return this._cache.fullHeight = (height === '100%' || minHeight === '100%' || documentBody && (height === '100vh' || minHeight === '100vh')) && !this.isResizable('maxHeight', documentBody ? ['100%', '100vh'] : undefined);
+            let documentBody: Undef<boolean>;
+            return this._cache.fullHeight = (height === '100%' || minHeight === '100%' || (height === '100vh' || minHeight === '100vh') && (documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody)) && !this.isResizable('maxHeight', documentBody ? ['100%', '100vh'] : undefined) && this.containerHeight;
         }
         return result;
     }

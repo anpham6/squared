@@ -1002,7 +1002,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         cache.height = undefined;
                         cache.hasHeight = undefined;
                         if (!this._preferInitial) {
-                            this.cascade(item => item.unsetCache('height', 'bottomAligned'));
+                            this.cascade(item => item.unsetCache('height', 'bottomAligned', 'containerHeight'));
                         }
                         break;
                     case 'actualWidth':
@@ -2787,6 +2787,24 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return result;
     }
 
+    get containerHeight() {
+        let result = this._cache.containerHeight;
+        if (result === undefined) {
+            if (this.pageFlow) {
+                result = this.actualParent?.hasHeight === true;
+            }
+            else if (this.positionFixed) {
+                result = true;
+            }
+            else {
+                const parent = this.absoluteParent;
+                result = !!parent && (parent.hasHeight || parent.naturalChildren.some(item => item.pageFlow && item.bounds.height > 0));
+            }
+            this._cache.containerHeight = result;
+        }
+        return result;
+    }
+
     get percentWidth() {
         const result = this._cache.percentWidth;
         if (result === undefined) {
@@ -2812,7 +2830,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.percentHeight;
         if (result === undefined) {
             let value = asPercent(this.valueOf('height'));
-            if (value > 0 && (this.absoluteParent?.hasHeight || this.positionFixed)) {
+            if (value > 0 && this.containerHeight) {
                 const min = asPercent(this.valueOf('minHeight'));
                 const max = asPercent(this.valueOf('maxHeight'));
                 if (!isNaN(min)) {

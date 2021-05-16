@@ -566,6 +566,7 @@ declare module "base" {
         get actualWidth(): number;
         get actualHeight(): number;
         get actualDimension(): Dimension;
+        get containerHeight(): boolean;
         get percentWidth(): number;
         get percentHeight(): number;
         get firstChild(): Null<Node>;
