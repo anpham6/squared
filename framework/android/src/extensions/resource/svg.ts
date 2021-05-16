@@ -1121,7 +1121,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         else {
                                             repeatCount = item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1';
                                         }
-                                        const options = createPropertyValue('', valueType, '', item.duration.toString(), precision, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
+                                        const baseOptions = createPropertyValue('', valueType, '', item.duration.toString(), precision, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
                                         if (!synchronized && valueType === 'pathType') {
                                             if (group.pathData) {
                                                 const parent = item.parent;
@@ -1205,12 +1205,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         }
                                         if (!item.keySplines) {
                                             const timingFunction = item.timingFunction;
-                                            options.interpolator = timingFunction ? createPathInterpolator(resourceId, timingFunction) : this.options.animateInterpolator;
+                                            baseOptions.interpolator = timingFunction ? createPathInterpolator(resourceId, timingFunction) : this.options.animateInterpolator;
                                         }
                                         if (values && propertyNames) {
                                             const { keyTimes, synchronized: syncData } = item;
                                             const q = propertyNames.length;
-                                            const keyName = syncData ? syncData.key + syncData.value : index !== 0 || q > 1 ? JSON.stringify(options) : '';
+                                            const keyName = syncData ? syncData.key + syncData.value : index !== 0 || q > 1 ? JSON.stringify(baseOptions) : '';
                                             for (let k = 0, r = keyTimes.length; k < q; ++k) {
                                                 const propertyName = propertyNames[k];
                                                 if (resetBefore && beforeValues) {
@@ -1239,7 +1239,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                             if (keyName) {
                                                                 animatorMap.set(keyName, propertyValuesHolder);
                                                             }
-                                                            (i === 0 ? objectAnimator : customAnimator).push({ ...options, propertyValuesHolder });
+                                                            (i === 0 ? objectAnimator : customAnimator).push({ ...baseOptions, propertyValuesHolder });
                                                         }
                                                         transformOrigin = null;
                                                     }
@@ -1249,7 +1249,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         for (let l = 0; l < r; ++l) {
                                                             const keyTime = keyTimes[l];
                                                             const propertyOptions: PropertyValue = {
-                                                                ...options,
+                                                                ...baseOptions,
                                                                 propertyName,
                                                                 startOffset: l === 0 ? (item.delay + (keyTime > 0 ? Math.floor(keyTime * item.duration) : 0)).toString() : '',
                                                                 propertyValuesHolder: false
@@ -1309,7 +1309,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 }
                                                 else {
                                                     const propertyOptions: PropertyValue = {
-                                                        ...options,
+                                                        ...baseOptions,
                                                         propertyName,
                                                         interpolator: item.duration > 1 ? getPathInterpolator(resourceId, item.keySplines, 0) : '',
                                                         propertyValuesHolder: false

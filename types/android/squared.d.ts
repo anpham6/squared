@@ -128,6 +128,7 @@ declare namespace base {
         get blockHeight(): boolean;
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
+        get flexibleHorizontal(): boolean;
         get watch(): Undef<WatchInterval>;
         get tasks(): Undef<TaskAction[]>;
         get target(): Null<HTMLElement>;
@@ -402,7 +403,7 @@ declare namespace lib {
         function concatString(list: (string | number)[], char?: string): string;
         function formatString(value: string, ...params: string[]): string;
         function sanitizeString(value: string): string;
-        function replaceCharacterData(value: string, tab?: number, quote?: boolean): string;
+        function replaceCharacterData(value: string, tab?: number, inline?: boolean): string;
         function replaceTab(value: string, spaces: number, lineStart?: string, lineEnd?: string): string;
         function getXmlNs(value: string): string;
         function getRootNs(value: string): string;

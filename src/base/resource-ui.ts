@@ -1019,6 +1019,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
 
     public setData(rendering: NodeList<T>) {
         rendering.each(node => {
+            if (node.renderExclude) {
+                return;
+            }
             if (node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
                 this.setBoxStyle(node);
             }
@@ -1373,7 +1376,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     value = value
                         .replace(/\n+/g, ' ')
                         .replace(/\s{2,}/g, ' ');
-                    if (node.onlyChild && node.htmlElement) {
+                    if (node.onlyStaticChild && node.htmlElement) {
                         value = value
                             .replace(CHAR_LEADINGSPACE, '')
                             .replace(CHAR_TRAILINGSPACE, '');

@@ -1758,7 +1758,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const width = this.valueOf('width');
             const minWidth = this.valueOf('minWidth');
             let documentBody: Undef<boolean>;
-            return this._cache.fullWidth = (width === '100%' || minWidth === '100%' || (width === '100vw' || minWidth === '100vw') && (documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody)) && !this.isResizable('maxWidth', documentBody ? ['100%', '100vw'] : undefined);
+            return this._cache.fullWidth = (width === '100%' || minWidth === '100%' || (width === '100vw' || minWidth === '100vw') && (documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyStaticChild) || this.documentBody)) && !this.isResizable('maxWidth', documentBody ? ['100%', '100vw'] : undefined);
         }
         return result;
     }
@@ -1769,7 +1769,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const height = this.valueOf('height');
             const minHeight = this.valueOf('minHeight');
             let documentBody: Undef<boolean>;
-            return this._cache.fullHeight = (height === '100%' || minHeight === '100%' || (height === '100vh' || minHeight === '100vh') && (documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyChild) || this.documentBody)) && !this.isResizable('maxHeight', documentBody ? ['100%', '100vh'] : undefined) && this.containerHeight;
+            return this._cache.fullHeight = (height === '100%' || minHeight === '100%' || (height === '100vh' || minHeight === '100vh') && (documentBody = this.absoluteParent?.documentBody && (!this.pageFlow || this.onlyStaticChild) || this.documentBody)) && !this.isResizable('maxHeight', documentBody ? ['100%', '100vh'] : undefined) && this.containerHeight;
         }
         return result;
     }
@@ -1977,10 +1977,32 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (!this.rootElement) {
             const children = this.renderParent?.renderChildren || this.parent?.children;
             if (children) {
-                for (let i = 0, length = children.length; i < length; ++i) {
-                    const node = children[i] as T;
-                    if (node !== this && node.visible && !(!node.pageFlow && node.opacity === 0)) {
-                        return false;
+                const length = children.length;
+                if (length > 1) {
+                    for (let i = 0; i < length; ++i) {
+                        const node = children[i] as T;
+                        if (node !== this && node.visible && !node.renderExclude) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    get onlyStaticChild() {
+        if (this.pageFlow && !this.rootElement) {
+            const children = this.renderParent?.renderChildren || this.parent?.children;
+            if (children) {
+                const length = children.length;
+                if (length > 1) {
+                    for (let i = 0; i < length; ++i) {
+                        const node = children[i] as T;
+                        if (node !== this && node.pageFlow && node.visible && !node.renderExclude) {
+                            return false;
+                        }
                     }
                 }
                 return true;

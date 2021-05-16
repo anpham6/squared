@@ -125,7 +125,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const index = children.indexOf(node);
                 if (index !== -1) {
                     const autoMargin = node.autoMargin;
-                    if (mainData.row && (autoMargin.leftRight || autoMargin.horizontal && (!node.onlyChild || node.percentWidth < 1)) || mainData.column && (autoMargin.topBottom || autoMargin.vertical && (!node.onlyChild || node.percentHeight < 1))) {
+                    if (mainData.row && (autoMargin.leftRight || autoMargin.horizontal && (!node.onlyStaticChild || node.percentWidth < 1)) || mainData.column && (autoMargin.topBottom || autoMargin.vertical && (!node.onlyStaticChild || node.percentHeight < 1))) {
                         const container = this.controller.createNodeWrapper(node, parent);
                         container.cssApply({
                             marginTop: '0px',

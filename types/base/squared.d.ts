@@ -760,6 +760,7 @@ declare module "base" {
         get firstStaticChild(): Null<NodeUI>;
         get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
+        get onlyStaticChild(): boolean;
         get rendering(): boolean;
         get boxReset(): number[];
         get boxAdjustment(): number[];

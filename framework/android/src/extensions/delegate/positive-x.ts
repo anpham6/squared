@@ -51,7 +51,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             bottom: Undef<boolean>;
         node.each((item: View) => {
             const fixed = rootElement && item.positionFixed;
-            if (item.pageFlow || !contentBox && !fixed) {
+            if (item.pageFlow || item.renderExclude || !contentBox && !fixed) {
                 return;
             }
             if (item.hasUnit('left') || fixed && item.autoPosition) {

@@ -1,9 +1,9 @@
-5a0b0bb0330e1aab433efbc9fac40ca3  ./app/src/main/res/drawable/svg_imageview_1_viewbox.xml
-bf9d1c6d96d25e24f130c0247c6a79fc  ./app/src/main/res/drawable/svg_imageview_2.xml
-1fe98cb06578e2c7849c35bf148bb531  ./app/src/main/res/drawable/svg_imageview_2_viewbox.xml
+bf9d1c6d96d25e24f130c0247c6a79fc  ./app/src/main/res/drawable/svg_imageview_1.xml
+1fe98cb06578e2c7849c35bf148bb531  ./app/src/main/res/drawable/svg_imageview_1_viewbox.xml
+5a0b0bb0330e1aab433efbc9fac40ca3  ./app/src/main/res/drawable/svg_imageview_2_viewbox.xml
 34539dbde1eb35b5dca72d6193cd0a2e  ./app/src/main/res/drawable/svg_imageview_3_viewbox.xml
 0df803430a06c8c5b516af8358e43cad  ./app/src/main/res/drawable/svg_imageview_4_viewbox.xml
-fa738a70bba2baa3bb046bc23a84fba3  ./app/src/main/res/layout/activity_main.xml
+3de005bdb6c0ba507a543fb476593b32  ./app/src/main/res/layout/activity_main.xml
 0cd59cf4e9d02c86d93b4f000ad146a2  ./app/src/main/res/values/colors.xml
 ccb01a3f40db239b4be3ce6caffde493  ./app/src/main/res/values/dimens.xml
 96bb312f9ecc291325557a1443e56a1a  ./app/src/main/res/values/strings.xml

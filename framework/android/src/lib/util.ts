@@ -211,18 +211,18 @@ export function sanitizeString(value: string) {
     return value.trim().replace(/[ \t\n]+/g, ' ');
 }
 
-export function replaceCharacterData(value: string, tab?: number, quote?: boolean) {
+export function replaceCharacterData(value: string, tab?: number, inline?: boolean) {
     let output = '';
     for (let i = 0, length = value.length, ch: string; i < length; ++i) {
         ch = value[i];
         switch (ch) {
             case "'":
-                if (!quote) {
+                if (!inline) {
                     output += "\\'";
                 }
                 break;
             case '@':
-                output += i === 0 || !output.trim() ? '\\@' : '@';
+                output += !inline && (i === 0 || !output.trim()) ? '\\@' : '@';
                 break;
             case '"':
                 output += '&quot;';

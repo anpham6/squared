@@ -1,8 +1,8 @@
-bb5a0fa9a1744c2fc2dd6605e4a9f2dd  ./app/src/main/res/drawable/div_framelayout_1.xml
-05a1d0904f3159b7289188fa37ec1432  ./app/src/main/res/drawable/img_svgimg_viewbox.xml
+72ad595bd4502ff1ce0fe56bb8870701  ./app/src/main/res/drawable/div_framelayout_1.xml
+05a1d0904f3159b7289188fa37ec1432  ./app/src/main/res/drawable/div_framelayout_1_viewbox.xml
 562c8f14d3fd78dd19cc1758b999a765  ./app/src/main/res/drawable/svg_imageview_1_viewbox.xml
 4553e0f3b84a305c197cc6d67ff91232  ./app/src/main/res/drawable/svg_svginline_viewbox.xml
-8709f0bf93cff0093008e5d3db8a4e44  ./app/src/main/res/layout/activity_main.xml
+200e76551c2ad74e7061a0036312707c  ./app/src/main/res/layout/activity_main.xml
 85314a980e785bd1c62d22d08097cd55  ./app/src/main/res/values/colors.xml
 5a6321eeff19b6ef39b06795da9c1347  ./app/src/main/res/values/dimens.xml
 2ab66814cde0c43a941ebdb2b08ef836  ./app/src/main/res/values/strings.xml

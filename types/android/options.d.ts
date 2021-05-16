@@ -17,6 +17,7 @@ interface CloneOptions {
 }
 
 interface IsUnanchoredOptions {
+    documentId?: string;
     orientation?: OrientationAttr;
     chained?: boolean;
     parent?: boolean;

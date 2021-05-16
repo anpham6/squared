@@ -22,8 +22,7 @@ bd6c2f8e2f77798085a9197b977a5c83  ./app/src/main/res/drawable/button_constraintl
 d26c1ed3fc15e193a6f799ebecb20373  ./app/src/main/res/drawable/button_constraintlayout_55.xml
 e74be731e6075987b022b6bbf9e8fe94  ./app/src/main/res/drawable/button_constraintlayout_56.xml
 784d283500704311a4b4a290ab158a87  ./app/src/main/res/drawable/button_constraintlayout_57.xml
-e10ad6ea1a5549189105d382625aa61d  ./app/src/main/res/drawable/div_dropdown0.xml
-729697d3b0a602d00baf7cd00cbb8d89  ./app/src/main/res/drawable/div_framelayout_19.xml
+729697d3b0a602d00baf7cd00cbb8d89  ./app/src/main/res/drawable/div_.xml
 66d7faddfcf1f692be2ea45acc192ebc  ./app/src/main/res/drawable/span_framelayout_1.xml
 a0b4b2fbbda902338f3d966a179a1824  ./app/src/main/res/drawable/span_framelayout_15.xml
 b8702c171fb9502b74f94c9220964fb3  ./app/src/main/res/drawable/span_framelayout_17.xml
@@ -31,10 +30,10 @@ e8f20d93580d1a7f8371c648acfc9716  ./app/src/main/res/drawable/span_framelayout_7
 fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
 4f8866f9f2a59d40f184cd0a4198ce5e  ./app/src/main/res/font/roboto_bold.xml
 276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
-c9e903344342bddc812306a0684a3246  ./app/src/main/res/layout/activity_main.xml
-5ccf0d1beb8ad43e79d2a747ddae81ba  ./app/src/main/res/values/colors.xml
-c8761eecc001505b93bd5f6fca493b7b  ./app/src/main/res/values/dimens.xml
+7448e6c8ae131e5ae585e7ee40ac47e7  ./app/src/main/res/layout/activity_main.xml
+80ffcf74ab72302ff56ea1bc0917c4b0  ./app/src/main/res/values/colors.xml
+8c249e37b3c2863ff87a9d584b221ba4  ./app/src/main/res/values/dimens.xml
 00e923c59075e44f54c44454d11ae355  ./app/src/main/res/values/string_arrays.xml
 31ede41f5d677f0588d5670e09392cb1  ./app/src/main/res/values/strings.xml
-d5c57c50eb67423f6c51ae2a2b21e118  ./app/src/main/res/values/styles.xml
+d3e18886d2c4dfb40cd37735583884e1  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

@@ -1,5 +1,4 @@
 ba33c0153a12a1e37297efc719ada145  ./app/src/main/res/drawable/button_button_1.xml
-286d29f2ecfcd9edbfd66af9b5cde131  ./app/src/main/res/drawable/div_.xml
 1e602dc6b28b6bc7df70a1d30518dfc0  ./app/src/main/res/drawable/div_constraintlayout_34.xml
 0778505a491ce4e1bffec187144d35d2  ./app/src/main/res/drawable/div_framelayout_17.xml
 5ccd71b06778b17609679ea18b5d4678  ./app/src/main/res/drawable/div_framelayout_18.xml
@@ -23,10 +22,10 @@ a1c080407bedb326eeac42e06daf9dc7  ./app/src/main/res/drawable/span_framelayout_2
 cd973755eb1116d4eecd4e25c747424d  ./app/src/main/res/drawable/span_inputgroupprepend.xml
 fbbfbcd27b75af5a2f69b89aa0773ad8  ./app/src/main/res/font/roboto.xml
 276ef8343228524bc1edb7ae56db8c12  ./app/src/main/res/font/roboto_medium.xml
-d5ac57a76971dbd6532b9913b2fffabb  ./app/src/main/res/layout/activity_main.xml
-07ffd70bc23592d83fef3d441ddfe006  ./app/src/main/res/values/colors.xml
-56b25867c5f3cd4c18ad82bd09a62645  ./app/src/main/res/values/dimens.xml
+5d37f1d78024ee320c10a72f374b1d62  ./app/src/main/res/layout/activity_main.xml
+fde597e6d13cc570e469b1aded17d027  ./app/src/main/res/values/colors.xml
+0ace2442675ad05a231c99d1dc009a0e  ./app/src/main/res/values/dimens.xml
 f2f37ad0b60de19930b52dde18103dc9  ./app/src/main/res/values/string_arrays.xml
 6f5dc5c6f911c76880028e194c592e82  ./app/src/main/res/values/strings.xml
-22e3e541d711032bc7c653b7133ca17b  ./app/src/main/res/values/styles.xml
+464ed945335b5dd3d753a16082bf9bc8  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml

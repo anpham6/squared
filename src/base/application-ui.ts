@@ -915,7 +915,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             for (let i = 0, q = depth.length; i < q; ++i) {
                 const parent = depth[i];
                 const r = parent.size();
-                if (r === 0) {
+                if (r === 0 || parent.renderExclude) {
                     continue;
                 }
                 const renderExtension = parent.renderExtension as Undef<ExtensionUI<T>[]>;
@@ -923,7 +923,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const axisY = parent.toArray() as T[];
                 for (let j = 0; j < r; ++j) {
                     let nodeY = axisY[j];
-                    if (nodeY.rendered || !nodeY.visible) {
+                    if (nodeY.rendered || !nodeY.visible || nodeY.renderExclude) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
