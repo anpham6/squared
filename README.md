@@ -383,6 +383,7 @@ body.addEvent("click", event => body.element.classList.toggle("example"));
 android.customize(build: number, widget: string, options: {}) // Global attributes applied to specific views
 android.setViewModel(data: {}, sessionId?: string) // Object data for layout bindings
 android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
+android.getLocalSettings() // Modify controller styles and parsing rules
 android.addFontProvider(authority: string, package: string, certs: string[], webFonts: string | {}) // Add additional Web fonts (Google Fonts already included)
 ```
 

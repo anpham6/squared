@@ -7,6 +7,7 @@ import LayoutUI = squared.base.LayoutUI;
 declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T>, base.AppProxy, FontProviderAction {
     customize(build: number, widget: string, options: ObjectMap<StringMap>): Undef<ObjectMap<StringMap>>;
     addXmlNs(name: string, uri: string): void;
+    getLocalSettings(): ControllerSettingsUI;
 }
 
 declare namespace base {

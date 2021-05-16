@@ -346,6 +346,9 @@ const appBase: android.AppFramework<View> = {
         if (application) {
             return (application.resourceHandler as Resource<View>).addFontProvider(authority, packageName, certs, webFonts);
         }
+    },
+    getLocalSettings() {
+        return application ? application.controllerHandler.localSettings : {} as ControllerSettingsUI;
     }
 };
 

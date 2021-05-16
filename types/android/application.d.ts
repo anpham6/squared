@@ -23,6 +23,10 @@ interface ControllerSettingsDirectoryUI {
     theme: string;
 }
 
+interface ControllerSettingsStyleUI {
+    progressOrientation: string;
+}
+
 interface ControllerSettingsDeviationsUI {
     legendBottomOffset: number;
 }

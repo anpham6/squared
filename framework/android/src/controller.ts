@@ -558,6 +558,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             rangeBackgroundCenterHeight: 0.75,
             meterForegroundColor: 'rgb(99, 206, 68)',
             meterBackgroundColor: 'rgb(237, 237, 237)',
+            progressOrientation: '@android:style/Widget.ProgressBar.Horizontal',
             progressForegroundColor: 'rgb(138, 180, 248)',
             progressBackgroundColor: 'rgb(237, 237, 237)'
         },
@@ -1780,6 +1781,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     ({ progressForegroundColor: foregroundColor, progressBackgroundColor: backgroundColor } = this.localSettings.style);
+                    (node.actualParent!.element as HTMLElement).querySelectorAll(':indeterminate').forEach(child => {
+                        if (child === node.element) {
+                            node.android('indeterminate', 'true');
+                        }
+                    });
                 }
                 if (!node.hasWidth) {
                     setBoundsWidth();
@@ -1790,7 +1796,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.android('progressTint', `@color/${Resource.addColor(resourceId, foregroundColor)}`);
                 node.android('progressBackgroundTint', `@color/${Resource.addColor(resourceId, backgroundColor)}`);
                 const keyFrames = Resource.ASSETS[resourceId]!.keyFrames;
-                let circular = false;
+                let circular: Undef<boolean>;
                 if (keyFrames) {
                     splitSome(node.cssInitial('animationName'), name => {
                         const item = keyFrames.get(name);
@@ -1806,7 +1812,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     });
                 }
                 if (!circular) {
-                    node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
+                    node.attr('_', 'style', this.localSettings.style.progressOrientation);
                 }
                 else if (node.hasHeight) {
                     node.resetBox(BOX_STANDARD.PADDING_TOP | BOX_STANDARD.PADDING_BOTTOM);
