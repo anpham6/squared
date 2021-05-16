@@ -20,10 +20,7 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
             const item = children[i];
             const parent = item.parent;
             if (parent && !(item === child && parent === parentAs && parentAs.replaceTry({ child, replaceWith: this }))) {
-                const index = parent.children.indexOf(item);
-                if (index !== -1) {
-                    parent.children.splice(index, 1);
-                }
+                parent.remove(item);
             }
             item.internalSelf(this, depth);
         }

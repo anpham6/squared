@@ -487,7 +487,7 @@ function applyLayout(node: View, parent: View, item: View, mainData: CssGridData
         item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan', cellSpan.toString());
         let columnWeight = horizontal && (column.flags & LAYOUT_CSSGRID.FLEXIBLE) > 0;
         if (sizeWeight !== 0) {
-            if (!item.hasUnit(dimension)) {
+            if (!item.hasUnit(dimension) || (horizontal ? item.fullWidth : item.fullHeight)) {
                 if (horizontal) {
                     if (cellData.columnSpan === column.length) {
                         item.setLayoutWidth('match_parent');
@@ -747,11 +747,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             else if (!target.hasUnit('height') && !target.hasUnit('maxHeight') && !(row.length === 1 && startsWith(mainData.alignContent, 'space') && !CSS_ALIGNSELF.includes(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
-            return {
-                parent: renderAs,
-                renderAs,
-                outputAs
-            };
+            return { parent: renderAs, renderAs, outputAs };
         }
     }
 
@@ -992,18 +988,18 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                             gapSize = 0;
                         }
                         else {
-                            const [widthA, heightA, columnWeightA, rowWeightA] = getCellDimensions(node, horizontal, section, gapSize * (section.length - 1));
-                            if (widthA) {
-                                width = widthA;
+                            const [w, h, cw, rw] = getCellDimensions(node, horizontal, section, gapSize * (section.length - 1));
+                            if (w) {
+                                width = w;
                             }
-                            if (heightA) {
-                                height = heightA;
+                            if (h) {
+                                height = h;
                             }
-                            if (columnWeightA) {
-                                layout_columnWeight = columnWeightA;
+                            if (cw) {
+                                layout_columnWeight = cw;
                             }
-                            if (rowWeightA) {
-                                layout_rowWeight = rowWeightA;
+                            if (rw) {
+                                layout_rowWeight = rw;
                             }
                         }
                         controller.addAfterOutsideTemplate(

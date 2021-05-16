@@ -34,6 +34,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const hasHeight = node.hasHeight || node.actualParent!.hasHeight;
         const parentVisible = isParentVisible(node, parent);
         const fixed = node.cssValue('backgroundAttachment') === 'fixed';
+        const outerWrapper = node.outerWrapper && node.outerMostWrapper as Undef<T>;
         let renderParent = parent,
             container: Undef<T>,
             parentAs: Undef<T>;
@@ -116,6 +117,10 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             container.setLayoutHeight('wrap_content', false);
         }
         if (container) {
+            if (outerWrapper) {
+                outerWrapper.setLayoutWidth('match_parent');
+                outerWrapper.setLayoutHeight('match_parent');
+            }
             visibleStyle.background = visibleStyle.borderWidth || visibleStyle.backgroundImage || visibleStyle.backgroundColor;
             return {
                 parent: container,

@@ -13,7 +13,9 @@ interface CreateNodeUIOptions<T> extends CreateNodeBaseUIOptions, CreateNodeOpti
     innerWrapped?: T;
 }
 
-interface CreateNodeGroupUIOptions extends CreateNodeBaseUIOptions, Partial<LayoutType> {}
+interface CreateNodeGroupUIOptions extends CreateNodeBaseUIOptions, Partial<LayoutType> {
+    wrapper?: boolean;
+}
 
 interface CreateNodeWrapperUIOptions<T> extends Partial<LayoutType>, ExcludeOptions {
     flags?: number;
