@@ -30,7 +30,7 @@ ada40b9de635ccce9100f06906acbf66  ./app/src/main/res/drawable/div_textview_30.xm
 0272d3d2fcce9a54a26b89b7322681d3  ./app/src/main/res/drawable/div_textview_31.xml
 7166c325f322ef9680b5469125c9ed1f  ./app/src/main/res/drawable/framelayout_1_gradient_1.xml
 32ec207df85bb462bcfd2729062578a8  ./app/src/main/res/drawable/h2_textview_44.xml
-7522fc2298907a6e92c8b495020674de  ./app/src/main/res/drawable/header_constraintlayout_9.xml
+e9ba3a63beeabffcecc398c5188efd32  ./app/src/main/res/drawable/header_constraintlayout_9.xml
 8d30a0e82287a57105fcac38187de457  ./app/src/main/res/drawable/img_imageview_1_viewbox.xml
 48e24605d4d935e10a0a13fe47dc753c  ./app/src/main/res/drawable/img_imageview_2_viewbox.xml
 1680bdf5d63ccc08d97ab36d26268daf  ./app/src/main/res/drawable/li_textview_11.xml
@@ -51,13 +51,13 @@ a0b4b2fbbda902338f3d966a179a1824  ./app/src/main/res/drawable/span_framelayout_3
 e9a63de03022350054b4ac1cadd5c310  ./app/src/main/res/drawable/span_framelayout_33.xml
 161cee9f3b58569878c847fc948ae2ed  ./app/src/main/res/drawable/span_framelayout_34.xml
 da174a358163162d80bc4f99c9e09183  ./app/src/main/res/drawable/span_framelayout_3_viewbox.xml
-e531b21f58c8c8a9e40ac429f83e5041  ./app/src/main/res/drawable/svg_imageview_5_viewbox.xml
+4ad46101b2b7987b4d02cadd4ca21d53  ./app/src/main/res/drawable/svg_imageview_5_viewbox.xml
 5a1363fbee4533286a3447062e55cced  ./app/src/main/res/drawable/svg_imageview_6_viewbox.xml
-4b06b5341d3e121553feae73ad00ea81  ./app/src/main/res/drawable/svg_imageview_7_viewbox.xml
+7f3b7668dc02988e27a25fd10df1f903  ./app/src/main/res/drawable/svg_imageview_7_viewbox.xml
 17963502f0b2e15bb8afba4845668a1d  ./app/src/main/res/drawable/ul_constraintlayout_22.xml
-befa221d01baaa7867bab57c4a292eed  ./app/src/main/res/layout/activity_main.xml
-c80f6e258b5e3c70b090a93fc6fd5583  ./app/src/main/res/values/colors.xml
+3496b4024ea0f26a8007c57efaf14aa0  ./app/src/main/res/layout/activity_main.xml
+53afa21f140c236af64b765bf6d7fe1c  ./app/src/main/res/values/colors.xml
 833b8981c8f4471a2f7c02a1e53db712  ./app/src/main/res/values/dimens.xml
 82faf75b6d06fa333590494d7933b209  ./app/src/main/res/values/strings.xml
-5195e5ab9b21c94fd7acc9706de7f10d  ./app/src/main/res/values/styles.xml
+31531415d3b08e1ac7dda8524110898a  ./app/src/main/res/values/styles.xml
 0d07c41604f7f1bcd10a3d61a2e79576  ./app/src/main/res/values/themes.xml

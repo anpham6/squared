@@ -135,13 +135,19 @@ interface AnimateGroup {
     pathData?: string;
 }
 
+interface CreateSvgDrawableOptions {
+    size?: string;
+    keyFrames?: KeyframesMap;
+    contentMap?: StringMap;
+}
+
 const KEYSPLINE_NAME = SvgAnimate ? SvgAnimate.KEYSPLINE_NAME : null;
 
 const { FILE } = squared.lib.regex;
 
 const { extractURL, formatPX } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, replaceMap, splitSome, startsWith } = squared.lib.util;
+const { convertCamelCase, convertInt, convertPercent, convertWord, hasKeys, isArray, isNumber, lastItemOf, partitionArray, replaceMap, splitPair, splitSome, startsWith } = squared.lib.util;
 
 const { CACHE_VIEWNAME, MATRIX, SVG, TRANSFORM, getAttribute, getRootOffset } = squared.svg.lib.util;
 
@@ -756,7 +762,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
             }
             const addSvgElement = (node: T, element: SVGSVGElement, parentElement?: HTMLElement) => {
-                const drawable = this.createSvgDrawable(node, element, keyFrames, contentMap);
+                const drawable = this.createSvgDrawable(node, element, { keyFrames, contentMap });
                 if (drawable) {
                     if (node.api >= BUILD_VERSION.LOLLIPOP) {
                         node.android((node.percentWidth > 0 && !node.hasFixedDimension('width') || node.percentHeight > 0 && !node.hasFixedDimension('height')) && !node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle') ? 'background' : 'src', getDrawableSrc(drawable));
@@ -826,7 +832,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         return [];
     }
 
-    public createSvgDrawable(node: T, element: SVGSVGElement, keyframesMap?: KeyframesMap, contentMap?: StringMap) {
+    public createSvgDrawable(node: T, element: SVGSVGElement, options: CreateSvgDrawableOptions = {}) {
+        const { size, keyFrames, contentMap } = options;
         const { transformExclude: exclude, floatPrecision: precision, floatPrecisionKeyTime } = this.options;
         const svg = new Svg(element);
         if (contentMap) {
@@ -845,14 +852,21 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
         const templateName = (node.tagName + '_' + convertWord(node.controlId) + '_viewbox').toLowerCase();
-        svg.build({ contentMap, keyframesMap, exclude, residualHandler, precision });
+        svg.build({ contentMap, keyframesMap: keyFrames, exclude, residualHandler, precision });
         svg.synchronize({ keyTimeMode, framesPerSecond: this.application.getUserSetting<number>(node.sessionId, 'framesPerSecond'), precision });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const vectorData = this.parseVectorData(resourceId, svg);
         const imageLength = imageData.length;
         let vectorName: Undef<string>;
         if (vectorData) {
-            const { width, height } = node.fitToScreen(node.imageElement ? { width: svg.width, height: svg.height } : { width: node.width || svg.width, height: node.height || svg.height });
+            let width = NaN,
+                height = NaN;
+            if (size) {
+                const [w, h] = splitPair(size, ' ');
+                width = node.parseWidth(w, false);
+                height = h && node.parseWidth(h, false) || width;
+            }
+            ({ width, height } = node.fitToScreen(width && height ? { width, height } : node.imageElement ? { width: svg.width, height: svg.height } : { width: node.width || svg.width, height: node.height || svg.height }));
             vectorName = Resource.insertStoredAsset(
                 resourceId,
                 'drawables',

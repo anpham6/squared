@@ -596,9 +596,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         (stored ||= {} as BoxStyle).backgroundColor = backgroundColor;
                     }
                 }
-                if (node.containerName === 'INPUT_IMAGE' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                    boxImage = [node];
-                    stored ||= {} as BoxStyle;
+                switch (node.toElementString('type')) {
+                    case 'radio':
+                    case 'checkbox': {
+                        let backgroundColor: Undef<ColorData>;
+                        if (stored && (backgroundColor = stored.backgroundColor) && !backgroundColor.transparent) {
+                            node.android('buttonTint', `@color/${Resource.addColor(resourceId, backgroundColor)}`);
+                        }
+                        return;
+                    }
+                    case 'image':
+                        if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                            boxImage = [node];
+                            stored ||= {} as BoxStyle;
+                        }
+                        break;
                 }
             }
             if (stored) {
@@ -878,7 +890,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (svgInstance && svgInstance.enabled) {
                                 const [parentElement, element] = svgInstance.createSvgElement(node, value);
                                 if (parentElement && element) {
-                                    const drawable = svgInstance.createSvgDrawable(node, element);
+                                    const drawable = svgInstance.createSvgDrawable(node, element, { size: backgroundSize[i] });
                                     if (drawable) {
                                         let dimension = node.data<squared.svg.Svg>(Resource.KEY_NAME, 'svg')?.viewBox;
                                         if (!dimension || !dimension.width || !dimension.height) {
@@ -1224,6 +1236,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     height = unit;
                                 }
                             }
+                            if (!bitmap && width && height) {
+                                dimension = { width, height };
+                                dimenWidth = width;
+                                dimenHeight = height;
+                            }
                         }
                         break;
                 }
@@ -1381,7 +1398,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             break;
                     }
                 }
-                if (data.backgroundClip) {
+                if (data.backgroundClip && bitmap) {
                     const { top: clipTop, right: clipRight, left: clipLeft, bottom: clipBottom } = data.backgroundClip;
                     if (width === 0) {
                         width = boundsWidth;

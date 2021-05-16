@@ -10,14 +10,12 @@ b2168c98ce5e62087b5fd34f0a9caa17  ./app/src/main/res/drawable/li_constraintlayou
 59d602752f60fa213d7b03f43a2cac35  ./app/src/main/res/drawable/li_constraintlayout_3.xml
 aa54e73b8d32bdf5609fcc5acc392f2d  ./app/src/main/res/drawable/li_constraintlayout_5.xml
 d3cc61305ee7868eec941671830fa2ab  ./app/src/main/res/drawable/select_country.xml
-a0b49c32de0ba24186ad993eddc46e24  ./app/src/main/res/drawable/select_country_viewbox.xml
-453f986f4f6cf0670f97438631a1dcfc  ./app/src/main/res/drawable/select_state.xml
-85ff6989e7487379b93e3fb3aab30b29  ./app/src/main/res/drawable/select_state_viewbox.xml
+3ac019a50448f1d7be2d15ccca6f4161  ./app/src/main/res/drawable/select_country_viewbox.xml
 ab6a6bd7ac55c822f2706ac044e93955  ./app/src/main/res/drawable/span_textview_2.xml
 1c2237dfe8b490ef88095cebc31069cb  ./app/src/main/res/drawable/span_textview_9.xml
-5c9555d891710807d3cffc41fc76d774  ./app/src/main/res/layout/activity_main.xml
+76929405f7b67913980c925ad945ee16  ./app/src/main/res/layout/activity_main.xml
 2c3c02d7e7c046ce86d01715c3962070  ./app/src/main/res/values/colors.xml
-3264da5171fadf2003c4452df29463c4  ./app/src/main/res/values/dimens.xml
+c6ec4362f032db2bb3d98d335b9fd6bc  ./app/src/main/res/values/dimens.xml
 d8a2f62572a90f7fe20dee8afdede3dc  ./app/src/main/res/values/string_arrays.xml
 2f724cf391137cb39dcdcf160a65b25c  ./app/src/main/res/values/strings.xml
 1fd6154df56215640c4aa362491b3171  ./app/src/main/res/values/styles.xml

@@ -613,6 +613,10 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox, min: 0 });
         case 'objectPosition':
             return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox });
+        case 'backgroundPositionX':
+            return calculateVarAsString(element, value, { dimension: 'width', boundingBox, parent: false });
+        case 'backgroundPositionY':
+            return calculateVarAsString(element, value, { dimension: 'height', boundingBox, parent: false });
         case 'backgroundSize':
         case 'maskSize':
         case 'gap':

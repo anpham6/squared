@@ -1510,7 +1510,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (element.checked) {
                             node.android('checked', 'true');
                         }
-                        node.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
+                        if (node.height) {
+                            node.cssApply( { height: 'auto', minHeight: formatPX(node.height) });
+                        }
                         break;
                     case 'text':
                         node.android('inputType', 'text');
