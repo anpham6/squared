@@ -203,7 +203,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         case 'reset':
                         case 'submit':
                         case 'button':
-                            this.setButtonStyle(element, style, disabled);
+                            this.setButtonStyle(element as HTMLInputElement, style, disabled);
                             break;
                         case 'range':
                             if (!disabled && hasEmptyStyle(style.backgroundColor)) {
@@ -217,7 +217,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
                 case 'BUTTON': {
                     style.fontSize ||= this._settingsStyle.formFontSize;
-                    this.setButtonStyle(element, style, (element as HTMLButtonElement).disabled);
+                    this.setButtonStyle(element as HTMLButtonElement, style, (element as HTMLButtonElement).disabled);
                     break;
                 }
                 case 'TEXTAREA':
@@ -437,7 +437,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public evaluateNonStatic(documentRoot: T, cache: NodeList<T>) {
         const altered: T[] = [];
         const supportNegativeLeftTop = this.application.getUserSetting<boolean>(documentRoot.sessionId, 'supportNegativeLeftTop');
-        let escaped: Undef<Map<T, { parent: T; appending: T[] }>>;
+        let escaped: Undef<Map<T, { parent: T; appending: T[] }>>,
+            container: Undef<T>;
         cache.each(node => {
             if (node.floating) {
                 if (node.float === 'left') {
@@ -556,7 +557,20 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         altered.push(parent);
                     }
                 }
-                node.documentParent = parent;
+                if (parent === documentRoot && parent.layoutElement) {
+                    const root = parent.parent as T;
+                    if (!container) {
+                        container = this.createNodeGroup(parent, [parent, node], root, { ...this.containerTypeVertical, wrapper: true });
+                    }
+                    else {
+                        node.internalSelf(container, 1);
+                        container.add(node);
+                    }
+                    node.documentParent = root;
+                }
+                else {
+                    node.documentParent = parent;
+                }
             }
         });
         if (escaped) {
@@ -789,11 +803,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
     }
 
-    protected setButtonStyle(element: Element, style: CssStyleMap, disabled: boolean) {
+    protected setButtonStyle(element: HTMLInputElement | HTMLButtonElement, style: CssStyleMap, disabled: boolean) {
         const settings = this._settingsStyle;
         this.setBorderStyle(style, settings.buttonBorderStyle, settings.buttonBorderWidth, disabled ? settings.buttonDisabledBorderColor : settings.buttonBorderColor);
         if (hasEmptyStyle(style.backgroundColor)) {
-            style.backgroundColor = (disabled ? settings.buttonDisabledBackgroundColor : settings.buttonBackgroundColor) || getStyle(element).backgroundColor;
+            style.backgroundColor = (disabled ? element.type === 'file' && settings.inputFileDisabledBackgroundColor || settings.buttonDisabledBackgroundColor : element.type === 'file' && settings.inputFileBackgroundColor || settings.buttonBackgroundColor) || getStyle(element).backgroundColor;
         }
         style.textAlign ||= 'center';
         style.paddingTop ||= settings.buttonPaddingVertical;

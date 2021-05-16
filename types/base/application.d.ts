@@ -74,6 +74,8 @@ interface ControllerSettingsStyleUI {
     inputDisabledBorderColor: string;
     inputBackgroundColor?: string;
     inputDisabledBackgroundColor?: string;
+    inputFileBackgroundColor?: string;
+    inputFileDisabledBackgroundColor?: string;
     buttonBorderColor: string;
     buttonBorderWidth: string;
     buttonBorderStyle: string;

@@ -1,3 +1,4 @@
+import PLATFORM = squared.lib.constant.PLATFORM;
 import USER_AGENT = squared.lib.constant.USER_AGENT;
 import BOX_STANDARD = squared.base.lib.constant.BOX_STANDARD;
 import NODE_ALIGNMENT = squared.base.lib.constant.NODE_ALIGNMENT;
@@ -23,7 +24,7 @@ import NodeUI = squared.base.NodeUI;
 
 import { concatString, createViewAttribute, getDocumentId, getRootNs, parseColor, replaceTab } from './lib/util';
 
-const { isUserAgent } = squared.lib.client;
+const { isPlatform, isUserAgent } = squared.lib.client;
 const { asPercent, formatPX, getStyle, hasCoords } = squared.lib.css;
 const { getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
@@ -543,6 +544,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             inputBorderWidth: '2px',
             inputBorderStyle: 'inset',
             inputDisabledBorderColor: 'rgba(118, 118, 118, 0.3)',
+            inputFileBackgroundColor: isPlatform(PLATFORM.MAC) ? 'rgb(255, 255, 255)' : 'rgb(239, 239, 239)',
+            inputFileDisabledBackgroundColor: 'rgba(239, 239, 239, 0.3)',
             buttonBorderColor: 'rgb(118, 118, 118)',
             buttonBorderWidth: '2px',
             buttonBorderStyle: 'inset',
@@ -2040,7 +2043,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public createNodeGroup(node: T, children: T[], parent?: T, options: CreateNodeGroupUIOptions = {}) {
-        const { containerType, alignmentType, childIndex, flags = 0 } = options;
+        const { containerType, alignmentType, childIndex, wrapper, flags = 0 } = options;
         const container = new ViewGroup(this.application.nextId, node, children, parent) as T;
         if (containerType) {
             container.setControlType(View.getControlName(containerType, node.api), containerType);
@@ -2052,6 +2055,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (parent && !parent.contains(container)) {
             parent.add(container);
             container.internalSelf(parent, node.depth);
+        }
+        if (wrapper) {
+            if (node.documentRoot) {
+                node.documentRoot = false;
+                container.documentRoot = true;
+            }
+            container.addAlign(NODE_ALIGNMENT.WRAPPER);
+            container.saveAsInitial();
+            container.innerWrapped = node;
         }
         if (childIndex !== undefined) {
             container.unsafe('childIndex', childIndex);
