@@ -87,7 +87,7 @@ declare namespace base {
         formatted(value: string, overwrite?: boolean): void;
         mergeGravity(attr: LayoutGravityAttr, alignment: LayoutGravityDirectionAttr, overwrite?: boolean): void;
         anchor(position: AnchorPositionAttr, documentId?: string, overwrite?: boolean): boolean;
-        anchorChain(direction: PositionAttr): View[];
+        anchorChain(...values: PositionAttr[]): View[];
         anchorParent(orientation: OrientationAttr, bias?: number, style?: LayoutChainStyle, overwrite?: boolean): boolean;
         anchorStyle(orientation: OrientationAttr, bias: number, style?: LayoutChainStyle, overwrite?: boolean): void;
         anchorDelete(...position: AnchorPositionAttr[]): void;

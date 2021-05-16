@@ -2040,49 +2040,51 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public anchorChain(direction: PositionAttr) {
+        public anchorChain(...values: PositionAttr[]) {
             const result: T[] = [];
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
-                let anchorA: AnchorPositionAttr,
-                    anchorB: AnchorPositionAttr;
-                switch (direction) {
-                    case 'top':
-                        anchorA = 'topBottom';
-                        anchorB = 'bottomTop';
-                        break;
-                    case 'right':
-                        anchorA = 'rightLeft';
-                        anchorB = 'leftRight';
-                        break;
-                    case 'bottom':
-                        anchorA = 'bottomTop';
-                        anchorB = 'topBottom';
-                        break;
-                    case 'left':
-                        anchorA = 'leftRight';
-                        anchorB = 'rightLeft';
-                        break;
-                }
-                const siblings = renderParent.renderChildren;
-                let current = node;
-                do {
-                    const adjacent = current.alignSibling(anchorA);
-                    if (adjacent) {
-                        const sibling = siblings.find(item => item.documentId === adjacent) as Undef<T>;
-                        if (sibling && (sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
-                            result.push(current = sibling);
+                for (const direction of values) {
+                    let anchorA: AnchorPositionAttr,
+                        anchorB: AnchorPositionAttr;
+                    switch (direction) {
+                        case 'top':
+                            anchorA = 'topBottom';
+                            anchorB = 'bottomTop';
+                            break;
+                        case 'right':
+                            anchorA = 'rightLeft';
+                            anchorB = 'leftRight';
+                            break;
+                        case 'bottom':
+                            anchorA = 'bottomTop';
+                            anchorB = 'topBottom';
+                            break;
+                        case 'left':
+                            anchorA = 'leftRight';
+                            anchorB = 'rightLeft';
+                            break;
+                    }
+                    const siblings = renderParent.renderChildren;
+                    let current = node;
+                    do {
+                        const adjacent = current.alignSibling(anchorA);
+                        if (adjacent) {
+                            const sibling = siblings.find(item => item.documentId === adjacent) as Undef<T>;
+                            if (sibling && (sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
+                                result.push(current = sibling);
+                            }
+                            else {
+                                break;
+                            }
                         }
                         else {
                             break;
                         }
                     }
-                    else {
-                        break;
-                    }
+                    while (true);
                 }
-                while (true);
             }
             return result;
         }
