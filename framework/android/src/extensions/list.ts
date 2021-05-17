@@ -273,7 +273,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop);
             }
             if (ordinal.paddingTop && parent.layoutGrid || marginTop !== 0) {
-                ordinal.companion = target;
+                ordinal.data(this.name, 'companion', target);
                 this.subscribers.add(ordinal);
             }
             node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
@@ -310,7 +310,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
         }
         else if (node.getBox(BOX_STANDARD.MARGIN_TOP)[1] !== 0) {
-            const companion = node.companion;
+            const companion = node.data<T>(this.name, 'companion');
             if (companion) {
                 const [reset, adjustment] = companion.getBox(BOX_STANDARD.MARGIN_TOP);
                 if (reset === 0) {
@@ -324,7 +324,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public postOptimize(node: T) {
-        if (node.companion?.android('baselineAlignedChildIndex') && node.renderParent!.layoutGrid) {
+        const companion = node.data<T>(this.name, 'companion');
+        if (companion && companion.android('baselineAlignedChildIndex') && node.renderParent!.layoutGrid) {
             node.setBox(BOX_STANDARD.PADDING_TOP, { reset: 1 });
         }
     }

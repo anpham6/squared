@@ -444,16 +444,15 @@ function getBorderRadius(boxStyle: BoxStyle): Undef<CornerRadiusData> {
 }
 
 function getBorderAll(boxStyle: BoxStyle, fromImage: boolean, node?: View) {
-    const borderVisible: boolean[] = new Array(4);
     const borders = [
         boxStyle.borderTop,
         boxStyle.borderRight,
         boxStyle.borderBottom,
         boxStyle.borderLeft
     ];
+    const borderVisible: boolean[] = new Array(4);
     let borderStyle = true,
         borderAll = true,
-        border: Undef<BorderAttribute>,
         borderData: Undef<BorderAttribute>;
     for (let i = 0; i < 4; ++i) {
         const item = borders[i];
@@ -462,11 +461,11 @@ function getBorderAll(boxStyle: BoxStyle, fromImage: boolean, node?: View) {
                 let attr: Undef<keyof CacheValueUI>,
                     region!: number;
                 if (i === 0 || i === 2) {
-                    if (node.hasUnit('height', { percent: false }) && node.height > 0) {
+                    if (node.hasUnit('height', { percent: false }) && node.height) {
                         [attr, region] = i === 0 ? ['borderTopWidth', BOX_STANDARD.MARGIN_TOP] : ['borderBottomWidth', BOX_STANDARD.MARGIN_BOTTOM];
                     }
                 }
-                else if (node.hasUnit('width', { percent: false }) && node.width > 0) {
+                else if (node.hasUnit('width', { percent: false }) && node.width) {
                     [attr, region] = i === 1 ? ['borderRightWidth', BOX_STANDARD.MARGIN_RIGHT] : ['borderLeftWidth', BOX_STANDARD.MARGIN_LEFT];
                 }
                 if (attr) {
@@ -496,7 +495,26 @@ function getBorderAll(boxStyle: BoxStyle, fromImage: boolean, node?: View) {
             borderVisible[i] = false;
         }
     }
-    return { borderAll, borderStyle, borderVisible, borders, borderData, border };
+    return { borderAll, borderStyle, borderVisible, borders, borderData };
+}
+
+function convertShapeableImageView(resourceId: number, node: View, items: StringValue[], cut?: boolean) {
+    const name = 'Material_ShapeableImageView_' + (cut ? 'Cut_' : '') + capitalize(node.controlId);
+    items.sort((a, b) => a.key < b.key ? -1 : 1);
+    Resource.STORED[resourceId]!.styles.set(name, { name, parent: '', items } as StyleAttribute);
+    node.app('shapeAppearanceOverlay', `@style/${name}`);
+    node.containerType = CONTAINER_NODE.IMAGE;
+    node.setCacheState('controlName', SUPPORT_TAGNAME_X.SHAPEABLE_IMAGE_VIEW);
+    (node.renderedAs as NodeXmlTemplate<View>).controlName = SUPPORT_TAGNAME_X.SHAPEABLE_IMAGE_VIEW;
+    if (!cut) {
+        if (node.api < BUILD_VERSION.Q) {
+            node.app('srcCompat', node.android('src'));
+            node.delete('android', 'src');
+        }
+    }
+    else {
+        node.data(Resource.KEY_NAME, 'boxStyleShapeableImageView', true);
+    }
 }
 
 const createStrokeColor = (resourceId: number, value: ColorData): ShapeStrokeData => ({ color: getColorValue(resourceId, value) });
@@ -582,7 +600,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (node.is(CONTAINER_NODE.RANGE)) {
                     drawable = this.saveDrawable(resourceId, node, applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, [{ drawable, height: Math.floor(node.bounds.height * this.controller.localSettings.style.rangeBackgroundCenterHeight) + 'px', gravity: 'center_vertical', order: 0 }] )), 'main');
                 }
-                node.android('background', drawable, false);
+                if (node.data(Resource.KEY_NAME, 'boxStyleShapeableImageView')) {
+                    if (node.api >= BUILD_VERSION.Q) {
+                        node.android('src', drawable);
+                    }
+                    else {
+                        node.app('srcCompat', drawable);
+                    }
+                }
+                else {
+                    node.android('background', drawable, false);
+                }
             }
         };
         cache.each(node => {
@@ -614,73 +642,63 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             if (stored) {
-                if (node.imageContainer) {
+                if (node.imageContainer && node.renderedAs) {
                     const borderRadius = getBorderRadius(stored);
                     if (borderRadius) {
-                        const renderedAs = node.renderedAs as Undef<NodeXmlTemplate<T>>;
-                        if (renderedAs) {
-                            const styles = Resource.STORED[resourceId]!.styles;
-                            const items: StringValue[] = [{ key: 'cornerFamily', value: node.dataset.androidCornerFamily === 'cut' ? 'cut' : 'rounded' }];
-                            const maxRadius = Math.min(node.bounds.width, node.bounds.height) / 2;
-                            let radius: string;
-                            for (const attr in borderRadius) {
-                                let value = borderRadius[attr] as string;
-                                const checkSize = (cssAttr: CssStyleAttr) => {
-                                    if (isPercent(radius = node.css(cssAttr))) {
-                                        if (asPercent(value = radius) > 0.5) {
-                                            value = '50%';
-                                        }
+                        const items: StringValue[] = [{ key: 'cornerFamily', value: node.dataset.androidCornerFamily === 'cut' ? 'cut' : 'rounded' }];
+                        const maxRadius = Math.min(node.bounds.width, node.bounds.height) / 2;
+                        let radius: string;
+                        for (const attr in borderRadius) {
+                            let value = borderRadius[attr] as string;
+                            const checkSize = (cssAttr: CssStyleAttr) => {
+                                if (isPercent(radius = node.css(cssAttr))) {
+                                    if (asPercent(value = radius) > 0.5) {
+                                        value = '50%';
                                     }
-                                    else {
-                                        const unit = asPx(value);
-                                        if (unit > maxRadius) {
-                                            value = '50%';
-                                        }
-                                    }
-                                };
-                                switch (attr) {
-                                    case 'radius':
-                                        checkSize('borderTopLeftRadius');
-                                        items.push({ key: 'cornerSize', value });
-                                        break;
-                                    case 'topLeftRadius':
-                                        checkSize('borderTopLeftRadius');
-                                        items.push({ key: 'cornerSizeTopLeft', value });
-                                        break;
-                                    case 'topRightRadius':
-                                        checkSize('borderTopRightRadius');
-                                        items.push({ key: 'cornerSizeTopRight', value });
-                                        break;
-                                    case 'bottomLeftRadius':
-                                        checkSize('borderBottomLeftRadius');
-                                        items.push({ key: 'cornerSizeBottomLeft', value });
-                                        break;
-                                    case 'bottomRightRadius':
-                                        checkSize('borderBottomRightRadius');
-                                        items.push({ key: 'cornerSizeBottomRight', value });
-                                        break;
                                 }
+                                else {
+                                    const unit = asPx(value);
+                                    if (unit > maxRadius) {
+                                        value = '50%';
+                                    }
+                                }
+                            };
+                            switch (attr) {
+                                case 'radius':
+                                    checkSize('borderTopLeftRadius');
+                                    items.push({ key: 'cornerSize', value });
+                                    break;
+                                case 'topLeftRadius':
+                                    checkSize('borderTopLeftRadius');
+                                    items.push({ key: 'cornerSizeTopLeft', value });
+                                    break;
+                                case 'topRightRadius':
+                                    checkSize('borderTopRightRadius');
+                                    items.push({ key: 'cornerSizeTopRight', value });
+                                    break;
+                                case 'bottomLeftRadius':
+                                    checkSize('borderBottomLeftRadius');
+                                    items.push({ key: 'cornerSizeBottomLeft', value });
+                                    break;
+                                case 'bottomRightRadius':
+                                    checkSize('borderBottomRightRadius');
+                                    items.push({ key: 'cornerSizeBottomRight', value });
+                                    break;
                             }
-                            const { borderAll, borderData } = getBorderAll(stored, true);
-                            if (borderAll && borderData) {
-                                node.app('strokeWidth', formatPX(Math.round(borderData.width)));
-                                node.app('strokeColor', `@color/${Resource.addColor(resourceId, borderData.color)}`);
-                                delete stored.borderTop;
-                                delete stored.borderBottom;
-                                delete stored.borderRight;
-                                delete stored.borderLeft;
-                            }
-                            const name = 'Material_ShapeableImageView_' + capitalize(node.controlId);
-                            items.sort((a, b) => a.key < b.key ? -1 : 1);
-                            styles.set(name, { name, parent: '', items } as StyleAttribute);
-                            node.app('srcCompat', node.android('src'));
-                            node.app('shapeAppearanceOverlay', `@style/${name}`);
-                            node.delete('android', 'src');
-                            renderedAs.controlName = SUPPORT_TAGNAME_X.SHAPEABLE_IMAGE_VIEW;
-                            delete stored.borderRadius;
-                            if (Object.keys(stored).length === 0) {
-                                return;
-                            }
+                        }
+                        const { borderAll, borderData } = getBorderAll(stored, true);
+                        if (borderAll && borderData) {
+                            node.app('strokeWidth', formatPX(Math.round(borderData.width)));
+                            node.app('strokeColor', `@color/${Resource.addColor(resourceId, borderData.color)}`);
+                            delete stored.borderTop;
+                            delete stored.borderBottom;
+                            delete stored.borderRight;
+                            delete stored.borderLeft;
+                        }
+                        convertShapeableImageView(resourceId, node, items);
+                        delete stored.borderRadius;
+                        if (Object.keys(stored).length === 0) {
+                            return;
                         }
                     }
                 }
@@ -790,10 +808,219 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             borderData = outline;
         }
         else {
-            ({ borderAll, borderStyle, borderVisible, borders, borderData, border } = getBorderAll(boxStyle, false, node));
+            ({ borderAll, borderStyle, borderVisible, borders, borderData } = getBorderAll(boxStyle, false, node));
         }
         if (borderAll) {
             border = borderData;
+        }
+        if (node && (node.layoutFrame && !node.rendering || node.textElement && node.textEmpty) && node.renderedAs) {
+            const transparent = new Array(4);
+            let count = 0;
+            for (let i = 0; i < 4; ++i) {
+                const item = borders[i];
+                if (item && item.color.transparent) {
+                    transparent[i] = item;
+                    ++count;
+                }
+            }
+            if (count > 1 && count < 4) {
+                let valid: Undef<boolean>;
+                const resetBorder = (index: number, padding: number) => {
+                    let item = index !== -1 && borders[index];
+                    if (item) {
+                        switch (index) {
+                            case 0:
+                                node.setCacheValue('borderTopWidth', 0);
+                                break;
+                            case 1:
+                                node.setCacheValue('borderRightWidth', 0);
+                                break;
+                            case 2:
+                                node.setCacheValue('borderBottomWidth', 0);
+                                break;
+                            case 3:
+                                node.setCacheValue('borderLeftWidth', 0);
+                                break;
+                        }
+                        borders[index] = undefined;
+                        borderVisible[index] = false;
+                    }
+                    if (item = borders[padding]) {
+                        const width = Math.ceil(item.width);
+                        const setOffsetTop = (value: number, baseline?: boolean, inverted?: boolean) => {
+                            if (!node.pageFlow) {
+                                if (!baseline) {
+                                    node.modifyBox(BOX_STANDARD.MARGIN_TOP, value * (inverted ? index !== -1 ? 2 : 1 : -1));
+                                }
+                            }
+                            else if (node.android('layout_alignBaseline')) {
+                                if (baseline) {
+                                    if (node.verticalAligned) {
+                                        node.setCacheValue('verticalAlign', node.verticalAlign + value);
+                                    }
+                                    else if (node.positionRelative) {
+                                        node.setCacheValue('top', node.top - value);
+                                    }
+                                }
+                            }
+                            else if (!node.baselineAltered) {
+                                if (node.renderParent!.layoutConstraint) {
+                                    const adjustment = node.bounds.top - node.documentParent.box.top;
+                                    if (adjustment !== 0) {
+                                        node.anchorParent('vertical', 0, undefined, true);
+                                        node.delete('app', 'layout_constraintBaseline_toBaselineOf');
+                                        node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
+                                        node.setCacheValue('top', 0);
+                                        node.translateY(adjustment);
+                                        node.baselineAltered = true;
+                                    }
+                                }
+                                else {
+                                    if (baseline) {
+                                        value /= 2;
+                                    }
+                                    node.modifyBox(BOX_STANDARD.MARGIN_TOP, value);
+                                }
+                            }
+                        };
+                        switch (padding) {
+                            case 0:
+                                setOffsetTop(width);
+                                node.setCacheValue('borderTopWidth', 0);
+                                break;
+                            case 1:
+                                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, width);
+                                node.setCacheValue('borderRightWidth', 0);
+                                break;
+                            case 2:
+                                setOffsetTop(width, false, true);
+                                node.setCacheValue('borderBottomWidth', 0);
+                                break;
+                            case 3:
+                                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, width);
+                                node.setCacheValue('borderLeftWidth', 0);
+                                break;
+                        }
+                        if (!valid) {
+                            setOffsetTop(width, true);
+                            valid = true;
+                        }
+                        borders[padding] = undefined;
+                        borderVisible[padding] = false;
+                    }
+                    border = undefined;
+                    borderAll = false;
+                };
+                const [top, right, bottom, left] = borders;
+                const items: StringValue[] = [];
+                let width = 0,
+                    height = 0,
+                    backgroundColor: Undef<ColorData>;
+                if (transparent[0] && transparent[2]) {
+                    let value = Math.ceil(transparent[0].width);
+                    width = value;
+                    if (right) {
+                        if (!right.color.transparent) {
+                            items.push({ key: 'cornerFamilyTopLeft', value: 'cut' }, { key: 'cornerSizeTopLeft', value: formatPX(value) });
+                            backgroundColor = right.color;
+                            resetBorder(0, 1);
+                        }
+                        else {
+                            resetBorder(-1, 1);
+                        }
+                    }
+                    if (left) {
+                        if (!left.color.transparent) {
+                            items.push({ key: 'cornerFamilyTopRight', value: 'cut' }, { key: 'cornerSizeTopRight', value: formatPX(value) });
+                            backgroundColor = left.color;
+                            resetBorder(0, 3);
+                        }
+                        else {
+                            resetBorder(-1, 3);
+                        }
+                    }
+                    value = Math.ceil(transparent[2].width);
+                    width = Math.max(width, value);
+                    if (right) {
+                        if (!right.color.transparent) {
+                            items.push({ key: 'cornerFamilyBottomLeft', value: 'cut' }, { key: 'cornerSizeBottomLeft', value: formatPX(value) });
+                            backgroundColor = right.color;
+                            resetBorder(2, 1);
+                        }
+                        else {
+                            resetBorder(-1, 1);
+                        }
+                    }
+                    if (left) {
+                        if (!left.color.transparent) {
+                            items.push({ key: 'cornerFamilyBottomRight', value: 'cut' }, { key: 'cornerSizeBottomRight', value: formatPX(value) });
+                            backgroundColor = left.color;
+                            resetBorder(2, 3);
+                        }
+                        else {
+                            resetBorder(-1, 3);
+                        }
+                    }
+                }
+                if (transparent[1] && transparent[3]) {
+                    let value = Math.ceil(transparent[1].width);
+                    height = value;
+                    if (top) {
+                        if (!top.color.transparent) {
+                            items.push({ key: 'cornerFamilyBottomRight', value: 'cut' }, { key: 'cornerSizeBottomRight', value: formatPX(value) });
+                            backgroundColor = top.color;
+                            resetBorder(1, 0);
+                        }
+                        else {
+                            resetBorder(-1, 0);
+                        }
+                    }
+                    if (bottom) {
+                        if (!bottom.color.transparent) {
+                            items.push({ key: 'cornerFamilyTopRight', value: 'cut' }, { key: 'cornerSizeTopRight', value: formatPX(value) });
+                            backgroundColor = bottom.color;
+                            resetBorder(1, 2);
+                        }
+                        else {
+                            resetBorder(-1, 2);
+                        }
+                    }
+                    value = Math.ceil(transparent[3].width);
+                    height = Math.max(height, value);
+                    if (top) {
+                        if (!top.color.transparent) {
+                            items.push({ key: 'cornerFamilyBottomLeft', value: 'cut' }, { key: 'cornerSizeBottomLeft', value: formatPX(value) });
+                            backgroundColor = top.color;
+                            resetBorder(3, 0);
+                        }
+                        else {
+                            resetBorder(-1, 0);
+                        }
+                    }
+                    if (bottom) {
+                        if (!bottom.color.transparent) {
+                            items.push({ key: 'cornerFamilyTopLeft', value: 'cut' }, { key: 'cornerSizeTopLeft', value: formatPX(value) });
+                            backgroundColor = bottom.color;
+                            resetBorder(3, 2);
+                        }
+                        else {
+                            resetBorder(-1, 2);
+                        }
+                    }
+                }
+                if (valid) {
+                    if (backgroundColor) {
+                        boxStyle.backgroundColor = backgroundColor;
+                    }
+                    convertShapeableImageView(resourceId, node, items, true);
+                    if (!node.hasUnit('width')) {
+                        node.css('width', formatPX(width || node.box.width), true);
+                    }
+                    if (!node.hasUnit('height')) {
+                        node.css('height', formatPX(height || node.box.height), true);
+                    }
+                }
+            }
         }
         if (border && !isAlternatingBorder(border.style, Math.round(border.width)) && !(border.style === 'double' && Math.floor(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);

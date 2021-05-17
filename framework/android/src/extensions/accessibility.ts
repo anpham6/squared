@@ -8,6 +8,8 @@ import Resource from '../resource';
 
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_TEMPLATE } = squared.base.lib.constant;
 
+const { formatPX } = squared.lib.css;
+
 function addTextDecorationLine(node: View, attr: string) {
     if (!checkTextElement(node, attr)) {
         node.cascade((item: View) => {
@@ -77,11 +79,8 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                         sibling.labelFor = node;
                                         if (!this.options.displayLabel) {
                                             sibling.hide();
-                                            if (node.hasUnit('width')) {
-                                                if (!node.hasUnit('minWidth')) {
-                                                    node.css('minWidth', node.cssValue('width'));
-                                                }
-                                                node.css('width', 'auto', true);
+                                            if (node.width) {
+                                                node.cssApply({ minWidth: formatPX(node.width), width: 'auto', maxWidth: 'auto' });
                                             }
                                         }
                                         break;

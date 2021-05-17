@@ -1722,7 +1722,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get blockVertical() {
         const result = this._cache.blockVertical;
-        return result === undefined ? this._cache.blockVertical = this.blockDimension && this.hasHeight : result;
+        return result === undefined ? this._cache.blockVertical = this.blockDimension && this.height > 0 : result;
     }
 
     get rightAligned() {

@@ -2235,7 +2235,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const { orientation, chained, parent, relative, documentId } = options;
             if ((!orientation || orientation === 'horizontal') && (
                 chained && (!documentId && (this.alignSibling('leftRight') || this.alignSibling('rightLeft') || this.app('layout_constraintHorizontal_chainStyle')) || documentId && (this.alignSibling('leftRight') === documentId || this.alignSibling('rightLeft') === documentId)) ||
-                parent && (this.alignParent('left') || !this.alignParent('right')) ||
+                parent && (this.alignParent('left') || this.alignParent('right')) ||
                 relative && (!documentId && (this.alignSibling('left') || this.alignSibling('right')) || documentId && (this.alignSibling('left') === documentId || this.alignSibling('right') === documentId))
             )) {
                 return true;
@@ -2353,7 +2353,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.hide({ collapse: true });
                 return true;
             }
-            else if (renderParent.layoutConstraint && !this.onlyChild && !this.rendering && !this.isAnchored({ chained: true, parent: true, relative: true }) && this.hide({ remove: true })) {
+            else if (renderParent.layoutConstraint && !this.rendering && !this.isAnchored({ chained: true, parent: true, relative: true }) && this.hide({ remove: true })) {
                 return false;
             }
             const lineHeight = this.lineHeight;
@@ -2799,12 +2799,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                return parent.layoutConstraint && !parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && (!parent.layoutVertical || !this.blockStatic || this.variableWidth) && !this.positionFixed && (
-                    this.isAnchored({ orientation: 'horizontal', chained: true }) ||
-                    !this.textElement && !this.inputElement && !this.controlElement && !this.isAnchored({ orientation: 'horizontal', parent: true }) ||
-                    this.hasUnit('minWidth') && parent.inlineWidth)
-                    ? '0px'
-                    : 'match_parent';
+                if (parent.layoutConstraint && !this.positionFixed) {
+                    if (this.isAnchored({ orientation: 'horizontal', chained: true })) {
+                        return '0px';
+                    }
+                    else if (!parent.flexibleWidth && (!parent.inlineWidth || this.rendering) && (!parent.layoutVertical || !this.blockStatic || this.variableWidth) && (
+                       !this.textElement && !this.inputElement && !this.controlElement && !this.isAnchored({ orientation: 'horizontal', parent: true }) ||
+                       this.hasUnit('minWidth') && parent.inlineWidth))
+                    {
+                        return '0px';
+                    }
+                }
+                return 'match_parent';
             }
             return '';
         }

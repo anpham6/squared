@@ -96,15 +96,15 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     public postBaseLayout(node: T) {
         const mainData = this.data.get(node) as NegativeXData;
         if (mainData) {
-            let firstChild = mainData.firstChild;
+            const firstChild = mainData.firstChild;
             if (firstChild) {
-                firstChild = (firstChild.ascend({ excluding: node, attr: 'outerWrapper' }).pop() || firstChild) as T;
-                firstChild.anchor('left', 'parent');
-                firstChild.anchorStyle('horizontal', 0);
-                firstChild.anchorParent('vertical', 0);
-                firstChild.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
-                firstChild.setConstraintDimension();
-                firstChild.positioned = true;
+                const outerWrapper = firstChild.outerMostWrapper as T;
+                outerWrapper.anchor('left', 'parent');
+                outerWrapper.anchorStyle('horizontal', 0);
+                outerWrapper.anchorParent('vertical', 0);
+                outerWrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
+                outerWrapper.setConstraintDimension();
+                outerWrapper.positioned = true;
             }
             for (const item of mainData.children) {
                 if (item === firstChild) {
@@ -125,6 +125,22 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             node.anchorParent('vertical', 0);
             node.setConstraintDimension();
             node.positioned = true;
+        }
+    }
+
+    public postOptimize(node: T) {
+        if (node.inlineHeight && !node.imageContainer) {
+            const mainData = this.data.get(node) as NegativeXData;
+            if (mainData) {
+                const height = Math.floor(node.bounds.height);
+                for (const item of mainData.children) {
+                    if (!item.flexibleHeight && Math.ceil(item.bounds.height) >= height) {
+                        node.anchorParent('vertical', 0, undefined, true);
+                        node.setLayoutHeight('0px');
+                        break;
+                    }
+                }
+            }
         }
     }
 

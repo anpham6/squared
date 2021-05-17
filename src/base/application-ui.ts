@@ -148,18 +148,12 @@ function setElementState(node: NodeUI, type?: number) {
     }
 }
 
-function isDocumentBase(node: NodeUI) {
-    const renderExtension = node.renderExtension;
-    return !!renderExtension && renderExtension.some(item => item.documentBase);
-}
-
 function getStyleAttr(sessionId: string, element: Element, attr: CssStyleAttr, pseudoElt = '') {
     const styleMap = getElementCache<CSSStyleDeclaration>(element, 'styleMap' + pseudoElt, sessionId);
     return styleMap && styleMap[attr] || getStyle(element, pseudoElt as PseudoElt)[attr];
 }
 
 const getStyleMap = (sessionId: string, element: Element, pseudoElt = '') => getElementCache<CSSStyleDeclaration>(element, 'styleMap' + pseudoElt, sessionId) || getStyle(element, pseudoElt as PseudoElt);
-const setColumnMaxWidth = (nodes: NodeUI[], value: number) => nodes.forEach(child => !child.hasUnit('width') && !child.hasUnit('maxWidth') && !child.imageContainer && child.css('maxWidth', formatPX(value)));
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
@@ -238,16 +232,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         const documentRoot: LayoutRoot<T>[] = [];
         const finalizeData: FinalizeDataExtensionUI<T> = { resourceId: this.resourceId, rendered, documentRoot };
+        const isDocumentBase = (node: NodeUI) => {
+            const renderExtension = node.renderExtension;
+            return !!renderExtension && renderExtension.some(item => item.documentBase);
+        };
         itemCount = rendered.length;
         for (let i = 0; i < itemCount; ++i) {
             const node = rendered[i];
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
-            if (node.documentRoot && node.renderParent && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
+            if (node.documentRoot && !(!node.rendering && !node.inlineText && node.naturalElements.length)) {
                 const host = node.innerMostWrapped as T;
                 const filename = host.data<string>(Application.KEY_NAME, 'filename');
-                const renderTemplates = node.renderParent.renderTemplates as Undef<NodeTemplate<T>[]>;
+                const renderTemplates = node.renderParent!.renderTemplates as Undef<NodeTemplate<T>[]>;
                 if (filename && renderTemplates) {
                     documentRoot.push({ node, pathname: host.data<string>(Application.KEY_NAME, 'pathname'), filename, documentBase: isDocumentBase(host) || isDocumentBase(node), renderTemplates });
                 }
@@ -1949,6 +1947,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[] = [], rightAbove: T[] = []) {
         const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
+        const setColumnMaxWidth = (nodes: NodeUI[], value: number) => nodes.forEach(child => !child.hasUnit('width') && !child.hasUnit('maxWidth') && !child.imageContainer && child.css('maxWidth', formatPX(value)));
         const paddingNodes: T[] = [];
         for (let i = 0, length = inlineAbove.length; i < length; ++i) {
             const child = inlineAbove[i];
@@ -2067,10 +2066,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const indexA = a.index;
             const indexB = b.index;
             if (indexA !== indexB) {
-                if (indexA === 0 || indexB === Infinity || indexB === -1 && indexA !== Infinity) {
+                if (indexA === 0 || indexB === -1 && indexA !== Infinity) {
                     return -1;
                 }
-                if (indexB === 0 || indexA === Infinity || indexA === -1 && indexB !== Infinity) {
+                if (indexB === 0 || indexA === -1 && indexB !== Infinity) {
                     return 1;
                 }
                 return indexA - indexB;

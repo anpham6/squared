@@ -868,6 +868,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     percentage.push(item);
                 }
             }
+            if (groupGrow.length === 1 && length === 1 && items[0].flexbox.grow < 1) {
+                percentage.push(items[0]);
+                groupGrow.length = 0;
+            }
             let q = percentage.length,
                 maxWidth: Undef<string>,
                 previousWeight = 0;
@@ -896,12 +900,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 item.flexbox.weight = weight;
                 if (horizontal) {
                     if (item.percentWidth > 0) {
-                        item.css('width', 'auto', true);
+                        item.css('width', 'auto');
                         item.setCacheValue('percentWidth', 0);
                     }
                 }
                 else if (item.percentHeight > 0) {
-                    item.css('height', 'auto', true);
+                    item.css('height', 'auto');
                     item.setCacheValue('percentHeight', 0);
                 }
                 if (q === length && !isNaN(previousWeight)) {

@@ -1673,7 +1673,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             ({ percent, initial } = options);
         }
         const value = initial ? this.cssInitial(attr, options) : this._styleMap[attr];
-        return value ? isLength(value, percent !== false) : false;
+        return !!value && isLength(value, percent !== false);
     }
 
     public setBounds(cache = true) {

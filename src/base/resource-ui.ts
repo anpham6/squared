@@ -693,7 +693,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
     }
 
     public static isBackgroundVisible(object: Undef<BoxStyle>) {
-        return object ? 'backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object : false;
+        return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
     }
 
     public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean) {

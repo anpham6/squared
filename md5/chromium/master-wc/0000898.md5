@@ -10,9 +10,9 @@ f28feaabbf4720b45e09f2ca6193c503  ./app/src/main/res/drawable/span_framelayout_4
 553d67da31b77302c8cc7a3958f279d9  ./app/src/main/res/drawable/svg_imageview_1_viewbox.xml
 dffec6fee67a8930cb5f4057d110635c  ./app/src/main/res/drawable/svg_imageview_2_viewbox.xml
 b895a0ae962482ae0f2cb86e8e05f678  ./app/src/main/res/drawable/svg_imageview_5_viewbox.xml
-f6c5312609426c676ff644d8feecdc21  ./app/src/main/res/layout/activity_main.xml
+bb086eff64281f7e5f74d5bfd9d880d5  ./app/src/main/res/layout/activity_main.xml
 0900532578cd4e31fd3db5eb794a3450  ./app/src/main/res/values/colors.xml
-fe8ea4a293aa71330783773f3094d7eb  ./app/src/main/res/values/dimens.xml
+9c338efe96e163c99791c61eb0b73f14  ./app/src/main/res/values/dimens.xml
 926b5cfb285c212cbe2f3f830bbcd529  ./app/src/main/res/values/strings.xml
-b160c316c2c23167d03dc8e237f5d281  ./app/src/main/res/values/styles.xml
+b9a864d796c12c683b0eb177fd69f388  ./app/src/main/res/values/styles.xml
 e615506b2d6ed8e95e1803aeab4fb662  ./app/src/main/res/values/themes.xml
