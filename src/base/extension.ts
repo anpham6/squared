@@ -3,6 +3,8 @@ import type Controller from './controller';
 import type Resource from './resource';
 import type Node from './node';
 
+import MultiSet from './lib/session/multiset';
+
 export default class Extension<T extends Node> implements squared.base.Extension<T> {
     public enabled = true;
     public controller!: Controller<T>;
@@ -10,7 +12,7 @@ export default class Extension<T extends Node> implements squared.base.Extension
     public readonly data = new WeakMap<object, unknown>(); // eslint-disable-line @typescript-eslint/ban-types
     public readonly options: StandardMap = {};
     public readonly dependencies: ExtensionDependency[] = [];
-    public readonly subscribers = new Set<T>();
+    public readonly subscribers = new MultiSet<T>();
 
     protected _application!: Application<T>;
 
@@ -36,9 +38,7 @@ export default class Extension<T extends Node> implements squared.base.Extension
     }
 
     public reset() {
-        if (this.subscribers.size) {
-            this.subscribers.clear();
-        }
+        this.subscribers.clear();
     }
 
     public beforeParseDocument(sessionId: string) {}

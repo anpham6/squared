@@ -4,7 +4,7 @@ declare module "lib" {
     namespace base {
         class Container<T = unknown> implements Iterable<T> {
             children: T[];
-            [Symbol.iterator](): Iterator<T>;
+            [Symbol.iterator](): IterableIterator<T>;
             item(index: number, value?: T): Undef<T>;
             add(item: T): this;
             addAt(index: number, ...items: T[]): this;
@@ -34,6 +34,14 @@ declare module "lib" {
             hasNext(): boolean;
             remove(): void;
             forEachRemaining(predicate: FunctionSelf<T, void>): void;
+            constructor(children: T[]);
+        }
+
+        class Iterator<T = unknown> implements IterableIterator<T> {
+            readonly children: T[];
+            readonly length: number;
+            [Symbol.iterator](): IterableIterator<T>;
+            next(): IteratorResult<T>
             constructor(children: T[]);
         }
 

@@ -11,6 +11,7 @@ import * as session from './lib/session';
 import * as util from './lib/util';
 
 import Container from './lib/base/container';
+import Iterator from './lib/base/iterator';
 import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
 import Pattern from './lib/base/pattern';
@@ -553,6 +554,7 @@ const lib = {
     base: {
         Container,
         ArrayIterator,
+        Iterator,
         ListIterator,
         Pattern
     },

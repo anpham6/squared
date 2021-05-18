@@ -1,26 +1,13 @@
+import Iterator from './iterator';
 import ListIterator from './listiterator';
 
 import { sortByArray } from '../util';
-
-class Iter<T> implements Iterator<T> {
-    private index = -1;
-
-    constructor(
-        public readonly children: T[],
-        public readonly length = children.length) {
-    }
-
-    public next() {
-        const i = ++this.index;
-        return (i < this.length ? { value: this.children[i] } : { done: true }) as IteratorResult<T>;
-    }
-}
 
 export default class Container<T = unknown> implements squared.lib.base.Container<T>, Iterable<T> {
     constructor(public children: T[] = []) {}
 
     public [Symbol.iterator]() {
-        return new Iter(this.children);
+        return new Iterator(this.children) as IterableIterator<T>;
     }
 
     public item(index: number, value?: T): Undef<T> {

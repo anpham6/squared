@@ -1201,10 +1201,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const ext = extensions[i] as ExtensionUI<T>;
             if (ext.postBaseLayout) {
                 const postBaseLayout = ext.postBaseLayout.bind(ext);
-                for (const node of ext.subscribers) {
-                    if (node.sessionId === sessionId) {
-                        postBaseLayout(node);
-                    }
+                for (const node of ext.subscribers.values(sessionId)) {
+                    postBaseLayout(node);
                 }
             }
             ext.afterBaseLayout(sessionId, cache);
@@ -1218,10 +1216,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const ext = extensions[i] as ExtensionUI<T>;
             if (ext.postConstraints) {
                 const postConstraints = ext.postConstraints.bind(ext);
-                for (const node of ext.subscribers) {
-                    if (node.sessionId === sessionId) {
-                        postConstraints(node);
-                    }
+                for (const node of ext.subscribers.values(sessionId)) {
+                    postConstraints(node);
                 }
             }
             ext.afterConstraints(sessionId, cache);
@@ -1235,10 +1231,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const ext = extensions[i] as ExtensionUI<T>;
             if (ext.postResources) {
                 const postResources = ext.postResources.bind(ext);
-                for (const node of ext.subscribers) {
-                    if (node.sessionId === sessionId) {
-                        postResources(node);
-                    }
+                for (const node of ext.subscribers.values(sessionId)) {
+                    postResources(node);
                 }
             }
             ext.afterResources(sessionId, resourceId, cache);

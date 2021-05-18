@@ -295,7 +295,7 @@ declare module "base" {
         readonly name: string;
         readonly options: StandardMap;
         readonly dependencies: ExtensionDependency[];
-        readonly subscribers: Set<T>;
+        readonly subscribers: lib.session.MultiSet<T>;
         reset(): void;
         require(value: ExtensionDependency): void;
         beforeInsertNode?(element: HTMLElement, sessionId: string): boolean;
@@ -810,6 +810,23 @@ declare module "base" {
     }
 
     namespace lib {
+        namespace session {
+            class MultiSet<T extends Node> implements Set<T> {
+                readonly [Symbol.toStringTag]: string;
+                [Symbol.iterator](): IterableIterator<T>;
+                keys(sessionId?: string): IterableIterator<T>;
+                values(sessionId?: string): IterableIterator<T>;
+                entries(sessionId?: string): IterableIterator<[T, T]>;
+                clear(sessionId?: string): void;
+                add(node: T): this;
+                delete(node: T): boolean;
+                has(node: T): boolean;
+                combine(): void;
+                forEach(predicate: (a: T, b: T, set: Set<T>) => void, thisArg?: any): void;
+                get size(): number;
+            }
+        }
+
         namespace internal {
             const enum EXT_NAME {
                 ACCESSIBILITY = 'squared.accessibility',
