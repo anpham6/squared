@@ -565,8 +565,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public api = BUILD_VERSION.LATEST;
         public renderChildren!: T[];
         public renderParent!: Null<T>;
-        public horizontalRows?: T[][];
-        public companion?: T;
+        public horizontalRows!: Undef<T[][]>;
+        public companion!: Undef<T>;
         public alignedWithX?: T;
         public alignedWithY?: T;
 
@@ -1928,8 +1928,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return '';
                 }
             }
-            const app = this._namespaces.app;
-            return app && app[attr] || '';
+            return this._namespaces.app![attr] || '';
         }
 
         public formatted(value: string, overwrite = true) {
@@ -2982,7 +2981,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public isUnstyled(checkMargin = true) {
-            return this.contentBoxWidth === 0 && this.contentBoxHeight === 0 && this.css('verticalAlign') === 'baseline' && !this.hasAlign(NODE_ALIGNMENT.WRAPPER) && (!checkMargin || !this.blockStatic && this.marginTop === 0 && this.marginBottom === 0) && !this.visibleStyle.background && !this.positionRelative && !this.hasWidth && !this.hasHeight && !this.has('maxWidth') && !this.has('maxHeight') && this.css('whiteSpace') !== 'nowrap';
+            return this.positionStatic && this.contentBoxWidth === 0 && this.contentBoxHeight === 0 && this.css('verticalAlign') === 'baseline' && !this.hasAlign(NODE_ALIGNMENT.WRAPPER) && (!checkMargin || !this.blockStatic && this.marginTop === 0 && this.marginBottom === 0) && !this.visibleStyle.background && !this.hasWidth && !this.hasHeight && !this.has('maxWidth') && !this.has('maxHeight') && this.css('whiteSpace') !== 'nowrap';
         }
 
         public getHorizontalBias(rect: BoxRect = this.documentParent.box) {

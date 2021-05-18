@@ -446,13 +446,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderExtension: Null<ExtensionUI<T>[]> = null;
     public renderTemplates: Null<NodeTemplate<T>[]> = null;
     public renderedAs: Null<NodeTemplate<T>> = null;
-    public innerBefore: Undef<T> = undefined;
-    public innerAfter: Undef<T> = undefined;
     public outerWrapper: Undef<T> = undefined;
-    public companion?: T;
     public horizontalRows?: T[][];
-    public horizontalRowStart?: boolean;
-    public horizontalRowEnd?: boolean;
+    public companion?: T;
     public documentChildren?: T[];
 
     protected _preferInitial = true;
@@ -1897,6 +1893,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._siblingsTrailing ||= this.nextSiblings({ floating: true });
     }
 
+    set horizontalRowStart(value) {
+        this._cacheState.horizontalRowStart = value;
+    }
+    get horizontalRowStart() {
+        return this._cacheState.horizontalRowStart ?? false;
+    }
+
+    set horizontalRowEnd(value) {
+        this._cacheState.horizontalRowEnd = value;
+    }
+    get horizontalRowEnd() {
+        return this._cacheState.horizontalRowEnd ?? false;
+    }
+
     get flowElement() {
         return this.pageFlow && (!this.excluded || this.lineBreak);
     }
@@ -2009,6 +2019,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return false;
+    }
+
+    get innerBefore() {
+        return this.naturalChildren.find(node => node.pseudoElt === '::before') as Undef<T> || null;
+    }
+
+    get innerAfter() {
+        return this.naturalChildren.find(node => node.pseudoElt === '::after') as Undef<T> || null;
     }
 
     get rendering() {

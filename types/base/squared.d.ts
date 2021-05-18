@@ -610,11 +610,7 @@ declare module "base" {
         renderedAs: Null<NodeTemplate<NodeUI>>;
         documentChildren?: NodeUI[];
         outerWrapper?: NodeUI;
-        innerBefore?: NodeUI;
-        innerAfter?: NodeUI;
         companion?: NodeUI;
-        horizontalRowStart?: boolean;
-        horizontalRowEnd?: boolean;
         horizontalRows?: NodeUI[][];
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
@@ -723,6 +719,10 @@ declare module "base" {
         get labelFor(): Null<NodeUI>;
         set innerWrapped(value);
         get innerWrapped(): Null<NodeUI>;
+        set horizontalRowStart(value);
+        get horizontalRowStart(): boolean;
+        set horizontalRowEnd(value);
+        get horizontalRowEnd(): boolean;
         set use(value);
         get use(): string;
         set localSettings(value);
@@ -761,6 +761,8 @@ declare module "base" {
         get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
         get onlyStaticChild(): boolean;
+        get innerBefore(): Null<NodeUI>;
+        get innerAfter(): Null<NodeUI>;
         get rendering(): boolean;
         get boxReset(): number[];
         get boxAdjustment(): number[];

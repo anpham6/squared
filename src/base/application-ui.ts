@@ -645,7 +645,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         child.inlineText = true;
                     }
                     inlineText = false;
-                    node.innerBefore = child;
                 }
                 else if (element === afterElement) {
                     setElementState(child = this.insertNode(processing, afterElement, cascadeAll, '::after'), 2);
@@ -654,7 +653,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         child.inlineText = true;
                     }
                     inlineText = false;
-                    node.innerAfter = child;
                 }
                 else if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
