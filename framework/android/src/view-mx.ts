@@ -3103,9 +3103,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         set innerWrapped(value) {
             if (!this.naturalChild && value) {
-                value = value.outerMostWrapper as T;
-                this._innerWrapped = value;
+                const outerWrapper = value.outerWrapper;
+                if (outerWrapper) {
+                    outerWrapper.innerWrapped = this;
+                    this.outerWrapper = outerWrapper;
+                }
                 value.outerWrapper = this;
+                this._innerWrapped = value;
             }
         }
 

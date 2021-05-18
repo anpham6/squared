@@ -192,7 +192,7 @@ export function replaceCharacterData(value: string, tab?: number, quote?: boolea
                 }
                 break;
             case '@':
-                output += i === 0 || !output.trim() ? '\\@' : '@';
+                output += !quote && (i === 0 || !output.trim()) ? '\\@' : '@';
                 break;
             case '"':
                 output += '&quot;';

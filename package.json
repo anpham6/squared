@@ -1,6 +1,6 @@
 {
   "name": "squared",
-  "version": "2.5.12",
+  "version": "2.5.13",
   "description": "Virtual DOM and CSS framework for parsing usable browser data.",
   "main": "dist/squared.umd.js",
   "types": "types/index.d.ts",
@@ -76,7 +76,7 @@
   "license": "MIT",
   "homepage": "https://github.com/anpham6/squared#readme",
   "dependencies": {
-    "@squared-functions/file-manager": "^0.15.0",
+    "@squared-functions/file-manager": "^0.15.1",
     "archiver": "^5.3.0",
     "chalk": "^4.1.1",
     "cors": "^2.8.5",

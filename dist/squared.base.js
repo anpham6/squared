@@ -1,4 +1,4 @@
-/* squared.base 2.5.12
+/* squared.base 2.5.13
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -5407,7 +5407,7 @@ this.squared.base = (function (exports) {
                 if (content) {
                     content = content.replace(/\\(["'])/g, (...match) => match[1]);
                 }
-                if (content || base64 || buffer) {
+                if (content || base64 || buffer || mimeType && FILE$1.PROTOCOL.test(uri)) {
                     const url = uri.split('?')[0];
                     if (!filename) {
                         const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
@@ -6886,55 +6886,58 @@ this.squared.base = (function (exports) {
             return value.replace(/\u00A0/g, this.STRING_SPACE);
         }
         removeExcludedText(node, element) {
-            const { preserveWhiteSpace, sessionId } = node;
             const styled = element.children.length > 0 || element.tagName === 'CODE';
             const attr = styled ? 'innerHTML' : 'textContent';
-            let value = element[attr] || '';
-            element.childNodes.forEach((item, index) => {
+            let value = element[attr];
+            if (!value) {
+                return '';
+            }
+            const { preserveWhiteSpace, sessionId } = node;
+            const childNodes = element.childNodes;
+            for (let i = 0, length = childNodes.length; i < length; ++i) {
+                const item = childNodes[i];
                 const child = getElementAsNode$1(item, sessionId);
-                if (!child || !child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
-                    if (child) {
-                        if (styled && child.htmlElement) {
-                            if (child.lineBreak) {
-                                const previousSibling = child.previousSibling;
-                                value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
-                            }
-                            else if (child.positioned) {
-                                value = value.replace(item.outerHTML, '');
-                            }
-                            else if (child.display === 'contents') {
-                                value = value.replace(item.outerHTML, child.textContent);
-                            }
-                            else if (!preserveWhiteSpace) {
-                                value = value.replace(item.outerHTML, child.pageFlow && isString$1(child.textContent) ? this.STRING_SPACE : '');
-                            }
-                            return;
-                        }
-                        const textContent = child.plainText ? child.textContent : child[attr];
-                        if (textContent) {
-                            if (!preserveWhiteSpace) {
-                                value = value.replace(textContent, '');
-                            }
-                            return;
-                        }
-                    }
-                    else if (item.nodeName[0] !== '#') {
+                if (!child) {
+                    if (item.nodeName[0] !== '#') {
                         value = value.replace(item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords$3(getComputedStyle(item).position) && isString$1(item.textContent) ? this.STRING_SPACE : '');
                     }
                     if (!preserveWhiteSpace) {
-                        if (index === 0) {
+                        if (i === 0) {
                             value = value.replace(CHAR_LEADINGSPACE, '');
                         }
-                        else if (index === length - 1) {
+                        else if (i === length - 1) {
                             value = value.replace(CHAR_TRAILINGSPACE, '');
                         }
                     }
                 }
-            });
+                else if (!child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
+                    if (styled) {
+                        if (child.lineBreak) {
+                            const previousSibling = child.previousSibling;
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
+                        }
+                        else if (child.positioned) {
+                            value = value.replace(item.outerHTML, '');
+                        }
+                        else if (child.display === 'contents') {
+                            value = value.replace(item.outerHTML, child.textContent);
+                        }
+                        else if (!preserveWhiteSpace) {
+                            value = value.replace(item.outerHTML, child.pageFlow && isString$1(child.textContent) ? this.STRING_SPACE : '');
+                        }
+                    }
+                    else if (!preserveWhiteSpace) {
+                        const textContent = child.textContent;
+                        if (textContent) {
+                            value = value.replace(textContent, '');
+                        }
+                    }
+                }
+            }
             if (!styled) {
                 return value;
             }
-            else if (!preserveWhiteSpace && !value.trim()) {
+            if (!preserveWhiteSpace && !value.trim()) {
                 return node.blockStatic ? this.STRING_SPACE : '';
             }
             return value;
@@ -8635,7 +8638,7 @@ this.squared.base = (function (exports) {
             return this.pageFlow && (!this.excluded || this.lineBreak);
         }
         get flexbox() {
-            return this.naturalChild ? super.flexbox : this.innerMostWrapped.flexbox;
+            return this.naturalChild || !this.innerWrapped ? super.flexbox : this.innerMostWrapped.flexbox;
         }
         get previousSibling() {
             const parent = this.actualParent;

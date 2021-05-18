@@ -151,9 +151,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         if (options) {
             ({ count, cascade, also, error } = options);
         }
-        if (!count || count < 0) {
-            count = Infinity;
-        }
+        count ||= 0;
         let complete: Undef<boolean>;
         return (function recurse(container: Container<T>, result: T[]) {
             const children = container.children;
@@ -188,13 +186,9 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
         if (options) {
-            const { also, error, cascade } = options;
-            let { start, end, count } = options;
+            let { also, error, cascade, start, end, count = 0 } = options; // eslint-disable-line prefer-const
             start &&= Math.max(start, 0);
             end &&= Math.min(this.size(), end);
-            if (!count || count < 0) {
-                count = 0;
-            }
             let complete: Undef<boolean>;
             return (function recurse(container: Container<T>, level: number): Undef<T> {
                 const children = container.children;
@@ -245,9 +239,7 @@ export default class Container<T = any> implements squared.lib.base.Container<T>
         if (options) {
             ({ count, also, error } = options);
         }
-        if (!count || count < 0) {
-            count = Infinity;
-        }
+        count ||= 0;
         let complete: Undef<boolean>;
         return (function recurse(container: Container<T>, result: T[]) {
             const children = container.children;

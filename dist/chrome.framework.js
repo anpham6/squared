@@ -1,4 +1,4 @@
-/* chrome-framework 2.5.12
+/* chrome-framework 2.5.13
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -158,18 +158,15 @@ var chrome = (function () {
         }
     }
     function checkBundleStart(assets, data) {
-        for (let i = 0, length = assets.length; i < length; ++i) {
-            if (hasSamePath(assets[i], data)) {
-                for (let j = i + 1; j < length; ++j) {
-                    if (!hasSamePath(assets[j], data)) {
-                        checkFilename(assets, data);
-                        return true;
-                    }
+        for (const item of assets) {
+            if (hasSamePath(item, data, true)) {
+                if (item.mimeType === data.mimeType) {
+                    return false;
                 }
-                return false;
+                checkFilename(assets, data);
+                break;
             }
         }
-        checkFilename(assets, data);
         return true;
     }
     function checkFilename(assets, data) {
@@ -329,7 +326,7 @@ var chrome = (function () {
                         }
                         else {
                             moveTo = "__serverroot__" /* SERVERROOT */;
-                            pathname = pathsub;
+                            pathname = pathsub[0] === '/' ? pathsub.substring(1) : pathsub;
                         }
                     }
                     filename || (filename = filesub);

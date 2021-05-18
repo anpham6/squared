@@ -402,7 +402,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
             if (content) {
                 content = content.replace(/\\(["'])/g, (...match: string[]) => match[1]);
             }
-            if (content || base64 || buffer) {
+            if (content || base64 || buffer || mimeType && FILE.PROTOCOL.test(uri)) {
                 const url = uri.split('?')[0];
                 if (!filename) {
                     const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');

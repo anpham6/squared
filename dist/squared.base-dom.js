@@ -1,4 +1,4 @@
-/* squared.base 2.5.12
+/* squared.base 2.5.13
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -5407,7 +5407,7 @@ this.squared.base = (function (exports) {
                 if (content) {
                     content = content.replace(/\\(["'])/g, (...match) => match[1]);
                 }
-                if (content || base64 || buffer) {
+                if (content || base64 || buffer || mimeType && FILE.PROTOCOL.test(uri)) {
                     const url = uri.split('?')[0];
                     if (!filename) {
                         const ext = '.' + (mimeType && fromMimeType(mimeType) || 'unknown');
