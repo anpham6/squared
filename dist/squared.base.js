@@ -5740,7 +5740,7 @@ this.squared.base = (function (exports) {
                 if (content) {
                     content = content.replace(/\\(["'])/g, (...match) => match[1]);
                 }
-                if (content || base64 || buffer) {
+                if (content || base64 || buffer || mimeType && FILE.PROTOCOL.test(uri)) {
                     const url = splitPairStart(uri, '?');
                     if (!filename) {
                         const ext = mimeType && fromMimeType(mimeType);
@@ -7225,55 +7225,58 @@ this.squared.base = (function (exports) {
             return replaceAll$2(value, '\u00A0', this.STRING_SPACE);
         }
         removeExcludedText(node, element) {
-            const { preserveWhiteSpace, sessionId } = node;
             const styled = element.children.length > 0 || element.tagName === 'CODE';
             const attr = styled ? 'innerHTML' : 'textContent';
-            let value = element[attr] || '';
-            element.childNodes.forEach((item, index) => {
+            let value = element[attr];
+            if (!value) {
+                return '';
+            }
+            const { preserveWhiteSpace, sessionId } = node;
+            const childNodes = element.childNodes;
+            for (let i = 0, length = childNodes.length; i < length; ++i) {
+                const item = childNodes[i];
                 const child = getElementAsNode$1(item, sessionId);
-                if (!child || !child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
-                    if (child) {
-                        if (styled && child.htmlElement) {
-                            if (child.lineBreak) {
-                                const previousSibling = child.previousSibling;
-                                value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
-                            }
-                            else if (child.positioned) {
-                                value = replaceAll$2(value, item.outerHTML, '', 1);
-                            }
-                            else if (child.display === 'contents') {
-                                value = replaceAll$2(value, item.outerHTML, child.textContent, 1);
-                            }
-                            else if (!preserveWhiteSpace) {
-                                value = replaceAll$2(value, item.outerHTML, child.pageFlow && isString$2(child.textContent) ? this.STRING_SPACE : '', 1);
-                            }
-                            return;
-                        }
-                        const textContent = child.plainText ? child.textContent : child[attr];
-                        if (textContent) {
-                            if (!preserveWhiteSpace) {
-                                value = replaceAll$2(value, textContent, '', 1);
-                            }
-                            return;
-                        }
-                    }
-                    else if (item.nodeName[0] !== '#') {
+                if (!child) {
+                    if (item.nodeName[0] !== '#') {
                         value = replaceAll$2(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords$3(getStyle$4(item).position) && isString$2(item.textContent) ? this.STRING_SPACE : '', 1);
                     }
                     if (!preserveWhiteSpace) {
-                        if (index === 0) {
+                        if (i === 0) {
                             value = value.replace(CHAR_LEADINGSPACE, '');
                         }
-                        else if (index === length - 1) {
+                        else if (i === length - 1) {
                             value = value.replace(CHAR_TRAILINGSPACE, '');
                         }
                     }
                 }
-            });
+                else if (!child.textElement || child.pseudoElement || !child.pageFlow || child.positioned || child.excluded) {
+                    if (styled) {
+                        if (child.lineBreak) {
+                            const previousSibling = child.previousSibling;
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${escapePattern(item.outerHTML)}\\s*`) : item.outerHTML, child.lineBreakTrailing && previousSibling && previousSibling.inlineStatic || !previousSibling && !node.pageFlow ? '' : this.STRING_NEWLINE);
+                        }
+                        else if (child.positioned) {
+                            value = replaceAll$2(value, item.outerHTML, '', 1);
+                        }
+                        else if (child.display === 'contents') {
+                            value = replaceAll$2(value, item.outerHTML, child.textContent, 1);
+                        }
+                        else if (!preserveWhiteSpace) {
+                            value = replaceAll$2(value, item.outerHTML, child.pageFlow && isString$2(child.textContent) ? this.STRING_SPACE : '', 1);
+                        }
+                    }
+                    else if (!preserveWhiteSpace) {
+                        const textContent = child.textContent;
+                        if (textContent) {
+                            value = replaceAll$2(value, textContent, '', 1);
+                        }
+                    }
+                }
+            }
             if (!styled) {
                 return value;
             }
-            else if (!preserveWhiteSpace && !value.trim()) {
+            if (!preserveWhiteSpace && !value.trim()) {
                 return node.blockStatic ? this.STRING_SPACE : '';
             }
             return value;
@@ -9033,7 +9036,7 @@ this.squared.base = (function (exports) {
             return this.pageFlow && (!this.excluded || this.lineBreak);
         }
         get flexbox() {
-            return this.naturalChild ? super.flexbox : this.innerMostWrapped.flexbox;
+            return this.naturalChild || !this.innerWrapped ? super.flexbox : this.innerMostWrapped.flexbox;
         }
         get previousSibling() {
             const parent = this.actualParent;

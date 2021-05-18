@@ -5269,9 +5269,7 @@
             if (options) {
                 ({ count, cascade, also, error } = options);
             }
-            if (!count || count < 0) {
-                count = Infinity;
-            }
+            count || (count = 0);
             let complete;
             return (function recurse(container, result) {
                 const children = container.children;
@@ -5305,12 +5303,9 @@
         }
         find(predicate, options) {
             if (options) {
-                let { also, error, cascade, start, end, count } = options; // eslint-disable-line prefer-const
+                let { also, error, cascade, start, end, count = 0 } = options; // eslint-disable-line prefer-const
                 start && (start = Math.max(start, 0));
                 end && (end = Math.min(this.size(), end));
-                if (!count || count < 0) {
-                    count = 0;
-                }
                 let complete;
                 return (function recurse(container, level) {
                     const children = container.children;
@@ -5357,9 +5352,7 @@
             if (options) {
                 ({ count, also, error } = options);
             }
-            if (!count || count < 0) {
-                count = Infinity;
-            }
+            count || (count = 0);
             let complete;
             return (function recurse(container, result) {
                 const children = container.children;

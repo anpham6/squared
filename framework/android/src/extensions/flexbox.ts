@@ -859,6 +859,16 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     item.flexbox.weight = ((data.size / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
                 }
                 item.flexbox.basis = 'auto';
+                if (horizontal) {
+                    if (item.percentWidth > 0) {
+                        item.css('width', 'auto', true);
+                        item.setCacheValue('percentWidth', 0);
+                    }
+                }
+                else if (item.percentHeight > 0) {
+                    item.css('height', 'auto', true);
+                    item.setCacheValue('percentHeight', 0);
+                }
             }
         }
         return [result, basisSize];

@@ -5740,7 +5740,7 @@ this.squared.base = (function (exports) {
                 if (content) {
                     content = content.replace(/\\(["'])/g, (...match) => match[1]);
                 }
-                if (content || base64 || buffer) {
+                if (content || base64 || buffer || mimeType && FILE.PROTOCOL.test(uri)) {
                     const url = splitPairStart(uri, '?');
                     if (!filename) {
                         const ext = mimeType && fromMimeType(mimeType);

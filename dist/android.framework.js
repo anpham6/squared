@@ -528,7 +528,7 @@ var android = (function () {
                     }
                     break;
                 case '@':
-                    output += i === 0 || !output.trim() ? '\\@' : '@';
+                    output += !quote && (i === 0 || !output.trim()) ? '\\@' : '@';
                     break;
                 case '"':
                     output += '&quot;';
@@ -4640,9 +4640,13 @@ var android = (function () {
             }
             set innerWrapped(value) {
                 if (!this.naturalChild && value) {
-                    value = value.outerMostWrapper;
-                    this._innerWrapped = value;
+                    const outerWrapper = value.outerWrapper;
+                    if (outerWrapper) {
+                        outerWrapper.innerWrapped = this;
+                        this.outerWrapper = outerWrapper;
+                    }
                     value.outerWrapper = this;
+                    this._innerWrapped = value;
                 }
             }
             get anchorTarget() {
@@ -11461,6 +11465,16 @@ var android = (function () {
                         item.flexbox.weight = ((data.size / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
                     }
                     item.flexbox.basis = 'auto';
+                    if (horizontal) {
+                        if (item.percentWidth > 0) {
+                            item.css('width', 'auto', true);
+                            item.setCacheValue('percentWidth', 0);
+                        }
+                    }
+                    else if (item.percentHeight > 0) {
+                        item.css('height', 'auto', true);
+                        item.setCacheValue('percentHeight', 0);
+                    }
                 }
             }
             return [result, basisSize];
