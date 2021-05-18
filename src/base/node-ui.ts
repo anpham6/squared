@@ -19,7 +19,7 @@ const { getStyle } = squared.lib.css;
 const { createElement, getParentElement, getRangeClientRect } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { cloneObject, hasKeys, isArray, isEmptyString, replaceAll, startsWith, withinRange } = squared.lib.util;
+const { cloneObject, findReverse, hasKeys, isArray, isEmptyString, replaceAll, startsWith, withinRange } = squared.lib.util;
 
 const CSS_SPACINGINDEX = [BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_RIGHT, BOX_STANDARD.PADDING_BOTTOM, BOX_STANDARD.PADDING_LEFT];
 
@@ -734,6 +734,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     visibleStyle.backgroundRepeatY = false;
                     visibleStyle.backgroundColor = false;
                     visibleStyle.borderWidth = false;
+                    visibleStyle.borderRadius = false;
                     break;
                 }
             }
@@ -1958,29 +1959,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get lastChild(): Null<T> {
-        const children = this.naturalChildren;
-        for (let i = children.length - 1; i >= 0; --i) {
-            const node = children[i] as T;
-            if (!node.excluded || node.lineBreak) {
-                return node;
-            }
-        }
-        return null;
+        return findReverse(this.naturalChildren as T[], node => !node.excluded || node.lineBreak) || null;
     }
 
     get firstStaticChild() {
-        return (this.naturalChildren as T[]).find(node => node.flowElement) || null;
+        return this.naturalChildren.find((node: T) => node.flowElement) as Undef<T> || null;
     }
 
     get lastStaticChild() {
-        const children = this.naturalChildren;
-        for (let i = children.length - 1; i >= 0; --i) {
-            const node = children[i] as T;
-            if (node.flowElement) {
-                return node;
-            }
-        }
-        return null;
+        return findReverse(this.naturalChildren as T[], node => node.flowElement) || null;
     }
 
     get onlyChild() {
@@ -2026,7 +2013,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get innerAfter() {
-        return this.naturalChildren.find(node => node.pseudoElt === '::after') as Undef<T> || null;
+        return findReverse(this.naturalChildren as T[], node => node.pseudoElt === '::after') || null;
     }
 
     get rendering() {

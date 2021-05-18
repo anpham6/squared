@@ -562,6 +562,16 @@ export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean
     }
 }
 
+export function findReverse<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start = 0, end = Infinity) {
+    start = Math.max(start, 0);
+    for (let i = Math.min(list.length, end) - 1; i >= start; --i) {
+        const item = list[i];
+        if (predicate(item, i, list)) {
+            return item;
+        }
+    }
+}
+
 export function sortByArray<T = unknown>(list: T[], ...attrs: [...string[], boolean]) {
     let length = attrs.length,
         ascending = attrs[length - 1];

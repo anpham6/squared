@@ -364,6 +364,7 @@ declare module "lib" {
         function withinRange(a: number, b: number, offset?: number): boolean;
         function sortNumber(values: number[], ascending?: boolean): number[];
         function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
+        function findReverse<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, unknown>, start?: number, end?: number): Undef<T>;
         function sortByArray<T = unknown>(list: T[], ...attrs: [...string[], boolean]): T[];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
