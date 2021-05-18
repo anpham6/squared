@@ -39,7 +39,7 @@ export const STRING = {
 
 export const FILE = {
     NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
-    PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/,
+    PROTOCOL: /^(?:([A-Za-z]{3,}):\/\/)([A-Za-z\d\-.]+)(?::(\d+))?(\/[^?]*)?\??(.*)?$/,
     BASE64: /^[A-Za-z\d+/]+=*$/,
     SVG: /\.svg$/i
 };

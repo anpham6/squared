@@ -1,0 +1,8 @@
+body > div {
+    vertical-align: top;
+    display: inline-block;
+}
+
+p {
+    background-image: url(../common/images/android.png);
+}

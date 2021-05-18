@@ -519,7 +519,7 @@ export function resolvePath(value: string, href?: Null<string>) {
 }
 
 export function escapePattern(value: string) {
-	return value.replace(/[-|\\{}()[\]^$+*?.]/g, capture => capture === '-' ? '\\x2d' : capture);
+	return value.replace(/[-|\\{}()[\]^$+*?.]/g, capture => capture === '-' ? '\\x2d' : '\\' + capture);
 }
 
 export function fromLastIndexOf(value: string, ...char: string[]) {

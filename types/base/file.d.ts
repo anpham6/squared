@@ -64,6 +64,7 @@ interface TaskAction {
 interface BundleAction {
     bundleId?: number;
     bundleIndex?: number;
+    bundleReplace?: string;
     bundleRoot?: string;
     trailingContent?: string[];
 }

@@ -28,6 +28,7 @@ interface OutputModifiers {
     blob?: boolean;
     preserve?: boolean;
     download?: boolean;
+    extract?: boolean;
     ignore?: boolean;
     exclude?: boolean;
 }
