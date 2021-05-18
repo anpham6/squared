@@ -1583,7 +1583,7 @@ export function parseSelectorText(value: string) {
     return [value];
 }
 
-export function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot) {
+export function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot>) {
     if (isUserAgent(USER_AGENT.CHROME | USER_AGENT.EDGE, 73)) {
         try {
             const sheet = new CSSStyleSheet();

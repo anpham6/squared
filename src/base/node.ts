@@ -824,8 +824,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public documentRoot = false;
     public queryMap: Null<T[][]> = null;
+    public shadowHost: Null<ShadowRoot> = null;
     public pseudoElt?: PseudoElt;
-    public shadowHost?: ShadowRoot;
 
     protected _parent: Null<T> = null;
     protected _depth = -1;
@@ -847,8 +847,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     protected readonly _element: Null<Element>;
 
     private _style: Null<CSSStyleDeclaration> = null;
+    private _data: Null<StandardMap> = null;
     private _dataset?: DOMStringMap;
-    private _data?: StandardMap;
 
     constructor(
         public readonly id: number,

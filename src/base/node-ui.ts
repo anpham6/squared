@@ -446,14 +446,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderExtension: Null<ExtensionUI<T>[]> = null;
     public renderTemplates: Null<NodeTemplate<T>[]> = null;
     public renderedAs: Null<NodeTemplate<T>> = null;
+    public innerBefore: Undef<T> = undefined;
+    public innerAfter: Undef<T> = undefined;
+    public outerWrapper: Undef<T> = undefined;
+    public companion?: T;
+    public horizontalRows?: T[][];
     public horizontalRowStart?: boolean;
     public horizontalRowEnd?: boolean;
-    public outerWrapper?: T;
-    public innerBefore?: T;
-    public innerAfter?: T;
-    public companion?: T;
     public documentChildren?: T[];
-    public horizontalRows?: T[][];
 
     protected _preferInitial = true;
     protected _boxRegister: Null<T[]> = null;
@@ -467,8 +467,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _locked: Null<ObjectMapNested<boolean>> = null;
     private _siblingsLeading: Null<T[]> = null;
     private _siblingsTrailing: Null<T[]> = null;
-    private _renderAs?: T;
-    private _exclusions?: number[];
+    private _renderAs: Null<T> = null;
+    private _exclusions: Null<number[]> = null;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
@@ -486,9 +486,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract localizeString(value: string): string;
 
     public abstract set labelFor(value);
-    public abstract get labelFor(): Undef<T>;
+    public abstract get labelFor(): Null<T>;
     public abstract set innerWrapped(value);
-    public abstract get innerWrapped(): Undef<T>;
+    public abstract get innerWrapped(): Null<T>;
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract set controlId(name: string);
@@ -1672,7 +1672,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             this._renderAs = value;
         }
         else {
-            delete this._renderAs;
+            this._renderAs = null;
         }
     }
     get renderAs() {
@@ -2132,19 +2132,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (this.naturalChild) {
             return this;
         }
-        let result = this._cacheState.innerMostWrapped;
+        const result = this._cacheState.innerMostWrapped;
         if (result === undefined) {
-            result = this.innerWrapped;
-            while (result) {
-                const innerWrapped = result.innerWrapped;
+            let current = this.innerWrapped;
+            while (current) {
+                const innerWrapped = current.innerWrapped;
                 if (innerWrapped) {
-                    result = innerWrapped;
+                    current = innerWrapped;
                 }
                 else {
                     break;
                 }
             }
-            return this._cacheState.innerMostWrapped = result || this;
+            return this._cacheState.innerMostWrapped = current || this;
         }
         return result;
     }

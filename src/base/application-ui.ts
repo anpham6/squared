@@ -226,7 +226,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (ext.postOptimize) {
                 const postOptimize = ext.postOptimize.bind(ext);
                 for (const node of ext.subscribers) {
-                    postOptimize(node, rendered);
+                    if (node.renderParent) {
+                        postOptimize(node, rendered);
+                    }
                 }
             }
         }
@@ -256,7 +258,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (ext.postBoxSpacing) {
                 const postBoxSpacing = ext.postBoxSpacing.bind(ext);
                 for (const node of ext.subscribers) {
-                    postBoxSpacing(node, rendered);
+                    if (node.renderParent) {
+                        postBoxSpacing(node, rendered);
+                    }
                 }
             }
             ext.beforeFinalize(finalizeData);

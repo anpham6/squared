@@ -420,7 +420,7 @@ declare module "base" {
         static sanitizeCss(element: DocumentElement, style: CssStyleMap, writingMode?: string): CssStyleMap;
         documentRoot: boolean;
         queryMap: Null<Node[][]>;
-        shadowHost?: ShadowRoot;
+        shadowHost: Null<ShadowRoot>;
         pseudoElt?: PseudoElt;
         readonly id: number;
         readonly sessionId: string;
@@ -718,11 +718,11 @@ declare module "base" {
         set renderExclude(value: boolean);
         get renderExclude(): boolean;
         set renderAs(value);
-        get renderAs(): Undef<NodeUI>;
+        get renderAs(): Null<NodeUI>;
         set labelFor(value);
-        get labelFor(): Undef<NodeUI>;
+        get labelFor(): Null<NodeUI>;
         set innerWrapped(value);
-        get innerWrapped(): Undef<NodeUI>;
+        get innerWrapped(): Null<NodeUI>;
         set use(value);
         get use(): string;
         set localSettings(value);

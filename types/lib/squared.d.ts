@@ -235,7 +235,7 @@ declare module "lib" {
         function parseSelectorText(value: string): string[];
         function getSpecificity(value: string): Specificity;
         function compareSpecificity(value: Specificity, preceding: Undef<Specificity>): boolean;
-        function insertStyleSheetRule(value: string, shadowRoot?: ShadowRoot): Null<VoidFunction>;
+        function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot>): Null<VoidFunction>;
     }
 
     namespace math {

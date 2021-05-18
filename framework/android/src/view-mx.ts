@@ -570,7 +570,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public alignedWithX?: T;
         public alignedWithY?: T;
 
-        protected _namespaces: ObjectMap<StringMap> = { android: {} };
+        protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {} };
         protected _containerType = 0;
         protected _cache!: CacheValueUI;
         protected _localSettings!: LocalSettingsUI;
@@ -580,8 +580,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private _controlId = '';
         private _positioned = false;
         private _constraint: Null<Constraint> = null;
-        private _labelFor?: T;
-        private _innerWrapped?: T;
+        private _labelFor: Null<T>= null;
+        private _innerWrapped: Null<T> = null;
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
