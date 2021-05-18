@@ -3,7 +3,7 @@ h2  { margin:0; font-size:1.1em; font-style:italic; background-color:white; widt
 #before    { width:auto; margin:0 auto; margin-left:20px; }
 *.parent   { position:absolute; height:450px; width:700px; 
              margin-top:5px; background-color:white; 
-             border:2px solid black; repeat-y; }
+             border:2px solid black; background-repeat: repeat-y; }
 
 *.box     { border:1px solid black; background-color:gold; } 
 *.spacer  { height:15px; border:none!important; background:none!important; font-size:1px; line-height:1px; }

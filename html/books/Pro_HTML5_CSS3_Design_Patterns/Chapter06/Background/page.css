@@ -1,7 +1,7 @@
 p    { /* margin-left:240px; */  margin-top:0px;    margin-bottom:10px; }
 span { /* margin-left:-230px; */ margin-right:30px; padding-left:195px; font-size:19px;
        background-position:left bottom; background-repeat:no-repeat;
-       background-color:black; background-image:url("star.gif"); }
+       background-color:black; background-image:url("star.png"); }
 
 *.no-bg       { background-image:none;  background-color:transparent; }
 *.bg-color    { background-image:none;  background-color:black;       }

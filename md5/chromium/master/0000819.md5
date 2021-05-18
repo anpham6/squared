@@ -1,4 +1,9 @@
-72de2c97063123c9a996fe5a368fa789  ./app/src/main/res/layout/activity_main.xml
+ed1a42b12284a261f88ed36699f835b8  ./app/src/main/res/drawable/android.png
+17e8d1d852736b43e38ea2982de4c7ab  ./app/src/main/res/drawable/p_textview_1.xml
+3c24b278130468f2bec8ffba11b1251c  ./app/src/main/res/drawable/p_textview_2.xml
+149d9609ad26c14cadf8cfeca550c922  ./app/src/main/res/drawable/p_textview_3.xml
+198cec1ecbacbdc4653811635d7c4e13  ./app/src/main/res/drawable/p_textview_5.xml
+7456d333396a8b5f41b13bc65beaf6a8  ./app/src/main/res/layout/activity_main.xml
 ee6ae6b974328eedc43e81267786d70a  ./app/src/main/res/values/colors.xml
 9fab893dad5ef7385ea2fe08148140d6  ./app/src/main/res/values/dimens.xml
 ba1550b07d7f90d5ba9f3f88d65ee148  ./app/src/main/res/values/strings.xml

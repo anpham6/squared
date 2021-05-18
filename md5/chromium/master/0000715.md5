@@ -1,11 +1,13 @@
+ed1a42b12284a261f88ed36699f835b8  ./app/src/main/res/drawable/android.png
 ceb457aa9177a8c4b69b76d420ce4290  ./app/src/main/res/drawable/coloured_balloon.jpg
 65738fc8f1637eb3f802a86f0622c10e  ./app/src/main/res/drawable/harbour1.jpg
 3160daaa34b8f029e9e7f253fa9a414e  ./app/src/main/res/drawable/harbour2.jpg
+b0d6973f9a56f2ce115ff9e55a0011d0  ./app/src/main/res/drawable/p_textview_1.xml
 ff9c90c1a24a2ca9bc49e97520164b63  ./app/src/main/res/font/alegreyasanssc.xml
 a7d7cf72b0540ac5a3a53cf889cfae21  ./app/src/main/res/font/alegreyasanssc_normal.ttf
-594eaa5fd62e8b88ced5ba9bbc2d49dd  ./app/src/main/res/layout/activity_main.xml
+f5c61f3793070fa8198c45d7e45ef9bd  ./app/src/main/res/layout/activity_main.xml
 468d29d99ba408517c940af22b76b742  ./app/src/main/res/values/colors.xml
-416b58af6179e749fe51a87e387201ee  ./app/src/main/res/values/dimens.xml
+f4a31a35d356a048fe0d8414fde505f5  ./app/src/main/res/values/dimens.xml
 d6bb269762efdc91f8af03d39ba53902  ./app/src/main/res/values/strings.xml
-be51da095dd25cf6db2dcc73217a0024  ./app/src/main/res/values/styles.xml
+a86577f95436cff6ce9df3d970edc83c  ./app/src/main/res/values/styles.xml
 8aaf2a49a5e95ffcbbd45aef7598875c  ./app/src/main/res/values/themes.xml
