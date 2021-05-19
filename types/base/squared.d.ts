@@ -661,7 +661,7 @@ declare module "base" {
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         actualBoxWidth(value?: number): number;
         actualTextHeight(options?: TextHeightOptions): number;
-        alignedVertically(siblings?: Node[], cleared?: Null<Map<Node, string>>, horizontal?: boolean): number;
+        alignedVertically(siblings?: Null<Node[]>, cleared?: Null<Map<Node, string>>, horizontal?: boolean, partition?: boolean): number;
         previousSiblings(options?: TraverseSiblingsOptions): NodeUI[];
         nextSiblings(options?: TraverseSiblingsOptions): NodeUI[];
         actualSpacing(region: lib.constant.BOX_STANDARD): number;

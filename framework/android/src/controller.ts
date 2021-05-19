@@ -3320,12 +3320,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     protected processConstraintChain(node: T, children: T[]) {
-        const clearMap = this.application.clearMap;
-        const emptyMap = clearMap.size === 0;
         const floating = node.hasAlign(NODE_ALIGNMENT.FLOAT);
+        const clearMap = node.innerMostWrapped.floatContainer || floating ? this.application.clearMap : undefined;
         const horizontalRows = NodeUI.partitionRows(children, clearMap);
         const checkClearMap = (item: T) => {
-            if (!emptyMap) {
+            if (clearMap) {
                 if (item.naturalChild) {
                     return clearMap.has(item);
                 }
@@ -3373,7 +3372,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     alignParent =
                         !rowStart.pageFlow && (!rowStart.autoPosition || q === 1) ||
                         previousRow && (
-                            !rowStart.floating && previousRow.every(item => item.floating || !item.pageFlow) && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item))) ||
+                            !rowStart.floating && previousRow.every(item => item.floating || !item.pageFlow) && (!clearMap || clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item))) ||
                             previousRow.every(item => !item.pageFlow)
                         );
                     previousAlignParent = alignParent;
@@ -3429,7 +3428,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         checkPercent = -1;
                     }
                     if (previousRow && k === 0) {
-                        if (!emptyMap && clearMap.has(chain) && !chain.floating) {
+                        if (clearMap && clearMap.has(chain) && !chain.floating) {
                             chain.modifyBox(BOX_STANDARD.MARGIN_TOP, lastItemOf(previousRow)!.bounds.height * -1, false);
                         }
                         if (floating && Math.ceil(chain.bounds.top) < minMaxOf(previousSiblings, item => Math.floor(item.bounds.bottom), '>')[1]) {

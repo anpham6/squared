@@ -1000,7 +1000,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 horizontal.push(item);
                                             }
                                         }
-                                        else if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation)) {
+                                        else if (item.alignedVertically(orientation ? horizontal : vertical, null, orientation)) {
                                             if (horizontal.length) {
                                                 break traverse;
                                             }

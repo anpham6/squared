@@ -418,7 +418,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 row.push(node);
                 siblings.push(active);
             }
-            else if (active.alignedVertically(siblings, cleared)) {
+            else if (active.alignedVertically(siblings, cleared, undefined, true)) {
                 if (row.length) {
                     result.push(row);
                 }
@@ -906,7 +906,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    public alignedVertically(siblings?: T[], cleared?: Null<Map<T, string>>, horizontal?: boolean) {
+    public alignedVertically(siblings?: Null<T[]>, cleared?: Null<Map<T, string>>, horizontal?: boolean, partition?: boolean) {
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
@@ -1016,7 +1016,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             }
-            if (checkBlockDimension(previous)) {
+            if (checkBlockDimension(previous) || partition && Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                 return NODE_TRAVERSE.INLINE_WRAP;
             }
             const percentWidth = getPercentWidth(this);
