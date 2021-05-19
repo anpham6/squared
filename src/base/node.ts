@@ -825,7 +825,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     public documentRoot = false;
     public queryMap: Null<T[][]> = null;
     public shadowHost: Null<ShadowRoot> = null;
-    public pseudoElt?: PseudoElt;
+    public pseudoElt: PseudoElt | "" = '';
 
     protected _parent: Null<T> = null;
     protected _depth = -1;
@@ -911,7 +911,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 }
                             }
                         }
-                        else {
+                        else if (elementData.pseudoElt) {
                             this.pseudoElt = elementData.pseudoElt;
                         }
                         this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);

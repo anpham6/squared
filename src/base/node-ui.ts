@@ -446,6 +446,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public baselineActive = false;
     public baselineAltered = false;
     public contentAltered = false;
+    public horizontalRowStart = false;
+    public horizontalRowEnd = false;
     public visible = true;
     public renderChildren: T[] = [];
     public renderParent: Null<T> = null;
@@ -453,9 +455,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderTemplates: Null<NodeTemplate<T>[]> = null;
     public renderedAs: Null<NodeTemplate<T>> = null;
     public outerWrapper: Undef<T> = undefined;
-    public horizontalRows?: T[][];
-    public companion?: T;
-    public documentChildren?: T[];
+    public horizontalRows: Undef<T[][]> = undefined;
+    public companion: Undef<T> = undefined;
+    public documentChildren: Undef<T[]> = undefined;
 
     protected _preferInitial = true;
     protected _boxRegister: Null<T[]> = null;
@@ -1473,7 +1475,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get pseudoElement() {
         const result = this._cacheState.pseudoElement;
-        return result === undefined ? this._cacheState.pseudoElement = this._element ? this._element.className === '__squared-pseudo' : false : result;
+        return result === undefined ? this._cacheState.pseudoElement = !!this._element && this._element.className === '__squared-pseudo' : result;
     }
 
     get scrollElement() {
@@ -1898,20 +1900,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get siblingsTrailing() {
         return this._siblingsTrailing ||= this.nextSiblings({ floating: true });
-    }
-
-    set horizontalRowStart(value) {
-        this._cacheState.horizontalRowStart = value;
-    }
-    get horizontalRowStart() {
-        return this._cacheState.horizontalRowStart ?? false;
-    }
-
-    set horizontalRowEnd(value) {
-        this._cacheState.horizontalRowEnd = value;
-    }
-    get horizontalRowEnd() {
-        return this._cacheState.horizontalRowEnd ?? false;
     }
 
     get flowElement() {

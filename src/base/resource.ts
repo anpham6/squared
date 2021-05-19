@@ -490,11 +490,8 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     public getRawData(resourceId: number, uri: string) {
         const rawData = Resource.ASSETS[resourceId]?.rawData;
         if (rawData) {
-            if (startsWith(uri, 'url(')) {
-                uri = extractURL(uri)!;
-                if (!uri) {
-                    return;
-                }
+            if (startsWith(uri, 'url(') && !(uri = extractURL(uri)!)) {
+                return;
             }
             return rawData.get(uri);
         }

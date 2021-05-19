@@ -4,7 +4,7 @@ import type Node from '../../node';
 const { Iterator } = squared.lib.base;
 
 export default class MultiSet<T extends Node> implements squared.base.lib.session.MultiSet<T> {
-    public readonly [Symbol.toStringTag] = '[object MultiSet]';
+    public readonly [Symbol.toStringTag] = 'MultiSet';
 
     private _sessionMap: ObjectMap<T[]> = {};
     private _children: Null<T[]> = null;

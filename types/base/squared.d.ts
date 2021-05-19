@@ -424,7 +424,7 @@ declare module "base" {
         documentRoot: boolean;
         queryMap: Null<Node[][]>;
         shadowHost: Null<ShadowRoot>;
-        pseudoElt?: PseudoElt;
+        pseudoElt: PseudoElt | "";
         readonly id: number;
         readonly sessionId: string;
         internalSelf(parent: Null<Node>, depth: number, index?: number, actualParent?: Null<Node>): void;
@@ -606,6 +606,8 @@ declare module "base" {
         lineBreakLeading: boolean;
         lineBreakTrailing: boolean;
         floatContainer: boolean;
+        horizontalRowStart: boolean;
+        horizontalRowEnd: boolean;
         renderChildren: NodeUI[];
         renderParent: Null<NodeUI>;
         renderExtension: Null<Extension<NodeUI>[]>;
@@ -722,10 +724,6 @@ declare module "base" {
         get labelFor(): Null<NodeUI>;
         set innerWrapped(value);
         get innerWrapped(): Null<NodeUI>;
-        set horizontalRowStart(value);
-        get horizontalRowStart(): boolean;
-        set horizontalRowEnd(value);
-        get horizontalRowEnd(): boolean;
         set use(value);
         get use(): string;
         set localSettings(value);

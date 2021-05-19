@@ -580,7 +580,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private _controlId = '';
         private _positioned = false;
         private _constraint: Null<Constraint> = null;
-        private _labelFor: Null<T>= null;
+        private _labelFor: Null<T> = null;
         private _innerWrapped: Null<T> = null;
 
         public setControlType(controlName: string, containerType?: number) {
@@ -630,7 +630,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 if (this.isAnchored({ orientation: 'horizontal', chained: true })) {
                                     layoutWidth = '0px';
                                 }
-                                else if ((containsWidth || this.alignParent('left') && this.alignParent('right')) && !this.hasUnit('maxWidth') && !(this.inputElement && !this.flexibleHorizontal)) {
+                                else if ((containsWidth || this.alignParent('right') && this.alignParent('left')) && !this.hasUnit('maxWidth') && !(this.inputElement && !this.flexibleHorizontal)) {
                                     layoutWidth = 'match_parent';
                                 }
                             }
@@ -940,7 +940,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 this.setLayoutHeight(layoutHeight || 'wrap_content');
             }
-            else if (layoutHeight === '0px' && renderParent.inlineHeight && !(this.alignParent('top') && this.alignParent('bottom')) && !renderParent.android('minHeight') && !actualParent.layoutElement && actualParent === this.absoluteParent) {
+            else if (layoutHeight === '0px' && renderParent.inlineHeight && !(this.alignParent('bottom') && this.alignParent('top')) && !renderParent.android('minHeight') && !actualParent.layoutElement && actualParent === this.absoluteParent) {
                 this.setLayoutHeight('wrap_content');
             }
             if (this.hasUnit('minWidth') && (!actualParent.flexElement || !this.flexibleWidth || !this.hasFlex('row'))) {
@@ -2284,7 +2284,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                     break;
                                 case 'center_horizontal':
-                                    if (!this.alignSibling('leftRight') && !this.alignSibling('rightLeft')) {
+                                    if (!this.isAnchored({ orientation: 'horizontal', chained: true })) {
                                         this.anchorParent('horizontal', 0.5);
                                     }
                                     break;

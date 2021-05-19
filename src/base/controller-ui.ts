@@ -580,7 +580,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 const containerIndex = children.indexOf(floated);
                 if (containerIndex !== -1) {
                     const childIndex = floated.childIndex;
-                    const documentChildren = parent.naturalChildren.slice(0);
+                    const documentChildren = parent.naturalChildren.slice(0) as T[];
                     const target = children[containerIndex] as T;
                     const depth = parent.depth + 1;
                     const actualParent = new Set<T>();
@@ -663,16 +663,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         if (index !== -1) {
                             const siblingsLeading: T[] = [];
                             const siblingsTrailing: T[] = [];
-                            for (let j = index - 1; j >= 0; --j) {
-                                const sibling = documentChildren[j] as T;
-                                siblingsLeading.push(sibling);
+                            for (let j = index - 1, sibling: T; j >= 0; --j) {
+                                siblingsLeading.push(sibling = documentChildren[j]);
                                 if (!sibling.excluded) {
                                     break;
                                 }
                             }
-                            for (let j = index + 1; j < q; ++j) {
-                                const sibling = documentChildren[j] as T;
-                                siblingsTrailing.push(sibling);
+                            for (let j = index + 1, sibling: T; j < q; ++j) {
+                                siblingsTrailing.push(sibling = documentChildren[j]);
                                 if (!sibling.excluded) {
                                     break;
                                 }
@@ -686,6 +684,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             item.floatContainer = false;
                         }
                     }
+                    parent.documentChildren = documentChildren;
                 }
             }
         }

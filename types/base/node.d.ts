@@ -97,8 +97,6 @@ interface CacheStateUI<T> extends CacheState<T> {
     containerName?: string;
     pseudoElement?: boolean;
     innerMostWrapped?: T;
-    horizontalRowStart?: boolean;
-    horizontalRowEnd?: boolean;
 }
 
 interface LocalSettingsUI {

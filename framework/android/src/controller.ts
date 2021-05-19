@@ -3611,7 +3611,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         return true;
                     };
-                    const setAlignedWidth = (sibling: T, position: AnchorPositionAttr) => {
+                    const setAlignedWith = (sibling: T, position: AnchorPositionAttr) => {
                         if (node.actualParent !== sibling.actualParent) {
                             switch (position) {
                                 case 'top':
@@ -3677,7 +3677,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         node.translateY(offset);
                                     }
                                 }
-                                setAlignedWidth(child, position);
+                                setAlignedWith(child, position);
                                 node.anchor(position, child.documentId, true);
                                 node.constraint[axis] = true;
                                 return;
@@ -3693,7 +3693,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 adjustment -= translate.values[horizontal ? 0 : 1];
                             }
                         }
-                        setAlignedWidth(sibling, position);
+                        setAlignedWith(sibling, position);
                         node.anchor(position, sibling.documentId, true);
                         node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                         node.constraint[axis] = true;
