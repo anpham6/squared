@@ -75,7 +75,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         return false;
                     }
                 }
-                return minLength && node.every(item => !item.isEmpty() && NodeUI.linearData(item.children as T[]).linearX);
+                return minLength && node.every((item: T) => !item.isEmpty() && NodeUI.linearData(item.children as T[], item.floatContainer ? this.application.clearMap : undefined).linearX);
             }
         }
         return false;

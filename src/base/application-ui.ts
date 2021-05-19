@@ -1147,6 +1147,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let layout: ContentUI<T>;
                         if (!nodeY.isEmpty()) {
                             layout = new LayoutUI(parentY, nodeY, containerType, nodeY.alignmentType);
+                            if (nodeY.floatContainer) {
+                                layout.clearMap = this.clearMap;
+                            }
                             if (containerType === 0) {
                                 controller.processUnknownParent(layout as LayoutUI<T>);
                             }
@@ -1406,6 +1409,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const seg = segments[j];
                 const target = controllerHandler.createNodeGroup(seg[0], seg, outerGroup, { flags: CREATE_NODE.DELEGATE | CREATE_NODE.CASCADE });
                 const group = new LayoutUI(outerGroup, target, 0, NODE_ALIGNMENT.SEGMENTED, seg);
+                group.absolute = false;
                 if (seg === inlineAbove) {
                     group.addAlign(NODE_ALIGNMENT.COLUMN);
                     if (inheritStyle) {

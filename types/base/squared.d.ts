@@ -385,6 +385,7 @@ declare module "base" {
         node: T;
         containerType: number;
         alignmentType: number;
+        clearMap?: Map<T, string>;
         renderIndex?: number;
         next?: boolean;
         set itemCount(value);
@@ -398,6 +399,8 @@ declare module "base" {
         node: T;
         containerType: number;
         alignmentType: number;
+        absolute: boolean;
+        clearMap?: Map<T, string>;
         renderIndex?: number;
         next?: boolean;
         rowCount?: number;
@@ -590,7 +593,7 @@ declare module "base" {
     }
 
     class NodeUI extends Node implements LayoutType {
-        static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData;
+        static linearData<T>(list: T[], cleared?: Map<T, string>, absolute?: boolean): LinearData;
         static baseline<T>(list: T[], text?: boolean, image?: boolean): Null<T>;
         static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
         alignmentType: number;

@@ -16,6 +16,8 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         return layout;
     }
 
+    public clearMap: Undef<Map<T, string>> = undefined;
+    public absolute = true;
     public rowCount?: number;
     public columnCount?: number;
     public renderIndex?: number;
@@ -41,7 +43,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public init() {
         const length = this.size();
         if (length > 1) {
-            const { linearX, linearY, floated } = NodeUI.linearData(this.children);
+            const { linearX, linearY, floated } = NodeUI.linearData(this.children, this.clearMap, this.absolute);
             this._linearX = linearX;
             this._linearY = linearY;
             if (floated) {

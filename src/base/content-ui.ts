@@ -1,6 +1,7 @@
 import type NodeUI from './node-ui';
 
 export default class ContentUI<T extends NodeUI> implements squared.base.ContentUI<T> {
+    public clearMap?: Map<T, string>;
     public renderType?: number;
     public renderIndex?: number;
     public next?: boolean;

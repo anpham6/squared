@@ -555,11 +555,14 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                 }
                 else if (belowFloating && node.borderBottomWidth === 0 && node.paddingBottom === 0) {
-                    const offset = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[1] - node.max('bounds', { subAttr: 'bottom' }).bounds.bottom;
-                    if (offset > node.marginBottom) {
-                        (node.registerBox(BOX_STANDARD.MARGIN_BOTTOM) || node).setCacheValue('marginBottom', offset);
+                    const { containerType, alignmentType } = this.controller.containerTypeVerticalMargin;
+                    if (node.ascend({ condition: (item: T) => item.of(containerType, alignmentType), error: (item: T) => item.naturalChild, attr: 'renderParent' }).length === 0) {
+                        const offset = minMaxOf(belowFloating, sibling => sibling.linear.bottom, '>')[1] - node.max('bounds', { subAttr: 'bottom' }).bounds.bottom;
+                        if (offset > node.marginBottom) {
+                            (node.registerBox(BOX_STANDARD.MARGIN_BOTTOM) || node).setCacheValue('marginBottom', offset);
+                        }
+                        belowFloating.forEach(sibling => !sibling.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] && resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM));
                     }
-                    belowFloating.forEach(sibling => !sibling.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] && resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM));
                 }
             }
         });

@@ -771,8 +771,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (layout.find(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
+            return;
         }
-        else if (layout.size() <= 1) {
+        layout.absolute = false;
+        if (layout.size() <= 1) {
             const child = node.item(0) as Undef<T>;
             if (child) {
                 if (child.plainText) {
@@ -928,7 +930,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]) {
-        const { parent, floated } = layout;
+        const parent = layout.parent;
+        if (parent.floatContainer) {
+            layout.clearMap = this.application.clearMap;
+        }
+        const floated = layout.floated;
         if (floated && floated.size === 1 && layout.every(item => item.floating)) {
             if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, layout.size())) {
                 parent.addAlign(NODE_ALIGNMENT.FLOAT);
@@ -956,7 +962,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public processTraverseVertical(layout: LayoutUI<T>) {
-        const { parent, floated } = layout;
+        const parent = layout.parent;
+        if (parent.floatContainer) {
+            layout.clearMap = this.application.clearMap;
+        }
+        const floated = layout.floated;
         const size = layout.size();
         let layoutType = NaN;
         if (floated) {

@@ -40,7 +40,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             marginHorizontal = (!!getPercent(node.cssValue('marginLeft')) || !!getPercent(node.cssValue('marginRight'))) && (
                 parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
                 parent.layoutFrame ||
-                node.blockStatic && node.alignedVertically(undefined, this.application.clearMap) > 0 ||
+                node.blockStatic && node.alignedVertically(undefined, parent.floatContainer ? this.application.clearMap : undefined) > 0 ||
                 node.documentParent.size() === 1 ||
                 !node.pageFlow
             );

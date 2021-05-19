@@ -11,6 +11,7 @@ import type View from '../../view';
 import NodeUI = squared.base.NodeUI;
 
 const { getElementAsNode } = squared.lib.session;
+const { iterateArray } = squared.lib.util;
 
 const getInputName = (node: View) => node.toElementString('name').trim();
 
@@ -29,7 +30,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         let radiogroup: T[] = [],
             first = -1,
             last = -1;
-        parent.each((item: T, index) => {
+        parent.each((item: T, index, children: T[]) => {
             const renderAs = item.renderAs as T;
             let remove: Undef<T>;
             if (renderAs) {
@@ -39,13 +40,13 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 item = renderAs;
             }
             if (item.is(CONTAINER_NODE.RADIO) && !item.rendered && getInputName(item) === inputName) {
-                radiogroup.push(item);
                 if (first === -1) {
                     first = index;
                 }
                 last = index;
+                radiogroup.push(item);
             }
-            else if (!item.visible && radiogroup.includes(item.labelFor as T)) {
+            else if (!item.visible && children.includes(item.labelFor as T)) {
                 last = index;
             }
             if (remove) {
@@ -54,7 +55,19 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         });
         let length = radiogroup.length;
         if (length > 1) {
-            const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
+            let items: T[];
+            if (parent.layoutConstraint) {
+                items = [];
+                iterateArray(parent.children, (item: T) => {
+                    if (item.pageFlow || item.autoPosition) {
+                        items.push(item);
+                    }
+                }, first, last);
+            }
+            else {
+                items = parent.children.slice(first, last + 1) as T[];
+            }
+            const linearX = NodeUI.linearData(items, parent.floatContainer ? this.application.clearMap : undefined, false).linearX;
             const container = this.controller.createNodeGroup(node, radiogroup, parent, { flags: CREATE_NODE.DELEGATE });
             const controlName = CONTAINER_TAGNAME.RADIOGROUP;
             container.setControlType(controlName, CONTAINER_NODE.LINEAR);
