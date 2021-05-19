@@ -606,8 +606,6 @@ declare module "base" {
         lineBreakLeading: boolean;
         lineBreakTrailing: boolean;
         floatContainer: boolean;
-        horizontalRowStart: boolean;
-        horizontalRowEnd: boolean;
         renderChildren: NodeUI[];
         renderParent: Null<NodeUI>;
         renderExtension: Null<Extension<NodeUI>[]>;
@@ -616,7 +614,6 @@ declare module "base" {
         documentChildren?: NodeUI[];
         outerWrapper?: NodeUI;
         companion?: NodeUI;
-        horizontalRows?: NodeUI[][];
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
         setLayout(): void;
@@ -657,7 +654,7 @@ declare module "base" {
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
         parseWidth(value: string, parent?: boolean): number;
         parseHeight(value: string, parent?: boolean): number;
-        actualRect(direction: PositionAttr, dimension?: BoxType): number;
+        actualRect(position: PositionAttr, dimension?: BoxType): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         actualBoxWidth(value?: number): number;
         actualTextHeight(options?: TextHeightOptions): number;
@@ -708,6 +705,8 @@ declare module "base" {
         get siblingsLeading(): NodeUI[];
         set siblingsTrailing(value);
         get siblingsTrailing(): NodeUI[];
+        set horizontalRows(value);
+        get horizontalRows(): Null<NodeUI[][]>
         set containerType(value: number);
         get containerType(): number;
         set positioned(value);
@@ -762,6 +761,8 @@ declare module "base" {
         get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
         get onlyStaticChild(): boolean;
+        get horizontalRowStart(): boolean;
+        get horizontalRowEnd(): boolean;
         get innerBefore(): Null<NodeUI>;
         get innerAfter(): Null<NodeUI>;
         get rendering(): boolean;

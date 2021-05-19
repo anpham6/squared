@@ -1382,15 +1382,18 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             .replace(CHAR_TRAILINGSPACE, '');
                     }
                     else if (!node.naturalChild) {
-                        if (!node.horizontalRowStart) {
+                        if (node.horizontalRowStart) {
+                            value = value.replace(CHAR_LEADINGSPACE, '');
+                        }
+                        else {
                             const previousSibling = node.element?.previousSibling;
                             if (previousSibling && previousSibling instanceof HTMLElement && !hasEndingSpace(previousSibling)) {
                                 value = value.replace(CHAR_LEADINGSPACE, this.STRING_SPACE);
                                 break;
                             }
-                        }
-                        if (checkPreviousSibling(node.siblingsLeading[0])) {
-                            value = value.replace(CHAR_LEADINGSPACE, '');
+                            if (checkPreviousSibling(node.siblingsLeading[0])) {
+                                value = value.replace(CHAR_LEADINGSPACE, '');
+                            }
                         }
                     }
                     else {
@@ -1509,7 +1512,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         value = replaceAll(value, item.outerHTML, child.textContent, 1);
                     }
                     else if (!preserveWhiteSpace) {
-                        value = replaceAll(value, item.outerHTML, child.pageFlow && isString(child.textContent) ? this.STRING_SPACE : '', 1);
+                        value = replaceAll(value, item.outerHTML, child.pageFlow && child.display !== 'none' && isString(child.textContent) ? this.STRING_SPACE : '', 1);
                     }
                 }
                 else if (!preserveWhiteSpace) {

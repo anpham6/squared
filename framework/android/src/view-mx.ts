@@ -565,7 +565,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public api = BUILD_VERSION.LATEST;
         public renderChildren!: T[];
         public renderParent!: Null<T>;
-        public horizontalRows!: Undef<T[][]>;
         public companion!: Undef<T>;
         public alignedWithX?: T;
         public alignedWithY?: T;
@@ -1005,7 +1004,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     width = Math.ceil(this.actualWidth);
                 }
                 if (width >= 0) {
-                    this.android('maxWidth', formatPX(width), false);
+                    if (this.flexibleWidth) {
+                        this.app('layout_constraintWidth_max', formatPX(width));
+                    }
+                    else {
+                        this.android('maxWidth', formatPX(width), false);
+                    }
                 }
                 if (isLength(maxHeight, true)) {
                     let height = -1;
@@ -1023,9 +1027,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         height = this.parseHeight(maxHeight);
                     }
                     if (height >= 0) {
-                        this.android('maxHeight', formatPX(height));
-                        if (this.flexibleHeight) {
-                            this.setLayoutHeight('wrap_content');
+                        if (containsHeight && this.flexibleHeight) {
+                            this.app('layout_constraintHeight_max', formatPX(height));
+                        }
+                        else {
+                            this.android('maxHeight', formatPX(height));
+                            if (this.flexibleHeight) {
+                                this.setLayoutHeight('wrap_content');
+                            }
                         }
                     }
                 }
@@ -1652,10 +1661,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return '';
         }
 
-        public actualRect(direction: PositionAttr, dimension: BoxType = 'linear') {
-            let value: number = this[dimension][direction];
+        public actualRect(position: PositionAttr, dimension: BoxType = 'linear') {
+            let value: number = this[dimension][position];
             if (this.positionRelative && this.floating) {
-                switch (direction) {
+                switch (position) {
                     case 'top':
                         if (this.hasUnit('top')) {
                             value += this.top;
@@ -1693,8 +1702,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.inputElement) {
                 const companion = this.companion;
                 if (companion && companion.labelFor === this && !companion.visible) {
-                    const outer: number = companion[dimension][direction];
-                    switch (direction) {
+                    const outer: number = companion[dimension][position];
+                    switch (position) {
                         case 'top':
                         case 'left':
                             return Math.min(outer, value);
@@ -2079,7 +2088,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         const adjacent = current.alignSibling(anchorA);
                         if (adjacent) {
                             const sibling = siblings.find(item => item.documentId === adjacent) as Undef<T>;
-                            if (sibling && (sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
+                            if (sibling && (renderParent.layoutRelative || sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
                                 result.push(current = sibling);
                             }
                             else {
@@ -2371,7 +2380,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         });
                     }
                     else {
-                        const horizontalRows = this.horizontalRows || [this.renderChildren];
+                        const horizontalRows = this.horizontalRows as Null<T[][]> || [this.renderChildren];
                         for (let i = 0, q = horizontalRows.length; i < q; ++i) {
                             const row = horizontalRows[i];
                             const r = row.length;

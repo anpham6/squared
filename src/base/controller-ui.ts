@@ -656,7 +656,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         }
                         actualParent.add(item.actualParent as T);
                     }
-                    parent.floatContainer = true;
                     for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
                         const item = appending[i];
                         const index = documentChildren.indexOf(item);
@@ -684,6 +683,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             item.floatContainer = false;
                         }
                     }
+                    parent.floatContainer = true;
                     parent.documentChildren = documentChildren;
                 }
             }

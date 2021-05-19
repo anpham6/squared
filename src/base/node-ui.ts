@@ -446,8 +446,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public baselineActive = false;
     public baselineAltered = false;
     public contentAltered = false;
-    public horizontalRowStart = false;
-    public horizontalRowEnd = false;
     public visible = true;
     public renderChildren: T[] = [];
     public renderParent: Null<T> = null;
@@ -455,7 +453,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderTemplates: Null<NodeTemplate<T>[]> = null;
     public renderedAs: Null<NodeTemplate<T>> = null;
     public outerWrapper: Undef<T> = undefined;
-    public horizontalRows: Undef<T[][]> = undefined;
     public companion: Undef<T> = undefined;
     public documentChildren: Undef<T[]> = undefined;
 
@@ -473,6 +470,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _siblingsTrailing: Null<T[]> = null;
     private _renderAs: Null<T> = null;
     private _exclusions: Null<number[]> = null;
+    private _horizontalRows: Null<T[][]> = null;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
@@ -481,10 +479,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract apply(options: PlainObject): void;
     public abstract clone(id: number): T;
     public abstract extractAttributes(depth?: number): string;
-    public abstract alignParent(position: string): boolean;
-    public abstract alignSibling(position: string, documentId?: string): string;
+    public abstract alignParent(position: AnchorPositionAttr): boolean;
+    public abstract alignSibling(position: AnchorPositionAttr, documentId?: string): string;
     public abstract anchorChain(...values: PositionAttr[]): T[];
-    public abstract actualRect(direction: string, dimension?: BoxType): number;
+    public abstract actualRect(position: PositionAttr, dimension?: BoxType): number;
     public abstract translateX(value: number, options?: TranslateOptions): boolean;
     public abstract translateY(value: number, options?: TranslateOptions): boolean;
     public abstract localizeString(value: string): string;
@@ -2042,8 +2040,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get backgroundColor(): string {
         let result = this._cache.backgroundColor;
         if (result === undefined) {
-            result = super.backgroundColor;
-            if (result && this.styleElement && !this.inputElement && this.opacity === 1 && this.pageFlow) {
+            if ((result = super.backgroundColor) && result[4] !== '(' && this.styleElement && !this.inputElement && this.pageFlow && this.opacity === 1) {
                 let parent = this.actualParent;
                 while (parent && parent.pageFlow) {
                     const backgroundImage = parent.backgroundImage;
@@ -2120,6 +2117,51 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return this._cache.textWidth = this.bounds.width;
         }
         return result;
+    }
+
+    set horizontalRows(value) {
+        if (value) {
+            for (let i = 0, length = value.length; i < length; ++i) {
+                const row = value[i];
+                const first = row[0];
+                if (row.length === 1) {
+                    first.setCacheState('horizontalRowStart', true);
+                    first.setCacheState('horizontalRowEnd', true);
+                }
+                else {
+                    let direction = 0;
+                    if (!first.alignParent('left')) {
+                        if (first.alignParent('right')) {
+                            direction = 1;
+                        }
+                        else {
+                            let siblings = first.anchorChain('left');
+                            if (siblings.length) {
+                                if (row.includes(siblings[0])) {
+                                    direction = 1;
+                                }
+                            }
+                            else if ((siblings = first.anchorChain('right')).length && !row.includes(siblings[0])) {
+                                direction = 1;
+                            }
+                        }
+                    }
+                    first.setCacheState(direction === 0 ? 'horizontalRowStart' : 'horizontalRowEnd', true);
+                    row[row.length - 1].setCacheState(direction === 0 ? 'horizontalRowEnd' : 'horizontalRowStart', true);
+                }
+            }
+            this._horizontalRows = value;
+        }
+    }
+    get horizontalRows() {
+        return this._horizontalRows;
+    }
+
+    get horizontalRowStart() {
+        return this._cacheState.horizontalRowStart ?? false;
+    }
+    get horizontalRowEnd() {
+        return this._cacheState.horizontalRowEnd ?? false;
     }
 
     get childIndex(): number {

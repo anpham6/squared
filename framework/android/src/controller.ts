@@ -2468,11 +2468,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         float = '';
                     }
-                    const setTextIndent = (item: T) => {
-                        if (i > 0 && textIndent < 0) {
-                            item.modifyBox(BOX_STANDARD.MARGIN_LEFT, float === 'left' ? Math.max(-(currentFloated!.linear.width + textIndent), 0) : textIndent * -1);
-                        }
-                    };
+                    const setTextIndent = (item: T) => i > 0 && item.modifyBox(BOX_STANDARD.MARGIN_LEFT, float === 'left' ? Math.max(-(currentFloated!.linear.width + textIndent), 0) : textIndent * -1);
                     for (let j = 0, q = rows.length; j < q; ++j) {
                         const items = rows[j];
                         let r = items.length;
@@ -2607,7 +2603,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             else {
                                                 item.anchor('left', 'true');
                                             }
-                                            setTextIndent(item);
+                                            if (textIndent < 0) {
+                                                setTextIndent(item);
+                                            }
                                         }
                                         else {
                                             item.anchor('leftRight', items[k - 1].documentId);
@@ -2857,6 +2855,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (previousBaseline) {
                                     baseline.anchor('topBottom', previousBaseline.documentId);
                                 }
+                                baseline.horizontalRows = [items];
                             }
                             else {
                                 let leftIndent = NaN;
@@ -2884,22 +2883,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                     else if (checkBottom && item.linear.bottom >= baseline.linear.bottom) {
                                         baseline = item;
-                                    }
-                                    if (k === 0) {
-                                        if (rightAligned) {
-                                            item.horizontalRowEnd = true;
-                                        }
-                                        else {
-                                            item.horizontalRowStart = true;
-                                        }
-                                    }
-                                    else if (k === r - 1) {
-                                        if (rightAligned) {
-                                            item.horizontalRowStart = true;
-                                        }
-                                        else {
-                                            item.horizontalRowEnd = true;
-                                        }
                                     }
                                 }
                             }
@@ -2956,14 +2939,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 baseline.anchor('left', 'true');
                             }
                             setLayoutBelow(baseline);
-                            if (!rightAligned) {
+                            if (textIndent < 0 && !rightAligned) {
                                 setTextIndent(baseline);
                             }
                             if (singleLine && i < length - 1 && !baseline.lineBreakTrailing && !baseline.multiline) {
                                 baseline.setSingleLine(true, true);
                             }
-                            baseline.horizontalRowStart = true;
-                            baseline.horizontalRowEnd = true;
                             horizontalRows.push(items);
                             previousBaseline = baseline;
                         }
@@ -3059,7 +3040,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             baselineActive = false;
             documentId = 'parent';
         }
-        for (let i = 0, length = children.length, start = false; i < length; ++i) {
+        for (let i = 0, length = children.length; i < length; ++i) {
             const item = children[i];
             if (previous) {
                 if (item.pageFlow) {
@@ -3192,23 +3173,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     item.anchored = true;
                 }
-                if (!start) {
-                    if (reverse) {
-                        item.horizontalRowEnd = true;
-                    }
-                    else {
-                        item.horizontalRowStart = true;
-                    }
-                    start = true;
-                }
-                if (i === length - 1) {
-                    if (reverse) {
-                        item.horizontalRowStart = true;
-                    }
-                    else {
-                        item.horizontalRowEnd = true;
-                    }
-                }
                 percentWidth = item.setConstraintDimension(percentWidth);
                 previous = item;
             }
@@ -3288,6 +3252,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
         }
+        node.horizontalRows = [children];
     }
 
     protected processConstraintVertical(node: T, children: T[]) {
@@ -3339,7 +3304,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let checkPercent = !node.hasWidth ? 1 : 0,
             previousRow: Undef<T[]>,
             previousAlignParent: Undef<boolean>;
-        for (let i = 0, length = horizontalRows.length, start = false; i < length; ++i) {
+        for (let i = 0, length = horizontalRows.length; i < length; ++i) {
             const partition = horizontalRows[i];
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || !!item.autoMargin.left);
             let alignParent: Undef<boolean>,
@@ -3453,25 +3418,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     currentRowTop ||= chain;
                                     break;
                                 }
-                            }
-                        }
-                    }
-                    if (chain.pageFlow) {
-                        if (!start) {
-                            if (reverse) {
-                                chain.horizontalRowEnd = true;
-                            }
-                            else {
-                                chain.horizontalRowStart = true;
-                            }
-                            start = true;
-                        }
-                        if (k === q - 1) {
-                            if (reverse) {
-                                chain.horizontalRowStart = true;
-                            }
-                            else {
-                                chain.horizontalRowEnd = true;
                             }
                         }
                     }
