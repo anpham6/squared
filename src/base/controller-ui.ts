@@ -550,7 +550,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const containerIndex = children.findIndex(item => item === floated);
             if (containerIndex !== -1) {
                 const childIndex = floated.childIndex;
-                const documentChildren = parent.naturalChildren.slice(0);
+                const documentChildren = parent.naturalChildren.slice(0) as T[];
                 const target = children[containerIndex] as T;
                 const depth = parent.depth + 1;
                 const actualParent = new Set<T>();
@@ -626,7 +626,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     actualParent.add(item.actualParent as T);
                 }
-                parent.floatContainer = true;
                 for (let i = 0, length = appending.length, q = documentChildren.length; i < length; ++i) {
                     const item = appending[i];
                     const index = documentChildren.findIndex(child => child === item);
@@ -634,14 +633,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         const siblingsLeading: T[] = [];
                         const siblingsTrailing: T[] = [];
                         for (let j = index - 1; j >= 0; --j) {
-                            const sibling = documentChildren[j] as T;
+                            const sibling = documentChildren[j];
                             siblingsLeading.push(sibling);
                             if (!sibling.excluded) {
                                 break;
                             }
                         }
                         for (let j = index + 1; j < q; ++j) {
-                            const sibling = documentChildren[j] as T;
+                            const sibling = documentChildren[j];
                             siblingsTrailing.push(sibling);
                             if (!sibling.excluded) {
                                 break;
@@ -656,6 +655,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         item.floatContainer = false;
                     }
                 }
+                parent.floatContainer = true;
+                parent.documentChildren = documentChildren;
             }
         }
         for (const node of altered) {

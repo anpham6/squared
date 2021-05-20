@@ -1903,7 +1903,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let result = this._cache.backgroundColor;
         if (result === undefined) {
             result = super.backgroundColor;
-            if (result && this.styleElement && !this.inputElement && this.opacity === 1 && this.pageFlow) {
+            if ((result = super.backgroundColor) && result[4] !== '(' && this.styleElement && !this.inputElement && this.pageFlow && this.opacity === 1) {
                 let parent = this.actualParent;
                 while (parent) {
                     const backgroundImage = parent.backgroundImage;
