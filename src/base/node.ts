@@ -2262,13 +2262,20 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length) {
+                    let { marginTop, marginLeft } = this;
+                    if (marginTop > 0) {
+                        marginTop = 0;
+                    }
+                    if (marginLeft > 0) {
+                        marginLeft = 0;
+                    }
                     return this._box = {
                         top: bounds.top + (this.paddingTop + this.borderTopWidth),
                         right: bounds.right - (this.paddingRight + this.borderRightWidth),
                         bottom: bounds.bottom - (this.paddingBottom + this.borderBottomWidth),
                         left: bounds.left + (this.paddingLeft + this.borderLeftWidth),
-                        width: bounds.width - this.contentBoxWidth,
-                        height: bounds.height - this.contentBoxHeight
+                        width: bounds.width + marginLeft - this.contentBoxWidth,
+                        height: bounds.height + marginTop - this.contentBoxHeight
                     };
                 }
                 return this._box = bounds;
