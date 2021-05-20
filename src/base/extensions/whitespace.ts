@@ -710,7 +710,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     public afterConstraints(sessionId: string, cache = this.application.getProcessingCache(sessionId)) {
         const resetting = this.data.get(cache) as Undef<T[]>;
         if (resetting) {
-            resetting.forEach(node => node.anchorChain('left', 'right').forEach(sibling => resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM)));
+            resetting.forEach(node => node.getAnchoredSiblings('horizontal').forEach(sibling => resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM)));
         }
         cache.each(node => {
             if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned) {

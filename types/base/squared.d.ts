@@ -675,6 +675,7 @@ declare module "base" {
         translateX(value: number, options?: TranslateOptions): boolean;
         translateY(value: number, options?: TranslateOptions): boolean;
         getBoxSpacing(): [number, number, number, number];
+        getAnchoredSiblings(orientation: OrientationAttr): NodeUI[];
         getPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
         isResizable(attr: DimensionSizableAttr, not?: StringOfArray): boolean;
         fitToScreen(value: Dimension): Dimension;

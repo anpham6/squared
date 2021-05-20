@@ -1584,7 +1584,7 @@ export function parseSelectorText(value: string) {
 }
 
 export function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot>) {
-    if (isUserAgent(USER_AGENT.CHROME | USER_AGENT.EDGE, 73)) {
+    if (document.adoptedStyleSheets) {
         try {
             const sheet = new CSSStyleSheet();
             sheet.replaceSync!(value);

@@ -30,11 +30,11 @@ function cascadeActualPadding(children: T[], attr: "paddingTop" | "paddingBottom
         if (item.blockStatic) {
             return false;
         }
-        else if (item.inlineStatic) {
+        if (item.inlineStatic) {
             if (item.has('lineHeight') && item.lineHeight > item.bounds.height) {
                 return false;
             }
-            else if (item[attr] >= value) {
+            if (item[attr] >= value) {
                 valid = true;
             }
             else if (canCascadeChildren(item)) {
@@ -1390,6 +1390,35 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         super.unsetCache(...attrs as CssStyleAttr[]);
+    }
+
+    public getAnchoredSiblings(orientation: OrientationAttr) {
+        const renderParent = this.renderParent;
+        if (renderParent) {
+            if (orientation === 'horizontal') {
+                const horizontalRows = renderParent.horizontalRows;
+                if (horizontalRows) {
+                    for (let i = 0, length = horizontalRows.length; i < length; ++i) {
+                        const row = horizontalRows[i];
+                        const index = row.indexOf(this);
+                        if (index !== -1) {
+                            const q = row.length;
+                            if (q === 1) {
+                                return [];
+                            }
+                            if (index === 0) {
+                                return row.splice(1);
+                            }
+                            const siblings = row.splice(0, index);
+                            return index === q - 1 ? siblings : [...siblings, ...row.splice(index + 1)];
+                        }
+                    }
+                }
+                return this.anchorChain('left', 'right');
+            }
+            return this.anchorChain('top', 'bottom');
+        }
+        return [];
     }
 
     public getBoxSpacing(): [number, number, number, number] {

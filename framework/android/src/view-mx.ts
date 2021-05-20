@@ -2060,46 +2060,78 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const result: T[] = [];
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
-            if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
-                for (const direction of values) {
-                    let anchorA: AnchorPositionAttr,
-                        anchorB: AnchorPositionAttr;
-                    switch (direction) {
-                        case 'top':
-                            anchorA = 'topBottom';
-                            anchorB = 'bottomTop';
-                            break;
-                        case 'right':
-                            anchorA = 'rightLeft';
-                            anchorB = 'leftRight';
-                            break;
-                        case 'bottom':
-                            anchorA = 'bottomTop';
-                            anchorB = 'topBottom';
-                            break;
-                        case 'left':
-                            anchorA = 'leftRight';
-                            anchorB = 'rightLeft';
-                            break;
-                    }
-                    const siblings = renderParent.renderChildren;
-                    let current = node;
-                    do {
-                        const adjacent = current.alignSibling(anchorA);
-                        if (adjacent) {
-                            const sibling = siblings.find(item => item.documentId === adjacent) as Undef<T>;
-                            if (sibling && (renderParent.layoutRelative || sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
-                                result.push(current = sibling);
+            if (renderParent) {
+                if (renderParent.layoutConstraint || renderParent.layoutRelative) {
+                    for (const direction of values) {
+                        let leading: AnchorPositionAttr,
+                            trailing: AnchorPositionAttr;
+                        switch (direction) {
+                            case 'top':
+                                leading = 'topBottom';
+                                trailing = 'bottomTop';
+                                break;
+                            case 'right':
+                                leading = 'rightLeft';
+                                trailing = 'leftRight';
+                                break;
+                            case 'bottom':
+                                leading = 'bottomTop';
+                                trailing = 'topBottom';
+                                break;
+                            case 'left':
+                                leading = 'leftRight';
+                                trailing = 'rightLeft';
+                                break;
+                        }
+                        const siblings = renderParent.renderChildren;
+                        let current = node;
+                        do {
+                            const id = current.alignSibling(leading);
+                            if (id) {
+                                const sibling = siblings.find(item => item.documentId === id) as Undef<T>;
+                                if (sibling && (renderParent.layoutRelative || sibling.alignSibling(trailing) === current.documentId || sibling.float === direction && sibling.alignParent(sibling.float))) {
+                                    result.push(current = sibling);
+                                }
+                                else {
+                                    break;
+                                }
                             }
                             else {
                                 break;
                             }
                         }
-                        else {
-                            break;
+                        while (true);
+                    }
+                }
+                else if (renderParent.layoutLinear) {
+                    const siblings = renderParent.renderChildren as T[];
+                    const index = siblings.indexOf(this);
+                    if (index !== -1) {
+                        for (const direction of values) {
+                            switch (direction) {
+                                case 'top':
+                                    if (renderParent.layoutVertical && index > 0) {
+                                        result.push(...siblings.slice(0, index));
+                                    }
+                                    break;
+                                case 'right':
+                                    if (renderParent.layoutHorizontal && index < siblings.length - 1) {
+                                        result.push(...siblings.slice(index + 1));
+                                    }
+                                    break;
+                                case 'bottom':
+                                    if (renderParent.layoutVertical && index < siblings.length - 1) {
+                                        result.push(...siblings.slice(index + 1));
+                                    }
+                                    break;
+                                case 'left':
+                                    if (renderParent.layoutHorizontal && index > 0) {
+                                        result.push(...siblings.slice(0, index));
+                                    }
+                                    break;
+                            }
                         }
                     }
-                    while (true);
                 }
             }
             return result;
