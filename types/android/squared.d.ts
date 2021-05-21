@@ -4,23 +4,21 @@ import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;
 
-declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T>, base.AppProxy, FontProviderAction {
-    customize(build: number, widget: string, options: ObjectMap<StringMap>): Undef<ObjectMap<StringMap>>;
+declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T>, ViewModelAction, FontProviderAction {
     addXmlNs(name: string, uri: string): void;
+    customize(build: number, widget: string, options: ObjectMap<StringMap>): Undef<ObjectMap<StringMap>>;
+    loadCustomizations(name: string): void;
+    saveCustomizations(name: string): void;
     getLocalSettings(): ControllerSettingsUI;
 }
 
 declare namespace base {
-    interface AppProxy {
-        setViewModel(data?: PlainObject, sessionId?: string): void;
-    }
-
     interface AppViewModel extends PlainObject {
         import?: string[];
         variable?: { name: string; type: string }[];
     }
 
-    class Application<T extends View> extends squared.base.ApplicationUI<T> implements AppProxy {
+    class Application<T extends View> extends squared.base.ApplicationUI<T> implements ViewModelAction {
         resolveTarget(sessionId: string, target: Null<squared.base.RootElement>): Null<T>;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;

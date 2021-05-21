@@ -335,8 +335,40 @@ const appBase: android.AppFramework<View> = {
     customize(build: number, widget: string, options: ObjectMap<StringMap>) {
         const api = customization.API_VERSION[build];
         if (api) {
-            const data = api.assign[widget];
-            return data ? Object.assign(data, options) : api.assign[widget] = options;
+            const assign = api.assign ||= {};
+            return assign[widget] ? Object.assign(assign[widget], options) : assign[widget] = options;
+        }
+    },
+    loadCustomizations(name: string) {
+        try {
+            const settings = localStorage.getItem(name + '-android-customizations');
+            if (settings) {
+                const stored = JSON.parse(settings) as Customizations<View>;
+                const API_VERSION = customization.API_VERSION;
+                for (const build in stored) {
+                    const item = API_VERSION[build];
+                    if (item) {
+                        Object.assign(item, stored[build]);
+                    }
+                }
+            }
+        }
+        catch {
+        }
+    },
+    saveCustomizations(name: string) {
+        const API_VERSION = customization.API_VERSION;
+        const settings: PlainObject = {};
+        for (const build in API_VERSION) {
+            const item = API_VERSION[build]!;
+            if (item.assign) {
+                settings[build] = { assign: item.assign };
+            }
+        }
+        try {
+            localStorage.setItem(name + '-android-customizations', JSON.stringify(settings));
+        }
+        catch {
         }
     },
     addXmlNs(name: string, uri: string) {

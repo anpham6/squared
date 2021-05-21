@@ -1,7 +1,7 @@
 a87905bb7b5fb4c48c3d523468c7d802  ./app/src/main/res/drawable/button_button_1.xml
 94ce91a0652106e3fc9fbabbafc8dd03  ./app/src/main/res/drawable/button_button_2.xml
 a231a93046a0c4236290a0faeec7ebe1  ./app/src/main/res/drawable/button_constraintlayout_5.xml
-fe7fe733f5f5cb5831646ff4a761907e  ./app/src/main/res/drawable/canvas_mychart.png
+315b5f5ad32edeb90c08a9e82d1c4ca4  ./app/src/main/res/drawable/canvas_mychart.png
 32ec207df85bb462bcfd2729062578a8  ./app/src/main/res/drawable/div_constraintlayout_18.xml
 1c8f1237ccad1c942d2aeba027c1c3aa  ./app/src/main/res/drawable/span_framelayout_13.xml
 4977c57c83b35ed60406c2ac8faea579  ./app/src/main/res/drawable/svg_imageview_1_viewbox.xml
@@ -16,7 +16,7 @@ e73198941b1de0bde59c75f8ffdc92cb  ./app/src/main/res/drawable/svg_imageview_3_vi
 e0da3c8a8aa9c8ffe6b2ed6b16b11eb5  ./app/src/main/res/drawable/td_textview_20.xml
 a3b2d3f70fc7ae04c3d74c505a16fd12  ./app/src/main/res/drawable/td_textview_25.xml
 74fd557e45d6a757ad7fe4bd7b332776  ./app/src/main/res/drawable/th_textview_15.xml
-46e83d4b90e8212493da6996db26fc85  ./app/src/main/res/layout/activity_main.xml
+cb62e032678dc555140ec0496bf1a1a0  ./app/src/main/res/layout/activity_main.xml
 5f8de0b4e3fb8b91a72c4064b6bfa144  ./app/src/main/res/values/colors.xml
 8dfa026646862aff9b518afa03175f8e  ./app/src/main/res/values/dimens.xml
 86a08d9f183f9a52abfcba78ce9e4597  ./app/src/main/res/values/strings.xml

@@ -1,6 +1,7 @@
 interface LocalSettingsUI {
     supportRTL: boolean;
     lineHeightAdjust: number;
+    customizationsBaseAPI: number | number[];
     floatPrecision: number;
 }
 

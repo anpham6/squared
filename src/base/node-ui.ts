@@ -518,10 +518,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public attr(name: string, attr: string, value?: string, overwrite = true): string {
         const obj = this.namespace(name);
         if (value) {
-            if (overwrite && this.lockedAttr(name, attr)) {
-                overwrite = false;
-            }
-            if (overwrite || !obj[attr]) {
+            if (!obj[attr] || overwrite && !this.lockedAttr(name, attr)) {
                 return obj[attr] = value;
             }
         }
@@ -584,7 +581,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockedAttr(name: string, attr: string) {
-        return !!this._locked?.[name]?.[attr];
+        const locked = this._locked;
+        if (locked && locked[name]) {
+            return attr in locked[name]!;
+        }
+        return false;
     }
 
     public render(parent: T) {

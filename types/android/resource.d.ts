@@ -22,13 +22,17 @@ interface Customizations<T> {
 
 interface CustomizationsData<T> {
     android: ObjectMap<boolean | CustomizationResult<T>>;
-    assign: {
+    assign?: {
         [namespace: string]: Undef<ObjectMap<StringMap>>;
     };
 }
 
 interface Deprecations<T> {
     android: ObjectMap<CustomizationResult<T>>;
+}
+
+interface ViewModelAction {
+    setViewModel(data?: PlainObject, sessionId?: string): void;
 }
 
 interface FontProviderAction {

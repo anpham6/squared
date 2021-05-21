@@ -97,6 +97,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
             { // Custom settings do not affect other layouts
                 element: document.body,
                 enabledMultiline: false,
+                customizationsBaseAPI: -1,
                 exclude: ["squared.list", "squared.grid"],
                 afterCascade: function(sessionId: string, node: Node) { /* squared 3.1 */ }
             },
@@ -184,6 +185,7 @@ squared.settings = {
     createElementMap: false,
     createQuerySelectorMap: false,
     pierceShadowRoot: true,
+    customizationsBaseAPI: 0, // All: 0 | None: -1 (Multiple: [0, 29])
 
     // Not customizable with parseDocument
     builtInExtensions: [
@@ -380,22 +382,38 @@ body.addEvent("click", event => body.element.classList.toggle("example"));
 ### ANDROID: Public Methods
 
 ```javascript
-android.customize(build: number, widget: string, options: {}) // Global attributes applied to specific views
 android.setViewModel(data: {}, sessionId?: string) // Object data for layout bindings
 android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
-android.getLocalSettings() // Modify controller styles and parsing rules
+android.customize(build: number, tagNameOrWidget: string, options: {}) // Global attributes applied to specific views
+android.loadCustomizations(name: string) // Load customizations from Local Storage
+android.saveCustomizations(name: string) // Save "customize" settings into Local Storage
 android.addFontProvider(authority: string, package: string, certs: string[], webFonts: string | {}) // Add additional Web fonts (Google Fonts already included)
+android.getLocalSettings() // Modify controller styles and parsing rules
 ```
 
 ```javascript
-// targetAPI: 0 - ALL, 30 - Android 11
+// NOTE: squared.settings.targetAPI is always parsed (except when customizationsBaseAPI: -1)
 
-android.customize(squared.settings.targetAPI, "Button", {
+android.customize(android.lib.constant.BUILD_VERSION.ALL /* 0 */, "Button", {
     android: {
         minWidth: "35px",
         minHeight: "25px"
+    },
+    "_": { // Non-namespaced attributes
+        style: "@style/Widget.MaterialComponents.Button.TextButton"
     }
 });
+
+android.customize(android.lib.constant.BUILD_VERSION.KITKAT /* 19 */, "svg", {
+    android: {
+        "[src]": "app:srcCompat"
+    }
+});
+
+// Local Storage
+android.saveCustomizations("customize-example"); // Save at least once in one layout
+
+android.loadCustomizations("customize-example"); // Load in any other layout
 ```
 
 ```javascript

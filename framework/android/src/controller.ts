@@ -639,6 +639,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             },
             supportRTL: application.getUserSetting<boolean>(processing, 'supportRTL'),
             lineHeightAdjust: application.getUserSetting<number>(processing, 'lineHeightAdjust'),
+            customizationsBaseAPI: application.getUserSetting<number | number[]>(processing, 'customizationsBaseAPI'),
             floatPrecision: this.localSettings.floatPrecision
         };
     }
@@ -1746,6 +1747,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 node.mergeGravity('gravity', 'center_vertical');
+                node.android('textAllCaps', 'false');
                 setReadOnly();
                 break;
             case CONTAINER_TAGNAME.SELECT:

@@ -21,10 +21,10 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         super.processNode(node, parent);
         const mainData = this.data.get(node) as TableData;
-        let requireWidth: Undef<boolean>,
+        let flexible: Undef<boolean>,
             multiline: Undef<boolean>;
         if (mainData.columnCount > 1) {
-            requireWidth = (mainData.flags & LAYOUT_TABLE.EXPAND) > 0;
+            flexible = (mainData.flags & LAYOUT_TABLE.EXPAND) > 0;
             node.each((item: T) => {
                 const cellData = this.data.get(item) as Undef<TableCellData>;
                 if (cellData) {
@@ -32,7 +32,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     if (flags & LAYOUT_TABLECELL.FLEXIBLE) {
                         item.android('layout_columnWeight', cellData.colSpan.toString());
                         item.setLayoutWidth('0px');
-                        requireWidth = true;
+                        flexible = true;
                     }
                     else {
                         if (flags & LAYOUT_TABLECELL.SHRINK) {
@@ -43,14 +43,14 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             if (value) {
                                 item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', truncateTrailingZero(value.toPrecision(node.localSettings.floatPrecision)));
-                                requireWidth = true;
+                                flexible = true;
                             }
                         }
                         if (flags & LAYOUT_TABLECELL.DOWNSIZED) {
                             if (flags & LAYOUT_TABLECELL.EXCEED) {
                                 item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', '0.01');
-                                requireWidth = true;
+                                flexible = true;
                             }
                             else if (item.hasUnit('width')) {
                                 const width = item.bounds.width;
@@ -79,11 +79,11 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (item) {
                 if (item.percentWidth > 0 && !node.hasWidth) {
                     item.setLayoutWidth('wrap_content');
-                    requireWidth = true;
+                    flexible = true;
                 }
                 if (item.tagName !== 'CAPTION' && (item.multiline || item.find((child: T) => child.multiline || child.contentAltered, { cascade: true }))) {
                     multiline = true;
-                    requireWidth = true;
+                    flexible = true;
                 }
                 setLayoutHeight(item);
             }
@@ -101,7 +101,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 }
             }
         }
-        else if (requireWidth) {
+        else if (flexible) {
             if ((parent.blockStatic || parent.hasWidth) && (multiline || Math.ceil(node.bounds.width) >= parent.box.width)) {
                 node.setLayoutWidth('match_parent');
             }

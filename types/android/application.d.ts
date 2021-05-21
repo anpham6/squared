@@ -7,6 +7,7 @@ interface UserResourceSettingsUI {
     compressImages: boolean;
     convertImages: string;
     baseLayoutAsFragment: boolean;
+    customizationsBaseAPI: number | number[];
     customizationsOverwritePrivilege: boolean;
     convertPixels: string;
     fontMeasureAdjust: number;

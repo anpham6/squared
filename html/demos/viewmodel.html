@@ -105,13 +105,15 @@
             if (copyTo) {
                 squared.settings.showErrorMessages = false;
             }
-            android.customize(squared.settings.targetAPI, 'Button', {
+            /* android.customize(squared.settings.targetAPI, 'Button', {
                 android: {
                     layout_height: 'wrap_content',
                     minWidth: '35px',
                     minHeight: '25px'
                 }
             });
+            android.saveCustomizations('viewmodel'); */
+            android.loadCustomizations('viewmodel');
             const time = performance.now();
             squared.parseDocument({ element: document.body, enabledViewModel: true })
                 .then(() => {

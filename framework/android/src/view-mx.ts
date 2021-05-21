@@ -1911,10 +1911,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public android(attr: string, value?: string, overwrite = true) {
+            const obj = this._namespaces.android!;
             if (typeof value === 'string') {
                 if (value) {
-                    if (value = this.attr('android', attr, value, overwrite)) {
-                        return value;
+                    if (!obj[attr] || overwrite && !this.lockedAttr('android', attr)) {
+                        return obj[attr] = value;
                     }
                 }
                 else {
@@ -1922,14 +1923,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return '';
                 }
             }
-            return this._namespaces.android![attr] || '';
+            return obj[attr] || '';
         }
 
         public app(attr: string, value?: string, overwrite = true) {
+            const obj = this._namespaces.app!;
             if (typeof value === 'string') {
                 if (value) {
-                    if (value = this.attr('app', attr, value, overwrite)) {
-                        return value;
+                    if (!obj[attr] || overwrite && !this.lockedAttr('app', attr)) {
+                        return obj[attr] = value;
                     }
                 }
                 else {
@@ -1937,7 +1939,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return '';
                 }
             }
-            return this._namespaces.app![attr] || '';
+            return obj[attr] || '';
         }
 
         public formatted(value: string, overwrite = true) {
@@ -2733,25 +2735,42 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public applyCustomizations(overwrite = true) {
-            const { tagName, controlName } = this;
-            const setCustomization = (obj: Undef<ObjectMap<StringMap>>) => {
-                if (obj) {
-                    for (const name in obj) {
-                        const data = obj[name];
-                        for (const attr in data) {
-                            this.attr(name, attr, data[attr], overwrite);
+            const setCustomization = (obj: ObjectMap<StringMap>) => {
+                for (const name in obj) {
+                    const data = obj[name];
+                    for (let attr in data) {
+                        const value = data[attr]!;
+                        if (attr[0] === '[' && lastItemOf(attr) === ']') {
+                            const previous = this.attr(name, attr = attr.substring(1, attr.length - 1));
+                            if (previous) {
+                                const [nameAlt, attrAlt] = splitPair(value, ':', true);
+                                if (attrAlt) {
+                                    this.attr(nameAlt, attrAlt, previous);
+                                    this.delete(name, attr);
+                                }
+                            }
+                        }
+                        else {
+                            this.attr(name, attr, value, overwrite);
                         }
                     }
                 }
             };
-            let assign = API_VERSION[0]!.assign;
-            setCustomization(assign[tagName]);
-            setCustomization(assign[controlName]);
-            const api = API_VERSION[this.api];
-            if (api) {
-                assign = api.assign;
-                setCustomization(assign[tagName]);
-                setCustomization(assign[controlName]);
+            const baseAPI = this.localSettings.customizationsBaseAPI;
+            if (baseAPI !== -1) {
+                const { tagName, controlName } = this;
+                const assign = Array.isArray(baseAPI) ? [...baseAPI, this.api] : [baseAPI, this.api];
+                for (let i = 0, length = assign.length, data: Undef<ObjectMapNested<StringMap>>; i < length; ++i) {
+                    const item = API_VERSION[assign[i]];
+                    if (item && (data = item.assign)) {
+                        if (data[tagName]) {
+                            setCustomization(data[tagName]!);
+                        }
+                        if (data[controlName]) {
+                            setCustomization(data[controlName]!);
+                        }
+                    }
+                }
             }
         }
 

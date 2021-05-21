@@ -50,6 +50,7 @@ const settings: UserResourceSettingsUI = {
     compressImages: false,
     convertImages: "",
     showAttributes: true,
+    customizationsBaseAPI: 0,
     customizationsOverwritePrivilege: true,
     convertPixels: "dp",
     insertSpaces: 4,

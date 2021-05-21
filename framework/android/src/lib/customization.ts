@@ -17,8 +17,7 @@ function substitute(result: PlainObject, attr: string, api?: BUILD_VERSION, minA
 
 export const API_VERSION: Customizations<View> = {
     [BUILD_VERSION.R]: {
-        android: {},
-        assign: {}
+        android: {}
     },
     [BUILD_VERSION.Q]: {
         android: {
@@ -35,8 +34,7 @@ export const API_VERSION: Customizations<View> = {
             preserveLegacyExternalStorage: false,
             resourcesMap: false,
             supportsInlineSuggestions: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.PIE]: {
         android: {
@@ -69,8 +67,7 @@ export const API_VERSION: Customizations<View> = {
             useAppZygote: false,
             useEmbeddedDex: false,
             zygotePreloadName: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.OREO_1]: {
         android: {
@@ -94,8 +91,7 @@ export const API_VERSION: Customizations<View> = {
             versionCodeMajor: false,
             versionMajor: false,
             widgetFeatures: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.OREO]: {
         android: {
@@ -105,8 +101,7 @@ export const API_VERSION: Customizations<View> = {
             turnScreenOn: false,
             windowLayoutInDisplayCutoutMode: false,
             windowLightNavigationBar: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.NOUGAT_1]: {
         android: {
@@ -164,8 +159,7 @@ export const API_VERSION: Customizations<View> = {
             tooltipText: false,
             visibleToInstantApps: false,
             windowSplashscreenContent: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.NOUGAT]: {
         android: {
@@ -178,8 +172,7 @@ export const API_VERSION: Customizations<View> = {
             shortcutLongLabel: false,
             shortcutShortLabel: false,
             showMetadataInPreview: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.MARSHMALLOW]: {
         android: {
@@ -236,8 +229,7 @@ export const API_VERSION: Customizations<View> = {
             use32bitAbi: false,
             version: false,
             windowBackgroundFallback: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.LOLLIPOP_1]: {
         android: {
@@ -269,8 +261,7 @@ export const API_VERSION: Customizations<View> = {
             trackTintMode: false,
             usesCleartextTraffic: false,
             windowLightStatusBar: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.LOLLIPOP]: {
         android: {
@@ -281,8 +272,7 @@ export const API_VERSION: Customizations<View> = {
             resizeClip: false,
             revisionCode: false,
             searchHintIcon: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.KITKAT_1]: {
         android: {
@@ -481,15 +471,13 @@ export const API_VERSION: Customizations<View> = {
             windowTransitionBackgroundFadeDuration: false,
             yearListItemTextAppearance: false,
             yearListSelectorColor: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.KITKAT]: {
         android: {
             allowEmbedded: false,
             windowSwipeToDismiss: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.JELLYBEAN_2]: {
         android: {
@@ -516,8 +504,7 @@ export const API_VERSION: Customizations<View> = {
             vendor: false,
             windowTranslucentNavigation: false,
             windowTranslucentStatus: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.JELLYBEAN_1]: {
         android: {
@@ -535,8 +522,7 @@ export const API_VERSION: Customizations<View> = {
             requiredForAllUsers: false,
             restrictedAccountType: false,
             windowOverscan: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.JELLYBEAN]: {
         android: {
@@ -569,8 +555,7 @@ export const API_VERSION: Customizations<View> = {
             textDirection: false,
             timeZone: false,
             widgetCategory: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.ICE_CREAM_SANDWICH_1]: {
         android: {
@@ -581,22 +566,13 @@ export const API_VERSION: Customizations<View> = {
             mediaRouteButtonStyle: false,
             mediaRouteTypes: false,
             parentActivityName: false
-        },
-        assign: {}
+        }
     },
     [BUILD_VERSION.ICE_CREAM_SANDWICH]: {
-        android: {},
-        assign: {}
+        android: {}
     },
     [BUILD_VERSION.ALL]: {
-        android: {},
-        assign: {
-            Button: {
-                android: {
-                    textAllCaps: 'false'
-                }
-            }
-        }
+        android: {}
     }
 };
 
@@ -697,10 +673,14 @@ export const DEPRECATED_ATTRIBUTE: Deprecations<View> = {
 };
 
 export function getValue(api: BUILD_VERSION, tagName: string, namespace: string, attr: string) {
-    for (const build of [API_VERSION[api], API_VERSION[0]]) {
-        const value = build!.assign[tagName]?.[namespace]?.[attr];
-        if (value) {
-            return value;
+    const items = [api, 0];
+    for (let i = 0; i < 2; ++i) {
+        const item = API_VERSION[items[i]];
+        if (item) {
+            const value = item.assign?.[tagName]?.[namespace]?.[attr];
+            if (value) {
+                return value;
+            }
         }
     }
     return '';
