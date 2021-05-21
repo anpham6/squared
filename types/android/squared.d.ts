@@ -9,6 +9,7 @@ declare interface AppFramework<T extends base.View> extends squared.base.AppFram
     customize(build: number, widget: string, options: ObjectMap<StringMap>): Undef<ObjectMap<StringMap>>;
     loadCustomizations(name: string): void;
     saveCustomizations(name: string): void;
+    resetCustomizations(): void;
     getLocalSettings(): ControllerSettingsUI;
 }
 

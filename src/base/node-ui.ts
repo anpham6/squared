@@ -1271,7 +1271,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             style.whiteSpace = 'nowrap';
         }
         style.display = 'inline-block';
-        const parent = this.actualParent?.element || document.body;
+        const parent = this.parentElement || document.body;
         const element = createElement(tagName !== '#text' ? tagName : 'span', { attributes: { textContent: textContent || 'AgjpqyZ' }, style });
         parent.appendChild(element);
         const result = getRangeClientRect(element);

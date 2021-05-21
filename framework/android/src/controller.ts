@@ -1793,7 +1793,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     ({ progressForegroundColor: foregroundColor, progressBackgroundColor: backgroundColor } = this.localSettings.style);
-                    (node.actualParent!.element as HTMLElement).querySelectorAll(':indeterminate').forEach(child => {
+                    (node.parentElement as HTMLElement).querySelectorAll(':indeterminate').forEach(child => {
                         if (child === node.element) {
                             node.android('indeterminate', 'true');
                         }
@@ -1988,10 +1988,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const length = nodes.length;
         for (let i = 0; i < length; ++i) {
             const node = nodes[i];
-            if (node.constraint.horizontal) {
+            const constraint = node.constraint;
+            if (constraint.horizontal) {
                 horizontalAligned.push(node);
             }
-            if (node.constraint.vertical) {
+            if (constraint.vertical) {
                 verticalAligned.push(node);
             }
             if (node.alignParent('top') || node.alignSibling('top')) {
@@ -3875,9 +3876,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     get screenDimension() {
         const { resolutionDPI, resolutionScreenWidth, resolutionScreenHeight } = this.application.userSettings;
         const dpiRatio = 160 / resolutionDPI;
-        return {
-            width: resolutionScreenWidth! * dpiRatio,
-            height: resolutionScreenHeight! * dpiRatio
-        };
+        return { width: resolutionScreenWidth! * dpiRatio, height: resolutionScreenHeight! * dpiRatio };
     }
 }

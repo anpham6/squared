@@ -371,6 +371,15 @@ const appBase: android.AppFramework<View> = {
         catch {
         }
     },
+    resetCustomizations() {
+        const API_VERSION = customization.API_VERSION;
+        for (const build in API_VERSION) {
+            const item = API_VERSION[build]!;
+            if (item.assign) {
+                delete item.assign;
+            }
+        }
+    },
     addXmlNs(name: string, uri: string) {
         constant.XML_NAMESPACE[name] = uri;
     },

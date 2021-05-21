@@ -386,7 +386,8 @@ android.setViewModel(data: {}, sessionId?: string) // Object data for layout bin
 android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
 android.customize(build: number, tagNameOrWidget: string, options: {}) // Global attributes applied to specific views
 android.loadCustomizations(name: string) // Load customizations from Local Storage
-android.saveCustomizations(name: string) // Save "customize" settings into Local Storage
+android.saveCustomizations(name: string) // Save "customize" data into Local Storage
+android.resetCustomizations() // All session customizations are deleted
 android.addFontProvider(authority: string, package: string, certs: string[], webFonts: string | {}) // Add additional Web fonts (Google Fonts already included)
 android.getLocalSettings() // Modify controller styles and parsing rules
 ```
@@ -425,9 +426,9 @@ View model data can be applied to most HTML elements using the dataset attribute
 Leaving the sessionId empty sets the default view model for the entire project.
 
 ```javascript
-// NOTE: latest(1 | -1 | undefined): string
+// NOTE: latest(undefined = 1): string (1: most recent sessionId | -1: first sessionId)
 
-await squared.parseDocument(/* "mainview" */, /* "subview" */).then(() => {
+await squared.parseDocument(/* "mainview" */, /* "subview" */).then(nodes => {
     const sessions = squared.latest(2);
     android.setViewModel(
         {
@@ -440,7 +441,7 @@ await squared.parseDocument(/* "mainview" */, /* "subview" */).then(() => {
                 { name: "key", type: "String" }
             ]
         },
-        sessions[1] // Used when there are multiple layouts (optional)
+        nodes[0].sessionId || sessions[0]
     );
     android.setViewModel(
         {
@@ -449,7 +450,7 @@ await squared.parseDocument(/* "mainview" */, /* "subview" */).then(() => {
                 { name: "map", type: "Map&lt;String, String>" }
             ]
         },
-        sessions[0]
+        nodes[1].sessionId || sessions[1] // Used when there are multiple layouts (optional)
     );
 });
 
