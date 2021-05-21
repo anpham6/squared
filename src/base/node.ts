@@ -302,6 +302,9 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                         break;
                 }
             }
+            else if (!(other === value && (!attr.symbol || attr.symbol === '|'))) {
+                return false;
+            }
         }
     }
     if (pseudoList) {
