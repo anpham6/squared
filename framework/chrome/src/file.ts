@@ -571,6 +571,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     else if (!href || rel.indexOf('icon') === -1 || !checkMimeType()) {
                         return;
                     }
+                    else {
+                        try {
+                            if (new URL(href).origin !== location.origin) {
+                                return;
+                            }
+                        }
+                        catch {
+                            return;
+                        }
+                    }
                 }
             }
             const data = this.createBundle(options?.sessionId || '', mimeType === 'text/css', result, element, href, mimeType, 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
