@@ -455,7 +455,6 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
         })
         .replace(/\./g, '\\.')
         .replace(/\[[!^]([^\]]+)\]/g, (...match: string[]) => `[^/${match[1]}]`)
-        .replace(/(\*\*\/)*\*+$/, '.::')
         .replace(/(\*\*\/)+/g, '([^/]+/)::')
         .replace(/([!?*+@])(\([^)]+\))/g, (...match: string[]) => {
             const escape = () => match[2].replace(/\*/g, ':>').replace(/\?/g, ':<');
@@ -473,7 +472,7 @@ export function parseGlob(value: string, options?: ParseGlobOptions) {
             }
         })
         .replace(/\?(?!!)/g, '[^/]')
-        .replace(/\*/g, '[^/]*?')
+        .replace(/\*/g, '(?:[^/]*?|[^/]*/$)')
         .replace(/:([@:<>]|\d+)/g, (...match: string[]) => {
             switch (match[1]) {
                 case ':':
