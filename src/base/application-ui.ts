@@ -160,6 +160,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public builtInExtensions!: Map<string, ExtensionUI<T>>;
     public readonly session: squared.base.AppSessionUI<T> = {
         active: new Map(),
+        data: new Map(),
         extensionMap: new WeakMap(),
         clearMap: new Map()
     };
@@ -297,7 +298,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public reset() {
         const session = this.session;
-        session.active.clear();
         session.extensionMap = new WeakMap();
         session.clearMap.clear();
         this.setResourceId();

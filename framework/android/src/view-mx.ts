@@ -415,7 +415,7 @@ function transferLayoutAlignment(node: T, target: T) {
                     break;
                 default:
                     if (startsWith(attr, 'layout_') && attr.indexOf('margin') === -1) {
-                        target.attr(name, attr, item[attr], true);
+                        target.attr(name, attr, item[attr]);
                     }
                     break;
             }

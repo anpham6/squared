@@ -12,6 +12,7 @@ declare module "base" {
     interface ElementSettings extends Partial<UserResourceSettingsUI>, Partial<LocationUri> {
         element?: string | HTMLElement;
         exclude?: StringOfArray;
+        data?: PlainObject;
         beforeCascade?: (sessionId: string) => void;
         afterCascade?: (sessionId: string, node: Node) => void;
     }
@@ -61,6 +62,7 @@ declare module "base" {
 
     interface AppSession<T extends Node> {
         active: Map<string, AppProcessing<T>>;
+        data: Map<string, PlainObject>;
         usedSelector?: AppSessionSelectorCallback;
         unusedSelector?: AppSessionSelectorCallback;
         unusedMedia?: AppSessionConditionCallback;

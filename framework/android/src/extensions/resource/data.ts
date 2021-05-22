@@ -2,7 +2,9 @@ import type View from '../../view';
 
 import { getDataSet } from '../../lib/util';
 
-const { capitalize } = squared.lib.util;
+type AppViewModel = android.base.AppViewModel;
+
+const { capitalize, isPlainObject } = squared.lib.util;
 
 export default class ResourceData<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -12,8 +14,8 @@ export default class ResourceData<T extends View> extends squared.base.Extension
     }
 
     public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
-        const viewModel = (this.application as android.base.Application<T>).viewModel;
-        if (viewModel.size) {
+        const { session, viewModel } = (this.application as android.base.Application<T>);
+        if (session.data.size || viewModel.size) {
             const { rendered, documentRoot } = data;
             const controller = this.controller;
             const applied = new Set<T>();
@@ -24,7 +26,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                         const dataset = getDataSet(node.dataset, 'viewmodel' + capitalize(name));
                         if (dataset) {
                             for (const attr in dataset) {
-                                node.attr(name, attr, `@{${dataset[attr]!}}`, true);
+                                node.attr(name, attr, `@{${dataset[attr]!}}`);
                             }
                             applied.add(node);
                         }
@@ -34,8 +36,8 @@ export default class ResourceData<T extends View> extends squared.base.Extension
             if (applied.size) {
                 for (let i = 0, length = documentRoot.length; i < length; ++i) {
                     const node = documentRoot[i].node;
-                    const viewData = viewModel.get(node.sessionId) || viewModel.get('0');
-                    if (viewData) {
+                    const viewData = session.data.get(node.sessionId)?.viewModel || viewModel.get(node.sessionId) || viewModel.get('0');
+                    if (isPlainObject<AppViewModel>(viewData)) {
                         for (const child of applied) {
                             if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length) {
                                 const { import: importing, variable } = viewData;

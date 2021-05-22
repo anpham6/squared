@@ -94,7 +94,10 @@ export default abstract class Application<T extends Node> implements squared.bas
     public closed = false;
     public elementMap: WeakMap<Element, T> = new WeakMap();
     public readonly Node: Constructor<T>;
-    public readonly session: squared.base.AppSession<T> = { active: new Map() };
+    public readonly session: squared.base.AppSession<T> = {
+        active: new Map(),
+        data: new Map()
+    };
 
     public abstract readonly systemName: string;
 
@@ -193,6 +196,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         this.extensions.forEach(ext => ext.reset());
         this.elementMap = new WeakMap();
+        const session = this.session;
+        session.active.clear();
+        session.data.clear();
         this.closed = false;
     }
 
@@ -423,8 +429,13 @@ export default abstract class Application<T extends Node> implements squared.bas
             const node = this.createCache(processing, rootElements[i]);
             if (node) {
                 this.afterCreateCache(processing, node);
-                if (settings && settings.afterCascade) {
-                    settings.afterCascade(processing.sessionId, node);
+                if (settings) {
+                    if (settings.data) {
+                        this.session.data.set(sessionId, settings.data);
+                    }
+                    if (settings.afterCascade) {
+                        settings.afterCascade(sessionId, node);
+                    }
                 }
                 success.push(node);
             }
