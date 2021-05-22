@@ -295,7 +295,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public reset() {
         const session = this.session;
-        session.active.clear();
         session.extensionMap = new WeakMap();
         session.clearMap.clear();
         this.setResourceId();

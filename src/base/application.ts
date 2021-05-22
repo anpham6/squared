@@ -181,6 +181,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.resourceHandler?.reset();
         this.extensions.forEach(ext => ext.reset());
         this.elementMap = new WeakMap();
+        this.session.active.clear();
         this.closed = false;
     }
 
