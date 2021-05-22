@@ -392,31 +392,31 @@ View model data can be applied to most HTML elements using the dataset attribute
 Leaving the sessionId empty sets the default view model for the entire project.
 
 ```javascript
-// NOTE: latest(1 | -1 | undefined): string
+// NOTE: latest(undefined = 1): string (1: most recent sessionId | -1: first sessionId)
 
-await squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(() => {
-    const sessions = squared.latest(2);
+await squared.parseDocument(/* "mainview" */, /* "subview" */).then(nodes => {
+    const sessions = squared.latest(2); // ['1'. '2'. '3'] => ['2', '3']
     android.setViewModel(
         {
-            import: ['java.util.Map', 'java.util.List'],
+            import: ["java.util.Map", "java.util.List"],
             variable: [
-                { name: 'user', type: 'com.example.User' },
-                { name: 'list', type: 'List&lt;String>' },
-                { name: 'map', type: 'Map&lt;String, String>' },
-                { name: 'index', type: 'int' },
-                { name: 'key', type: 'String' }
+                { name: "user", type: "com.example.User" },
+                { name: "list", type: "List&lt;String>" },
+                { name: "map", type: "Map&lt;String, String>" },
+                { name: "index", type: "int" },
+                { name: "key", type: "String" }
             ]
         },
-        sessions[1] // Used when there are multiple layouts (optional)
+        nodes[0].sessionId || sessions[0]
     );
     android.setViewModel(
         {
-            import: ['java.util.Map'],
+            import: ["java.util.Map"],
             variable: [
-                { name: 'map', type: 'Map&lt;String, String>' }
+                { name: "map", type: "Map&lt;String, String>" }
             ]
         },
-        sessions[0]
+        nodes[1].sessionId || sessions[1] // Used when there are multiple layouts (optional)
     );
 });
 

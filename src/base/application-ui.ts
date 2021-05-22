@@ -304,7 +304,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 delete element.dataset[iterationName];
             }
         }
-        session.active.clear();
         session.extensionMap = new WeakMap();
         session.clearMap.clear();
         this.setResourceId();

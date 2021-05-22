@@ -187,6 +187,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         for (const ext of this.extensions) {
             ext.reset();
         }
+        this.session.active.clear();
         this.closed = false;
     }
 
