@@ -354,7 +354,7 @@ function createBackgroundGradient(resourceId: number, gradient: Gradient, api = 
     return result;
 }
 
-function createLayerList(resourceId: number, images: Undef<BackgroundImageData[]>, corners?: Undef<CornerRadiusData>, boxStyle?: BoxStyle, stroke?: StandardMap | false, indentOffset?: string) {
+function createLayerList(resourceId: number, images: Undef<BackgroundImageData[]>, corners?: Undef<CornerRadiusData>, boxStyle?: BoxStyle, stroke?: StandardMap | false, indentWidth = 0) {
     const item: LayerData[] = [];
     const result: LayerList[] = [{ 'xmlns:android': XML_NAMESPACE.android, item }];
     const solid = boxStyle && getBackgroundColor(resourceId, boxStyle.backgroundColor);
@@ -368,6 +368,7 @@ function createLayerList(resourceId: number, images: Undef<BackgroundImageData[]
         }
     }
     if (stroke) {
+        const indentOffset = indentWidth ? formatPX(indentWidth) : '';
         item.push({
             top: indentOffset,
             right: indentOffset,
@@ -384,7 +385,7 @@ function getColorValue(resourceId: number, value: ColorData | string, transparen
     return color ? `@color/${color}` : '';
 }
 
-function setBorderStyle(resourceId: number, layerList: LayerList, index: number, borders: Undef<BorderAttribute>[], corners: Undef<CornerRadiusData>, indentWidth: number, indentOffset: string) {
+function setBorderStyle(resourceId: number, layerList: LayerList, index: number, borders: Undef<BorderAttribute>[], corners: Undef<CornerRadiusData>, indentWidth: number) {
     const border = borders[index];
     if (border) {
         const width = Math.round(border.width);
@@ -414,6 +415,7 @@ function setBorderStyle(resourceId: number, layerList: LayerList, index: number,
                 });
             }
             const hideOffset = '-' + formatPX((inset ? Math.ceil(width / 2) : width) + indentWidth + 1);
+            const indentOffset = indentWidth ? formatPX(indentWidth) : '';
             layerList.item.push({
                 top: index === 0 ? indentOffset : hideOffset,
                 right: index === 1 ? indentOffset : hideOffset,
@@ -790,7 +792,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     }
 
     public getDrawableBackground(resourceId: number, boxStyle: BoxStyle, { node, indentWidth = 0, images, borderOnly = false, outline }: DrawableData): [Null<StandardMap[]>, Null<LayerList[]>, Undef<CornerRadiusData>] {
-        const indentOffset = indentWidth ? formatPX(indentWidth) : '';
         const corners = !borderOnly ? getBorderRadius(boxStyle) : undefined;
         let shapeData: Null<StandardMap[]> = null,
             layerList: Null<LayerList[]> = null,
@@ -1025,7 +1026,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (border && !isAlternatingBorder(border.style, Math.round(border.width)) && !(border.style === 'double' && Math.floor(border.width) > 1) || !borderData && (corners || images && images.length)) {
             const stroke = border && getBorderStroke(resourceId, border);
             if (images && images.length || indentWidth || outline && borderOnly) {
-                layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined, stroke, indentOffset);
+                layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined, stroke, indentWidth);
             }
             else {
                 shapeData = [{
@@ -1056,6 +1057,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 else {
                     const hideOffset = '-' + formatPX(width + indentWidth + 1);
+                    const indentOffset = indentWidth ? formatPX(indentWidth) : '';
                     layerList[0].item.push({
                         top: borderVisible[0] ? indentOffset : hideOffset,
                         right: borderVisible[1] ? indentOffset : hideOffset,
@@ -1067,10 +1069,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             else {
                 const layerData = layerList[0];
-                setBorderStyle(resourceId, layerData, 0, borders, corners, indentWidth, indentOffset);
-                setBorderStyle(resourceId, layerData, 3, borders, corners, indentWidth, indentOffset);
-                setBorderStyle(resourceId, layerData, 2, borders, corners, indentWidth, indentOffset);
-                setBorderStyle(resourceId, layerData, 1, borders, corners, indentWidth, indentOffset);
+                setBorderStyle(resourceId, layerData, 0, borders, corners, indentWidth);
+                setBorderStyle(resourceId, layerData, 3, borders, corners, indentWidth);
+                setBorderStyle(resourceId, layerData, 2, borders, corners, indentWidth);
+                setBorderStyle(resourceId, layerData, 1, borders, corners, indentWidth);
             }
         }
         return [shapeData, layerList, corners];
