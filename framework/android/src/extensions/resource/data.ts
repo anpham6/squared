@@ -1,8 +1,6 @@
 import type View from '../../view';
 
-import { getDataSet } from '../../lib/util';
-
-const { capitalize } = squared.lib.util;
+const { convertHyphenated, startsWith } = squared.lib.util;
 
 export default class ResourceData<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -16,13 +14,26 @@ export default class ResourceData<T extends View> extends squared.base.Extension
             for (let i = 0, length = rendered.length; i < length; ++i) {
                 const node = rendered[i];
                 if (node.styleElement) {
-                    for (const [name] of node.namespaces()) {
-                        const dataset = getDataSet(node.dataset, 'viewmodel' + capitalize(name));
-                        if (dataset) {
-                            for (const attr in dataset) {
-                                node.attr(name, attr, `@{${dataset[attr]!}}`, true);
+                    const dataset = node.dataset!;
+                    for (const name in dataset) {
+                        if (startsWith(name, 'viewmodel')) {
+                            const items = convertHyphenated(name).split('-');
+                            if (items.length === 3) {
+                                const attr = items[2];
+                                const value = `@{${dataset[name]!}}`;
+                                switch (items[1]) {
+                                    case 'android':
+                                        node.android(attr, value);
+                                        break;
+                                    case 'app':
+                                        node.app(attr, value);
+                                        break;
+                                    default:
+                                        node.attr(items[1], attr, value);
+                                        break;
+                                }
+                                applied.add(node);
                             }
-                            applied.add(node);
                         }
                     }
                 }
