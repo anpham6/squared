@@ -83,7 +83,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         protected _transforms: Null<SvgTransform[]> = null;
         protected _animations: Null<SvgAnimation[]> = null;
 
-        private _name: Null<string> = null;
+        private _name = '';
 
         public getTransforms(element = this.element) {
             return SvgBuild.filterTransforms(TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal));
@@ -484,7 +484,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
         get name() {
             let result = this._name;
-            if (result === null) {
+            if (!result) {
                 const element = this.element;
                 let id = element.id.trim(),
                     value: Undef<string>,

@@ -216,9 +216,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public name = '';
     public value = '';
     public baseValue = '';
+    public rotateAngle = 0;
     public parent: Null<SvgContainer> = null;
     public transformed: Null<SvgTransform[]> = null;
-    public transformResidual?: SvgTransform[][];
+    public transformResidual: Null<SvgTransform[][]> = null;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_PATH;
 
     private _transforms?: SvgTransform[];
@@ -942,7 +943,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                     }
                                     item.baseValue = '0';
-                                    item.replaceValue = replaceValue;
+                                    if (replaceValue) {
+                                        item.replaceValue = replaceValue;
+                                    }
                                     item.values = values;
                                     item.keyTimes = keyTimes;
                                     const timingFunction = item.timingFunction;

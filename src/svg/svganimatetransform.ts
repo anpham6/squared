@@ -99,8 +99,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         return result;
     }
 
-    public transformFrom?: string;
-    public transformOrigin?: Point[];
+    public transformFrom = '';
+    public transformOrigin: Undef<Point[]> = undefined;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement) {

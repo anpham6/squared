@@ -9,7 +9,8 @@ import { MATRIX, SVG } from './lib/util';
 const { resolvePath } = squared.lib.util;
 
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
-    public rotateAngle?: number;
+    public rotateAngle = 0;
+    public transformResidual: Null<SvgTransform[][]> = null;
     public readonly imageElement: Null<SVGImageElement> = null;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_IMAGE;
 
@@ -111,14 +112,22 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         super.x = value;
     }
     get x() {
-        return super.x || this.imageElement?.x.baseVal.value || 0;
+        const x = this.getX();
+        if (!isNaN(x)) {
+            return x;
+        }
+        return super.x;
     }
 
     set y(value) {
         super.y = value;
     }
     get y() {
-        return super.y || this.imageElement?.y.baseVal.value || 0;
+        const y = this.getY();
+        if (!isNaN(y)) {
+            return y;
+        }
+        return super.y;
     }
 
     set width(value) {
@@ -141,10 +150,10 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
 
     get transforms() {
-        return !this._transforms ? this._transforms = this.imageElement ? super.transforms.concat(this.getTransforms(this.imageElement)) : super.transforms : this._transforms;
+        return this._transforms ||= this.imageElement ? super.transforms.concat(this.getTransforms(this.imageElement)) : super.transforms;
     }
 
     get animations() {
-        return !this._animations ? this._animations = this.imageElement ? super.animations.concat(this.getAnimations(this.imageElement)) : super.animations : this._animations;
+        return this._animations ||= this.imageElement ? super.animations.concat(this.getAnimations(this.imageElement)) : super.animations;
     }
 }

@@ -641,8 +641,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         }
                         if (command) {
                             if (command.customize) {
-                                filename = command.customize.call(null, uri, 'text/css', command = { ...command });
-                                if (filename === null) {
+                                if ((filename = command.customize.call(null, uri, 'text/css', command = { ...command })) === null) {
                                     continue;
                                 }
                                 if (command.pathname && filename) {
@@ -726,11 +725,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             let command = saveAsImage,
                                 filename: Undef<string>,
                                 commands: Undef<string[]>;
-                            if (command.customize) {
-                                filename = command.customize.call(null, '', mimeType, command = { ...command });
-                                if (filename === null) {
-                                    continue;
-                                }
+                            if (command.customize && (filename = command.customize.call(null, '', mimeType, command = { ...command })) === null) {
+                                continue;
                             }
                             const pathname = command.pathname;
                             filename ||= item.filename;
@@ -807,11 +803,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         inline: Undef<boolean>,
                         blob: Undef<boolean>;
                     if (command) {
-                        if (command.customize) {
-                            filename = command.customize.call(null, srcUrl || '', mimeType, command = { ...command });
-                            if (filename === null) {
-                                continue;
-                            }
+                        if (command.customize && (filename = command.customize.call(null, srcUrl || '', mimeType, command = { ...command })) === null) {
+                            continue;
                         }
                         ({ pathname, inline, blob } = command);
                     }
@@ -1183,11 +1176,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         else {
             let saveAsOptions = bundling && options.saveAsOptions;
             if (saveAsOptions) {
-                if (saveAsOptions.customize) {
-                    filename = saveAsOptions.customize.call(null, src || '', mimeType, saveAsOptions = { ...saveAsOptions });
-                    if (filename === null) {
-                        return;
-                    }
+                if (saveAsOptions.customize && (filename = saveAsOptions.customize.call(null, src || '', mimeType, saveAsOptions = { ...saveAsOptions })) === null) {
+                    return;
                 }
                 ({ inline, compress, download, preserve, process, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsOptions);
                 if (excludeAsset(assets, saveAsOptions, element, documentData)) {
@@ -1293,11 +1283,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 documentData: Undef<StringOfArray>,
                 fromConfig: Undef<boolean>;
             const setFilename = (options: SaveAsOptions) => {
-                if (options.customize) {
-                    filename = options.customize.call(null, uri, mimeType || '', command = { ...options });
-                    if (filename === null) {
-                        return false;
-                    }
+                if (options.customize && (filename = options.customize.call(null, uri, mimeType || '', command = { ...options })) === null) {
+                    return false;
                 }
                 return true;
             };

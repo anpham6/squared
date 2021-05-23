@@ -76,9 +76,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public fillMode = 0;
     public synchronizeState = 0;
     public paused = false;
-    public id: Null<number> = null;
+    public id = NaN;
     public baseValue = '';
-    public replaceValue?: string;
+    public replaceValue = '';
     public companion?: NumberValue<SvgAnimation>;
     public readonly animationElement: Null<SVGAnimationElement> = null;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_ANIMATION;

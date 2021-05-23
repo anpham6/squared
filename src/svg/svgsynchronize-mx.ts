@@ -882,7 +882,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     }
                     removeAnimations(animationsBase, removeable);
                 }
-                if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
+                if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || !isNaN(staggered[0].end))) {
                     const groupName: ObjectMapSafe<Map<number, SvgAnimate[]>> = {};
                     const groupAttributeMap: ObjectMapSafe<SvgAnimate[]> = {};
                     const intervalMap = new SvgAnimationIntervalMap(mergeable);

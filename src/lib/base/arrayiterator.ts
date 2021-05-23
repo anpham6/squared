@@ -12,7 +12,7 @@ export default class Iterator<T = unknown> implements squared.lib.base.ArrayIter
             this._iterating = 1;
             return this.children[this._index];
         }
-        else if (this.hasNext()) {
+        if (this.hasNext()) {
             this._iterating = 1;
             return this.children[++this._index];
         }

@@ -38,8 +38,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public color = '';
         public clipPath = '';
         public clipRule = '';
-        public patternParent?: SvgShapePattern;
-        public useParent?: SvgUse;
+        public useParent: Null<SvgUse> = null;
+        public patternParent: Null<SvgShapePattern> = null;
 
         private _strokeWidth = '';
 

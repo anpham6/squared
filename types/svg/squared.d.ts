@@ -78,7 +78,7 @@ declare module "svg" {
     }
 
     interface SvgViewRect extends SvgBaseVal, SvgRect {
-        rectElement?: SvgRectElement;
+        rectElement: Null<SvgRectElement>;
         setRect(): void;
     }
 
@@ -103,8 +103,8 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        useParent?: SvgUse;
-        patternParent?: SvgShapePattern;
+        useParent: Null<SvgUse>;
+        patternParent: Null<SvgShapePattern>;
         setPaint(d?: Null<string[]>, precision?: number): void;
         setAttribute(attr: string): void;
         getAttribute(attr: string): string;
@@ -120,9 +120,9 @@ declare module "svg" {
     }
 
     interface SvgTransformable {
-        rotateAngle?: number;
+        rotateAngle: number;
         transformed: Null<SvgTransform[]>;
-        transformResidual?: SvgTransform[][];
+        transformResidual: Null<SvgTransform[][]>;
         readonly transforms: SvgTransform[];
     }
 
@@ -159,9 +159,10 @@ declare module "svg" {
     }
 
     class Svg extends SvgContainer implements SvgViewBox {
+        rectElement: Null<SvgRectElement>;
         transformed: Null<SvgTransform[]>;
-        keyframesMap?: KeyframesMap;
         precision?: number;
+        keyframesMap?: KeyframesMap;
         readonly element: SVGSVGElement;
         readonly documentRoot: boolean;
         readonly definitions: SvgDefinitions;
@@ -216,9 +217,9 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
+        useParent: Null<SvgUse>;
         transformed: Null<SvgTransform[]>;
-        useParent?: SvgUse;
-        patternParent?: SvgShapePattern;
+        patternParent: Null<SvgShapePattern>;
         readonly element: SVGGElement;
         setPaint(d?: string[], precision?: number): void;
         resetPaint(): void;
@@ -241,6 +242,7 @@ declare module "svg" {
     }
 
     class SvgUseG extends SvgG implements SvgUse {
+        rectElement: Null<SvgRectElement>;
         readonly useElement: SVGUseElement;
         setRect(): void;
         setBaseValue<T = unknown>(attr: string, value?: T): boolean;
@@ -298,8 +300,9 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        useParent?: SvgUse;
-        patternParent?: SvgShapePattern;
+        rectElement: Null<SvgRectElement>;
+        useParent: Null<SvgUse>;
+        patternParent: Null<SvgShapePattern>;
         readonly useElement: SVGUseElement;
         setRect(): void;
         setBaseValue<T = unknown>(attr: string, value?: T): boolean;
@@ -326,8 +329,10 @@ declare module "svg" {
     }
 
     class SvgImage extends SvgElement implements SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
-        rotateAngle?: number;
+        rotateAngle: number;
         transformed: Null<SvgTransform[]>;
+        rectElement: Null<SvgRectElement>;
+        transformResidual: Null<SvgTransform[][]>;
         readonly element: SVGImageElement | SVGUseElement;
         setRect(): void;
         setBaseValue<T = unknown>(attr: string, value?: T): boolean;
@@ -378,12 +383,13 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
+        rotateAngle: number;
         parent: Null<SvgContainer>;
         viewport: Null<Svg>;
         transformed: Null<SvgTransform[]>;
-        useParent?: SvgUse;
-        patternParent?: SvgShapePattern;
-        transformResidual?: SvgTransform[][];
+        useParent: Null<SvgUse>;
+        transformResidual: Null<SvgTransform[][]>;
+        patternParent: Null<SvgShapePattern>;
         readonly element: SVGGeometryElement;
         readonly instanceType: number;
         setPaint(d?: string[], precision?: number): void;
@@ -426,8 +432,9 @@ declare module "svg" {
         clipPath: string;
         clipRule: string;
         transformed: Null<SvgTransform[]>;
-        useParent?: SvgUse;
-        patternParent?: SvgShapePattern;
+        rectElement: Null<SvgRectElement>;
+        useParent: Null<SvgUse>;
+        patternParent: Null<SvgShapePattern>;
         readonly symbolElement: SVGSymbolElement;
         readonly useElement: SVGUseElement;
         setPaint(d?: string[], precision?: number): void;
@@ -502,9 +509,9 @@ declare module "svg" {
         clipPath: string;
         clipRule: string;
         drawRegion: Null<BoxRect>;
+        useParent: Null<SvgUse>;
         transformed: Null<SvgTransform[]>;
-        useParent?: SvgUse;
-        patternParent?: SvgShapePattern;
+        patternParent: Null<SvgShapePattern>;
         readonly element: SVGGeometryElement;
         readonly patternElement: SVGPatternElement;
         readonly patternUnits: number;
@@ -529,6 +536,7 @@ declare module "svg" {
     }
 
     class SvgUseShapePattern extends SvgShapePattern implements SvgViewRect, SvgUse {
+        rectElement: Null<SvgRectElement>;
         readonly element: SVGGeometryElement;
         readonly useElement: SVGUseElement;
         setRect(): void;
@@ -553,9 +561,9 @@ declare module "svg" {
         fillMode: number;
         paused: boolean;
         synchronizeState: number;
-        id: Null<number>;
+        id: number;
         baseValue: string;
-        replaceValue?: string;
+        replaceValue: string;
         companion?: NumberValue<SvgAnimation>;
         readonly element: Null<SVGGraphicsElement>;
         readonly animationElement: Null<SVGAnimationElement>;
@@ -607,8 +615,8 @@ declare module "svg" {
         from: string;
         additiveSum: boolean;
         accumulateSum: boolean;
-        by?: number;
-        end?: number;
+        by: number;
+        end: number;
         synchronized?: NumberValue;
         readonly animationElement: Null<SVGAnimateElement>;
         setCalcMode(attributeName?: string, mode?: string): void;
@@ -646,7 +654,7 @@ declare module "svg" {
         static toScaleList(values: string[]): Null<number[][]>;
         static toTranslateList(values: string[]): Null<number[][]>;
         static toSkewList(values: string[]): Null<number[][]>;
-        transformFrom?: string;
+        transformFrom: string;
         transformOrigin?: Point[];
         readonly animationElement: Null<SVGAnimateTransformElement>;
         setType(value: string): void;
@@ -659,8 +667,8 @@ declare module "svg" {
         path: string;
         distance: string;
         rotate: string;
+        framesPerSecond: number;
         rotateData?: NumberValue[];
-        framesPerSecond?: number;
         readonly animationElement: Null<SVGAnimateMotionElement>;
         addKeyPoint(item: NumberValue): void;
         get offsetPath(): Null<SvgOffsetPath[]>;

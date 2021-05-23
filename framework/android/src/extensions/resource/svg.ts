@@ -457,7 +457,7 @@ function getTransformValues(item: SvgAnimate): Null<number[][]> {
     return null;
 }
 
-function getTransformInitialValue(name: string): Undef<"0" | "1"> {
+function getTransformInitialValue(name: string) {
     switch (name) {
         case 'rotation':
         case 'pivotX':
@@ -647,7 +647,7 @@ function resetBeforeValue(propertyName: string, valueType: string, valueTo: Unde
 
 function insertFillAfter(resourceId: number, propertyName: string, valueType: string, item: SvgAnimation, synchronized: Undef<boolean>, transforming: Undef<boolean>, precision: number, afterAnimator: PropertyValue[], transformOrigin?: Null<Point[]>, propertyValues?: PropertyValue[], startOffset?: number) {
     if (!synchronized && item.fillReplace) {
-        let valueTo = item.replaceValue;
+        let valueTo: Undef<string> = item.replaceValue;
         if (!valueTo) {
             if (transforming) {
                 valueTo = getTransformInitialValue(propertyName);
@@ -810,8 +810,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public createSvgElement(node: T, src: string): [Undef<HTMLElement>, Undef<SVGSVGElement>] | [] {
-        src = extractURL(src) || src;
-        if (FILE.SVG.test(src) || startsWith(src, 'data:image/svg+xml')) {
+        if (FILE.SVG.test(src = extractURL(src) || src) || startsWith(src, 'data:image/svg+xml')) {
             const fileAsset = this.resource.getRawData(node.localSettings.resourceId, src);
             if (fileAsset) {
                 const parentElement = node.parentElement as HTMLElement;
@@ -1154,9 +1153,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             transforming = true;
                                         }
                                         else if (SvgBuild.asAnimateMotion(item)) {
+                                            const rotateValues = item.rotateValues;
                                             propertyNames = getTransformPropertyName(item.type);
                                             values = getTransformValues(item);
-                                            const rotateValues = item.rotateValues;
                                             if (rotateValues && propertyNames && values) {
                                                 const q = values.length;
                                                 if (rotateValues.length === q) {
@@ -1195,9 +1194,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                             beforeValues = getColorValue(resourceId, item.baseValue, true);
                                                         }
                                                         for (let k = 0, r = values.length; k < r; ++k) {
-                                                            if (values[k]) {
-                                                                values[k] = getColorValue(resourceId, values[k]) || values[k - 1] || '';
-                                                            }
+                                                            values[k] &&= getColorValue(resourceId, values[k]) || values[k - 1] || '';
                                                         }
                                                     }
                                                     break;
@@ -1533,7 +1530,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (animateData) {
                                             this._animateData.set(strokePath.name, {
                                                 element: animateData.element,
-                                                animate: animateData.animate.filter(animate => animate.id === null || animate.id === i)
+                                                animate: animateData.animate.filter(animate => isNaN(animate.id) || animate.id === i)
                                             });
                                         }
                                         strokePath.trimPathStart = truncate(dash.start, floatPrecision);

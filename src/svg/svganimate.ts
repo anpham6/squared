@@ -194,9 +194,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public type = 0;
     public additiveSum = false;
     public accumulateSum = false;
-    public by?: number;
-    public end?: number;
-    public synchronized?: NumberValue;
+    public by = 0;
+    public end = NaN;
+    public synchronized: Undef<NumberValue> = undefined;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_ANIMATE;
 
     protected _reverse = false;

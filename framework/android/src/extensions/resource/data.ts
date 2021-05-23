@@ -12,7 +12,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
     }
 
     public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
-        const { session, viewModel } = (this.application as android.base.Application<T>);
+        const { session, viewModel } = this.application as android.base.Application<T>;
         if (session.data.size || viewModel.size) {
             const { rendered, documentRoot } = data;
             const controller = this.controller;
@@ -20,7 +20,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
             for (let i = 0, length = rendered.length; i < length; ++i) {
                 const node = rendered[i];
                 if (node.styleElement) {
-                    const dataset = node.dataset!;
+                    const dataset = node.dataset;
                     for (const name in dataset) {
                         if (startsWith(name, 'viewmodel')) {
                             const items = convertHyphenated(name).split('-');

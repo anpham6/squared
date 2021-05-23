@@ -228,8 +228,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             element = this.element;
         }
         const viewport = getViewport(this);
-        let rootElement: Undef<SVGSVGElement>,
-            contentMap: Null<StringMap> = null;
+        let contentMap: Null<StringMap> = null,
+            rootElement: Undef<SVGSVGElement>;
         if (viewport) {
             ({ element: rootElement, contentMap } = viewport);
             if (precision === undefined) {

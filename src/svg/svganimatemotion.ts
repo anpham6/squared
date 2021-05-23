@@ -15,8 +15,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     public distance = '0%';
     public rotate = 'auto 0deg';
     public motionPathElement: Null<SVGGeometryElement> = null;
-    public rotateData?: NumberValue[];
-    public framesPerSecond?: number;
+    public framesPerSecond = NaN;
+    public rotateData: Undef<NumberValue[]> = undefined;
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
     public readonly instanceType = squared.svg.constant.INSTANCE_TYPE.SVG_ANIMATE_MOTION;
 
