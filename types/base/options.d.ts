@@ -62,7 +62,7 @@ interface DescendOptions<T> {
 }
 
 interface AscendOptions<T> extends DescendOptions<T> {
-    attr?: "actualParent" | "absoluteParent" | "parent" | "renderParent" | "documentParent" | "outerWrapper";
+    attr?: squared.base.NodeParentAttr;
     startSelf?: boolean;
 }
 

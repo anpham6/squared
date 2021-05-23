@@ -18,17 +18,17 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     public clearMap: Undef<Map<T, string>> = undefined;
     public absolute = true;
+    public renderIndex = -1;
     public rowCount?: number;
     public columnCount?: number;
-    public renderIndex?: number;
     public next?: boolean;
 
     private _floated: Null<Set<string>> = null;
     private _initialized = false;
     private _itemCount = NaN;
-    private _linearX: Null<boolean> = null;
-    private _linearY: Null<boolean> = null;
-    private _singleRow: Null<boolean> = null;
+    private _linearX: Undef<boolean> = undefined;
+    private _linearY: Undef<boolean> = undefined;
+    private _singleRow: Undef<boolean> = undefined;
 
     constructor(
         public parent: T,
@@ -92,14 +92,16 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         if (!this._initialized) {
             this.init();
         }
-        return this._linearX ?? true;
+        const result = this._linearX;
+        return result === undefined ? true : result;
     }
 
     get linearY() {
         if (!this._initialized) {
             this.init();
         }
-        return this._linearY ?? false;
+        const result = this._linearY;
+        return result === undefined ? false : result;
     }
 
     get floated() {
@@ -111,7 +113,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     get singleRowAligned() {
         const result = this._singleRow;
-        if (result === null) {
+        if (result === undefined) {
             const children = this.children;
             const length = children.length;
             if (length > 1) {

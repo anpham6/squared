@@ -119,7 +119,7 @@ function setDimension(node: T, style: CssStyleMap, dimension: DimensionAttr) {
         const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
         const max = style[attr];
         if (max) {
-            if (value === max || max === 'auto') {
+            if (max === value || max === 'auto') {
                 delete style[attr];
             }
             else {
@@ -789,14 +789,13 @@ const canTextAlign = (node: T) => node.naturalChild && (node.isEmpty() || isInli
 const newBoxRectDimension = (): BoxRectDimension => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 });
 
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static sanitizeCss(element: DocumentElement, style: CssStyleMap, writingMode?: string) {
-        const result: CssStyleMap = {};
-        for (let attr in style) {
-            let value = style[attr as CssStyleAttr]!;
+    public static sanitizeCss(element: DocumentElement, input: CssStyleMap, writingMode?: string, output: CssStyleMap = {}) {
+        for (let attr in input) {
+            let value = input[attr as CssStyleAttr]!;
             const alias = checkWritingMode(attr, writingMode);
             if (alias !== attr) {
                 if (typeof alias === 'string') {
-                    if (!style[alias]) {
+                    if (!input[alias]) {
                         attr = alias;
                     }
                     else {
@@ -806,9 +805,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 else {
                     let actual: string;
                     for (const alt of alias) {
-                        if (!style[alt]) {
+                        if (!input[alt]) {
                             if (actual ||= checkStyleValue(element, alt, value)) {
-                                result[alt] = actual;
+                                output[alt] = actual;
                             }
                             else {
                                 break;
@@ -819,10 +818,10 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
             }
             if (value = checkStyleValue(element, attr, value)) {
-                result[attr] = value;
+                output[attr] = value;
             }
         }
-        return result;
+        return output;
     }
 
     public documentRoot = false;
@@ -917,7 +916,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         else if (elementData.pseudoElt) {
                             this.pseudoElt = elementData.pseudoElt;
                         }
-                        this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);
+                        Node.sanitizeCss(element, styleMap, styleMap.writingMode, this._styleMap);
                     }
                     else {
                         this._styleMap = styleMap;
@@ -1150,7 +1149,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             every: Undef<boolean>,
             including: Undef<T>,
             excluding: Undef<T>,
-            attr: Undef<string>,
+            attr: Undef<squared.base.NodeParentAttr>,
             startSelf: Undef<boolean>;
         if (options) {
             ({ condition, error, every, including, excluding, attr, startSelf } = options);
@@ -1162,7 +1161,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             return [];
         }
         const result: T[] = [];
-        let parent: Null<T> = startSelf ? this : this[attr];
+        let parent: Optional<T> = startSelf ? this : this[attr];
         while (parent && parent !== excluding) {
             if (error && error(parent)) {
                 break;
@@ -2077,11 +2076,12 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }
                 return item === including;
             };
+            const children = this.actualParent!.naturalElements;
             if (reverse) {
-                iterateReverseArray(this.actualParent!.naturalElements, filterPredicate, 0, this.childIndex);
+                iterateReverseArray(children, filterPredicate, 0, this.childIndex);
             }
             else {
-                iterateArray(this.actualParent!.naturalElements, filterPredicate, this.childIndex + 1);
+                iterateArray(children, filterPredicate, this.childIndex + 1);
             }
             if (value) {
                 const ancestors: T[] = this.ascend();
@@ -3105,18 +3105,18 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         if (result === undefined) {
             if (this.naturalChild) {
                 if (this.styleElement) {
-                    const fixedWidth = isFixedFont(this);
-                    let value = convertFontSize(this.valueOf('fontSize'), fixedWidth);
+                    const fixed = isFixedFont(this);
+                    let value = convertFontSize(this.valueOf('fontSize'), fixed);
                     if (isNaN(result = asPx(value)) && !isNaN(result = asPercent(value))) {
                         const parent = this.actualParent;
                         if (parent) {
                             result *= parent.fontSize;
-                            if (fixedWidth && !isFixedFont(parent)) {
+                            if (fixed && !isFixedFont(parent)) {
                                 result *= 13 / getRemSize();
                             }
                         }
                         else {
-                            result = getRemSize(fixedWidth);
+                            result = getRemSize(fixed);
                         }
                     }
                     else {
@@ -3156,7 +3156,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 value = '1rem';
                             }
                         }
-                        result = (endsWith(value, 'rem') ? safeFloat(value, 3) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
+                        result = (endsWith(value, 'rem') ? safeFloat(value, 3) * getRemSize(fixed) : parseUnit(value, { fixedWidth: fixed })) * emRatio;
                     }
                 }
                 else {

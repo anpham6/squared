@@ -452,7 +452,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderExtension: Null<ExtensionUI<T>[]> = null;
     public renderTemplates: Null<NodeTemplate<T>[]> = null;
     public renderedAs: Null<NodeTemplate<T>> = null;
-    public outerWrapper: Undef<T> = undefined;
+    public outerWrapper: Null<T> = null;
     public companion: Undef<T> = undefined;
     public documentChildren: Undef<T[]> = undefined;
 

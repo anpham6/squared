@@ -8,6 +8,7 @@ declare module "base" {
     type RootElement = string | HTMLElement | ElementSettings;
     type UserSettingMethod<T extends Node, U extends UserResourceSettings> = <V = unknown>(sessionId: Undef<string | AppProcessing<T>>, name: keyof U) => V;
     type AppThreadData<T extends Node> = [AppProcessing<T>, HTMLElement[], QuerySelectorElement[], string[]?];
+    type NodeParentAttr = "actualParent" | "absoluteParent" | "parent" | "renderParent" | "documentParent" | "outerWrapper";
 
     interface ElementSettings extends Partial<UserResourceSettingsUI>, Partial<LocationUri> {
         element?: string | HTMLElement;
@@ -401,9 +402,9 @@ declare module "base" {
         node: T;
         containerType: number;
         alignmentType: number;
+        renderIndex: number;
         absolute: boolean;
         clearMap?: Map<T, string>;
-        renderIndex?: number;
         next?: boolean;
         rowCount?: number;
         columnCount?: number;
@@ -422,7 +423,7 @@ declare module "base" {
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel, Dimension {
         static readonly TEXT_STYLE: string[];
-        static sanitizeCss(element: DocumentElement, style: CssStyleMap, writingMode?: string): CssStyleMap;
+        static sanitizeCss(element: DocumentElement, input: CssStyleMap, writingMode?: string, output?: CssStyleMap): CssStyleMap;
         documentRoot: boolean;
         queryMap: Null<Node[][]>;
         shadowHost: Null<ShadowRoot>;
@@ -613,8 +614,8 @@ declare module "base" {
         renderExtension: Null<Extension<NodeUI>[]>;
         renderTemplates: Null<NodeTemplate<NodeUI>[]>;
         renderedAs: Null<NodeTemplate<NodeUI>>;
+        outerWrapper: Null<NodeUI>;
         documentChildren?: NodeUI[];
-        outerWrapper?: NodeUI;
         companion?: NodeUI;
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
