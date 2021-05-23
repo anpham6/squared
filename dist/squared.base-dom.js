@@ -1,4 +1,4 @@
-/* squared.base 2.5.13
+/* squared.base 2.5.14
    https://github.com/anpham6/squared */
 
 this.squared = this.squared || {};
@@ -166,6 +166,7 @@ this.squared.base = (function (exports) {
             for (const ext of this.extensions) {
                 ext.reset();
             }
+            this.session.active.clear();
             this.closed = false;
         }
         parseDocument(...elements) {
@@ -1554,7 +1555,6 @@ this.squared.base = (function (exports) {
         })
             .replace(/\./g, '\\.')
             .replace(/\[[!^]([^\]]+)\]/g, (...match) => `[^/${match[1]}]`)
-            .replace(/(\*\*\/)*\*+$/, '.::')
             .replace(/(\*\*\/)+/g, '([^/]+/)::')
             .replace(/([!?*+@])(\([^)]+\))/g, (...match) => {
             const escape = () => match[2].replace(/\*/g, ':>').replace(/\?/g, ':<');
@@ -1572,7 +1572,7 @@ this.squared.base = (function (exports) {
             }
         })
             .replace(/\?(?!!)/g, '[^/]')
-            .replace(/\*/g, '[^/]*?')
+            .replace(/\*/g, '(?:[^/]*?|[^/]*/$)')
             .replace(/:([@:<>]|\d+)/g, (...match) => {
             switch (match[1]) {
                 case ':':
@@ -2149,7 +2149,7 @@ this.squared.base = (function (exports) {
                         case 'TH':
                             return 0;
                         default: {
-                            const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
+                            const parent = node.ascend({ condition: item => item.tableElement })[0];
                             if (parent) {
                                 const [horizontal, vertical] = splitPair(parent.css('borderSpacing'), ' ');
                                 switch (attr) {
@@ -2277,6 +2277,9 @@ this.squared.base = (function (exports) {
                             }
                             break;
                     }
+                }
+                else if (!(other === value && (!attr.symbol || attr.symbol === '|'))) {
+                    return false;
                 }
             }
         }
@@ -4148,13 +4151,20 @@ this.squared.base = (function (exports) {
                 const bounds = this.bounds;
                 if (bounds) {
                     if (this.styleElement && this.naturalChildren.length) {
+                        let { marginTop, marginLeft } = this;
+                        if (marginTop > 0) {
+                            marginTop = 0;
+                        }
+                        if (marginLeft > 0) {
+                            marginLeft = 0;
+                        }
                         return this._box = {
                             top: bounds.top + (this.paddingTop + this.borderTopWidth),
                             right: bounds.right - (this.paddingRight + this.borderRightWidth),
                             bottom: bounds.bottom - (this.paddingBottom + this.borderBottomWidth),
                             left: bounds.left + (this.paddingLeft + this.borderLeftWidth),
-                            width: bounds.width - this.contentBoxWidth,
-                            height: bounds.height - this.contentBoxHeight
+                            width: bounds.width + marginLeft - this.contentBoxWidth,
+                            height: bounds.height + marginTop - this.contentBoxHeight
                         };
                     }
                     return this._box = bounds;

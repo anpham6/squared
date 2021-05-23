@@ -1,4 +1,4 @@
-/* android-framework 2.5.13
+/* android-framework 2.5.14
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -320,7 +320,7 @@ var android = (function () {
 
     const { DOM } = squared.lib.regex;
     const { parseColor: __parseColor } = squared.lib.color;
-    const { capitalize: capitalize$6, joinArray: joinArray$1, isPlainObject: isPlainObject$2, startsWith: startsWith$8 } = squared.lib.util;
+    const { capitalize: capitalize$5, joinArray: joinArray$1, isPlainObject: isPlainObject$2, startsWith: startsWith$9 } = squared.lib.util;
     const CACHE_COLORDATA = {};
     function parseColor(value, opacity = 1, transparency) {
         if (value && (value !== 'transparent' || transparency)) {
@@ -448,8 +448,8 @@ var android = (function () {
     function getDataSet(dataset, prefix) {
         let result;
         for (const attr in dataset) {
-            if (startsWith$8(attr, prefix)) {
-                (result || (result = {}))[capitalize$6(attr.substring(prefix.length), false)] = dataset[attr];
+            if (startsWith$9(attr, prefix)) {
+                (result || (result = {}))[capitalize$5(attr.substring(prefix.length), false)] = dataset[attr];
             }
         }
         return result;
@@ -495,7 +495,7 @@ var android = (function () {
                     }
                     break;
                 case '@':
-                    output += i === 0 || !output.trim() ? '\\@' : '@';
+                    output += !quote && (i === 0 || !output.trim()) ? '\\@' : '@';
                     break;
                 case '"':
                     output += '&quot;';
@@ -628,7 +628,7 @@ var android = (function () {
 
     const { PROTOCOL } = squared.lib.regex.FILE;
     const { extractURL: extractURL$2, getSrcSet: getSrcSet$1 } = squared.lib.css;
-    const { endsWith: endsWith$2, fromLastIndexOf: fromLastIndexOf$3, isNumber: isNumber$1, isPlainObject: isPlainObject$1, isString: isString$1, padStart, resolvePath: resolvePath$2, splitPairStart: splitPairStart$1, startsWith: startsWith$7, trimString } = squared.lib.util;
+    const { endsWith: endsWith$2, fromLastIndexOf: fromLastIndexOf$3, isNumber: isNumber$1, isPlainObject: isPlainObject$1, isString: isString$1, padStart, resolvePath: resolvePath$2, splitPairStart: splitPairStart$1, startsWith: startsWith$8, trimString } = squared.lib.util;
     const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
     const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
     let CACHE_IMAGE = {};
@@ -640,7 +640,7 @@ var android = (function () {
             if (isString$1(value)) {
                 switch (attr) {
                     case 'text':
-                        if (!startsWith$7(value, '@string/')) {
+                        if (!startsWith$8(value, '@string/')) {
                             obj[attr] = Resource.addString(resourceId, value, '', numberAlias);
                         }
                         break;
@@ -858,7 +858,7 @@ var android = (function () {
             let mdpi;
             if (typeof element === 'string') {
                 mdpi = extractURL$2(element);
-                if (mdpi && !startsWith$7(mdpi, 'data:image/')) {
+                if (mdpi && !startsWith$8(mdpi, 'data:image/')) {
                     return this.addImageSet(resourceId, { mdpi: resolvePath$2(mdpi) }, prefix);
                 }
             }
@@ -1633,7 +1633,7 @@ var android = (function () {
     const { CSS_PROPERTIES, formatPX: formatPX$b, isLength: isLength$3, isPercent: isPercent$4, parseTransform: parseTransform$1 } = squared.lib.css;
     const { getNamedItem, getRangeClientRect: getRangeClientRect$1 } = squared.lib.dom;
     const { clamp: clamp$1, truncate: truncate$8 } = squared.lib.math;
-    const { capitalize: capitalize$5, convertFloat, convertInt: convertInt$1, convertPercent: convertPercent$5, convertWord: convertWord$3, fromLastIndexOf: fromLastIndexOf$2, hasKeys: hasKeys$2, isString, replaceMap: replaceMap$1, splitPair: splitPair$1, startsWith: startsWith$6 } = squared.lib.util;
+    const { capitalize: capitalize$4, convertFloat, convertInt: convertInt$1, convertPercent: convertPercent$5, convertWord: convertWord$3, fromLastIndexOf: fromLastIndexOf$2, hasKeys: hasKeys$2, isString, replaceMap: replaceMap$1, splitPair: splitPair$1, startsWith: startsWith$7 } = squared.lib.util;
     const { parseTask, parseWatchInterval } = squared.base.lib.util;
     const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
     const BOX_MARGIN = CSS_PROPERTIES.margin.value;
@@ -1992,7 +1992,7 @@ var android = (function () {
                     case 'layout_height':
                         break;
                     default:
-                        if (startsWith$6(attr, 'layout_') && !attr.includes('margin')) {
+                        if (startsWith$7(attr, 'layout_') && !attr.includes('margin')) {
                             target.attr(name, attr, item[attr], true);
                         }
                         break;
@@ -2695,7 +2695,7 @@ var android = (function () {
                             if (this.pageFlow && !this.floating) {
                                 this.mergeGravity('layout_gravity', parentAlign, false);
                             }
-                            if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || startsWith$6(this.display, 'table-')) {
+                            if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || startsWith$7(this.display, 'table-')) {
                                 this.mergeGravity('gravity', parentAlign, false);
                             }
                         }
@@ -3052,7 +3052,7 @@ var android = (function () {
                     if (dataset) {
                         const pattern = /^attr[A-Z]/;
                         for (const namespace in dataset) {
-                            const name = namespace === 'attr' ? 'android' : pattern.test(namespace) ? capitalize$5(namespace.substring(4), false) : '';
+                            const name = namespace === 'attr' ? 'android' : pattern.test(namespace) ? capitalize$4(namespace.substring(4), false) : '';
                             if (name) {
                                 for (const values of dataset[namespace].split(';')) {
                                     const [key, value] = splitPair$1(values, '::');
@@ -3548,7 +3548,7 @@ var android = (function () {
                         const adjacent = current.alignSibling(anchorA);
                         if (adjacent) {
                             const sibling = siblings.find(item => item.documentId === adjacent);
-                            if (sibling && (sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
+                            if (sibling && (renderParent.layoutRelative || sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
                                 result.push(sibling);
                                 current = sibling;
                             }
@@ -4745,7 +4745,7 @@ var android = (function () {
     const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
     const { truncate: truncate$7 } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { assignEmptyValue, capitalize: capitalize$4, convertPercent: convertPercent$4, convertWord: convertWord$2, iterateArray, lastItemOf: lastItemOf$1, minMaxOf, partitionArray: partitionArray$1, plainMap: plainMap$3, startsWith: startsWith$5, withinRange: withinRange$1 } = squared.lib.util;
+    const { assignEmptyValue, capitalize: capitalize$3, convertPercent: convertPercent$4, convertWord: convertWord$2, iterateArray, lastItemOf: lastItemOf$1, minMaxOf, partitionArray: partitionArray$1, plainMap: plainMap$3, startsWith: startsWith$6, withinRange: withinRange$1 } = squared.lib.util;
     const { parseMimeType: parseMimeType$1 } = squared.base.lib.util;
     const REGEXP_TEXTSYMBOL = /^[^\w\s]+\s+$/;
     function sortHorizontalFloat(list) {
@@ -4917,18 +4917,18 @@ var android = (function () {
         const element = node.element;
         const src = element.tagName === 'OBJECT' ? element.data : element.src;
         const type = element.type || parseMimeType$1(src);
-        if (startsWith$5(type, 'image/')) {
+        if (startsWith$6(type, 'image/')) {
             node.setCacheValue('tagName', 'IMG');
             node.setCacheValue('imageElement', true);
             element.src = src;
             layout.containerType = 5 /* IMAGE */;
         }
-        else if (startsWith$5(type, 'video/')) {
+        else if (startsWith$6(type, 'video/')) {
             node.setCacheValue('tagName', 'VIDEO');
             element.src = src;
             layout.containerType = 21 /* VIDEOVIEW */;
         }
-        else if (startsWith$5(type, 'audio/')) {
+        else if (startsWith$6(type, 'audio/')) {
             node.setCacheValue('tagName', 'AUDIO');
             element.src = src;
             layout.containerType = 21 /* VIDEOVIEW */;
@@ -5051,7 +5051,7 @@ var android = (function () {
                     case 'grid':
                         return style.float === 'none' || hasWidth();
                     default:
-                        return (startsWith$5(display, 'inline-') || display === 'table') && hasWidth();
+                        return (startsWith$6(display, 'inline-') || display === 'table') && hasWidth();
                 }
             }
         }
@@ -5301,7 +5301,7 @@ var android = (function () {
             };
             this._viewSettings = {
                 resourceId,
-                systemName: capitalize$4(this.application.systemName),
+                systemName: capitalize$3(this.application.systemName),
                 screenDimension: this._screenDimension,
                 supportRTL: userSettings.supportRTL,
                 lineHeightAdjust: userSettings.lineHeightAdjust,
@@ -9504,7 +9504,7 @@ var android = (function () {
     var LayoutUI$a = squared.base.LayoutUI;
     const { formatPercent: formatPercent$1, formatPX: formatPX$8, isLength: isLength$2, isPercent: isPercent$3, isPx: isPx$1 } = squared.lib.css;
     const { truncate: truncate$5 } = squared.lib.math;
-    const { convertPercent: convertPercent$3, endsWith, flatArray, startsWith: startsWith$4 } = squared.lib.util;
+    const { convertPercent: convertPercent$3, endsWith, flatArray, startsWith: startsWith$5 } = squared.lib.util;
     const REGEXP_ALIGNSELF = /start|end|center|baseline/;
     const REGEXP_JUSTIFYSELF = /start|center|end|baseline|right|left/;
     function getRowData(mainData, horizontal) {
@@ -9587,7 +9587,7 @@ var android = (function () {
             MARGIN_START = 1 /* MARGIN_TOP */;
             MARGIN_END = 4 /* MARGIN_BOTTOM */;
         }
-        if (startsWith$4(alignment, 'space')) {
+        if (startsWith$5(alignment, 'space')) {
             const offset = getRemainingSize(mainData, data, node, dimension, maxScreenWidth, maxScreenHeight);
             if (offset > 0) {
                 const rowData = getRowData(mainData, horizontal);
@@ -10173,7 +10173,7 @@ var android = (function () {
                 if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
                     target.css('minHeight', formatPX$8(node.box.height), true);
                 }
-                else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && startsWith$4(mainData.alignContent, 'space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
+                else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && startsWith$5(mainData.alignContent, 'space') && !REGEXP_ALIGNSELF.test(mainData.alignItems))) {
                     target.mergeGravity('layout_gravity', 'fill_vertical');
                 }
                 return {
@@ -10562,7 +10562,7 @@ var android = (function () {
     var LayoutUI$9 = squared.base.LayoutUI;
     const { isLength: isLength$1 } = squared.lib.css;
     const { truncate: truncate$4 } = squared.lib.math;
-    const { capitalize: capitalize$3, iterateReverseArray, sameArray } = squared.lib.util;
+    const { capitalize: capitalize$2, iterateReverseArray, sameArray } = squared.lib.util;
     function getBaseline(nodes) {
         for (let i = 0, length = nodes.length; i < length; ++i) {
             const node = nodes[i];
@@ -10777,7 +10777,7 @@ var android = (function () {
                         dimension = node.hasWidth;
                         dimensionInverse = node.hasHeight;
                     }
-                    const orientationWeight = `layout_constraint${capitalize$3(orientation)}_weight`;
+                    const orientationWeight = `layout_constraint${capitalize$2(orientation)}_weight`;
                     for (let j = 0; j < length; ++j) {
                         const seg = partition[j];
                         const q = seg.length;
@@ -15143,7 +15143,7 @@ var android = (function () {
         }
     }
 
-    const { capitalize: capitalize$2 } = squared.lib.util;
+    const { convertHyphenated: convertHyphenated$1, startsWith: startsWith$4 } = squared.lib.util;
     class ResourceData extends squared.base.ExtensionUI {
         constructor() {
             super(...arguments);
@@ -15158,13 +15158,26 @@ var android = (function () {
                 for (let i = 0, length = rendered.length; i < length; ++i) {
                     const node = rendered[i];
                     if (node.styleElement) {
-                        for (const [name] of node.namespaces()) {
-                            const dataset = getDataSet(node.dataset, 'viewmodel' + capitalize$2(name));
-                            if (dataset) {
-                                for (const attr in dataset) {
-                                    node.attr(name, attr, `@{${dataset[attr]}}`, true);
+                        const dataset = node.dataset;
+                        for (const name in dataset) {
+                            if (startsWith$4(name, 'viewmodel')) {
+                                const items = convertHyphenated$1(name).split('-');
+                                if (items.length === 3) {
+                                    const attr = items[2];
+                                    const value = `@{${dataset[name]}}`;
+                                    switch (items[1]) {
+                                        case 'android':
+                                            node.android(attr, value);
+                                            break;
+                                        case 'app':
+                                            node.app(attr, value);
+                                            break;
+                                        default:
+                                            node.attr(items[1], attr, value);
+                                            break;
+                                    }
+                                    applied.add(node);
                                 }
-                                applied.add(node);
                             }
                         }
                     }
