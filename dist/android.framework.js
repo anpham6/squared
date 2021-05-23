@@ -3592,7 +3592,7 @@ var android = (function () {
                         const adjacent = current.alignSibling(anchorA);
                         if (adjacent) {
                             const sibling = siblings.find(item => item.documentId === adjacent);
-                            if (sibling && (sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
+                            if (sibling && (renderParent.layoutRelative || sibling.alignSibling(anchorB) === current.documentId || sibling.floating && sibling.alignParent(direction))) {
                                 result.push(sibling);
                                 current = sibling;
                             }

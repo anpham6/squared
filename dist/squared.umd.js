@@ -5917,17 +5917,17 @@
     function latest(value = 1) {
         if (main) {
             const items = Array.from(main.session.active.keys());
-            if (value < 0) {
-                items.reverse();
-                value *= -1;
+            const length = items.length;
+            if (length) {
+                if (value < 0) {
+                    items.reverse();
+                    value *= -1;
+                }
+                if (value === 1) {
+                    return items[length - 1];
+                }
+                return value < length ? items.slice(length - value) : items;
             }
-            switch (value) {
-                case 0:
-                    return items;
-                case 1:
-                    return items.pop() || '';
-            }
-            return items.slice(0, Math.abs(value));
         }
         return Math.abs(value) === 1 ? '' : [];
     }
