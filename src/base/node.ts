@@ -69,8 +69,8 @@ function parseLineHeight(value: string, fontSize: number) {
 }
 
 function isFixedFont(node: T) {
-    const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
-    return fontFirst === 'monospace' && fontSecond !== 'monospace';
+    const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',');
+    return fontFirst === 'monospace' && fontSecond.trim() !== 'monospace';
 }
 
 function getCssFloat(node: T, attr: CssStyleAttr, fallback: number): number {
@@ -234,11 +234,11 @@ function checkReadOnly(element: HTMLInputElement, value: boolean) {
     return true;
 }
 
-function validateSelector(this: T, selector: QueryData, child?: T) {
-    if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
+function validateSelector(node: T, selector: QueryData, child?: T) {
+    if (selector.tagName && selector.tagName !== node.tagName.toUpperCase() || selector.id && selector.id !== node.elementId) {
         return false;
     }
-    const element = this.element as HTMLElement;
+    const element = node.element as HTMLElement;
     const { classList, attrList, pseudoList, notList } = selector;
     if (classList) {
         const classes = element.classList;
@@ -249,7 +249,7 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
         }
     }
     if (attrList) {
-        const attributes = this.attributes;
+        const attributes = node.attributes;
         for (let i = 0, length = attrList.length; i < length; ++i) {
             const attr = attrList[i];
             let value: Undef<string>;
@@ -312,18 +312,18 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
         }
     }
     if (pseudoList) {
-        const { actualParent: parent, tagName } = this;
+        const { actualParent: parent, tagName } = node;
         const scoped: string[] = [];
         for (let i = 0, length = pseudoList.length; i < length; ++i) {
             const pseudo = pseudoList[i];
             switch (pseudo) {
                 case ':first-child':
-                    if (this !== parent!.firstElementChild) {
+                    if (node !== parent!.firstElementChild) {
                         return false;
                     }
                     break;
                 case ':last-child':
-                    if (this !== parent!.lastElementChild) {
+                    if (node !== parent!.lastElementChild) {
                         return false;
                     }
                     break;
@@ -346,7 +346,7 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     for (let j = 0, q = children.length; j < q; ++j) {
                         const item = children[j];
                         if (item.tagName === tagName) {
-                            if (item !== this) {
+                            if (item !== node) {
                                 return false;
                             }
                             break;
@@ -362,17 +362,17 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     break;
                 }
                 case ':checked':
-                    if (!this.checked) {
+                    if (!node.checked) {
                         return false;
                     }
                     break;
                 case ':disabled':
-                    if (!this.inputElement && this.tagName !== 'OPTION' || !(element as HTMLInputElement).disabled) {
+                    if (!node.inputElement && node.tagName !== 'OPTION' || !(element as HTMLInputElement).disabled) {
                         return false;
                     }
                     break;
                 case ':enabled':
-                    if (!this.inputElement && this.tagName !== 'OPTION' || (element as HTMLInputElement).disabled) {
+                    if (!node.inputElement && node.tagName !== 'OPTION' || (element as HTMLInputElement).disabled) {
                         return false;
                     }
                     break;
@@ -387,12 +387,12 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     }
                     break;
                 case ':required':
-                    if (!this.inputElement || this.tagName === 'BUTTON' || !(element as HTMLInputElement).required) {
+                    if (!node.inputElement || node.tagName === 'BUTTON' || !(element as HTMLInputElement).required) {
                         return false;
                     }
                     break;
                 case ':optional':
-                    if (!this.inputElement || this.tagName === 'BUTTON' || (element as HTMLInputElement).required) {
+                    if (!node.inputElement || node.tagName === 'BUTTON' || (element as HTMLInputElement).required) {
                         return false;
                     }
                     break;
@@ -443,7 +443,7 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     break;
                 case ':target': {
                     const hash = location.hash;
-                    if (!hash || !(hash === '#' + this.elementId || tagName === 'A' && hash === '#' + this.toElementString('name'))) {
+                    if (!hash || !(hash === '#' + node.elementId || tagName === 'A' && hash === '#' + node.toElementString('name'))) {
                         return false;
                     }
                     break;
@@ -481,7 +481,7 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     break;
                 case ':focus-within': {
                     const activeElement = document.activeElement;
-                    if (element !== activeElement && !this.querySelectorAll('*').find(item => item.element === activeElement)) {
+                    if (element !== activeElement && !node.querySelectorAll('*').find(item => item.element === activeElement)) {
                         return false;
                     }
                     break;
@@ -507,7 +507,7 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                     let match = REGEXP_QUERYNTH.exec(pseudo);
                     if (match) {
                         const children = match[1] ? parent!.naturalElements.slice(0).reverse() : parent!.naturalElements;
-                        const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(this) + 1;
+                        const index = match[2] === 'child' ? children.indexOf(node) + 1 : children.filter((item: T) => item.tagName === tagName).indexOf(node) + 1;
                         if (index) {
                             const placement = match[3].trim();
                             switch (placement) {
@@ -574,7 +574,7 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
                         }
                     }
                     else if (match = REGEXP_DIR.exec(pseudo)) {
-                        switch (this.dir) {
+                        switch (node.dir) {
                             case 'rtl':
                                 if (match[1] === 'ltr') {
                                     return false;
@@ -651,11 +651,11 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
             }
             if (notData) {
                 notData.fromNot = true;
-                if (validateSelector.call(this, notData)) {
+                if (validateSelector(node, notData)) {
                     return false;
                 }
             }
-            else if ((child ? this : this.actualParent!).querySelectorAll(':scope > ' + not).includes(child || this)) {
+            else if ((child ? node : node.actualParent!).querySelectorAll(':scope > ' + not).includes(child || node)) {
                 return false;
             }
         }
@@ -663,18 +663,18 @@ function validateSelector(this: T, selector: QueryData, child?: T) {
     return true;
 }
 
-function ascendSelector(this: T, selectors: QueryData[], index: number, nodes: T[], offset: number, checked?: string): boolean {
+function ascendSelector(node: T, selectors: QueryData[], index: number, nodes: T[], offset: number, checked?: string): boolean {
     const selector = selectors[index];
     const selectorAdjacent = index > 0 && selectors[--index];
     const adjacent = selector.adjacent;
     const next: T[] = [];
     for (let i = 0, length = nodes.length; i < length; ++i) {
         const child = nodes[i];
-        if (checked || selector.all || validateSelector.call(child, selector)) {
+        if (checked || selector.all || validateSelector(child, selector)) {
             let parent = child.actualParent;
             if (adjacent) {
                 if (adjacent === '>') {
-                    if (!next.includes(parent!) && (selectorAdjacent && (selectorAdjacent.all || validateSelector.call(parent!, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
+                    if (!next.includes(parent!) && (selectorAdjacent && (selectorAdjacent.all || validateSelector(parent!, selectorAdjacent, child))) || !selectorAdjacent && parent === node) {
                         next.push(parent!);
                     }
                 }
@@ -683,7 +683,7 @@ function ascendSelector(this: T, selectors: QueryData[], index: number, nodes: T
                     switch (adjacent) {
                         case '+': {
                             const j = children.indexOf(child) - 1;
-                            if (j >= 0 && (selectorAdjacent.all || validateSelector.call(children[j], selectorAdjacent))) {
+                            if (j >= 0 && (selectorAdjacent.all || validateSelector(children[j], selectorAdjacent))) {
                                 next.push(children[j]);
                             }
                             break;
@@ -694,7 +694,7 @@ function ascendSelector(this: T, selectors: QueryData[], index: number, nodes: T
                                 if (sibling === child) {
                                     break;
                                 }
-                                else if (selectorAdjacent.all || validateSelector.call(sibling, selectorAdjacent)) {
+                                else if (selectorAdjacent.all || validateSelector(sibling, selectorAdjacent)) {
                                     next.push(sibling);
                                 }
                             }
@@ -703,8 +703,8 @@ function ascendSelector(this: T, selectors: QueryData[], index: number, nodes: T
                 }
             }
             else if (selectorAdjacent) {
-                while (parent && parent.depth - this.depth >= index + offset) {
-                    if (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent)) {
+                while (parent && parent.depth - node.depth >= index + offset) {
+                    if (selectorAdjacent.all || validateSelector(parent, selectorAdjacent)) {
                         next.push(parent);
                     }
                     parent = parent.actualParent;
@@ -715,7 +715,7 @@ function ascendSelector(this: T, selectors: QueryData[], index: number, nodes: T
             }
         }
     }
-    return next.length > 0 && (index === 0 ? true : ascendSelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
+    return next.length > 0 && (index === 0 ? true : ascendSelector(node, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
 }
 
 function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions) {
@@ -1989,7 +1989,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                             const items = queryMap[j];
                             for (let k = 0, s = items.length; k < s; ++k) {
                                 const node = items[k];
-                                if ((all || !result.includes(node)) && ascendSelector.call(this, selectors, q - 1, [node], offset)) {
+                                if ((all || !result.includes(node)) && ascendSelector(this, selectors, q - 1, [node], offset)) {
                                     result.push(node);
                                 }
                             }
