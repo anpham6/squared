@@ -37,6 +37,7 @@ const settings: UserResourceSettingsUI = {
     enabledSVG: true,
     enabledMultiline: true,
     enabledViewModel: true,
+    enabledIncludes: false,
     preloadImages: true,
     preloadFonts: true,
     preloadCustomElements: true,

@@ -4,6 +4,7 @@ interface UserResourceSettingsUI {
     supportRTL: boolean;
     enabledMultiline: boolean;
     enabledViewModel: boolean;
+    enabledIncludes: boolean;
     compressImages: boolean;
     convertImages: string;
     baseLayoutAsFragment: boolean;

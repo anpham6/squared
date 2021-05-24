@@ -309,6 +309,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                     settings = item;
                     item = item.element;
                 }
+                else if (i === 0) {
+                    settings = item;
+                    item = this.mainElement;
+                }
                 else {
                     continue;
                 }

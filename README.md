@@ -95,7 +95,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
         // OR
         await squared.parseDocument( // squared 3.0
             { // Custom settings do not affect other layouts
-                element: document.body,
+                element: document.body, // index = 0 (default)
                 enabledMultiline: false,
                 customizationsBaseAPI: -1,
                 exclude: ["squared.list", "squared.grid"],
@@ -178,6 +178,7 @@ squared.settings = {
     enabledSVG: true,
     enabledMultiline: true, // fontMeasureWrap (squared 2.5)
     enabledViewModel: true,
+    enabledIncludes: false,
     fontMeasureAdjust: 0.75, // wider < 0 | thinner > 0 (data-android-font-measure-adjust)
     lineHeightAdjust: 1.1, // shorter < 1 | taller > 1 (data-android-line-height-adjust)
     baseLayoutAsFragment: false, // FragmentContainerView

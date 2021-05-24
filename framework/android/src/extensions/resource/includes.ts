@@ -16,6 +16,10 @@ interface NodeIndex {
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
+    public beforeCascadeRoot(processing: squared.base.AppProcessing<T>) {
+        this.enabled = this.application.getUserSetting<boolean>(processing, 'enabledIncludes');
+    }
+
     public beforeFinalize(data: FinalizeDataExtensionUI<T>) {
         const rendered = data.rendered;
         for (let i = 0, length = rendered.length; i < length; ++i) {
