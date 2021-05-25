@@ -40,7 +40,7 @@ interface ViewEngine {
     };
 }
 
-interface DataSource extends ElementAction, DocumentAction, PlainObject {
+interface DataSource extends ElementAction, DocumentAction {
     source: string;
     query?: unknown;
     index?: number;

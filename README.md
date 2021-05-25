@@ -455,7 +455,7 @@ await squared.parseDocument(/* "mainview" */, /* "subview" */).then(nodes => {
     );
 });
 
-// squared 3.1.0
+// squared 3.1
 await squared.parseDocument({
     element: "mainview",
     enabledViewModel: true, // Optional

@@ -119,21 +119,18 @@ function setDimension(node: T, style: CssStyleMap, dimension: DimensionAttr) {
         const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
         const max = style[attr];
         if (max) {
-            if (max === value || max === 'auto') {
-                delete style[attr];
-            }
-            else {
-                const maxValue = node.parseUnit(max, { dimension });
-                if (maxValue) {
+            if (!(max === value || max === 'auto')) {
+                const maxValue = node.parseUnit(max, { dimension, fallback: NaN });
+                if (!isNaN(maxValue)) {
                     if (maxValue <= baseValue && value && isLength(value)) {
                         style[dimension] = max;
-                        delete style[attr];
                     }
                     else {
                         return Math.min(result, maxValue);
                     }
                 }
             }
+            delete style[attr];
         }
     }
     return result;
@@ -611,8 +608,8 @@ function validateSelector(node: T, selector: QueryData, child?: T) {
     if (notList) {
         for (let i = 0, length = notList.length; i < length; ++i) {
             const not = notList[i];
-            let notData: Undef<QueryData>,
-                match: Null<RegExpExecArray>;
+            let match: Null<RegExpExecArray>,
+                notData: Undef<QueryData>;
             switch (not[0]) {
                 case ':':
                     if ((match = CSS.SELECTOR_PSEUDO_CLASS.exec(not)) && match[0] === not) {
@@ -723,8 +720,8 @@ function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions)
         last: Undef<boolean>,
         wrapperOf: Undef<boolean>,
         subAttr: Undef<string>,
-        initialValue: Undef<number>,
-        initial: Undef<boolean>;
+        initial: Undef<boolean>,
+        initialValue: Undef<number>;
     if (options) {
         ({ self, subAttr, last, wrapperOf, initialValue, initial } = options);
     }
@@ -791,8 +788,8 @@ const newBoxRectDimension = (): BoxRectDimension => ({ top: 0, left: 0, right: 0
 export default class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static sanitizeCss(element: DocumentElement, input: CssStyleMap, writingMode?: string, output: CssStyleMap = {}) {
         for (let attr in input) {
-            let value = input[attr as CssStyleAttr]!;
             const alias = checkWritingMode(attr, writingMode);
+            let value = input[attr as CssStyleAttr]!;
             if (alias !== attr) {
                 if (typeof alias === 'string') {
                     if (!input[alias]) {
@@ -2028,8 +2025,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (value && length) {
                     const customMap: T[][] = [];
                     const depth = this.depth + 1;
-                    let index: number;
-                    for (let i = 0; i < length; ++i) {
+                    for (let i = 0, index: number; i < length; ++i) {
                         const item = children[i];
                         index = item.depth - depth;
                         (customMap[index] ||= []).push(item);

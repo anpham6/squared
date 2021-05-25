@@ -836,13 +836,14 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                             closestCorner = Infinity,
                             farthestCorner = -Infinity,
                             radius = 0,
-                            radiusExtent = 0;
-                        if (position && (position[1] = position[1].trim())) {
-                            if (startsWith(position[1], 'circle')) {
+                            radiusExtent = 0,
+                            shapeAt: Undef<string>;
+                        if (position && (shapeAt = position[1].trim())) {
+                            if (startsWith(shapeAt, 'circle')) {
                                 shape = 'circle';
                             }
                             else {
-                                const [radiusX, radiusY] = splitPair(position[1], ' ');
+                                const [radiusX, radiusY] = splitPair(shapeAt, ' ');
                                 let minRadius = Infinity;
                                 if (radiusX) {
                                     minRadius = node.parseWidth(radiusX, false);
@@ -857,15 +858,26 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                                 }
                             }
                         }
-                        for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
-                            const length = Math.round(hypotenuse(Math.abs(corner[0] - left), Math.abs(corner[1] - top)));
-                            closestCorner = Math.min(length, closestCorner);
-                            farthestCorner = Math.max(length, farthestCorner);
-                        }
-                        for (const side of [width - left, height - top, left]) {
-                            closestSide = Math.min(side, closestSide);
-                            farthestSide = Math.max(side, farthestSide);
-                        }
+                        const getCorner = (right: number, bottom: number) => Math.round(hypotenuse(Math.abs(right - left), Math.abs(bottom - top)));
+                        const setCorners = (...values: number[]) => {
+                            closestCorner = Math.min(closestCorner, ...values);
+                            farthestCorner = Math.max(farthestCorner, ...values);
+                        };
+                        const setSides = (...values: number[]) => {
+                            closestSide = Math.min(closestSide, ...values);
+                            farthestSide = Math.max(farthestSide, ...values);
+                        };
+                        setCorners(
+                            getCorner(0, 0),
+                            getCorner(width, 0),
+                            getCorner(width, height),
+                            getCorner(0, height)
+                        );
+                        setSides(
+                            width - left,
+                            height - top,
+                            left
+                        );
                         const radial = {
                             type,
                             repeating,
@@ -879,7 +891,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                         } as RadialGradient;
                         if (radius === 0 && radiusExtent === 0) {
                             radius = farthestCorner;
-                            const extent = position && position[1].split(' ').pop() || '';
+                            const extent = shapeAt && shapeAt.split(' ').pop() || '';
                             switch (extent) {
                                 case 'closest-corner':
                                 case 'closest-side':
