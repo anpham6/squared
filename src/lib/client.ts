@@ -1,37 +1,44 @@
 import { PLATFORM, USER_AGENT } from './constant';
 
+const CLIENT_USERAGENT = navigator.userAgentData;
 let CLIENT_BROWSER = USER_AGENT.CHROME;
-let CLIENT_VERSION: string | number[] = '';
+let CLIENT_VERSION: Undef<number[]>;
 
-if (navigator.userAgent.indexOf('Chrom') !== -1) {
-    const match = /(Chrom(?:e|ium)|Edg|OPR)\/([^ ]+)/.exec(navigator.userAgent);
-    if (match) {
-        switch (match[1]) {
-            case 'Edg':
-                CLIENT_BROWSER = USER_AGENT.EDGE;
-                break;
-            case 'OPR':
-                CLIENT_BROWSER = USER_AGENT.OPERA;
-                break;
+function setUserAgentData() {
+    let version: Undef<string>;
+    if (navigator.userAgent.indexOf('Chrom') !== -1) {
+        const match = /(Chrom(?:e|ium)|Edg|OPR)\/([^ ]+)/.exec(navigator.userAgent);
+        if (match) {
+            switch (match[1]) {
+                case 'Edg':
+                    CLIENT_BROWSER = USER_AGENT.EDGE;
+                    break;
+                case 'OPR':
+                    CLIENT_BROWSER = USER_AGENT.OPERA;
+                    break;
+            }
+            version = match[2];
         }
-        CLIENT_VERSION = match[2];
     }
-}
-else {
-    const match = /(Safari|Firefox|Edge)\/([^ ]+)/.exec(navigator.userAgent);
-    if (match) {
-        switch (match[1]) {
-            case 'Firefox':
-                CLIENT_BROWSER = USER_AGENT.FIREFOX;
-                break;
-            case 'Edge':
-                CLIENT_BROWSER = USER_AGENT.EDGE_WIN;
-                break;
-            default:
-                CLIENT_BROWSER = USER_AGENT.SAFARI;
-                break;
+    else {
+        const match = /(Safari|Firefox|Edge)\/([^ ]+)/.exec(navigator.userAgent);
+        if (match) {
+            switch (match[1]) {
+                case 'Firefox':
+                    CLIENT_BROWSER = USER_AGENT.FIREFOX;
+                    break;
+                case 'Edge':
+                    CLIENT_BROWSER = USER_AGENT.EDGE_WIN;
+                    break;
+                default:
+                    CLIENT_BROWSER = USER_AGENT.SAFARI;
+                    break;
+            }
+            version = match[2];
         }
-        CLIENT_VERSION = match[2];
+    }
+    if (version) {
+        CLIENT_VERSION = version.split('.').map(seg => +seg);
     }
 }
 
@@ -62,35 +69,41 @@ export function isUserAgent(value: NumString, version?: unknown) {
             return true;
         }
         if (CLIENT_VERSION) {
-            if (typeof CLIENT_VERSION === 'string') {
-                CLIENT_VERSION = CLIENT_VERSION.split('.').map(seg => +seg);
-            }
             switch (typeof version) {
-                case 'string':
-                    version = version.split('.').map(seg => +seg);
-                    break;
                 case 'number':
-                    version = [version];
+                    return CLIENT_VERSION[0] >= version;
+                case 'string':
+                    version = version.split('.');
+                default:
+                    if (!Array.isArray(version)) {
+                        return false;
+                    }
+                    version = version.map(seg => +seg);
                     break;
             }
-            if (Array.isArray(version)) {
-                for (let i = 0, length = Math.min(version.length, CLIENT_VERSION.length); i < length; ++i) {
-                    const offset = +version[i];
-                    if (!isNaN(offset)) {
-                        const seg = CLIENT_VERSION[i];
-                        if (seg > offset) {
-                            break;
-                        }
-                        else if (seg < offset) {
-                            return false;
-                        }
+            const length = (version as number[]).length;
+            if (length === 1) {
+                return CLIENT_VERSION[0] >= (version as number[])[0];
+            }
+            else if (length > CLIENT_VERSION.length) {
+                setUserAgentData();
+            }
+            for (let i = 0; i < length; ++i) {
+                const offset = (version as number[])[i];
+                if (!isNaN(offset)) {
+                    const seg = CLIENT_VERSION[i];
+                    if (seg > offset) {
+                        break;
                     }
-                    else {
+                    else if (seg < offset) {
                         return false;
                     }
                 }
-                return true;
+                else {
+                    return false;
+                }
             }
+            return true;
         }
     }
     return false;
@@ -98,4 +111,27 @@ export function isUserAgent(value: NumString, version?: unknown) {
 
 export function getDeviceDPI() {
     return window.devicePixelRatio * 96;
+}
+
+if (CLIENT_USERAGENT) {
+    const brands = CLIENT_USERAGENT.brands;
+    const items = ['Microsoft Edge', 'Opera', 'Chromium'];
+    for (let i = 0; i < 3; ++i) {
+        const brand = items[i];
+        const browser = brands.find(item => item.brand === brand);
+        if (browser) {
+            if (i === 0) {
+                CLIENT_BROWSER = USER_AGENT.EDGE;
+            }
+            else if (i === 1) {
+                CLIENT_BROWSER = USER_AGENT.OPERA;
+            }
+            CLIENT_VERSION = [+browser.version];
+            break;
+        }
+    }
+}
+
+if (!CLIENT_VERSION) {
+    setUserAgentData();
 }
