@@ -127,7 +127,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const hasWidth = node.hasWidth;
-        const colgroup = node.element!.querySelector('COLGROUP');
+        const colgroup = (node.element as HTMLElement).querySelector('COLGROUP');
         const caption = node.find(item => item.tagName === 'CAPTION') as Undef<T>;
         const captionBottom = caption && node.valueOf('captionSide') === 'bottom';
         const rowWidth: number[] = [];
@@ -191,7 +191,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const visibleStyle = td.visibleStyle;
                 if (!visibleStyle.backgroundImage && !visibleStyle.backgroundColor) {
-
                     if (colgroup) {
                         const group = colgroup.children[index + 1];
                         if (group) {

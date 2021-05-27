@@ -2298,7 +2298,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else {
                             const documentId = previous.documentId;
-                            if (previous === currentFloated && currentFloated!.float === 'right') {
+                            if (previous === currentFloated && (currentFloated as T).float === 'right') {
                                 item.anchor('left', 'true');
                             }
                             else {

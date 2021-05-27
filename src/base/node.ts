@@ -2903,7 +2903,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return this._actualParent;
     }
 
-    get wrapperOf() {
+    get wrapperOf(): Null<T> {
         let result = this._cacheState.wrapperOf;
         if (result === undefined) {
             let node = this as T;
@@ -2997,23 +2997,23 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return lastItemOf(this.naturalChildren) || null;
     }
 
-    get firstElementChild() {
+    get firstElementChild(): Null<T> {
         return this.naturalElements[0] || null;
     }
 
-    get lastElementChild() {
+    get lastElementChild(): Null<T> {
         return lastItemOf(this.naturalElements) || null;
     }
 
-    get previousSibling() {
+    get previousSibling(): Null<T> {
         return this.actualParent?.naturalChildren[this.childIndex - 1] || null;
     }
 
-    get nextSibling() {
+    get nextSibling(): Null<T> {
         return this.actualParent?.naturalChildren[this.childIndex + 1] || null;
     }
 
-    get previousElementSibling() {
+    get previousElementSibling(): Null<T> {
         const children = this.actualParent?.naturalElements;
         if (children) {
             const index = children.indexOf(this);
@@ -3024,7 +3024,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         return null;
     }
 
-    get nextElementSibling() {
+    get nextElementSibling(): Null<T> {
         const children = this.actualParent?.naturalElements;
         if (children) {
             const index = children.indexOf(this);

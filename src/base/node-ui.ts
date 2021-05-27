@@ -1643,7 +1643,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     set actualParent(value: Null<T>) {
         this._actualParent = value;
     }
-    get actualParent() {
+    get actualParent(): Null<T> {
         const result = this._actualParent as Null<T>;
         if (!result && !this.naturalChild) {
             const element = this.innerMostWrapped.element;
@@ -1656,7 +1656,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     set documentParent(value) {
         this._documentParent = value;
     }
-    get documentParent() {
+    get documentParent(): T {
         return this._documentParent ||= (this.absoluteParent || this.actualParent || this.parent || this) as T;
     }
 
@@ -1938,7 +1938,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this.naturalChild || !this.innerWrapped ? super.flexbox : this.innerMostWrapped.flexbox;
     }
 
-    get previousSibling() {
+    get previousSibling(): Null<T> {
         const parent = this.actualParent;
         if (parent) {
             const children = parent.naturalChildren as T[];
@@ -1957,7 +1957,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    get nextSibling() {
+    get nextSibling(): Null<T> {
         const parent = this.actualParent;
         if (parent) {
             const children = parent.naturalChildren as T[];
@@ -1984,11 +1984,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return findReverse(this.naturalChildren as T[], node => !node.excluded || node.lineBreak) || null;
     }
 
-    get firstStaticChild() {
+    get firstStaticChild(): Null<T> {
         return this.naturalChildren.find((node: T) => node.flowElement) as Undef<T> || null;
     }
 
-    get lastStaticChild() {
+    get lastStaticChild(): Null<T> {
         return findReverse(this.naturalChildren as T[], node => node.flowElement) || null;
     }
 
@@ -2030,11 +2030,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return false;
     }
 
-    get innerBefore() {
+    get innerBefore(): Null<T> {
         return this.naturalChildren.find(node => node.pseudoElt === '::before') as Undef<T> || null;
     }
 
-    get innerAfter() {
+    get innerAfter(): Null<T> {
         return findReverse(this.naturalChildren as T[], node => node.pseudoElt === '::after') || null;
     }
 
@@ -2199,7 +2199,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result === Infinity && this.innerWrapped ? this._childIndex = this.innerMostWrapped.childIndex : result;
     }
 
-    get innerMostWrapped() {
+    get innerMostWrapped(): T {
         if (this.naturalChild) {
             return this;
         }
@@ -2220,7 +2220,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    get outerMostWrapper() {
+    get outerMostWrapper(): T {
         let result = this.outerWrapper;
         while (result) {
             const outerWrapper = result.outerWrapper;

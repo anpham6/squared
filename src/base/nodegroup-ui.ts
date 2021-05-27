@@ -75,14 +75,15 @@ export default abstract class NodeGroupUI extends NodeUI {
         return result === undefined ? this._cache.block = !!this.find(node => node.block) : result;
     }
 
-    get blockStatic() {
+    get blockStatic(): boolean {
         if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
             return true;
         }
         let result = this._cache.blockStatic;
         if (result === undefined) {
             const parent = this.actualParent || this.documentParent;
-            result = parent.blockStatic && (parent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN)) ||
+            result =
+                parent.blockStatic && (parent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN)) ||
                 parent.percentWidth > 0 ||
                 this.layoutVertical && (parent.hasWidth || !!this.find(node => node.centerAligned || node.rightAligned)) ||
                 !!this.find(node => node.blockStatic && !node.hasWidth || node.percentWidth > 0);
