@@ -32,7 +32,7 @@ interface FileAsData {
 const { DOM } = squared.base.lib.regex;
 
 const { createElement } = squared.lib.dom;
-const { convertWord, escapePattern, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
+const { convertWord, escapePattern, findReverse, fromLastIndexOf, isPlainObject, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
 const { parseTask, parseWatchInterval } = squared.base.lib.internal;
 const { appendSeparator, fromMimeType, parseMimeType, generateUUID, getComponentEnd, trimEnd } = squared.base.lib.util;
@@ -179,7 +179,7 @@ function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: st
         if (inline) {
             data.inlineContent = getContentType(element);
         }
-        const previous = lastItemOf(assets);
+        const previous = findReverse(assets, item => item.mimeType === mimeType && !item.exclude);
         if (previous && hasSamePath(previous, data, true)) {
             (previous.trailingContent ||= []).push(content);
             excludeAsset(assets, { exclude: true }, element, document);
