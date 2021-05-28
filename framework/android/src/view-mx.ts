@@ -1816,7 +1816,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     };
                 }
             }
-            return super.removeTry(options);
+            return super.removeTry(...(arguments as unknown) as [RemoveTryOptions<T>?]);
         }
 
         public hasFlex(direction: LayoutDirectionAttr) {
@@ -1909,7 +1909,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return null;
                 }
             }
-            return super.hide(options);
+            return super.hide(...(arguments as unknown) as [HideOptions<T>?]);
         }
 
         public android(attr: string, value?: string, overwrite = true) {

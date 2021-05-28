@@ -23,6 +23,6 @@ export default class SvgUseShapePattern extends SvgSynchronize$MX(SvgViewRect$MX
         if (animations.length || transforms.length) {
             this.animateSequentially(this.getAnimateViewRect(animations), transforms, undefined, options);
         }
-        super.synchronize(options);
+        super.synchronize(...(arguments as unknown) as [SvgSynchronizeOptions?]);
     }
 }

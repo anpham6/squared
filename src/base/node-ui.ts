@@ -595,7 +595,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public parseUnit(value: unknown, options?: NodeParseUnitOptions) {
          (options ||= {}).screenDimension ||= this.localSettings.screenDimension;
-        return super.parseUnit(value, options);
+        return super.parseUnit(...(arguments as unknown) as [unknown, NodeParseUnitOptions?]);
     }
 
     public parseWidth(value: string, parent?: boolean) {
@@ -1340,7 +1340,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public cssSet(attr: CssStyleAttr, value: string, cache = true) {
-        return super.css(attr, value, cache);
+        return super.css(...(arguments as unknown) as [CssStyleAttr, string, boolean?]);
     }
 
     public setCacheValue(attr: keyof CacheValueUI, value: any) {

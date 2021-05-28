@@ -79,7 +79,7 @@ const hasMultiline = (node: View, parent: View) => node.find(child => child.mult
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        super.processNode(node, parent);
+        super.processNode(...(arguments as unknown) as [T, T]);
         const mainData = this.data.get(node) as FlexboxData<T>;
         if (mainData.singleRow) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;

@@ -16,6 +16,6 @@ export default class SvgUseG extends SvgViewRect$MX(SvgBaseVal$MX(SvgG)) impleme
 
     public build(options?: SvgBuildOptions) {
         this.setRect();
-        super.build(options);
+        super.build(...(arguments as unknown) as [SvgBuildOptions?]);
     }
 }

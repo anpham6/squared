@@ -15,7 +15,7 @@ const { withinRange } = squared.lib.util;
 
 export default class Grid <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
-        super.processNode(node, parent);
+        super.processNode(...(arguments as unknown) as [T, T]);
         const columnCount = this.data.get(node) as Undef<number>;
         if (columnCount) {
             return {

@@ -40,7 +40,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
     }
 
     public addLayoutTemplate(parent: T, node: T, template: NodeXmlTemplate<T>, index?: number) {
-        super.addLayoutTemplate(parent, node, template, index);
+        super.addLayoutTemplate(...(arguments as unknown) as [T, T, NodeXmlTemplate<T>, number?]);
         if (node.renderedAs && this.userSettings.createBuildDependencies) {
             let controlName = template.controlName;
             if (!this._resolvedTagName.includes(controlName)) {

@@ -16,6 +16,7 @@ module.exports = {
         "no-fallthrough": "off",
         "no-unused-vars": "off",
         "object-curly-spacing": "off",
+        "prefer-rest-params": "off",
         "semi": "off",
         "arrow-parens": ["error", "as-needed"],
         "block-scoped-var": "error",

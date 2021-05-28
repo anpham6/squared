@@ -91,14 +91,14 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
             this.keyframesMap = options.keyframesMap || getKeyframesRules();
         }
         this.setRect();
-        super.build(options);
+        super.build(...(arguments as unknown) as [SvgBuildOptions]);
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
         if (!this.documentRoot && this.animations.length) {
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
-        super.synchronize(options);
+        super.synchronize(...(arguments as unknown) as [SvgSynchronizeOptions?]);
     }
 
     public findFill(value: string | SVGGraphicsElement) {

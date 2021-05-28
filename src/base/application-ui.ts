@@ -572,7 +572,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public afterCreateCache(processing: squared.base.AppProcessing<T>, node: T) {
-        super.afterCreateCache(processing, node);
+        super.afterCreateCache(...(arguments as unknown) as [squared.base.AppProcessing<T>, T]);
         const { elementId, dataset } = node;
         const systemName = capitalize(this.systemName);
         const settings = processing.settings;

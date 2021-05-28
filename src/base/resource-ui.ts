@@ -1021,7 +1021,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         data.fonts = new Map();
         data.colors = new Map();
         data.images = new Map();
-        super.createThread(resourceId);
+        super.createThread(...(arguments as unknown) as [number]);
     }
 
     public clear() {

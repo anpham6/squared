@@ -74,7 +74,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     }
 
     public retainAs(list: T[]) {
-        super.retainAs(list);
+        super.retainAs(...(arguments as unknown) as [T[]]);
         if (this._initialized) {
             this.init();
         }

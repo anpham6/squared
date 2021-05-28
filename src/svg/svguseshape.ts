@@ -29,7 +29,7 @@ export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$M
     }
 
     public build(options?: SvgBuildOptions) {
-        super.build(options);
+        super.build(...(arguments as unknown) as [SvgBuildOptions?]);
         this.setPaint(this.path && [this.path.value], options && options.precision);
     }
 
@@ -38,7 +38,7 @@ export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$M
         if (this.animations.length) {
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
-        super.synchronize(options);
+        super.synchronize(...(arguments as unknown) as [SvgSynchronizeOptions?]);
     }
 
     public getTransforms() {

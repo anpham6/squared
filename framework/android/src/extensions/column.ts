@@ -16,8 +16,8 @@ const { truncate } = squared.lib.math;
 const { lastItemOf } = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.Column<T> {
-    public processNode(node: T, parent: T) {
-        super.processNode(node, parent);
+    public processNode(node: T) {
+        super.processNode(...(arguments as unknown) as [T, T]);
         node.containerType = CONTAINER_NODE.CONSTRAINT;
         node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
         node.addAlign(NODE_ALIGNMENT.COLUMN);

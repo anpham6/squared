@@ -10,7 +10,7 @@ export default class SvgG extends SvgPaint$MX(SvgView$MX(SvgContainer)) implemen
     }
 
     public build(options?: SvgBuildOptions) {
-        super.build(options);
+        super.build(...(arguments as unknown) as [SvgBuildOptions?]);
         this.setPaint(this.getPathAll(), options && options.precision);
     }
 }

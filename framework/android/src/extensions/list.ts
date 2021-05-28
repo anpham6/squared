@@ -27,7 +27,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
         const layout = new LayoutUI(parent, node);
         if (layout.linearY || layout.linearX || layout.singleRowAligned) {
-            super.processNode(node, parent);
+            super.processNode(...(arguments as unknown) as [T, T]);
             if (layout.linearY) {
                 layout.rowCount = node.size();
                 layout.columnCount = node.find((item: T) => isInside(item)) ? 3 : 2;

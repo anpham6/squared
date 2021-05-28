@@ -8,7 +8,8 @@ class GlobExp extends RegExp implements IGlobExp {
     }
 
     test(value: string) {
-        return this.negate ? !super.test(value) : super.test(value);
+        const result = super.test(...(arguments as unknown) as [string]);
+        return this.negate ? !result : result;
     }
     filter(values: string[]) {
         return values.filter(value => this.test(value));

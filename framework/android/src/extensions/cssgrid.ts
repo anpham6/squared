@@ -552,7 +552,7 @@ const getLayoutDimension = (value: string) => value === 'space-between' ? 'match
 
 export default class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T): Void<ExtensionResult<T>> {
-        super.processNode(node, parent);
+        super.processNode(...(arguments as unknown) as [T, T]);
         const mainData = this.data.get(node) as Undef<ICssGridData<T>>;
         if (mainData) {
             let container: Undef<T>,

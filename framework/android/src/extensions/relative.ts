@@ -9,6 +9,6 @@ export default class <T extends View> extends squared.base.extensions.Relative<T
                     return true;
             }
         }
-        return super.is(node);
+        return super.is(...(arguments as unknown) as [T]);
     }
 }

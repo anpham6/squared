@@ -27,7 +27,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         if (this.animations.length) {
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
-        super.synchronize(options);
+        super.synchronize(...(arguments as unknown) as [SvgSynchronizeOptions?]);
     }
 
     get viewBox() {
