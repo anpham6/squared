@@ -31,6 +31,10 @@ interface Deprecations<T> {
     android: ObjectMap<CustomizationResult<T>>;
 }
 
+interface DependencyAction {
+    addDependency(group: string, name: string, version: string, overwrite?: boolean): void;
+}
+
 interface ViewModelAction {
     setViewModel(data?: PlainObject, sessionId?: string): void;
 }

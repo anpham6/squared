@@ -17,6 +17,7 @@ interface UserResourceSettingsUI {
     manifestLabelAppName: string;
     manifestThemeName: string;
     manifestParentThemeName: string;
+    createBuildDependencies: boolean;
     outputMainFileName: string;
 }
 

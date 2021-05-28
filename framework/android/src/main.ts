@@ -388,6 +388,11 @@ const appBase: android.AppFramework<View> = {
             return (application.resourceHandler as Resource<View>).addFontProvider(authority, packageName, certs, webFonts);
         }
     },
+    addDependency(group: string, name: string, version: string) {
+        if (application) {
+            return application.addDependency(group, name, version, true);
+        }
+    },
     getLocalSettings() {
         return application ? application.controllerHandler.localSettings : {} as ControllerSettingsUI;
     }

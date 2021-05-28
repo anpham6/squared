@@ -549,6 +549,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
         }
+        if (this.userSettings.createBuildDependencies) {
+            body.dependencies = this.resource.application.dependencies;
+        }
     }
 
     protected async processAssets(assets: FileAsset[], options: FileUniversalOptions) {

@@ -18,7 +18,7 @@ const { CSS_PROPERTIES } = squared.lib.internal;
 const { NODE_PROCEDURE } = squared.base.lib.constant;
 
 const { isUserAgent } = squared.lib.client;
-const { asPercent, asPx, formatPX, isLength, isPercent } = squared.lib.css;
+const { asPercent, asPx, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { getNamedItem, getRangeClientRect } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, lastItemOf, isString, replaceMap, safeFloat, splitPair, startsWith } = squared.lib.util;
@@ -397,11 +397,13 @@ function constraintPercentHeight(node: T, percentAvailable = 1) {
 }
 
 function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite = false) {
-    if (horizontal) {
-        node.setLayoutWidth(value, overwrite);
-    }
-    else {
-        node.setLayoutHeight(value, overwrite);
+    if (value) {
+        if (horizontal) {
+            node.setLayoutWidth(value, overwrite);
+        }
+        else {
+            node.setLayoutHeight(value, overwrite);
+        }
     }
 }
 
@@ -629,7 +631,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 if (this.isAnchored({ orientation: 'horizontal', chained: true })) {
                                     layoutWidth = '0px';
                                 }
-                                else if ((containsWidth || this.alignParent('right') && this.alignParent('left')) && !this.hasUnit('maxWidth') && !(this.inputElement && !this.flexibleHorizontal)) {
+                                else if ((containsWidth || this.alignParent('right') && this.alignParent('left')) && !this.hasUnit('maxWidth') && (!this.inputElement || this.flexibleHorizontal)) {
                                     layoutWidth = 'match_parent';
                                 }
                             }
@@ -3420,7 +3422,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get flexibleHorizontal() {
-            return this.ascend({ condition: (node: T) => node.hasWidth || +node.app('layout_constraintHorizontal_weight') > 0, error: (node: T) => node.layoutHorizontal || node.inlineWidth }).length > 0;
+            return this.ascend({ condition: (node: T) => isPx(node.layoutWidth) && !node.flexibleWidth || +node.app('layout_constraintHorizontal_weight') > 0, error: (node: T) => node.layoutHorizontal && node.renderChildren.length > 1 || node.inlineWidth }).length > 0;
         }
 
         get labelFor() {

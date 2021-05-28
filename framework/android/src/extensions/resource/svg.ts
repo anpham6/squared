@@ -1,6 +1,6 @@
 import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
 
-import { BUILD_VERSION, XML_NAMESPACE } from '../../lib/constant';
+import { BUILD_VERSION, DEPENDENCY_NAMESPACE, XML_NAMESPACE } from '../../lib/constant';
 import { VECTOR_GROUP, VECTOR_PATH, VECTOR_TMPL } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
@@ -809,7 +809,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         }
     }
 
-    public createSvgElement(node: T, src: string): [Undef<HTMLElement>, Undef<SVGSVGElement>] | [] {
+    public createSvgElement(node: T, src: string): [HTMLElement?, SVGSVGElement?] {
         if (FILE.SVG.test(src = extractURL(src) || src) || startsWith(src, 'data:image/svg+xml')) {
             const fileAsset = this.resource.getRawData(node.localSettings.resourceId, src);
             if (fileAsset) {
@@ -824,6 +824,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (element.height.baseVal.value === 0) {
                         element.setAttribute('height', node.actualHeight.toString());
                     }
+                    const application = this.application as android.base.Application<T>;
+                    if (application.userSettings.createBuildDependencies) {
+                        application.addDependency(...DEPENDENCY_NAMESPACE['androidx.vectordrawable']!);
+                    }
                     return [parentElement, element];
                 }
             }
@@ -834,6 +838,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public createSvgDrawable(node: T, element: SVGSVGElement, options: CreateSvgDrawableOptions = {}) {
         const { size, keyFrames, contentMap } = options;
         const { transformExclude: exclude, floatPrecision: precision, floatPrecisionKeyTime } = this.options;
+        const application = this.application as android.base.Application<T>;
         const svg = new Svg(element);
         if (contentMap) {
             svg.contentMap = contentMap;
@@ -852,12 +857,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this._synchronizeMode = keyTimeMode;
         const templateName = (node.tagName + '_' + convertWord(node.controlId) + '_viewbox').toLowerCase();
         svg.build({ contentMap, keyframesMap: keyFrames, exclude, residualHandler, precision });
-        svg.synchronize({ keyTimeMode, framesPerSecond: this.application.getUserSetting<number>(node.sessionId, 'framesPerSecond'), precision });
+        svg.synchronize({ keyTimeMode, framesPerSecond: application.getUserSetting<number>(node.sessionId, 'framesPerSecond'), precision });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const vectorData = this.parseVectorData(resourceId, svg);
         const imageLength = imageData.length;
         let vectorName: Undef<string>;
         if (vectorData) {
+            const implementation = DEPENDENCY_NAMESPACE['androidx.vectordrawable']!;
             let width = NaN,
                 height = NaN;
             if (size) {
@@ -882,6 +888,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     include: vectorData
                 }])
             );
+            if (application.userSettings.createBuildDependencies) {
+                application.addDependency(...implementation);
+            }
             if (animateData.size) {
                 const data: AnimatedVectorTemplate[] = [{
                     'xmlns:android': XML_NAMESPACE.android,
@@ -1449,6 +1458,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 if (data[0].target) {
                     vectorName = Resource.insertStoredAsset(resourceId, 'drawables', getTemplateFilename(templateName, imageLength, 'anim'), applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data));
+                    if (application.userSettings.createBuildDependencies) {
+                        application.addDependency(implementation[0], implementation[1] + '-animated', implementation[2]);
+                    }
                 }
             }
         }

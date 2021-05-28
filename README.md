@@ -81,13 +81,13 @@ The primary function "parseDocument" can be called on multiple elements and mult
 ```javascript
 <script src="/dist/squared.min.js"></script>
 <script src="/dist/squared.base.min.js"></script>
-<script src="/dist/squared.svg.min.js"></script> /* optional */
+<script src="/dist/squared.svg.min.js"></script> /* Optional */
 <script src="/dist/android.framework.min.js"></script>
 <script>
     squared.settings.targetAPI = 30; // optional
 
     document.addEventListener("DOMContentLoaded", async () => {
-        squared.setFramework(android, /* optional: settings */);
+        squared.setFramework(android, /* settings (optional) */);
 
         await squared.parseDocument(); // document.body "BODY" (default)
         // OR
@@ -132,7 +132,7 @@ VDOM is a minimal framework (45kb gzipped) for those who prefer a universal HTML
 ```javascript
 <script src="/dist/squared.min.js"></script>
 <script src="/dist/squared.base-dom.min.js"></script>
-<script src="/dist/vdom.framework.min.js"></script> /* OR: chrome.framework.min.js */
+<script src="/dist/vdom.framework.min.js"></script> /* chrome.framework.min.js */
 <script>
     document.addEventListener("DOMContentLoaded", async () => {
         squared.setFramework(vdom /* chrome */, /* optional: settings */);
@@ -221,6 +221,7 @@ squared.settings = {
     convertImages: "", // png | jpeg | webp | bmp
     showAttributes: true,
     customizationsOverwritePrivilege: true,
+    createBuildDependencies: false, // Update build.gradle
     convertPixels: "dp",
     insertSpaces: 4,
     showErrorMessages: true,
@@ -323,7 +324,7 @@ apply(name: string | Extension, options: PlainObject, saveName?: string) // See 
 
 extend(functionMap: {}, framework?: /* 0 - ALL | 1 - vdom | 2 - android | 4 - chrome */) // Add extension functions to Node prototype
 
-// Promise (cache: createElementMap - true)
+// Promise (Required for cache: createElementMap - true)
 
 getElementById(value: string, sync?: boolean, cache?: boolean) // sync - false | cache - true (default)
 querySelector(value: string, sync?: boolean, cache?: boolean)
@@ -385,6 +386,7 @@ body.addEvent("click", event => body.element.classList.toggle("example"));
 ```javascript
 android.setViewModel(data: {}, sessionId?: string) // Object data for layout bindings
 android.addXmlNs(name: string, uri: string) // Add global namespaces for third-party controls
+android.addDependency(group: string, name: string, version: string) // Add application dependency implementation (build.gradle)
 android.customize(build: number, tagNameOrWidget: string, options: {}) // Global attributes applied to specific views
 android.loadCustomizations(name: string) // Load customizations from Local Storage
 android.saveCustomizations(name: string) // Save "customize" data into Local Storage
@@ -394,7 +396,7 @@ android.getLocalSettings() // Modify controller styles and parsing rules
 ```
 
 ```javascript
-// NOTE: squared.settings.targetAPI is always parsed (except when customizationsBaseAPI: -1)
+// NOTE: squared.settings.targetAPI is always parsed (Except when: customizationsBaseAPI = -1)
 
 android.customize(android.lib.constant.BUILD_VERSION.ALL /* 0 */, "Button", {
     android: {
@@ -475,7 +477,7 @@ Two additional output parameters are required with the "data-viewmodel" prefix.
 data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 
 ```xml
-<div data-pathname-android="app/src/main" data-filename-android="activity_sub.xml"> <!-- optional -->
+<div data-pathname-android="app/src/main" data-filename-android="activity_sub.xml"> <!-- Optional -->
     <label>Name:</label>
     <input type="text" data-viewmodel-android-text="user.firstName" />
     <input type="text" data-viewmodel-android-text="user.lastName" />
@@ -613,12 +615,10 @@ Font providers are available as of squared 3.1. Google Fonts can be used without
 * [Guide](https://developer.android.com/guide/topics/ui/look-and-feel/downloadable-fonts)
 
 ```xml
-<!-- build.gradle -->
+<!-- build.gradle (required) -->
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.2.0' <!-- Required -->
-
+    implementation 'androidx.appcompat:appcompat:1.3.0' <!-- Optional: createBuildDependencies = true -->
     <!-- OR -->
-    implementation 'com.android.support:appcompat:28.0.0'
     implementation 'com.android.support:appcompat-v7:28.0.0'
 }
 

@@ -4,8 +4,9 @@ import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;
 
-declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T>, ViewModelAction, FontProviderAction {
+declare interface AppFramework<T extends base.View> extends squared.base.AppFramework<T>, ViewModelAction, DependencyAction, FontProviderAction {
     addXmlNs(name: string, uri: string): void;
+    addDependency(group: string, name: string, version: string, overwrite?: boolean): void;
     customize(build: number, widget: string, options: ObjectMap<StringMap>): Undef<ObjectMap<StringMap>>;
     loadCustomizations(name: string): void;
     saveCustomizations(name: string): void;
@@ -19,11 +20,13 @@ declare namespace base {
         variable?: { name: string; type: string }[];
     }
 
-    class Application<T extends View> extends squared.base.ApplicationUI<T> implements ViewModelAction {
+    class Application<T extends View> extends squared.base.ApplicationUI<T> implements ViewModelAction, DependencyAction {
         resolveTarget(sessionId: string, target: Null<squared.base.RootElement>): Null<T>;
         setViewModel(data: AppViewModel, sessionId?: string): void;
         getViewModel(sessionId: string): Undef<AppViewModel>;
+        addDependency(group: string, name: string, version: string, overwrite?: boolean): void;
         get viewModel(): Map<string, AppViewModel>;
+        get dependencies(): string[];
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
@@ -380,6 +383,8 @@ declare namespace lib {
             app: string;
             aapt: string;
         };
+        const DEPENDENCY_NAMESPACE: ObjectMap<[string, string, string]>;
+        const DEPENDENCY_TAGNAME: ObjectMap<[string, string, string]>;
         const RESERVED_JAVA: string[];
     }
 

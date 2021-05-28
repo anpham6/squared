@@ -47,6 +47,7 @@ const settings: UserResourceSettingsUI = {
     createDownloadableFonts: true,
     createElementMap: false,
     createQuerySelectorMap: false,
+    createBuildDependencies: false,
     pierceShadowRoot: true,
     compressImages: false,
     convertImages: "",

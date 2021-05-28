@@ -114,7 +114,7 @@ export const CONTAINER_TAGNAME = {
     SPACE: 'Space',
     FRAME: 'FrameLayout',
     LINEAR: 'LinearLayout',
-    GRID: 'GridLayout',
+    GRID: 'android.widget.GridLayout',
     RELATIVE: 'RelativeLayout',
     WEBVIEW: 'WebView',
     VIDEOVIEW: 'VideoView',
@@ -128,6 +128,7 @@ export const CONTAINER_TAGNAME = {
 };
 
 export const CONTAINER_TAGNAME_X = {
+    GRID: 'GridLayout',
     FRAGMENT: 'androidx.fragment.app.FragmentContainerView',
     VERTICAL_SCROLL: 'androidx.core.widget.NestedScrollView',
     CONSTRAINT: 'androidx.constraintlayout.widget.ConstraintLayout',
@@ -136,26 +137,47 @@ export const CONTAINER_TAGNAME_X = {
 };
 
 export const SUPPORT_TAGNAME = {
-    DRAWER: 'android.support.v4.widget.DrawerLayout',
     NAVIGATION_VIEW: 'android.support.design.widget.NavigationView',
     COORDINATOR: 'android.support.design.widget.CoordinatorLayout',
     APPBAR: 'android.support.design.widget.AppBarLayout',
     COLLAPSING_TOOLBAR: 'android.support.design.widget.CollapsingToolbarLayout',
-    TOOLBAR: 'android.support.v7.widget.Toolbar',
     FLOATING_ACTION_BUTTON: 'android.support.design.widget.FloatingActionButton',
-    BOTTOM_NAVIGATION: 'android.support.design.widget.BottomNavigationView'
+    BOTTOM_NAVIGATION: 'android.support.design.widget.BottomNavigationView',
+    DRAWER: 'android.support.v4.widget.DrawerLayout',
+    TOOLBAR: 'android.support.v7.widget.Toolbar'
 };
 
 export const SUPPORT_TAGNAME_X = {
-    DRAWER: 'androidx.drawerlayout.widget.DrawerLayout',
     NAVIGATION_VIEW: 'com.google.android.material.navigation.NavigationView',
-    COORDINATOR: 'androidx.coordinatorlayout.widget.CoordinatorLayout',
     APPBAR: 'com.google.android.material.appbar.AppBarLayout',
     COLLAPSING_TOOLBAR: 'com.google.android.material.appbar.CollapsingToolbarLayout',
-    TOOLBAR: 'androidx.appcompat.widget.Toolbar',
     FLOATING_ACTION_BUTTON: 'com.google.android.material.floatingactionbutton.FloatingActionButton',
     BOTTOM_NAVIGATION: 'com.google.android.material.bottomnavigation.BottomNavigationView',
-	SHAPEABLE_IMAGE_VIEW: 'com.google.android.material.imageview.ShapeableImageView'
+    SHAPEABLE_IMAGE_VIEW: 'com.google.android.material.imageview.ShapeableImageView',
+    COORDINATOR: 'androidx.coordinatorlayout.widget.CoordinatorLayout',
+    TOOLBAR: 'androidx.appcompat.widget.Toolbar',
+    DRAWER: 'androidx.drawerlayout.widget.DrawerLayout'
+};
+
+export const DEPENDENCY_NAMESPACE: ObjectMap<[string, string, string]> = {
+    'androidx.constraintlayout.widget': ['androidx.constraintlayout', 'constraintlayout', '2.0.4'],
+    'androidx.core.widget': ['androidx.core', 'core', '1.5.0'],
+    'androidx.appcompat.widget': ['androidx.appcompat', 'appcompat', '1.3.0'],
+    'com.google.android.material': ['com.google.android.material', 'material', '1.3.0'],
+    'android.support.constraint': ['android.support.constraint', 'constraint-layout', '2.0.4'],
+    'android.support.design.widget': ['com.android.support', 'design', '28.0.0'],
+    'android.support.v4.widget': ['com.android.support', 'support-v4', '28.0.0'],
+    'android.support.v7.widget': ['com.android.support', 'appcompat-v7', '28.0.0'],
+	'androidx.vectordrawable': ['androidx.vectordrawable', 'vectordrawable', '1.1.0']
+};
+
+export const DEPENDENCY_TAGNAME: ObjectMap<[string, string, string]> = {
+	'fragment': ['com.android.support', 'support-fragment', '28.0.0'],
+	'GridLayout': ['androidx.gridlayout', 'gridlayout', '1.0.0'],
+    [CONTAINER_TAGNAME.GRID]: ['com.android.support', 'gridlayout-v7', '28.0.0'],
+	[SUPPORT_TAGNAME_X.COORDINATOR]: ['androidx.coordinatorlayout', 'coordinatorlayout', '1.1.0'],
+    [SUPPORT_TAGNAME_X.DRAWER]: ['androidx.appcompat', 'appcompat', '1.3.0'],
+	[CONTAINER_TAGNAME_X.FRAGMENT]: ['androidx.fragment', 'fragment', '1.3.4']
 };
 
 export const LAYOUT_MAP = {
@@ -217,7 +239,7 @@ export const XML_NAMESPACE = {
 };
 
 export const RESERVED_JAVA = [
-	'_',
+    '_',
     'abstract',
     'assert',
     'boolean',

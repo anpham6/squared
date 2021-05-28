@@ -9,7 +9,7 @@ import NODE_RESOURCE = squared.base.lib.constant.NODE_RESOURCE;
 import CREATE_NODE = squared.base.lib.internal.CREATE_NODE;
 import CONTAINER_NODE = android.lib.constant.CONTAINER_NODE;
 
-import { BUILD_VERSION, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } from './lib/constant';
+import { BUILD_VERSION, CONTAINER_TAGNAME, CONTAINER_TAGNAME_X, DEPENDENCY_NAMESPACE, SUPPORT_TAGNAME, SUPPORT_TAGNAME_X } from './lib/constant';
 
 import type Application from './application';
 import type ResourceBackground from './extensions/resource/background';
@@ -627,9 +627,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public processUserSettings(processing: squared.base.AppProcessing<T>) {
-        const application = this.application;
+        const application = this.application as android.base.Application<T>;
         const dpiRatio = 160 / application.getUserSetting<number>(processing, 'resolutionDPI');
-        this._targetAPI[processing.sessionId] = application.getUserSetting<number>(processing, 'targetAPI') || BUILD_VERSION.LATEST;
+        const targetAPI = application.getUserSetting<number>(processing, 'targetAPI') || BUILD_VERSION.LATEST;
+        this._targetAPI[processing.sessionId] = targetAPI;
         this._viewSettings[processing.sessionId] = {
             resourceId: processing.resourceId,
             systemName: capitalize(this.application.systemName),
@@ -642,6 +643,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             customizationsBaseAPI: application.getUserSetting<number | number[]>(processing, 'customizationsBaseAPI'),
             floatPrecision: this.localSettings.floatPrecision
         };
+        if (application.userSettings.createBuildDependencies) {
+            application.addDependency(...DEPENDENCY_NAMESPACE[targetAPI >= BUILD_VERSION.Q ? 'androidx.appcompat.widget' : 'android.support.v7.widget']!);
+        }
     }
 
     public optimize(rendered: T[]) {
@@ -1368,10 +1372,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const resourceId = node.localSettings.resourceId;
         let parent = layout.parent,
             controlName = '';
-        const setControlType = (containerType: number) => {
-            controlName = View.getControlName(layout.containerType, node.api);
-            node.setControlType(controlName, containerType);
-        };
+        const setControlType = (containerType: number) => node.setControlType(controlName = View.getControlName(layout.containerType, node.api), containerType);
         const setReadOnly = () => {
             const element = node.element as HTMLInputElement;
             if (element.readOnly) {
