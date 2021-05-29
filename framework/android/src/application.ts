@@ -1,4 +1,4 @@
-import { DEPENDENCY_NAMESPACE, DEPENDENCY_TAGNAME } from './lib/constant';
+import { DEPENDENCY_NAMESPACE, DEPENDENCY_SUPPLEMENT, DEPENDENCY_TAGNAME } from './lib/constant';
 
 import type View from './view';
 
@@ -44,6 +44,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
         if (node.renderedAs && this.userSettings.createBuildDependencies) {
             let controlName = template.controlName;
             if (!this._resolvedTagName.includes(controlName)) {
+                const supplement = DEPENDENCY_SUPPLEMENT[controlName];
                 let implementation = DEPENDENCY_TAGNAME[controlName];
                 this._resolvedTagName.push(controlName);
                 if (!implementation) {
@@ -61,6 +62,9 @@ export default class Application<T extends View> extends squared.base.Applicatio
                 }
                 if (implementation) {
                     this.addDependency(...implementation);
+                }
+                if (supplement) {
+                    supplement.forEach(item => this.addDependency(...item));
                 }
             }
         }

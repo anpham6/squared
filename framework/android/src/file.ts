@@ -57,7 +57,7 @@ function getFileAssets(pathname: string, items: string[], document: StringOfArra
     return result;
 }
 
-function getImageAssets(this: Resource<View>, resourceId: number, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray) {
+function getImageAssets(resource: Resource<View>, resourceId: number, pathname: string, items: string[], convertImages: string, compressing: boolean, document: StringOfArray) {
     const compress = compressing ? [{ format: 'png' }] : undefined;
     const length = items.length;
     const result: FileAsset[] = new Array(length / 3);
@@ -86,7 +86,7 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
                     break;
             }
         }
-        const image = this.getImage(resourceId, uri);
+        const image = resource.getImage(resourceId, uri);
         result[j++] = {
             pathname: pathname + items[i + 1],
             filename,
@@ -101,12 +101,12 @@ function getImageAssets(this: Resource<View>, resourceId: number, pathname: stri
     return result;
 }
 
-function getRawAssets(this: Resource<View>, resourceId: number, name: ResourceRawAsset, pathname: string, items: string[], document: StringOfArray) {
+function getRawAssets(resource: Resource<View>, resourceId: number, name: ResourceRawAsset, pathname: string, items: string[], document: StringOfArray) {
     const length = items.length;
     const result: FileAsset[] = new Array(length / 3);
     for (let i = 0, j = 0; i < length; i += 3) {
         const uri = items[i];
-        const rawData = name === 'video' ? this.getVideo(resourceId, uri) : this.getAudio(resourceId, uri);
+        const rawData = name === 'video' ? resource.getVideo(resourceId, uri) : resource.getAudio(resourceId, uri);
         result[j++] = {
             pathname,
             filename: items[i + 1].toLowerCase(),
@@ -192,13 +192,13 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 for (const name in result) {
                     switch (name) {
                         case 'drawableImage':
-                            rawAssets.push(...getImageAssets.call(resource, resourceId, outputDirectory, result[name], convertImages, compressImages, outputDocumentHandler));
+                            rawAssets.push(...getImageAssets(resource, resourceId, outputDirectory, result[name]!, convertImages, compressImages, outputDocumentHandler));
                             break;
                         case 'rawVideo':
-                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name], outputDocumentHandler));
+                            rawAssets.push(...getRawAssets(resource, resourceId, 'video', outputDirectory + this.directory.video, result[name]!, outputDocumentHandler));
                             break;
                         case 'rawAudio':
-                            rawAssets.push(...getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name], outputDocumentHandler));
+                            rawAssets.push(...getRawAssets(resource, resourceId, 'audio', outputDirectory + this.directory.audio, result[name]!, outputDocumentHandler));
                             break;
                         default:
                             rawAssets.push(...getFileAssets(outputDirectory, result[name]!, outputDocumentHandler));
@@ -227,10 +227,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
         const items = Array.from(stored.strings).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1);
         const length = items.length;
-        let j: number,
+        let j = 0,
             itemArray: ItemValue[];
         if (stored.strings.has('app_name')) {
-            j = 0;
             itemArray = new Array(length);
         }
         else {
@@ -494,7 +493,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
             if (hasFileAction(options)) {
                 const { resource, resourceId, userSettings } = this;
-                const assets = getImageAssets.call(resource, resourceId, getOutputDirectory(userSettings.outputDirectory), result, userSettings.convertImages, userSettings.compressImages, userSettings.outputDocumentHandler);
+                const assets = getImageAssets(resource, resourceId, getOutputDirectory(userSettings.outputDirectory), result, userSettings.convertImages, userSettings.compressImages, userSettings.outputDocumentHandler);
                 if (options.assets) {
                     assets.push(...options.assets);
                 }
@@ -588,9 +587,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 Object.assign(options, themeOptions);
             }
             if (!options.updateXmlOnly) {
-                const imageAssets = getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
-                const videoAssets = getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);
-                const audioAssets = getRawAssets.call(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler);
+                const imageAssets = getImageAssets(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
+                const videoAssets = getRawAssets(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);
+                const audioAssets = getRawAssets(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler);
                 const uri = options.config?.uri;
                 if (uri) {
                     const items = await this.loadConfig(uri, options);
@@ -700,7 +699,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
         if (hasFileAction(options)) {
             const { resource, resourceId, userSettings } = this;
-            const rawAssets = getRawAssets.call(resource, resourceId, name, getOutputDirectory(userSettings.outputDirectory) + this.directory[name], result, userSettings.outputDocumentHandler);
+            const rawAssets = getRawAssets(resource, resourceId, name, getOutputDirectory(userSettings.outputDirectory) + this.directory[name], result, userSettings.outputDocumentHandler);
             if (options.assets) {
                 rawAssets.push(...options.assets);
             }

@@ -385,8 +385,10 @@ declare namespace lib {
             app: string;
             aapt: string;
         };
-        const DEPENDENCY_NAMESPACE: ObjectMap<[string, string, string]>;
-        const DEPENDENCY_TAGNAME: ObjectMap<[string, string, string]>;
+        const DEPENDENCY_NAMESPACE: DependencyNameMap;
+        const DEPENDENCY_TAGNAME: DependencyNameMap;
+        const DEPENDECNY_RUNTIME: DependencyNameMap;
+        const DEPENDENCY_SUPPLEMENT: ObjectMap<[string, string, string][]>;
         const RESERVED_JAVA: string[];
     }
 

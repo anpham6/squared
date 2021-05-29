@@ -1815,8 +1815,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const item = keyFrames.get(name);
                         if (item) {
                             for (const attr in item) {
-                                const transform = item[attr]!.transform;
-                                if (transform && transform.includes('rotate')) {
+                                if (item[attr]!.transform?.includes('rotate')) {
                                     circular = true;
                                     return true;
                                 }
@@ -2476,9 +2475,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     for (let j = 0, q = rows.length; j < q; ++j) {
                         const items = rows[j];
                         let r = items.length;
-                        for (let k = 0; k < r - 1; ++k) {
-                            const item = items[k];
-                            if (isMultilineSegment(item)) {
+                        for (let k = 0, item: T; k < r - 1; ++k) {
+                            if (isMultilineSegment(item = items[k])) {
                                 const element = item.element;
                                 if (element) {
                                     let textContent = '',

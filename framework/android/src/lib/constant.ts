@@ -3,6 +3,8 @@
 import NODE = android.lib.constant.CONTAINER_NODE;
 
 export const enum BUILD_VERSION {
+    ALL = 0,
+	LATEST = 30,
     R = 30,
     Q = 29,
     PIE = 28,
@@ -19,9 +21,7 @@ export const enum BUILD_VERSION {
     JELLYBEAN_1 = 17,
     JELLYBEAN = 16,
     ICE_CREAM_SANDWICH_1 = 15,
-    ICE_CREAM_SANDWICH = 14,
-    ALL = 0,
-    LATEST = 30
+    ICE_CREAM_SANDWICH = 14
 }
 
 export enum CONTAINER_NODE {
@@ -161,7 +161,7 @@ export const SUPPORT_TAGNAME_X = {
     DRAWER: 'androidx.drawerlayout.widget.DrawerLayout'
 };
 
-export const DEPENDENCY_NAMESPACE: ObjectMap<[string, string, string]> = {
+export const DEPENDENCY_NAMESPACE: DependencyNameMap = {
     'androidx.constraintlayout.widget': ['androidx.constraintlayout', 'constraintlayout', '2.0.4'],
     'androidx.core.widget': ['androidx.core', 'core', '1.5.0'],
     'androidx.appcompat.widget': ['androidx.appcompat', 'appcompat', '1.3.0'],
@@ -169,11 +169,10 @@ export const DEPENDENCY_NAMESPACE: ObjectMap<[string, string, string]> = {
     'android.support.constraint': ['android.support.constraint', 'constraint-layout', '2.0.4'],
     'android.support.design.widget': ['com.android.support', 'design', '28.0.0'],
     'android.support.v4.widget': ['com.android.support', 'support-v4', '28.0.0'],
-    'android.support.v7.widget': ['com.android.support', 'appcompat-v7', '28.0.0'],
-	'androidx.vectordrawable': ['androidx.vectordrawable', 'vectordrawable', '1.1.0']
+    'android.support.v7.widget': ['com.android.support', 'appcompat-v7', '28.0.0']
 };
 
-export const DEPENDENCY_TAGNAME: ObjectMap<[string, string, string]> = {
+export const DEPENDENCY_TAGNAME: DependencyNameMap = {
 	'GridLayout': ['androidx.gridlayout', 'gridlayout', '1.0.0'],
     [CONTAINER_TAGNAME.GRID]: ['com.android.support', 'gridlayout-v7', '28.0.0'],
 	'fragment': ['com.android.support', 'support-fragment', '28.0.0'],
@@ -182,6 +181,16 @@ export const DEPENDENCY_TAGNAME: ObjectMap<[string, string, string]> = {
     [SUPPORT_TAGNAME_X.DRAWER]: ['androidx.appcompat', 'appcompat', '1.3.0'],
 	[SUPPORT_TAGNAME_X.CARD_VIEW]: ['androidx.cardview', 'cardview', '1.0.0'],
 	[SUPPORT_TAGNAME_X.RECYCLER_VIEW]: ['androidx.recyclerview', 'recyclerview', '1.2.0']
+};
+
+export const DEPENDECNY_RUNTIME: DependencyNameMap = {
+	'androidx.collection': ['androidx.collection', 'collection', '1.1.0'],
+	'androidx.paging': ['androidx.paging', 'paging-runtime', '3.0.0'],
+	'androidx.vectordrawable': ['androidx.vectordrawable', 'vectordrawable', '1.1.0']
+};
+
+export const DEPENDENCY_SUPPLEMENT: ObjectMap<[string, string, string][]> = {
+	[SUPPORT_TAGNAME_X.RECYCLER_VIEW]: [DEPENDECNY_RUNTIME['androidx.collection']!, DEPENDECNY_RUNTIME['androidx.paging']!]
 };
 
 export const LAYOUT_MAP = {

@@ -1,6 +1,6 @@
 import SYNCHRONIZE_MODE = squared.svg.constant.SYNCHRONIZE_MODE;
 
-import { BUILD_VERSION, DEPENDENCY_NAMESPACE, XML_NAMESPACE } from '../../lib/constant';
+import { BUILD_VERSION, DEPENDECNY_RUNTIME, XML_NAMESPACE } from '../../lib/constant';
 import { VECTOR_GROUP, VECTOR_PATH, VECTOR_TMPL } from '../../template/vector';
 
 import ANIMATEDVECTOR_TMPL from '../../template/animated-vector';
@@ -826,7 +826,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                     const application = this.application as android.base.Application<T>;
                     if (application.userSettings.createBuildDependencies) {
-                        application.addDependency(...DEPENDENCY_NAMESPACE['androidx.vectordrawable']!);
+                        application.addDependency(...DEPENDECNY_RUNTIME['androidx.vectordrawable']!);
                     }
                     return [parentElement, element];
                 }
@@ -863,7 +863,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const imageLength = imageData.length;
         let vectorName: Undef<string>;
         if (vectorData) {
-            const implementation = DEPENDENCY_NAMESPACE['androidx.vectordrawable']!;
+            const implementation = DEPENDECNY_RUNTIME['androidx.vectordrawable']!;
             let width = NaN,
                 height = NaN;
             if (size) {
