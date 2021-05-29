@@ -149,15 +149,18 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resource!: Resource<T>;
 
     public async copyTo(pathname: string, options: FileCopyingOptions) {
-        return this.copying(pathname, { ...options, assets: await this.processAssets(options.assets!, options) });
+        const assets = await this.processAssets(options.assets!, options);
+        return this.copying(pathname, { ...options, assets });
     }
 
     public async appendTo(pathname: string, options: FileArchivingOptions) {
-        return this.archiving(pathname, { ...options, assets: await this.processAssets(options.assets!, options) });
+        const assets = await this.processAssets(options.assets!, options);
+        return this.archiving(pathname, { ...options, assets });
     }
 
     public async saveAs(filename: string, options: FileArchivingOptions) {
-        return this.archiving('', { ...options, assets: await this.processAssets(options.assets!, options), filename });
+        const assets = await this.processAssets(options.assets!, options);
+        return this.archiving('', { ...options, assets, filename });
     }
 
     public resourceAllToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions) {
@@ -405,6 +408,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     result.push(replaceTab(convertPixels ? replaceAll(value, 'px<', convertPixels + '<') : value, insertSpaces), ...splitPair(filename, '/', false, true));
                 }
             }
+            if (appTheme.length && options && options.manifest?.application) {
+                options.manifest.application.theme = manifestThemeName;
+            }
         }
         return this.checkFileAssets(result, options);
     }
@@ -557,20 +563,30 @@ export default class File<T extends View> extends squared.base.File<T> implement
     protected async processAssets(assets: FileAsset[], options: FileUniversalOptions) {
         const { userSettings, resource, resourceId } = this;
         const documentHandler = userSettings.outputDocumentHandler;
-        checkLayoutFiles(assets, this.userSettings.outputMainFileName, documentHandler);
+        checkLayoutFiles(assets, userSettings.outputMainFileName, documentHandler);
         const data = Resource.ASSETS[resourceId];
         if (data) {
             const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
+            const themeOptions = userSettings.createManifest ? { manifest: { application: {} } } as FileUniversalOptions : undefined;
             assets.push(
                 ...getFileAssets(outputDirectory, this.resourceStringToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceStringArrayToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceFontToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceColorToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceDimenToXml(), documentHandler),
-                ...getFileAssets(outputDirectory, this.resourceStyleToXml(), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceStyleToXml(undefined, themeOptions), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceDrawableToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler)
             );
+            if (themeOptions) {
+                const manifest = themeOptions.manifest!;
+                manifest.package = userSettings.manifestPackage;
+                const application = manifest.application!;
+                application.supportRTL = userSettings.supportRTL;
+                application.theme ||= userSettings.manifestParentThemeName;
+                application.activityName = userSettings.manifestActivityName;
+                Object.assign(options, themeOptions);
+            }
             if (!options.updateXmlOnly) {
                 const imageAssets = getImageAssets.call(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
                 const videoAssets = getRawAssets.call(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);

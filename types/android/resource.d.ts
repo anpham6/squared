@@ -70,3 +70,12 @@ interface WebFont {
     category: string;
     kind: string;
 }
+
+interface ManifestData extends PlainObject {
+    package?: string;
+    application?: {
+        supportRTL?: boolean;
+        theme?: string;
+        activityName?: string;
+    };
+}

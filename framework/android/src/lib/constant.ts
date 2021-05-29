@@ -154,6 +154,8 @@ export const SUPPORT_TAGNAME_X = {
     FLOATING_ACTION_BUTTON: 'com.google.android.material.floatingactionbutton.FloatingActionButton',
     BOTTOM_NAVIGATION: 'com.google.android.material.bottomnavigation.BottomNavigationView',
     SHAPEABLE_IMAGE_VIEW: 'com.google.android.material.imageview.ShapeableImageView',
+	CARD_VIEW: 'androidx.cardview.widget.CardView',
+	RECYCLER_VIEW: 'androidx.recyclerview.widget.RecyclerView',
     COORDINATOR: 'androidx.coordinatorlayout.widget.CoordinatorLayout',
     TOOLBAR: 'androidx.appcompat.widget.Toolbar',
     DRAWER: 'androidx.drawerlayout.widget.DrawerLayout'
@@ -172,12 +174,14 @@ export const DEPENDENCY_NAMESPACE: ObjectMap<[string, string, string]> = {
 };
 
 export const DEPENDENCY_TAGNAME: ObjectMap<[string, string, string]> = {
-	'fragment': ['com.android.support', 'support-fragment', '28.0.0'],
 	'GridLayout': ['androidx.gridlayout', 'gridlayout', '1.0.0'],
     [CONTAINER_TAGNAME.GRID]: ['com.android.support', 'gridlayout-v7', '28.0.0'],
+	'fragment': ['com.android.support', 'support-fragment', '28.0.0'],
+	[CONTAINER_TAGNAME_X.FRAGMENT]: ['androidx.fragment', 'fragment', '1.3.4'],
 	[SUPPORT_TAGNAME_X.COORDINATOR]: ['androidx.coordinatorlayout', 'coordinatorlayout', '1.1.0'],
     [SUPPORT_TAGNAME_X.DRAWER]: ['androidx.appcompat', 'appcompat', '1.3.0'],
-	[CONTAINER_TAGNAME_X.FRAGMENT]: ['androidx.fragment', 'fragment', '1.3.4']
+	[SUPPORT_TAGNAME_X.CARD_VIEW]: ['androidx.cardview', 'cardview', '1.0.0'],
+	[SUPPORT_TAGNAME_X.RECYCLER_VIEW]: ['androidx.recyclerview', 'recyclerview', '1.2.0']
 };
 
 export const LAYOUT_MAP = {

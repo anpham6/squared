@@ -221,13 +221,16 @@ squared.settings = {
     convertImages: "", // png | jpeg | webp | bmp
     showAttributes: true,
     customizationsOverwritePrivilege: true,
+    createManifest: false, // Update AndroidManifest.xml
     createBuildDependencies: false, // Update build.gradle
     convertPixels: "dp",
     insertSpaces: 4,
     showErrorMessages: true,
+    manifestPackage: "",
     manifestLabelAppName: "android",
     manifestThemeName: "AppTheme",
     manifestParentThemeName: "Theme.AppCompat.Light.NoActionBar",
+    manifestActivityName: ".MainActivity",
     outputMainFileName: "activity_main.xml",
     outputDirectory: "app/src/main",
     outputDocumentHandler: "android",

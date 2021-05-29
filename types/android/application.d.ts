@@ -14,9 +14,12 @@ interface UserResourceSettingsUI {
     fontMeasureAdjust: number;
     lineHeightAdjust: number;
     createDownloadableFonts: boolean;
+    manifestPackage: string;
+    manifestActivityName: string;
     manifestLabelAppName: string;
     manifestThemeName: string;
     manifestParentThemeName: string;
+    createManifest: boolean;
     createBuildDependencies: boolean;
     outputMainFileName: string;
 }
