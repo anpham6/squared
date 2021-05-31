@@ -287,7 +287,7 @@ function validateSelector(node: T, selector: QueryData, child?: T) {
                         }
                         break;
                     case '*':
-                        if (!value.includes(other)) {
+                        if (value.indexOf(other) === -1) {
                             return false;
                         }
                         break;

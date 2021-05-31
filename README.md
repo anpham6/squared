@@ -392,7 +392,7 @@ android.addXmlNs(name: string, uri: string) // Add global namespaces for third-p
 android.addDependency(group: string, name: string, version: string) // Add application dependency implementation (build.gradle)
 android.customize(build: number, tagNameOrWidget: string, options: {}) // Global attributes applied to specific views
 android.loadCustomizations(name: string) // Load customizations from Local Storage
-android.saveCustomizations(name: string) // Save "customize" data into Local Storage
+android.saveCustomizations(name: string) // Save "customize" data into Local Storage (includes xmlns)
 android.resetCustomizations() // All session customizations are deleted
 android.addFontProvider(authority: string, package: string, certs: string[], webFonts: string | {}) // Add additional Web fonts (Google Fonts already included)
 android.getLocalSettings() // Modify controller styles and parsing rules
@@ -425,6 +425,13 @@ android.loadCustomizations("customize-example"); // Load in any other layout
 
 ```javascript
 android.addXmlNs("tools", "http://schemas.android.com/tools");
+
+android.customize(16 /* Jelly Bean */, "ImageView", {
+    tools: {
+        ignore: "ContentDescription",
+        targetApi: "16"
+    }
+});
 ```
 
 View model data can be applied to most HTML elements using the dataset attribute. Different view models can be used for every "parseDocument" session.

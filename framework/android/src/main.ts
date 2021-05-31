@@ -49,6 +49,11 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileActionOptions = FileCopyingOptions & FileArchivingOptions;
 
+interface CustomizationsData {
+    customizations: Customizations<View>;
+    xmlns: StringMap;
+}
+
 let application: Null<Application<View>> = null;
 let file: Null<File<View>> = null;
 
@@ -343,14 +348,15 @@ const appBase: android.AppFramework<View> = {
         try {
             const settings = localStorage.getItem(name + '-android-customizations');
             if (settings) {
-                const stored = JSON.parse(settings) as Customizations<View>;
+                const { customizations, xmlns } = JSON.parse(settings) as CustomizationsData;
                 const API_VERSION = customization.API_VERSION;
-                for (const build in stored) {
+                for (const build in customizations) {
                     const item = API_VERSION[build];
                     if (item) {
-                        Object.assign(item, stored[build]);
+                        Object.assign(item, customizations[build]);
                     }
                 }
+                Object.assign(constant.XML_NAMESPACE, xmlns);
             }
         }
         catch {
@@ -358,15 +364,15 @@ const appBase: android.AppFramework<View> = {
     },
     saveCustomizations(name: string) {
         const API_VERSION = customization.API_VERSION;
-        const settings: PlainObject = {};
+        const customizations: PlainObject = {};
         for (const build in API_VERSION) {
-            const item = API_VERSION[build]!;
-            if (item.assign) {
-                settings[build] = { assign: item.assign };
+            const { assign } = API_VERSION[build]!;
+            if (assign) {
+                customizations[build] = { assign };
             }
         }
         try {
-            localStorage.setItem(name + '-android-customizations', JSON.stringify(settings));
+            localStorage.setItem(name + '-android-customizations', JSON.stringify({ customizations, xmlns: constant.XML_NAMESPACE } as CustomizationsData));
         }
         catch {
         }
