@@ -515,7 +515,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this.is(containerType) && alignmentType.every(value => this.hasAlign(value));
     }
 
-    public attr(name: string, attr: string, value?: string, overwrite = true): string {
+    public attr(name: string, attr: string, value?: string, overwrite = true) {
         const obj = this.namespace(name);
         if (value) {
             if (!obj[attr] || overwrite && !this.lockedAttr(name, attr)) {
@@ -523,6 +523,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return obj[attr] || '';
+    }
+
+    public xAttr(attr: string, value?: string, overwrite?: boolean) {
+        return this.attr('_', attr, value, overwrite);
     }
 
     public delete(name: string, ...attrs: string[]) {

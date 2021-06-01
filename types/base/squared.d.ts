@@ -624,6 +624,7 @@ declare module "base" {
         setAlignment(): void;
         setBoxSpacing(): void;
         attr(name: string, attr: string, value?: string, overwrite?: boolean): string;
+        xAttr(attr: string, value?: string, overwrite?: boolean): string;
         alignParent(position: AnchorPositionAttr): boolean;
         alignSibling(position: AnchorPositionAttr, documentId?: string): string;
         anchorChain(...values: PositionAttr[]): NodeUI[];

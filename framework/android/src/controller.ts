@@ -1824,7 +1824,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     });
                 }
                 if (!circular) {
-                    node.attr('_', 'style', this.localSettings.style.progressOrientation);
+                    node.xAttr('style', this.localSettings.style.progressOrientation);
                 }
                 else if (node.hasHeight) {
                     node.resetBox(BOX_STANDARD.PADDING_TOP | BOX_STANDARD.PADDING_BOTTOM);

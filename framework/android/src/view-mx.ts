@@ -571,7 +571,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public alignedWithX?: T;
         public alignedWithY?: T;
 
-        protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {} };
+        protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {}, '_': {} };
         protected _containerType = 0;
         protected _cache!: CacheValueUI;
         protected _localSettings!: LocalSettingsUI;
@@ -1500,7 +1500,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     case 'string':
                     case 'number':
                     case 'boolean':
-                        this.attr('_', name, data.toString());
+                        this.xAttr(name, data.toString());
                         break;
                 }
             }

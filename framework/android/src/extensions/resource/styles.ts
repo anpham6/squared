@@ -64,7 +64,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     styles.set(name, { name, parent: '', items } as StyleAttribute);
                     for (let j = 0; j < q; ++j) {
                         const item = children[j];
-                        item.attr('_', 'style', `@style/${name}`);
+                        item.xAttr('style', `@style/${name}`);
                         item.delete('android', ...attrs);
                     }
                 }
