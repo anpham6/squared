@@ -940,21 +940,32 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             if (data[name]) {
                 delete data[name][attr];
             }
-            return;
         }
-        else if (value !== undefined) {
-            let obj: PlainObject = data[name];
-            if (!isObject(obj)) {
-                obj = {};
-                data[name] = obj;
+        else {
+            if (value !== undefined) {
+                let obj: PlainObject = data[name];
+                if (!isObject(obj)) {
+                    obj = {};
+                    data[name] = obj;
+                }
+                if (overwrite || !hasValue(obj[attr])) {
+                    obj[attr] = value;
+                }
             }
-            if (overwrite || !hasValue(obj[attr])) {
-                obj[attr] = value;
+            const stored: PlainObject = data[name];
+            if (isObject(stored)) {
+                return stored[attr] as U;
             }
         }
-        const stored: PlainObject = data[name];
-        if (isObject(stored)) {
-            return stored[attr] as U;
+    }
+
+    public elementAttr<U = unknown>(attr: string, value: U): Undef<U> {
+        if (this.naturalElement) {
+            const element = this._element!;
+            if (attr in element && typeof value === typeof element[attr]) {
+                element[attr] = value;
+                return element[attr] as U;
+            }
         }
     }
 
@@ -3069,7 +3080,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     get boundingClientRect() {
-        if (this.styleElement) {
+        if (this.naturalElement) {
             return this._element!.getBoundingClientRect();
         }
         else if (this.plainText && this.naturalChild) {

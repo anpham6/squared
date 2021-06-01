@@ -434,6 +434,7 @@ declare module "base" {
         internalNodes(children: Node[], elements?: Node[], inlineText?: boolean, shadowRoot?: boolean): void;
         syncWith(sessionId?: string, cache?: boolean): boolean;
         saveAsInitial(): void;
+        elementAttr<T = unknown>(attr: string, value: T): Undef<T>;
         data<T = unknown>(name: string, attr: string, value?: unknown, overwrite?: boolean): Undef<T>;
         unsetCache(...attrs: (CssStyleAttr | keyof CacheValue)[]): void;
         unsetState(...attrs: (keyof CacheState<Node>)[]) : void;
