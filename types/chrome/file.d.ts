@@ -1,4 +1,4 @@
-interface RequestData extends DocumentOutput, CssSelectorData {
+interface RequestData extends DocumentOutput, ICssRuleData {
     baseUrl?: string;
     templateMap?: TemplateMap;
 }
@@ -8,7 +8,7 @@ interface DocumentOutput {
     normalizeHtmlOutput?: boolean;
 }
 
-interface CssSelectorData {
+interface ICssRuleData {
     usedVariables?: string[];
     usedFontFace?: string[];
     usedKeyframes?: string[];

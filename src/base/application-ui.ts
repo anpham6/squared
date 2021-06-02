@@ -170,6 +170,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract userSettings: UserResourceSettingsUI;
 
     private _layouts: LayoutAsset[] = [];
+    private _finalizedElements: FinalizedElement[] = [];
     private _resourceId!: number;
     private _controllerSettings!: ControllerSettingsUI;
     private _excludedElements!: string[];
@@ -202,7 +203,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (this.closed) {
             return true;
         }
-        const controller = this.controllerHandler;
+        const { controllerHandler: controller, resourceId } = this;
         const [extensions, children] = this.sessionAll as [ExtensionUI<T>[], T[]];
         const length = children.length;
         const rendered: T[] = new Array(length - 1);
@@ -235,13 +236,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         const documentRoot: LayoutRoot<T>[] = [];
-        const finalizeData: FinalizeDataExtensionUI<T> = { resourceId: this.resourceId, rendered, documentRoot };
+        const outputDocumentCSS = this.userSettings.outputDocumentCSS;
+        const finalizeData: FinalizeDataExtensionUI<T> = { resourceId, rendered, documentRoot };
         const isDocumentBase = (node: NodeUI) => {
             const renderExtension = node.renderExtension;
             return !!renderExtension && renderExtension.some(item => item.documentBase);
         };
         itemCount = rendered.length;
-        for (let i = 0; i < itemCount; ++i) {
+        for (let i = 0, k = outputDocumentCSS.length; i < itemCount; ++i) {
             const node = rendered[i];
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
@@ -252,6 +254,25 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const renderTemplates = node.renderParent!.renderTemplates as Undef<NodeTemplate<T>[]>;
                 if (filename && renderTemplates) {
                     documentRoot.push({ node, pathname: host.data<string>(Application.KEY_NAME, 'pathname'), filename, documentBase: isDocumentBase(host) || isDocumentBase(node), renderTemplates });
+                }
+            }
+            if (k) {
+                let data: Undef<FinalizedElement>;
+                for (let j = 0, attr: CssStyleAttr, wrapper: Optional<T>; j < k; ++j) {
+                    if (node.has(attr = outputDocumentCSS[j])) {
+                        if (!data && (data = { documentId: node.documentId, bounds: node.bounds, css: {} }) && (wrapper = node.outerWrapper as Null<T>)) {
+                            const ids: string[] = [];
+                            do {
+                                ids.push(wrapper.documentId);
+                            }
+                            while (wrapper = wrapper.outerWrapper as Null<T>);
+                            data.outerWrapperIds = ids;
+                        }
+                        data.css[attr] = node.css(attr);
+                    }
+                }
+                if (data) {
+                    this._finalizedElements.push(data);
                 }
             }
         }
@@ -303,6 +324,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.setResourceId();
         this._nextId = 0;
         this._layouts = [];
+        this._finalizedElements = [];
         super.reset();
     }
 
@@ -2076,6 +2098,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return 0;
         });
+    }
+
+    get finalizedElements() {
+        return this._finalizedElements;
     }
 
     get clearMap() {

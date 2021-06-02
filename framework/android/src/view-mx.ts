@@ -567,7 +567,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public api = BUILD_VERSION.LATEST;
         public renderChildren!: T[];
         public renderParent!: Null<T>;
-        public companion!: Undef<T>;
+        public companion!: Null<T>;
         public alignedWithX?: T;
         public alignedWithY?: T;
 
@@ -3351,9 +3351,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 else {
                     break;
                 }
-                target = target.outerWrapper as T;
             }
-            while (target);
+            while (target = target.outerWrapper as T);
             return this;
         }
 

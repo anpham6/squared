@@ -704,13 +704,11 @@ export function getParentAttribute(element: SVGElement, attr: string, computed?:
     let current: Null<StyleElement> = element,
         value: string;
     do {
-        value = getAttribute(current, attr, computed);
-        if (value && value !== 'inherit') {
+        if ((value = getAttribute(current, attr, computed)) && value !== 'inherit') {
             break;
         }
-        current = current.parentElement;
     }
-    while (current && !(current instanceof HTMLElement));
+    while ((current = current.parentElement) && !(current instanceof HTMLElement));
     return value;
 }
 

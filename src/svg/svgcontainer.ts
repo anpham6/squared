@@ -163,9 +163,8 @@ function getViewport(container: SvgContainer): Null<Svg> {
         if (SvgBuild.asSvg(container) && container.documentRoot) {
             return container;
         }
-        container = container.parent as SvgContainer;
     }
-    while (container);
+    while (container = container.parent as SvgContainer);
     return null;
 }
 
@@ -174,9 +173,8 @@ function getNearestViewBox(container: SvgContainer): Undef<Svg | SvgUseSymbol> {
         if (container.hasViewBox()) {
             return container;
         }
-        container = container.parent as SvgContainer;
     }
-    while (container);
+    while (container = container.parent as SvgContainer);
 }
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {

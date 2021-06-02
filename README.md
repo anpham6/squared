@@ -231,9 +231,10 @@ squared.settings = {
     manifestThemeName: "AppTheme",
     manifestParentThemeName: "Theme.AppCompat.Light.NoActionBar",
     manifestActivityName: ".MainActivity",
+    outputDocumentHandler: "android",
+    outputDocumentCSS: [], // CSS properties to receive further processing at host server (e.g. "boxShadow")
     outputMainFileName: "activity_main.xml",
     outputDirectory: "app/src/main",
-    outputDocumentHandler: "android",
     outputEmptyCopyDirectory: false, // Sub directories within target directory
     outputTasks: {} // { "**/drawable/*.xml": { handler: "gulp", task: "minify" } }
     outputWatch: {} // { "**/drawable/*.png": true, "**/drawable/*.jpg": { interval: 1000, expires: "2h" } } (only raw assets)

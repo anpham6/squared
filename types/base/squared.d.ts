@@ -175,6 +175,7 @@ declare module "base" {
         get resourceHandler(): ResourceUI<T>;
         get extensionManager(): ExtensionManager<T>;
         get layouts(): FileAsset[];
+        get finalizedElements(): FinalizedElement[];
         get clearMap(): Map<T, string>;
     }
 
@@ -616,8 +617,8 @@ declare module "base" {
         renderTemplates: Null<NodeTemplate<NodeUI>[]>;
         renderedAs: Null<NodeTemplate<NodeUI>>;
         outerWrapper: Null<NodeUI>;
+        companion: Null<NodeUI>;
         documentChildren?: NodeUI[];
-        companion?: NodeUI;
         setControlType(controlName: string, containerType?: number): void;
         setExclusions(): void;
         setLayout(): void;

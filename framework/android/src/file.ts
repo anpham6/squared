@@ -547,15 +547,19 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public finalizeRequestBody(body: RequestData & FileUniversalOptions) {
+        const elements = this.resource.application.finalizedElements;
+        if (elements.length) {
+            body.elements = elements;
+        }
+        if (this.userSettings.createBuildDependencies) {
+            body.dependencies = this.resource.application.dependencies;
+        }
         if (body.watch) {
             for (const item of body.assets!) {
                 if (isPlainObject<WatchInterval>(item.watch)) {
                     delete item.watch.reload;
                 }
             }
-        }
-        if (this.userSettings.createBuildDependencies) {
-            body.dependencies = this.resource.application.dependencies;
         }
     }
 

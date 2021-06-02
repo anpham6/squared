@@ -548,9 +548,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         current = actualParent;
                     do {
                         opacity *= current.opacity;
-                        current = current.actualParent as T;
                     }
-                    while (current && current !== parent);
+                    while ((current = current.actualParent as T) && current !== parent);
                     node.cssInitial('opacity', { value: opacity.toString() });
                     node.parent = parent;
                     if (!altered.includes(parent)) {

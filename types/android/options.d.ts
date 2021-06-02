@@ -2,6 +2,7 @@ interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.
     pathname?: string;
     manifest?: ManifestData;
     dependencies?: string[];
+    elements?: FinalizedElement[];
     updateXmlOnly?: boolean;
 }
 

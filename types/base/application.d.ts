@@ -27,6 +27,7 @@ interface UserResourceSettingsUI extends UserResourceSettings {
     showAttributes: boolean;
     insertSpaces: number;
     outputDirectory: string;
+    outputDocumentCSS: CssStyleAttr[];
     resolutionScreenWidth?: number;
     resolutionScreenHeight?: number;
 }
@@ -155,6 +156,13 @@ interface FinalizeDataExtensionUI<T> {
     resourceId: number;
     rendered: T[];
     documentRoot: LayoutRoot<T>[];
+}
+
+interface FinalizedElement {
+    documentId: string;
+    bounds: BoxRectDimension;
+    css: CssStyleMap;
+    outerWrapperIds?: string[];
 }
 
 interface ResourceMap extends ObjectMap<Map<string, unknown> | unknown[]> {}
