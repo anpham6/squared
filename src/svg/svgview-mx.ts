@@ -163,10 +163,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 values.length = length;
                 cssData[name] = values;
             }
-            for (let i = 0; i < length; ++i) {
+            for (let i = 0, duration: number; i < length; ++i) {
+                const clockTime = cssData['animation-duration'][i];
+                if (!clockTime) {
+                    continue;
+                }
                 const keyframes = keyframesMap.get(animationName[i]);
-                const duration = SvgAnimation.parseClockTime(cssData['animation-duration'][i]);
-                if (keyframes && !isNaN(duration) && duration > 0) {
+                if (keyframes && (duration = SvgAnimation.parseClockTime(clockTime)) > 0) {
                     ++id;
                     const attrData: AttributeMap = {};
                     const keyframeData: AttributeMap = {};
@@ -477,6 +480,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         public getDesc(lang?: string) {
             return !lang && getNamedItem(this.element, 'aria-describedby') || getTextContent(this.element, 'desc', lang);
+        }
+
+        public hasAnimations() {
+            return this.animations.length > 0;
+        }
+
+        public hasTransforms() {
+            return this.transforms.length > 0;
         }
 
         set name(value) {

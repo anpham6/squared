@@ -852,9 +852,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     protected applyMarginCollapse(node: T, child: T, direction: boolean) {
         if (!direction || isBlockElement(child, true)) {
             let marginName: CssStyleAttr,
-                borderWidth: string,
-                paddingName: string,
-                region: number;
+                borderWidth: CssStyleAttr,
+                paddingName: CssStyleAttr,
+                region: BOX_STANDARD;
             if (direction) {
                 marginName = 'marginTop';
                 borderWidth = 'borderTopWidth';

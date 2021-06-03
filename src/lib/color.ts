@@ -271,9 +271,9 @@ export function convertHSLA(value: RGBA): HSLA {
     const b = value.b / 255;
     const min = Math.min(r, g, b);
     const max = Math.max(r, g, b);
-    let h = (max + min) / 2;
+    let h = (max + min) / 2,
+        s: number;
     const l = h;
-    let s: number;
     if (max === min) {
         h = 0;
         s = 0;
@@ -303,13 +303,11 @@ export function convertHSLA(value: RGBA): HSLA {
 }
 
 export function convertRGBA(value: HSLA): RGBA {
-    let { h, s, l, a } = value;
+    let { h, s, l, a } = value, // eslint-disable-line prefer-const
+        r, g, b;
     h /= 360;
     s /= 100;
     l /= 100;
-    let r,
-        g,
-        b;
     if (s === 0) {
         r = l;
         g = l;
@@ -322,11 +320,12 @@ export function convertRGBA(value: HSLA): RGBA {
         g = hue2rgb(h, p, q);
         b = hue2rgb(h - 1/3, p, q);
     }
-    r = Math.round(Math.min(r, 1) * 255);
-    g = Math.round(Math.min(g, 1) * 255);
-    b = Math.round(Math.min(b, 1) * 255);
-    a = Math.round(Math.min(a, 1) * 255);
-    return { r, g, b, a };
+    return {
+        r: Math.round(Math.min(r, 1) * 255),
+        g: Math.round(Math.min(g, 1) * 255),
+        b: Math.round(Math.min(b, 1) * 255),
+        a: Math.round(Math.min(a, 1) * 255)
+    };
 }
 
 export function formatRGBA(value: RGBA) {

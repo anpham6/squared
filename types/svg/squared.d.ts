@@ -73,6 +73,8 @@ declare module "svg" {
         readonly animations: SvgAnimation[];
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        hasTransforms(): boolean;
+        hasAnimations(): boolean;
         getTitle(lang?: string): string;
         getDesc(lang?: string): string;
     }
@@ -179,6 +181,8 @@ declare module "svg" {
         animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        hasTransforms(): boolean;
+        hasAnimations(): boolean;
         getTitle(lang?: string): string;
         getDesc(lang?: string): string;
         set name(value);
@@ -228,6 +232,8 @@ declare module "svg" {
         convertLength(value: string, dimension?: NumString): number;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        hasTransforms(): boolean;
+        hasAnimations(): boolean;
         getTitle(lang?: string): string;
         getDesc(lang?: string): string;
         set name(value);
@@ -271,6 +277,8 @@ declare module "svg" {
         setPath(): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        hasTransforms(): boolean;
+        hasAnimations(): boolean;
         getTitle(lang?: string): string;
         getDesc(lang?: string): string;
         set name(value);
@@ -342,6 +350,8 @@ declare module "svg" {
         renderStatic(exclude?: number[]): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        hasTransforms(): boolean;
+        hasAnimations(): boolean;
         getTitle(lang?: string): string;
         getDesc(lang?: string): string;
         set name(value);
@@ -453,6 +463,8 @@ declare module "svg" {
         animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        hasTransforms(): boolean;
+        hasAnimations(): boolean;
         getTitle(lang?: string): string;
         getDesc(lang?: string): string;
         set name(value);
@@ -481,6 +493,8 @@ declare module "svg" {
         readonly patternElement: SVGPatternElement;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        hasTransforms(): boolean;
+        hasAnimations(): boolean;
         getTitle(lang?: string): string;
         getDesc(lang?: string): string;
         set name(value);

@@ -1946,7 +1946,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, boolean>, pathData = '', targetName?: string) {
-        if (svg.animations.length) {
+        if (svg.hasAnimations()) {
             const animate = svg.animations.filter((item, index, array) => !item.paused && (item.duration >= 0 || item.setterType) && predicate(item, index, array));
             if (animate.length) {
                 const element = svg.element;
