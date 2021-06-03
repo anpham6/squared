@@ -3565,13 +3565,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 case 'bottom':
                                 case 'topBottom':
                                 case 'bottomTop':
-                                    node.alignedWithY = sibling;
+                                    node.setCacheState('alignedWithY', sibling);
                                     break;
                                 case 'left':
                                 case 'right':
                                 case 'leftRight':
                                 case 'rightLeft':
-                                    node.alignedWithX = sibling;
+                                    node.setCacheState('alignedWithX', sibling);
                                     break;
                             }
                         }

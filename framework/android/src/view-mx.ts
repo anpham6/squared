@@ -568,12 +568,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public renderChildren!: T[];
         public renderParent!: Null<T>;
         public companion!: Null<T>;
-        public alignedWithX?: T;
-        public alignedWithY?: T;
 
         protected _namespaces: ObjectMap<StringMap> = { android: {}, app: {}, '_': {} };
         protected _containerType = 0;
         protected _cache!: CacheValueUI;
+        protected _cacheState!: CacheStateUI<T>;
         protected _localSettings!: LocalSettingsUI;
         protected _boxReset!: Null<number[]>;
         protected _boxAdjustment!: Null<number[]>;
@@ -2556,11 +2555,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
-            if (this.alignedWithX) {
-                this.translateX(safeFloat(this.alignedWithX.android('translationX')));
+            const { alignedWithX, alignedWithY } = this._cacheState;
+            if (alignedWithX) {
+                this.translateX(safeFloat(alignedWithX.android('translationX')));
             }
-            if (this.alignedWithY) {
-                this.translateY(safeFloat(this.alignedWithY.android('translationY')));
+            if (alignedWithY) {
+                this.translateY(safeFloat(alignedWithY.android('translationY')));
             }
             if (this.paddingBottom > 0 && (renderParent.layoutVertical || renderParent.layoutFrame) && this.pageFlow && !this.documentParent.layoutElement) {
                 const layoutHeight = asPx(renderParent.layoutHeight);

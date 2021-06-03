@@ -19,8 +19,7 @@ export default class Container<T = unknown> implements squared.lib.base.Containe
             else {
                 index = Math.min(index, children.length);
             }
-            children[index] = value!;
-            return value;
+            return children[index] = value!;
         }
         return index >= 0 ? children[index] : children[children.length + index];
     }
@@ -231,14 +230,13 @@ export default class Container<T = unknown> implements squared.lib.base.Containe
         let complete: Undef<boolean>;
         return (function recurse(container: Container<T>, result: T[]) {
             const children = container.children;
-            for (let i = 0, length = children.length; i < length; ++i) {
+            for (let i = 0, length = children.length, next: unknown; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     options!.hadError = true;
                     complete = true;
                     break;
                 }
-                let next: unknown;
                 if (!predicate || (next = predicate(item, i, children)) === true) {
                     if (also) {
                         next = also.call(container, item);

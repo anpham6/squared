@@ -9,6 +9,11 @@ interface CacheValueUI {
     support?: SupportUI;
 }
 
+interface CacheStateUI<T> {
+    alignedWithX?: T;
+    alignedWithY?: T;
+}
+
 interface SupportUI {
     maxDimension: boolean;
 }
