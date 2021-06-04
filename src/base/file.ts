@@ -320,11 +320,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     break;
                 }
                 const [output, attr] = i === 0 ? [outputTasks, 'tasks'] : [outputWatch, 'watch'];
-                let unassigned: Undef<FileAsset[]>;
+                let unassigned: Undef<FileAsset[]>,
+                    length: number;
                 for (const module in output) {
                     unassigned ||= assets.filter(item => !item[attr]);
-                    let length = unassigned.length;
-                    if (length) {
+                    if (length = unassigned.length) {
                         const glob = parseGlob(module, { fromEnd: true });
                         for (let j = 0; j < length; ++j) {
                             const item = unassigned[j];
