@@ -426,7 +426,7 @@ declare module "base" {
         static readonly TEXT_STYLE: string[];
         static sanitizeCss(element: DocumentElement, input: CssStyleMap, writingMode?: string, output?: CssStyleMap): CssStyleMap;
         documentRoot: boolean;
-        queryMap: Null<Node[][]>;
+        queryMap: Null<Node[]>;
         shadowHost: Null<ShadowRoot>;
         pseudoElt: PseudoElt | "";
         readonly id: number;
@@ -479,7 +479,7 @@ declare module "base" {
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
-        querySelectorAll(value: string, sorted?: boolean, customMap?: Node[][]): Node[];
+        querySelectorAll(value: string, customMap?: Node[], queryRoot?: HTMLElement): Node[];
         ancestors(value?: string, options?: AscendOptions<Node>): Node[];
         descendants(value?: string, options?: DescendOptions<Node>): Node[];
         siblings(value?: string, options?: SiblingsOptions<Node>): Node[];

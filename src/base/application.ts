@@ -705,19 +705,11 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     protected createQueryMap(elements: T[]) {
-        const result: T[][] = [elements];
+        const result: T[] = elements.slice(0);
         for (let i = 0, length = elements.length; i < length; ++i) {
-            const childMap = elements[i].queryMap;
-            if (childMap) {
-                for (let j = 0, k = 1, q = childMap.length; j < q; ++j, ++k) {
-                    const items = result[k];
-                    if (items) {
-                        items.push(...childMap[j] as T[]);
-                    }
-                    else {
-                        result[k] = q === 1 ? childMap[j] as T[] : childMap[j].slice(0) as T[];
-                    }
-                }
+            const queryMap = elements[i].queryMap;
+            if (queryMap) {
+                result.push(...queryMap as T[]);
             }
         }
         return result;
