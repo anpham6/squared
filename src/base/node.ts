@@ -35,8 +35,9 @@ const TEXT_STYLE: CssStyleAttr[] = [
 const [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT, BORDER_OUTLINE] = CSS_BORDER_SET;
 
 const REGEXP_NOT = /^:not\((.+)\)$/i;
-const REGEXP_ENCLOSING = /^:(not|is|where)\((.+)\)$/i;
-const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
+const REGEXP_ISGROUP = /^:(not|is|where)\((.+)\)$/i;
+const REGEXP_ISWITHIN = /:(not|is|where)\(/i;
+const REGEXP_ISEXPAND = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
 const REGEXP_NOTINDEX = /:not-(x+)/;
 const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
@@ -1741,7 +1742,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result: T[] = [];
         if (queryMap) {
             const queries: string[] = [];
-            let notIndex: Undef<string[]>;
+            let unsupported: Undef<number[]>,
+                notIndex: Undef<string[]>;
             const addNot = (part: string) => {
                 (notIndex ||= []).push(part);
                 return ':not-' + 'x'.repeat(notIndex.length);
@@ -1759,13 +1761,32 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 }, '');
             };
             for (const query of parseSelectorText(value)) {
-                let selector = '',
-                    expand: Undef<boolean>;
-                invalid: {
-                    let match: Null<RegExpExecArray>;
-                    for (let seg of splitEnclosing(query, CSS.SELECTOR_ENCLOSING_G)) {
-                        if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
-                            const condition = match[2].trim();
+                native: {
+                    const items = splitEnclosing(query, CSS.SELECTOR_ENCLOSING_G);
+                    let selector = '',
+                        expand: Undef<boolean>;
+                    for (let i = 0, length = items.length, match: Null<RegExpExecArray>; i < length; ++i) {
+                        let seg = items[i];
+                        if (seg[0] === ':' && (match = REGEXP_ISGROUP.exec(seg))) {
+                            const condition =
+                                (function expandCondition(input: string) {
+                                    const output: string[] = [];
+                                    const other = parseSelectorText(input);
+                                    let within: Null<RegExpExecArray>;
+                                    for (let j = 0; j < other.length; ++j) {
+                                        let is = other[j];
+                                        if (is[0] === ':' && (within = REGEXP_ISGROUP.exec(is))) {
+                                            switch (within[1].toLowerCase()) {
+                                                case 'is':
+                                                case 'where':
+                                                    is = expandCondition(within[2].trim());
+                                                    break;
+                                            }
+                                        }
+                                        output.push(is);
+                                    }
+                                    return output.join(', ');
+                                })(match[2].trim());
                             switch (match[1].toLowerCase()) {
                                 case 'not':
                                     seg = parseNot(condition);
@@ -1773,7 +1794,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                 case 'is':
                                 case 'where':
                                     if (selector && !isSpace(lastItemOf(selector))) {
-                                        break invalid;
+                                        break native;
                                     }
                                     if (condition.indexOf(',') !== -1) {
                                         seg = parseSelectorText(condition).reduce((a, b) => a + `{{${checkNot(b)}}}`, '@');
@@ -1784,36 +1805,69 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                                     }
                                     break;
                             }
+                            if (REGEXP_ISWITHIN.test(seg)) {
+                                break native;
+                            }
                         }
                         selector += seg;
                     }
-                }
-                if (expand) {
-                    (function expandQuery(segments: string[]) {
-                        for (let i = 0, length = segments.length; i < length; ++i) {
-                            const match = REGEXP_ISWHERE.exec(segments[i]);
-                            if (match) {
-                                const pending: string[] = [];
-                                const pattern = /\{\{(.+?)\}\}/g;
-                                let subMatch: Null<RegExpExecArray>;
-                                while (subMatch = pattern.exec(match[2])) {
-                                    pending.push(match[1] + subMatch[1] + match[3]);
+                    if (expand) {
+                        (function expandQuery(segments: string[]) {
+                            for (let i = 0, q = segments.length; i < q; ++i) {
+                                const match = REGEXP_ISEXPAND.exec(segments[i]);
+                                if (match) {
+                                    const pending: string[] = [];
+                                    const pattern = /\{\{(.+?)\}\}/g;
+                                    let subMatch: Null<RegExpExecArray>;
+                                    while (subMatch = pattern.exec(match[2])) {
+                                        pending.push(match[1] + subMatch[1] + match[3]);
+                                    }
+                                    expandQuery(pending);
                                 }
-                                expandQuery(pending);
+                                else {
+                                    queries.push(segments[i]);
+                                }
                             }
-                            else {
-                                queries.push(segments[i]);
-                            }
-                        }
-                    })([selector]);
+                        })([selector]);
+                    }
+                    else {
+                        queries.push(selector);
+                    }
+                    continue;
                 }
-                else {
-                    queries.push(selector);
-                }
+                (unsupported ||= []).push(queries.length);
+                queries.push(query);
             }
             for (let i = 0, length = queries.length; i < length; ++i) {
                 invalid: {
                     const query = queries[i];
+                    if (unsupported && unsupported.includes(i)) {
+                        try {
+                            const items = Array.from(this._element!.querySelectorAll(query));
+                            let itemCount = items.length;
+                            if (itemCount) {
+                                const all = result.length === 0;
+                                for (let j = 0, r = queryMap.length; j < r; ++j) {
+                                    const column = queryMap[j];
+                                    for (let k = 0, s = column.length; k < s; ++k) {
+                                        const node = column[k];
+                                        if (items.includes(node.element!)) {
+                                            if (all || !result.includes(node)) {
+                                                result.push(node);
+                                            }
+                                            if (--itemCount === 0) {
+                                                j = r;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch {
+                        }
+                        continue;
+                    }
                     const selectors: QueryData[] = [];
                     let q = 0,
                         offset = 0,
@@ -1994,9 +2048,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                         }
                         const all = result.length === 0;
                         for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
-                            const items = queryMap[j];
-                            for (let k = 0, s = items.length; k < s; ++k) {
-                                const node = items[k];
+                            const column = queryMap[j];
+                            for (let k = 0, s = column.length; k < s; ++k) {
+                                const node = column[k];
                                 if ((all || !result.includes(node)) && ascendSelector(this, selectors, q - 1, [node], offset)) {
                                     result.push(node);
                                 }
