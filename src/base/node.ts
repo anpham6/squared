@@ -194,6 +194,19 @@ function convertPosition(node: T, attr: CssStyleAttr) {
     return 0;
 }
 
+function recurseNaturalElements(result: T[], items: Element[], children: T[]) {
+    for (let i = 0, length = children.length; i < length; ++i) {
+        const node = children[i];
+        if (items.includes(node.element!) && result.push(node) === items.length) {
+            return true;
+        }
+        const next = node.naturalElements;
+        if (next.length && recurseNaturalElements(result, items, next)) {
+            return true;
+        }
+    }
+}
+
 function getMinMax(node: T, min: boolean, attr: string, options?: MinMaxOptions) {
     let self: Undef<boolean>,
         last: Undef<boolean>,
@@ -301,7 +314,6 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public documentRoot = false;
-    public queryMap: Null<T[]> = null;
     public shadowHost: Null<ShadowRoot> = null;
     public pseudoElt: PseudoElt | "" = '';
 
@@ -589,12 +601,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 return;
             }
             parent.resetBounds();
-            if (parent.queryMap) {
-                parent.querySelectorAll('*').forEach(item => item.resetBounds());
-            }
-            else {
-                this.cascade(item => item.resetBounds());
-            }
+            parent.querySelectorAll('*').forEach(item => item.resetBounds());
         }
     }
 
@@ -1212,33 +1219,38 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public querySelector(value: string) {
-        const queryMap = this.queryMap;
-        if (queryMap) {
-            const element = this._element!.querySelector(value);
-            if (element) {
-                return queryMap.find(node => node.element === element) || null;
+        const element = this._element!.querySelector(value);
+        if (element) {
+            const result: T[] = [];
+            if (recurseNaturalElements(result, [element], this.naturalElements)) {
+                return result[0];
             }
         }
         return null;
     }
 
-    public querySelectorAll(value: string, customMap?: T[], queryRoot?: HTMLElement) {
-        const queryMap = customMap || this.queryMap;
+    public querySelectorAll(value: string, queryMap?: T[], queryRoot?: Null<Element>) {
         const result: T[] = [];
-        if (queryMap) {
-            try {
-                const items = Array.from((queryRoot || this._element!).querySelectorAll(value));
-                if (items.length) {
-                    for (let i = 0, length = queryMap.length; i < length; ++i) {
-                        const node = queryMap[i];
-                        if (items.includes(node.element!)) {
-                            result.push(node);
+        try {
+            if (queryRoot ||= this._element) {
+                const items = Array.from(queryRoot.querySelectorAll(value));
+                const itemCount = items.length;
+                if (itemCount) {
+                    if (queryMap) {
+                        for (let i = 0, length = queryMap.length; i < length; ++i) {
+                            const node = queryMap[i];
+                            if (items.includes(node.element!) && result.push(node) === itemCount) {
+                                break;
+                            }
                         }
+                    }
+                    else {
+                        recurseNaturalElements(result, items, this.naturalElements);
                     }
                 }
             }
-            catch {
-            }
+        }
+        catch {
         }
         return result;
     }
@@ -1250,9 +1262,9 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     public descendants(value?: string, options?: DescendOptions<T>) {
         if (this.naturalElements.length) {
-            if (options || !this.queryMap) {
-                const children: T[] = this.descend(options).filter(item => item.naturalElement);
-                return value && children.length ? this.querySelectorAll(value, children) : children.sort(sortById);
+            if (options) {
+                const children: T[] = this.descend(options);
+                return value && children.length ? this.querySelectorAll(value, children) : children.filter(item => item.naturalElement).sort(sortById);
             }
             return this.querySelectorAll(value || '*');
         }
@@ -1260,50 +1272,50 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public siblings(value?: string, options?: SiblingsOptions<T>) {
-        if (this.naturalElement) {
-            let condition: Undef<(item: T) => boolean>,
-                error: Undef<(item: T) => boolean>,
-                every: Undef<boolean>,
-                including: Undef<T>,
-                excluding: Undef<T>,
-                reverse: Undef<boolean>;
-            if (options) {
-                ({ condition, error, every, including, excluding, reverse } = options);
+        const parent = this.actualParent;
+        if (!parent) {
+            return [];
+        }
+        let condition: Undef<(item: T) => boolean>,
+            error: Undef<(item: T) => boolean>,
+            every: Undef<boolean>,
+            including: Undef<T>,
+            excluding: Undef<T>,
+            reverse: Undef<boolean>;
+        if (options) {
+            ({ condition, error, every, including, excluding, reverse } = options);
+        }
+        let result: T[] = [];
+        const filterPredicate = (item: T) => {
+            if (error && error(item) || item === excluding) {
+                return true;
             }
-            let result: T[] = [];
-            const filterPredicate = (item: T) => {
-                if (error && error(item) || item === excluding) {
-                    return true;
-                }
-                if (condition) {
-                    if (condition(item)) {
-                        result.push(item);
-                        if (!every) {
-                            return true;
-                        }
+            if (condition) {
+                if (condition(item)) {
+                    result.push(item);
+                    if (!every) {
+                        return true;
                     }
                 }
-                else {
-                    result.push(item);
-                }
-                return item === including;
-            };
-            const parent = this.actualParent!;
-            if (reverse) {
-                iterateReverseArray(parent.naturalElements, filterPredicate, 0, this.childIndex);
             }
             else {
-                iterateArray(parent.naturalElements, filterPredicate, this.childIndex + 1);
+                result.push(item);
             }
-            if (value) {
-                result = parent.querySelectorAll(value, result);
-                if (reverse && result.length > 1) {
-                    result.reverse();
-                }
-            }
-            return result;
+            return item === including;
+        };
+        if (reverse) {
+            iterateReverseArray(parent.naturalElements, filterPredicate, 0, this.childIndex);
         }
-        return [];
+        else {
+            iterateArray(parent.naturalElements, filterPredicate, this.childIndex + 1);
+        }
+        if (value) {
+            result = parent.querySelectorAll(value, result);
+            if (reverse && result.length > 1) {
+                result.reverse();
+            }
+        }
+        return result;
     }
 
     public valueOf(attr: CssStyleAttr, options?: CssInitialOptions) {
@@ -1326,7 +1338,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
         const result = this._cache.tagName;
         if (result === undefined) {
             const element = this._element;
-            return this._cache.tagName = element ? element.nodeName[0] === '#' ? element.nodeName : element.tagName : '';
+            return this._cache.tagName = element ? element.nodeName : '';
         }
         return result;
     }

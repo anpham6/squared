@@ -5,7 +5,6 @@ const settings: UserResourceSettings = {
     preloadCustomElements: false,
     excludePlainText: true,
     createElementMap: true,
-    createQuerySelectorMap: true,
     pierceShadowRoot: true,
     showErrorMessages: false,
     webSocketPort: 80,

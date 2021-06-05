@@ -3,7 +3,6 @@ interface UserSettings {
     showErrorMessages: boolean;
     pierceShadowRoot: boolean;
     createElementMap: boolean;
-    createQuerySelectorMap: boolean;
 }
 
 interface UserResourceSettings extends UserSettings {

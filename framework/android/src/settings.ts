@@ -46,7 +46,6 @@ const settings: UserResourceSettingsUI = {
     baseLayoutAsFragment: false,
     createDownloadableFonts: true,
     createElementMap: false,
-    createQuerySelectorMap: false,
     createManifest: false,
     createBuildDependencies: false,
     pierceShadowRoot: true,

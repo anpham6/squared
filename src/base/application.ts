@@ -581,7 +581,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected createRootNode(processing: squared.base.AppProcessing<T>, rootElement: HTMLElement) {
         const { sessionId, resourceId } = processing;
         const extensions = processing.extensions.filter(item => !!item.beforeInsertNode) as Extension<T>[];
-        const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, this.getUserSetting<boolean>(processing, 'pierceShadowRoot'), this.getUserSetting<boolean>(processing, 'createQuerySelectorMap'), extensions.length ? extensions : null);
+        const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, this.getUserSetting<boolean>(processing, 'pierceShadowRoot'), extensions.length ? extensions : null);
         if (node) {
             node.documentRoot = true;
             processing.node = node;
@@ -629,7 +629,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, createQuerySelectorMap: boolean, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, extensions: Null<Extension<T>[]>, shadowParent?: Null<ShadowRoot>) {
         const node = this.insertNode(processing, parentElement);
         if (node) {
             if (depth === 0) {
@@ -667,7 +667,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                         this.setStyleMap(sessionId, resourceId, shadowRoot);
                     }
-                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
+                    if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, pierceShadowRoot, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                         elements.push(child);
                         inlineText = false;
                     }
@@ -693,26 +693,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                     processing.cache.add(children[0]);
                 }
             }
-            if (elements.length && createQuerySelectorMap) {
-                node.queryMap = this.createQueryMap(elements);
-            }
         }
         return node;
     }
 
     protected visibleText(node: T, element: Element) {
         return element.nodeName === '#text' && (!isEmptyString(element.textContent!) || node.preserveWhiteSpace && (node.tagName !== 'PRE' || node.element!.childElementCount === 0));
-    }
-
-    protected createQueryMap(elements: T[]) {
-        const result: T[] = elements.slice(0);
-        for (let i = 0, length = elements.length; i < length; ++i) {
-            const queryMap = elements[i].queryMap;
-            if (queryMap) {
-                result.push(...queryMap as T[]);
-            }
-        }
-        return result;
     }
 
     private applyStyleRule(sessionId: string, resourceId: number, item: CSSStyleRule, documentRoot: DocumentRoot, queryRoot?: QuerySelectorElement) {

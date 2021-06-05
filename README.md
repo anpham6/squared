@@ -184,7 +184,6 @@ squared.settings = {
     baseLayoutAsFragment: false, // FragmentContainerView
     createDownloadableFonts: true,
     createElementMap: false,
-    createQuerySelectorMap: false,
     pierceShadowRoot: true,
     customizationsBaseAPI: 0, // All: 0 | None: -1 (Multiple: [0, 29])
 
@@ -253,7 +252,6 @@ squared.settings = {
     preloadCustomElements: false,
     excludePlainText: true,
     createElementMap: true,
-    createQuerySelectorMap: true,
     pierceShadowRoot: true,
 
     // Not customizable with parseDocument
@@ -276,7 +274,6 @@ squared.settings = {
 ```javascript
 squared.settings = {
     createElementMap: true,
-    createQuerySelectorMap: true,
     pierceShadowRoot: false,
 
     // Not customizable with parseDocument
@@ -291,7 +288,7 @@ Custom named user settings per framework can be saved to local storage and reloa
 
 ```javascript
 // Save
-squared.setFramework(android, { compressImages: true, createQuerySelectorMap: true }, "android-example");
+squared.setFramework(android, { compressImages: true }, "android-example");
 
 // Load
 squared.setFramework(android, "android-example", true); // "cache" can also be used as the last argument

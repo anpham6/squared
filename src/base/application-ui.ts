@@ -629,7 +629,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, createQuerySelectorMap: boolean, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
         const node = this.insertNode(processing, parentElement, cascadeAll);
         setElementState(node);
         if (depth === 0) {
@@ -708,7 +708,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 element,
                                 childDepth,
                                 pierceShadowRoot,
-                                createQuerySelectorMap,
                                 extensions,
                                 shadowRoot || shadowParent,
                                 beforeChild,
@@ -843,9 +842,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         processing.excluded.add(item);
                     }
                 }
-            }
-            if (elements.length && createQuerySelectorMap) {
-                node.queryMap = this.createQueryMap(elements);
             }
         }
         return node;
