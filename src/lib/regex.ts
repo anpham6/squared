@@ -3,7 +3,7 @@ import USER_AGENT = squared.lib.constant.USER_AGENT;
 
 import { isUserAgent } from './client';
 
-const [QUOTED, SINGLE_QUOTED] = isUserAgent(USER_AGENT.CHROME, 62) || isUserAgent(USER_AGENT.FIREFOX, 78) || isUserAgent(USER_AGENT.EDGE) || isUserAgent(USER_AGENT.OPERA, 49) ? ['"((?:[^"]|(?<=\\\\)")*)"', "'((?:[^']|(?<=\\\\)')*)'"] : ['"([^"]*)"', "'([^']*)'"];
+const [QUOTED, SINGLE_QUOTED] = isUserAgent(USER_AGENT.CHROME | USER_AGENT.EDGE, 62) || isUserAgent(USER_AGENT.FIREFOX, 78) || isUserAgent(USER_AGENT.OPERA, 49) ? ['"((?:[^"]|(?<=\\\\)")*)"', "'((?:[^']|(?<=\\\\)')*)'"] : ['"([^"]*)"', "'([^']*)'"];
 
 const EXPONENT = '(?:[eE][+-]?\\d+)';
 const DECIMAL_PLAIN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
@@ -53,8 +53,7 @@ export const CSS = {
     SELECTOR_LABEL: new RegExp(SELECTOR_LABEL),
     SELECTOR_PSEUDO_ELEMENT: new RegExp(SELECTOR_PSEUDO_ELEMENT),
     SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
-    SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
-    SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g')
+    SELECTOR_ATTR: new RegExp(SELECTOR_ATTR)
 };
 
 export const TRANSFORM = {

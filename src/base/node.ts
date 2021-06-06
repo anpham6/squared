@@ -1219,34 +1219,40 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public querySelector(value: string) {
-        const element = this._element!.querySelector(value);
-        if (element) {
-            const result: T[] = [];
-            if (recurseNaturalElements(result, [element], this.naturalElements)) {
-                return result[0];
+        if (this.naturalElement) {
+            const element = this._element!.querySelector(value);
+            if (element) {
+                const result: T[] = [];
+                if (recurseNaturalElements(result, [element], this.naturalElements)) {
+                    return result[0];
+                }
             }
         }
         return null;
     }
 
-    public querySelectorAll(value: string, queryMap?: T[], queryRoot?: Null<Element>) {
+    public querySelectorAll(value: string, queryMap?: T[], queryRoot?: Null<HTMLElement>) {
+        if (!queryRoot) {
+            if (!this.naturalElement) {
+                return [];
+            }
+            queryRoot = this._element as HTMLElement;
+        }
         const result: T[] = [];
         try {
-            if (queryRoot ||= this._element) {
-                const items = Array.from(queryRoot.querySelectorAll(value));
-                const itemCount = items.length;
-                if (itemCount) {
-                    if (queryMap) {
-                        for (let i = 0, length = queryMap.length; i < length; ++i) {
-                            const node = queryMap[i];
-                            if (items.includes(node.element!) && result.push(node) === itemCount) {
-                                break;
-                            }
+            const items = Array.from(queryRoot.querySelectorAll(value));
+            const itemCount = items.length;
+            if (itemCount) {
+                if (queryMap) {
+                    for (let i = 0, length = queryMap.length; i < length; ++i) {
+                        const node = queryMap[i];
+                        if (items.includes(node.element!) && result.push(node) === itemCount) {
+                            break;
                         }
                     }
-                    else {
-                        recurseNaturalElements(result, items, this.naturalElements);
-                    }
+                }
+                else {
+                    recurseNaturalElements(result, items, this.naturalElements);
                 }
             }
         }

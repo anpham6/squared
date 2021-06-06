@@ -478,7 +478,7 @@ declare module "base" {
         min(attr: string, options?: MinMaxOptions): Node;
         max(attr: string, options?: MinMaxOptions): Node;
         querySelector(value: string): Null<Node>;
-        querySelectorAll(value: string, queryMap?: Node[], queryRoot?: Null<Element>): Node[];
+        querySelectorAll(value: string, queryMap?: Node[], queryRoot?: Null<HTMLElement>): Node[];
         ancestors(value?: string, options?: AscendOptions<Node>): Node[];
         descendants(value?: string, options?: DescendOptions<Node>): Node[];
         siblings(value?: string, options?: SiblingsOptions<Node>): Node[];
@@ -624,7 +624,7 @@ declare module "base" {
         setAlignment(): void;
         setBoxSpacing(): void;
         attr(name: string, attr: string, value?: string, overwrite?: boolean): string;
-        xAttr(attr: string, value?: string, overwrite?: boolean): string;
+        attrx(attr: string, value?: string, overwrite?: boolean): string;
         alignParent(position: AnchorPositionAttr): boolean;
         alignSibling(position: AnchorPositionAttr, documentId?: string): string;
         anchorChain(...values: PositionAttr[]): NodeUI[];

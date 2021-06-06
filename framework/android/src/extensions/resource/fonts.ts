@@ -513,7 +513,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 else {
                     parentStyle.add(styleData[0]);
                 }
-                node.xAttr('style', `@style/${concatString(styleData, '.')}`);
+                node.attrx('style', `@style/${concatString(styleData, '.')}`);
             }
         }
         for (const value of parentStyle) {

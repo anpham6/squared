@@ -1499,7 +1499,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     case 'string':
                     case 'number':
                     case 'boolean':
-                        this.xAttr(name, data.toString());
+                        this.attrx(name, data.toString());
                         break;
                 }
             }

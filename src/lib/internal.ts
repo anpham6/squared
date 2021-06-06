@@ -11,8 +11,9 @@ let DOCUMENT_FONTMAP!: number[];
 let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
-const SELECTOR_GROUP = /^:(?:not|is|where)\(/i;
 const SELECTOR_ENCLOSING = /:(?:not|is|where)/gi;
+const SELECTOR_GROUP = /^:(?:not|is|where)\(/i;
+const SELECTOR_ATTR = new RegExp(CSS.SELECTOR_ATTR, 'g');
 const SPEC_GROUP = /:(?:is|where)/;
 const SPEC_ISWHERE = /^:(is|where)\((.+)\)$/;
 const SPEC_NOT = /^:not\((.+)\)$/;
@@ -111,12 +112,12 @@ function addSpecificity(value: Specificity, other: Undef<Specificity>) {
 function mergeSelector(value: string) {
     const result: string[] = [];
     let match: Null<RegExpExecArray>;
-    for (const seg of parseSelectorText(value)) {
+    for (let seg of parseSelectorText(value)) {
         if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
-            if (match[1] === 'is') {
-                result.push(mergeSelector(match[2]));
+            if (match[1][0] === 'w') {
+                continue;
             }
-            continue;
+            seg = mergeSelector(match[2]);
         }
         result.push(seg);
     }
@@ -1515,12 +1516,14 @@ export function getSpecificity(value: string) {
             const seg = items[i];
             let group: Undef<Specificity>;
             if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
-                if (match[1] === 'where') {
+                if (match[1][0] === 'w') {
                     continue;
                 }
                 group = getSelectorValue(mergeSelector(match[2]));
             }
-            group ||= calculateSpecificity(seg);
+            else {
+                group = calculateSpecificity(seg);
+            }
             if (!result) {
                 result = group;
             }
@@ -1535,25 +1538,24 @@ export function getSpecificity(value: string) {
 
 export function parseSelectorText(value: string) {
     if ((value = value.trim()).indexOf(',') !== -1) {
-        const segments = splitEnclosing(value, SELECTOR_ENCLOSING);
+        const items = splitEnclosing(value, SELECTOR_ENCLOSING);
         let timestamp: Undef<number>,
             removed: Undef<string[]>;
-        for (let i = 0; i < segments.length; ++i) {
-            const seg = segments[i];
+        for (let i = 0; i < items.length; ++i) {
+            const seg = items[i];
             if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
                 (removed ||= []).push(seg);
-                segments[i] = (timestamp ||= Date.now()) + '-' + (removed.length - 1);
+                items[i] = (timestamp ||= Date.now()) + '-' + (removed.length - 1);
             }
         }
         if (removed) {
-            value = segments.join('');
+            value = items.join('');
         }
-        CSS.SELECTOR_ATTR_G.lastIndex = 0;
         let result: string[],
             normalized = value,
             found: Undef<boolean>,
             match: Null<RegExpExecArray>;
-        while (match = CSS.SELECTOR_ATTR_G.exec(normalized)) {
+        while (match = SELECTOR_ATTR.exec(normalized)) {
             if (match[0].indexOf(',') !== -1) {
                 const index = match.index;
                 const length = match[0].length;
@@ -1561,6 +1563,7 @@ export function parseSelectorText(value: string) {
                 found = true;
             }
         }
+        SELECTOR_ATTR.lastIndex = 0;
         if (found) {
             result = [];
             let position = 0;

@@ -525,7 +525,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return obj[attr] || '';
     }
 
-    public xAttr(attr: string, value?: string, overwrite?: boolean) {
+    public attrx(attr: string, value?: string, overwrite?: boolean) {
         return this.attr('_', attr, value, overwrite);
     }
 

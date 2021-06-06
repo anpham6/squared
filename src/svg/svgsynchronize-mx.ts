@@ -808,7 +808,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return result;
         }
 
-        public animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions) {
+        public animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: Null<SvgPath>, options?: SvgSynchronizeOptions) {
             let keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | SYNCHRONIZE_MODE.FROMTO_TRANSFORM,
                 precision: Undef<number>;
             if (options) {

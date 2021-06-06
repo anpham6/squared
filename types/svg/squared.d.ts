@@ -118,7 +118,7 @@ declare module "svg" {
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
-        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: Null<SvgPath>, options?: SvgSynchronizeOptions): void;
     }
 
     interface SvgTransformable {
@@ -178,7 +178,7 @@ declare module "svg" {
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
-        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: Null<SvgPath>, options?: SvgSynchronizeOptions): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         hasTransforms(): boolean;
@@ -273,7 +273,7 @@ declare module "svg" {
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
-        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: Null<SvgPath>, options?: SvgSynchronizeOptions): void;
         setPath(): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
@@ -460,7 +460,7 @@ declare module "svg" {
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
-        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+        animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: Null<SvgPath>, options?: SvgSynchronizeOptions): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         hasTransforms(): boolean;
