@@ -1,4 +1,4 @@
-interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileUniversalAttribute {
+interface FileActionOptions extends squared.FileActionOptions, FileActionAttribute, FileRequestAttribute {
     sessionId?: string;
     resourceId?: number;
     assetMap?: ElementAssetMap;

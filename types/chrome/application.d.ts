@@ -4,7 +4,7 @@ interface UserResourceSettings {
     webSocketSecurePort?: number;
 }
 
-interface FileUniversalAttribute extends PlainObject, DocumentOutput {
+interface FileRequestAttribute extends DocumentOutput {
     saveAsWebPage?: boolean;
     useOriginalHtmlPage?: boolean;
     removeInlineStyles?: boolean;
@@ -18,7 +18,7 @@ interface FileUniversalAttribute extends PlainObject, DocumentOutput {
     removeUnusedSupports?: boolean;
 }
 
-interface FileActionAttribute extends PlainObject {
+interface FileActionAttribute {
     saveAs?: {
         html?: SaveAsOptions;
         script?: SaveAsOptions;
@@ -29,7 +29,7 @@ interface FileActionAttribute extends PlainObject {
     preserveCrossOrigin?: boolean;
 }
 
-interface TemplateMap extends StandardMap {
+interface TemplateMap {
     html: ObjectMap<PlainObject>;
     js: ObjectMap<PlainObject>;
     css: ObjectMap<PlainObject>;

@@ -2274,7 +2274,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return result;
         }
 
-        public isAnchored(options: IsUnanchoredOptions) {
+        public isAnchored(options: IsAnchoredOptions) {
             const { orientation, chained, parent, relative, documentId } = options;
             if ((!orientation || orientation === 'horizontal') && (
                 chained && (!documentId && (this.alignSibling('leftRight') || this.alignSibling('rightLeft') || this.app('layout_constraintHorizontal_chainStyle')) || documentId && (this.alignSibling('leftRight') === documentId || this.alignSibling('rightLeft') === documentId)) ||

@@ -1,8 +1,11 @@
-interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.base.FileArchivingOptions {
+interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.base.FileArchivingOptions, FileRequestAttribute {
     pathname?: string;
     manifest?: ManifestData;
     dependencies?: string[];
     elements?: FinalizedElement[];
+}
+
+interface FileRequestAttribute {
     mainParentDir?: string;
     mainActivityFile?: string;
     updateXmlOnly?: boolean;
@@ -21,7 +24,7 @@ interface CloneOptions {
     attributes?: boolean;
 }
 
-interface IsUnanchoredOptions {
+interface IsAnchoredOptions {
     documentId?: string;
     orientation?: OrientationAttr;
     chained?: boolean;

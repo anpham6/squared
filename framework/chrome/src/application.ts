@@ -135,9 +135,14 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         options = { ...options, saveAsWebPage: true, sessionId, resourceId, assetMap, nodeMap, appendMap };
         const retainUsedStyles = options.retainUsedStyles;
         const retainUsedStylesValue = retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string') as string[] : [];
+        const createSet = (values: string[]) => {
+            const items: string[] = [];
+            values.forEach(value => !items.includes(value) && items.push(value));
+            return items;
+        };
         if (options.removeUnusedVariables) {
             const values = this._cssVariables[sessionId];
-            let variables = Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('--')));
+            let variables = createSet(Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('--'))));
             if (values) {
                 const nested = new Set<string>();
                 for (const name of variables) {
@@ -164,11 +169,11 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             delete options.removeUnusedVariables;
         }
         if (options.removeUnusedFontFace) {
-            options.usedFontFace = Array.from(this._cssUsedFontFace[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
+            options.usedFontFace = createSet(Array.from(this._cssUsedFontFace[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim())));
             delete options.removeUnusedFontFace;
         }
         if (options.removeUnusedKeyframes) {
-            options.usedKeyframes = Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|keyframes:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim()));
+            options.usedKeyframes = createSet(Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|keyframes:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(10).trim())));
             delete options.removeUnusedKeyframes;
         }
         if (options.removeUnusedMedia) {
@@ -176,11 +181,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             if (unusedMedia) {
                 const queries: string[] = [];
                 const exclusions = retainUsedStylesValue.filter(value => value.startsWith('|media:') && value.endsWith('|')).map((value: string) => trimBoth(value, '|').substring(6).trim());
-                for (const value of unusedMedia) {
-                    if (!exclusions.includes(value)) {
-                        queries.push(value);
-                    }
-                }
+                unusedMedia.forEach(value => !exclusions.includes(value) && queries.push(value));
                 if (queries.length) {
                     options.unusedMedia = queries;
                 }
