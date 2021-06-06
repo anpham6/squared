@@ -356,7 +356,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public saveDocument(filename: string, content: string, pathname?: string, index = -1) {
         const layout: LayoutAsset = {
-            pathname: pathname ? trimString(replaceAll(pathname, '\\', '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.baseDirectory),
+            pathname: pathname ? trimString(replaceAll(pathname, '\\', '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.directory.layout),
             filename,
             content,
             index

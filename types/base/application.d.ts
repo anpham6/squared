@@ -51,13 +51,13 @@ interface ControllerSettingsUI extends ControllerSettings {
 }
 
 interface ControllerSettingsLayoutUI {
-    baseDirectory: string;
     fileExtension: string;
     baseTemplate: string;
     innerXmlTags: string[];
 }
 
 interface ControllerSettingsDirectoryUI {
+    layout: string;
     string: string;
     font: string;
     image: string;

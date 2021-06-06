@@ -1509,97 +1509,97 @@ export function compareSpecificity(value: Specificity, preceding: Undef<Specific
 }
 
 export function getSpecificity(value: string) {
-    if (value.indexOf('(') !== -1) {
-        const items = splitEnclosing(value, SPEC_GROUP);
-        let result: Undef<Specificity>;
-        for (let i = 0, length = items.length, match: Null<RegExpExecArray>; i < length; ++i) {
-            const seg = items[i];
-            let group: Undef<Specificity>;
-            if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
-                if (match[1][0] === 'w') {
-                    continue;
-                }
-                group = getSelectorValue(mergeSelector(match[2]));
-            }
-            else {
-                group = calculateSpecificity(seg);
-            }
-            if (!result) {
-                result = group;
-            }
-            else {
-                addSpecificity(result, group);
-            }
-        }
-        return result || [0, 0, 0];
+    if (value.indexOf('(') === -1) {
+        return calculateSpecificity(value);
     }
-    return calculateSpecificity(value);
+    const items = splitEnclosing(value, SPEC_GROUP);
+    let result: Undef<Specificity>;
+    for (let i = 0, length = items.length, match: Null<RegExpExecArray>; i < length; ++i) {
+        const seg = items[i];
+        let group: Undef<Specificity>;
+        if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
+            if (match[1][0] === 'w') {
+                continue;
+            }
+            group = getSelectorValue(mergeSelector(match[2]));
+        }
+        else {
+            group = calculateSpecificity(seg);
+        }
+        if (!result) {
+            result = group;
+        }
+        else {
+            addSpecificity(result, group);
+        }
+    }
+    return result || [0, 0, 0];
 }
 
 export function parseSelectorText(value: string) {
-    if ((value = value.trim()).indexOf(',') !== -1) {
-        const items = splitEnclosing(value, SELECTOR_ENCLOSING);
-        let timestamp: Undef<number>,
-            removed: Undef<string[]>;
-        for (let i = 0; i < items.length; ++i) {
-            const seg = items[i];
-            if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
-                (removed ||= []).push(seg);
-                items[i] = (timestamp ||= Date.now()) + '-' + (removed.length - 1);
+    if (value.indexOf(',') === -1) {
+        return [value];
+    }
+    const items = splitEnclosing(value, SELECTOR_ENCLOSING);
+    let timestamp: Undef<number>,
+        removed: Undef<string[]>;
+    for (let i = 0; i < items.length; ++i) {
+        const seg = items[i];
+        if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
+            (removed ||= []).push(seg);
+            items[i] = (timestamp ||= Date.now()) + '-' + (removed.length - 1);
+        }
+    }
+    if (removed) {
+        value = items.join('');
+    }
+    let result: string[],
+        normalized = value,
+        found: Undef<boolean>,
+        match: Null<RegExpExecArray>;
+    while (match = SELECTOR_ATTR.exec(normalized)) {
+        if (match[0].indexOf(',') !== -1) {
+            const index = match.index;
+            const length = match[0].length;
+            normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
+            found = true;
+        }
+    }
+    SELECTOR_ATTR.lastIndex = 0;
+    if (found) {
+        result = [];
+        let position = 0;
+        do {
+            const index = normalized.indexOf(',', position);
+            if (index !== -1) {
+                result.push(value.substring(position, index));
+                position = index + 1;
+            }
+            else {
+                result.push(value.substring(position));
+                break;
             }
         }
-        if (removed) {
-            value = items.join('');
-        }
-        let result: string[],
-            normalized = value,
-            found: Undef<boolean>,
-            match: Null<RegExpExecArray>;
-        while (match = SELECTOR_ATTR.exec(normalized)) {
-            if (match[0].indexOf(',') !== -1) {
-                const index = match.index;
-                const length = match[0].length;
-                normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
-                found = true;
-            }
-        }
-        SELECTOR_ATTR.lastIndex = 0;
-        if (found) {
-            result = [];
-            let position = 0;
-            do {
-                const index = normalized.indexOf(',', position);
-                if (index !== -1) {
-                    result.push(value.substring(position, index));
-                    position = index + 1;
-                }
-                else {
-                    result.push(value.substring(position));
+        while (true);
+    }
+    else {
+        result = value.split(/\s*,\s*/);
+    }
+    if (removed) {
+        for (let i = 0, k = 0; i < removed.length; ++i) {
+            const part = removed[i];
+            const placeholder = timestamp! + '-' + i;
+            for (let j = k; j < result.length; ++j) {
+                const seg = result[j];
+                result[j] = replaceAll(seg, placeholder, part, 1);
+                if (seg !== result[j]) {
+                    k = j;
                     break;
                 }
             }
-            while (true);
         }
-        else {
-            result = value.split(/\s*,\s*/);
-        }
-        if (removed) {
-            for (let i = 0, k = 0; i < removed.length; ++i) {
-                const part = removed[i];
-                const placeholder = timestamp! + '-' + i;
-                for (let j = k; j < result.length; ++j) {
-                    const seg = result[j];
-                    result[j] = replaceAll(seg, placeholder, part, 1);
-                    if (seg !== result[j]) {
-                        k = j;
-                        break;
-                    }
-                }
-            }
-        }
-        return result;
     }
-    return [value];
+    return result;
 }
 
 export function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot>) {

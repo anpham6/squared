@@ -24,8 +24,7 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
             }
             item.internalSelf(this, depth);
         }
-        super.retainAs(children);
         this.setBounds();
-        return this;
+        return super.retainAs(children);
     }
 }

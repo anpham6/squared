@@ -501,7 +501,6 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: bo
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
     public readonly localSettings: ControllerSettingsUI = {
         layout: {
-            baseDirectory: 'res/layout',
             fileExtension: 'xml',
             baseTemplate: '<?xml version="1.0" encoding="utf-8"?>\n',
             innerXmlTags: [
@@ -529,6 +528,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             ]
         },
         directory: {
+            layout: 'res/layout',
             string: 'res/values',
             font: 'res/font',
             image: 'res/drawable',
