@@ -720,7 +720,7 @@ const getItemTime = (delay: number, duration: number, keyTimes: number[], iterat
 const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? value.map(pt => pt.x + ',' + pt.y).join(' ') : value !== undefined ? value.toString() : '';
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => ((transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE) & keyTimeMode) > 0;
 const isFromToFormat = (transforming: boolean, keyTimeMode: number) => ((transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE) & keyTimeMode) > 0;
-const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;
+const playableAnimation = (item: SvgAnimate) => (item.playable || item.animationElement && item.duration !== -1) && !item.synchronized;
 const cloneKeyTimes = (item: SvgAnimate): [number[], string[], Null<string[]>] => [item.keyTimes.slice(0), item.values.slice(0), item.keySplines?.slice(0) || null];
 const getStartIteration = (time: number, delay: number, duration: number) => Math.floor(Math.max(0, time - delay) / duration);
 
@@ -778,7 +778,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             const animations = this.animations as SvgAnimateTransform[];
             for (let i = 0, length = animations.length; i < length; ++i) {
                 const item = animations[i];
-                if (SvgBuild.isAnimateTransform(item) && item.duration > 0) {
+                if (SvgBuild.isAnimateTransform(item) && !item.synchronized && item.duration > 0) {
                     result.push(item);
                     if (options && SvgBuild.asAnimateMotion(item)) {
                         const framesPerSecond = options.framesPerSecond;
