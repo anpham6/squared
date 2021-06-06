@@ -12,8 +12,9 @@ let DOCUMENT_FONTBASE!: number;
 let DOCUMENT_FONTSIZE!: number;
 
 const SELECTOR_GROUP = /^:(?:not|is|where)\(/i;
+const SELECTOR_ENCLOSING = /:(?:not|is|where)/gi;
 const SPEC_GROUP = /:(?:is|where)/;
-const SPEC_IS = /^:is\((.+)\)$/;
+const SPEC_ISWHERE = /^:(is|where)\((.+)\)$/;
 const SPEC_NOT = /^:not\((.+)\)$/;
 
 updateDocumentFont();
@@ -105,6 +106,21 @@ function addSpecificity(value: Specificity, other: Undef<Specificity>) {
             value[i]! += other[i]!;
         }
     }
+}
+
+function mergeSelector(value: string) {
+    const result: string[] = [];
+    let match: Null<RegExpExecArray>;
+    for (const seg of parseSelectorText(value)) {
+        if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
+            if (match[1] === 'is') {
+                result.push(mergeSelector(match[2]));
+            }
+            continue;
+        }
+        result.push(seg);
+    }
+    return result.join(', ');
 }
 
 const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
@@ -1492,34 +1508,34 @@ export function compareSpecificity(value: Specificity, preceding: Undef<Specific
 }
 
 export function getSpecificity(value: string) {
-    const items = splitEnclosing(value, SPEC_GROUP);
-    let result: Undef<Specificity>;
-    for (let i = 0, length = items.length; i < length; ++i) {
-        const seg = items[i];
-        let group: Undef<Specificity>;
-        if (seg[0] === ':') {
-            if (startsWith(seg, ':where(')) {
-                return;
+    if (value.indexOf('(') !== -1) {
+        const items = splitEnclosing(value, SPEC_GROUP);
+        let result: Undef<Specificity>;
+        for (let i = 0, length = items.length, match: Null<RegExpExecArray>; i < length; ++i) {
+            const seg = items[i];
+            let group: Undef<Specificity>;
+            if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
+                if (match[1] === 'where') {
+                    continue;
+                }
+                group = getSelectorValue(mergeSelector(match[2]));
             }
-            const match = SPEC_IS.exec(seg);
-            if (match) {
-                group = getSelectorValue(match[1]);
+            group ||= calculateSpecificity(seg);
+            if (!result) {
+                result = group;
+            }
+            else {
+                addSpecificity(result, group);
             }
         }
-        group ||= calculateSpecificity(seg);
-        if (!result) {
-            result = group;
-        }
-        else {
-            addSpecificity(result, group);
-        }
+        return result || [0, 0, 0];
     }
-    return result || [0, 0, 0];
+    return calculateSpecificity(value);
 }
 
 export function parseSelectorText(value: string) {
     if ((value = value.trim()).indexOf(',') !== -1) {
-        const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
+        const segments = splitEnclosing(value, SELECTOR_ENCLOSING);
         let timestamp: Undef<number>,
             removed: Undef<string[]>;
         for (let i = 0; i < segments.length; ++i) {
