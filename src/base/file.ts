@@ -103,7 +103,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
 
     public abstract get userSettings(): UserResourceSettings;
 
-    public finalizeRequestBody(body: RequestData) {}
+    public finalizeRequestBody(options: RequestData) {}
     public getCopyQueryParameters(options: FileCopyingOptions) { return ''; }
     public getArchiveQueryParameters(options: FileArchivingOptions) { return ''; }
 

@@ -2,11 +2,13 @@ interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.
     pathname?: string;
     manifest?: ManifestData;
     dependencies?: string[];
+    directories?: ControllerSettingsDirectoryUI;
     elements?: FinalizedElement[];
 }
 
 interface FileRequestAttribute {
     mainParentDir?: string;
+    mainSrcDir?: string;
     mainActivityFile?: string;
     updateXmlOnly?: boolean;
 }

@@ -174,8 +174,8 @@ export function replaceTab(value: string, spaces: number, lineStart = '<', lineE
         const padding = ' '.repeat(spaces);
         const end = lineEnd.length;
         let result = '';
-        for (let i = 0, j = 0, start = true, length = value.length; i < length; ++i) {
-            const ch = value[i];
+        for (let i = 0, j = 0, start = true, length = value.length, ch: string; i < length; ++i) {
+            ch = value[i];
             if (start) {
                 if (ch === '\t') {
                     ++j;
@@ -214,8 +214,7 @@ export function sanitizeString(value: string) {
 export function replaceCharacterData(value: string, tab?: number, inline?: boolean) {
     let output = '';
     for (let i = 0, length = value.length, ch: string; i < length; ++i) {
-        ch = value[i];
-        switch (ch) {
+        switch (ch = value[i]) {
             case "'":
                 if (!inline) {
                     output += "\\'";
@@ -285,12 +284,12 @@ export function replaceCharacterData(value: string, tab?: number, inline?: boole
                 output += '&#8205;';
                 break;
             case '&':
-                if (value[i + 5] === ';' && value.substring(i + 1, i + 5) === 'nbsp') {
+                if (value[i + 5] === ';' && value.substr(i + 1, 4) === 'nbsp') {
                     output += '&#160;';
                     i += 5;
                     break;
                 }
-                else if (value.substring(i + 1, i + 4) === '#10' && !/\d/.test(value[i + 4])) {
+                else if (value.substr(i + 1, 3) === '#10' && !/\d/.test(value[i + 4])) {
                     output += '\\n';
                     i += value[i + 4] === ';' ? 4 : 3;
                     break;

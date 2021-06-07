@@ -26,6 +26,7 @@ interface UserResourceSettingsUI extends UserResourceSettings {
     showAttributes: boolean;
     insertSpaces: number;
     outputDirectory: string;
+    outputDocumentEditing: boolean;
     outputDocumentCSS: CssStyleAttr[];
     resolutionScreenWidth?: number;
     resolutionScreenHeight?: number;

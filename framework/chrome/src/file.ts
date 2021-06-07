@@ -829,14 +829,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(body: RequestData & FileCopyingOptions & FileArchivingOptions) {
-        const productionRelease = body.productionRelease;
+    public finalizeRequestBody(options: RequestData & FileCopyingOptions & FileArchivingOptions) {
+        const productionRelease = options.productionRelease;
         let watchElement: Undef<HTMLElement>;
-        if (!productionRelease && body.watch) {
+        if (!productionRelease && options.watch) {
             const socketMap: ObjectMap<string> = {};
             const hostname = new URL(this.hostname).hostname;
             const settings = this.application.userSettings as UserResourceSettings;
-            for (const { watch } of body.assets!) {
+            for (const { watch } of options.assets!) {
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
                     const { socketId, secure, handler = {} } = reload;
@@ -858,20 +858,20 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     textContent += socketMap[id];
                 }
                 textContent += '});';
-                if (!body.useOriginalHtmlPage) {
+                if (!options.useOriginalHtmlPage) {
                     watchElement = createElement('script', { parent: document.body, attributes: { textContent } });
                 }
                 else {
-                    const html = (body.assets as ChromeAsset[]).find(item => item.mimeType === '@text/html');
+                    const html = (options.assets as ChromeAsset[]).find(item => item.mimeType === '@text/html');
                     if (html) {
                         html.element!.textContent = `<script>${textContent}</script>`;
                     }
                 }
             }
         }
-        if (!body.useOriginalHtmlPage) {
+        if (!options.useOriginalHtmlPage) {
             let append: Undef<TagAppend>;
-            for (const item of body.assets as ChromeAsset[]) {
+            for (const item of options.assets as ChromeAsset[]) {
                 const element = item.element as Undef<XmlTagNode>;
                 if (element) {
                     switch (element.tagName) {
@@ -895,13 +895,13 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (watchElement) {
                 document.body.removeChild(watchElement);
             }
-            if (body.document) {
-                for (const name of body.document) {
+            if (options.document) {
+                for (const name of options.document) {
                     const attr = name + 'Id';
                     document.querySelectorAll(`[data-${name}-id]`).forEach((element: HTMLElement) => delete element.dataset[attr]);
                 }
             }
-            if (body.removeInlineStyles) {
+            if (options.removeInlineStyles) {
                 document.querySelectorAll(`[style]`).forEach(element => element.removeAttribute('style'));
             }
         }

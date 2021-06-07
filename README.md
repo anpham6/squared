@@ -230,6 +230,7 @@ squared.settings = {
     manifestThemeName: "AppTheme",
     manifestParentThemeName: "Theme.AppCompat.Light.NoActionBar",
     manifestActivityName: ".MainActivity",
+    outputDocumentEditing: true, // squared 3.1
     outputDocumentHandler: "android",
     outputDocumentCSS: [], // CSS properties to receive further processing at host server (e.g. "boxShadow")
     outputMainFileName: "activity_main.xml",

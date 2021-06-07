@@ -373,7 +373,7 @@ declare module "base" {
         copyFiles(pathname: string, options: FileCopyingOptions): FileActionResult;
         appendTo(target: string, options?: FileCopyingOptions): FileActionResult;
         appendFiles(filename: string, options: FileArchivingOptions): FileActionResult;
-        finalizeRequestBody(body: RequestData): void;
+        finalizeRequestBody(options: RequestData): void;
         getCopyQueryParameters(options: FileCopyingOptions): string;
         getArchiveQueryParameters(options: FileArchivingOptions): string;
         setEndpoint(name: string, value: string): void;

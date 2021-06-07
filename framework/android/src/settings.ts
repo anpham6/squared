@@ -63,6 +63,7 @@ const settings: UserResourceSettingsUI = {
     manifestThemeName: "AppTheme",
     manifestParentThemeName: "Theme.AppCompat.Light.NoActionBar",
     manifestActivityName: ".MainActivity",
+    outputDocumentEditing: true,
     outputDocumentHandler: "android",
     outputDocumentCSS: [],
     outputMainFileName: "activity_main.xml",
