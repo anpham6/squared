@@ -2112,8 +2112,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 iterateReverseArray(ancestors, (item: T) => customMap.push([item]));
                 customMap.push(result);
                 result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
+                if (reverse && result.length > 1) {
+                    result.reverse();
+                }
             }
-            return reverse && result.length > 1 ? result.reverse() : result;
+            return result;
         }
         return [];
     }
@@ -2298,7 +2301,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get linear() {
         if (!this._linear) {
-            const bounds = this.bounds;
+            const bounds = this._bounds || this.setBounds(false);
             if (bounds) {
                 if (this.styleElement) {
                     const { marginBottom, marginRight } = this;
@@ -2322,7 +2325,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get box() {
         if (!this._box) {
-            const bounds = this.bounds;
+            const bounds = this._bounds || this.setBounds(false);
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length) {
                     let { marginTop, marginLeft } = this;

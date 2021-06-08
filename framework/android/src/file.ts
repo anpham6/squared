@@ -117,15 +117,18 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resource!: Resource<T>;
 
     public async copyTo(pathname: string, options: FileCopyingOptions) {
-        return this.copying(pathname, { ...options, assets: await this.processAssets(options.assets!, options) });
+        const assets = await this.processAssets(options.assets!, options);
+        return this.copying(pathname, { ...options, assets });
     }
 
     public async appendTo(pathname: string, options: FileArchivingOptions) {
-        return this.archiving(pathname, { ...options, assets: await this.processAssets(options.assets!, options) });
+        const assets = await this.processAssets(options.assets!, options);
+        return this.archiving(pathname, { ...options, assets });
     }
 
     public async saveAs(filename: string, options: FileArchivingOptions) {
-        return this.archiving('', { ...options, assets: await this.processAssets(options.assets!, options), filename });
+        const assets = await this.processAssets(options.assets!, options);
+        return this.archiving('', { ...options, assets, filename });
     }
 
     public resourceAllToXml(stored = Resource.STORED[this.resourceId], options?: FileUniversalOptions) {

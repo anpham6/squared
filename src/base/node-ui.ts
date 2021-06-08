@@ -904,7 +904,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    public alignedVertically(siblings?: T[], cleared?: Null<Map<T, string>>, horizontal?: boolean) {
+    public alignedVertically(siblings?: T[], cleared?: Null<Map<T, string>>, horizontal?: boolean): number {
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
@@ -937,7 +937,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                         if (siblings.every(item => item.inlineDimension)) {
                             const parent = this.actualParent!;
-                            if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
+                            if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true }).length) {
                                 const length = siblings.length;
                                 if (parent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
                                     const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;

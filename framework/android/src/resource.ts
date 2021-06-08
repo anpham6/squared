@@ -167,7 +167,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public static addImage(resourceId: number, images: StringMap, prefix = '', imageFormat?: MIMEOrAll) {
         const mdpi = images.mdpi;
         if (mdpi) {
-            if (Object.keys(images).length === 1) {
+            const imageCount = Object.keys(images).length;
+            if (imageCount === 1) {
                 const asset = CACHE_IMAGE[mdpi];
                 if (asset) {
                     return asset;
@@ -178,7 +179,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const length = ext.length;
             if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                 const name = Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase();
-                return CACHE_IMAGE[mdpi] = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
+                const result = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
+                return imageCount === 1 ? CACHE_IMAGE[mdpi] = result : result;
             }
         }
         return '';

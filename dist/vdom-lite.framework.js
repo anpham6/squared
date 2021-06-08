@@ -1,4 +1,4 @@
-/* vdom-lite-framework 2.5.14
+/* vdom-lite-framework 2.5.15
    https://github.com/anpham6/squared */
 
 var vdom = (function () {
@@ -2940,8 +2940,11 @@ var vdom = (function () {
                     iterateReverseArray(ancestors, (item) => customMap.push([item]));
                     customMap.push(result);
                     result = this.querySelectorAll(value, customMap).filter(item => !ancestors.includes(item));
+                    if (reverse && result.length > 1) {
+                        result.reverse();
+                    }
                 }
-                return reverse && result.length > 1 ? result.reverse() : result;
+                return result;
             }
             return [];
         }
@@ -3094,7 +3097,7 @@ var vdom = (function () {
         }
         get linear() {
             if (!this._linear) {
-                const bounds = this.bounds;
+                const bounds = this._bounds || this.setBounds(false);
                 if (bounds) {
                     if (this.styleElement) {
                         const { marginBottom, marginRight } = this;
@@ -3117,7 +3120,7 @@ var vdom = (function () {
         }
         get box() {
             if (!this._box) {
-                const bounds = this.bounds;
+                const bounds = this._bounds || this.setBounds(false);
                 if (bounds) {
                     if (this.styleElement && this.naturalChildren.length) {
                         let { marginTop, marginLeft } = this;
