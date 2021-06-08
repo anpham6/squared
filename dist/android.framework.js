@@ -817,7 +817,8 @@ var android = (function () {
         static addImage(resourceId, images, prefix = '', imageFormat) {
             const mdpi = images.mdpi;
             if (mdpi) {
-                if (Object.keys(images).length === 1) {
+                const imageCount = Object.keys(images).length;
+                if (imageCount === 1) {
                     const asset = CACHE_IMAGE[mdpi];
                     if (asset) {
                         return asset;
@@ -828,7 +829,8 @@ var android = (function () {
                 const length = ext.length;
                 if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                     const name = Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase();
-                    return CACHE_IMAGE[mdpi] = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
+                    const result = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
+                    return imageCount === 1 ? CACHE_IMAGE[mdpi] = result : result;
                 }
             }
             return '';
@@ -8713,13 +8715,16 @@ var android = (function () {
     const getOutputDirectory = (value) => (value = replaceAll$2(value, '\\', '/')) + (lastItemOf$5(value) !== '/' ? '/' : '');
     class File extends squared.base.File {
         async copyTo(pathname, options) {
-            return this.copying(pathname, Object.assign(Object.assign({}, options), { assets: await this.processAssets(options.assets, options) }));
+            const assets = await this.processAssets(options.assets, options);
+            return this.copying(pathname, Object.assign(Object.assign({}, options), { assets }));
         }
         async appendTo(pathname, options) {
-            return this.archiving(pathname, Object.assign(Object.assign({}, options), { assets: await this.processAssets(options.assets, options) }));
+            const assets = await this.processAssets(options.assets, options);
+            return this.archiving(pathname, Object.assign(Object.assign({}, options), { assets }));
         }
         async saveAs(filename, options) {
-            return this.archiving('', Object.assign(Object.assign({}, options), { assets: await this.processAssets(options.assets, options), filename }));
+            const assets = await this.processAssets(options.assets, options);
+            return this.archiving('', Object.assign(Object.assign({}, options), { assets, filename }));
         }
         resourceAllToXml(stored = Resource.STORED[this.resourceId], options) {
             if (stored) {

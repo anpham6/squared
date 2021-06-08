@@ -1481,7 +1481,7 @@
     let DOCUMENT_FONTSIZE;
     const SELECTOR_GROUP = /^:(?:not|is|where)\(/i;
     const SPEC_GROUP = /:(?:is|where)/;
-    const SPEC_IS = /^:is\((.+)\)$/;
+    const SPEC_ISWHERE = /^:(is|where)\((.+)\)$/;
     const SPEC_NOT = /^:not\((.+)\)$/;
     updateDocumentFont();
     function calculateSpecificity(value) {
@@ -1564,6 +1564,20 @@
                 value[i] += other[i];
             }
         }
+    }
+    function mergeSelector(value) {
+        const result = [];
+        let match;
+        for (let seg of parseSelectorText(value)) {
+            if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
+                if (match[1][0] === 'w') {
+                    continue;
+                }
+                seg = mergeSelector(match[2]);
+            }
+            result.push(seg);
+        }
+        return result.join(', ');
     }
     const fromFontNamedValue = (index, fixedWidth) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
     const CSS_PROPERTIES = {
@@ -2936,87 +2950,91 @@
         return true;
     }
     function getSpecificity(value) {
+        if (value.indexOf('(') === -1) {
+            return calculateSpecificity(value);
+        }
+        const items = splitEnclosing(value, SPEC_GROUP);
         let result;
-        splitEnclosing(value, SPEC_GROUP).forEach(seg => {
+        for (let i = 0, length = items.length, match; i < length; ++i) {
+            const seg = items[i];
             let group;
-            if (seg[0] === ':') {
-                if (startsWith(seg, ':where(')) {
-                    return;
+            if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
+                if (match[1][0] === 'w') {
+                    continue;
                 }
-                const match = SPEC_IS.exec(seg);
-                if (match) {
-                    group = getSelectorValue(match[1]);
-                }
+                group = getSelectorValue(mergeSelector(match[2]));
             }
-            group || (group = calculateSpecificity(seg));
+            else {
+                group = calculateSpecificity(seg);
+            }
             if (!result) {
                 result = group;
             }
             else {
                 addSpecificity(result, group);
             }
-        });
+        }
         return result || [0, 0, 0];
     }
     function parseSelectorText(value) {
-        if ((value = value.trim()).indexOf(',') !== -1) {
-            const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
-            let timestamp, removed;
-            for (let i = 0; i < segments.length; ++i) {
-                const seg = segments[i];
-                if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
-                    (removed || (removed = [])).push(seg);
-                    segments[i] = (timestamp || (timestamp = Date.now())) + '-' + (removed.length - 1);
+        if ((value = value.trim()).indexOf(',') === -1) {
+            return [value];
+        }
+        const items = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
+        let timestamp, removed;
+        for (let i = 0; i < items.length; ++i) {
+            const seg = items[i];
+            if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
+                (removed || (removed = [])).push(seg);
+                items[i] = (timestamp || (timestamp = Date.now())) + '-' + (removed.length - 1);
+            }
+        }
+        if (removed) {
+            value = items.join('');
+        }
+        CSS.SELECTOR_ATTR_G.lastIndex = 0;
+        let result, normalized = value, found, match;
+        while (match = CSS.SELECTOR_ATTR_G.exec(normalized)) {
+            if (match[0].indexOf(',') !== -1) {
+                const index = match.index;
+                const length = match[0].length;
+                normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
+                found = true;
+            }
+        }
+        if (found) {
+            result = [];
+            let position = 0;
+            do {
+                const index = normalized.indexOf(',', position);
+                if (index !== -1) {
+                    result.push(value.substring(position, index));
+                    position = index + 1;
                 }
-            }
-            if (removed) {
-                value = segments.join('');
-            }
-            CSS.SELECTOR_ATTR_G.lastIndex = 0;
-            let result, normalized = value, found, match;
-            while (match = CSS.SELECTOR_ATTR_G.exec(normalized)) {
-                if (match[0].indexOf(',') !== -1) {
-                    const index = match.index;
-                    const length = match[0].length;
-                    normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
-                    found = true;
+                else {
+                    result.push(value.substring(position));
+                    break;
                 }
-            }
-            if (found) {
-                result = [];
-                let position = 0;
-                do {
-                    const index = normalized.indexOf(',', position);
-                    if (index !== -1) {
-                        result.push(value.substring(position, index));
-                        position = index + 1;
-                    }
-                    else {
-                        result.push(value.substring(position));
+            } while (true);
+        }
+        else {
+            result = value.split(/\s*,\s*/);
+        }
+        if (removed) {
+            for (let i = 0, k = 0; i < removed.length; ++i) {
+                const part = removed[i];
+                const placeholder = timestamp + '-' + i;
+                for (let j = k; j < result.length; ++j) {
+                    const seg = result[j];
+                    result[j] = replaceAll(seg, placeholder, part, 1);
+                    if (seg !== result[j]) {
+                        k = j;
                         break;
                     }
-                } while (true);
-            }
-            else {
-                result = value.split(/\s*,\s*/);
-            }
-            if (removed) {
-                for (let i = 0, k = 0; i < removed.length; ++i) {
-                    const part = removed[i];
-                    const placeholder = timestamp + '-' + i;
-                    for (let j = k; j < result.length; ++j) {
-                        const seg = result[j];
-                        result[j] = replaceAll(seg, placeholder, part, 1);
-                        if (seg !== result[j]) {
-                            k = j;
-                            break;
-                        }
-                    }
                 }
             }
-            return result;
         }
-        return [value];
+        return result;
     }
     function insertStyleSheetRule(value, shadowRoot) {
         if (isUserAgent(1 /* CHROME */ | 8 /* EDGE */, 73)) {

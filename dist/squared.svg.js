@@ -3747,7 +3747,7 @@ this.squared.svg = (function (exports) {
     const convertToString = (value) => Array.isArray(value) ? value.map(pt => pt.x + ',' + pt.y).join(' ') : value !== undefined ? value.toString() : '';
     const isKeyTimeFormat = (transforming, keyTimeMode) => ((transforming ? 16 /* KEYTIME_TRANSFORM */ : 2 /* KEYTIME_ANIMATE */) & keyTimeMode) > 0;
     const isFromToFormat = (transforming, keyTimeMode) => ((transforming ? 8 /* FROMTO_TRANSFORM */ : 1 /* FROMTO_ANIMATE */) & keyTimeMode) > 0;
-    const playableAnimation = (item) => item.playable || item.animationElement && item.duration !== -1;
+    const playableAnimation = (item) => (item.playable || item.animationElement && item.duration !== -1) && !item.synchronized;
     const cloneKeyTimes = (item) => { var _a; return [item.keyTimes.slice(0), item.values.slice(0), ((_a = item.keySplines) === null || _a === void 0 ? void 0 : _a.slice(0)) || null]; };
     const getStartIteration = (time, delay, duration) => Math.floor(Math.max(0, time - delay) / duration);
     var SvgSynchronize$MX = (Base) => {
@@ -3803,7 +3803,7 @@ this.squared.svg = (function (exports) {
                 const animations = this.animations;
                 for (let i = 0, length = animations.length; i < length; ++i) {
                     const item = animations[i];
-                    if (SvgBuild.isAnimateTransform(item) && item.duration > 0) {
+                    if (SvgBuild.isAnimateTransform(item) && !item.synchronized && item.duration > 0) {
                         result.push(item);
                         if (options && SvgBuild.asAnimateMotion(item)) {
                             const framesPerSecond = options.framesPerSecond;

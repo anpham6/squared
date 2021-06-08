@@ -2149,14 +2149,15 @@ this.squared.base = (function (exports) {
         'wordSpacing'
     ];
     const [BORDER_TOP$1, BORDER_RIGHT$1, BORDER_BOTTOM$1, BORDER_LEFT$1, BORDER_OUTLINE$1] = CSS_BORDER_SET$3;
-    const REGEXP_EM = /\dem$/i;
     const REGEXP_NOT = /^:not\((.+)\)$/i;
-    const REGEXP_ENCLOSING = /^:(not|is|where)\((.+)\)$/i;
-    const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
+    const REGEXP_ISGROUP = /^:(not|is|where)\((.+)\)$/i;
+    const REGEXP_ISWITHIN = /:(not|is|where)\(/i;
+    const REGEXP_ISEXPAND = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
     const REGEXP_NOTINDEX = /:not-(x+)/;
     const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
     const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
     const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
+    const REGEXP_EM = /\dem$/;
     function setStyleCache(element, attr, value, style, sessionId) {
         const current = style[attr];
         if (value !== current) {
@@ -2339,11 +2340,11 @@ this.squared.base = (function (exports) {
         }
         return true;
     }
-    function validateSelector(selector, child) {
-        if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
+    function validateSelector(node, selector, child) {
+        if (selector.tagName && selector.tagName !== node.tagName.toUpperCase() || selector.id && selector.id !== node.elementId) {
             return false;
         }
-        const element = this.element;
+        const element = node.element;
         const { classList, attrList, pseudoList, notList } = selector;
         if (classList) {
             const classes = element.classList;
@@ -2354,7 +2355,7 @@ this.squared.base = (function (exports) {
             }
         }
         if (attrList) {
-            const attributes = this.attributes;
+            const attributes = node.attributes;
             for (let i = 0, length = attrList.length; i < length; ++i) {
                 const attr = attrList[i];
                 let value;
@@ -2395,7 +2396,7 @@ this.squared.base = (function (exports) {
                             }
                             break;
                         case '*':
-                            if (!value.includes(other)) {
+                            if (value.indexOf(other) === -1) {
                                 return false;
                             }
                             break;
@@ -2417,18 +2418,18 @@ this.squared.base = (function (exports) {
             }
         }
         if (pseudoList) {
-            const { actualParent: parent, tagName } = this;
+            const { actualParent: parent, tagName } = node;
             const scoped = [];
             for (let i = 0, length = pseudoList.length; i < length; ++i) {
                 const pseudo = pseudoList[i];
                 switch (pseudo) {
                     case ':first-child':
-                        if (this !== parent.firstElementChild) {
+                        if (node !== parent.firstElementChild) {
                             return false;
                         }
                         break;
                     case ':last-child':
-                        if (this !== parent.lastElementChild) {
+                        if (node !== parent.lastElementChild) {
                             return false;
                         }
                         break;
@@ -2451,7 +2452,7 @@ this.squared.base = (function (exports) {
                         for (let j = 0, q = children.length; j < q; ++j) {
                             const item = children[j];
                             if (item.tagName === tagName) {
-                                if (item !== this) {
+                                if (item !== node) {
                                     return false;
                                 }
                                 break;
@@ -2467,17 +2468,17 @@ this.squared.base = (function (exports) {
                         break;
                     }
                     case ':checked':
-                        if (!this.checked) {
+                        if (!node.checked) {
                             return false;
                         }
                         break;
                     case ':disabled':
-                        if (!this.inputElement && this.tagName !== 'OPTION' || !element.disabled) {
+                        if (!node.inputElement && node.tagName !== 'OPTION' || !element.disabled) {
                             return false;
                         }
                         break;
                     case ':enabled':
-                        if (!this.inputElement && this.tagName !== 'OPTION' || element.disabled) {
+                        if (!node.inputElement && node.tagName !== 'OPTION' || element.disabled) {
                             return false;
                         }
                         break;
@@ -2492,12 +2493,12 @@ this.squared.base = (function (exports) {
                         }
                         break;
                     case ':required':
-                        if (!this.inputElement || this.tagName === 'BUTTON' || !element.required) {
+                        if (!node.inputElement || node.tagName === 'BUTTON' || !element.required) {
                             return false;
                         }
                         break;
                     case ':optional':
-                        if (!this.inputElement || this.tagName === 'BUTTON' || element.required) {
+                        if (!node.inputElement || node.tagName === 'BUTTON' || element.required) {
                             return false;
                         }
                         break;
@@ -2548,7 +2549,7 @@ this.squared.base = (function (exports) {
                         break;
                     case ':target': {
                         const hash = location.hash;
-                        if (!hash || !(hash === '#' + this.elementId || tagName === 'A' && hash === '#' + this.toElementString('name'))) {
+                        if (!hash || !(hash === '#' + node.elementId || tagName === 'A' && hash === '#' + node.toElementString('name'))) {
                             return false;
                         }
                         break;
@@ -2586,7 +2587,7 @@ this.squared.base = (function (exports) {
                         break;
                     case ':focus-within': {
                         const activeElement = document.activeElement;
-                        if (element !== activeElement && !this.querySelectorAll('*').find(item => item.element === activeElement)) {
+                        if (element !== activeElement && !node.querySelectorAll('*').find(item => item.element === activeElement)) {
                             return false;
                         }
                         break;
@@ -2612,7 +2613,7 @@ this.squared.base = (function (exports) {
                         let match = REGEXP_QUERYNTH.exec(pseudo);
                         if (match) {
                             const children = match[1] ? parent.naturalElements.slice(0).reverse() : parent.naturalElements;
-                            const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item) => item.tagName === tagName).indexOf(this) + 1;
+                            const index = match[2] === 'child' ? children.indexOf(node) + 1 : children.filter((item) => item.tagName === tagName).indexOf(node) + 1;
                             if (index) {
                                 const placement = match[3].trim();
                                 switch (placement) {
@@ -2678,7 +2679,7 @@ this.squared.base = (function (exports) {
                             }
                         }
                         else if (match = REGEXP_DIR.exec(pseudo)) {
-                            switch (this.dir) {
+                            switch (node.dir) {
                                 case 'rtl':
                                     if (match[1] === 'ltr') {
                                         return false;
@@ -2715,7 +2716,7 @@ this.squared.base = (function (exports) {
         if (notList) {
             for (let i = 0, length = notList.length; i < length; ++i) {
                 const not = notList[i];
-                let notData, match;
+                let match, notData;
                 switch (not[0]) {
                     case ':':
                         if ((match = CSS$1.SELECTOR_PSEUDO_CLASS.exec(not)) && match[0] === not) {
@@ -2754,29 +2755,29 @@ this.squared.base = (function (exports) {
                 }
                 if (notData) {
                     notData.fromNot = true;
-                    if (validateSelector.call(this, notData)) {
+                    if (validateSelector(node, notData)) {
                         return false;
                     }
                 }
-                else if ((child ? this : this.actualParent).querySelectorAll(':scope > ' + not).includes(child || this)) {
+                else if ((child ? node : node.actualParent).querySelectorAll(':scope > ' + not).includes(child || node)) {
                     return false;
                 }
             }
         }
         return true;
     }
-    function ascendSelector(selectors, index, nodes, offset, checked) {
+    function ascendSelector(node, selectors, index, nodes, offset, checked) {
         const selector = selectors[index];
         const selectorAdjacent = index > 0 && selectors[--index];
         const adjacent = selector.adjacent;
         const next = [];
         for (let i = 0, length = nodes.length; i < length; ++i) {
             const child = nodes[i];
-            if (checked || selector.all || validateSelector.call(child, selector)) {
+            if (checked || selector.all || validateSelector(child, selector)) {
                 let parent = child.actualParent;
                 if (adjacent) {
                     if (adjacent === '>') {
-                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
+                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateSelector(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === node) {
                             next.push(parent);
                         }
                     }
@@ -2785,7 +2786,7 @@ this.squared.base = (function (exports) {
                         switch (adjacent) {
                             case '+': {
                                 const j = children.indexOf(child) - 1;
-                                if (j >= 0 && (selectorAdjacent.all || validateSelector.call(children[j], selectorAdjacent))) {
+                                if (j >= 0 && (selectorAdjacent.all || validateSelector(children[j], selectorAdjacent))) {
                                     next.push(children[j]);
                                 }
                                 break;
@@ -2796,7 +2797,7 @@ this.squared.base = (function (exports) {
                                     if (sibling === child) {
                                         break;
                                     }
-                                    else if (selectorAdjacent.all || validateSelector.call(sibling, selectorAdjacent)) {
+                                    else if (selectorAdjacent.all || validateSelector(sibling, selectorAdjacent)) {
                                         next.push(sibling);
                                     }
                                 }
@@ -2805,8 +2806,8 @@ this.squared.base = (function (exports) {
                     }
                 }
                 else if (selectorAdjacent) {
-                    while (parent && parent.depth - this.depth >= index + offset) {
-                        if (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent)) {
+                    while (parent && parent.depth - node.depth >= index + offset) {
+                        if (selectorAdjacent.all || validateSelector(parent, selectorAdjacent)) {
                             next.push(parent);
                         }
                         parent = parent.actualParent;
@@ -2817,7 +2818,7 @@ this.squared.base = (function (exports) {
                 }
             }
         }
-        return next.length > 0 && (index === 0 ? true : ascendSelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
+        return next.length > 0 && (index === 0 ? true : ascendSelector(node, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
     }
     function getMinMax(node, min, attr, options) {
         let self, last, wrapperOf, subAttr, initialValue, initial;
@@ -3726,7 +3727,7 @@ this.squared.base = (function (exports) {
             const result = [];
             if (queryMap) {
                 const queries = [];
-                let notIndex;
+                let unsupported, notIndex;
                 const addNot = (part) => {
                     (notIndex || (notIndex = [])).push(part);
                     return ':not-' + 'x'.repeat(notIndex.length);
@@ -3744,12 +3745,29 @@ this.squared.base = (function (exports) {
                     }, '');
                 };
                 for (const query of parseSelectorText(value)) {
-                    let selector = '', expand;
-                    invalid: {
-                        let match;
-                        for (let seg of splitEnclosing$3(query, CSS$1.SELECTOR_ENCLOSING_G)) {
-                            if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
-                                const condition = match[2].trim();
+                    native: {
+                        const items = splitEnclosing$3(query, CSS$1.SELECTOR_ENCLOSING_G);
+                        let selector = '', expand;
+                        for (let i = 0, length = items.length, match; i < length; ++i) {
+                            let seg = items[i];
+                            if (seg[0] === ':' && (match = REGEXP_ISGROUP.exec(seg))) {
+                                const condition = (function expandCondition(input) {
+                                    const output = [];
+                                    const other = parseSelectorText(input);
+                                    let within;
+                                    for (let is of other) {
+                                        if (is[0] === ':' && (within = REGEXP_ISGROUP.exec(is))) {
+                                            switch (within[1].toLowerCase()) {
+                                                case 'is':
+                                                case 'where':
+                                                    is = expandCondition(within[2].trim());
+                                                    break;
+                                            }
+                                        }
+                                        output.push(is);
+                                    }
+                                    return output.join(', ');
+                                })(match[2].trim());
                                 switch (match[1].toLowerCase()) {
                                     case 'not':
                                         seg = parseNot(condition);
@@ -3757,10 +3775,10 @@ this.squared.base = (function (exports) {
                                     case 'is':
                                     case 'where':
                                         if (selector && !isSpace(lastItemOf$1(selector))) {
-                                            break invalid;
+                                            break native;
                                         }
                                         if (condition.indexOf(',') !== -1) {
-                                            seg = parseSelectorText(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
+                                            seg = parseSelectorText(condition).reduce((a, b) => a + `{{${checkNot(b)}}}`, '@');
                                             expand = true;
                                         }
                                         else {
@@ -3768,36 +3786,69 @@ this.squared.base = (function (exports) {
                                         }
                                         break;
                                 }
+                                if (REGEXP_ISWITHIN.test(seg)) {
+                                    break native;
+                                }
                             }
                             selector += seg;
                         }
-                    }
-                    if (expand) {
-                        (function expandQuery(segments) {
-                            for (let i = 0, length = segments.length; i < length; ++i) {
-                                const match = REGEXP_ISWHERE.exec(segments[i]);
-                                if (match) {
-                                    const pending = [];
-                                    const pattern = /\{\{(.+?)\}\}/g;
-                                    let subMatch;
-                                    while (subMatch = pattern.exec(match[2])) {
-                                        pending.push(match[1] + subMatch[1] + match[3]);
+                        if (expand) {
+                            (function expandQuery(segments) {
+                                for (let i = 0, q = segments.length; i < q; ++i) {
+                                    const match = REGEXP_ISEXPAND.exec(segments[i]);
+                                    if (match) {
+                                        const pending = [];
+                                        const pattern = /\{\{(.+?)\}\}/g;
+                                        let subMatch;
+                                        while (subMatch = pattern.exec(match[2])) {
+                                            pending.push(match[1] + subMatch[1] + match[3]);
+                                        }
+                                        expandQuery(pending);
                                     }
-                                    expandQuery(pending);
+                                    else {
+                                        queries.push(segments[i]);
+                                    }
                                 }
-                                else {
-                                    queries.push(segments[i]);
-                                }
-                            }
-                        })([selector]);
+                            })([selector]);
+                        }
+                        else {
+                            queries.push(selector);
+                        }
+                        continue;
                     }
-                    else {
-                        queries.push(selector);
-                    }
+                    (unsupported || (unsupported = [])).push(queries.length);
+                    queries.push(query);
                 }
                 for (let i = 0, length = queries.length; i < length; ++i) {
                     invalid: {
                         const query = queries[i];
+                        if (unsupported && unsupported.includes(i)) {
+                            try {
+                                const items = Array.from(this._element.querySelectorAll(query));
+                                let itemCount = items.length;
+                                if (itemCount) {
+                                    const all = result.length === 0;
+                                    for (let j = 0, r = queryMap.length; j < r; ++j) {
+                                        const column = queryMap[j];
+                                        for (let k = 0, s = column.length; k < s; ++k) {
+                                            const node = column[k];
+                                            if (items.includes(node.element)) {
+                                                if (all || !result.includes(node)) {
+                                                    result.push(node);
+                                                }
+                                                if (--itemCount === 0) {
+                                                    j = r;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (_a) {
+                            }
+                            continue;
+                        }
                         const selectors = [];
                         let q = 0, offset = 0, start;
                         if (query === '*') {
@@ -3967,10 +4018,10 @@ this.squared.base = (function (exports) {
                             }
                             const all = result.length === 0;
                             for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
-                                const items = queryMap[j];
-                                for (let k = 0, s = items.length; k < s; ++k) {
-                                    const node = items[k];
-                                    if ((all || !result.includes(node)) && ascendSelector.call(this, selectors, q - 1, [node], offset)) {
+                                const column = queryMap[j];
+                                for (let k = 0, s = column.length; k < s; ++k) {
+                                    const node = column[k];
+                                    if ((all || !result.includes(node)) && ascendSelector(this, selectors, q - 1, [node], offset)) {
                                         result.push(node);
                                     }
                                 }
@@ -4061,8 +4112,11 @@ this.squared.base = (function (exports) {
                     iterateReverseArray$1(ancestors, (item) => customMap.push([item]));
                     customMap.push(result);
                     result = this.querySelectorAll(value, true, customMap).filter(item => !ancestors.includes(item));
+                    if (reverse && result.length > 1) {
+                        result.reverse();
+                    }
                 }
-                return reverse && result.length > 1 ? result.reverse() : result;
+                return result;
             }
             return [];
         }
@@ -8208,7 +8262,7 @@ this.squared.base = (function (exports) {
                         else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                             if (siblings.every(item => item.inlineDimension)) {
                                 const parent = this.actualParent;
-                                if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item) => item.layoutElement, startSelf: true })) {
+                                if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item) => item.layoutElement, startSelf: true }).length) {
                                     const length = siblings.length;
                                     if (parent.naturalChildren.filter((item) => item.visible && item.pageFlow).length === length + 1) {
                                         const getLayoutWidth = (node) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
