@@ -911,7 +911,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return options.watch && !options.productionRelease ? '&watch=1' : '';
     }
 
-    protected getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {
+    private getRawAssets(tagName: ResourceAssetTagName, options?: FileActionOptions) {
         let assetMap: Undef<ElementAssetMap>,
             preserveCrossOrigin: Undef<boolean>,
             saveAsImage: Undef<SaveAsOptions>;

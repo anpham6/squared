@@ -2177,7 +2177,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.api = this._targetAPI[sessionId]!;
     }
 
-    protected processRelativeHorizontal(node: T) {
+    private processRelativeHorizontal(node: T) {
         let autoPosition: Undef<boolean>;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: Undef<T>;
@@ -2982,7 +2982,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    protected processConstraintHorizontal(node: T, children: T[]) {
+    private processConstraintHorizontal(node: T, children: T[]) {
         const reverse = node.hasAlign(NODE_ALIGNMENT.RIGHT);
         const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
         let bias = 0,
@@ -3257,7 +3257,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.horizontalRows = [children];
     }
 
-    protected processConstraintVertical(node: T, children: T[]) {
+    private processConstraintVertical(node: T, children: T[]) {
         const bias = node.css('textAlign') === 'center' ? 0.5 : 0;
         for (let i = 0, length = children.length; i < length; ++i) {
             const chain = children[i];
@@ -3286,7 +3286,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    protected processConstraintChain(node: T, children: T[]) {
+    private processConstraintChain(node: T, children: T[]) {
         const floating = node.hasAlign(NODE_ALIGNMENT.FLOAT);
         const clearMap = node.innerMostWrapped.floatContainer || floating ? this.application.clearMap : undefined;
         const horizontalRows = NodeUI.partitionRows(children, clearMap);
@@ -3482,7 +3482,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    protected applyGuideline(axis: string, options: GuidelineOptions<T>) {
+    private applyGuideline(axis: string, options: GuidelineOptions<T>) {
         const node = options.target;
         if (node.constraint[axis] || options.orientation && axis !== options.orientation) {
             return;
@@ -3782,7 +3782,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    protected setPositionAbsolute(target: T, parent: T) {
+    private setPositionAbsolute(target: T, parent: T) {
         const constraint = target.constraint;
         if (target.outerWrapper === parent) {
             const autoMargin = target.autoMargin;
@@ -3813,7 +3813,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         target.setConstraintDimension(1);
     }
 
-    protected createLayoutGroup(layout: LayoutUI<T>) {
+    private createLayoutGroup(layout: LayoutUI<T>) {
         return this.createNodeGroup(layout.node, layout.children, layout.parent);
     }
 

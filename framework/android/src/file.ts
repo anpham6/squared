@@ -300,7 +300,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     const [fontFamily, fontStyle, fontWeight] = attr.split(';');
                     const fontName = filename + (fontStyle === 'normal' ? fontWeight === '400' ? '_normal' : '_' + font[attr] : '_' + fontStyle + (fontWeight !== '400' ? font[attr] : ''));
                     itemArray.push({ font: `@font/${fontName}`, fontStyle, fontWeight });
-                    if (options?.updateXmlOnly) {
+                    if (options && options.updateXmlOnly) {
                         continue;
                     }
                     const fonts = resource.getFonts(resourceId, fontFamily, fontStyle, fontWeight);
@@ -578,7 +578,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
     }
 
-    protected async processAssets(assets: FileAsset[], options: FileUniversalOptions) {
+    private async processAssets(assets: FileAsset[], options: FileUniversalOptions) {
         const { userSettings, resource, resourceId } = this;
         const documentHandler = userSettings.outputDocumentHandler;
         checkLayoutFiles(assets, userSettings.outputMainFileName, documentHandler);
@@ -592,7 +592,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 ...getFileAssets(outputDirectory, this.resourceFontToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceColorToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceDimenToXml(), documentHandler),
-                ...getFileAssets(outputDirectory, this.resourceStyleToXml(null, themeOptions), documentHandler),
+                ...getFileAssets(outputDirectory, this.resourceStyleToXml(undefined, themeOptions), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceDrawableToXml(), documentHandler),
                 ...getFileAssets(outputDirectory, this.resourceAnimToXml(), documentHandler)
             );
@@ -685,7 +685,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return assets;
     }
 
-    protected getOutputDirectory(value: string, options?: FileUniversalOptions) {
+    private getOutputDirectory(value: string, options?: FileUniversalOptions) {
         value = replaceAll(value, '\\', '/');
         if (options && options.mainParentDir) {
             value = appendSeparator(options.mainParentDir, options.mainSrcDir ||= splitPairEnd(value, '/'));
