@@ -3026,13 +3026,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                             else {
                                                 parent.setLayoutHeight('match_parent', parent.inlineWidth);
                                             }
-                                            parent = parent.outerWrapper as T;
                                         }
                                         else {
                                             break;
                                         }
                                     }
-                                    while (parent);
+                                    while (parent = parent.outerWrapper as T);
                                 }
                             }
                             break;

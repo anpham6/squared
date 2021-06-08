@@ -151,9 +151,10 @@ function getOpenCellIndex(iteration: number, length: number, available: Undef<nu
     return 0;
 }
 
-function getOpenRowIndex(cells: number[][]) {
+function getOpenRowIndex(cells: Undef<number[]>[]) {
     for (let i = 0, length = cells.length; i < length; ++i) {
-        if (cells[i].some(value => value === 0)) {
+        const cell = cells[i];
+        if (cell && cell.some(value => value === 0)) {
             return i;
         }
     }
@@ -284,7 +285,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const mainData = createDataAttribute(node);
         const { column, dense, row, rowDirection: horizontal } = mainData;
         const rowData: Undef<T[]>[][] = [];
-        const openCells: number[][] = [];
+        const openCells: Undef<number[]>[] = [];
         const layout: GridLayout[] = [];
         const gridTemplates = [node.valueOf('gridTemplateRows'), node.valueOf('gridTemplateColumns'), node.css('gridAutoRows'), node.css('gridAutoColumns')];
         let autoWidth: Undef<boolean>,
@@ -977,7 +978,7 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (!dense) {
                     const cellIndex = horizontal ? rowStart : columnStart;
                     if (cellIndex) {
-                        const cells = openCells[cellIndex - 1];
+                        const cells = openCells[cellIndex - 1] ||= [];
                         for (let i = 0; i < ITERATION; ++i) {
                             cells[i] = 1;
                         }

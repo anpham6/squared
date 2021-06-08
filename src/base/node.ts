@@ -36,7 +36,7 @@ const [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT, BORDER_OUTLINE] = C
 
 const REGEXP_EM = /\dem$/;
 
-function setStyleCache(sessionId: string, style: CSSStyleDeclaration, element: HTMLElement, attr: CssStyleAttr, value: string) {
+function setStyleCache(sessionId: string, style: CSSStyleDeclaration, element: HTMLElement, attr: CssStyleAttr, value: string): number {
     const current = style[attr];
     if (value !== current) {
         const restore = element.style[attr];
@@ -343,11 +343,11 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     constructor(
         public readonly id: number,
         public readonly sessionId = '0',
-        element: Null<Element> = null,
+        element?: Null<Element>,
         children?: T[])
     {
         super(children);
-        this._element = element;
+        this._element = element || null;
         if (element && sessionId !== '0') {
             this.syncWith(sessionId);
             setElementCache(element, 'node', this, sessionId);
@@ -2094,8 +2094,17 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 if (backgroundImage) {
                     splitSome(this.css('backgroundRepeat'), value => {
                         const [repeatX, repeatY] = splitPair(value, ' ');
-                        backgroundRepeatX ||= repeatX === 'repeat' || repeatX === 'repeat-x';
-                        backgroundRepeatY ||= repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
+                        if (repeatX === 'repeat') {
+                            backgroundRepeatX = true;
+                            backgroundRepeatY = true;
+                            return true;
+                        }
+                        if (repeatX === 'repeat-x') {
+                            backgroundRepeatX = true;
+                        }
+                        if (repeatX === 'repeat-y' || repeatY === 'repeat') {
+                            backgroundRepeatY = true;
+                        }
                     });
                 }
                 result = {

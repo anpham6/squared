@@ -188,8 +188,8 @@ interface ResourceStoredMap extends ResourceMap {
 
 interface FontFaceData {
     fontFamily: string;
+    fontStyle: string;
     fontWeight: number;
-    fontStyle: FontStyle;
     mimeType: string;
     srcFormat: string;
     srcUrl?: string;

@@ -828,7 +828,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         else {
                             let current = node;
-                            while (true) {
+                            do {
                                 const siblingsLeading = current.siblingsLeading;
                                 if (siblingsLeading.length && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                                     const previousSibling = siblingsLeading[0] as T;
@@ -842,6 +842,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 break;
                             }
+                            while (true);
                         }
                     }
                 }

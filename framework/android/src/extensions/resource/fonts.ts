@@ -8,6 +8,7 @@ import { concatString } from '../../lib/util';
 
 type StyleList<T> = ObjectMap<T[]>;
 type AttributeMap<T> = ObjectMap<T[]>;
+type FontStyle = "normal" | "italic";
 
 interface StyleData<T> extends StyleAttribute {
     nodes: T[];
@@ -112,8 +113,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const convertPixels = this.application.userSettings.convertPixels;
         const { resourceId, cache } = this.application.getProcessing(sessionId)!;
         const { fonts, arrays, styles } = Resource.STORED[resourceId]!;
-        const nameMap: ObjectMapSafe<T[]> = {};
-        const textMap: ObjectMapSafe<T[]> = {};
+        const nameMap: ObjectMap<T[]> = {};
+        const textMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<Undef<StyleList<T>>[]> = {};
         const fontItems: T[] = [];
         cache.each(node => {
@@ -123,7 +124,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             }
         });
         for (const tag in nameMap) {
-            const data = nameMap[tag];
+            const data = nameMap[tag]!;
             const sorted: Undef<StyleList<T>>[] = [{}, {}];
             const addFontItem = (node: T, index: number, attr: string, value: string) => {
                 if (value) {
@@ -141,7 +142,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     closest: Undef<boolean>;
                 const finalizeFont = (actualWeight: number) => {
                     if (fontStyle === 'normal' || startsWith(fontStyle, 'oblique')) {
-                        fontStyle = '' as FontStyle;
+                        fontStyle = '';
                     }
                     if (actualWeight) {
                         fontWeight = actualWeight.toString();
@@ -189,7 +190,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         if (foundStyle) {
                             const styleData = foundStyle.fonts[foundName]!;
-                            const font = styleData[fontStyle] || styleData.normal!;
+                            const font = styleData[fontStyle as FontStyle] || styleData.normal!;
                             if (!font.includes(fontWeight)) {
                                 actualWeight = +fontWeight;
                                 fontWeight = '';
@@ -568,7 +569,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const attr in textMap) {
             const [fontFamily, fontSize, fontWeight, fontStyle, fontColor] = attr.split(';');
-            const nodes = textMap[attr];
+            const nodes = textMap[attr]!;
             let tagName = nodes[0].tagName;
             if (tagName[0] === '#') {
                 tagName = '';

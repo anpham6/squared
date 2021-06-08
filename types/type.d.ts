@@ -23,5 +23,4 @@ type PlainObject = Record<string | number | symbol, unknown>;
 type StringMap = Record<string, Undef<string>>;
 
 type ObjectMap<T> = Record<string, Undef<T>>;
-type ObjectMapSafe<T> = Record<string, T>;
 type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;

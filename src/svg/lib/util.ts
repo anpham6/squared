@@ -438,7 +438,7 @@ export const TRANSFORM = {
                         const scale = __TRANSFORM.SCALE.exec(transform);
                         if (scale) {
                             const x = isY ? 1 : +scale[2];
-                            const y = isX ? 1 : isY ? +scale[2] : !isX && scale[3] ? +scale[3] : x;
+                            const y = isX ? 1 : isY ? +scale[2] : scale[3] ? +scale[3] : x;
                             result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, y), 0, !isY, !isX));
                         }
                     }
@@ -778,18 +778,24 @@ export function truncateString(value: string, precision = 3) {
 }
 
 export function getNearestViewBox(element: SVGElement) {
-    let current = element.parentElement;
+    let current = element.parentElement,
+        result: Null<DOMRect> = null;
     while (current) {
         if (SVG.svg(current) || SVG.symbol(current)) {
             const viewBox = current.viewBox;
             if (viewBox) {
                 const baseVal = viewBox.baseVal;
-                return baseVal && baseVal.width && baseVal.height ? baseVal : getDOMRect(current);
+                if (baseVal && baseVal.width && baseVal.height) {
+                    return baseVal;
+                }
+                else if (!result && SVG.svg(current)) {
+                    result = getDOMRect(current);
+                }
             }
         }
         current = current.parentElement;
     }
-    return null;
+    return result;
 }
 
 export function getRootOffset(element: SVGGraphicsElement, rootElement: Element) {

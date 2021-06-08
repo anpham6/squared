@@ -1655,7 +1655,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     content += match[1];
                                 }
                             }
-                            if (!isString(content)) {
+                            if (!content.trim()) {
                                 const checkDimension = (after?: boolean) => {
                                     switch (styleMap!.display) {
                                         case 'inline':

@@ -6,7 +6,7 @@ interface BorderAttribute {
 
 interface FontAttribute {
     fontFamily: string;
-    fontStyle: FontStyle;
+    fontStyle: string;
     fontSize: number;
     fontWeight: string;
     color: Null<ColorData>;

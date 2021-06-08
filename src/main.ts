@@ -132,7 +132,7 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
             incomplete = true;
         }
     }
-    return !incomplete ? result : result.filter(item => item);
+    return !incomplete ? result : result.filter((item: Undef<Node>) => item);
 }
 
 async function findElementAsync(element: HTMLElement, cache?: boolean) {
@@ -159,7 +159,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
             incomplete = true;
         }
     }
-    return !incomplete ? result : result.filter(item => item);
+    return !incomplete ? result : result.filter((item: Undef<Node>) => item);
 }
 
 const errorReject = (type: 1 | 2 | 3) => error.reject(type === 1 ? error.FRAMEWORK_NOT_INSTALLED : type === 2 ? error.UNABLE_TO_FINALIZE_DOCUMENT : error.INVALID_ASSET_REQUEST);

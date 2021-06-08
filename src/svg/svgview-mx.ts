@@ -149,7 +149,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 return result;
             }
             const keyframesMap = this.viewport?.keyframesMap || getKeyframesRules();
-            const cssData: ObjectMapSafe<string[]> = {};
+            const cssData: ObjectMap<string[]> = {};
             const groupName: SvgAnimate[] = [];
             const groupOrdering: SvgAnimationAttribute[] = [];
             for (const name in ANIMATION_DEFAULT) {
@@ -164,7 +164,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 cssData[name] = values;
             }
             for (let i = 0, duration: number; i < length; ++i) {
-                const clockTime = cssData['animation-duration'][i];
+                const clockTime = cssData['animation-duration']![i];
                 if (!clockTime) {
                     continue;
                 }
@@ -173,10 +173,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     ++id;
                     const attrData: AttributeMap = {};
                     const keyframeData: AttributeMap = {};
-                    const paused = cssData['animation-play-state'][i] === 'paused';
-                    const delay = SvgAnimation.parseClockTime(cssData['animation-delay'][i]) || 0;
-                    const iterationCount = cssData['animation-iteration-count'][i];
-                    const fillMode = cssData['animation-fill-mode'][i];
+                    const paused = cssData['animation-play-state']![i] === 'paused';
+                    const delay = SvgAnimation.parseClockTime(cssData['animation-delay']![i]) || 0;
+                    const iterationCount = cssData['animation-iteration-count']![i];
+                    const fillMode = cssData['animation-fill-mode']![i];
                     const keyframeIndex = animationName[i] + '_' + i;
                     const attributes: string[] = [];
                     let includeKeySplines = true;
@@ -372,8 +372,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         }
                         addAnimation(animate, delay, keyframeIndex);
                         const animation = attrData[name]!;
-                        const direction = cssData['animation-direction'][i];
-                        const timingFunction = cssData['animation-timing-function'][i];
+                        const direction = cssData['animation-direction']![i];
+                        const timingFunction = cssData['animation-timing-function']![i];
                         const q = animation.length;
                         sortAttribute(animation);
                         if (name === 'offset-distance') {
