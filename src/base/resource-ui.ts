@@ -379,29 +379,26 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (stored && hasValue(value)) {
             const data = stored[type];
             if (data instanceof Map) {
-                let result = '';
                 if (stored) {
                     for (const item of data) {
                         if (isEqual(value, item[1])) {
-                            result = item[0];
-                            break;
+                            return item[0];
                         }
                     }
                 }
-                if (!result) {
-                    if (!isNaN(+name)) {
-                        name = '__' + name;
-                    }
-                    let i = 0;
-                    do {
-                        result = i === 0 ? name : name + '_' + i;
-                        if (!data.has(result)) {
-                            data.set(result, value);
-                            break;
-                        }
-                    }
-                    while (++i);
+                if (!isNaN(+name)) {
+                    name = '__' + name;
                 }
+                let result = '',
+                    i = 0;
+                do {
+                    result = i === 0 ? name : name + '_' + i;
+                    if (!data.has(result)) {
+                        data.set(result, value);
+                        break;
+                    }
+                }
+                while (++i);
                 return result;
             }
         }

@@ -16,9 +16,8 @@ const { getComponentEnd, trimString } = squared.base.lib.util;
 const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
 const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
 
-let CACHE_IMAGE: StringMap = {};
-let COUNTER_UUID = 0;
-let COUNTER_SYMBOL = 0;
+let CACHE_IMAGE: ObjectMap<StringMap> = {};
+let COUNTER_SYMBOL: number[] = [];
 
 function formatObject(resourceId: number, obj: ObjectMap<string | StringMap>, numberAlias?: boolean) {
     for (const attr in obj) {
@@ -152,7 +151,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     }
                 }
                 if (!name) {
-                    name = '__symbol' + ++COUNTER_SYMBOL;
+                    COUNTER_SYMBOL[resourceId] ??= 0;
+                    name = '__symbol' + ++COUNTER_SYMBOL[resourceId];
                 }
                 else if (isLeadingDigit(name = name.toLowerCase()) || RESERVED_JAVA.includes(name)) {
                     name = '__' + name;
@@ -166,8 +166,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public static addImage(resourceId: number, images: StringMap, prefix = '', imageFormat?: MIMEOrAll) {
         const mdpi = images.mdpi;
         if (mdpi) {
-            if (Object.keys(images).length === 1) {
-                const asset = CACHE_IMAGE[mdpi];
+            const imageData = CACHE_IMAGE[resourceId] ||= {};
+            const imageCount = Object.keys(images).length;
+            if (imageCount === 1) {
+                const asset = imageData[mdpi];
                 if (asset) {
                     return asset;
                 }
@@ -177,7 +179,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const length = ext.length;
             if (!imageFormat || Resource.hasMimeType(imageFormat, ext) || length === 0) {
                 const name = Resource.formatName(prefix + src.substring(0, src.length - (length ? length + 1 : 0))).toLowerCase();
-                return CACHE_IMAGE[mdpi] = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
+                const result = Resource.insertStoredAsset(resourceId, 'images', (RESERVED_JAVA.includes(name) ? '_' : '') + name, images);
+                return imageCount === 1 ? imageData[mdpi] = result : result;
             }
         }
         return '';
@@ -221,6 +224,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
 
     private _fontProvider: ObjectMap<FontProvider> = {};
     private _imageFormat?: MIMEOrAll;
+    private _counterFilename = 0;
 
     constructor(
         public application: Application<T>,
@@ -243,11 +247,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         super.createThread(resourceId);
     }
 
-    public reset() {
+    public clear() {
         CACHE_IMAGE = {};
-        COUNTER_UUID = 0;
-        COUNTER_SYMBOL = 0;
-        super.reset();
+        COUNTER_SYMBOL = [];
+        super.clear();
     }
 
     public addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcData[]) {
@@ -330,7 +333,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {
-        return '__' + padStart((++COUNTER_UUID).toString(), 5, '0') + '.' + ext;
+        return '__' + padStart((++this._counterFilename).toString(), 5, '0') + '.' + ext;
     }
 
     private parseWebFonts(value: PlainObject) {
