@@ -177,10 +177,7 @@ function getBorderStyle(resourceId: number, border: BorderAttribute, direction =
                     }
                 }
                 if (percent) {
-                    const reduced = color.lighten(percent);
-                    if (reduced) {
-                        return createStrokeColor(resourceId, reduced);
-                    }
+                    return createStrokeColor(resourceId, color.lighten(percent));
                 }
                 break;
             }
@@ -1187,12 +1184,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     else if (value.colorStops.length > 1) {
-                        const gradient = createBackgroundGradient(resourceId, value, node.api, q, data.borderRadius);
-                        if (gradient) {
-                            images[length] = gradient;
-                            imageDimensions[length] = value.dimension;
-                            valid = true;
-                        }
+                        images[length] = createBackgroundGradient(resourceId, value, node.api, q, data.borderRadius);
+                        imageDimensions[length] = value.dimension;
+                        valid = true;
                     }
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];

@@ -15,7 +15,7 @@ import { convertColorStops } from './background';
 import { applyTemplate, formatString } from '../../lib/util';
 
 if (!squared.svg) {
-    Object.assign(squared, { svg: { lib: { constant: {}, util: {} } } });
+    Object.assign(squared, { svg: { lib: { util: {} } } });
 }
 
 import Svg = squared.svg.Svg;
@@ -36,7 +36,7 @@ type AnimateCompanion = NumberValue<SvgAnimation>;
 interface AnimatedVectorTemplate {
     'xmlns:android': string;
     'android:drawable': string;
-    target: AnimatedVectorTarget[];
+    target?: AnimatedVectorTarget[];
 }
 
 interface AnimatedVectorTarget {
@@ -621,7 +621,7 @@ function insertTargetAnimation(resourceId: number, data: AnimatedVectorTemplate[
         };
         if (targetData.animation) {
             targetData.animation = `@anim/${targetData.animation}`;
-            data[0].target.push(targetData);
+            (data[0].target ||= []).push(targetData);
         }
     }
 }
@@ -894,8 +894,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             if (animateData.size) {
                 const data: AnimatedVectorTemplate[] = [{
                     'xmlns:android': XML_NAMESPACE.android,
-                    'android:drawable': getDrawableSrc(vectorName),
-                    target: []
+                    'android:drawable': getDrawableSrc(vectorName)
                 }];
                 for (const [name, group] of animateData) {
                     const sequentialMap = new Map<string, SvgAnimate[]>();
@@ -1911,7 +1910,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             for (let i = 0, length = items.length; i < length; ++i) {
                 const value = items[i];
                 if (value[0] === '#') {
-                    const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;
+                    const element = definitions.clipPath.get(value) as Undef<SVGGElement>;
                     if (element) {
                         const g = new SvgG(element);
                         g.build({ exclude, residualHandler, precision });

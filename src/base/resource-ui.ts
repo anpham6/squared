@@ -379,11 +379,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
         if (stored && hasValue(value)) {
             const data = stored[type];
             if (data instanceof Map) {
-                if (stored) {
-                    for (const item of data) {
-                        if (isEqual(value, item[1])) {
-                            return item[0];
-                        }
+                for (const item of data) {
+                    if (isEqual(value, item[1])) {
+                        return item[0];
                     }
                 }
                 if (!isNaN(+name)) {
@@ -1334,7 +1332,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                 default:
                     trimming = true;
                     if (node.plainText || node.pseudoElement || node.hasAlign(NODE_ALIGNMENT.INLINE) && node.textElement) {
-                        value = trimming ? replaceAll(node.textContent, '&', '&amp;') : node.textContent;
+                        value = replaceAll(node.textContent, '&', '&amp;');
                         inlined = true;
                     }
                     else if (node.inlineText) {
@@ -1425,15 +1423,15 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     value = value.replace(CHAR_TRAILINGSPACE, node.horizontalRowEnd ? '' : this.STRING_SPACE);
                 }
                 else if (node.pageFlow) {
-                    const previousSibling = node.siblingsLeading[0];
+                    const previousSibling = node.siblingsLeading[0] as Undef<T>;
                     const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
                     let previousSpaceEnd: Undef<boolean>;
                     if (value.length > 1) {
                         if (checkPreviousSibling(previousSibling)) {
                             value = value.replace(CHAR_LEADINGSPACE, '');
                         }
-                        else if (previousSibling.naturalElement) {
-                            previousSpaceEnd = hasEndingSpace(previousSibling.element as HTMLElement) || previousSibling.lastStaticChild?.lineBreak;
+                        else if (previousSibling!.naturalElement) {
+                            previousSpaceEnd = hasEndingSpace(previousSibling!.element as HTMLElement) || previousSibling!.lastStaticChild?.lineBreak;
                         }
                     }
                     if (inlined) {

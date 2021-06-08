@@ -547,7 +547,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             processing = this.getProcessing(processing);
         }
         if (processing) {
-            const settings = processing.settings as UserSettings;
+            const settings = processing.settings as Null<UserSettings>;
             if (settings && name in settings) {
                 return settings[name] as U;
             }

@@ -139,7 +139,7 @@ interface SvgPathExtendData {
 }
 
 interface SvgAnimationIntervalAttributeMap<T> {
-    [key: string]: Map<number, SvgAnimationIntervalValue<T>[]>;
+    [key: string]: Undef<Map<number, SvgAnimationIntervalValue<T>[]>>;
 }
 
 interface SvgAnimationIntervalValue<T> {

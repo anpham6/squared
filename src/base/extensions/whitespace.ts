@@ -99,7 +99,7 @@ function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: numbe
 function getBottomChild(node: NodeUI) {
     let bottomChild: Null<NodeUI> = null;
     if (!node.floatContainer) {
-        bottomChild = node.lastStaticChild as NodeUI;
+        bottomChild = node.lastStaticChild;
         if (!isBlockElement(node, false) || bottomChild && node.hasHeight && Math.floor(bottomChild.linear.bottom) < node.box.bottom) {
             bottomChild = null;
         }
@@ -728,7 +728,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (children[i] === outerWrapper) {
                                     if (i > 0 && !node.lineBreakLeading && !node.baselineAltered) {
                                         const previous = children[i - 1];
-                                        if (previous.pageFlow && (!previous.blockStatic || node.inlineStatic && node.blockDimension)) {
+                                        if (previous.pageFlow && (!previous.blockStatic || node.inlineStatic)) {
                                             setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
                                         }
                                     }
@@ -972,7 +972,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 else if (child[marginName] === 0 && child[borderWidth] === 0 && canResetChild(child) && !node.documentBody) {
                     let blockAll = true;
                     do {
-                        const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as T;
+                        const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as Null<T>;
                         if (endChild && endChild[marginName] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
                             const value = endChild[paddingName];
                             if (value) {

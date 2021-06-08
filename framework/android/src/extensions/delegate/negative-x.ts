@@ -94,7 +94,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const mainData = this.data.get(node) as NegativeXData;
+        const mainData = this.data.get(node) as Undef<NegativeXData>;
         if (mainData) {
             const firstChild = mainData.firstChild;
             if (firstChild) {
@@ -130,7 +130,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public postOptimize(node: T) {
         if (node.inlineHeight && !node.imageContainer) {
-            const mainData = this.data.get(node) as NegativeXData;
+            const mainData = this.data.get(node) as Undef<NegativeXData>;
             if (mainData) {
                 const height = Math.floor(node.bounds.height);
                 for (const item of mainData.children) {
@@ -146,7 +146,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public beforeFinalize() {
         for (const node of this.subscribers) {
-            const mainData = this.data.get(node) as NegativeXData;
+            const mainData = this.data.get(node) as Undef<NegativeXData>;
             if (mainData) {
                 const translateX = node.android('translationX');
                 const translateY = node.android('translationY');

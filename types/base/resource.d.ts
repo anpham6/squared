@@ -34,7 +34,7 @@ interface BoxStyle extends Partial<BoxBorder> {
 }
 
 interface Gradient {
-    type: string;
+    type: "conic" | "radial" | "linear";
     colorStops: ColorStop[];
     dimension: Null<Dimension>;
 }

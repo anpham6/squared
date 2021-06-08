@@ -463,7 +463,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _cacheState!: CacheStateUI<T>;
     protected _boxReset: Null<number[]> = null;
     protected _boxAdjustment: Null<number[]> = null;
-    protected abstract _namespaces: ObjectMapSafe<StringMap>;
+    protected abstract _namespaces: ObjectMap<StringMap>;
 
     private _locked: Null<ObjectMapNested<boolean>> = null;
     private _siblingsLeading: Null<T[]> = null;
@@ -558,7 +558,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public namespaces() {
-        return Object.entries(this._namespaces);
+        return Object.entries(this._namespaces) as [string, StringMap][];
     }
 
     public unsafe<U = unknown>(name: string | PlainObject, value?: unknown): Undef<U> {
@@ -909,7 +909,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    public alignedVertically(siblings?: Null<T[]>, cleared?: Null<Map<T, string>>, horizontal?: boolean, partition?: boolean) {
+    public alignedVertically(siblings?: Null<T[]>, cleared?: Null<Map<T, string>>, horizontal?: boolean, partition?: boolean): number {
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
@@ -942,7 +942,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                         if (siblings.every(item => item.inlineDimension)) {
                             const parent = this.actualParent!;
-                            if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
+                            if (parent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true }).length) {
                                 const length = siblings.length;
                                 if (parent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
                                     const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
@@ -1170,7 +1170,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             this._boxRegister[index] = node;
         }
         else {
-            node = this._boxRegister[index];
+            node = this._boxRegister[index] as Undef<T>;
         }
         while (node) {
             const next: Undef<T> = node.unsafe<T[]>('boxRegister')?.[index];
@@ -1307,7 +1307,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         Object.assign(node.unsafe<CacheStateUI<T>>('cacheState'), this._cacheState);
     }
 
-    public css(attr: CssStyleAttr, value?: string, cache = false) {
+    public css(attr: CssStyleAttr, value?: Null<string>, cache = false) {
         if (arguments.length >= 2) {
             if (value) {
                 this._styleMap[attr] = value;
@@ -1839,7 +1839,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get positiveAxis() {
         const result = this._cache.positiveAxis;
-        return result === undefined ? this._cache.positiveAxis = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasUnit('left')) && (this.bottom <= 0 || this.hasUnit('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
+        return result === undefined ? this._cache.positiveAxis = (!this.positionRelative || this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasUnit('left')) && (this.bottom <= 0 || this.hasUnit('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0 : result;
     }
 
     get leftTopAxis() {

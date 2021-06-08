@@ -32,7 +32,7 @@ function getDataSetValue(element: SVGElement, attr: string) {
     if (value && (value = value.trim())) {
         if (value[0] === '{' && lastItemOf(value) === '}') {
             try {
-                const obj: SvgDataSet = JSON.parse(value);
+                const obj = JSON.parse(value) as Undef<SvgDataSet>;
                 if (obj) {
                     return obj[attr]?.toString().trim() || '';
                 }
@@ -744,13 +744,13 @@ export function getTargetElement(element: Element, rootElement?: Null<Element>, 
             const content = contentMap[resolvePath(href)];
             if (content) {
                 document.body.insertAdjacentHTML('beforeend', content);
-                element = document.body.lastElementChild as Element;
-                if (element instanceof SVGGraphicsElement) {
-                    element.style.display = 'none';
-                    return element.querySelector(`#${id}`);
+                const lastElementChild = document.body.lastElementChild as Null<Element>;
+                if (lastElementChild instanceof SVGGraphicsElement) {
+                    lastElementChild.style.display = 'none';
+                    return lastElementChild.querySelector(`#${id}`);
                 }
-                else if (element) {
-                    document.body.removeChild(element);
+                else if (lastElementChild) {
+                    document.body.removeChild(lastElementChild);
                 }
             }
         }

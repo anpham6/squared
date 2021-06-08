@@ -834,24 +834,22 @@ export default abstract class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 end: number;
             for (let i = 0, length = layout.length; i < length; ++i) {
                 const item = layout[i];
-                if (item) {
-                    if (horizontal) {
-                        totalSpan = item.columnSpan;
-                        start = 1;
-                        end = 3;
-                    }
-                    else {
-                        totalSpan = item.rowSpan;
-                        start = 0;
-                        end = 2;
-                    }
-                    const placement = item.placement;
-                    if (placement.some(value => value > 0)) {
-                        totalCount = Math.max(totalCount, totalSpan, placement[start], placement[end] - 1);
-                    }
-                    if (withinRange(item.outerCoord, horizontal ? node.box.top : node.box.left)) {
-                        outerCount += totalSpan;
-                    }
+                if (horizontal) {
+                    totalSpan = item.columnSpan;
+                    start = 1;
+                    end = 3;
+                }
+                else {
+                    totalSpan = item.rowSpan;
+                    start = 0;
+                    end = 2;
+                }
+                const placement = item.placement;
+                if (placement.some(value => value > 0)) {
+                    totalCount = Math.max(totalCount, totalSpan, placement[start], placement[end] - 1);
+                }
+                if (withinRange(item.outerCoord, horizontal ? node.box.top : node.box.left)) {
+                    outerCount += totalSpan;
                 }
             }
             ITERATION = Math.max(totalCount, outerCount, horizontal && !autoWidth ? column.unit.length : 0, !horizontal && !autoHeight ? row.unit.length : 0);

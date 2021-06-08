@@ -1615,7 +1615,7 @@ export function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot
         }
     }
     const style = document.createElement('style');
-    const sheet = style.sheet as CSSStyleSheet;
+    const sheet = style.sheet as Null<CSSStyleSheet>;
     if (sheet && typeof sheet.insertRule === 'function') {
         try {
             if (isUserAgent(USER_AGENT.SAFARI)) {

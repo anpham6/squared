@@ -11,7 +11,7 @@ type SvgView = squared.svg.SvgView;
 
 const { getFontSize, getStyle, hasEm, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { capitalize, hasValue, sortNumber, splitSome } = squared.lib.util;
+const { capitalize, hasValue, isPlainObject, sortNumber, splitSome } = squared.lib.util;
 
 const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
 const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
@@ -151,10 +151,11 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set attributeName(value) {
+        this._attributeName = value;
         if (value !== 'transform' && !this.baseValue) {
-            let baseValue = this._dataset?.baseValue?.[value];
-            if (hasValue<string>(baseValue)) {
-                this.baseValue = baseValue.toString().trim();
+            const baseValue = this._dataset?.baseValue;
+            if (isPlainObject(baseValue) && hasValue<string>(baseValue[value])) {
+                this.baseValue = baseValue[value]!.toString().trim();
             }
             else {
                 const element = this.element;
@@ -163,13 +164,13 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                         case 'opacity':
                         case 'stroke-opacity':
                         case 'fill-opacity':
-                            baseValue = getAttribute(element, value) || '1';
+                            this.baseValue = getAttribute(element, value) || '1';
                             break;
                         default:
-                            baseValue = getAttribute(element, value);
+                            this.baseValue = getAttribute(element, value);
                             break;
                     }
-                    if (!baseValue) {
+                    if (!this.baseValue) {
                         const animationElement = this.animationElement;
                         if (animationElement && getStyle(element).animationPlayState === 'paused') {
                             const parentElement = animationElement.parentElement;
@@ -181,13 +182,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                             }
                         }
                     }
-                    else {
-                        this.baseValue = baseValue;
-                    }
                 }
             }
         }
-        this._attributeName = value;
     }
     get attributeName() {
         return this._attributeName;

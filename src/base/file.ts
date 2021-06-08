@@ -14,7 +14,7 @@ const { escapePattern, fromLastIndexOf, isPlainObject, replaceAll, splitPair, st
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
-    const glob = exclusions.glob as (string | IGlobExp)[];
+    const glob = exclusions.glob as Undef<(string | IGlobExp)[]>;
     const url = appendSeparator(pathname, filename);
     if (glob) {
         for (let i = 0, length = glob.length; i < length; ++i) {

@@ -164,7 +164,7 @@ function convertBox(node: T, attr: CssStyleAttr, margin: boolean) {
                     case 'TH':
                         return 0;
                     default: {
-                        const parent = node.ascend({ condition: item => item.tableElement })[0];
+                        const parent = node.ascend({ condition: item => item.tableElement })[0] as Undef<T>;
                         if (parent) {
                             const [horizontal, vertical] = splitPair(parent.css('borderSpacing'), ' ');
                             switch (attr) {
@@ -377,7 +377,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
     }
 
     public syncWith(sessionId?: string, cache?: boolean) {
-        const element = this._element as HTMLElement;
+        const element = this._element as Null<HTMLElement>;
         if (element) {
             let elementData: Optional<ElementData>;
             if ((sessionId ||= getElementCache(element, 'sessionId', '0')) && (elementData = getElementData(element, sessionId))) {
@@ -1485,7 +1485,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get linear() {
         if (!this._linear) {
-            const bounds = this.bounds;
+            const bounds = this._bounds || this.setBounds(false);
             if (bounds) {
                 if (this.styleElement) {
                     let { marginTop, marginBottom, marginRight, marginLeft } = this; // eslint-disable-line prefer-const
@@ -1513,7 +1513,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
 
     get box() {
         if (!this._box) {
-            const bounds = this.bounds;
+            const bounds = this._bounds || this.setBounds(false);
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length) {
                     let { marginTop, marginLeft } = this;
@@ -1617,14 +1617,14 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                     value = parseLineHeight(lineHeight, this.fontSize);
                 }
                 else {
-                    let parent = this.ascend({ condition: item => item.has('lineHeight', { initial: true, not: 'inherit' }) })[0];
+                    let parent = this.ascend({ condition: item => item.has('lineHeight', { initial: true, not: 'inherit' }) })[0] as Undef<T>;
                     if (parent && (value = parseLineHeight(parent.css('lineHeight'), this.fontSize))) {
                         if (parent !== this.actualParent || REGEXP_EM.test(this.valueOf('fontSize')) || this.multiline) {
                             this.css('lineHeight', value + 'px');
                         }
                         hasOwnStyle = true;
                     }
-                    if (value === 0 && (parent = this.ascend({ condition: item => item.lineHeight > 0 })[0])) {
+                    if (value === 0 && (parent = this.ascend({ condition: item => item.lineHeight > 0 })[0] as Undef<T>)) {
                         value = parent.lineHeight;
                     }
                 }
@@ -2092,8 +2092,8 @@ export default class Node extends squared.lib.base.Container<T> implements squar
                 let backgroundRepeatX = false,
                     backgroundRepeatY = false;
                 if (backgroundImage) {
-                    splitSome(this.css('backgroundRepeat'), repeat => {
-                        const [repeatX, repeatY] = splitPair(repeat, ' ');
+                    splitSome(this.css('backgroundRepeat'), value => {
+                        const [repeatX, repeatY] = splitPair(value, ' ');
                         backgroundRepeatX ||= repeatX === 'repeat' || repeatX === 'repeat-x';
                         backgroundRepeatY ||= repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
                     });
@@ -2394,7 +2394,7 @@ export default class Node extends squared.lib.base.Container<T> implements squar
             }
             else {
                 const options = { fixedWidth: isFixedFont(this) };
-                result = parseUnit(this.css('fontSize'), options) || (this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize ?? parseUnit('1rem', options));
+                result = parseUnit(this.css('fontSize'), options) || ((this.ascend({ condition: item => item.fontSize > 0 })[0] as Undef<T>)?.fontSize ?? parseUnit('1rem', options));
             }
             this._cache.fontSize = result;
         }

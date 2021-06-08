@@ -58,7 +58,7 @@ function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number
         setTimelineValue(map, time, previous.value, true);
     }
     else if (!transforming) {
-        let value = intervalMap.get(attr, time, true) as AnimateValue;
+        let value = intervalMap.get(attr, time, true) as Undef<AnimateValue>;
         if (value !== undefined) {
             value = convertToAnimateValue(value, true);
             if (value !== '') {
@@ -202,7 +202,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Null<SvgCo
             if (parent) {
                 parent.refitPoints(points);
             }
-            let value: Undef<string>;
+            let value: string;
             switch (tagName) {
                 case 'line':
                 case 'polyline':
@@ -219,9 +219,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Null<SvgCo
                     break;
                 }
             }
-            if (value !== undefined) {
-                result.push({ key, value });
-            }
+            result.push({ key, value });
         }
     }
     return result;
@@ -850,9 +848,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             break;
                                         }
                                     }
-                                    else if (!itemB.evaluateStart && !itemB.evaluateEnd) {
+                                    else if (!itemB.evaluateStart) {
                                         if (itemA.delay === itemB.delay && (!itemB.fillReplace || itemB.iterationCount === -1 || timeA <= itemB.getTotalDuration()) ||
-                                            itemB.fillBackwards && itemA.delay <= itemB.delay && (itemB.fillForwards || itemA.fillReplace && timeA <= itemB.delay) ||
+                                            itemB.fillBackwards && itemA.delay <= itemB.delay && (itemB.fillForwards || timeA <= itemB.delay) ||
                                             itemA.animationElement && !itemB.animationElement && (itemA.delay >= itemB.delay && timeA <= itemB.getTotalDuration() || itemB.fillForwards))
                                         {
                                             excluded[i] = itemA;
@@ -883,7 +881,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     removeAnimations(animationsBase, removeable);
                 }
                 if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || !isNaN(staggered[0].end))) {
-                    const groupName: ObjectMapSafe<Map<number, SvgAnimate[]>> = {};
+                    const groupName: ObjectMap<Map<number, SvgAnimate[]>> = {};
                     const groupAttributeMap: ObjectMapSafe<SvgAnimate[]> = {};
                     const intervalMap = new SvgAnimationIntervalMap(mergeable);
                     const repeatingMap: TimelineMap = {};
@@ -899,7 +897,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     const animateTimeRangeMap = new Map<number, number>();
                     let repeatingDuration = 0,
                         repeatingAsInfinite = -1,
-                        repeatingResult: Undef<KeyTimeMap>,
+                        repeatingResult: KeyTimeMap,
                         infiniteResult: Undef<KeyTimeMap>;
                     for (let i = 0, length = staggered.length; i < length; ++i) {
                         const item = staggered[i];
@@ -922,7 +920,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     }
                     for (const attr in groupName) {
                         const groupDelay = new Map<number, SvgAnimate[]>();
-                        const groupData = groupName[attr];
+                        const groupData = groupName[attr]!;
                         const timeData = sortNumber(Array.from(groupData.keys()));
                         for (let i = 0, length = timeData.length; i < length; ++i) {
                             const delay = timeData[i];
@@ -957,7 +955,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         const groupDelay: number[] = [];
                         const groupData: SvgAnimate[][] = [];
                         let incomplete: SvgAnimate[] = [];
-                        for (const [delay, data] of groupName[attr]) {
+                        for (const [delay, data] of groupName[attr]!) {
                             groupDelay.push(delay);
                             groupData.push(data);
                         }
@@ -1794,7 +1792,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     baseMap.set(keyTime, startValue);
                                                 }
                                                 else {
-                                                    let value = intervalMap.get(attr, keyTime) as AnimateValue;
+                                                    let value = intervalMap.get(attr, keyTime) as Undef<AnimateValue>;
                                                     if (value !== undefined) {
                                                         value = convertToAnimateValue(value, true);
                                                         if (value !== '') {
@@ -1887,208 +1885,206 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         }
                         infiniteResult = createKeyTimeMap(timelineMap, keyTimes, forwardMap);
                     }
-                    if (repeatingResult || infiniteResult) {
-                        removeAnimations(animationsBase, staggered);
-                        const timeRange = Array.from(animateTimeRangeMap);
-                        const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
-                        const parent = this.parent;
-                        for (const result of [repeatingResult, infiniteResult]) {
-                            if (result) {
-                                const repeating = result === repeatingResult;
-                                const interpolatorMap = repeating ? repeatingInterpolatorMap : infiniteInterpolatorMap;
-                                const transformOriginMap = (repeating ? repeatingTransformOriginMap : infiniteTransformOriginMap) as TransformOriginMap;
-                                if (isKeyTimeFormat(transforming, keyTimeMode)) {
-                                    const keySplines: string[] = [];
-                                    if (transforming) {
-                                        const transformMap: KeyTimeMap[] = [];
-                                        if (repeating) {
-                                            const entries = Array.from(result);
-                                            let type = timeRange[0][1];
-                                            for (let i = 0, j = 0, k = 0, length = timeRange.length; i < length; ++i) {
-                                                const next = i < length - 1 ? timeRange[i + 1][1] : -1;
-                                                if (type !== next) {
-                                                    const map = new Map<number, Map<number, AnimateValue>>();
-                                                    for (let l = k, q = entries.length; l < q; ++l) {
-                                                        const keyTime = entries[l][0];
-                                                        if (keyTime >= timeRange[j][0] && keyTime <= timeRange[i][0]) {
-                                                            map.set(keyTime, new Map([[type, entries[l][1].values().next().value as string]]));
-                                                            k = l;
-                                                        }
-                                                        else if (keyTime > timeRange[i][0]) {
-                                                            break;
-                                                        }
+                    removeAnimations(animationsBase, staggered);
+                    const timeRange = Array.from(animateTimeRangeMap);
+                    const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
+                    const parent = this.parent;
+                    for (const result of [repeatingResult, infiniteResult]) {
+                        if (result) {
+                            const repeating = result === repeatingResult;
+                            const interpolatorMap = repeating ? repeatingInterpolatorMap : infiniteInterpolatorMap;
+                            const transformOriginMap = (repeating ? repeatingTransformOriginMap : infiniteTransformOriginMap) as TransformOriginMap;
+                            if (isKeyTimeFormat(transforming, keyTimeMode)) {
+                                const keySplines: string[] = [];
+                                if (transforming) {
+                                    const transformMap: KeyTimeMap[] = [];
+                                    if (repeating) {
+                                        const entries = Array.from(result);
+                                        let type = timeRange[0][1];
+                                        for (let i = 0, j = 0, k = 0, length = timeRange.length; i < length; ++i) {
+                                            const next = i < length - 1 ? timeRange[i + 1][1] : -1;
+                                            if (type !== next) {
+                                                const map = new Map<number, Map<number, AnimateValue>>();
+                                                for (let l = k, q = entries.length; l < q; ++l) {
+                                                    const keyTime = entries[l][0];
+                                                    if (keyTime >= timeRange[j][0] && keyTime <= timeRange[i][0]) {
+                                                        map.set(keyTime, new Map([[type, entries[l][1].values().next().value as string]]));
+                                                        k = l;
                                                     }
-                                                    transformMap.push(map);
-                                                    type = next;
-                                                    j = i + 1;
+                                                    else if (keyTime > timeRange[i][0]) {
+                                                        break;
+                                                    }
                                                 }
+                                                transformMap.push(map);
+                                                type = next;
+                                                j = i + 1;
                                             }
                                         }
-                                        else if (infiniteMap.transform) {
-                                            const map = new Map<number, Map<number, AnimateValue>>();
-                                            for (const [time, item] of result) {
-                                                map.set(time, new Map([[infiniteMap.transform.type, item.values().next().value as string]]));
+                                    }
+                                    else if (infiniteMap.transform) {
+                                        const map = new Map<number, Map<number, AnimateValue>>();
+                                        for (const [time, item] of result) {
+                                            map.set(time, new Map([[infiniteMap.transform.type, item.values().next().value as string]]));
+                                        }
+                                        transformMap.push(map);
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                    let previousEndTime = 0;
+                                    for (let i = 0, length = transformMap.length; i < length; ++i) {
+                                        const entries = Array.from(transformMap[i]);
+                                        const items = entries[0];
+                                        let delay = items[0];
+                                        const value = items[1];
+                                        if (entries.length === 1) {
+                                            if (i < length - 1) {
+                                                entries.push([transformMap[i + 1].keys().next().value, value]);
                                             }
-                                            transformMap.push(map);
+                                            else {
+                                                entries.push([delay + 1, value]);
+                                            }
+                                        }
+                                        const q = entries.length;
+                                        const endTime = entries[q - 1][0];
+                                        let duration = endTime - delay;
+                                        const animate = new SvgAnimateTransform();
+                                        animate.type = value.keys().next().value as number;
+                                        for (let j = 0; j < q; ++j) {
+                                            const entry = entries[j];
+                                            keySplines.push(interpolatorMap.get(entry[0]) || '');
+                                            if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
+                                                const transformOrigin = transformOriginMap.get(entry[0]);
+                                                if (transformOrigin) {
+                                                    (animate.transformOrigin ||= [])[j] = transformOrigin;
+                                                }
+                                            }
+                                            entry[0] -= delay;
+                                        }
+                                        for (const [keyTime, data] of convertToFraction(entries)) {
+                                            animate.keyTimes.push(keyTime);
+                                            animate.values.push(data.values().next().value as string);
+                                        }
+                                        delay -= previousEndTime;
+                                        if (delay > 1) {
+                                            animate.delay = delay;
+                                        }
+                                        else if (delay === 1 && (duration + 1) % 10 === 0) {
+                                            ++duration;
+                                        }
+                                        animate.duration = duration;
+                                        animate.keySplines = keySplines;
+                                        animate.synchronized = { key: i, value: '' };
+                                        previousEndTime = endTime;
+                                        insertAnimate(animationsBase, animate, repeating);
+                                    }
+                                }
+                                else {
+                                    const entries = Array.from(result);
+                                    const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
+                                    let object: Undef<SvgAnimate>;
+                                    for (let i = 0, q = entries.length; i < q; ++i) {
+                                        const item = entries[i];
+                                        keySplines.push(interpolatorMap.get(item[0]) || '');
+                                        item[0] -= delay;
+                                    }
+                                    if (path) {
+                                        const pathData = getPathData(convertToFraction(entries), path, parent, forwardMap, precision);
+                                        if (pathData) {
+                                            object = new SvgAnimate();
+                                            object.attributeName = 'd';
+                                            for (let i = 0, q = pathData.length; i < q; ++i) {
+                                                const item = pathData[i];
+                                                object.keyTimes.push(item.key);
+                                                object.values.push(item.value.toString());
+                                            }
                                         }
                                         else {
                                             continue;
                                         }
-                                        let previousEndTime = 0;
-                                        for (let i = 0, length = transformMap.length; i < length; ++i) {
-                                            const entries = Array.from(transformMap[i]);
-                                            const items = entries[0];
-                                            let delay = items[0];
-                                            const value = items[1];
-                                            if (entries.length === 1) {
-                                                if (i < length - 1) {
-                                                    entries.push([transformMap[i + 1].keys().next().value, value]);
+                                    }
+                                    else {
+                                        const animate = new SvgAnimateTransform();
+                                        animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                        for (const [keyTime, data] of result) {
+                                            const x = data.get('x') as number || 0;
+                                            const y = data.get('y') as number || 0;
+                                            animate.keyTimes.push(keyTime);
+                                            animate.values.push(parent ? parent.refitX(x) + ' ' + parent.refitX(y) : x + ' ' + y);
+                                        }
+                                        object = animate;
+                                    }
+                                    object.delay = delay;
+                                    object.keySplines = keySplines;
+                                    object.duration = lastItemOf(entries)![0];
+                                    insertAnimate(animationsBase, object, repeating);
+                                }
+                            }
+                            else if (isFromToFormat(transforming, keyTimeMode)) {
+                                const entries = Array.from(result);
+                                for (let i = 0, length = entries.length - 1; i < length; ++i) {
+                                    const [keyTimeFrom, dataFrom] = entries[i];
+                                    const [keyTimeTo, dataTo] = entries[i + 1];
+                                    let value = synchronizedName,
+                                        object: Undef<SvgAnimate>;
+                                    if (transforming) {
+                                        const animate = new SvgAnimateTransform();
+                                        if (repeating) {
+                                            for (let j = 0, q = timeRange.length - 1; j < q; ++j) {
+                                                const previous = timeRange[j];
+                                                const next = timeRange[j + 1];
+                                                if (previous[1] === next[1] && keyTimeFrom >= previous[0] && keyTimeTo <= next[0]) {
+                                                    animate.type = previous[1];
+                                                    break;
                                                 }
-                                                else {
-                                                    entries.push([delay + 1, value]);
+                                                else if (keyTimeTo - keyTimeFrom === 1 && keyTimeTo === next[0]) {
+                                                    animate.type = next[1];
+                                                    break;
                                                 }
                                             }
-                                            const q = entries.length;
-                                            const endTime = entries[q - 1][0];
-                                            let duration = endTime - delay;
-                                            const animate = new SvgAnimateTransform();
-                                            animate.type = value.keys().next().value as number;
-                                            for (let j = 0; j < q; ++j) {
-                                                const entry = entries[j];
-                                                keySplines.push(interpolatorMap.get(entry[0]) || '');
-                                                if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
-                                                    const transformOrigin = transformOriginMap.get(entry[0]);
-                                                    if (transformOrigin) {
-                                                        (animate.transformOrigin ||= [])[j] = transformOrigin;
-                                                    }
-                                                }
-                                                entry[0] -= delay;
-                                            }
-                                            for (const [keyTime, data] of convertToFraction(entries)) {
-                                                animate.keyTimes.push(keyTime);
-                                                animate.values.push(data.values().next().value as string);
-                                            }
-                                            delay -= previousEndTime;
-                                            if (delay > 1) {
-                                                animate.delay = delay;
-                                            }
-                                            else if (delay === 1 && (duration + 1) % 10 === 0) {
-                                                ++duration;
-                                            }
-                                            animate.duration = duration;
-                                            animate.keySplines = keySplines;
-                                            animate.synchronized = { key: i, value: '' };
-                                            previousEndTime = endTime;
-                                            insertAnimate(animationsBase, animate, repeating);
+                                        }
+                                        else if (infiniteMap.transform) {
+                                            animate.type = infiniteMap.transform.type;
+                                        }
+                                        if (animate.type === 0) {
+                                            continue;
+                                        }
+                                        animate.values = [dataFrom.values().next().value as string, dataTo.values().next().value as string];
+                                        const transformOrigin = transformOriginMap.get(keyTimeTo);
+                                        if (transformOrigin) {
+                                            animate.transformOrigin = [transformOrigin];
+                                        }
+                                        object = animate;
+                                    }
+                                    else if (path) {
+                                        const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, parent, forwardMap, precision);
+                                        if (pathData) {
+                                            object = new SvgAnimate();
+                                            object.attributeName = 'd';
+                                            object.values = replaceMap(pathData, item => item.value.toString());
+                                        }
+                                        else {
+                                            continue;
                                         }
                                     }
                                     else {
-                                        const entries = Array.from(result);
-                                        const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
-                                        let object: Undef<SvgAnimate>;
-                                        for (let i = 0, q = entries.length; i < q; ++i) {
-                                            const item = entries[i];
-                                            keySplines.push(interpolatorMap.get(item[0]) || '');
-                                            item[0] -= delay;
-                                        }
-                                        if (path) {
-                                            const pathData = getPathData(convertToFraction(entries), path, parent, forwardMap, precision);
-                                            if (pathData) {
-                                                object = new SvgAnimate();
-                                                object.attributeName = 'd';
-                                                for (let i = 0, q = pathData.length; i < q; ++i) {
-                                                    const item = pathData[i];
-                                                    object.keyTimes.push(item.key);
-                                                    object.values.push(item.value.toString());
-                                                }
-                                            }
-                                            else {
-                                                continue;
-                                            }
-                                        }
-                                        else {
-                                            const animate = new SvgAnimateTransform();
-                                            animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                            for (const [keyTime, data] of result) {
-                                                const x = data.get('x') as number || 0;
-                                                const y = data.get('y') as number || 0;
-                                                animate.keyTimes.push(keyTime);
-                                                animate.values.push(parent ? parent.refitX(x) + ' ' + parent.refitX(y) : x + ' ' + y);
-                                            }
-                                            object = animate;
-                                        }
-                                        object.delay = delay;
-                                        object.keySplines = keySplines;
-                                        object.duration = lastItemOf(entries)![0];
-                                        insertAnimate(animationsBase, object, repeating);
+                                        const animate = new SvgAnimateTransform();
+                                        animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                        animate.values = [refitTransformPoints(dataFrom, parent), refitTransformPoints(dataTo, parent)];
+                                        value += i;
+                                        object = animate;
                                     }
-                                }
-                                else if (isFromToFormat(transforming, keyTimeMode)) {
-                                    const entries = Array.from(result);
-                                    for (let i = 0, length = entries.length - 1; i < length; ++i) {
-                                        const [keyTimeFrom, dataFrom] = entries[i];
-                                        const [keyTimeTo, dataTo] = entries[i + 1];
-                                        let value = synchronizedName,
-                                            object: Undef<SvgAnimate>;
-                                        if (transforming) {
-                                            const animate = new SvgAnimateTransform();
-                                            if (repeating) {
-                                                for (let j = 0, q = timeRange.length - 1; j < q; ++j) {
-                                                    const previous = timeRange[j];
-                                                    const next = timeRange[j + 1];
-                                                    if (previous[1] === next[1] && keyTimeFrom >= previous[0] && keyTimeTo <= next[0]) {
-                                                        animate.type = previous[1];
-                                                        break;
-                                                    }
-                                                    else if (keyTimeTo - keyTimeFrom === 1 && keyTimeTo === next[0]) {
-                                                        animate.type = next[1];
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                            else if (infiniteMap.transform) {
-                                                animate.type = infiniteMap.transform.type;
-                                            }
-                                            if (animate.type === 0) {
-                                                continue;
-                                            }
-                                            animate.values = [dataFrom.values().next().value as string, dataTo.values().next().value as string];
-                                            const transformOrigin = transformOriginMap.get(keyTimeTo);
-                                            if (transformOrigin) {
-                                                animate.transformOrigin = [transformOrigin];
-                                            }
-                                            object = animate;
-                                        }
-                                        else if (path) {
-                                            const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, parent, forwardMap, precision);
-                                            if (pathData) {
-                                                object = new SvgAnimate();
-                                                object.attributeName = 'd';
-                                                object.values = replaceMap(pathData, item => item.value.toString());
-                                            }
-                                            else {
-                                                continue;
-                                            }
-                                        }
-                                        else {
-                                            const animate = new SvgAnimateTransform();
-                                            animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                            animate.values = [refitTransformPoints(dataFrom, parent), refitTransformPoints(dataTo, parent)];
-                                            value += i;
-                                            object = animate;
-                                        }
-                                        if (repeating) {
-                                            object.delay = i === 0 ? keyTimeFrom : 0;
-                                        }
-                                        object.duration = keyTimeTo - keyTimeFrom;
-                                        object.keyTimes = [0, 1];
-                                        object.synchronized = { key: i, value };
-                                        const interpolator = interpolatorMap.get(keyTimeTo);
-                                        if (interpolator) {
-                                            object.keySplines = [interpolator];
-                                        }
-                                        insertAnimate(animationsBase, object, repeating);
+                                    if (repeating) {
+                                        object.delay = i === 0 ? keyTimeFrom : 0;
                                     }
+                                    object.duration = keyTimeTo - keyTimeFrom;
+                                    object.keyTimes = [0, 1];
+                                    object.synchronized = { key: i, value };
+                                    const interpolator = interpolatorMap.get(keyTimeTo);
+                                    if (interpolator) {
+                                        object.keySplines = [interpolator];
+                                    }
+                                    insertAnimate(animationsBase, object, repeating);
                                 }
                             }
                         }

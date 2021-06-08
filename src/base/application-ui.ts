@@ -260,7 +260,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let data: Undef<FinalizedElement>;
                 for (let j = 0, attr: CssStyleAttr, wrapper: Optional<T>; j < k; ++j) {
                     if (node.has(attr = outputDocumentCSS[j])) {
-                        if (!data && (data = { documentId: node.documentId, bounds: node.bounds, css: {} }) && (wrapper = node.outerWrapper as Null<T>)) {
+                        data ||= { documentId: node.documentId, bounds: node.bounds, css: {} };
+                        if (wrapper = node.outerWrapper as Null<T>) {
                             const ids: string[] = [];
                             do {
                                 ids.push(wrapper.documentId);
@@ -975,7 +976,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                     }
                                     if (l === 0) {
-                                        const next = item.siblingsTrailing[0];
+                                        const next = item.siblingsTrailing[0] as Undef<T>;
                                         if (next) {
                                             if (!item.inlineFlow || next.alignedVertically([item])) {
                                                 vertical.push(item);
@@ -986,7 +987,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             continue;
                                         }
                                     }
-                                    const previous = item.siblingsLeading[0];
+                                    const previous = item.siblingsLeading[0] as Undef<T>;
                                     if (previous) {
                                         const orientation = horizontal.length > 0;
                                         if (floatContainer) {

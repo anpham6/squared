@@ -365,8 +365,8 @@ function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
     const below = b.node.innerMostWrapped as View;
     const depth = above.depth - below.depth;
     if (depth === 0) {
-        const parentA = above.actualParent as View;
-        const parentB = below.actualParent as View;
+        const parentA = above.actualParent as Null<View>;
+        const parentB = below.actualParent as Null<View>;
         if (parentA && parentB) {
             if (above === parentB) {
                 return -1;
@@ -667,7 +667,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const parent = this.application.resolveTarget(node.sessionId, target);
                 if (parent) {
-                    const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
+                    const template = node.removeTry({ alignSiblings: true }) as Null<NodeTemplate<T>>;
                     if (template) {
                         const renderChildren = parent.renderChildren;
                         const renderTemplates = parent.renderTemplates ||= [];
@@ -2236,17 +2236,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     currentFloated: Null<T> = null,
                     currentFloatedWidth = 0,
                     currentFloatedHeight = 0;
-                const setCurrentFloated = (item: T) => {
-                    currentFloated = item;
-                    currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom) + (item.positionRelative ? item.hasUnit('top') ? item.top : item.bottom * -1 : 0));
-                };
+                const setCurrentFloated = (item: T) => currentFloatedHeight = Math.floor(item.marginTop + item.bounds.height + Math.max(0, item.marginBottom) + (item.positionRelative ? item.hasUnit('top') ? item.top : item.bottom * -1 : 0));
                 const createNewRow = (item: T, floating: boolean) => {
                     if (currentFloated) {
                         rows.push(items = [item]);
                     }
                     else if (floating) {
                         rowsAll.push([item, rows = [items = []], true]);
-                        setCurrentFloated(item);
+                        setCurrentFloated(currentFloated = item);
                     }
                     else {
                         items = [item];
@@ -2298,7 +2295,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else {
                             const documentId = previous.documentId;
-                            if (previous === currentFloated && (currentFloated as T).float === 'right') {
+                            if (previous === currentFloated && currentFloated.float === 'right') {
                                 item.anchor('left', 'true');
                             }
                             else {
@@ -2404,7 +2401,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else if (floating && !currentFloated && item.float === 'left') {
                             lastItemOf(rowsAll)![0] = item;
-                            setCurrentFloated(item);
+                            setCurrentFloated(currentFloated = item);
                         }
                         else {
                             if (currentFloated !== previous && !previous.hasUnit('width')) {
@@ -3139,7 +3136,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     if (item !== textBottom || withinRange(textBaseline.bounds.bottom, item.bounds.bottom)) {
                                         item.anchor('bottom', textBaseline.documentId);
                                     }
-                                    else if (textBottom) {
+                                    else {
                                         constraintAlignTop(item, boxTop);
                                     }
                                     break;
@@ -3635,7 +3632,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const setAnchorOffset = (sibling: T, position: AnchorPositionAttr, adjustment: number) => {
                         const transform = node.cssValue('transform');
                         if (transform) {
-                            const translate = parseTransform(transform, { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.group === 'translate')[0];
+                            const translate = parseTransform(transform, { accumulate: true, boundingBox: node.bounds, fontSize: node.fontSize }).filter(item => item.group === 'translate')[0] as Undef<TransformData>;
                             if (translate) {
                                 adjustment -= translate.values[horizontal ? 0 : 1];
                             }
@@ -3727,7 +3724,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         valid = true;
                     }
                 }
-                else if (rightAligned && box.right + location === bounds.right) {
+                else if (box.right + location === bounds.right) {
                     valid = true;
                 }
             }
@@ -3738,7 +3735,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         valid = true;
                     }
                 }
-                else if (bottomAligned && box.bottom + location === bounds.bottom) {
+                else if (box.bottom + location === bounds.bottom) {
                     valid = true;
                 }
             }

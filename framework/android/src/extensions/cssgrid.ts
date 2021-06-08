@@ -607,8 +607,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (mainData.rowSpanMultiple.length === 0 && unit.length === column.length && unit.every(value => endsWith(value, 'fr')) && !node.hasWidth && !node.rootElement && node.ascend({ condition: (item: T) => this.isFlexibleContainer(item), error: item => item.hasWidth }).length) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
-                const constraintData: T[][] = new Array(rowCount);
-                let valid = true;
+                const constraintData: T[][] = [];
                 invalid: {
                     for (let i = 0; i < rowCount; ++i) {
                         const nodes: T[] = [];
@@ -619,14 +618,14 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 nodes.push(cell[0]);
                             }
                             else {
-                                valid = false;
+                                constraintData.length = 0;
                                 break invalid;
                             }
                         }
-                        constraintData[i] = nodes;
+                        constraintData.push(nodes);
                     }
                 }
-                if (valid) {
+                if (constraintData.length) {
                     column.frTotal = unit.reduce((a, b) => a + safeFloat(b), 0);
                     row.frTotal = row.unit.reduce((a, b) => a + (endsWith(b, 'fr') ? safeFloat(b) : 0), 0);
                     node.setLayoutWidth('match_parent');
@@ -871,7 +870,6 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             }
             const constraintData = mainData.constraintData;
             if (constraintData) {
-                const { gap, length } = column;
                 const rowCount = constraintData.length;
                 const barrierIds: string[] = new Array(rowCount - 1);
                 for (let i = 1, j = 0; i < rowCount; ++i) {
@@ -881,9 +879,9 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     const nodes = constraintData[i];
                     const previousBarrierId = barrierIds[i - 1];
                     const barrierId = barrierIds[i];
-                    let previousItem: Undef<T>;
-                    for (let j = 0; j < length; ++j) {
-                        const item = nodes[j];
+                    for (let j = 0, length = column.length; j < length; ++j) {
+                        const item = nodes[j] as Undef<T>;
+                        const previous = nodes[j - 1] as Undef<T>;
                         if (item) {
                             if (i === 0) {
                                 item.anchor('top', 'parent');
@@ -903,11 +901,11 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 item.anchor('right', 'parent');
                             }
                             else {
-                                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, gap * -1);
+                                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, column.gap * -1);
                             }
-                            if (previousItem) {
-                                previousItem.anchor('rightLeft', item.documentId);
-                                item.anchor('leftRight', previousItem.documentId);
+                            if (previous) {
+                                previous.anchor('rightLeft', item.documentId);
+                                item.anchor('leftRight', previous.documentId);
                             }
                             else {
                                 item.anchor('left', 'parent');
@@ -917,9 +915,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                             }
                             item.anchored = true;
                             item.positioned = true;
-                            previousItem = item;
                         }
-                        else if (previousItem) {
+                        else if (previous) {
                             const options = {
                                 width: '0px',
                                 height: 'wrap_content',
@@ -927,9 +924,9 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 app: {
                                     layout_constraintTop_toTopOf: i === 0 ? 'parent' : '',
                                     layout_constraintTop_toBottomOf: previousBarrierId,
-                                    layout_constraintBottom_toTopOf: i < length - 1 ? barrierId : '',
-                                    layout_constraintBottom_toBottomOf: i === length - 1 ? 'parent' : '',
-                                    layout_constraintStart_toEndOf: previousItem.anchorTarget.documentId,
+                                    layout_constraintBottom_toTopOf: i < rowCount - 1 ? barrierId : '',
+                                    layout_constraintBottom_toBottomOf: i === rowCount - 1 ? 'parent' : '',
+                                    layout_constraintStart_toEndOf: previous.anchorTarget.documentId,
                                     layout_constraintEnd_toEndOf: 'parent',
                                     layout_constraintVertical_bias: i === 0 ? '0' : '',
                                     layout_constraintVertical_chainStyle: i === 0 ? 'packed' : '',
@@ -937,7 +934,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 }
                             } as RenderSpaceAttribute;
                             controller.addAfterInsideTemplate(node, controller.renderSpace(node.sessionId, options), false);
-                            previousItem.anchor('rightLeft', options.documentId);
+                            previous.anchor('rightLeft', options.documentId);
                             break;
                         }
                     }

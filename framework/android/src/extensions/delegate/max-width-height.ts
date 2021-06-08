@@ -54,7 +54,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                 autoMargin.top = false;
                 autoMargin.bottom = false;
                 autoMargin.topBottom = false;
-                if (!maxHeight && node.blockStatic && !node.hasWidth) {
+                if (!maxWidth && node.blockStatic && !node.hasWidth) {
                     node.setLayoutWidth('match_parent', false);
                 }
             }

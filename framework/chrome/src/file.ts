@@ -5,7 +5,7 @@ import type Application from './application';
 import Resource = squared.base.Resource;
 
 type CloudStorage = unknown;
-type BundleIndex = ObjectMapSafe<ChromeAsset[]>;
+type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 interface OptionsData {
     preserve?: boolean;
@@ -117,7 +117,7 @@ function resolveAssetSource(element: SrcElement | HTMLObjectElement, data: Map<H
 
 function setBundleIndex(bundles: BundleIndex) {
     for (const uri in bundles) {
-        const items = bundles[uri];
+        const items = bundles[uri]!;
         const length = items.length;
         if (length > 1) {
             const urls: Null<URL[]> = [];
@@ -129,7 +129,7 @@ function setBundleIndex(bundles: BundleIndex) {
                 if (i > 0) {
                     delete item.cloudStorage;
                 }
-                if (urls && item.uri) {
+                if (item.uri) {
                     urls.push(new URL(item.uri));
                 }
             }
@@ -723,7 +723,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (base64) {
                         if (saveAsImage?.blob) {
                             let command = saveAsImage,
-                                filename: Undef<string>,
+                                filename: Optional<string>,
                                 commands: Undef<string[]>;
                             if (command.customize && (filename = command.customize.call(null, '', mimeType, command = { ...command })) === null) {
                                 continue;
@@ -799,7 +799,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     let command = saveAsFont,
                         data: Null<ChromeAsset> = null,
                         pathname: Undef<string>,
-                        filename: Undef<string>,
+                        filename: Optional<string>,
                         inline: Undef<boolean>,
                         blob: Undef<boolean>;
                     if (command) {
@@ -1148,7 +1148,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             return;
         }
         const command = getAssetCommand(assetMap, element) || appendCommand;
-        let filename: Undef<string>,
+        let filename: Optional<string>,
             format: Undef<string>,
             inline: Undef<boolean>,
             process: Undef<string[]>,
@@ -1270,7 +1270,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 saveAs: Undef<string>,
                 saveTo: Undef<boolean>,
                 pathname: Undef<string>,
-                filename: Undef<string>,
+                filename: Optional<string>,
                 commands: Undef<string[]>,
                 inline: Undef<boolean>,
                 compress: Undef<CompressFormat[]>,

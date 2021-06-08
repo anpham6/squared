@@ -41,13 +41,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         break;
                     }
                     default: {
-                        const object: Undef<SVGAnimatedLength> = this.element[attr];
-                        if (object) {
-                            const baseVal = object.baseVal;
-                            if (baseVal) {
-                                this._baseVal[attr] = baseVal.value;
-                                return true;
-                            }
+                        const object = this.element[attr] as Undef<SVGAnimatedLength>;
+                        if (object && object.baseVal) {
+                            this._baseVal[attr] = object.baseVal.value;
+                            return true;
                         }
                         break;
                     }
@@ -57,7 +54,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         public getBaseValue<U = unknown>(attr: string, fallback?: U): Undef<U> {
-            return this._baseVal[attr] as U ?? (!this.setBaseValue(attr) ? fallback : undefined);
+            return this._baseVal[attr] as Undef<U> ?? (!this.setBaseValue(attr) ? fallback : undefined);
         }
 
         public refitBaseValue(x: number, y: number, precision?: number, scaleX = 1, scaleY = 1) {

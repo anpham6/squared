@@ -273,7 +273,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         else {
                             const maxTime = Math.floor(truncateFraction(toKey * duration));
                             do {
-                                const item = offsetPath[j];
+                                const item = offsetPath[j] as Undef<SvgOffsetPath>;
                                 if (item && item.key <= maxTime) {
                                     timeRange.push(item);
                                 }

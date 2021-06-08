@@ -7,7 +7,7 @@ import SvgBuild from './svgbuild';
 
 import { TRANSFORM } from './lib/util';
 
-type IntervalMap = ObjectMapSafe<Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>>;
+type IntervalMap = ObjectMap<Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>>;
 
 const { sortNumber, splitPairStart } = squared.lib.util;
 
@@ -55,7 +55,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             intervalMap[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             const attributeName = splitPairStart(keyName, ':');
-            const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => b.group.id - a.group.id)[0] as SvgAnimate;
+            const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => b.group.id - a.group.id)[0] as Undef<SvgAnimate>;
             if (backwards) {
                 const delay = backwards.delay;
                 insertIntervalValue(intervalMap[keyName]!, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
@@ -88,7 +88,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             }
         }
         for (const keyName in intervalMap) {
-            const data = intervalMap[keyName];
+            const data = intervalMap[keyName]!;
             const keyTimes = sortNumber(Array.from(data.keys()));
             for (let i = 0, q = keyTimes.length; i < q; ++i) {
                 const time = keyTimes[i];
@@ -98,7 +98,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     const animation = interval.animation;
                     if (!interval.value || animation && interval.start && SvgBuild.isAnimate(animation) && !animation.from) {
                         let value: Undef<string>;
-                        for (const group of map[keyName].values()) {
+                        for (const group of map[keyName]!.values()) {
                             for (let k = 0, s = group.length; k < s; ++k) {
                                 const previous = group[k];
                                 if (animation !== previous.animation && previous.value && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
@@ -117,19 +117,19 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 }
                 if (values.length) {
                     values.sort((a, b) => a.animation && b.animation ? a.fillMode === b.fillMode ? b.animation.group.id - a.animation.group.id : b.fillMode - a.fillMode : 0);
-                    map[keyName].set(time, values);
+                    map[keyName]!.set(time, values);
                 }
             }
         }
         for (const keyName in map) {
-            for (const [timeA, dataA] of map[keyName]) {
+            for (const [timeA, dataA] of map[keyName]!) {
                 for (let i = 0, q = dataA.length; i < q; ++i) {
                     const itemA = dataA[i];
                     const animationA = itemA.animation;
                     if (animationA) {
                         if (itemA.fillMode === FILL_MODE.FREEZE) {
                             const previous: SvgAnimation[] = [];
-                            for (const [timeB, dataB] of map[keyName]) {
+                            for (const [timeB, dataB] of map[keyName]!) {
                                 if (timeB < timeA) {
                                     for (let j = 0, r = dataB.length; j < r; ++j) {
                                         const itemB = dataB[j];
@@ -177,7 +177,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                 }
                             }
                             const previous: SvgAnimation[] = [];
-                            for (const [timeB, dataB] of map[keyName]) {
+                            for (const [timeB, dataB] of map[keyName]!) {
                                 if (!forwarded && timeB < timeA) {
                                     for (let j = 0, r = dataB.length; j < r; ++j) {
                                         const itemB = dataB[j];
@@ -213,7 +213,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             }
         }
         for (const keyName in map) {
-            const data = map[keyName];
+            const data = map[keyName]!;
             for (const [time, entry] of data) {
                 if (entry.length === 0) {
                     data.delete(time);

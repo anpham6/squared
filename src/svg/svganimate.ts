@@ -460,7 +460,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set values(value) {
         this._values = value;
-        if (value && value.length !== this.keyTimes.length) {
+        if (value.length !== this.keyTimes.length) {
             this._keyTimes = null;
             this._keySplines = null;
         }

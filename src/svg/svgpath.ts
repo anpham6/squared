@@ -240,8 +240,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             ({ residualHandler, precision } = options);
         }
         const element = this.element;
-        const parent = this.parent as SvgContainer;
-        const patternParent = this.patternParent as SvgShapePattern;
+        const parent = this.parent;
+        const patternParent = this.patternParent as Null<SvgShapePattern>;
         const requireRefit = parent && parent.requireRefit;
         const patternRefit = patternParent && patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
         this.transformed = null;
@@ -254,7 +254,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     let points = SvgBuild.toPathPoints(commands);
                     if (points.length) {
                         if (patternRefit) {
-                            patternParent.patternRefitPoints(points);
+                            patternParent!.patternRefitPoints(points);
                         }
                         if (transforms && transforms.length) {
                             if (typeof residualHandler === 'function') {
@@ -267,7 +267,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         }
                         this.baseValue = SvgBuild.drawPath(SvgBuild.syncPath(requireRefit ? cloneObject(commands, { deep: true }) : commands, requireRefit ? cloneObject(points, { deep: true }) : points, !!this.transformed), precision);
                         if (requireRefit) {
-                            parent.refitPoints(points);
+                            parent!.refitPoints(points);
                             d = SvgBuild.drawPath(SvgBuild.syncPath(commands, points, !!this.transformed), precision);
                         }
                         else {
@@ -284,7 +284,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 { x: this.getBaseValue<number>('x2')!, y: this.getBaseValue<number>('y2')! }
             ];
             if (patternRefit) {
-                patternParent.patternRefitPoints(points);
+                patternParent!.patternRefitPoints(points);
             }
             if (transforms && transforms.length) {
                 if (typeof residualHandler === 'function') {
@@ -298,7 +298,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             const drawPolyline = () => SvgBuild.drawPolyline(points, precision);
             this.baseValue = drawPolyline();
             if (requireRefit) {
-                parent.refitPoints(points);
+                parent!.refitPoints(points);
                 d = drawPolyline();
             }
             else {
@@ -320,7 +320,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             let points: SvgPoint[] = [{ x, y, rx, ry }];
             if (patternRefit) {
-                patternParent.patternRefitPoints(points);
+                patternParent!.patternRefitPoints(points);
             }
             if (transforms && transforms.length) {
                 if (typeof residualHandler === 'function') {
@@ -335,7 +335,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             const drawEllipse = () => SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
             this.baseValue = drawEllipse();
             if (requireRefit) {
-                parent.refitPoints(points);
+                parent!.refitPoints(points);
                 d = drawEllipse();
             }
             else {
@@ -355,7 +355,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     { x, y: y + height }
                 ];
                 if (patternRefit) {
-                    patternParent.patternRefitPoints(points);
+                    patternParent!.patternRefitPoints(points);
                 }
                 if (transforms && transforms.length) {
                     if (typeof residualHandler === 'function') {
@@ -368,7 +368,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 this.baseValue = SvgBuild.drawPolygon(points, precision);
                 if (requireRefit) {
-                    parent.refitPoints(points);
+                    parent!.refitPoints(points);
                     d = SvgBuild.drawPolygon(points, precision);
                 }
                 else {
@@ -377,10 +377,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             else {
                 if (patternRefit) {
-                    x = patternParent.patternRefitX(x);
-                    y = patternParent.patternRefitY(y);
-                    width = patternParent.patternRefitX(width);
-                    height = patternParent.patternRefitY(height);
+                    x = patternParent!.patternRefitX(x);
+                    y = patternParent!.patternRefitY(y);
+                    width = patternParent!.patternRefitX(width);
+                    height = patternParent!.patternRefitY(height);
                 }
                 d = SvgBuild.drawRect(width, height, x, y, precision);
                 this.baseValue = d;
@@ -389,7 +389,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         else if (SVG.polygon(element) || SVG.polyline(element)) {
             let points = this.getBaseValue<SvgPoint[]>('points')!;
             if (patternRefit) {
-                patternParent.patternRefitPoints(points);
+                patternParent!.patternRefitPoints(points);
             }
             if (transforms && transforms.length) {
                 if (typeof residualHandler === 'function') {
@@ -406,7 +406,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 if (!this.transformed) {
                     points = SvgBuild.clonePoints(points);
                 }
-                parent.refitPoints(points);
+                parent!.refitPoints(points);
                 d = drawPolygon();
             }
             else {

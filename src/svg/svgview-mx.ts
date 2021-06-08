@@ -241,8 +241,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         break;
                                     case SVGTransform.SVG_TRANSFORM_SCALE:
                                         name = 'scale';
-                                        value = m.a + ' ' + m.d + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
-                                        if (origin && (key !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                        value = m.a + ' ' + m.d + ' ' + origin.x + ' ' + origin.y;
+                                        if (origin.x !== 0 || origin.y !== 0) {
                                             transformOrigin = {
                                                 x: origin.x * (1 - m.a),
                                                 y: origin.y * (1 - m.d)
@@ -251,12 +251,12 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         break;
                                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                                         name = 'rotate';
-                                        value = item.angle + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
+                                        value = item.angle + ' ' + origin.x + ' ' + origin.y;
                                         break;
                                     case SVGTransform.SVG_TRANSFORM_SKEWX:
                                         name = 'skewX';
                                         value = item.angle.toString();
-                                        if (origin && (key !== 0 || origin.y !== 0)) {
+                                        if (origin.y !== 0) {
                                             transformOrigin = {
                                                 x: origin.y * m.c * -1,
                                                 y: 0
@@ -266,7 +266,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     case SVGTransform.SVG_TRANSFORM_SKEWY:
                                         name = 'skewY';
                                         value = item.angle.toString();
-                                        if (origin && (key !== 0 || origin.x !== 0)) {
+                                        if (origin.x !== 0) {
                                             transformOrigin = {
                                                 x: 0,
                                                 y: origin.x * m.b * -1

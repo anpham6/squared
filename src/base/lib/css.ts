@@ -9,25 +9,23 @@ export function getKeyframesRules(documentRoot: DocumentOrShadowRoot = document)
     for (let i = 0, length = styleSheets.length; i < length; ++i) {
         try {
             const cssRules = styleSheets[i].cssRules;
-            if (cssRules) {
-                for (let j = 0, q = cssRules.length; j < q; ++j) {
-                    try {
-                        const item = cssRules[j] as CSSKeyframesRule;
-                        if (item.type === CSSRule.KEYFRAMES_RULE) {
-                            const value = parseKeyframes(item.cssRules);
-                            if (value) {
-                                const data = result.get(item.name);
-                                if (data) {
-                                    Object.assign(data, value);
-                                }
-                                else {
-                                    result.set(item.name, value);
-                                }
+            for (let j = 0, q = cssRules.length; j < q; ++j) {
+                try {
+                    const item = cssRules[j] as CSSKeyframesRule;
+                    if (item.type === CSSRule.KEYFRAMES_RULE) {
+                        const value = parseKeyframes(item.cssRules);
+                        if (value) {
+                            const data = result.get(item.name);
+                            if (data) {
+                                Object.assign(data, value);
+                            }
+                            else {
+                                result.set(item.name, value);
                             }
                         }
                     }
-                    catch {
-                    }
+                }
+                catch {
                 }
             }
         }

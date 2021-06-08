@@ -31,7 +31,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             first = -1,
             last = -1;
         parent.each((item: T, index, children: T[]) => {
-            const renderAs = item.renderAs as T;
+            const renderAs = item.renderAs as Null<T>;
             let remove: Undef<T>;
             if (renderAs) {
                 if (renderAs !== node) {
@@ -102,7 +102,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         radiogroup = [];
         const sessionId = node.sessionId;
         document.querySelectorAll(`input[type=radio][name=${getInputName(node)}]`).forEach((element: Element) => {
-            const item = getElementAsNode(element, sessionId) as T;
+            const item = getElementAsNode<T>(element, sessionId);
             if (item) {
                 radiogroup.push(item);
             }

@@ -462,7 +462,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             else if (!node.pageFlow && !node.documentRoot) {
                 const actualParent = node.actualParent as T;
                 const absoluteParent = node.absoluteParent as T;
-                let parent: Undef<T>;
+                let parent: Optional<T>;
                 switch (node.valueOf('position')) {
                     case 'fixed':
                         if (!node.autoPosition) {
@@ -512,7 +512,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     else if (node.withinX(linear) && node.withinY(linear)) {
                                         break;
                                     }
-                                    parent = parent.actualParent as T;
+                                    parent = parent.actualParent as Null<T>;
                                 }
                                 else {
                                     break;
@@ -709,7 +709,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 if (length) {
                     const children: T[] = [];
                     for (let i = 0; i < length; ++i) {
-                        const order = layers[i];
+                        const order = layers[i] as Undef<T[]>;
                         if (order) {
                             order.sort((a, b) => {
                                 if (a.parent === b.parent) {

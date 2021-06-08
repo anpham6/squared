@@ -184,7 +184,7 @@ export default class Multiline<T extends View> extends squared.base.ExtensionUI<
         if (isNaN(fontAdjust)) {
             fontAdjust = application.getUserSetting<number>(node.sessionId, 'fontMeasureAdjust');
         }
-        const mainData = this.data.get(node) as MultilineData<T>;
+        const mainData = this.data.get(node) as Undef<MultilineData<T>>;
         const parentContainer = mainData ? node : parent;
         const { children, sessionId } = parentContainer;
         const breakable = mainData || [[1, node]];

@@ -234,7 +234,7 @@ declare module "base" {
         static readonly ASSETS: ResourceSessionAsset;
         static hasMimeType(formats: MIMEOrAll, value: string): boolean;
         static getExtension(value: string): string;
-        static parseDataURI(value: string, mimeType?: string, encoding?: string): RawDataOptions;
+        static parseDataURI(value: string, mimeType?: string, encoding?: string): Undef<RawDataOptions>;
         readonly application: Application<T>;
         init(): void;
         reset(): void;
@@ -676,6 +676,7 @@ declare module "base" {
         setCacheValue(attr: keyof CacheValueUI, value: any): void;
         setCacheState(attr: keyof CacheStateUI<NodeUI>, value: any): void;
         extractAttributes(depth: number): string;
+        css(attr: CssStyleAttr, value?: Null<string>, cache?: boolean): string;
         cssSet(attr: CssStyleAttr, value: string, cache?: boolean): string;
         translateX(value: number, options?: TranslateOptions): boolean;
         translateY(value: number, options?: TranslateOptions): boolean;

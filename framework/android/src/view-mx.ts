@@ -573,7 +573,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _containerType = 0;
         protected _cache!: CacheValueUI;
         protected _cacheState!: CacheStateUI<T>;
-        protected _localSettings!: LocalSettingsUI;
         protected _boxReset!: Null<number[]>;
         protected _boxAdjustment!: Null<number[]>;
 
@@ -582,6 +581,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private _constraint: Null<Constraint> = null;
         private _labelFor: Null<T> = null;
         private _innerWrapped: Null<T> = null;
+        private _localSettings: Null<LocalSettingsUI> = null;
 
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
@@ -1045,7 +1045,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public setAlignment() {
             const node = this.outerMostWrapper as T;
             const renderParent = this.renderParent as T;
-            const outerRenderParent = node.renderParent as T || renderParent;
+            const outerRenderParent = node.renderParent as Undef<T> || renderParent;
             const autoMargin = this.autoMargin;
             const setAutoMargin = (target: T) => {
                 if (autoMargin.horizontal) {
@@ -1305,7 +1305,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             let actualNode: Undef<T>;
                             while (Math.floor(sibling.bounds.top) === boundsTop) {
                                 actualNode = sibling;
-                                const innerWrapped = sibling.innerWrapped as T;
+                                const innerWrapped = sibling.innerWrapped as Null<T>;
                                 if (innerWrapped) {
                                     sibling = innerWrapped;
                                 }
@@ -3443,7 +3443,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
         get localSettings() {
-            return this._localSettings;
+            return this._localSettings || {} as LocalSettingsUI;
         }
 
         set positioned(value) {

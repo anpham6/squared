@@ -13,7 +13,7 @@ const { withinRange } = squared.lib.util;
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const topA = target.bounds.top;
     for (let i = 0, length = columns.length; i < length; ++i) {
-        const index = columns[i].findIndex(item => {
+        const index = columns[i].findIndex((item: Undef<NodeUI>) => {
             if (!item) {
                 return false;
             }
@@ -149,7 +149,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        const columnLast = columns[columns.length - 1];
+                        const columnLast = columns[columns.length - 1] as Undef<T[]>;
                         if (columnLast) {
                             let minLeft = Infinity,
                                 maxRight = -Infinity;
@@ -162,7 +162,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 const index = getRowIndex(columns, nextX);
                                 if (index !== -1) {
                                     for (let k = columns.length - 1; k >= 0; --k) {
-                                        const row = columns[k];
+                                        const row = columns[k] as Undef<T[]>;
                                         if (row) {
                                             if (!row[index]) {
                                                 columnLast.length = 0;

@@ -811,7 +811,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
         }
         case 'boxShadow':
         case 'textShadow':
-            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*\s+(-[\d.]+[a-z]*)/ });
+            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*\s+(-?[\d.]+[a-z]*)?/ });
         case 'animation':
         case 'animationDelay':
         case 'animationDuration':
@@ -1236,20 +1236,17 @@ export function parseVar(element: StyleElement, value: string, style?: CSSStyleD
 }
 
 export function calculateVarAsString(element: StyleElement, value: string, options?: CalculateVarAsStringOptions) {
-    let orderedSize: Undef<number[]>,
+    let orderedSize: Undef<Undef<number>[]>,
         dimension: Undef<DimensionAttr[]>,
         separator: Undef<string>,
         unitType: Undef<number>,
         checkUnit: Undef<boolean>,
         errorString: Undef<RegExp>;
     if (options) {
-        if (Array.isArray(options.orderedSize)) {
-            orderedSize = options.orderedSize;
-        }
+        ({ separator, unitType, checkUnit, orderedSize, errorString } = options);
         if (Array.isArray(options.dimension)) {
             dimension = options.dimension;
         }
-        ({ separator, unitType, checkUnit, errorString } = options);
     }
     if (separator === ' ') {
         value = value.trim();
@@ -1294,18 +1291,16 @@ export function calculateVarAsString(element: StyleElement, value: string, optio
     if (errorString) {
         let match: Null<RegExpExecArray>;
         while (match = errorString.exec(value)) {
-            if (match[1] === undefined) {
-                return '';
-            }
-            const segment = match[0];
-            let optional = segment;
+            let optional = match[0];
             for (let i = match.length - 1; i >= 1; --i) {
-                optional = optional.replace(new RegExp(escapePattern(match[i]) + '$'), '');
+                if (match[i]) {
+                    optional = optional.replace(new RegExp(`\\s*${escapePattern(match[i])}\\s*$`), '');
+                }
             }
-            if (optional === segment) {
+            if (optional === match[0]) {
                 return '';
             }
-            value = value.replace(segment, optional);
+            value = value.replace(match[0], optional);
         }
     }
     return value;

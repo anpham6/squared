@@ -124,7 +124,7 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
     let incomplete: Undef<boolean>;
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
-        const item = elementMap.get(element) || main!.parseDocumentSync(element) as Node;
+        const item = elementMap.get(element) || main!.parseDocumentSync(element) as Undef<Node>;
         if (item) {
             result[i] = item;
         }
@@ -151,7 +151,7 @@ async function findElementAllAsync(query: NodeListOf<Element>, length: number) {
     let incomplete: Undef<boolean>;
     for (let i = 0; i < length; ++i) {
         const element = query[i] as HTMLElement;
-        const item = elementMap.get(element) || await main!.parseDocument(element) as Node;
+        const item = elementMap.get(element) || await main!.parseDocument(element) as Undef<Node>;
         if (item) {
             result[i] = item;
         }

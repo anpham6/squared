@@ -36,7 +36,7 @@ interface CalculateOptions extends UnitOptions {
 interface CalculateVarAsStringOptions extends CalculateOptions {
     boundingBox?: Null<Dimension>;
     dimension?: DimensionAttr[] | DimensionAttr;
-    orderedSize?: number[];
+    orderedSize?: Undef<number>[];
     parent?: boolean;
     roundValue?: boolean;
     precision?: number;

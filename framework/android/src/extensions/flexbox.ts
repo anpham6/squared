@@ -385,8 +385,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     for (let k = 0, ignore: Undef<boolean>; k < q; ++k) {
                         const chain = seg[k];
-                        const previous = seg[k - 1];
-                        const next = seg[k + 1];
+                        const previous = seg[k - 1] as Undef<T>;
+                        const next = seg[k + 1] as Undef<T>;
                         if (next) {
                             chain.anchor(RLBT, next.documentId);
                         }

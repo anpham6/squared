@@ -192,7 +192,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const visibleStyle = td.visibleStyle;
                 if (!visibleStyle.backgroundImage && !visibleStyle.backgroundColor) {
                     if (colgroup) {
-                        const group = colgroup.children[index + 1];
+                        const group = colgroup.children[index + 1] as Undef<Element>;
                         if (group) {
                             const { backgroundImage, backgroundColor } = getStyle(group);
                             if (backgroundImage !== 'none') {
@@ -515,7 +515,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             for (let i = 0; i < rowCount; ++i) {
                 const tr = tableFilled[i];
                 for (let j = 0; j < columnCount; ++j) {
-                    const td = tr[j];
+                    const td = tr[j] as Undef<T>;
                     if (td && td.css('visibility') === 'visible') {
                         if (i === 0) {
                             if (td.borderTopWidth < node.borderTopWidth) {
@@ -527,7 +527,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (i >= 0 && i < rowCount - 1) {
-                            const next = tableFilled[i + 1][j];
+                            const next = tableFilled[i + 1][j] as Undef<T>;
                             if (next && next.css('visibility') === 'visible' && next !== td) {
                                 if (td.borderBottomWidth > next.borderTopWidth) {
                                     next.css('borderTopWidth', '0px', true);
@@ -556,7 +556,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (j >= 0 && j < columnCount - 1) {
-                            const next = tr[j + 1];
+                            const next = tr[j + 1] as Undef<T>;
                             if (next && next.css('visibility') === 'visible' && next !== td) {
                                 if (td.borderRightWidth >= next.borderLeftWidth) {
                                     next.css('borderLeftWidth', '0px', true);

@@ -344,7 +344,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         return x === nextPoint.x.toPrecision(x.length - (x.indexOf('.') !== -1 ? 1 : 0)) && y === nextPoint.y.toPrecision(y.length - (y.indexOf('.') !== -1 ? 1 : 0));
                     });
                     if (index !== -1) {
-                        const endPoint = keyPoints[index + 1];
+                        const endPoint = keyPoints[index + 1] as Undef<Point>;
                         if (endPoint) {
                             if (rotating = rotatingPoints[index + 1]) {
                                 center = SvgBuild.centerOf(keyPoints[index], endPoint);

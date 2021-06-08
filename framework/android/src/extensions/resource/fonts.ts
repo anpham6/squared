@@ -9,7 +9,7 @@ import { concatString } from '../../lib/util';
 type StyleList<T> = ObjectMap<T[]>;
 type AttributeMap<T> = ObjectMap<T[]>;
 
-interface IStyleAttribute<T> extends StyleAttribute {
+interface StyleData<T> extends StyleAttribute {
     nodes: T[];
 }
 
@@ -77,13 +77,12 @@ const FONT_STYLE = {
     'backgroundColor': 'background="@color/'
 };
 
-function deleteStyleAttribute(sorted: AttributeMap<View>[], attrs: string[], nodes: View[]) {
+function deleteStyleAttribute(sorted: Undef<AttributeMap<View>>[], attrs: string[], nodes: View[]) {
     for (let i = 0, length = attrs.length, q = sorted.length; i < length; ++i) {
         const attr = attrs[i];
-        for (let j = 0; j < q; ++j) {
-            const data = sorted[j];
-            let item = data[attr];
-            if (item) {
+        for (let j = 0, item: Undef<View[]>; j < q; ++j) {
+            const data = sorted[j]!;
+            if (item = data[attr]) {
                 item = item.filter(node => !nodes.includes(node));
                 if (item.length === 0) {
                     delete data[attr];
@@ -115,7 +114,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const { fonts, arrays, styles } = Resource.STORED[resourceId]!;
         const nameMap: ObjectMapSafe<T[]> = {};
         const textMap: ObjectMapSafe<T[]> = {};
-        const groupMap: ObjectMap<StyleList<T>[]> = {};
+        const groupMap: ObjectMap<Undef<StyleList<T>>[]> = {};
         const fontItems: T[] = [];
         cache.each(node => {
             if (node.data(Resource.KEY_NAME, 'fontStyle')) {
@@ -125,7 +124,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         });
         for (const tag in nameMap) {
             const data = nameMap[tag];
-            const sorted: StyleList<T>[] = [{}, {}];
+            const sorted: Undef<StyleList<T>>[] = [{}, {}];
             const addFontItem = (node: T, index: number, attr: string, value: string) => {
                 if (value) {
                     const items = sorted[index] ||= {};
@@ -454,12 +453,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             }
             while (sorted.length);
         }
-        const resourceMap: ObjectMap<IStyleAttribute<T>[]> = {};
+        const resourceMap: ObjectMap<StyleData<T>[]> = {};
         const nodeMap = new WeakMap<T, string[]>();
         const parentStyle = new Set<string>();
         for (const tag in style) {
             const styleTag = style[tag];
-            const styleData: IStyleAttribute<T>[] = [];
+            const styleData: StyleData<T>[] = [];
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const attr of attrs.split(';')) {
@@ -490,15 +489,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in resourceMap) {
             for (const group of resourceMap[tag]!) {
                 const nodes = group.nodes;
-                if (nodes) {
-                    for (let i = 0, length = nodes.length; i < length; ++i) {
-                        const item = nodes[i];
-                        let data = nodeMap.get(item);
-                        if (!data) {
-                            nodeMap.set(item, data = []);
-                        }
-                        data.push(group.name);
+                for (let i = 0, length = nodes.length; i < length; ++i) {
+                    const item = nodes[i];
+                    let data = nodeMap.get(item);
+                    if (!data) {
+                        nodeMap.set(item, data = []);
                     }
+                    data.push(group.name);
                 }
             }
         }
@@ -525,7 +522,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const name = values[i];
                 const match = REGEXP_FONTNAME.exec(name);
                 if (match) {
-                    const styleData = resourceMap[match[1].toUpperCase()]![+match[2] || 0];
+                    const styleData = resourceMap[match[1].toUpperCase()]![+match[2] || 0] as Undef<StyleData<T>>;
                     if (styleData) {
                         if (i === 0) {
                             parent = name;

@@ -174,7 +174,7 @@ export function replaceTab(value: string, spaces: number, lineStart = '<', lineE
         const padding = ' '.repeat(spaces);
         const end = lineEnd.length;
         let result = '';
-        for (let i = 0, j = 0, start = true, length = value.length, ch: string; i < length; ++i) {
+        for (let i = 0, j = 0, length = value.length, start = true, ch: string; i < length; ++i) {
             ch = value[i];
             if (start) {
                 if (ch === '\t') {
