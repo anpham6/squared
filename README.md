@@ -78,7 +78,7 @@ File bundles for common combinations are available in the /dist/bundles folder a
 
 The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build the layout files into a single entity with combined shared resources. Using "parseDocumentSync" is not recommended when your page has either images or fonts.
 
-```javascript
+```html
 <script src="/dist/squared.min.js"></script>
 <script src="/dist/squared.base.min.js"></script>
 <script src="/dist/squared.svg.min.js"></script> /* Optional */
@@ -129,7 +129,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
 VDOM is a minimal framework (41kb gzipped) for those who prefer a universal HTMLElement. The "lite" version is about half the bundle size and is recommended for most browser applications. Chrome framework offers the same features as VDOM but can also bundle assets using HTML syntax and Express server. It is adequate for most applications and gives you the ability to see your application first and to build it last.
 
-```javascript
+```html
 <script src="/dist/squared.min.js"></script>
 <script src="/dist/squared.base-dom.min.js"></script>
 <script src="/dist/vdom.framework.min.js"></script> /* chrome.framework.min.js */
@@ -225,6 +225,8 @@ squared.settings = {
     convertPixels: "dp",
     insertSpaces: 4,
     showErrorMessages: true,
+    formatUUID: "8-4-4-4-12",
+    formatDictionary: "0123456789abcdef",
     manifestPackage: "",
     manifestLabelAppName: "android",
     manifestThemeName: "AppTheme",
@@ -260,6 +262,8 @@ squared.settings = {
     showErrorMessages: false,
     webSocketPort: 80,
     webSocketSecurePort: 443,
+    formatUUID: "8-4-4-4-12",
+    formatDictionary: "0123456789abcdef",
     outputDocumentHandler: "chrome",
     outputEmptyCopyDirectory: false,
     outputTasks: {} // { "*.js": [{ handler: "gulp", task: "minify" }, { handler: "gulp", task: "beautify" }] }

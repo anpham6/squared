@@ -986,7 +986,7 @@ declare module "base" {
             function parseMimeType(value: string): string;
             function getComponentEnd(value: string, leading?: string, trailing?: string): string;
             function appendSeparator(preceding?: string, value?: string, separator?: string): string;
-            function generateUUID(format?: string): string;
+            function generateUUID(format?: string, dictionary?: string): string;
             function upperCaseString(value: string): string;
             function lowerCaseString(value: string): string;
             function assignEmptyValue(dest: PlainObject, ...attrs: string[]): void;

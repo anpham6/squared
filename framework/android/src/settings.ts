@@ -58,6 +58,7 @@ const settings: UserResourceSettingsUI = {
     insertSpaces: 4,
     showErrorMessages: true,
     formatUUID: "8-4-4-4-12",
+    formatDictionary: "0123456789abcdef",
     manifestPackage: "",
     manifestLabelAppName: "android",
     manifestThemeName: "AppTheme",

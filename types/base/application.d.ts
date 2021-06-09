@@ -10,6 +10,7 @@ interface UserResourceSettings extends UserSettings {
     preloadFonts: boolean;
     preloadCustomElements: boolean;
     formatUUID: string;
+    formatDictionary: string;
     outputTasks: ObjectMap<TaskAction | TaskAction[]>;
     outputWatch: ObjectMap<WatchValue>;
     outputEmptyCopyDirectory: boolean;

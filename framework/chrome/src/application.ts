@@ -314,7 +314,6 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         }
         if (dataSource.length) {
             const useOriginalHtmlPage = options.useOriginalHtmlPage;
-            const formatUUID = this.getUserSetting<string>(processing, 'formatUUID');
             const elements = document.querySelectorAll('*');
             const cache: SelectorCache = {};
             const items = options.dataSource ||= [];
@@ -323,7 +322,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                 node.textContent = element.textContent!;
                 data.element = node;
                 if (!useOriginalHtmlPage) {
-                    File.setDocumentId(node, element, data.document, formatUUID);
+                    File.setDocumentId(node, element, data.document);
                 }
                 nodeMap.set(node, element);
                 items.push(data);

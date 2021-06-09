@@ -146,7 +146,6 @@ const EXT_DATA = {
 };
 
 const CACHE_UUID: ObjectMap<RegExpMatchArray> = {};
-const HEX_STRING = '0123456789abcdef';
 
 export function fromMimeType(value: string) {
     const [type, name] = splitPair(value, '/');
@@ -425,12 +424,12 @@ export function assignEmptyValue(dest: PlainObject, ...attrs: string[]) {
     }
 }
 
-export function generateUUID(format = '8-4-4-4-12') {
+export function generateUUID(format = '8-4-4-4-12', dictionary = '0123456789abcdef') {
     return (CACHE_UUID[format] || format.match(/(\d+|[^\d]+)/g)!).reduce((a, b) => {
         const length = +b;
         if (!isNaN(length)) {
-            for (let i = 0; i < length; ++i) {
-                a += HEX_STRING[Math.floor(Math.random() * 16)];
+            for (let i = 0, j = dictionary.length; i < length; ++i) {
+                a += dictionary[Math.floor(Math.random() * j)];
             }
             return a;
         }

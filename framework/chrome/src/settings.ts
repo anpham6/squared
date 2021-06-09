@@ -10,6 +10,7 @@ const settings: UserResourceSettings = {
     webSocketPort: 80,
     webSocketSecurePort: 443,
     formatUUID: "8-4-4-4-12",
+    formatDictionary: "0123456789abcdef",
     outputDocumentHandler: "chrome",
     outputEmptyCopyDirectory: false,
     outputTasks: {},
