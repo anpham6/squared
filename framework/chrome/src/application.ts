@@ -264,7 +264,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                         let dataSrc: Null<DataSource> = isPlainObject(item.dataSource) ? item.dataSource : null,
                             dataCloud: Null<DataSource> = isPlainObject(item.cloudDatabase) ? item.cloudDatabase : null;
                         if (paramMap.size) {
-                            for (const data of [dataSrc, dataCloud]) {
+                            const checkValues = (data: Null<DataSource>) => {
                                 if (data) {
                                     for (const attr in data) {
                                         if (attr !== 'value') {
@@ -272,7 +272,9 @@ export default class Application<T extends squared.base.Node> extends squared.ba
                                         }
                                     }
                                 }
-                            }
+                            };
+                            checkValues(dataSrc);
+                            checkValues(dataCloud);
                         }
                         dataSrc &&= { document: item.document || File.copyDocument(documentHandler), ...dataSrc, type } as DataSource;
                         dataCloud &&= { document: item.document || File.copyDocument(documentHandler), ...dataSrc, type, source: 'cloud' } as DataSource;

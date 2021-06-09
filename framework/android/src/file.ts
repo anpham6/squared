@@ -95,7 +95,8 @@ function getImageAssets(resource: Resource<View>, resourceId: number, pathname: 
             compress,
             uri,
             document: File.copyDocument(document),
-            tasks: image && image.tasks
+            tasks: image && image.tasks,
+            willChange: !!commands
         };
     }
     return result;

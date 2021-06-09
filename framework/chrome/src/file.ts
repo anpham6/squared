@@ -283,6 +283,20 @@ function createFile(mimeType: Undef<string>): ChromeAsset {
     };
 }
 
+function hasFormat(value: Undef<string>) {
+    if (value) {
+        switch (value) {
+            case 'base64':
+            case 'crossorigin':
+            case 'blob':
+            case 'srcset':
+                return false;
+        }
+        return true;
+    }
+    return false;
+}
+
 const assignFilename = (value: string, ext?: string) => DIR_FUNCTIONS.ASSIGN + '.' + (ext || value && getFileExt(value) || 'unknown');
 const isCrossOrigin = (download: Undef<boolean>, preserveCrossOrigin: Undef<boolean>) => typeof download === 'boolean' ? !download : !!preserveCrossOrigin;
 const getContentType = (element: HTMLElement) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
@@ -463,6 +477,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             else if (!data.filename) {
                 const value = location.pathname.split('/').pop()!;
                 data.filename = /\.(?:html?|php|jsp|aspx?)$/i.exec(value) ? value : 'index.html';
+            }
+            if (hasFormat(data.format)) {
+                data.willChange = true;
             }
             return [data];
         }
@@ -999,16 +1016,22 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
-            for (const item of assets) {
+            assets.forEach(item => {
                 switch (item.mimeType) {
                     case 'text/html':
                     case 'text/css':
                         item.mimeType = '@' + item.mimeType;
+                        item.willChange = true;
                         break;
                 }
-            }
+            });
         }
         const [scriptAssets, templateMap] = this.getScriptAssets(options);
+        scriptAssets.forEach(item => {
+            if (hasFormat(item.format) || item.bundleId || item.trailingContent) {
+                item.willChange = true
+            }
+        });
         assets.push(
             ...scriptAssets,
             ...this.getImageAssets(options),
@@ -1258,6 +1281,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (bundleIndex) {
                 setBundleData(bundleIndex, data);
             }
+            if (hasFormat(data.format)) {
+                data.willChange = true;
+            }
             assets.push(data);
             return data;
         }
@@ -1372,6 +1398,10 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
                 if (commands) {
                     data.commands = commands;
+                    data.willChange = true;
+                }
+                else if (compress) {
+                    data.willChange = true;
                 }
                 assets.push(data);
                 return data;

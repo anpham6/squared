@@ -69,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (copyTo) {
         squared.settings.showErrorMessages = false;
     }
+    /* squared.settings.createManifest = true;
+    squared.settings.createBuildDependencies = true; */
+    squared.settings.outputDocumentEditing = false;
     squared.settings.customizationsBaseAPI = -1;
     const time = performance.now();
     squared.parseDocument()

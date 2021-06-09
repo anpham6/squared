@@ -53,6 +53,7 @@ interface OutputAction extends DocumentAction {
     process?: string[];
     commands?: string[];
     compress?: CompressFormat[];
+    willChange?: boolean;
 }
 
 interface TaskAction {
