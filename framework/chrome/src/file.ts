@@ -814,7 +814,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const fonts of assets.fonts.values()) {
                 for (const { srcUrl, srcBase64, mimeType } of fonts) {
                     let command = saveAsFont,
-                        data: Null<ChromeAsset> = null,
+                        data: Optional<ChromeAsset>,
                         pathname: Undef<string>,
                         filename: Optional<string>,
                         inline: Undef<boolean>,
@@ -1029,7 +1029,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const [scriptAssets, templateMap] = this.getScriptAssets(options);
         scriptAssets.forEach(item => {
             if (hasFormat(item.format) || item.bundleId || item.trailingContent) {
-                item.willChange = true
+                item.willChange = true;
             }
         });
         assets.push(
@@ -1232,7 +1232,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         if (process) {
             format = process.join('+');
         }
-        let data: Null<ChromeAsset> = null;
+        let data: Optional<ChromeAsset>;
         if (src) {
             if ((data = File.parseUri(resolvePath(src), isCrossOrigin(download, preserveCrossOrigin) || appendCommand && preserve, { saveAs: file, mimeType, format, fromConfig })) && data.format !== 'crossorigin') {
                 if (appendCommand) {
@@ -1415,7 +1415,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
     }
 
-    private processExtensions(data: Null<ChromeAsset>, document?: StringOfArray, compress?: CompressFormat[], tasks?: TaskAction[], cloudStorage?: CloudStorage[], attributes?: AttributeMap, element?: Null<HTMLElement>, watch?: WatchValue, modified?: Undef<boolean>): data is ChromeAsset {
+    private processExtensions(data: Optional<ChromeAsset>, document?: StringOfArray, compress?: CompressFormat[], tasks?: TaskAction[], cloudStorage?: CloudStorage[], attributes?: AttributeMap, element?: Null<HTMLElement>, watch?: WatchValue, modified?: Undef<boolean>): data is ChromeAsset {
         if (data) {
             if (compress) {
                 data.compress = compress;

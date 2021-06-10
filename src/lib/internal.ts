@@ -1615,6 +1615,8 @@ export function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot
         }
     }
     const style = document.createElement('style');
+    const parentElement = shadowRoot || document.head;
+    parentElement.appendChild(style);
     const sheet = style.sheet as Null<CSSStyleSheet>;
     if (sheet && typeof sheet.insertRule === 'function') {
         try {
@@ -1622,8 +1624,6 @@ export function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot
                 style.appendChild(document.createTextNode(''));
             }
             sheet.insertRule(value);
-            const parentElement = shadowRoot || document.head;
-            parentElement.appendChild(style);
             return () => {
                 try {
                     parentElement.removeChild(style);
@@ -1635,5 +1635,6 @@ export function insertStyleSheetRule(value: string, shadowRoot?: Null<ShadowRoot
         catch {
         }
     }
+    parentElement.removeChild(style);
     return null;
 }

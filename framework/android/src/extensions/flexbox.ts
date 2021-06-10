@@ -38,6 +38,10 @@ function setLayoutWeightOpposing(node: View, horizontal: boolean, value: string)
     }
     else {
         node.setLayoutWidth(value, node.naturalChild);
+        const innerWrapped = node.innerWrapped;
+        if (innerWrapped) {
+            innerWrapped.setLayoutWidth('match_parent', false);
+        }
     }
 }
 

@@ -3420,7 +3420,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get flexibleHorizontal() {
-            return this.ascend({ condition: (node: T) => isPx(node.layoutWidth) && !node.flexibleWidth || +node.app('layout_constraintHorizontal_weight') > 0, error: (node: T) => node.layoutHorizontal && node.renderChildren.length > 1 || node.inlineWidth }).length > 0;
+            const condition = (node: T) => {
+                if (+node.app('layout_constraintHorizontal_weight') > 0) {
+                    return true;
+                }
+                if (node.flexibleWidth) {
+                    return node.renderParent!.layoutVertical;
+                }
+                return isPx(node.layoutWidth);
+            }
+            return this.ascend({ condition, error: (node: T) => node.layoutHorizontal && node.renderChildren.length > 1 || node.inlineWidth }).length > 0;
         }
 
         get labelFor() {

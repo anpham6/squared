@@ -203,9 +203,16 @@ function setVerticalLayout(node: View) {
 function constraintAlignTop(node: View, boxTop: number) {
     node.anchorParent('vertical', 0);
     const adjustment = node.bounds.top - boxTop;
-    if (adjustment !== 0 && Math.floor(adjustment) !== Math.floor(node.marginTop)) {
-        node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
-        node.baselineAltered = true;
+    if (adjustment !== 0) {
+        const marginTop = node.marginTop;
+        if (marginTop === 0) {
+            node.modifyBox(BOX_STANDARD.MARGIN_TOP, adjustment);
+            node.baselineAltered = true;
+        }
+        else if (Math.floor(adjustment) !== Math.floor(marginTop)) {
+            node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
+            node.baselineAltered = true;
+        }
     }
 }
 
