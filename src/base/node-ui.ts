@@ -1672,12 +1672,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             const element = this.element;
             if (element) {
-                if (element.nodeName[0] === '#') {
+                if ((result = element.nodeName)[0] === '#') {
                     result = 'PLAINTEXT';
                 }
                 else {
-                    result = element.tagName.toUpperCase();
-                    if (result === 'INPUT') {
+                    if ((result = result.toUpperCase()) === 'INPUT') {
                         result += '_' + (element as HTMLInputElement).type.toUpperCase();
                     }
                     result = replaceAll(result, '-', '_');

@@ -150,6 +150,13 @@
                         },
                         image: {
                             blob: true,
+                            compress: [{
+                                format: 'png',
+                                plugin: 'imagemin-pngquant',
+                                options: {
+                                    quality: [0.6, 0.8]
+                                }
+                            }],
                             customize: (uri, mimeType, command) => {
                                 if (mimeType === 'image/jpeg') {
                                     return Math.floor(Math.random() * 10000) + '.jpg';

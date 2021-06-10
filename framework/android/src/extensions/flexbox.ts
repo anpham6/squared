@@ -839,6 +839,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             value = item.parseUnit(basis, options);
                         }
                     }
+                    else if (asPercent(basis) <= asPercent(item.css(maxAttr))) {
+                        percentage.push(item);
+                        continue;
+                    }
                     else if (grow === 0 && (horizontal ? item.variableWidth : item.variableHeight) && !item.hasUnit(maxAttr) && (!spreadInside || items.some(sibling => sibling !== item && (horizontal ? sibling.percentWidth >= 1 && !sibling.isResizable('maxWidth') : sibling.percentHeight >= 1 && !sibling.isResizable('maxHeight'))))) {
                         item.css(maxAttr, formatPX(value));
                     }
@@ -907,19 +911,19 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         item.css('width', 'auto');
                         item.setCacheValue('percentWidth', 0);
                     }
+                    if (q === length && !isNaN(previousWeight)) {
+                        if (previousWeight === 0) {
+                            maxWidth = item.css('maxWidth');
+                            previousWeight = !maxWidth || !isPercent(maxWidth) ? NaN : weight;
+                        }
+                        else if (previousWeight !== weight || maxWidth !== item.css('maxWidth')) {
+                            previousWeight = NaN;
+                        }
+                    }
                 }
                 else if (item.percentHeight > 0) {
                     item.css('height', 'auto');
                     item.setCacheValue('percentHeight', 0);
-                }
-                if (q === length && !isNaN(previousWeight)) {
-                    if (previousWeight === 0) {
-                        maxWidth = item.css('maxWidth');
-                        previousWeight = !maxWidth || !isPercent(maxWidth) ? NaN : weight;
-                    }
-                    else if (previousWeight !== weight || maxWidth !== item.css('maxWidth')) {
-                        previousWeight = NaN;
-                    }
                 }
             }
             if (maxWidth && q * asPercent(maxWidth) >= 0.999) {

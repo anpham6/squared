@@ -3421,14 +3421,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get flexibleHorizontal() {
             const condition = (node: T) => {
-                if (+node.app('layout_constraintHorizontal_weight') > 0) {
+                const percent = +node.app('layout_constraintWidth_percent');
+                if (percent > 0 && percent < 1 || +node.app('layout_constraintHorizontal_weight') > 0) {
                     return true;
                 }
-                if (node.flexibleWidth) {
-                    return node.renderParent!.layoutVertical;
-                }
-                return isPx(node.layoutWidth);
-            }
+                return node.flexibleWidth ? node.renderParent!.layoutVertical : isPx(node.layoutWidth);
+            };
             return this.ascend({ condition, error: (node: T) => node.layoutHorizontal && node.renderChildren.length > 1 || node.inlineWidth }).length > 0;
         }
 
