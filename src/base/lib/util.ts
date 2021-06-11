@@ -68,7 +68,7 @@ const EXT_DATA = {
     pjp: 'image/jpeg',
     jpeg2000: 'video/jpeg2000',
     js: 'text/javascript',
-    mjs: 'text/javascript',
+    mjs: 'application/javascript',
     json: 'application/json',
     jsonp: 'application/javascript',
     jsonld: 'application/ld+json',

@@ -518,7 +518,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         document.querySelectorAll('script').forEach(element => {
             const template = element.dataset.chromeTemplate;
-            if (template || element.type === 'text/template') {
+            let mimeType = element.type.toLowerCase();
+            if (template || mimeType === 'text/template') {
                 const command = getAssetCommand(assetMap, element);
                 let type: Undef<string>,
                     module: Undef<string>,
@@ -546,9 +547,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     excludeAsset(result, command, element);
                 }
             }
-            else {
+            else if (!(mimeType === 'application/json' || mimeType === 'application/ld+json')) {
                 const src = element.src;
-                this.createBundle(options?.sessionId || '', true, result, element, src, getMimeType(element, src, 'text/javascript'), 'js', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsScript });
+                mimeType = getMimeType(element, src, 'text/javascript');
+                if (mimeType === 'application/javascript') {
+                    mimeType = 'text/javascript';
+                }
+                mimeType += '|' + (element.defer ? '1' : '0') + (element.async ? '1' : '0') + (element.noModule ? '1' : '0');
+                this.createBundle(true, result, element, src, mimeType, 'js', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsScript });
             }
         });
         setBundleIndex(bundleIndex);
@@ -600,7 +606,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                 }
             }
-            const data = this.createBundle(options?.sessionId || '', mimeType === 'text/css', result, element, href, mimeType, 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
+            const data = this.createBundle(mimeType === 'text/css', result, element, href, mimeType, 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
             if (data) {
                 styleMap.set(element, data);
             }
@@ -641,7 +647,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                                             assetCommand.filename = data.filename;
                                                         }
                                                     }
-                                                    const data = this.createBundle(options?.sessionId || '', true, result, element, uri, 'text/css', 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
+                                                    const data = this.createBundle(true, result, element, uri, 'text/css', 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
                                                     if (data) {
                                                         data.bundleReplace = escapePattern(rule.cssText).replace(/\("/, `(\\s*["']?\\s*`).replace(/"\\\)/, `\\s*["']?\\s*\\)`).replace(/\s+/g, '\\s+');
                                                         delete data.element;
@@ -1028,6 +1034,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const [scriptAssets, templateMap] = this.getScriptAssets(options);
         scriptAssets.forEach(item => {
+            let mimeType = item.mimeType;
+            if (mimeType) {
+                mimeType = splitPairStart(mimeType, '|');
+                if (mimeType === 'module') {
+                    mimeType = 'application/javascript';
+                }
+                item.mimeType = mimeType;
+            }
             if (hasFormat(item.format) || item.bundleId || item.trailingContent) {
                 item.willChange = true;
             }
@@ -1111,7 +1125,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         if (url && attributes) {
                             appendCommand.document ||= documentData;
                             delete appendCommand.download;
-                            const data = this.createBundle(sessionId!, false, assets, element, url, attributes.type!, js ? 'js' : 'css', { appendCommand });
+                            const data = this.createBundle(false, assets, element, url, attributes.type!, js ? 'js' : 'css', { appendCommand });
                             if (data) {
                                 if (isCrossOrigin(download, preserveCrossOrigin)) {
                                     delete data.uri;
@@ -1163,7 +1177,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return options;
     }
 
-    private createBundle(sessionId: string, bundling: boolean, assets: ChromeAsset[], element: HTMLElement, src: Undef<string>, mimeType: string, ext: string, options: BundleOptions) {
+    private createBundle(bundling: boolean, assets: ChromeAsset[], element: HTMLElement, src: Undef<string>, mimeType: string, ext: string, options: BundleOptions) {
         const { preserveCrossOrigin, bundleIndex, assetMap, appendCommand } = options;
         let file = !appendCommand ? element.dataset.chromeFile : '';
         if (file === 'exclude' || file === 'ignore') {
