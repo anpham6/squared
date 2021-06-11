@@ -241,7 +241,7 @@ function newBoxRectPosition(orientation = ['left', 'top']): BoxRectPosition {
     };
 }
 
-function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], uuid: string, start?: boolean) {
+function replaceSvgAttribute(src: string, tagName: string, attrs: NumString[], uuid: string, start: boolean) {
     const length = attrs.length;
     let i = 0;
     while (i < length) {
@@ -1494,8 +1494,9 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
             const item = childNodes[i] as Element;
             const child = getElementAsNode<NodeUI>(item, sessionId);
             if (!child) {
-                if (item.nodeName[0] !== '#') {
-                    value = replaceAll(value, item.outerHTML, item.tagName === 'WBR' ? this.STRING_WBR : !hasCoords(getStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '', 1);
+                const nodeName = item.nodeName;
+                if (nodeName[0] !== '#') {
+                    value = replaceAll(value, item.outerHTML, nodeName === 'WBR' ? this.STRING_WBR : !hasCoords(getStyle(item).position) && isString(item.textContent!) ? this.STRING_SPACE : '', 1);
                 }
                 if (!preserveWhiteSpace) {
                     if (i === 0) {

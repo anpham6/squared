@@ -127,7 +127,7 @@ function getCounterValue(value: Undef<string>, counterName: string, fallback = 1
     return null;
 }
 
-function setElementState(node: NodeUI, type?: number) {
+function setElementState(node: NodeUI, type: number) {
     const cacheState = node.unsafe<CacheStateUI<NodeUI>>('cacheState')!;
     cacheState.naturalChild = true;
     if (type === 1) {
@@ -461,7 +461,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (parent) {
                 parent.visible = false;
                 node.documentParent = parent;
-                setElementState(parent);
+                setElementState(parent, 0);
                 if (parent.element === document.documentElement) {
                     parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                     parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
@@ -632,7 +632,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
         const node = this.insertNode(processing, parentElement, cascadeAll);
-        setElementState(node);
+        setElementState(node, 0);
         if (depth === 0) {
             processing.cache.add(node);
             for (const name of node.extensions) {
@@ -1648,15 +1648,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             (REGEXP_ATTRVALUE ||= new RegExp(QUOTED + '|attr\\(([^)]+)\\)', 'g')).lastIndex = 0;
                             let match: Null<RegExpExecArray>;
                             while (match = REGEXP_ATTRVALUE.exec(value)) {
-                                if (match[2]) {
-                                    content += getNamedItem(element, match[2].trim());
-                                }
-                                else {
-                                    content += match[1];
-                                }
+                                content += match[2] ? getNamedItem(element, match[2].trim()) : match[1];
                             }
                             if (!content.trim()) {
-                                const checkDimension = (after?: boolean) => {
+                                const checkDimension = (after: boolean) => {
                                     switch (styleMap!.display) {
                                         case 'inline':
                                         case 'block':
@@ -1716,15 +1711,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         return;
                                     }
                                 }
-                                else if (!checkDimension()) {
+                                else if (!checkDimension(false)) {
                                     return;
                                 }
                                 else {
                                     const childNodes = elementRoot.childNodes;
                                     for (let i = 0, length = childNodes.length; i < length; ++i) {
                                         const child = childNodes[i] as Element;
-                                        if (child.nodeName[0] === '#') {
-                                            if (child.nodeName === '#text' && isString(child.textContent)) {
+                                        const nodeName = child.nodeName;
+                                        if (nodeName[0] === '#') {
+                                            if (nodeName === '#text' && isString(child.textContent)) {
                                                 break;
                                             }
                                         }
@@ -1770,7 +1766,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         wasSet = 0,
                                         wasReset: Undef<boolean>,
                                         locked: Undef<boolean>;
-                                    const incrementCounter = (increment: Null<number>, isSet?: boolean) => {
+                                    const incrementCounter = (increment: Null<number>, isSet: boolean) => {
                                         if (increment !== null && !locked && (isSet || wasSet !== 2)) {
                                             if (isNaN(counters[0])) {
                                                 counters[0] = increment;
@@ -1780,7 +1776,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                         }
                                     };
-                                    const cascadeSibling = (target: Element, ignoreReset?: boolean, ascending?: boolean) => {
+                                    const cascadeSibling = (target: Element, ignoreReset: boolean, ascending: boolean) => {
                                         const [counterSet, counterReset] = setCounter(target, ascending);
                                         let type = 0;
                                         if (counterSet !== null) {
@@ -1801,7 +1797,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         }
                                         iterateArray(target.children, (item: Element) => {
                                             if (item.className !== '__squared-pseudo') {
-                                                switch (cascadeSibling(item)) {
+                                                switch (cascadeSibling(item, false, false)) {
                                                     case 0:
                                                     case 1:
                                                         wasReset = true;
@@ -1823,13 +1819,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 return 2;
                                             }
                                             if (wasSet === 1 && !wasReset) {
-                                                incrementCounter(initial);
+                                                incrementCounter(initial, false);
                                                 locked = true;
                                             }
                                         }
                                         return wasReset ? 0 : -1;
                                     };
-                                    const setCounter = (target: Element, ascending?: boolean) => {
+                                    const setCounter = (target: Element, ascending: boolean) => {
                                         const { counterSet, counterReset, counterIncrement } = getStyleMap(sessionId, target);
                                         const setValue = getCounterValue(counterSet, counterName, 0);
                                         const resetValue = getCounterValue(counterReset, counterName);
@@ -1965,12 +1961,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[] = [], rightAbove: T[] = []) {
-        const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
+        const requirePadding = (node: NodeUI, depth: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
         const setColumnMaxWidth = (nodes: NodeUI[], value: number) => nodes.forEach(child => !child.hasUnit('width') && !child.hasUnit('maxWidth') && !child.imageContainer && child.css('maxWidth', formatPX(value)));
         const paddingNodes: T[] = [];
         for (let i = 0, length = inlineAbove.length; i < length; ++i) {
             const child = inlineAbove[i];
-            if (requirePadding(child) || child.centerAligned) {
+            if (requirePadding(child, 0) || child.centerAligned) {
                 paddingNodes.push(child);
             }
             if (child.blockStatic) {

@@ -9,7 +9,7 @@ const { getStyle } = squared.lib.css;
 const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 let NUMERALS: string[];
 
-function getItemType(node: NodeUI, checked?: boolean) {
+function getItemType(node: NodeUI, checked: boolean) {
     if (node.display === 'list-item') {
         const value = node.css('listStyleType');
         if (value !== 'none') {
@@ -60,7 +60,7 @@ function convertRoman(value: number) {
     return 'M'.repeat(+digits.join('')) + result;
 }
 
-export function convertListStyle(name: string, value: number, fallback?: boolean) {
+export function convertListStyle(name: string, value: number, fallback: boolean) {
     switch (name) {
         case 'decimal':
             return value.toString();
@@ -88,7 +88,7 @@ export function convertListStyle(name: string, value: number, fallback?: boolean
 
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return !node.isEmpty() && !!node.find((item: T) => getItemType(item) > 0);
+        return !node.isEmpty() && !!node.find((item: T) => getItemType(item, false) > 0);
     }
 
     public condition() { return true; }
@@ -114,7 +114,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                 i = Math.floor(n);
                             }
                         }
-                        let ordinal = convertListStyle(type, i);
+                        let ordinal = convertListStyle(type, i, false);
                         if (ordinal) {
                             ordinal += '.';
                         }

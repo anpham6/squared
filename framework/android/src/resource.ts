@@ -19,7 +19,7 @@ const REGEXP_STRINGWORD = /[^A-Za-z\d]+/g;
 let CACHE_IMAGE: ObjectMap<StringMap> = {};
 let COUNTER_SYMBOL: number[] = [];
 
-function formatObject(resourceId: number, obj: ObjectMap<string | StringMap>, numberAlias?: boolean) {
+function formatObject(resourceId: number, obj: ObjectMap<string | StringMap>, numberAlias: boolean) {
     for (const attr in obj) {
         const value = obj[attr];
         if (isString(value)) {
@@ -63,7 +63,7 @@ function isLeadingDigit(value: string) {
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
     public static STORED: ResourceSessionStored<Required<ResourceStoredMap>>;
 
-    public static formatOptions(resourceId: number, options: ViewAttribute, numberAlias?: boolean) {
+    public static formatOptions(resourceId: number, options: ViewAttribute, numberAlias = false) {
         for (const namespace in options) {
             const obj = options[namespace];
             if (isPlainObject<StandardMap>(obj)) {

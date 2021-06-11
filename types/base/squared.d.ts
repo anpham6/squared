@@ -113,7 +113,7 @@ declare module "base" {
         setExtensions(namespaces?: string[]): void;
         parseDocument(...elements: RootElement[]): Promise<Void<T | T[]>>;
         parseDocumentSync(...elements: RootElement[]): Void<T | T[]>;
-        createThread(elements: RootElement[], sync?: boolean): AppThreadData<T>;
+        createThread(elements: RootElement[], sync: boolean): AppThreadData<T>;
         resumeThread(processing: AppProcessing<T>, rootElements: HTMLElement[], requestCount: number): Node | Node[];
         createCache(processing: AppProcessing<T>, documentRoot: HTMLElement): Undef<T>;
         setStyleMap(sessionId: string, resourceId: number, documentRoot?: DocumentRoot, queryRoot?: QuerySelectorElement): void;

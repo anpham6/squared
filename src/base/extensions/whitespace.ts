@@ -153,7 +153,7 @@ function checkOverflowValue(value: string) {
     return true;
 }
 
-function getMarginTop(node: NodeUI, opposing: NodeUI, check?: boolean): [number, boolean] {
+function getMarginTop(node: NodeUI, opposing: NodeUI, check: boolean): [number, boolean] {
     let marginTop = node.marginTop,
         current = node,
         inherited = false;
@@ -228,7 +228,7 @@ function getMarginTop(node: NodeUI, opposing: NodeUI, check?: boolean): [number,
     return [marginTop, inherited];
 }
 
-function getMarginBottom(node: NodeUI, opposing: NodeUI, check?: boolean): [number, boolean] {
+function getMarginBottom(node: NodeUI, opposing: NodeUI, check: boolean): [number, boolean] {
     let marginBottom = node.marginBottom,
         current = node,
         inherited = false;
@@ -421,8 +421,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 break blockMain;
                                             }
                                         }
-                                        let [marginTop, inheritedTop] = getMarginTop(current, previous),
-                                            [marginBottom, inheritedBottom] = getMarginBottom(previous, current); // eslint-disable-line prefer-const
+                                        let [marginTop, inheritedTop] = getMarginTop(current, previous, false),
+                                            [marginBottom, inheritedBottom] = getMarginBottom(previous, current, false); // eslint-disable-line prefer-const
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {

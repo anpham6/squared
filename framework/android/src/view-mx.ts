@@ -39,7 +39,7 @@ const OPTIONS_LINEHEIGHT: CssStyleMap = {
     whiteSpace: 'nowrap'
 };
 
-function checkTextAlign(value: string, ignoreStart?: boolean): Undef<LayoutGravityDirectionAttr> {
+function checkTextAlign(value: string, ignoreStart: boolean): Undef<LayoutGravityDirectionAttr> {
     switch (value) {
         case 'left':
         case 'start':
@@ -140,7 +140,7 @@ function setLineHeight(node: T, value: number, inlineStyle: boolean, top: boolea
             node.mergeGravity('gravity', 'center_vertical', false);
         }
         else {
-            const setBoxPadding = (offset: number, padding?: boolean) => {
+            const setBoxPadding = (offset: number, padding: boolean) => {
                 if (offset > 0) {
                     if (!node.inline && (inlineStyle || height > value) && (node.styleText || padding) && !(node.inputElement && !isLength(node.cssInitial('lineHeight'), true)) || parent) {
                         if (top) {
@@ -185,7 +185,7 @@ function setLineHeight(node: T, value: number, inlineStyle: boolean, top: boolea
                 }
             };
             if (node.textElement) {
-                setBoxPadding(getLineSpacingExtra(node, value));
+                setBoxPadding(getLineSpacingExtra(node, value), false);
             }
             else if (node.inputElement) {
                 const textHeight = node.actualTextHeight({ tagName: 'span' });
@@ -212,13 +212,13 @@ function setLineHeight(node: T, value: number, inlineStyle: boolean, top: boolea
                 }
             }
             else {
-                setBoxPadding((value - node.bounds.height) / 2);
+                setBoxPadding((value - node.bounds.height) / 2, false);
             }
         }
     }
 }
 
-function getLineHeight(node: T, value: number, checkOnly?: boolean) {
+function getLineHeight(node: T, value: number, checkOnly: boolean) {
     if (!node.rendering && (!node.multiline || node.lineHeight === 0 && !node.android('lineHeight'))) {
         const result = node.has('lineHeight') ? Math.max(node.lineHeight, value) : value;
         if (!checkOnly) {
@@ -254,7 +254,7 @@ function getLineSpacingExtra(node: T, value: number) {
 function constraintMinMax(node: T) {
     if (!node.imageContainer) {
         const [minWidth, minHeight, maxWidth, maxHeight] = node.cssValues('minWidth', 'minHeight', 'maxWidth', 'maxHeight');
-        if (minWidth && isLength(minWidth, true) && minWidth !== '100%' && ascendFlexibleWidth(node)) {
+        if (minWidth && isLength(minWidth, true) && minWidth !== '100%' && ascendFlexibleWidth(node, false)) {
             const value = node.parseUnit(minWidth);
             if (value > 0 && (!node.hasUnit('width', { percent: false }) || value > node.cssUnit('width'))) {
                 node.setLayoutWidth('0px', false);
@@ -264,7 +264,7 @@ function constraintMinMax(node: T) {
                 }
             }
         }
-        if (maxWidth && isLength(maxWidth, true) && maxWidth !== '100%' && ascendFlexibleWidth(node)) {
+        if (maxWidth && isLength(maxWidth, true) && maxWidth !== '100%' && ascendFlexibleWidth(node, false)) {
             const value = node.parseUnit(maxWidth);
             if (node.percentWidth > 0 || value > node.width) {
                 node.setLayoutWidth('0px', false);
@@ -272,7 +272,7 @@ function constraintMinMax(node: T) {
                 node.css('maxWidth', 'auto');
             }
         }
-        if (minHeight && isLength(minHeight, true) && minHeight !== '100%' && ascendFlexibleHeight(node)) {
+        if (minHeight && isLength(minHeight, true) && minHeight !== '100%' && ascendFlexibleHeight(node, false)) {
             const value = node.parseHeight(minHeight);
             if (value > 0 && (!node.hasUnit('height', { percent: false }) || value > node.cssUnit('height', { dimension: 'height' }))) {
                 node.setLayoutHeight('0px', false);
@@ -282,7 +282,7 @@ function constraintMinMax(node: T) {
                 }
             }
         }
-        if (maxHeight && isLength(maxHeight, true) && maxHeight !== '100%' && ascendFlexibleHeight(node)) {
+        if (maxHeight && isLength(maxHeight, true) && maxHeight !== '100%' && ascendFlexibleHeight(node, false)) {
             const value = node.parseHeight(maxHeight);
             if (node.percentHeight > 0 || !node.support.maxDimension && value > node.height) {
                 node.setLayoutHeight('0px', false);
@@ -476,7 +476,7 @@ function replaceLayoutPosition(node: T, parentId: string) {
     }
 }
 
-function getGravityValues(node: T, attr: string, value?: string) {
+function getGravityValues(node: T, attr: string, value: string) {
     const gravity = node.android(attr);
     if (gravity) {
         const result = gravity.split('|');
@@ -506,7 +506,7 @@ function calculateBias(start: number, end: number, precision = 3) {
 const hasFlexibleContainer = (parent: Null<T>) => !!parent && (parent.layoutConstraint || parent.layoutGrid);
 const hasFlexibleHeight = (node: T) => node.hasHeight || node.layoutGrid || node.gridElement || node.layoutConstraint && (node.blockHeight || node.flexibleHeight);
 
-export function ascendFlexibleWidth(node: T, container?: boolean) {
+export function ascendFlexibleWidth(node: T, container: boolean) {
     let current = container ? node : node.renderParent as Null<T>,
         i = 0;
     while (current && !current.inlineWidth && current.pageFlow) {
@@ -524,7 +524,7 @@ export function ascendFlexibleWidth(node: T, container?: boolean) {
     return false;
 }
 
-export function ascendFlexibleHeight(node: T, container?: boolean) {
+export function ascendFlexibleHeight(node: T, container: boolean) {
     let current = container ? node : node.actualParent as Null<T>;
     if (current && hasFlexibleHeight(current) || container && (node.flexColumn && (current = node.actualParent as Null<T>) && hasFlexibleHeight(current))) {
         return true;
@@ -624,7 +624,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const width = this.cssValue('width');
                     let value = -1;
                     if (isPercent(width)) {
-                        const expandable = (override?: boolean) => width === '100%' && (containsWidth || override) && (this.support.maxDimension || !this.hasUnit('maxWidth'));
+                        const expandable = (override: boolean) => width === '100%' && (containsWidth || override) && (this.support.maxDimension || !this.hasUnit('maxWidth'));
                         const setActualWidth = (boundsWidth?: number) => {
                             if (width === '100%' && !this.rendering) {
                                 if (this.isAnchored({ orientation: 'horizontal', chained: true })) {
@@ -639,7 +639,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         };
                         if (this.inputElement) {
-                            if (expandable() && this.ascend({ condition: (item: T) => item.inlineWidth, attr: 'renderParent' }).length === 0) {
+                            if (expandable(false) && this.ascend({ condition: (item: T) => item.inlineWidth, attr: 'renderParent' }).length === 0) {
                                 layoutWidth = this.getMatchConstraint(renderParent);
                             }
                             else {
@@ -665,7 +665,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.android('layout_columnWeight', truncate(asPercent(width) / 100, this.localSettings.floatPrecision));
                         }
                         else if (this.imageElement) {
-                            if (expandable()) {
+                            if (expandable(false)) {
                                 layoutWidth = this.getMatchConstraint(renderParent);
                             }
                             else {
@@ -1064,7 +1064,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 return false;
             };
-            let textAlign = checkTextAlign(this.cssValue('textAlign') || this.nodeGroup && !this.hasAlign(NODE_ALIGNMENT.FLOAT) && (this.actualParent as Null<T>)?.cssValue('textAlign') || ''),
+            let textAlign = checkTextAlign(this.cssValue('textAlign') || this.nodeGroup && !this.hasAlign(NODE_ALIGNMENT.FLOAT) && (this.actualParent as Null<T>)?.cssValue('textAlign') || '', false),
                 marginAlign: Undef<boolean>;
             if (this.pageFlow) {
                 let floatAlign: Undef<LayoutGravityDirectionAttr>;
@@ -2408,7 +2408,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 else if (this.rendering && !(!hasOwnStyle && this.layoutHorizontal && this.alignSibling('baseline'))) {
                     if (this.layoutVertical || this.layoutFrame) {
                         this.renderEach((item: T) => {
-                            const value = getLineHeight(item, lineHeight);
+                            const value = getLineHeight(item, lineHeight, false);
                             if (value) {
                                 setLineHeight(item, value, true, true, true);
                             }
@@ -2455,7 +2455,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         continue;
                                     }
                                 }
-                                setLineHeight(baseline, getLineHeight(baseline, lineHeight), false, top, bottom);
+                                setLineHeight(baseline, getLineHeight(baseline, lineHeight, false), false, top, bottom);
                             }
                             else if (onlyChild) {
                                 const item = row[0];
@@ -2463,13 +2463,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     continue;
                                 }
                                 else {
-                                    setLineHeight(item, getLineHeight(item, lineHeight), true, top, bottom);
+                                    setLineHeight(item, getLineHeight(item, lineHeight, false), true, top, bottom);
                                 }
                             }
                             else {
                                 for (let j = 0; j < r; ++j) {
                                     const item = row[j];
-                                    const value = getLineHeight(item, lineHeight);
+                                    const value = getLineHeight(item, lineHeight, false);
                                     if (value) {
                                         setLineHeight(item, value, false, top, bottom);
                                     }
@@ -2483,7 +2483,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             const setAttribute = (attr: string) => {
-                const direction = getGravityValues(this, attr);
+                const direction = getGravityValues(this, attr, '');
                 if (direction && direction.length > 1) {
                     let modified: Undef<boolean>;
                     if (checkMergableGravity('center', direction)) {
@@ -2823,13 +2823,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (horizontal) {
                     percentAvailable = constraintPercentWidth(this, percentAvailable);
-                    if (grow > 0 && !this.layoutWidth && (this.isEmpty() || this.actualParent!.flexdata.wrap && !this.onlyStaticChild && ascendFlexibleWidth(this))) {
+                    if (grow > 0 && !this.layoutWidth && (this.isEmpty() || this.actualParent!.flexdata.wrap && !this.onlyStaticChild && ascendFlexibleWidth(this, false))) {
                         this.setLayoutWidth('0px');
                     }
                 }
                 else {
                     percentAvailable = constraintPercentHeight(this, percentAvailable);
-                    if (grow > 0 && !this.layoutHeight && ascendFlexibleHeight(this)) {
+                    if (grow > 0 && !this.layoutHeight && ascendFlexibleHeight(this, false)) {
                         this.setLayoutHeight('0px');
                     }
                 }

@@ -278,12 +278,12 @@ function residualHandler(element: SVGGraphicsElement, transforms: SvgTransform[]
         (SVG.circle(element) || SVG.ellipse(element)) &&
         transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE) &&
         (rx !== ry || transforms.length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))
-            ? groupTransforms(element, transforms)
+            ? groupTransforms(element, transforms, false)
             : [[], transforms]
     );
 }
 
-function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], ignoreClient?: boolean): [SvgTransform[][], SvgTransform[]] {
+function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], ignoreClient: boolean): [SvgTransform[][], SvgTransform[]] {
     if (transforms.length) {
         const host: SvgTransform[][] = [];
         const client: SvgTransform[] = [];
@@ -365,16 +365,15 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
     return [[], transforms];
 }
 
-function getPropertyValue(values: string[] | NumString[][], index: number, propertyIndex: number, keyframes?: boolean, baseValue?: string) {
+function getPropertyValue(values: string[] | NumString[][], index: number, propertyIndex: number, keyframes: boolean, baseValue: string) {
     const property = values[index];
-    let value: Undef<string>;
     if (property) {
-        value = Array.isArray(property) ? property[propertyIndex].toString() : property;
+        return Array.isArray(property) ? property[propertyIndex].toString() : property;
     }
     else if (!keyframes && index === 0) {
-        value = baseValue;
+        return baseValue;
     }
-    return value || '';
+    return '';
 }
 
 function getValueType(attr: string) {
@@ -414,7 +413,7 @@ function getValueType(attr: string) {
     }
 }
 
-function createAnimateFromTo(attributeName: string, delay: number, to: string, from?: string) {
+function createAnimateFromTo(attributeName: string, delay: number, to: string, from: string) {
     const result = new SvgAnimate();
     result.attributeName = attributeName;
     result.delay = delay;
@@ -712,7 +711,7 @@ function convertValueType(resourceId: number, item: SvgAnimation, value: Undef<s
     }
 }
 
-const getTemplateFilename = (templateName: string, length: number, prefix?: string, suffix?: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
+const getTemplateFilename = (templateName: string, length: number, prefix: string, suffix: string) => templateName + (prefix ? '_' + prefix : '') + (length ? '_vector' : '') + (suffix ? '_' + suffix.toLowerCase() : '');
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
@@ -858,7 +857,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const templateName = (node.tagName + '_' + convertWord(node.controlId) + '_viewbox').toLowerCase();
         svg.build({ contentMap, keyframesMap: keyFrames, exclude, residualHandler, precision });
         svg.synchronize({ keyTimeMode, framesPerSecond: application.getUserSetting<number>(node.sessionId, 'framesPerSecond'), precision });
-        this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
+        this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity', '', '');
         const vectorData = this.parseVectorData(resourceId, svg);
         const imageLength = imageData.length;
         let vectorName: Undef<string>;
@@ -875,7 +874,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             vectorName = Resource.insertStoredAsset(
                 resourceId,
                 'drawables',
-                getTemplateFilename(templateName, imageLength),
+                getTemplateFilename(templateName, imageLength, '', ''),
                 applyTemplate('vector', VECTOR_TMPL, [{
                     'xmlns:android': XML_NAMESPACE.android,
                     'xmlns:aapt': this._namespaceAapt ? XML_NAMESPACE.aapt : '',
@@ -1229,7 +1228,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         const propertyValuesHolder = animatorMap.get(keyName) || [];
                                                         const keyframe: Keyframe[] = [];
                                                         for (let l = 0; l < r; ++l) {
-                                                            let value = getPropertyValue(values, l, k, true);
+                                                            let value = getPropertyValue(values, l, k, true, '');
                                                             if (value && valueType === 'floatType') {
                                                                 value = truncate(value, precision);
                                                             }
@@ -1259,7 +1258,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 startOffset: l === 0 ? (item.delay + (keyTime > 0 ? Math.floor(keyTime * item.duration) : 0)).toString() : '',
                                                                 propertyValuesHolder: false
                                                             };
-                                                            let valueTo = getPropertyValue(values, l, k, false, valueType === 'pathType' ? group.pathData : item.baseValue);
+                                                            let valueTo = getPropertyValue(values, l, k, false, (valueType === 'pathType' ? group.pathData : item.baseValue) || '');
                                                             if (valueTo) {
                                                                 let duration: number;
                                                                 if (l === 0) {
@@ -1275,7 +1274,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                     duration = 0;
                                                                 }
                                                                 else {
-                                                                    propertyOptions.valueFrom = getPropertyValue(values, l - 1, k).toString();
+                                                                    propertyOptions.valueFrom = getPropertyValue(values, l - 1, k, false, '').toString();
                                                                     duration = Math.floor((keyTime - keyTimes[l - 1]) * item.duration);
                                                                 }
                                                                 if (valueType === 'floatType') {
@@ -1456,7 +1455,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                 }
                 if (data[0].target) {
-                    vectorName = Resource.insertStoredAsset(resourceId, 'drawables', getTemplateFilename(templateName, imageLength, 'anim'), applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data));
+                    vectorName = Resource.insertStoredAsset(resourceId, 'drawables', getTemplateFilename(templateName, imageLength, 'anim', ''), applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data));
                     if (application.userSettings.createBuildDependencies) {
                         application.addDependency(implementation[0], implementation[1] + '-animated', implementation[2]);
                     }
@@ -1609,7 +1608,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             if ((SvgBuild.asG(target) || SvgBuild.asUseSymbol(target)) && this.createClipPath(target, clipBox, target.clipPath)) {
                 baseData.name = groupName;
             }
-            if (this.queueAnimations(target, groupName, item => SvgBuild.asAnimateTransform(item))) {
+            if (this.queueAnimations(target, groupName, item => SvgBuild.asAnimateTransform(item), '', '')) {
                 baseData.name = groupName;
             }
             if (baseData.name) {
@@ -1869,12 +1868,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                 }
                 if (valid) {
-                    replaceResult.push(createAnimateFromTo('d', item.time, item.to));
+                    replaceResult.push(createAnimateFromTo('d', item.time, item.to, ''));
                     previousPathData = item.to;
                 }
             }
         }
-        if (!this.queueAnimations(target, result.name, item => (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)) && item.attributeName !== 'clip-path', pathData) && replaceResult.length === 0 && baseData.name !== groupName) {
+        if (!this.queueAnimations(target, result.name, item => (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)) && item.attributeName !== 'clip-path', pathData, '') && replaceResult.length === 0 && baseData.name !== groupName) {
             result.name = '';
         }
         const animateData = this._animateData;
@@ -1921,7 +1920,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 const pathData = path.value;
                                 if (pathData) {
                                     let name = getVectorName(child, 'clip_path', length > 1 ? i + 1 : -1);
-                                    if (!this.queueAnimations(child, name, item => SvgBuild.asAnimate(item) || SvgBuild.asSet(item), pathData)) {
+                                    if (!this.queueAnimations(child, name, item => SvgBuild.asAnimate(item) || SvgBuild.asSet(item), pathData, '')) {
                                         name = '';
                                     }
                                     clipArray.push({ name, pathData, fillType: getAttribute(child.element, 'fill-rule', true) === 'evenodd' ? 'evenOdd' : '' });
@@ -1933,7 +1932,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 else {
                     let name = getVectorName(target, 'clip_path', length > 1 ? i + 1 : -1);
-                    if (!this.queueAnimations(target, name, item => item.attributeName === 'clip-path' && (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)), value)) {
+                    if (!this.queueAnimations(target, name, item => item.attributeName === 'clip-path' && (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)), value, '')) {
                         name = '';
                     }
                     clipArray.push({ name, pathData: value, fillType: getAttribute(target.element, 'fill-rule', true) === 'evenodd' ? 'evenOdd' : '' });
@@ -1944,7 +1943,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         return valid;
     }
 
-    private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, boolean>, pathData = '', targetName?: string) {
+    private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, boolean>, pathData: string, targetName: string) {
         if (svg.hasAnimations()) {
             const animate = svg.animations.filter((item, index, array) => !item.paused && (item.duration >= 0 || item.setterType) && predicate(item, index, array));
             if (animate.length) {

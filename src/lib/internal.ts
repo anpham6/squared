@@ -124,7 +124,7 @@ function mergeSelector(value: string) {
     return result.join(', ');
 }
 
-const fromFontNamedValue = (index: number, fixedWidth?: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
+const fromFontNamedValue = (index: number, fixedWidth: boolean) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
 
 export const CSS_PROPERTIES: CssProperties = {
     alignContent: {
@@ -1437,7 +1437,7 @@ export function getDocumentFontSize() {
     return DOCUMENT_FONTSIZE;
 }
 
-export function convertFontSize(value: string, fixedWidth?: boolean) {
+export function convertFontSize(value: string, fixedWidth = false) {
     switch (value) {
         case '':
             return 'inherit';

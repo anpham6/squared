@@ -206,7 +206,7 @@ function calculateAngle(element: StyleElement, value: string) {
     }
 }
 
-function calculatePercent(element: StyleElement, value: string, restrict?: boolean) {
+function calculatePercent(element: StyleElement, value: string, restrict: boolean) {
     const percent = value.indexOf('%') !== -1;
     let result = calculateVar(element, value, { unitType: percent ? CSS_UNIT.PERCENT : CSS_UNIT.DECIMAL });
     if (!isNaN(result)) {
@@ -1085,7 +1085,7 @@ export function calculateStyle(element: StyleElement, attr: string, value: strin
                                 break;
                             case 'brightness':
                             case 'saturate':
-                                result = calculatePercent(element, seg);
+                                result = calculatePercent(element, seg, false);
                                 break;
                             case 'contrast':
                             case 'grayscale':
@@ -1443,7 +1443,7 @@ export function calculate(value: string, options?: CalculateOptions) {
         }
     }
     if (opening.length === closing.length) {
-        const equated: [number, Undef<NumString>][] = [];
+        const equated: [number, NumString?][] = [];
         let index = 0;
         do {
             for (let i = 0; i < closing.length; ++i) {

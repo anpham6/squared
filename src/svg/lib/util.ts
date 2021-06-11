@@ -52,7 +52,7 @@ function getDataSetValue(element: SVGElement, attr: string) {
 
 const getDataValue = (element: SVGElement, attr: string) => getDataSetValue(element, attr) || element.style[attr = convertCamelCase(attr)] as Undef<string> || getElementCache<CssStyleMap>(element, 'styleMap')?.[attr] as Undef<string>;
 const isElement = (element: Element, value: string) => element.tagName.toLowerCase() === value;
-const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
+const getViewportArea = (viewBox: DOMRect, min: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
 const createParseUnitOptions = (element: Element, value: string): Undef<ParseUnitOptions> => hasEm(value) ? { fontSize: getFontSize(element) } : undefined;
 
 Object.assign(CSS_PROPERTIES, {
@@ -683,13 +683,13 @@ export function calculateStyle(element: SVGGraphicsElement, attr: string, value:
             return !isNaN(result) ? SVG.rect(element) ? Math.min(result, viewBox.height / 2).toString() : result.toString() : '0';
         }
         case 'strokeDasharray':
-            return calculateVarAsString(element, value, { boundingSize: getViewportArea(viewBox), min: 0 });
+            return calculateVarAsString(element, value, { boundingSize: getViewportArea(viewBox, false), min: 0 });
         case 'strokeDashoffset': {
             const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox, true), unitType: CSS_UNIT.DECIMAL });
             return !isNaN(result) ? result.toString() : '';
         }
         case 'strokeWidth': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox), unitType: CSS_UNIT.DECIMAL, min: 0 });
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox, false), unitType: CSS_UNIT.DECIMAL, min: 0 });
             return !isNaN(result) ? result.toString() : '';
         }
     }

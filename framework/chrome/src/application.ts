@@ -224,7 +224,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
         if (uri) {
             const commands = await this.fileHandler!.loadConfig(uri, options) as Undef<AssetCommand[]>;
             if (commands) {
-                const documentHandler = this.getUserSetting<StringOfArray>(processing, 'outputDocumentHandler');
+                const documentHandler = (this.userSettings as UserResourceSettings).outputDocumentHandler;
                 const paramMap = new Map<string, [RegExp, string]>();
                 const replaceParams = (param: unknown): unknown => {
                     const type = typeof param;

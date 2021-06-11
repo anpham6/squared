@@ -91,7 +91,7 @@ const { capitalize, delimitString, lastItemOf, resolvePath, safeFloat, spliceArr
 
 const CHAR_SEPARATOR = /\s*,\s*/;
 
-function getBorderStyle(resourceId: number, border: BorderAttribute, direction = -1, halfSize = false) {
+function getBorderStyle(resourceId: number, border: BorderAttribute, direction: number, halfSize: boolean) {
     const { style, color } = border;
     const result = createStrokeColor(resourceId, color);
     if (style !== 'solid') {
@@ -186,15 +186,15 @@ function getBorderStyle(resourceId: number, border: BorderAttribute, direction =
     return result;
 }
 
-function getBorderStroke(resourceId: number, border: BorderAttribute, direction = -1, hasInset?: boolean, isInset?: boolean) {
+function getBorderStroke(resourceId: number, border: BorderAttribute, direction = -1, hasInset: boolean, isInset: boolean) {
     let result: ShapeStrokeData;
     if (isAlternatingBorder(border.style)) {
         const width = border.width;
-        result = getBorderStyle(resourceId, border, direction, isInset !== true);
+        result = getBorderStyle(resourceId, border, direction, !isInset);
         result.width = (isInset ? Math.ceil(width / 2) * 2 : hasInset ? Math.ceil(width / 2) : width) + 'px';
     }
     else {
-        result = getBorderStyle(resourceId, border);
+        result = getBorderStyle(resourceId, border, -1, false);
         result.width = formatPX(border.width);
     }
     return result;
@@ -245,7 +245,7 @@ function isAlternatingBorder(value: string, width = 0) {
     return false;
 }
 
-function insertDoubleBorder(resourceId: number, items: StandardMap[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth = 0, corners?: CornerRadiusData) {
+function insertDoubleBorder(resourceId: number, items: StandardMap[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth: number, corners: Undef<CornerRadiusData>) {
     const width = Math.round(border.width);
     const borderWidth = Math.max(1, Math.floor(width / 3));
     const indentOffset = indentWidth ? formatPX(indentWidth) : '';
@@ -255,7 +255,7 @@ function insertDoubleBorder(resourceId: number, items: StandardMap[], border: Bo
         right: right ? indentOffset : hideOffset,
         bottom: bottom ? indentOffset : hideOffset,
         left: left ? indentOffset : hideOffset,
-        shape: { 'android:shape': 'rectangle', stroke: { width: formatPX(borderWidth), ...getBorderStyle(resourceId, border) }, corners }
+        shape: { 'android:shape': 'rectangle', stroke: { width: formatPX(borderWidth), ...getBorderStyle(resourceId, border, -1, false) }, corners }
     });
     const insetWidth = width - borderWidth + indentWidth;
     const drawOffset = formatPX(insetWidth);
@@ -265,7 +265,7 @@ function insertDoubleBorder(resourceId: number, items: StandardMap[], border: Bo
         right: right ? drawOffset : hideOffset,
         bottom: bottom ? drawOffset : hideOffset,
         left: left ? drawOffset : hideOffset,
-        shape: { 'android:shape': 'rectangle', stroke: { width: formatPX(borderWidth), ...getBorderStyle(resourceId, border) }, corners }
+        shape: { 'android:shape': 'rectangle', stroke: { width: formatPX(borderWidth), ...getBorderStyle(resourceId, border, -1, false) }, corners }
     });
 }
 
@@ -418,7 +418,7 @@ function setBorderStyle(resourceId: number, layerList: LayerList, index: number,
                 right: index === 1 ? indentOffset : hideOffset,
                 bottom: index === 2 ? indentOffset : hideOffset,
                 left: index === 3 ? indentOffset : hideOffset,
-                shape: { 'android:shape': 'rectangle', stroke: getBorderStroke(resourceId, border, index, inset), corners }
+                shape: { 'android:shape': 'rectangle', stroke: getBorderStroke(resourceId, border, index, inset, false), corners }
             });
         }
     }
@@ -497,7 +497,7 @@ function getBorderAll(boxStyle: BoxStyle, fromImage: boolean, node?: View) {
     return { borderAll, borderStyle, borderVisible, borders, borderData };
 }
 
-function convertShapeableImageView(resourceId: number, node: View, items: StringValue[], cut?: boolean) {
+function convertShapeableImageView(resourceId: number, node: View, items: StringValue[], cut: boolean) {
     const name = 'Material_ShapeableImageView_' + (cut ? 'Cut_' : '') + capitalize(node.controlId);
     items.sort((a, b) => a.key < b.key ? -1 : 1);
     Resource.STORED[resourceId]!.styles.set(name, { name, parent: '', items } as StyleAttribute);
@@ -516,6 +516,7 @@ function convertShapeableImageView(resourceId: number, node: View, items: String
     }
 }
 
+const saveDrawable = (resourceId: number, node: View, value: string, suffix: string) => value ? `@drawable/${Resource.insertStoredAsset(resourceId, 'drawables', (node.containerName + '_' + node.controlId + (suffix ? '_' + suffix : '')).toLowerCase(), value)}` : '';
 const createStrokeColor = (resourceId: number, value: ColorData): ShapeStrokeData => ({ color: getColorValue(resourceId, value) });
 const isBorderEqual = (border: BorderAttribute, other: BorderAttribute) => border.style === border.style && border.width === other.width && border.color.rgbaAsString === other.color.rgbaAsString;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
@@ -583,7 +584,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         const setDrawableBackground = (node: T, value: string) => {
             if (value) {
-                let drawable = this.saveDrawable(resourceId, node, value);
+                let drawable = saveDrawable(resourceId, node, value, '');
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
                         setBodyBackground(drawable);
@@ -597,7 +598,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 if (node.is(CONTAINER_NODE.RANGE)) {
-                    drawable = this.saveDrawable(resourceId, node, applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, [{ drawable, height: Math.floor(node.bounds.height * this.controller.localSettings.style.rangeBackgroundCenterHeight) + 'px', gravity: 'center_vertical', order: 0 }] )), 'main');
+                    drawable = saveDrawable(resourceId, node, applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, [{ drawable, height: Math.floor(node.bounds.height * this.controller.localSettings.style.rangeBackgroundCenterHeight) + 'px', gravity: 'center_vertical', order: 0 }] )), 'main');
                 }
                 if (node.data(Resource.KEY_NAME, 'boxStyleShapeableImageView')) {
                     if (node.api >= BUILD_VERSION.Q) {
@@ -694,7 +695,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             delete stored.borderRight;
                             delete stored.borderLeft;
                         }
-                        convertShapeableImageView(resourceId, node, items);
+                        convertShapeableImageView(resourceId, node, items, false);
                         delete stored.borderRadius;
                         if (Object.keys(stored).length === 0) {
                             return;
@@ -775,7 +776,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             return '';
         }
         const resourceName = options.resourceName;
-        result = this.saveDrawable(resourceId, node, result, resourceName || 'system');
+        result = saveDrawable(resourceId, node, result, resourceName || 'system');
         if (result && options.resourceData) {
             for (const item of options.resourceData) {
                 if (!item.drawable) {
@@ -783,7 +784,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     break;
                 }
             }
-            return this.saveDrawable(resourceId, node, applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, options.resourceData, corners)), 'main' + (resourceName ? '_' + resourceName : ''));
+            return saveDrawable(resourceId, node, applyTemplate('layer-list', LAYERLIST_TMPL, createLayerList(resourceId, options.resourceData, corners)), 'main' + (resourceName ? '_' + resourceName : ''));
         }
         return result;
     }
@@ -845,7 +846,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     if (item = borders[padding]) {
                         const width = Math.ceil(item.width);
-                        const setOffsetTop = (value: number, baseline?: boolean, inverted?: boolean) => {
+                        const setOffsetTop = (value: number, baseline: boolean, inverted: boolean) => {
                             if (!node.pageFlow) {
                                 if (!baseline) {
                                     node.modifyBox(BOX_STANDARD.MARGIN_TOP, value * (inverted ? index !== -1 ? 2 : 1 : -1));
@@ -883,7 +884,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         };
                         switch (padding) {
                             case 0:
-                                setOffsetTop(width);
+                                setOffsetTop(width, false, false);
                                 node.setCacheValue('borderTopWidth', 0);
                                 break;
                             case 1:
@@ -900,7 +901,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 break;
                         }
                         if (!valid) {
-                            setOffsetTop(width, true);
+                            setOffsetTop(width, true, false);
                             valid = true;
                         }
                         borders[padding] = undefined;
@@ -1021,7 +1022,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
         }
         if (border && !isAlternatingBorder(border.style, Math.round(border.width)) && !(border.style === 'double' && Math.floor(border.width) > 1) || !borderData && (corners || images && images.length)) {
-            const stroke = border && getBorderStroke(resourceId, border);
+            const stroke = border && getBorderStroke(resourceId, border, undefined, false, false);
             if (images && images.length || indentWidth || outline && borderOnly) {
                 layerList = createLayerList(resourceId, images, corners, !borderOnly ? boxStyle : undefined, stroke, indentWidth);
             }
@@ -1060,7 +1061,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         right: borderVisible[1] ? indentOffset : hideOffset,
                         bottom: borderVisible[2] ? indentOffset : hideOffset,
                         left: borderVisible[3] ? indentOffset : hideOffset,
-                        shape: { 'android:shape': 'rectangle', stroke: getBorderStroke(resourceId, borderData), corners }
+                        shape: { 'android:shape': 'rectangle', stroke: getBorderStroke(resourceId, borderData, undefined, false, false), corners }
                     });
                 }
             }
@@ -2038,9 +2039,5 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             return result.sort((a, b) => a.order - b.order);
         }
-    }
-
-    private saveDrawable(resourceId: number, node: T, value: string, suffix?: string) {
-        return value ? `@drawable/${Resource.insertStoredAsset(resourceId, 'drawables', (node.containerName + '_' + node.controlId + (suffix ? '_' + suffix : '')).toLowerCase(), value)}` : '';
     }
 }

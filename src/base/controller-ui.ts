@@ -150,7 +150,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public applyDefaultStyles(processing: squared.base.AppProcessing<T>, element: Element) {
-        if (element.nodeName[0] === '#') {
+        const nodeName = element.nodeName;
+        if (nodeName[0] === '#') {
             setElementCache(element, 'styleMap', {
                 position: 'static',
                 display: 'inline',
@@ -164,7 +165,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 setElementCache(element, 'styleMap', style = {}, processing.sessionId);
             }
             if (isUserAgent(USER_AGENT.FIREFOX)) {
-                switch (element.tagName) {
+                switch (nodeName) {
                     case 'BODY':
                         if (style.backgroundColor === 'rgba(0, 0, 0, 0)') {
                             delete style.backgroundColor;
@@ -184,7 +185,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         break;
                 }
             }
-            switch (element.tagName) {
+            switch (nodeName) {
                 case 'A':
                     style.color ||= this._settingsStyle.anchorFontColor;
                     style.textDecorationLine ||= 'underline';

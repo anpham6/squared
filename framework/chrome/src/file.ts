@@ -135,8 +135,8 @@ function setBundleIndex(bundles: BundleIndex) {
             }
             invalid: {
                 if (urls.length === length) {
-                    const origin = urls[0].origin;
-                    let baseDir = urls[0].pathname.split('/');
+                    const { origin, pathname } = urls[0];
+                    let baseDir = pathname.split('/');
                     for (let i = 1; i < length; ++i) {
                         const url = urls[i];
                         if (url.origin === origin) {
@@ -215,7 +215,7 @@ function checkBundleStart(assets: ChromeAsset[], data: ChromeAsset) {
 function checkFilename(assets: ChromeAsset[], data: ChromeAsset) {
     const filename = data.filename;
     let i = 0;
-    while (assets.find(item => hasSamePath(item, data))) {
+    while (assets.find(item => hasSamePath(item, data, false))) {
         const [start, end] = splitPair(data.filename, '.');
         data.filename = start + '_' + ++i + (end ? '.' + end : '');
     }
@@ -305,7 +305,7 @@ const getAssetCommand = (assetMap: Undef<ElementAssetMap>, element: HTMLElement)
 const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
 const getBaseUrl = () => location.origin + location.pathname;
-const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle?: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
+const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
 
 export default class File<T extends squared.base.Node> extends squared.base.File<T> implements chrome.base.File<T> {
     public static createTagNode(element: Element, domAll: NodeListOf<Element>, cache: SelectorCache): XmlTagNode {
@@ -328,7 +328,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return { index, tagName, tagIndex, tagCount, ignoreCase: true };
     }
 
-    public static setDocumentId(node: XmlTagNode, element: HTMLElement, document: Undef<StringOfArray>) {
+    public static setDocumentId(node: XmlTagNode, element: HTMLElement, document?: StringOfArray) {
         if (Array.isArray(document)) {
             document.forEach(name => setUUID(node, element, name));
         }
@@ -370,7 +370,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             if (file === '~') {
                 file = '';
             }
-            if (local && file) {
+            else if (local && file) {
                 value = resolvePath(file);
             }
         }
@@ -783,7 +783,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     }
                     else if (content && mimeType) {
                         const data = {
-                            pathname: DIR_FUNCTIONS.GENERATED + `/${mimeType.split('/').pop()!}`,
+                            pathname: DIR_FUNCTIONS.GENERATED + '/' + mimeType.split('/').pop()!,
                             filename: assignFilename(item.filename),
                             content,
                             mimeType
@@ -852,7 +852,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         return result;
     }
 
-    public finalizeRequestBody(options: RequestData & FileCopyingOptions & FileArchivingOptions) {
+    public finalizeRequestBody(options: RequestData<ChromeAsset> & FileCopyingOptions & FileArchivingOptions) {
         const productionRelease = options.productionRelease;
         let watchElement: Undef<HTMLElement>;
         if (!productionRelease && options.watch) {
@@ -885,7 +885,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     watchElement = createElement('script', { parent: document.body, attributes: { textContent } });
                 }
                 else {
-                    const html = (options.assets as ChromeAsset[]).find(item => item.mimeType === '@text/html');
+                    const html = options.assets!.find(item => item.mimeType === '@text/html');
                     if (html) {
                         html.element!.textContent = `<script>${textContent}</script>`;
                     }
@@ -894,7 +894,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         if (!options.useOriginalHtmlPage) {
             let append: Undef<TagAppend>;
-            for (const item of options.assets as ChromeAsset[]) {
+            for (const item of options.assets!) {
                 const element = item.element as Undef<XmlTagNode>;
                 if (element) {
                     switch (element.tagName) {
@@ -1017,7 +1017,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private processAssets(options: FileActionOptions) {
-        const { sessionId, assetMap, appendMap, nodeMap = new Map<XmlNode, HTMLElement>(), useOriginalHtmlPage, preserveCrossOrigin } = options;
+        const { assetMap, appendMap, nodeMap = new Map<XmlNode, HTMLElement>(), useOriginalHtmlPage, preserveCrossOrigin } = options;
         const domAll = document.querySelectorAll('*');
         const cache: SelectorCache = {};
         const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
@@ -1075,73 +1075,71 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 let i = 0;
                 for (const appendCommand of appending) {
                     const { type, attributes, download, textContent } = appendCommand;
-                    if (type) {
-                        let js: Undef<boolean>,
-                            url: Optional<string>,
-                            prepend: Undef<boolean>;
-                        switch (type) {
-                            case 'prepend/js':
-                                prepend = true;
-                            case 'append/js':
-                                if (attributes) {
-                                    url = attributes.src;
-                                    attributes.type ||= 'text/javascript';
-                                    js = true;
-                                }
-                                break;
-                            case 'prepend/css':
-                                prepend = true;
-                            case 'append/css':
-                                if (attributes) {
-                                    url = attributes.href;
-                                    attributes.type ||= 'text/css';
-                                }
-                                break;
-                            default: {
-                                let elementData: Undef<XmlTagNode>;
-                                if (type === 'replace') {
-                                    if (textContent) {
-                                        elementData = getTagNode(node, attributes);
-                                        elementData.textContent = textContent;
-                                    }
-                                }
-                                else {
-                                    const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, textContent);
-                                    if (startsWith(type, 'append/')) {
-                                        append.nextSibling = getNextSibling();
-                                        elementData = getTagNode(node, attributes, append);
-                                    }
-                                    else if (startsWith(type, 'prepend/')) {
-                                        append.prepend = true;
-                                        elementData = getTagNode(node, attributes, append);
-                                    }
-                                }
-                                if (elementData) {
-                                    assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
-                                }
-                                continue;
+                    let js: Undef<boolean>,
+                        url: Optional<string>,
+                        prepend: Undef<boolean>;
+                    switch (type) {
+                        case 'prepend/js':
+                            prepend = true;
+                        case 'append/js':
+                            if (attributes) {
+                                url = attributes.src;
+                                attributes.type ||= 'text/javascript';
+                                js = true;
                             }
-                        }
-                        if (url && attributes) {
-                            appendCommand.document ||= documentData;
-                            delete appendCommand.download;
-                            const data = this.createBundle(false, assets, element, url, attributes.type!, js ? 'js' : 'css', { appendCommand });
-                            if (data) {
-                                if (isCrossOrigin(download, preserveCrossOrigin)) {
-                                    delete data.uri;
+                            break;
+                        case 'prepend/css':
+                            prepend = true;
+                        case 'append/css':
+                            if (attributes) {
+                                url = attributes.href;
+                                attributes.type ||= 'text/css';
+                            }
+                            break;
+                        default: {
+                            let elementData: Undef<XmlTagNode>;
+                            if (type === 'replace') {
+                                if (textContent) {
+                                    elementData = getTagNode(node, attributes);
+                                    elementData.textContent = textContent;
                                 }
-                                const append = getAppendData(js ? 'script' : 'link', ++i, undefined, prepend);
-                                if (!prepend) {
+                            }
+                            else {
+                                const append = getAppendData(splitPairEnd(type!, '/', true, true).toLowerCase(), ++i, textContent);
+                                if (startsWith(type, 'append/')) {
                                     append.nextSibling = getNextSibling();
+                                    elementData = getTagNode(node, attributes, append);
                                 }
-                                data.element = getTagNode(node, attributes, append);
+                                else if (startsWith(type, 'prepend/')) {
+                                    append.prepend = true;
+                                    elementData = getTagNode(node, attributes, append);
+                                }
                             }
+                            if (elementData) {
+                                assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
+                            }
+                            continue;
+                        }
+                    }
+                    if (url && attributes) {
+                        appendCommand.document ||= documentData;
+                        delete appendCommand.download;
+                        const data = this.createBundle(false, assets, element, url, attributes.type!, js ? 'js' : 'css', { appendCommand });
+                        if (data) {
+                            if (isCrossOrigin(download, preserveCrossOrigin)) {
+                                delete data.uri;
+                            }
+                            const append = getAppendData(js ? 'script' : 'link', ++i, undefined, prepend);
+                            if (!prepend) {
+                                append.nextSibling = getNextSibling();
+                            }
+                            data.element = getTagNode(node, attributes, append);
                         }
                     }
                 }
             }
         }
-        const documentHandler = this.application.getUserSetting<string>(sessionId, 'outputDocumentHandler');
+        const documentHandler = (this.application.userSettings as UserResourceSettings).outputDocumentHandler;
         for (const item of assets) {
             const element = item.element;
             if (element instanceof Element) {

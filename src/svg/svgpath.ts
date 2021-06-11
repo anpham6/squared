@@ -105,13 +105,13 @@ function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
     }
 }
 
-function getDashOffset(map: SvgAnimationIntervalMap, valueOffset: number, time: number, playing?: boolean) {
-    const value = map.get('stroke-dashoffset', time, playing);
+function getDashOffset(map: SvgAnimationIntervalMap, valueOffset: number, time: number) {
+    const value = map.get('stroke-dashoffset', time);
     return value ? +value : valueOffset;
 }
 
-function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: number, playing?: boolean) {
-    const value = map.get('stroke-dasharray', time, playing);
+function getDashArray(map: SvgAnimationIntervalMap, valueArray: number[], time: number) {
+    const value = map.get('stroke-dasharray', time);
     return value ? SvgBuild.parseCoordinates(value) : valueArray;
 }
 
@@ -863,7 +863,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 values.push(time);
                                             }
                                         };
-                                        const setFinalValue = (offset: number, checkInvert?: boolean) => {
+                                        const setFinalValue = (offset: number, checkInvert: boolean) => {
                                             finalValue = (offsetRemaining - offset) / extendedLength;
                                             if (checkInvert) {
                                                 const value = truncateFraction(finalValue);
@@ -887,7 +887,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         const getKeyTimeIncrement = (offset: number) => ((offset / offsetTotal) * segDuration) / duration;
                                         if (j === 0) {
                                             offsetRemaining %= extendedLength;
-                                            setFinalValue(0);
+                                            setFinalValue(0, false);
                                             if (increasing) {
                                                 finalValue = 1 - finalValue;
                                             }
@@ -898,7 +898,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 const remaining = increasing ? previousRemaining : 1 - previousRemaining;
                                                 const remainingValue = truncateFraction(remaining * extendedLength);
                                                 if (lessEqual(offsetRemaining, remainingValue)) {
-                                                    setFinalValue(0);
+                                                    setFinalValue(0, false);
                                                     if (increasing) {
                                                         finalValue = previousRemaining - finalValue;
                                                     }

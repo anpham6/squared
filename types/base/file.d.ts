@@ -154,8 +154,8 @@ interface FileInfo {
     size: string;
 }
 
-interface RequestData extends PlainObject {
-    assets?: FileAsset[];
+interface RequestData<T = FileAsset> extends PlainObject {
+    assets?: T[];
     dataSource?: DataSource[];
     document?: string[];
     task?: string[];

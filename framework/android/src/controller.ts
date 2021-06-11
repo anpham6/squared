@@ -411,7 +411,7 @@ function setLegendLayout(node : View, offset: number) {
 }
 
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => doOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
-const getAnchorDirection = (reverse?: boolean): AnchorPositionAttr[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
+const getAnchorDirection = (reverse: boolean): AnchorPositionAttr[] => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const getAnchorBaseline = (node: View) => isBottomAligned(node) ? 'baseline' : 'bottom';
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size > 0 && !!layout.find((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isUnknownParent = (node: View, containerType: number, length: number) => node.containerType === containerType && node.size() === length && (node.alignmentType === 0 || node.hasAlign(NODE_ALIGNMENT.UNKNOWN));
@@ -441,7 +441,7 @@ export function setHorizontalAlignment(node: View) {
     }
 }
 
-export function setVerticalAlignment(node: View, onlyChild = true, biasOnly?: boolean) {
+export function setVerticalAlignment(node: View, onlyChild: boolean, biasOnly: boolean) {
     const autoMargin = node.autoMargin;
     let bias = onlyChild ? 0 : NaN;
     if (node.floating) {
@@ -857,7 +857,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else {
-                layout.containerType = layout.singleRowAligned && this.isConstraintLayout(layout) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE;
+                layout.containerType = layout.singleRowAligned && this.isConstraintLayout(layout, false) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE;
             }
             layout.addAlign(NODE_ALIGNMENT.HORIZONTAL);
         }
@@ -1300,7 +1300,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             if (!item.constraint.vertical) {
                                 item.anchorParent('vertical');
-                                setVerticalAlignment(item);
+                                setVerticalAlignment(item, true, false);
                             }
                             item.setConstraintDimension(1);
                         }
@@ -3470,7 +3470,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         for (let k = 0; k < r; ++k) {
                             const chain = partition[k];
                             if (chain !== currentRowTop) {
-                                setVerticalAlignment(chain, r === 1);
+                                setVerticalAlignment(chain, r === 1, false);
                                 chain.anchor('top', documentId);
                                 chain.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop * -1);
                             }
@@ -3832,7 +3832,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return false;
     }
 
-    private isConstraintLayout(layout: LayoutUI<T>, vertical?: boolean) {
+    private isConstraintLayout(layout: LayoutUI<T>, vertical: boolean) {
         const { parent, node } = layout;
         if (parent.flexRow && (parent.cssValue('alignItems') === 'baseline' || layout.find(item => item.flexbox.alignSelf === 'baseline')) || layout.singleRowAligned && layout.find(item => item.positionRelative && item.percentWidth === 0 && Math.ceil(item.actualRect('bottom', 'bounds')) > Math.floor(node.box.bottom))) {
             return false;

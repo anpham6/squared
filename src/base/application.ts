@@ -39,7 +39,7 @@ function parseError(error: unknown) {
 
 const getErrorMessage = (errors: string[]) => errors.map(value => '- ' + value).join('\n');
 
-export function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number, dataUri?: boolean) {
+export function parseImageUrl(value: string, styleSheetHref: Optional<string>, resource: Null<Resource<Node>>, resourceId: number, dataUri: boolean) {
     REGEXP_DATAURI.lastIndex = 0;
     let result: Undef<string>,
         match: Null<RegExpExecArray>;
@@ -204,7 +204,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public parseDocument(...elements: RootElement[]) {
         const resource = this.resourceHandler;
-        const [processing, rootElements, shadowElements, styleSheets] = this.createThread(elements);
+        const [processing, rootElements, shadowElements, styleSheets] = this.createThread(elements, false);
         if (rootElements.length === 0) {
             return reject(DOCUMENT_ROOT_NOT_FOUND);
         }
@@ -289,7 +289,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this.resumeThread(sessionData[0], sessionData[1], elements.length);
     }
 
-    public createThread(elements: RootElement[], sync?: boolean): squared.base.AppThreadData<T> {
+    public createThread(elements: RootElement[], sync: boolean): squared.base.AppThreadData<T> {
         const { controllerHandler, resourceHandler, resourceId } = this;
         const rootElements: HTMLElement[] = [];
         const customSettings: Null<ElementSettings>[] = [];
@@ -376,10 +376,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                     for (let i = 0; i < q; ++i) {
                         const { backgroundImage, listStyleImage } = (items[i] as HTMLElement).style;
                         if (backgroundImage) {
-                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
+                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId, false);
                         }
                         if (listStyleImage) {
-                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
+                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId, false);
                         }
                     }
                 }
@@ -749,7 +749,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             case 'backgroundImage':
                             case 'listStyleImage':
                             case 'content':
-                                value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
+                                value = parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId, false);
                                 break;
                         }
                     }
@@ -961,7 +961,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 case 'content': {
                                     const value: string = cssStyle[attr];
                                     if (value !== 'initial') {
-                                        parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId);
+                                        parseImageUrl(value, item.parentStyleSheet?.href, resource, resourceId, false);
                                     }
                                     break;
                                 }

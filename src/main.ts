@@ -108,7 +108,7 @@ function loadExtensions() {
     }
 }
 
-function findElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
+function findElement(element: HTMLElement, sync: boolean, cache: boolean) {
     if (cache) {
         const result = main!.elementMap.get(element);
         if (result) {
@@ -135,7 +135,7 @@ function findElementAll(query: NodeListOf<Element>, length: number) {
     return !incomplete ? result : result.filter((item: Undef<Node>) => item);
 }
 
-async function findElementAsync(element: HTMLElement, cache?: boolean) {
+async function findElementAsync(element: HTMLElement, cache: boolean) {
     if (cache) {
         const result = main!.elementMap.get(element);
         if (result) {
@@ -477,7 +477,7 @@ export function copyFiles(value: string, options: FileActionOptions) {
     return errorReject(1);
 }
 
-export function getElementById(value: string, sync?: boolean, cache = true) {
+export function getElementById(value: string, sync = false, cache = true) {
     if (main) {
         const element = document.getElementById(value);
         if (element) {
@@ -487,7 +487,7 @@ export function getElementById(value: string, sync?: boolean, cache = true) {
     return sync ? null : Promise.resolve(null);
 }
 
-export function querySelector(value: string, sync?: boolean, cache = true) {
+export function querySelector(value: string, sync = false, cache = true) {
     if (main) {
         const element = document.querySelector(value);
         if (element) {
@@ -497,7 +497,7 @@ export function querySelector(value: string, sync?: boolean, cache = true) {
     return sync ? null : Promise.resolve(null);
 }
 
-export function querySelectorAll(value: string, sync?: boolean, cache = true) {
+export function querySelectorAll(value: string, sync = false, cache = true) {
     if (main) {
         const query = document.querySelectorAll(value);
         const length = query.length;
@@ -523,14 +523,14 @@ export function querySelectorAll(value: string, sync?: boolean, cache = true) {
     return sync ? [] : Promise.resolve([]);
 }
 
-export function fromElement(element: HTMLElement, sync?: boolean, cache?: boolean) {
+export function fromElement(element: HTMLElement, sync = false, cache = false) {
     if (main) {
         return findElement(element, sync, cache);
     }
     return sync ? null : Promise.resolve(null);
 }
 
-export function fromNode(node: Node, sync?: boolean, cache?: boolean) {
+export function fromNode(node: Node, sync = false, cache = false) {
     if (main && node instanceof squared.base.Node) {
         return findElement(node.element as HTMLElement, sync, cache);
     }
