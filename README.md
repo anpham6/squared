@@ -531,7 +531,7 @@ Some applications can benefit from using includes or merge tags to share common 
     <div data-android-include="filename1" data-android-include-merge="false">Item 2</div>
     <div>Item 3</div>
     <div data-android-include-end="true">Item 4</div>
-    <div data-android-include="filename2" data-android-include-end="true">Item 5</div>
+    <div data-android-include="filename2" data-android-include-end="true" data-android-include-viewmodel="viewModel">Item 5</div> <!-- Optional: viewModel -->
 </div>
 ```
 
@@ -539,7 +539,7 @@ Some applications can benefit from using includes or merge tags to share common 
 <LinearLayout>
     <TextView>Item 1</TextView>
     <include layout="@layout/filename1" />
-    <include layout="@layout/filename2" />
+    <include layout="@layout/filename2" android:viewModelInstance="@{viewModel}" />
 </LinearLayout>
 <!-- res/layout/activity_main.xml -->
 

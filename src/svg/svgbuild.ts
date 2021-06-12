@@ -37,6 +37,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static isUse(object: SvgElement): object is SvgUse {
         return hasBit(object.instanceType, INSTANCE_TYPE.SVG_USE);
     }
+
     public static isContainer(object: SvgElement): object is SvgGroup {
         return hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
     }

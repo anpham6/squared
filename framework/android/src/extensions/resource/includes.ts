@@ -9,6 +9,7 @@ type RenderData = Undef<NodeIndex[]>;
 interface NodeIndex {
     item: View;
     name?: string;
+    viewModel?: string;
     index: number;
     include: boolean;
 }
@@ -39,7 +40,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                             item,
                             name,
                             index,
-                            include: dataset.androidIncludeMerge === 'false'
+                            include: dataset.androidIncludeMerge === 'false',
+                            viewModel: dataset.androidIncludeViewmodel
                         };
                         if (name) {
                             (open ||= []).push(indexData);
@@ -58,7 +60,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                         close.splice(0, excess);
                     }
                     for (let j = q - 1; j >= 0; --j) {
-                        const { index, include, item, name } = open[j];
+                        const { index, include, item, name, viewModel } = open[j];
                         for (let k = 0; k < close.length; ++k) {
                             const r = close[k].index;
                             if (r >= index) {
@@ -68,10 +70,14 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 }
                                 const merge = !include || templates.length > 1;
                                 const depth = merge ? 1 : 0;
+                                const android: StringMap = {};
+                                if (viewModel) {
+                                    android.viewModelInstance = viewModel;
+                                }
                                 renderTemplates.splice(index, templates.length, {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: (controller as android.base.Controller<T>).renderNodeStatic(node.sessionId, { controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name!}`, android: {} }),
+                                    content: (controller as android.base.Controller<T>).renderNodeStatic(node.sessionId, { controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name!}`, android }),
                                     indent: true
                                 } as NodeIncludeTemplate<T>);
                                 let content = controller.writeDocument(templates, depth, application.userSettings.showAttributes);

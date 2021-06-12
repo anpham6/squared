@@ -347,10 +347,11 @@ function getBoxWidth(node: View) {
 }
 
 function causesLineBreak(element: Element) {
-    if (element.tagName === 'BR') {
+    const nodeName = element.nodeName;
+    if (nodeName === 'BR') {
         return true;
     }
-    if (element.nodeName[0] !== '#') {
+    if (nodeName[0] !== '#') {
         const style = getStyle(element);
         const hasWidth = () => (style.width === '100%' || style.minWidth === '100%') && (style.maxWidth === 'none' || style.maxWidth === '100%');
         if (!hasCoords(style.position)) {
