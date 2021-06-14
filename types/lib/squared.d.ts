@@ -234,6 +234,7 @@ declare module "lib" {
     namespace internal {
         const PROXY_INLINESTYLE: Readonly<CSSStyleDeclaration>;
         const CSS_PROPERTIES: CssProperties;
+        const ELEMENT_BLOCK: string[];
         const CSS_BORDER_SET: CssStyleAttr[][];
         function updateDocumentFont(): void;
         function getDocumentFontSize(): number;
@@ -356,7 +357,7 @@ declare module "lib" {
         function isObject<T = PlainObject>(value: unknown): value is T;
         function isPlainObject<T = PlainObject>(value: unknown): value is T;
         function isBase64(value: string): boolean;
-        function isSpace(ch: unknown): ch is string;
+        function isSpace(ch: unknown): boolean;
         function isEmptyString(value: string): boolean;
         function isEqual(source: unknown, other: unknown): boolean;
         function cloneObject<T>(data: T, options?: CloneObjectOptions<T>): T;

@@ -88,6 +88,7 @@ declare module "base" {
     interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
         extensionMap: WeakMap<T, ExtensionUI<T>[]>;
         clearMap: Map<T, string>;
+        firstLetterMap: Map<Element, string>;
     }
 
     interface AppModule {
@@ -682,7 +683,7 @@ declare module "base" {
         translateY(value: number, options?: TranslateOptions): boolean;
         getBoxSpacing(): [number, number, number, number];
         getAnchoredSiblings(orientation: OrientationAttr): NodeUI[];
-        getPseudoElement(name: PseudoElt, attr?: CssStyleAttr): Undef<CssStyleMap | string>;
+        getPseudoElement(name: PseudoElt): Null<CssStyleMap | string>;
         isResizable(attr: DimensionSizableAttr, not?: StringOfArray): boolean;
         fitToScreen(value: Dimension): Dimension;
         cssValue(attr: CssStyleAttr): string;

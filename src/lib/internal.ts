@@ -1386,6 +1386,42 @@ export const PROXY_INLINESTYLE = Object.freeze(
     })
 );
 
+export const ELEMENT_BLOCK = [
+    'ADDRESS',
+    'ARTICLE',
+    'ASIDE',
+    'BLOCKQUOTE',
+    'DD',
+    'DETAILS',
+    'DIALOG',
+    'DIV',
+    'DL',
+    'DT',
+    'FIELDSET',
+    'FIGCAPTION',
+    'FIGURE',
+    'FOOTER',
+    'FORM',
+    'H1',
+    'H2',
+    'H3',
+    'H4',
+    'H5',
+    'H6',
+    'HEADER',
+    'HGROUP',
+    'HR',
+    'LI',
+    'MAIN',
+    'NAV',
+    'OL',
+    'P',
+    'PRE',
+    'SECTION',
+    'TABLE',
+    'UL'
+];
+
 export const CSS_BORDER_SET = [
     CSS_PROPERTIES.borderTop!.value as string[],
     CSS_PROPERTIES.borderRight!.value as string[],

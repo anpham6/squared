@@ -1140,6 +1140,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             }
         }
         const documentHandler = (this.application.userSettings as UserResourceSettings).outputDocumentHandler;
+        const documentElement = document.documentElement;
         for (const item of assets) {
             const element = item.element;
             if (element instanceof Element) {
@@ -1153,7 +1154,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             item.document ||= File.copyDocument(documentHandler);
         }
         for (const [node, element] of nodeMap) {
-            if (element !== document.documentElement) {
+            if (element !== documentElement) {
                 node.outerXml = element.outerHTML.trim();
             }
         }

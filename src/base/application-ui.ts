@@ -30,13 +30,13 @@ type ApplyDefaultStylesMethod<T extends NodeUI> = (processing: squared.base.AppP
 type RenderNodeMethod<T extends NodeUI> = (layout: ContentUI<T>) => Undef<NodeTemplate<T>>;
 type PseudoData<T extends NodeUI> = [item: T, previousId: Null<string>, removeStyle: Null<VoidFunction>];
 
-const { insertStyleSheetRule } = squared.lib.internal;
+const { ELEMENT_BLOCK, insertStyleSheetRule } = squared.lib.internal;
 const { QUOTED } = squared.lib.regex.STRING;
 
 const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, isString, iterateArray, partitionArray, replaceAll, splitSome, startsWith } = squared.lib.util;
+const { capitalize, convertWord, isSpace, isString, iterateArray, partitionArray, replaceAll, splitSome, startsWith } = squared.lib.util;
 
 let REGEXP_COUNTER: RegExp;
 let REGEXP_COUNTERVALUE: RegExp;
@@ -162,7 +162,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         active: new Map(),
         data: new Map(),
         extensionMap: new WeakMap(),
-        clearMap: new Map()
+        clearMap: new Map(),
+        firstLetterMap: new Map()
     };
     public readonly extensions: ExtensionUI<T>[] = [];
 
@@ -302,6 +303,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         for (let i = 0, q = extensions.length; i < q; ++i) {
             extensions[i].afterFinalize(finalizeData);
         }
+        const firstLetterMap = this.session.firstLetterMap;
+        if (firstLetterMap.size) {
+            for (const [element, textContent] of firstLetterMap) {
+                try {
+                    element.textContent = textContent;
+                }
+                catch {
+                }
+            }
+            firstLetterMap.clear();
+        }
         removeElementsByClassName('__squared-pseudo');
         return this.closed = true;
     }
@@ -322,6 +334,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const session = this.session;
         session.extensionMap = new WeakMap();
         session.clearMap.clear();
+        session.firstLetterMap.clear();
         this.setResourceId();
         this._nextId = 0;
         this._layouts = [];
@@ -630,7 +643,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this.layouts[0]?.content || '';
     }
 
-    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, cascadeAll?: boolean) {
+    protected cascadeParentNode(processing: squared.base.AppProcessing<T>, sessionId: string, resourceId: number, parentElement: HTMLElement, depth: number, pierceShadowRoot: boolean, extensions: Null<ExtensionUI<T>[]>, shadowParent?: ShadowRoot, beforeElement?: HTMLElement, afterElement?: HTMLElement, firstLetterElement?: HTMLElement, cascadeAll?: boolean) {
         const node = this.insertNode(processing, parentElement, cascadeAll);
         setElementState(node, 0);
         if (depth === 0) {
@@ -641,6 +654,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     break;
                 }
             }
+            firstLetterElement = this.createPseduoElement(sessionId, resourceId, parentElement, '::first-letter');
             beforeElement = this.createPseduoElement(sessionId, resourceId, parentElement, '::before');
             afterElement = this.createPseduoElement(sessionId, resourceId, parentElement, '::after');
         }
@@ -677,6 +691,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     inlineText = false;
                 }
+                else if (element === firstLetterElement) {
+                    setElementState(child = this.insertNode(processing, firstLetterElement, cascadeAll, '::first-letter'), 2);
+                    if (!child.textEmpty) {
+                        child.cssApply(node.textStyle, false);
+                        child.inlineText = true;
+                    }
+                    inlineText = false;
+                }
                 else if (element.nodeName[0] === '#') {
                     if (this.visibleText(node, element)) {
                         setElementState(child = this.insertNode(processing, element), 1);
@@ -699,6 +721,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
                         const hostChild = shadowRoot || element;
+                        const firstLetterChild = this.createPseduoElement(sessionId, resourceId, element, '::first-letter', hostChild);
                         const beforeChild = this.createPseduoElement(sessionId, resourceId, element, '::before', hostChild);
                         const afterChild = this.createPseduoElement(sessionId, resourceId, element, '::after', hostChild);
                         if (hostChild.childNodes.length) {
@@ -713,6 +736,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 shadowRoot || shadowParent,
                                 beforeChild,
                                 afterChild,
+                                firstLetterChild,
                                 cascadeAll
                             );
                             if (child.display === 'contents' && !child.excluded && !shadowRoot) {
@@ -1601,362 +1625,402 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(sessionId: string, resourceId: number, element: HTMLElement, pseudoElt: PseudoElt, elementRoot: HTMLElement | ShadowRoot = element.shadowRoot || element) {
-        let styleMap = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId);
-        if (element.tagName === 'Q') {
-            if (!styleMap) {
-                setElementCache(element, 'styleMap' + pseudoElt, styleMap = {}, sessionId);
-            }
-            styleMap.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
-        }
-        if (styleMap) {
-            let value = styleMap.content;
-            if (value) {
-                const absolute = hasCoords(styleMap.position ||= 'static');
-                if (absolute && +styleMap.opacity! <= 0) {
-                    return;
-                }
-                let content = '',
-                    tagName: Undef<string>;
-                switch (value) {
-                    case 'initial':
-                    case 'unset':
-                    case 'revert':
-                        value = getStyle(element, pseudoElt).content;
-                        break;
-                    case 'inherit':
-                        value = getStyle(element).content;
-                        break;
-                }
-                switch (value) {
-                    case 'normal':
-                    case 'none':
-                    case 'no-open-quote':
-                    case 'no-close-quote':
+        let styleMap = getElementCache<CssStyleMap>(element, 'styleMap' + pseudoElt, sessionId),
+            content = '',
+            value: Undef<string>,
+            tagName: Undef<string>;
+        if (pseudoElt === '::first-letter') {
+            if (styleMap) {
+                const childNodes = element.childNodes;
+                for (let i = 0, length = childNodes.length; i < length; ++i) {
+                    const child = childNodes.item(i) as Element;
+                    const nodeName = child.nodeName;
+                    if (nodeName[0] !== '#') {
+                        if (!ELEMENT_BLOCK.includes(nodeName)) {
+                            setElementCache(child, 'styleMap' + pseudoElt, styleMap, sessionId);
+                        }
                         return;
-                    case 'open-quote':
-                        if (pseudoElt === '::before') {
-                            content = getPseudoQuoteValue(element, pseudoElt, '“', "‘", sessionId);
+                    }
+                    else if (child.nodeName === '#text') {
+                        const textContent = child.textContent!;
+                        let j = 0,
+                            ch: string;
+                        while (isSpace(ch = textContent[j]) || ch.charCodeAt(0) === 160) {
+                            ++j;
                         }
-                        break;
-                    case 'close-quote':
-                        if (pseudoElt === '::after') {
-                            content = getPseudoQuoteValue(element, pseudoElt, '”', "’", sessionId);
+                        if (textContent[j]) {
+                            content = textContent.substring(0, j + 1);
+                            child.textContent = textContent.substring(j + 1);
+                            styleMap.display = 'inline';
+                            this.session.firstLetterMap.set(child, textContent);
+                            break;
                         }
-                        break;
-                    default:
-                        if (value[0] === '"' || startsWith(value, 'attr')) {
-                            (REGEXP_ATTRVALUE ||= new RegExp(QUOTED + '|attr\\(([^)]+)\\)', 'g')).lastIndex = 0;
-                            let match: Null<RegExpExecArray>;
-                            while (match = REGEXP_ATTRVALUE.exec(value)) {
-                                content += match[2] ? getNamedItem(element, match[2].trim()) : match[1];
+                    }
+                }
+            }
+            else {
+                return;
+            }
+        }
+        else {
+            if (element.tagName === 'Q') {
+                if (!styleMap) {
+                    setElementCache(element, 'styleMap' + pseudoElt, styleMap = {}, sessionId);
+                }
+                styleMap.content ||= getStyle(element, pseudoElt).content || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
+            }
+            if (styleMap) {
+                if (value = styleMap.content) {
+                    const absolute = hasCoords(styleMap.position ||= 'static');
+                    if (absolute && +styleMap.opacity! <= 0) {
+                        return;
+                    }
+                    switch (value) {
+                        case 'initial':
+                        case 'unset':
+                        case 'revert':
+                            value = getStyle(element, pseudoElt).content;
+                            break;
+                        case 'inherit':
+                            value = getStyle(element).content;
+                            break;
+                    }
+                    switch (value) {
+                        case '""':
+                            break;
+                        case 'normal':
+                        case 'none':
+                        case 'no-open-quote':
+                        case 'no-close-quote':
+                            return;
+                        case 'open-quote':
+                            if (pseudoElt === '::before') {
+                                content = getPseudoQuoteValue(element, pseudoElt, '“', "‘", sessionId);
                             }
-                            if (!content.trim()) {
-                                const checkDimension = (after: boolean) => {
-                                    switch (styleMap!.display) {
-                                        case 'inline':
-                                        case 'block':
-                                        case 'inherit':
-                                        case 'initial':
-                                        case 'unset':
-                                        case 'revert': {
-                                            const { width, height } = styleMap!;
-                                            if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
-                                                for (const attr in styleMap) {
-                                                    const unit = parseFloat(styleMap[attr as CssStyleAttr]!);
-                                                    if (unit) {
-                                                        switch (attr) {
-                                                            case 'minHeight':
+                            break;
+                        case 'close-quote':
+                            if (pseudoElt === '::after') {
+                                content = getPseudoQuoteValue(element, pseudoElt, '”', "’", sessionId);
+                            }
+                            break;
+                        default:
+                            if (value[0] === '"' || startsWith(value, 'attr')) {
+                                (REGEXP_ATTRVALUE ||= new RegExp(QUOTED + '|attr\\(([^)]+)\\)', 'g')).lastIndex = 0;
+                                let match: Null<RegExpExecArray>;
+                                while (match = REGEXP_ATTRVALUE.exec(value)) {
+                                    content += match[2] ? getNamedItem(element, match[2].trim()) : match[1];
+                                }
+                                if (!content.trim()) {
+                                    const checkDimension = (after: boolean) => {
+                                        switch (styleMap!.display) {
+                                            case 'inline':
+                                            case 'block':
+                                            case 'inherit':
+                                            case 'initial':
+                                            case 'unset':
+                                            case 'revert': {
+                                                const { width, height } = styleMap!;
+                                                if ((after || !width || !parseFloat(width) && !isCalc(width)) && (!height || !parseFloat(height) && !isCalc(height))) {
+                                                    for (const attr in styleMap) {
+                                                        const unit = parseFloat(styleMap[attr as CssStyleAttr]!);
+                                                        if (unit) {
+                                                            switch (attr) {
+                                                                case 'minHeight':
+                                                                    return true;
+                                                                case 'borderTopWidth':
+                                                                    if (getStyle(element, pseudoElt).borderTopStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderRightWidth':
+                                                                    if (getStyle(element, pseudoElt).borderRightStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderBottomWidth':
+                                                                    if (getStyle(element, pseudoElt).borderBottomStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                                case 'borderLeftWidth':
+                                                                    if (getStyle(element, pseudoElt).borderLeftStyle !== 'none') {
+                                                                        return true;
+                                                                    }
+                                                                    continue;
+                                                            }
+                                                            if (startsWith(attr, 'padding')) {
                                                                 return true;
-                                                            case 'borderTopWidth':
-                                                                if (getStyle(element, pseudoElt).borderTopStyle !== 'none') {
-                                                                    return true;
-                                                                }
-                                                                continue;
-                                                            case 'borderRightWidth':
-                                                                if (getStyle(element, pseudoElt).borderRightStyle !== 'none') {
-                                                                    return true;
-                                                                }
-                                                                continue;
-                                                            case 'borderBottomWidth':
-                                                                if (getStyle(element, pseudoElt).borderBottomStyle !== 'none') {
-                                                                    return true;
-                                                                }
-                                                                continue;
-                                                            case 'borderLeftWidth':
-                                                                if (getStyle(element, pseudoElt).borderLeftStyle !== 'none') {
-                                                                    return true;
-                                                                }
-                                                                continue;
+                                                            }
+                                                            if (!absolute && startsWith(attr, 'margin')) {
+                                                                return true;
+                                                            }
                                                         }
-                                                        if (startsWith(attr, 'padding')) {
-                                                            return true;
-                                                        }
-                                                        if (!absolute && startsWith(attr, 'margin')) {
-                                                            return true;
+                                                        else if (unit === 0 && attr === 'maxHeight') {
+                                                            break;
                                                         }
                                                     }
-                                                    else if (unit === 0 && attr === 'maxHeight') {
-                                                        break;
-                                                    }
+                                                    return false;
                                                 }
-                                                return false;
                                             }
                                         }
+                                        return true;
+                                    };
+                                    if (pseudoElt === '::after') {
+                                        const checkLastChild = (sibling: Null<ChildNode>) => !!sibling && sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
+                                        if ((absolute || !content || !checkLastChild(element.lastChild)) && !checkDimension(true)) {
+                                            return;
+                                        }
                                     }
-                                    return true;
-                                };
-                                if (pseudoElt === '::after') {
-                                    const checkLastChild = (sibling: Null<ChildNode>) => !!sibling && sibling.nodeName === '#text' && !/\s+$/.test(sibling.textContent!);
-                                    if ((absolute || !content || !checkLastChild(element.lastChild)) && !checkDimension(true)) {
+                                    else if (!checkDimension(false)) {
                                         return;
                                     }
-                                }
-                                else if (!checkDimension(false)) {
-                                    return;
-                                }
-                                else {
-                                    const childNodes = elementRoot.childNodes;
-                                    for (let i = 0, length = childNodes.length; i < length; ++i) {
-                                        const child = childNodes[i] as Element;
-                                        const nodeName = child.nodeName;
-                                        if (nodeName[0] === '#') {
-                                            if (nodeName === '#text' && isString(child.textContent)) {
+                                    else {
+                                        const childNodes = elementRoot.childNodes;
+                                        for (let i = 0, length = childNodes.length; i < length; ++i) {
+                                            const child = childNodes[i] as Element;
+                                            const nodeName = child.nodeName;
+                                            if (nodeName[0] === '#') {
+                                                if (nodeName === '#text' && isString(child.textContent)) {
+                                                    break;
+                                                }
+                                            }
+                                            else {
+                                                const { position, float } = getStyle(child);
+                                                if (hasCoords(position)) {
+                                                    continue;
+                                                }
+                                                if (float !== 'none') {
+                                                    return;
+                                                }
                                                 break;
                                             }
-                                        }
-                                        else {
-                                            const { position, float } = getStyle(child);
-                                            if (hasCoords(position)) {
-                                                continue;
-                                            }
-                                            if (float !== 'none') {
-                                                return;
-                                            }
-                                            break;
                                         }
                                     }
                                 }
                             }
-                        }
-                        else if (startsWith(value = parseImageUrl(value, location.href, this.resourceHandler, resourceId, true), 'data:image/')) {
-                            tagName = 'img';
-                            content = value;
-                        }
-                        else {
-                            const url = resolveURL(value);
-                            if (url) {
-                                if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
-                                    tagName = 'img';
-                                    content = url;
-                                }
+                            else if (startsWith(value = parseImageUrl(value, location.href, this.resourceHandler, resourceId, true), 'data:image/')) {
+                                tagName = 'img';
+                                content = value;
                             }
                             else {
-                                (REGEXP_COUNTER ||= new RegExp(`counter\\(([^,)]+)(?:,\\s*([a-z-]+))?\\)|counters\\(([^,]+),\\s*${QUOTED}(?:,\\s*([a-z-]+))?\\)|${QUOTED}`, 'g')).lastIndex = 0;
-                                let match: Null<RegExpExecArray>;
-                                while (match = REGEXP_COUNTER.exec(value)) {
-                                    if (match[6]) {
-                                        content += match[6];
-                                        continue;
-                                    }
-                                    const [counterName, styleName = 'decimal'] = match[1] ? [match[1], match[2]] : [match[3], match[5]];
-                                    const counters: number[] = [NaN];
-                                    let current: Null<HTMLElement> = element,
-                                        depth = 0,
-                                        initial = 0,
-                                        wasSet = 0,
-                                        wasReset: Undef<boolean>,
-                                        locked: Undef<boolean>;
-                                    const incrementCounter = (increment: Null<number>, isSet: boolean) => {
-                                        if (increment !== null && !locked && (isSet || wasSet !== 2)) {
-                                            if (isNaN(counters[0])) {
-                                                counters[0] = increment;
-                                            }
-                                            else {
-                                                counters[0] += increment;
-                                            }
-                                        }
-                                    };
-                                    const cascadeSibling = (target: Element, ignoreReset: boolean, ascending: boolean) => {
-                                        const [counterSet, counterReset] = setCounter(target, ascending);
-                                        let type = 0;
-                                        if (counterSet !== null) {
-                                            wasSet = ascending ? 2 : 1;
-                                        }
-                                        if (counterReset !== null) {
-                                            if (depth === 0) {
-                                                if (ascending && !wasReset) {
-                                                    type = 1;
-                                                }
-                                                else {
-                                                    return 1;
-                                                }
-                                            }
-                                            else {
-                                                return 0;
-                                            }
-                                        }
-                                        iterateArray(target.children, (item: Element) => {
-                                            if (item.className !== '__squared-pseudo') {
-                                                switch (cascadeSibling(item, false, false)) {
-                                                    case 0:
-                                                    case 1:
-                                                        wasReset = true;
-                                                        return true;
-                                                }
-                                            }
-                                        });
-                                        if (type === 1) {
-                                            if (!ignoreReset || target === current) {
-                                                incrementCounter(counterReset, true);
-                                                locked = false;
-                                                counters.unshift(NaN);
-                                                return 1;
-                                            }
-                                            return ascending ? -1 : 0;
-                                        }
-                                        if (ascending) {
-                                            if (wasSet === 2) {
-                                                return 2;
-                                            }
-                                            if (wasSet === 1 && !wasReset) {
-                                                incrementCounter(initial, false);
-                                                locked = true;
-                                            }
-                                        }
-                                        return wasReset ? 0 : -1;
-                                    };
-                                    const setCounter = (target: Element, ascending: boolean) => {
-                                        const { counterSet, counterReset, counterIncrement } = getStyleMap(sessionId, target);
-                                        const setValue = getCounterValue(counterSet, counterName, 0);
-                                        const resetValue = getCounterValue(counterReset, counterName);
-                                        if (!locked) {
-                                            const isSet = setValue !== null;
-                                            if (ascending) {
-                                                incrementCounter(setValue, isSet);
-                                            }
-                                            else if (isSet) {
-                                                counters[0] = setValue!;
-                                            }
-                                            if (ascending || setValue === null && resetValue === null) {
-                                                incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
-                                            }
-                                            incrementCounter(getCounterValue(getStyleMap(sessionId, target, pseudoElt).counterIncrement, counterName), isSet);
-                                        }
-                                        return [setValue, resetValue];
-                                    };
-                                    while (current) {
-                                        const [counterSet, counterReset] = setCounter(current, true);
-                                        initial = 0;
-                                        wasReset = false;
-                                        if (counterSet !== null) {
-                                            locked = true;
-                                            wasSet = 2;
-                                        }
-                                        else {
-                                            wasSet = 0;
-                                        }
-                                        if (counterReset !== null) {
-                                            incrementCounter(counterReset, true);
-                                            if (match[1]) {
-                                                break;
-                                            }
-                                            else {
-                                                locked = false;
-                                                counters.unshift(NaN);
-                                            }
-                                        }
-                                        let sibling = current.previousElementSibling;
-                                        while (sibling) {
-                                            if (sibling.className !== '__squared-pseudo') {
-                                                if (!locked) {
-                                                    initial = counters[0];
-                                                }
-                                                switch (cascadeSibling(sibling, counterReset !== null, true)) {
-                                                    case 0:
-                                                        incrementCounter(initial, true);
-                                                        locked = true;
-                                                        break;
-                                                    case 1:
-                                                        wasSet = 0;
-                                                        break;
-                                                    case 2:
-                                                        locked = true;
-                                                        break;
-                                                }
-                                            }
-                                            sibling = sibling.previousElementSibling;
-                                        }
-                                        ++depth;
-                                        current = current.parentElement;
-                                    }
-                                    const delimiter = match[4] ? replaceAll(match[4], '\\"', '"') : '';
-                                    content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
-                                }
-                            }
-                        }
-                        break;
-                }
-                if (content || value === '""') {
-                    tagName ||= /^(?:inline|table)/.test(styleMap.display ||= 'inline') ? 'span' : 'div';
-                    const pseudoElement = document.createElement(tagName);
-                    pseudoElement.className = '__squared-pseudo';
-                    pseudoElement.style.display = 'none';
-                    if (pseudoElt === '::before') {
-                        elementRoot.insertBefore(pseudoElement, elementRoot.childNodes[0]);
-                    }
-                    else {
-                        elementRoot.appendChild(pseudoElement);
-                    }
-                    if (content) {
-                        if (tagName === 'img') {
-                            (pseudoElement as HTMLImageElement).src = content;
-                            const { width, height } = this.resourceHandler.getImageDimension(resourceId, content);
-                            if (width && height) {
-                                let options: Undef<ParseUnitOptions>;
-                                if (styleMap.fontSize) {
-                                    options = { fontSize: parseUnit(styleMap.fontSize) };
-                                }
-                                if (!styleMap.width && styleMap.height) {
-                                    const offset = parseUnit(styleMap.height, options);
-                                    if (offset > 0) {
-                                        styleMap.width = width * offset / height + 'px';
-                                    }
-                                }
-                                else if (styleMap.width && !styleMap.height) {
-                                    const offset = parseUnit(styleMap.width, options);
-                                    if (offset > 0) {
-                                        styleMap.height = height * offset / width + 'px';
+                                const url = resolveURL(value);
+                                if (url) {
+                                    if (ResourceUI.hasMimeType(this._controllerSettings.mimeType.image, url)) {
+                                        tagName = 'img';
+                                        content = url;
                                     }
                                 }
                                 else {
-                                    styleMap.width = width + 'px';
-                                    styleMap.height = height + 'px';
+                                    (REGEXP_COUNTER ||= new RegExp(`counter\\(([^,)]+)(?:,\\s*([a-z-]+))?\\)|counters\\(([^,]+),\\s*${QUOTED}(?:,\\s*([a-z-]+))?\\)|${QUOTED}`, 'g')).lastIndex = 0;
+                                    let match: Null<RegExpExecArray>;
+                                    while (match = REGEXP_COUNTER.exec(value)) {
+                                        if (match[6]) {
+                                            content += match[6];
+                                            continue;
+                                        }
+                                        const [counterName, styleName = 'decimal'] = match[1] ? [match[1], match[2]] : [match[3], match[5]];
+                                        const counters: number[] = [NaN];
+                                        let current: Null<HTMLElement> = element,
+                                            depth = 0,
+                                            initial = 0,
+                                            wasSet = 0,
+                                            wasReset: Undef<boolean>,
+                                            locked: Undef<boolean>;
+                                        const incrementCounter = (increment: Null<number>, isSet: boolean) => {
+                                            if (increment !== null && !locked && (isSet || wasSet !== 2)) {
+                                                if (isNaN(counters[0])) {
+                                                    counters[0] = increment;
+                                                }
+                                                else {
+                                                    counters[0] += increment;
+                                                }
+                                            }
+                                        };
+                                        const cascadeSibling = (target: Element, ignoreReset: boolean, ascending: boolean) => {
+                                            const [counterSet, counterReset] = setCounter(target, ascending);
+                                            let type = 0;
+                                            if (counterSet !== null) {
+                                                wasSet = ascending ? 2 : 1;
+                                            }
+                                            if (counterReset !== null) {
+                                                if (depth === 0) {
+                                                    if (ascending && !wasReset) {
+                                                        type = 1;
+                                                    }
+                                                    else {
+                                                        return 1;
+                                                    }
+                                                }
+                                                else {
+                                                    return 0;
+                                                }
+                                            }
+                                            iterateArray(target.children, (item: Element) => {
+                                                if (item.className !== '__squared-pseudo') {
+                                                    switch (cascadeSibling(item, false, false)) {
+                                                        case 0:
+                                                        case 1:
+                                                            wasReset = true;
+                                                            return true;
+                                                    }
+                                                }
+                                            });
+                                            if (type === 1) {
+                                                if (!ignoreReset || target === current) {
+                                                    incrementCounter(counterReset, true);
+                                                    locked = false;
+                                                    counters.unshift(NaN);
+                                                    return 1;
+                                                }
+                                                return ascending ? -1 : 0;
+                                            }
+                                            if (ascending) {
+                                                if (wasSet === 2) {
+                                                    return 2;
+                                                }
+                                                if (wasSet === 1 && !wasReset) {
+                                                    incrementCounter(initial, false);
+                                                    locked = true;
+                                                }
+                                            }
+                                            return wasReset ? 0 : -1;
+                                        };
+                                        const setCounter = (target: Element, ascending: boolean) => {
+                                            const { counterSet, counterReset, counterIncrement } = getStyleMap(sessionId, target);
+                                            const setValue = getCounterValue(counterSet, counterName, 0);
+                                            const resetValue = getCounterValue(counterReset, counterName);
+                                            if (!locked) {
+                                                const isSet = setValue !== null;
+                                                if (ascending) {
+                                                    incrementCounter(setValue, isSet);
+                                                }
+                                                else if (isSet) {
+                                                    counters[0] = setValue!;
+                                                }
+                                                if (ascending || setValue === null && resetValue === null) {
+                                                    incrementCounter(getCounterValue(counterIncrement, counterName), isSet);
+                                                }
+                                                incrementCounter(getCounterValue(getStyleMap(sessionId, target, pseudoElt).counterIncrement, counterName), isSet);
+                                            }
+                                            return [setValue, resetValue];
+                                        };
+                                        while (current) {
+                                            const [counterSet, counterReset] = setCounter(current, true);
+                                            initial = 0;
+                                            wasReset = false;
+                                            if (counterSet !== null) {
+                                                locked = true;
+                                                wasSet = 2;
+                                            }
+                                            else {
+                                                wasSet = 0;
+                                            }
+                                            if (counterReset !== null) {
+                                                incrementCounter(counterReset, true);
+                                                if (match[1]) {
+                                                    break;
+                                                }
+                                                else {
+                                                    locked = false;
+                                                    counters.unshift(NaN);
+                                                }
+                                            }
+                                            let sibling = current.previousElementSibling;
+                                            while (sibling) {
+                                                if (sibling.className !== '__squared-pseudo') {
+                                                    if (!locked) {
+                                                        initial = counters[0];
+                                                    }
+                                                    switch (cascadeSibling(sibling, counterReset !== null, true)) {
+                                                        case 0:
+                                                            incrementCounter(initial, true);
+                                                            locked = true;
+                                                            break;
+                                                        case 1:
+                                                            wasSet = 0;
+                                                            break;
+                                                        case 2:
+                                                            locked = true;
+                                                            break;
+                                                    }
+                                                }
+                                                sibling = sibling.previousElementSibling;
+                                            }
+                                            ++depth;
+                                            current = current.parentElement;
+                                        }
+                                        const delimiter = match[4] ? replaceAll(match[4], '\\"', '"') : '';
+                                        content += counters.reduce((a, b) => a + (!isNaN(b) ? (a ? delimiter : '') + convertListStyle(styleName, b, true) : ''), '');
+                                    }
                                 }
+                            }
+                            break;
+                    }
+                }
+            }
+            else {
+                return;
+            }
+        }
+        if (content || value === '""') {
+            tagName ||= /^(?:inline|table)/.test(styleMap.display ||= 'inline') ? 'span' : 'div';
+            const pseudoElement = document.createElement(tagName);
+            pseudoElement.className = '__squared-pseudo';
+            pseudoElement.style.display = 'none';
+            if (pseudoElt === '::after') {
+                elementRoot.appendChild(pseudoElement);
+            }
+            else {
+                elementRoot.insertBefore(pseudoElement, elementRoot.childNodes[0]);
+            }
+            if (content) {
+                if (tagName === 'img') {
+                    (pseudoElement as HTMLImageElement).src = content;
+                    const { width, height } = this.resourceHandler.getImageDimension(resourceId, content);
+                    if (width && height) {
+                        let options: Undef<ParseUnitOptions>;
+                        if (styleMap.fontSize) {
+                            options = { fontSize: parseUnit(styleMap.fontSize) };
+                        }
+                        if (!styleMap.width && styleMap.height) {
+                            const offset = parseUnit(styleMap.height, options);
+                            if (offset > 0) {
+                                styleMap.width = width * offset / height + 'px';
+                            }
+                        }
+                        else if (styleMap.width && !styleMap.height) {
+                            const offset = parseUnit(styleMap.width, options);
+                            if (offset > 0) {
+                                styleMap.height = height * offset / width + 'px';
                             }
                         }
                         else {
-                            pseudoElement.innerText = content;
+                            styleMap.width = width + 'px';
+                            styleMap.height = height + 'px';
                         }
                     }
-                    const style = getStyle(element, pseudoElt);
-                    for (const attr in styleMap) {
-                        if (attr !== 'display') {
-                            switch (value = styleMap[attr]) {
-                                case 'inherit':
-                                case 'unset':
-                                case 'revert':
-                                    value = style[attr];
-                                    styleMap[attr] = value;
-                                    break;
-                            }
-                            pseudoElement.style[attr] = value;
-                        }
-                    }
-                    setElementCache(pseudoElement, 'styleMap', styleMap, sessionId);
-                    setElementCache(pseudoElement, 'pseudoElt', pseudoElt, sessionId);
-                    return pseudoElement;
+                }
+                else {
+                    pseudoElement.innerText = content;
                 }
             }
+            const style = getStyle(element, pseudoElt);
+            for (const attr in styleMap) {
+                if (attr !== 'display') {
+                    switch (value = styleMap[attr]) {
+                        case 'inherit':
+                        case 'unset':
+                        case 'revert':
+                            value = style[attr];
+                            styleMap[attr] = value;
+                            break;
+                    }
+                    pseudoElement.style[attr] = value;
+                }
+            }
+            setElementCache(pseudoElement, 'styleMap', styleMap, sessionId);
+            setElementCache(pseudoElement, 'pseudoElt', pseudoElt, sessionId);
+            return pseudoElement;
         }
     }
 

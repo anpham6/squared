@@ -2440,8 +2440,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const textAlignLast = length > 1 ? node.textAlignLast : '';
                 const singleLine = !documentParent.preserveWhiteSpace && documentParent.tagName !== 'CODE';
                 let previousBaseline: Null<T> = null,
+                    backgroundColor: Null<ColorData> = null,
                     float: Undef<string>,
                     baseline: Null<T>;
+                if (firstLineStyle && firstLineStyle.backgroundColor && (backgroundColor = parseColor(firstLineStyle.backgroundColor))) {
+                    const boxStyle = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
+                    if (boxStyle && boxStyle.backgroundColor?.valueAsRGBA === backgroundColor.valueAsRGBA) {
+                        backgroundColor = null;
+                    }
+                }
                 const setLayoutBelow = (item: T) => {
                     if (previousBaseline) {
                         item.anchor('topBottom', previousBaseline.documentId);
@@ -2461,6 +2468,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             item.css(attr as CssStyleAttr, firstLineStyle[attr]);
+                        }
+                        if (backgroundColor) {
+                            let boxStyle = item.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
+                            if (!boxStyle) {
+                                item.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle', boxStyle = { backgroundSize: 'auto', backgroundRepeat: 'repeat', backgroundPositionX: 'left', backgroundPositionY: 'top' });
+                            }
+                            boxStyle.backgroundColor ||= backgroundColor;
                         }
                         item.unsetCache('textStyle');
                     }

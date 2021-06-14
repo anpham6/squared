@@ -159,6 +159,7 @@ interface RequestData<T = FileAsset> extends PlainObject {
     dataSource?: DataSource[];
     document?: string[];
     task?: string[];
+    update?: WatchInterval;
 }
 
 interface ResponseData {

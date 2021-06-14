@@ -1,48 +1,12 @@
 import { CSS_TRAITS, CSS_UNIT } from './constant';
 
-import { CSS_PROPERTIES, PROXY_INLINESTYLE, getDocumentFontSize } from './internal';
+import { CSS_PROPERTIES, ELEMENT_BLOCK, PROXY_INLINESTYLE, getDocumentFontSize } from './internal';
 import { CSS, STRING } from './regex';
 
 import { getDeviceDPI } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { getElementCache, setElementCache } from './session';
 import { endsWith, escapePattern, isSpace, resolvePath, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, trimEnclosing } from './util';
-
-const ELEMENT_BLOCK = [
-    'ADDRESS',
-    'ARTICLE',
-    'ASIDE',
-    'BLOCKQUOTE',
-    'DD',
-    'DETAILS',
-    'DIALOG',
-    'DIV',
-    'DL',
-    'DT',
-    'FIELDSET',
-    'FIGCAPTION',
-    'FIGURE',
-    'FOOTER',
-    'FORM',
-    'H1',
-    'H2',
-    'H3',
-    'H4',
-    'H5',
-    'H6',
-    'HEADER',
-    'HGROUP',
-    'HR',
-    'LI',
-    'MAIN',
-    'NAV',
-    'OL',
-    'P',
-    'PRE',
-    'SECTION',
-    'TABLE',
-    'UL'
-];
 
 const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:$|\\s+)$`, 'i');
 const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:$|\\s+)$`, 'i');
@@ -1326,38 +1290,35 @@ export function calculateVar(element: StyleElement, value: string, options: Calc
                         if (options.parent === false) {
                             boundingElement = element;
                         }
-                        else {
-                            boundingElement = element.parentElement;
-                            if (boundingElement instanceof HTMLElement) {
-                                let style: CSSStyleDeclaration;
-                                if (hasCoords(getStyle(element).position)) {
-                                    do {
-                                        style = getStyle(boundingElement);
-                                        if (boundingElement === document.body) {
-                                            break;
-                                        }
-                                        if (style.position === 'static') {
-                                            boundingElement = boundingElement.parentElement;
-                                        }
-                                        else {
-                                            break;
-                                        }
-                                    }
-                                    while (boundingElement);
-                                }
-                                else {
+                        else if ((boundingElement = element.parentElement) instanceof HTMLElement) {
+                            let style: CSSStyleDeclaration;
+                            if (hasCoords(getStyle(element).position)) {
+                                do {
                                     style = getStyle(boundingElement);
+                                    if (boundingElement === document.body) {
+                                        break;
+                                    }
+                                    if (style.position === 'static') {
+                                        boundingElement = boundingElement.parentElement;
+                                    }
+                                    else {
+                                        break;
+                                    }
                                 }
-                                offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
-                            }
-                            else if (element instanceof SVGElement) {
-                                if (options.parent !== true) {
-                                    boundingElement = element;
-                                }
+                                while (boundingElement);
                             }
                             else {
-                                boundingElement = null;
+                                style = getStyle(boundingElement);
                             }
+                            offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
+                        }
+                        else if (element instanceof SVGElement) {
+                            if (options.parent !== true) {
+                                boundingElement = element;
+                            }
+                        }
+                        else {
+                            boundingElement = null;
                         }
                         if (boundingElement) {
                             options.boundingSize = Math.max(0, boundingElement.getBoundingClientRect()[dimension] - offsetPadding);

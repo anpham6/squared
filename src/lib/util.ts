@@ -400,7 +400,7 @@ export function isBase64(value: string) {
     return value.length % 4 === 0 && FILE.BASE64.test(value);
 }
 
-export function isSpace(ch: unknown): ch is string {
+export function isSpace(ch: unknown) {
     return ch === ' ' || ch === '\n' || ch === '\t' || ch === '\r' || ch === '\f' || ch === '\v';
 }
 

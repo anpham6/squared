@@ -13,5 +13,10 @@ body {
 p:first-letter {
 	color: red;
 	font-size: 1.4em;  /* make letter larger */
+	font-weight: normal;
+}
+
+p:first-line {
+	background-color: yellow;
 	font-weight: bold;
 }
