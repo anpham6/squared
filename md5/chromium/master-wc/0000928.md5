@@ -19,9 +19,9 @@ f5a03b76742eefacd73f85e44609c089  ./app/src/main/res/drawable/button_button_23.x
 d7755474e0e96b56a500f6ee48136b6b  ./app/src/main/res/drawable/button_button_26.xml
 a02fc83cbe219c9167aa0383bcb78551  ./app/src/main/res/drawable/button_button_28.xml
 dab04248d2016f1c119d556d51708a21  ./app/src/main/res/drawable/button_button_9.xml
-a27aa690132b9100efc781c5ada8ba32  ./app/src/main/res/drawable/button_constraintlayout_5.xml
-e091fc2d768804b01e37d954395d6e5c  ./app/src/main/res/drawable/button_constraintlayout_8.xml
-222783a979047fc0a40f91e3221562b5  ./app/src/main/res/drawable/button_constraintlayout_9.xml
+222783a979047fc0a40f91e3221562b5  ./app/src/main/res/drawable/button_constraintlayout_10.xml
+a27aa690132b9100efc781c5ada8ba32  ./app/src/main/res/drawable/button_constraintlayout_6.xml
+e091fc2d768804b01e37d954395d6e5c  ./app/src/main/res/drawable/button_constraintlayout_9.xml
 1680bdf5d63ccc08d97ab36d26268daf  ./app/src/main/res/drawable/div_linearlayout_3.xml
 aa54e73b8d32bdf5609fcc5acc392f2d  ./app/src/main/res/drawable/div_linearlayout_4.xml
 72bcb2bafd73eda3199cf5c975715932  ./app/src/main/res/drawable/div_linearlayout_5.xml
@@ -61,9 +61,9 @@ dcc664551000f188ea9f62ec4d80477d  ./app/src/main/res/drawable/span_textview_19.x
 47e3647945862ecd67e7b1668d389189  ./app/src/main/res/drawable/span_textview_57.xml
 9a5376ed958614de422b30f031e17dd5  ./app/src/main/res/drawable/span_textview_59.xml
 a565fa7458d5bd47a21d086f99fb3b68  ./app/src/main/res/drawable/span_textview_61.xml
-7f3325d33db5ef3ca1f76ccf4a6b2519  ./app/src/main/res/layout/activity_main.xml
+353c0c341f35a385947ec4c45ef3276b  ./app/src/main/res/layout/activity_main.xml
 d098ac9c20010ab9f0f2fe4ed80f0c8d  ./app/src/main/res/values/colors.xml
-61fe091200662993bbdd961b8263ab4c  ./app/src/main/res/values/dimens.xml
+193b66abbaf3c1fc483bf3af4ea79f99  ./app/src/main/res/values/dimens.xml
 e262878016879c8f410319d2ab99444c  ./app/src/main/res/values/strings.xml
-abf94e93b24d5f30b34f9993e6c622b9  ./app/src/main/res/values/styles.xml
+42c2320d0d309d7a7929a0fcb23f0fff  ./app/src/main/res/values/styles.xml
 0d07c41604f7f1bcd10a3d61a2e79576  ./app/src/main/res/values/themes.xml

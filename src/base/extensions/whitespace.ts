@@ -228,7 +228,7 @@ function getMarginTop(node: NodeUI, opposing: NodeUI, check: boolean): [number, 
     return [marginTop, inherited];
 }
 
-function getMarginBottom(node: NodeUI, opposing: NodeUI, check: boolean): [number, boolean] {
+function getMarginBottom(node: NodeUI, opposing: NodeUI, check: boolean, resetting?: NodeUI[]): [number, boolean] {
     let marginBottom = node.marginBottom,
         current = node,
         inherited = false;
@@ -282,6 +282,9 @@ function getMarginBottom(node: NodeUI, opposing: NodeUI, check: boolean): [numbe
             if (childBottom !== 0) {
                 if (!check) {
                     resetBox(child, BOX_STANDARD.MARGIN_BOTTOM, !node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] ? node : undefined);
+                    if (resetting && hasOverflow(node)) {
+                        resetting.push(child);
+                    }
                 }
                 if (marginBottom < 0) {
                     if (childBottom > getMarginTop(opposing, node, true)[0]) {
@@ -422,7 +425,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             }
                                         }
                                         let [marginTop, inheritedTop] = getMarginTop(current, previous, false),
-                                            [marginBottom, inheritedBottom] = getMarginBottom(previous, current, false); // eslint-disable-line prefer-const
+                                            [marginBottom, inheritedBottom] = getMarginBottom(previous, current, false, resetting); // eslint-disable-line prefer-const
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {

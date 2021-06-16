@@ -862,9 +862,8 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const { watch } of options.assets!) {
                 if (isPlainObject<WatchInterval>(watch) && watch.reload) {
                     const reload = watch.reload as WatchReload;
-                    const { socketId, secure, handler = {} } = reload;
-                    let port = reload.port ?? (secure ? settings.webSocketSecurePort : settings.webSocketPort);
-                    if (socketId && hasValue<number>(port) && !isNaN(port = +port)) {
+                    let { socketId, secure, handler = {}, port = secure ? settings.webSocketSecurePort : settings.webSocketPort } = reload; // eslint-disable-line prefer-const
+                    if (socketId && hasValue<number>(port) && Math.floor(port = +port) > 0) {
                         socketMap[socketId + `_${port}_` + (secure ? '0' : '1')] ||=
                         `socket=new WebSocket("${secure ? 'wss' : 'ws'}://${hostname}:${port}");` +
                         (handler.open ? `socket.onopen=${handler.open};` : '') +
