@@ -20,6 +20,7 @@ interface BundleOptions {
     preserveCrossOrigin?: boolean;
     bundleIndex?: BundleIndex;
     assetMap?: ElementAssetMap;
+    assetCommand?: AssetCommand;
     appendCommand?: AssetCommand;
     saveAsOptions?: SaveAsOptions;
 }
@@ -629,31 +630,51 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             cloudStorage: Undef<CloudStorage[]>,
                             documentData: Undef<StringOfArray>;
                         try {
-                            if (assetMap && new URL(uri).origin === location.origin) {
-                                for (let i = 0; i < length; ++i) {
-                                    const cssRules = styleSheets[i].cssRules;
-                                    for (let j = 0, q = cssRules.length; j < q; ++q) {
-                                        const rule = cssRules[j];
-                                        if (rule.type === rule.IMPORT_RULE) {
-                                            const element = rule.parentStyleSheet?.ownerNode as Undef<HTMLElement>;
-                                            if (element) {
-                                                const assetCommand = assetMap.get(element);
-                                                if (assetCommand) {
-                                                    const file = element.dataset.chromeFile;
-                                                    if (assetCommand.extract || file && file.indexOf('extract') !== -1) {
-                                                        const data = styleMap.get(element);
-                                                        if (data) {
-                                                            assetCommand.pathname = (data.moveTo ? '/' : '') + data.pathname;
-                                                            assetCommand.filename = data.filename;
+                            invalid: {
+                                if (new URL(uri).origin === location.origin) {
+                                    for (let i = 0; i < length; ++i) {
+                                        const cssRules = styleSheets[i].cssRules;
+                                        for (let j = 0, q = cssRules.length, element: Optional<HTMLLinkElement>; j < q; ++j) {
+                                            const rule = cssRules[j] as CSSImportRule;
+                                            if (rule.type === rule.IMPORT_RULE && (element = rule.parentStyleSheet?.ownerNode as Undef<HTMLLinkElement>) && resolvePath(rule.href, element.href) === uri) {
+                                                const elementData = styleMap.get(element);
+                                                if (elementData) {
+                                                    let assetCommand = assetMap && assetMap.get(element),
+                                                        extracted: Undef<boolean>;
+                                                    if (assetCommand || saveAsLink?.extract) {
+                                                        const bundleOptions: BundleOptions = { preserveCrossOrigin, bundleIndex };
+                                                        if (assetCommand) {
+                                                            const file = element.dataset.chromeFile;
+                                                            if (assetCommand.extract || file && file.indexOf('extract') !== -1) {
+                                                                extracted = true;
+                                                            }
+                                                            bundleOptions.assetMap = assetMap;
+                                                        }
+                                                        else if (saveAsLink?.extract) {
+                                                            if (saveAsLink.customize && saveAsLink.customize.call(null, uri, 'text/css', { ...saveAsLink }) === null) {
+                                                                continue;
+                                                            }
+                                                            assetCommand = { ...saveAsLink };
+                                                            bundleOptions.assetCommand = assetCommand;
+                                                            extracted = true;
+                                                        }
+                                                        if (assetCommand) {
+                                                            if (extracted) {
+                                                                assetCommand.pathname = (elementData.moveTo ? '/' : '') + elementData.pathname;
+                                                                assetCommand.filename = elementData.filename;
+                                                            }
+                                                            const data = this.createBundle(true, result, element, uri, 'text/css', 'css', bundleOptions);
+                                                            if (data) {
+                                                                if (extracted) {
+                                                                    data.bundleReplace = escapePattern(rule.cssText).replace(/\("/, `(\\s*["']?\\s*`).replace(/"\\\)/, `\\s*["']?\\s*\\)`).replace(/\s+/g, '\\s+');
+                                                                }
+                                                                delete data.element;
+                                                                break bundled;
+                                                            }
                                                         }
                                                     }
-                                                    const data = this.createBundle(true, result, element, uri, 'text/css', 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
-                                                    if (data) {
-                                                        data.bundleReplace = escapePattern(rule.cssText).replace(/\("/, `(\\s*["']?\\s*`).replace(/"\\\)/, `\\s*["']?\\s*\\)`).replace(/\s+/g, '\\s+');
-                                                        delete data.element;
-                                                        break bundled;
-                                                    }
                                                 }
+                                                break invalid;
                                             }
                                         }
                                     }
@@ -1176,12 +1197,12 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     private createBundle(bundling: boolean, assets: ChromeAsset[], element: HTMLElement, src: Undef<string>, mimeType: string, ext: string, options: BundleOptions) {
-        const { preserveCrossOrigin, bundleIndex, assetMap, appendCommand } = options;
-        let file = !appendCommand ? element.dataset.chromeFile : '';
+        const { preserveCrossOrigin, bundleIndex, assetMap, assetCommand, appendCommand } = options;
+        let file = !assetCommand && !appendCommand ? element.dataset.chromeFile : '';
         if (file === 'exclude' || file === 'ignore') {
             return;
         }
-        const command = getAssetCommand(assetMap, element) || appendCommand;
+        const command = getAssetCommand(assetMap, element) || appendCommand || assetCommand;
         let filename: Optional<string>,
             format: Undef<string>,
             inline: Undef<boolean>,
@@ -1283,7 +1304,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         else if (!(element instanceof HTMLScriptElement)) {
             data = createFile(mimeType);
         }
-        if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, !appendCommand ? element : undefined, watch)) {
+        if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, !assetCommand && !appendCommand ? element : undefined, watch)) {
             if (filename) {
                 data.filename = filename;
             }
