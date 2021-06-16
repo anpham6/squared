@@ -17,6 +17,6 @@ p:first-letter {
 }
 
 p:first-line {
-	background-color: yellow;
+	background: yellow url(star.png) no-repeat center right;
 	font-weight: bold;
 }

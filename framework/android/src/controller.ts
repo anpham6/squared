@@ -2441,12 +2441,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const singleLine = !documentParent.preserveWhiteSpace && documentParent.tagName !== 'CODE';
                 let previousBaseline: Null<T> = null,
                     backgroundColor: Null<ColorData> = null,
+                    backgroundImage: Undef<(string | Gradient)[]>,
                     float: Undef<string>,
                     baseline: Null<T>;
-                if (firstLineStyle && firstLineStyle.backgroundColor && (backgroundColor = parseColor(firstLineStyle.backgroundColor))) {
-                    const boxStyle = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
-                    if (boxStyle && boxStyle.backgroundColor?.valueAsRGBA === backgroundColor.valueAsRGBA) {
-                        backgroundColor = null;
+                if (firstLineStyle) {
+                    if (firstLineStyle.backgroundColor && (backgroundColor = parseColor(firstLineStyle.backgroundColor))) {
+                        const boxStyle = node.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
+                        if (boxStyle && boxStyle.backgroundColor?.valueAsRGBA === backgroundColor.valueAsRGBA) {
+                            backgroundColor = null;
+                        }
+                    }
+                    if (firstLineStyle.backgroundImage) {
+                        backgroundImage = Resource.parseBackgroundImage(node, firstLineStyle.backgroundImage);
                     }
                 }
                 const setLayoutBelow = (item: T) => {
@@ -2457,27 +2463,31 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         item.anchor('top', 'true');
                     }
                 };
-                const applyFirstLine = (item: T) => {
-                    if (item.textElement) {
-                        const plainText = item.plainText && !item.naturalElement;
-                        for (const attr in firstLineStyle) {
-                            if (!plainText) {
-                                const value = item.cssInitial(attr as CssStyleAttr);
-                                if (value) {
+                const applyFirstLine = (item: T, single: boolean) => {
+                    const plainText = item.plainText && !item.naturalElement;
+                    for (const attr in firstLineStyle) {
+                        if (!plainText && item.cssInitial(attr as CssStyleAttr)) {
+                            continue;
+                        }
+                        const value = firstLineStyle[attr as CssStyleAttr]!;
+                        switch (attr) {
+                            case 'backgroundImage':
+                                if (!single) {
+                                    item.css('backgroundImage', 'none', true);
                                     continue;
                                 }
-                            }
-                            item.css(attr as CssStyleAttr, firstLineStyle[attr]);
+                                break;
+                            case 'backgroundClip':
+                            case 'backgroundOrigin':
+                                item.cssInitial(attr, { value });
+                                break;
                         }
-                        if (backgroundColor) {
-                            let boxStyle = item.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle');
-                            if (!boxStyle) {
-                                item.data<BoxStyle>(Resource.KEY_NAME, 'boxStyle', boxStyle = { backgroundSize: 'auto', backgroundRepeat: 'repeat', backgroundPositionX: 'left', backgroundPositionY: 'top' });
-                            }
-                            boxStyle.backgroundColor ||= backgroundColor;
-                        }
+                        item.css(attr as CssStyleAttr, value, true);
+                    }
+                    if (item.textElement) {
                         item.unsetCache('textStyle');
                     }
+                    item.unsetCache('visibleStyle');
                 };
                 const isMultilineSegment = (item: T) => item.contentAltered && !item.naturalChild && item.inlineText;
                 for (let i = 0; i < length; ++i) {
@@ -2613,7 +2623,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             for (let k = 0; k < r; ++k) {
                                 const item = items[k];
                                 if (firstLineStyle && i === 0 && j === 0) {
-                                    applyFirstLine(item);
+                                    applyFirstLine(item, false);
                                 }
                                 if (!item.constraint.horizontal) {
                                     const setAlignLeft = () => {
@@ -2821,11 +2831,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             const lastRowAligned = i === length - 1 && textAlignLast && textAlignLast !== 'justify';
-                            if (centerAligned || lastRowAligned) {
+                            const backgroundActive = i === 0 && j === 0 && firstLineStyle && backgroundImage;
+                            if (centerAligned || lastRowAligned || backgroundActive) {
                                 const application = this.application;
                                 baseline = this.createNodeGroup(items[0], items, node, { containerType: CONTAINER_NODE.RELATIVE, alignmentType: NODE_ALIGNMENT.HORIZONTAL });
                                 baseline.render(node);
-                                if (lastRowAligned) {
+                                if (centerAligned) {
+                                    baseline.anchor('centerHorizontal', 'true');
+                                }
+                                else if (lastRowAligned) {
                                     switch (textAlignLast) {
                                         case 'center':
                                             baseline.anchor('centerHorizontal', 'true');
@@ -2839,8 +2853,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                             break;
                                     }
                                 }
-                                else {
-                                    baseline.anchor('centerHorizontal', 'true');
+                                if (backgroundActive) {
+                                    applyFirstLine(baseline, true);
                                 }
                                 baseline.setLayoutWidth('wrap_content');
                                 baseline.setLayoutHeight('wrap_content');
@@ -2913,7 +2927,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         else if (r) {
                             baseline = items[0];
                             if (firstLineStyle && i === 0 && j === 0) {
-                                applyFirstLine(baseline);
+                                applyFirstLine(baseline, true);
                             }
                             if (currentFloated) {
                                 if (currentFloated.float === 'left') {

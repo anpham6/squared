@@ -195,10 +195,13 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: "borderTop" | "b
     return false;
 }
 
-function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "backgroundClip" | "backgroundOrigin") {
+function setBackgroundClip(node: NodeUI, boxStyle: BoxStyle, attr: CssStyleAttr = "backgroundClip") {
     switch (node.valueOf(attr) || (attr === 'backgroundClip' ? 'border-box' : 'padding-box')) {
         case 'border-box':
-            return true;
+            if (attr === "backgroundClip") {
+                setBackgroundClip(node, boxStyle, 'backgroundOrigin');
+            }
+            break;
         case 'padding-box':
             boxStyle[attr] = {
                 top: node.borderTopWidth,
@@ -216,7 +219,6 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: "background
             };
             break;
     }
-    return false;
 }
 
 function hasEndingSpace(element: HTMLElement) {
@@ -1156,9 +1158,7 @@ export default class ResourceUI<T extends NodeUI> extends Resource<T> implements
                     boxStyle.backgroundColor = color;
                 }
                 Object.assign(boxStyle, node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY'));
-                if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
-                    setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
-                }
+                setBackgroundClip(node, boxStyle);
                 node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
             }
         }

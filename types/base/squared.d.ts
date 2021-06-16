@@ -158,7 +158,6 @@ declare module "base" {
     }
 
     class ApplicationUI<T extends NodeUI> extends Application<T> {
-        resource: ResourceUI<T>;
         builtInExtensions: Map<string, ExtensionUI<T>>;
         userSettings: UserResourceSettingsUI;
         readonly session: AppSessionUI<T>;
@@ -272,7 +271,7 @@ declare module "base" {
         static getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
-        static parseBackgroundImage(node: NodeUI, value: string): Undef<string | Gradient>[];
+        static parseBackgroundImage(node: NodeUI, value: string): Undef<(string | Gradient)[]>;
         static getBackgroundSize<U extends NodeUI>(node: U, value: string, dimension?: Dimension): Null<Dimension>;
         static hasLineBreak<U extends NodeUI>(node: U, lineBreak?: boolean, trim?: boolean): boolean;
         static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
