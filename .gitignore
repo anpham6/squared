@@ -10,7 +10,6 @@ fonts.js
 md5sum.js
 gulpfile.js
 .DS_Store
-.vscode/tasks.json
 *-cloud.json
 html/**/*.dev.*
 *.7z

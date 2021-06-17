@@ -36,7 +36,7 @@ const { QUOTED } = squared.lib.regex.STRING;
 const { formatPX, getStyle, hasCoords, isCalc, parseUnit, resolveURL } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { getElementCache, setElementCache } = squared.lib.session;
-const { capitalize, convertWord, isSpace, isString, iterateArray, partitionArray, replaceAll, splitSome, startsWith } = squared.lib.util;
+const { capitalize, convertWord, endsWith, isSpace, isString, iterateArray, partitionArray, replaceAll, splitSome, startsWith } = squared.lib.util;
 
 let REGEXP_COUNTER: RegExp;
 let REGEXP_COUNTERVALUE: RegExp;
@@ -2141,7 +2141,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     get layouts() {
+        const layoutDir = this.controllerHandler.localSettings.directory.layout;
         return this._layouts.sort((a, b) => {
+            const dirA = endsWith(a.pathname, layoutDir);
+            const dirB = endsWith(b.pathname, layoutDir);
+            if (dirA !== dirB) {
+                if (dirA) {
+                    return -1;
+                }
+                if (dirB) {
+                    return 1;
+                }
+            }
             const indexA = a.index;
             const indexB = b.index;
             if (indexA !== indexB) {

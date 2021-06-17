@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "gitCommitAmendNoEdit",
+            "type": "shell",
+            "command": "git commit --amend --no-edit && git push --force-with-lease origin master"
+        },
+        {
+            "label": "expressReadWrite",
+            "type": "shell",
+            "command": "npm run express-rw"
+        }
+    ]
+}

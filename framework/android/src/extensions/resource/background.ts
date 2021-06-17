@@ -1541,7 +1541,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     if (percent !== 0) {
                                         top = Math.round((boundsHeight - height) * percent);
                                     }
-                                    const attr = node.layoutConstraint || node.layoutRelative ? 'minHeight' : 'height';
+                                    const attr = node.layoutAnchoring ? 'minHeight' : 'height';
                                     if (!node.hasUnit(attr)) {
                                         node.css(attr, formatPX(boundsHeight - node.contentBoxHeight));
                                     }

@@ -121,6 +121,7 @@ declare namespace base {
         get layoutGrid(): boolean;
         get layoutRelative(): boolean;
         get layoutConstraint(): boolean;
+        get layoutAnchoring(): boolean;
         get layoutWidth(): string;
         get layoutHeight(): string;
         get inlineWidth(): boolean;

@@ -2064,7 +2064,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as Null<T>;
             if (renderParent) {
-                if (renderParent.layoutConstraint || renderParent.layoutRelative) {
+                if (renderParent.layoutAnchoring) {
                     for (const direction of values) {
                         let leading: AnchorPositionAttr,
                             trailing: AnchorPositionAttr;
@@ -3253,7 +3253,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (result) {
                     const parent = this.renderParent;
-                    if (parent && (parent.layoutConstraint || parent.layoutRelative)) {
+                    if (parent && parent.layoutAnchoring) {
                         const children = parent.renderChildren;
                         const documentId = this.documentId;
                         for (let i = 0, length = children.length; i < length; ++i) {
@@ -3271,7 +3271,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                return this._cache.renderExclude = !!result;
+                return this._cache.renderExclude = !!result && !this.use;
             }
             return result;
         }
@@ -3343,7 +3343,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             do {
                 const renderParent = target.renderParent as Null<T>;
                 if (renderParent) {
-                    if (renderParent.layoutConstraint || renderParent.layoutRelative) {
+                    if (renderParent.layoutAnchoring) {
                         return target;
                     }
                 }
@@ -3388,6 +3388,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get layoutConstraint() {
             return this._containerType === CONTAINER_NODE.CONSTRAINT;
+        }
+        get layoutAnchoring() {
+            return this.layoutConstraint || this.layoutRelative;
         }
 
         get layoutWidth() {
