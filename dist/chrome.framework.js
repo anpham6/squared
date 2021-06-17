@@ -7,7 +7,7 @@ var chrome = (function () {
     var Resource = squared.base.Resource;
     const { DOM } = squared.base.lib.regex;
     const { createElement } = squared.lib.dom;
-    const { convertWord, fromLastIndexOf, isPlainObject: isPlainObject$2, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome: splitSome$1, startsWith } = squared.lib.util;
+    const { convertWord, escapePattern: escapePattern$1, findReverse, fromLastIndexOf, isPlainObject: isPlainObject$2, hasValue, lastItemOf, replaceAll, resolvePath, splitPair, splitPairEnd, splitPairStart, splitSome: splitSome$1, startsWith } = squared.lib.util;
     const { parseTask, parseWatchInterval } = squared.base.lib.internal;
     const { appendSeparator, fromMimeType, parseMimeType, generateUUID, getComponentEnd, trimEnd } = squared.base.lib.util;
     const FILENAME_MAP = new WeakMap();
@@ -32,6 +32,9 @@ var chrome = (function () {
             }
             if (value.indexOf('blob') !== -1) {
                 result.blob = true;
+            }
+            if (value.indexOf('extract') !== -1) {
+                result.extract = true;
             }
             if (value.indexOf('crossorigin') !== -1) {
                 result.download = false;
@@ -94,14 +97,14 @@ var chrome = (function () {
                     if (i > 0) {
                         delete item.cloudStorage;
                     }
-                    if (urls && item.uri) {
+                    if (item.uri) {
                         urls.push(new URL(item.uri));
                     }
                 }
                 invalid: {
                     if (urls.length === length) {
-                        const origin = urls[0].origin;
-                        let baseDir = urls[0].pathname.split('/');
+                        const { origin, pathname } = urls[0];
+                        let baseDir = pathname.split('/');
                         for (let i = 1; i < length; ++i) {
                             const url = urls[i];
                             if (url.origin === origin) {
@@ -143,7 +146,7 @@ var chrome = (function () {
             if (inline) {
                 data.inlineContent = getContentType(element);
             }
-            const previous = lastItemOf(assets);
+            const previous = findReverse(assets, item => item.mimeType === mimeType && !item.exclude);
             if (previous && hasSamePath(previous, data, true)) {
                 (previous.trailingContent || (previous.trailingContent = [])).push(content);
                 excludeAsset(assets, { exclude: true }, element, document);
@@ -162,24 +165,21 @@ var chrome = (function () {
         }
     }
     function checkBundleStart(assets, data) {
-        for (let i = 0, length = assets.length; i < length; ++i) {
-            if (hasSamePath(assets[i], data)) {
-                for (let j = i + 1; j < length; ++j) {
-                    if (!hasSamePath(assets[j], data)) {
-                        checkFilename(assets, data);
-                        return true;
-                    }
+        for (const item of assets) {
+            if (hasSamePath(item, data, true)) {
+                if (item.mimeType === data.mimeType) {
+                    return false;
                 }
-                return false;
+                checkFilename(assets, data);
+                break;
             }
         }
-        checkFilename(assets, data);
         return true;
     }
     function checkFilename(assets, data) {
         const filename = data.filename;
         let i = 0;
-        while (assets.find(item => hasSamePath(item, data))) {
+        while (assets.find(item => hasSamePath(item, data, false))) {
             const [start, end] = splitPair(data.filename, '.');
             data.filename = start + '_' + ++i + (end ? '.' + end : '');
         }
@@ -199,7 +199,7 @@ var chrome = (function () {
         if (value) {
             return [value, false];
         }
-        else if (pathname && pathname !== '~') {
+        if (pathname && pathname !== '~') {
             return [pathname, true];
         }
         return ['', false];
@@ -229,9 +229,9 @@ var chrome = (function () {
         }
         return pathname && filename && appendSeparator(pathname, filename);
     }
-    function setUUID(node, element, name, format) {
+    function setUUID(node, element, name) {
         var _a, _b;
-        const id = (_a = element.dataset)[_b = name + 'Id'] || (_a[_b] = generateUUID(format));
+        const id = (_a = element.dataset)[_b = name + 'Id'] || (_a[_b] = generateUUID());
         (node.id || (node.id = {}))[name] = id;
     }
     function createFile(mimeType) {
@@ -241,6 +241,19 @@ var chrome = (function () {
             mimeType,
             format: 'crossorigin'
         };
+    }
+    function hasFormat(value) {
+        if (value) {
+            switch (value) {
+                case 'base64':
+                case 'crossorigin':
+                case 'blob':
+                case 'srcset':
+                    return false;
+            }
+            return true;
+        }
+        return false;
     }
     const assignFilename = (value, ext) => "__assign__" /* ASSIGN */ + '.' + (ext || value && getFileExt(value) || 'unknown');
     const isCrossOrigin = (download, preserveCrossOrigin) => typeof download === 'boolean' ? !download : !!preserveCrossOrigin;
@@ -270,12 +283,12 @@ var chrome = (function () {
             }
             return { index, tagName, tagIndex, tagCount, ignoreCase: true };
         }
-        static setDocumentId(node, element, document, format) {
+        static setDocumentId(node, element, document) {
             if (Array.isArray(document)) {
-                document.forEach(name => setUUID(node, element, name, format));
+                document.forEach(name => setUUID(node, element, name));
             }
             else if (document) {
-                setUUID(node, element, document, format);
+                setUUID(node, element, document);
             }
         }
         static parseUri(uri, preserveCrossOrigin, options) {
@@ -306,7 +319,7 @@ var chrome = (function () {
                 if (file === '~') {
                     file = '';
                 }
-                if (local && file) {
+                else if (local && file) {
                     value = resolvePath(file);
                 }
             }
@@ -331,7 +344,7 @@ var chrome = (function () {
                         }
                         else {
                             moveTo = "__serverroot__" /* SERVERROOT */;
-                            pathname = pathsub;
+                            pathname = pathsub[0] === '/' ? pathsub.substring(1) : pathsub;
                         }
                     }
                     filename || (filename = filesub);
@@ -401,6 +414,9 @@ var chrome = (function () {
                     const value = location.pathname.split('/').pop();
                     data.filename = /\.(?:html?|php|jsp|aspx?)$/i.exec(value) ? value : 'index.html';
                 }
+                if (hasFormat(data.format)) {
+                    data.willChange = true;
+                }
                 return [data];
             }
             return [];
@@ -436,7 +452,8 @@ var chrome = (function () {
             }
             document.querySelectorAll('script').forEach(element => {
                 const template = element.dataset.chromeTemplate;
-                if (template || element.type === 'text/template') {
+                let mimeType = element.type.toLowerCase();
+                if (template || mimeType === 'text/template') {
                     const command = getAssetCommand(assetMap, element);
                     let type, module, identifier;
                     if (command) {
@@ -462,16 +479,21 @@ var chrome = (function () {
                         excludeAsset(result, command, element);
                     }
                 }
-                else {
+                else if (!(mimeType === 'application/json' || mimeType === 'application/ld+json')) {
                     const src = element.src;
-                    this.createBundle(options ? options.sessionId : '', true, result, element, src, getMimeType(element, src, 'text/javascript'), 'js', preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsScript);
+                    mimeType = getMimeType(element, src, 'text/javascript');
+                    if (mimeType === 'application/javascript') {
+                        mimeType = 'text/javascript';
+                    }
+                    mimeType += '|' + (element.defer ? '1' : '0') + (element.async ? '1' : '0') + (element.noModule ? '1' : '0');
+                    this.createBundle(true, result, element, src, mimeType, 'js', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsScript });
                 }
             });
             setBundleIndex(bundleIndex);
             return [result, templateMap];
         }
         getLinkAssets(options) {
-            var _a, _b;
+            var _a, _b, _c;
             let resourceId, assetMap, preserveCrossOrigin, saveAsLink;
             if (options) {
                 ({ resourceId, assetMap, preserveCrossOrigin } = options);
@@ -479,6 +501,7 @@ var chrome = (function () {
             }
             const result = [];
             const bundleIndex = {};
+            const styleMap = new WeakMap();
             document.querySelectorAll('link, style').forEach((element) => {
                 let href = '', mimeType = 'text/css';
                 if (element instanceof HTMLLinkElement) {
@@ -499,33 +522,105 @@ var chrome = (function () {
                         else if (!href || rel.indexOf('icon') === -1 || !checkMimeType()) {
                             return;
                         }
+                        else {
+                            try {
+                                if (new URL(href).origin !== location.origin) {
+                                    return;
+                                }
+                            }
+                            catch (_a) {
+                                return;
+                            }
+                        }
                     }
                 }
-                this.createBundle(options ? options.sessionId : '', mimeType === 'text/css', result, element, href, mimeType, 'css', preserveCrossOrigin, bundleIndex, assetMap, undefined, saveAsLink);
+                const data = this.createBundle(mimeType === 'text/css', result, element, href, mimeType, 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
+                if (data) {
+                    styleMap.set(element, data);
+                }
             });
             const rawData = (_b = this.getResourceAssets(resourceId)) === null || _b === void 0 ? void 0 : _b.rawData;
             if (rawData) {
+                const styleSheets = document.styleSheets;
+                const length = styleSheets.length;
                 for (const [uri, item] of rawData) {
-                    if (item.mimeType === 'text/css') {
-                        let command = saveAsLink, saveAs, filename, compress, download, preserve, process, tasks, cloudStorage, documentData;
-                        if (command) {
-                            if (command.customize) {
-                                filename = command.customize.call(null, uri, 'text/css', command = Object.assign({}, command));
-                                if (command.pathname && filename) {
-                                    saveAs = appendSeparator(command.pathname, filename);
+                    bundled: {
+                        if (item.mimeType === 'text/css') {
+                            try {
+                                invalid: {
+                                    if (new URL(uri).origin === location.origin) {
+                                        for (let i = 0; i < length; ++i) {
+                                            const cssRules = styleSheets[i].cssRules;
+                                            for (let j = 0, q = cssRules.length, element; j < q; ++j) {
+                                                const rule = cssRules[j];
+                                                if (rule.type === rule.IMPORT_RULE && (element = (_c = rule.parentStyleSheet) === null || _c === void 0 ? void 0 : _c.ownerNode) && resolvePath(rule.href, element.href) === uri) {
+                                                    const elementData = styleMap.get(element);
+                                                    if (elementData) {
+                                                        let assetCommand = assetMap && assetMap.get(element), extracted;
+                                                        if (assetCommand || (saveAsLink === null || saveAsLink === void 0 ? void 0 : saveAsLink.extract)) {
+                                                            const bundleOptions = { preserveCrossOrigin, bundleIndex };
+                                                            if (assetCommand) {
+                                                                const file = element.dataset.chromeFile;
+                                                                if (assetCommand.extract || file && file.indexOf('extract') !== -1) {
+                                                                    extracted = true;
+                                                                }
+                                                                bundleOptions.assetMap = assetMap;
+                                                            }
+                                                            else if (saveAsLink === null || saveAsLink === void 0 ? void 0 : saveAsLink.extract) {
+                                                                if (saveAsLink.customize && saveAsLink.customize.call(null, uri, 'text/css', Object.assign({}, saveAsLink)) === null) {
+                                                                    continue;
+                                                                }
+                                                                assetCommand = Object.assign({}, saveAsLink);
+                                                                bundleOptions.assetCommand = assetCommand;
+                                                                extracted = true;
+                                                            }
+                                                            if (assetCommand) {
+                                                                if (extracted) {
+                                                                    assetCommand.pathname = (elementData.moveTo ? '/' : '') + elementData.pathname;
+                                                                    assetCommand.filename = elementData.filename;
+                                                                }
+                                                                const data = this.createBundle(true, result, element, uri, 'text/css', 'css', bundleOptions);
+                                                                if (data) {
+                                                                    if (extracted) {
+                                                                        data.bundleReplace = escapePattern$1(rule.cssText).replace(/\("/, `(\\s*["']?\\s*`).replace(/"\\\)/, `\\s*["']?\\s*\\)`).replace(/\s+/g, '\\s+');
+                                                                    }
+                                                                    delete data.element;
+                                                                    break bundled;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    break invalid;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            ({ compress, download, preserve, process, tasks, cloudStorage, document: documentData } = command);
-                        }
-                        const data = File.parseUri(resolvePath(uri), isCrossOrigin(download, preserveCrossOrigin), { saveAs, mimeType: 'text/css', format: process ? process.join('+') : '' });
-                        if (this.processExtensions(data, documentData, compress, tasks, cloudStorage)) {
-                            if (filename) {
-                                data.filename = filename;
+                            catch (_d) {
                             }
-                            if (preserve) {
-                                data.preserve = true;
+                            let command = saveAsLink, saveAs, filename, compress, download, preserve, process, tasks, cloudStorage, documentData;
+                            if (command) {
+                                if (command.customize) {
+                                    if ((filename = command.customize.call(null, uri, 'text/css', command = Object.assign({}, command))) === null) {
+                                        continue;
+                                    }
+                                    if (command.pathname && filename) {
+                                        saveAs = appendSeparator(command.pathname, filename);
+                                    }
+                                }
+                                ({ compress, download, preserve, process, tasks, cloudStorage, document: documentData } = command);
                             }
-                            result.push(data);
+                            const data = File.parseUri(resolvePath(uri), isCrossOrigin(download, preserveCrossOrigin), { saveAs, mimeType: 'text/css', format: process ? process.join('+') : '' });
+                            if (this.processExtensions(data, documentData, compress, tasks, cloudStorage)) {
+                                if (filename) {
+                                    data.filename = filename;
+                                }
+                                if (preserve) {
+                                    data.preserve = true;
+                                }
+                                result.push(data);
+                            }
                         }
                     }
                 }
@@ -584,8 +679,8 @@ var chrome = (function () {
                         if (base64) {
                             if (saveAsImage === null || saveAsImage === void 0 ? void 0 : saveAsImage.blob) {
                                 let command = saveAsImage, filename, commands;
-                                if (command.customize) {
-                                    filename = command.customize.call(null, '', mimeType, command = Object.assign({}, command));
+                                if (command.customize && (filename = command.customize.call(null, '', mimeType, command = Object.assign({}, command))) === null) {
+                                    continue;
                                 }
                                 const pathname = command.pathname;
                                 filename || (filename = item.filename);
@@ -619,7 +714,7 @@ var chrome = (function () {
                         }
                         else if (content && mimeType) {
                             const data = {
-                                pathname: "__generated__" /* GENERATED */ + `/${mimeType.split('/').pop()}`,
+                                pathname: "__generated__" /* GENERATED */ + '/' + mimeType.split('/').pop(),
                                 filename: assignFilename(item.filename),
                                 content,
                                 mimeType
@@ -651,10 +746,10 @@ var chrome = (function () {
             if (assets) {
                 for (const fonts of assets.fonts.values()) {
                     for (const { srcUrl, srcBase64, mimeType } of fonts) {
-                        let command = saveAsFont, data = null, pathname, filename, inline, blob;
+                        let command = saveAsFont, data, pathname, filename, inline, blob;
                         if (command) {
-                            if (command.customize) {
-                                filename = command.customize.call(null, srcUrl || '', mimeType, command = Object.assign({}, command));
+                            if (command.customize && (filename = command.customize.call(null, srcUrl || '', mimeType, command = Object.assign({}, command))) === null) {
+                                continue;
                             }
                             ({ pathname, inline, blob } = command);
                         }
@@ -678,22 +773,20 @@ var chrome = (function () {
             }
             return result;
         }
-        finalizeRequestBody(body) {
+        finalizeRequestBody(options) {
             var _a;
-            var _b;
-            const productionRelease = body.productionRelease;
+            const productionRelease = options.productionRelease;
             let watchElement;
-            if (!productionRelease && body.watch) {
+            if (!productionRelease && options.watch) {
                 const socketMap = {};
                 const hostname = new URL(this.hostname).hostname;
                 const settings = this.application.userSettings;
-                for (const { watch } of body.assets) {
+                for (const { watch } of options.assets) {
                     if (isPlainObject$2(watch) && watch.reload) {
                         const reload = watch.reload;
-                        const { socketId, secure, handler = {} } = reload;
-                        let port = (_a = reload.port) !== null && _a !== void 0 ? _a : (secure ? settings.webSocketSecurePort : settings.webSocketPort);
-                        if (socketId && hasValue(port) && !isNaN(port = +port)) {
-                            socketMap[_b = socketId + `_${port}_` + (secure ? '0' : '1')] || (socketMap[_b] = `socket=new WebSocket("${secure ? 'wss' : 'ws'}://${hostname}:${port}");` +
+                        let { socketId, secure, handler = {}, port = secure ? settings.webSocketSecurePort : settings.webSocketPort } = reload; // eslint-disable-line prefer-const
+                        if (socketId && hasValue(port) && Math.floor(port = +port) > 0) {
+                            socketMap[_a = socketId + `_${port}_` + (secure ? '0' : '1')] || (socketMap[_a] = `socket=new WebSocket("${secure ? 'wss' : 'ws'}://${hostname}:${port}");` +
                                 (handler.open ? `socket.onopen=${handler.open};` : '') +
                                 'socket.onmessage=' + (handler.message || `function(e){var c=JSON.parse(e.data);if(c&&c.socketId==="${socketId}"&&c.module==="watch"&&c.action==="modified"){if(!c.errors||!c.errors.length){if(c.hot){if(c.type==="text/css"){var a=document.querySelectorAll('link[href^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.href=c.src+c.hot;});return;}}else if(c.type.startsWith("image/")){var a=document.querySelectorAll('img[src^="'+c.src+'"]');if(a.length){a.forEach(function(b){b.src=c.src+c.hot;});return;}}}window.location.reload();}else{console.log("FAIL: "+c.errors.length+" errors\\n\\n"+c.errors.join("\\n"));}}}`) + ';' +
                                 (handler.error ? `socket.onerror=${handler.error};` : '') +
@@ -708,20 +801,20 @@ var chrome = (function () {
                         textContent += socketMap[id];
                     }
                     textContent += '});';
-                    if (!body.useOriginalHtmlPage) {
+                    if (!options.useOriginalHtmlPage) {
                         watchElement = createElement('script', { parent: document.body, attributes: { textContent } });
                     }
                     else {
-                        const html = body.assets.find(item => item.mimeType === '@text/html');
+                        const html = options.assets.find(item => item.mimeType === '@text/html');
                         if (html) {
                             html.element.textContent = `<script>${textContent}</script>`;
                         }
                     }
                 }
             }
-            if (!body.useOriginalHtmlPage) {
+            if (!options.useOriginalHtmlPage) {
                 let append;
-                for (const item of body.assets) {
+                for (const item of options.assets) {
                     const element = item.element;
                     if (element) {
                         switch (element.tagName) {
@@ -745,13 +838,13 @@ var chrome = (function () {
                 if (watchElement) {
                     document.body.removeChild(watchElement);
                 }
-                if (body.document) {
-                    for (const name of body.document) {
+                if (options.document) {
+                    for (const name of options.document) {
                         const attr = name + 'Id';
                         document.querySelectorAll(`[data-${name}-id]`).forEach((element) => delete element.dataset[attr]);
                     }
                 }
-                if (body.removeInlineStyles) {
+                if (options.removeInlineStyles) {
                     document.querySelectorAll(`[style]`).forEach(element => element.removeAttribute('style'));
                 }
             }
@@ -831,22 +924,35 @@ var chrome = (function () {
         }
         processAssets(options) {
             var _a;
-            const { sessionId, assetMap, appendMap, nodeMap = new Map(), useOriginalHtmlPage, preserveCrossOrigin } = options;
-            const formatUUID = this.application.getUserSetting(sessionId, 'formatUUID');
+            const { assetMap, appendMap, nodeMap = new Map(), useOriginalHtmlPage, preserveCrossOrigin } = options;
             const domAll = document.querySelectorAll('*');
             const cache = {};
             const assets = this.getHtmlPage(options).concat(this.getLinkAssets(options));
             if (options.saveAsWebPage) {
-                for (const item of assets) {
+                assets.forEach(item => {
                     switch (item.mimeType) {
                         case 'text/html':
                         case 'text/css':
                             item.mimeType = '@' + item.mimeType;
+                            item.willChange = true;
                             break;
                     }
-                }
+                });
             }
             const [scriptAssets, templateMap] = this.getScriptAssets(options);
+            scriptAssets.forEach(item => {
+                let mimeType = item.mimeType;
+                if (mimeType) {
+                    mimeType = splitPairStart(mimeType, '|');
+                    if (mimeType === 'module') {
+                        mimeType = 'application/javascript';
+                    }
+                    item.mimeType = mimeType;
+                }
+                if (hasFormat(item.format) || item.bundleId || item.trailingContent) {
+                    item.willChange = true;
+                }
+            });
             assets.push(...scriptAssets, ...this.getImageAssets(options), ...this.getVideoAssets(options), ...this.getAudioAssets(options), ...this.getRawAssets('object', options), ...this.getRawAssets('embed', options), ...this.getRawAssets('iframe', options), ...this.getFontAssets(options));
             if (appendMap) {
                 const tagCount = {};
@@ -856,88 +962,87 @@ var chrome = (function () {
                     }
                     return { tagName, tagCount: tagCount[tagName], order, textContent, prepend };
                 };
-                for (const [element, siblings] of appendMap) {
+                for (const [element, appending] of appendMap) {
                     const node = File.createTagNode(element, domAll, cache);
                     const documentData = (_a = getAssetCommand(assetMap, element)) === null || _a === void 0 ? void 0 : _a.document;
                     const getNextSibling = () => node.index + element.querySelectorAll('*').length + 1;
                     if (!useOriginalHtmlPage) {
-                        File.setDocumentId(node, element, documentData, formatUUID);
+                        File.setDocumentId(node, element, documentData);
                     }
                     node.outerXml = element.outerHTML.trim();
                     let i = 0;
-                    for (const sibling of siblings) {
-                        const { type, attributes, download, textContent } = sibling;
-                        if (type) {
-                            let js, url, prepend;
-                            switch (type) {
-                                case 'prepend/js':
-                                    prepend = true;
-                                case 'append/js':
-                                    if (attributes) {
-                                        url = attributes.src;
-                                        attributes.type || (attributes.type = 'text/javascript');
-                                        js = true;
-                                    }
-                                    break;
-                                case 'prepend/css':
-                                    prepend = true;
-                                case 'append/css':
-                                    if (attributes) {
-                                        url = attributes.href;
-                                        attributes.type || (attributes.type = 'text/css');
-                                    }
-                                    break;
-                                default: {
-                                    let elementData;
-                                    if (type === 'replace') {
-                                        if (textContent) {
-                                            elementData = getTagNode(node, attributes);
-                                            elementData.textContent = textContent;
-                                        }
-                                    }
-                                    else {
-                                        const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, textContent);
-                                        if (startsWith(type, 'append/')) {
-                                            append.nextSibling = getNextSibling();
-                                            elementData = getTagNode(node, attributes, append);
-                                        }
-                                        else if (startsWith(type, 'prepend/')) {
-                                            append.prepend = true;
-                                            elementData = getTagNode(node, attributes, append);
-                                        }
-                                    }
-                                    if (elementData) {
-                                        assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
-                                    }
-                                    continue;
+                    for (const appendCommand of appending) {
+                        const { type, attributes, download, textContent } = appendCommand;
+                        let js, url, prepend;
+                        switch (type) {
+                            case 'prepend/js':
+                                prepend = true;
+                            case 'append/js':
+                                if (attributes) {
+                                    url = attributes.src;
+                                    attributes.type || (attributes.type = 'text/javascript');
+                                    js = true;
                                 }
-                            }
-                            if (url && attributes) {
-                                sibling.document || (sibling.document = documentData);
-                                delete sibling.download;
-                                const data = this.createBundle(sessionId, false, assets, element, url, attributes.type, '', undefined, undefined, undefined, sibling);
-                                if (data) {
-                                    if (isCrossOrigin(download, preserveCrossOrigin)) {
-                                        delete data.uri;
+                                break;
+                            case 'prepend/css':
+                                prepend = true;
+                            case 'append/css':
+                                if (attributes) {
+                                    url = attributes.href;
+                                    attributes.type || (attributes.type = 'text/css');
+                                }
+                                break;
+                            default: {
+                                let elementData;
+                                if (type === 'replace') {
+                                    if (textContent) {
+                                        elementData = getTagNode(node, attributes);
+                                        elementData.textContent = textContent;
                                     }
-                                    const append = getAppendData(js ? 'script' : 'link', ++i, undefined, prepend);
-                                    if (!prepend) {
+                                }
+                                else {
+                                    const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, textContent);
+                                    if (startsWith(type, 'append/')) {
                                         append.nextSibling = getNextSibling();
+                                        elementData = getTagNode(node, attributes, append);
                                     }
-                                    data.element = getTagNode(node, attributes, append);
+                                    else if (startsWith(type, 'prepend/')) {
+                                        append.prepend = true;
+                                        elementData = getTagNode(node, attributes, append);
+                                    }
                                 }
+                                if (elementData) {
+                                    assets.push({ pathname: '', filename: '', document: documentData, element: elementData });
+                                }
+                                continue;
+                            }
+                        }
+                        if (url && attributes) {
+                            appendCommand.document || (appendCommand.document = documentData);
+                            delete appendCommand.download;
+                            const data = this.createBundle(false, assets, element, url, attributes.type, js ? 'js' : 'css', { appendCommand });
+                            if (data) {
+                                if (isCrossOrigin(download, preserveCrossOrigin)) {
+                                    delete data.uri;
+                                }
+                                const append = getAppendData(js ? 'script' : 'link', ++i, undefined, prepend);
+                                if (!prepend) {
+                                    append.nextSibling = getNextSibling();
+                                }
+                                data.element = getTagNode(node, attributes, append);
                             }
                         }
                     }
                 }
             }
-            const documentHandler = this.application.getUserSetting(sessionId, 'outputDocumentHandler');
+            const documentHandler = this.application.userSettings.outputDocumentHandler;
+            const documentElement = document.documentElement;
             for (const item of assets) {
                 const element = item.element;
                 if (element instanceof Element) {
                     const node = File.createTagNode(element, domAll, cache);
                     if (!useOriginalHtmlPage) {
-                        File.setDocumentId(node, element, item.document, formatUUID);
+                        File.setDocumentId(node, element, item.document);
                     }
                     item.element = node;
                     nodeMap.set(node, element);
@@ -945,7 +1050,7 @@ var chrome = (function () {
                 item.document || (item.document = File.copyDocument(documentHandler));
             }
             for (const [node, element] of nodeMap) {
-                if (element !== document.documentElement) {
+                if (element !== documentElement) {
                     node.outerXml = element.outerHTML.trim();
                 }
             }
@@ -966,12 +1071,13 @@ var chrome = (function () {
             delete options.resourceId;
             return options;
         }
-        createBundle(sessionId, bundling, assets, element, src, mimeType, ext, preserveCrossOrigin, bundleIndex, assetMap, assetCommand, saveAsOptions) {
-            let file = !assetCommand ? element.dataset.chromeFile : '';
+        createBundle(bundling, assets, element, src, mimeType, ext, options) {
+            const { preserveCrossOrigin, bundleIndex, assetMap, assetCommand, appendCommand } = options;
+            let file = !assetCommand && !appendCommand ? element.dataset.chromeFile : '';
             if (file === 'exclude' || file === 'ignore') {
                 return;
             }
-            const command = getAssetCommand(assetMap, element) || assetCommand;
+            const command = getAssetCommand(assetMap, element) || appendCommand || assetCommand;
             let filename, format, inline, process, compress, download, preserve, tasks, watch, attributes, cloudStorage, documentData, fromConfig, fromSaveAs;
             if (command) {
                 ({ inline, compress, download, preserve, process, tasks, watch, attributes, cloudStorage, document: documentData } = command);
@@ -985,16 +1091,17 @@ var chrome = (function () {
                 fromConfig = true;
             }
             else {
-                if (bundling && saveAsOptions) {
-                    if (saveAsOptions.customize) {
-                        filename = saveAsOptions.customize.call(null, src || '', mimeType, saveAsOptions = Object.assign({}, saveAsOptions));
+                let saveAsOptions = bundling && options.saveAsOptions;
+                if (saveAsOptions) {
+                    if (saveAsOptions.customize && (filename = saveAsOptions.customize.call(null, src || '', mimeType, saveAsOptions = Object.assign({}, saveAsOptions))) === null) {
+                        return;
                     }
-                    ({ preserve, inline, compress, download, process, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsOptions);
+                    ({ inline, compress, download, preserve, process, tasks, watch, attributes, cloudStorage, document: documentData } = saveAsOptions);
                     if (excludeAsset(assets, saveAsOptions, element, documentData)) {
                         return;
                     }
                     if (!saveAsOptions.filename) {
-                        saveAsOptions.filename = filename || (generateUUID(this.application.getUserSetting(sessionId, 'formatUUID')) + '.' + ext);
+                        saveAsOptions.filename = filename || (generateUUID(this.userSettings.formatUUID, this.userSettings.formatDictionary) + '.' + ext);
                     }
                     filename || (filename = saveAsOptions.filename);
                     if (src) {
@@ -1009,23 +1116,23 @@ var chrome = (function () {
                     }
                 }
                 const { chromeOptions, chromeTasks, chromeWatch } = element.dataset;
-                const options = parseOptions(chromeOptions);
-                inline !== null && inline !== void 0 ? inline : (inline = options.inline);
-                preserve !== null && preserve !== void 0 ? preserve : (preserve = options.preserve);
-                compress || (compress = options.compress);
-                download !== null && download !== void 0 ? download : (download = options.download);
+                const dataset = parseOptions(chromeOptions);
+                inline !== null && inline !== void 0 ? inline : (inline = dataset.inline);
+                preserve !== null && preserve !== void 0 ? preserve : (preserve = dataset.preserve);
+                compress || (compress = dataset.compress);
+                download !== null && download !== void 0 ? download : (download = dataset.download);
                 tasks || (tasks = parseTask(chromeTasks));
                 watch || (watch = parseWatchInterval(chromeWatch));
             }
             if (process) {
                 format = process.join('+');
             }
-            let data = null;
+            let data;
             if (src) {
-                if ((data = File.parseUri(resolvePath(src), isCrossOrigin(download, preserveCrossOrigin) || assetCommand && preserve, { saveAs: file, mimeType, format, fromConfig })) && data.format !== 'crossorigin') {
-                    if (assetCommand) {
+                if ((data = File.parseUri(resolvePath(src), isCrossOrigin(download, preserveCrossOrigin) || appendCommand && preserve, { saveAs: file, mimeType, format, fromConfig })) && data.format !== 'crossorigin') {
+                    if (appendCommand) {
                         if (inline) {
-                            switch (assetCommand.type) {
+                            switch (appendCommand.type) {
                                 case 'append/js':
                                     data.inlineContent = 'script';
                                     break;
@@ -1059,7 +1166,7 @@ var chrome = (function () {
             else if (!(element instanceof HTMLScriptElement)) {
                 data = createFile(mimeType);
             }
-            if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, !assetCommand ? element : undefined, watch)) {
+            if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, !assetCommand && !appendCommand ? element : undefined, watch)) {
                 if (filename) {
                     data.filename = filename;
                 }
@@ -1069,6 +1176,9 @@ var chrome = (function () {
                 if (bundleIndex) {
                     setBundleData(bundleIndex, data);
                 }
+                if (hasFormat(data.format)) {
+                    data.willChange = true;
+                }
                 assets.push(data);
                 return data;
             }
@@ -1077,9 +1187,10 @@ var chrome = (function () {
             if (uri) {
                 let command, saveAs, saveTo, pathname, filename, commands, inline, compress, download, blob, tasks, watch, attributes, cloudStorage, documentData, fromConfig;
                 const setFilename = (options) => {
-                    if (options.customize) {
-                        filename = options.customize.call(null, uri, mimeType || '', command = Object.assign({}, options));
+                    if (options.customize && (filename = options.customize.call(null, uri, mimeType || '', command = Object.assign({}, options))) === null) {
+                        return false;
                     }
+                    return true;
                 };
                 if (element) {
                     const file = element.dataset.chromeFile;
@@ -1099,7 +1210,9 @@ var chrome = (function () {
                     }
                     else {
                         if (saveAsImage) {
-                            setFilename(command = saveAsImage);
+                            if (!setFilename(command = saveAsImage)) {
+                                return;
+                            }
                             ({ pathname, inline, compress, download, blob, commands, tasks, watch, attributes, cloudStorage, document: documentData } = command);
                             if (excludeAsset(assets, saveAsImage, element, documentData)) {
                                 return;
@@ -1129,7 +1242,9 @@ var chrome = (function () {
                     }
                 }
                 else if (saveAsImage) {
-                    setFilename(command = saveAsImage);
+                    if (!setFilename(command = saveAsImage)) {
+                        return;
+                    }
                     ({ pathname, inline, compress, download, blob, commands, tasks, cloudStorage } = command);
                     [saveAs, saveTo] = checkSaveAs(uri, pathname, filename || getComponentEnd(uri));
                 }
@@ -1162,6 +1277,10 @@ var chrome = (function () {
                     }
                     if (commands) {
                         data.commands = commands;
+                        data.willChange = true;
+                    }
+                    else if (compress) {
+                        data.willChange = true;
                     }
                     assets.push(data);
                     return data;
@@ -1340,9 +1459,14 @@ var chrome = (function () {
             options = Object.assign(Object.assign({}, options), { saveAsWebPage: true, sessionId, resourceId, assetMap, nodeMap, appendMap });
             const retainUsedStyles = options.retainUsedStyles;
             const retainUsedStylesValue = retainUsedStyles ? retainUsedStyles.filter(value => typeof value === 'string') : [];
+            const createSet = (values) => {
+                const items = [];
+                values.forEach(value => !items.includes(value) && items.push(value));
+                return items;
+            };
             if (options.removeUnusedVariables) {
                 const values = this._cssVariables[sessionId];
-                let variables = Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('--')));
+                let variables = createSet(Array.from(this._cssUsedVariables[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('--'))));
                 if (values) {
                     const nested = new Set();
                     for (const name of variables) {
@@ -1369,11 +1493,11 @@ var chrome = (function () {
                 delete options.removeUnusedVariables;
             }
             if (options.removeUnusedFontFace) {
-                options.usedFontFace = Array.from(this._cssUsedFontFace[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value) => trimBoth(value, '|').substring(10).trim()));
+                options.usedFontFace = createSet(Array.from(this._cssUsedFontFace[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|font-face:') && value.endsWith('|')).map((value) => trimBoth(value, '|').substring(10).trim())));
                 delete options.removeUnusedFontFace;
             }
             if (options.removeUnusedKeyframes) {
-                options.usedKeyframes = Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|keyframes:') && value.endsWith('|')).map((value) => trimBoth(value, '|').substring(10).trim()));
+                options.usedKeyframes = createSet(Array.from(this._cssUsedKeyframes[sessionId] || []).concat(retainUsedStylesValue.filter(value => value.startsWith('|keyframes:') && value.endsWith('|')).map((value) => trimBoth(value, '|').substring(10).trim())));
                 delete options.removeUnusedKeyframes;
             }
             if (options.removeUnusedMedia) {
@@ -1381,11 +1505,7 @@ var chrome = (function () {
                 if (unusedMedia) {
                     const queries = [];
                     const exclusions = retainUsedStylesValue.filter(value => value.startsWith('|media:') && value.endsWith('|')).map((value) => trimBoth(value, '|').substring(6).trim());
-                    for (const value of unusedMedia) {
-                        if (!exclusions.includes(value)) {
-                            queries.push(value);
-                        }
-                    }
+                    unusedMedia.forEach(value => !exclusions.includes(value) && queries.push(value));
                     if (queries.length) {
                         options.unusedMedia = queries;
                     }
@@ -1428,7 +1548,7 @@ var chrome = (function () {
             if (uri) {
                 const commands = await this.fileHandler.loadConfig(uri, options);
                 if (commands) {
-                    const documentHandler = this.getUserSetting(processing, 'outputDocumentHandler');
+                    const documentHandler = this.userSettings.outputDocumentHandler;
                     const paramMap = new Map();
                     const replaceParams = (param) => {
                         const type = typeof param;
@@ -1467,7 +1587,7 @@ var chrome = (function () {
                             const type = item.type;
                             let dataSrc = isPlainObject$1(item.dataSource) ? item.dataSource : null, dataCloud = isPlainObject$1(item.cloudDatabase) ? item.cloudDatabase : null;
                             if (paramMap.size) {
-                                for (const data of [dataSrc, dataCloud]) {
+                                const checkValues = (data) => {
                                     if (data) {
                                         for (const attr in data) {
                                             if (attr !== 'value') {
@@ -1475,7 +1595,9 @@ var chrome = (function () {
                                             }
                                         }
                                     }
-                                }
+                                };
+                                checkValues(dataSrc);
+                                checkValues(dataCloud);
                             }
                             dataSrc && (dataSrc = Object.assign(Object.assign({ document: item.document || File.copyDocument(documentHandler) }, dataSrc), { type }));
                             dataCloud && (dataCloud = Object.assign(Object.assign({ document: item.document || File.copyDocument(documentHandler) }, dataSrc), { type, source: 'cloud' }));
@@ -1517,7 +1639,6 @@ var chrome = (function () {
             }
             if (dataSource.length) {
                 const useOriginalHtmlPage = options.useOriginalHtmlPage;
-                const formatUUID = this.getUserSetting(processing, 'formatUUID');
                 const elements = document.querySelectorAll('*');
                 const cache = {};
                 const items = options.dataSource || (options.dataSource = []);
@@ -1526,7 +1647,7 @@ var chrome = (function () {
                     node.textContent = element.textContent;
                     data.element = node;
                     if (!useOriginalHtmlPage) {
-                        File.setDocumentId(node, element, data.document, formatUUID);
+                        File.setDocumentId(node, element, data.document);
                     }
                     nodeMap.set(node, element);
                     items.push(data);
@@ -1558,12 +1679,12 @@ var chrome = (function () {
         preloadCustomElements: false,
         excludePlainText: true,
         createElementMap: true,
-        createQuerySelectorMap: true,
         pierceShadowRoot: true,
         showErrorMessages: false,
         webSocketPort: 80,
         webSocketSecurePort: 443,
         formatUUID: "8-4-4-4-12",
+        formatDictionary: "0123456789abcdef",
         outputDocumentHandler: "chrome",
         outputEmptyCopyDirectory: false,
         outputTasks: {},

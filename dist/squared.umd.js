@@ -7,37 +7,44 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.squared = {}));
 }(this, (function (exports) { 'use strict';
 
+    const CLIENT_USERAGENT = navigator.userAgentData;
     let CLIENT_BROWSER = 1 /* CHROME */;
-    let CLIENT_VERSION = '';
-    if (navigator.userAgent.indexOf('Chrom') !== -1) {
-        const match = /(Chrom(?:e|ium)|Edg|OPR)\/([^ ]+)/.exec(navigator.userAgent);
-        if (match) {
-            switch (match[1]) {
-                case 'Edg':
-                    CLIENT_BROWSER = 8 /* EDGE */;
-                    break;
-                case 'OPR':
-                    CLIENT_BROWSER = 32 /* OPERA */;
-                    break;
+    let CLIENT_VERSION;
+    function setUserAgentData() {
+        let version;
+        if (navigator.userAgent.indexOf('Chrom') !== -1) {
+            const match = /(Chrom(?:e|ium)|Edg|OPR)\/([^ ]+)/.exec(navigator.userAgent);
+            if (match) {
+                switch (match[1]) {
+                    case 'Edg':
+                        CLIENT_BROWSER = 8 /* EDGE */;
+                        break;
+                    case 'OPR':
+                        CLIENT_BROWSER = 32 /* OPERA */;
+                        break;
+                }
+                version = match[2];
             }
-            CLIENT_VERSION = match[2];
         }
-    }
-    else {
-        const match = /(Safari|Firefox|Edge)\/([^ ]+)/.exec(navigator.userAgent);
-        if (match) {
-            switch (match[1]) {
-                case 'Firefox':
-                    CLIENT_BROWSER = 4 /* FIREFOX */;
-                    break;
-                case 'Edge':
-                    CLIENT_BROWSER = 16 /* EDGE_WIN */;
-                    break;
-                default:
-                    CLIENT_BROWSER = 2 /* SAFARI */;
-                    break;
+        else {
+            const match = /(Safari|Firefox|Edge)\/([^ ]+)/.exec(navigator.userAgent);
+            if (match) {
+                switch (match[1]) {
+                    case 'Firefox':
+                        CLIENT_BROWSER = 4 /* FIREFOX */;
+                        break;
+                    case 'Edge':
+                        CLIENT_BROWSER = 16 /* EDGE_WIN */;
+                        break;
+                    default:
+                        CLIENT_BROWSER = 2 /* SAFARI */;
+                        break;
+                }
+                version = match[2];
             }
-            CLIENT_VERSION = match[2];
+        }
+        if (version) {
+            CLIENT_VERSION = version.split('.').map(seg => +seg);
         }
     }
     function isPlatform(value) {
@@ -66,41 +73,68 @@
                 return true;
             }
             if (CLIENT_VERSION) {
-                if (typeof CLIENT_VERSION === 'string') {
-                    CLIENT_VERSION = CLIENT_VERSION.split('.').map(seg => +seg);
-                }
                 switch (typeof version) {
-                    case 'string':
-                        version = version.split('.').map(seg => +seg);
-                        break;
                     case 'number':
-                        version = [version];
+                        return CLIENT_VERSION[0] >= version;
+                    case 'string':
+                        version = version.split('.');
+                    default:
+                        if (!Array.isArray(version)) {
+                            return false;
+                        }
+                        version = version.map(seg => +seg);
                         break;
                 }
-                if (Array.isArray(version)) {
-                    for (let i = 0, length = Math.min(version.length, CLIENT_VERSION.length); i < length; ++i) {
-                        const offset = +version[i];
-                        if (!isNaN(offset)) {
-                            const seg = CLIENT_VERSION[i];
-                            if (seg > offset) {
-                                break;
-                            }
-                            else if (seg < offset) {
-                                return false;
-                            }
+                const length = version.length;
+                if (length === 1) {
+                    return CLIENT_VERSION[0] >= version[0];
+                }
+                else if (length > CLIENT_VERSION.length) {
+                    setUserAgentData();
+                }
+                for (let i = 0; i < length; ++i) {
+                    const offset = version[i];
+                    if (!isNaN(offset)) {
+                        const seg = CLIENT_VERSION[i];
+                        if (seg > offset) {
+                            break;
                         }
-                        else {
+                        else if (seg < offset) {
                             return false;
                         }
                     }
-                    return true;
+                    else {
+                        return false;
+                    }
                 }
+                return true;
             }
         }
         return false;
     }
     function getDeviceDPI() {
         return window.devicePixelRatio * 96;
+    }
+    if (CLIENT_USERAGENT) {
+        const brands = CLIENT_USERAGENT.brands;
+        const items = ['Microsoft Edge', 'Opera', 'Chromium'];
+        for (let i = 0; i < 3; ++i) {
+            const brand = items[i];
+            const browser = brands.find(item => item.brand === brand);
+            if (browser) {
+                if (i === 0) {
+                    CLIENT_BROWSER = 8 /* EDGE */;
+                }
+                else if (i === 1) {
+                    CLIENT_BROWSER = 32 /* OPERA */;
+                }
+                CLIENT_VERSION = [+browser.version];
+                break;
+            }
+        }
+    }
+    if (!CLIENT_VERSION) {
+        setUserAgentData();
     }
 
     var client = /*#__PURE__*/Object.freeze({
@@ -110,14 +144,14 @@
         getDeviceDPI: getDeviceDPI
     });
 
-    const [QUOTED, SINGLE_QUOTED] = isUserAgent(1 /* CHROME */, 62) || isUserAgent(4 /* FIREFOX */, 78) || isUserAgent(8 /* EDGE */) || isUserAgent(32 /* OPERA */, 49) ? ['"((?:[^"]|(?<=\\\\)")*)"', "'((?:[^']|(?<=\\\\)')*)'"] : ['"([^"]*)"', "'([^']*)'"];
+    const [QUOTED, SINGLE_QUOTED] = isUserAgent(1 /* CHROME */ | 8 /* EDGE */, 62) || isUserAgent(4 /* FIREFOX */, 78) || isUserAgent(32 /* OPERA */, 49) ? ['"((?:[^"]|(?<=\\\\)")*)"', "'((?:[^']|(?<=\\\\)')*)'"] : ['"([^"]*)"', "'([^']*)'"];
     const EXPONENT = '(?:[eE][+-]?\\d+)';
     const DECIMAL_PLAIN = '(?:\\d+(?:\\.\\d*)?|\\d*\\.\\d+)';
     const DECIMAL_SIGNED = '[+-]?' + DECIMAL_PLAIN;
     const DECIMAL_EXPONENT = DECIMAL_SIGNED + EXPONENT;
     const DECIMAL = DECIMAL_EXPONENT + '?';
     const UNIT_LENGTH = 'px|rem|e(?:m|x)|v(?:w|h|min|max)|p(?:t|c)|c(?:m|h)|mm|in|q';
-    const SELECTOR_ATTR = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:${QUOTED}|${SINGLE_QUOTED}|([^\\s\\]]+))\\s*([is])?)?\\s*\\]`;
+    const SELECTOR_ATTR$1 = `\\[\\s*((?:\\*\\|)?(?:[A-Za-z\\-]+:)?[A-Za-z\\-]+)\\s*(?:([~^$*|])?=\\s*(?:${QUOTED}|${SINGLE_QUOTED}|([^\\s\\]]+))\\s*([is])?)?\\s*\\]`;
     const SELECTOR_PSEUDO_ELEMENT = '::[A-Za-z\\-]+';
     const SELECTOR_PSEUDO_CLASS = ':(?:(?:[nN][tT][hH](?:-[lL][aA][sS][tT])?-(?:[cC][hH][iI][lL][dD]|[oO][fF]-[tT][yY][pP][eE])|[lL][aA][nN][gG]|[dD][iI][rR])\\([^)]+\\)|[A-Za-z\\-]+)';
     const SELECTOR_LABEL = '[\\.#]?[A-Za-z][\\w\\-]*';
@@ -143,7 +177,7 @@
     };
     const FILE = {
         NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
-        PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/,
+        PROTOCOL: /^(?:([A-Za-z]{3,}):\/\/)([A-Za-z\d\-.]+)(?::(\d+))?(\/[^?]*)?\??(.*)?$/,
         BASE64: /^[A-Za-z\d+/]+=*$/,
         SVG: /\.svg$/i
     };
@@ -152,13 +186,11 @@
         HEX: /^#?[\dA-Fa-f]{3,8}$/,
         RGBA: /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)$/,
         HSLA: /^hsla?\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+%?)\s*)?\)$/,
-        SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${SELECTOR_ATTR}|${SELECTOR_PSEUDO_ELEMENT}|${SELECTOR_PSEUDO_CLASS}|${SELECTOR_LABEL}|\\*(?![A-Za-z\\d*]))+|\\*(?![A-Za-z\\d*])|[>~+](?!\\s*[>~+]))`, 'g'),
+        SELECTOR_G: new RegExp(`\\s*((?:\\*\\|)?(?:${SELECTOR_ATTR$1}|${SELECTOR_PSEUDO_ELEMENT}|${SELECTOR_PSEUDO_CLASS}|${SELECTOR_LABEL}|\\*(?![A-Za-z\\d*]))+|\\*(?![A-Za-z\\d*])|[>~+](?!\\s*[>~+]))`, 'g'),
         SELECTOR_LABEL: new RegExp(SELECTOR_LABEL),
         SELECTOR_PSEUDO_ELEMENT: new RegExp(SELECTOR_PSEUDO_ELEMENT),
         SELECTOR_PSEUDO_CLASS: new RegExp(SELECTOR_PSEUDO_CLASS),
-        SELECTOR_ATTR: new RegExp(SELECTOR_ATTR),
-        SELECTOR_ATTR_G: new RegExp(SELECTOR_ATTR, 'g'),
-        SELECTOR_ENCLOSING_G: /:(?:not|is|where)/gi
+        SELECTOR_ATTR: new RegExp(SELECTOR_ATTR$1)
     };
     const TRANSFORM = {
         MATRIX: new RegExp(`(matrix|matrix3d)\\(\\s*(${DECIMAL_SIGNED})${`,\\s*(${DECIMAL_SIGNED})`.repeat(5)}(?:${`,\\s*(${DECIMAL_SIGNED})`.repeat(10)})?\\s*\\)`),
@@ -198,7 +230,7 @@
         if (value === base) {
             return value.toString();
         }
-        else if (isNaN(value) || (value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
+        if (isNaN(value) || (value >= 0 && value <= 1 / Math.pow(10, precision)) || (value < 0 && value >= -1 / Math.pow(10, precision))) {
             return '0';
         }
         if (base !== 0) {
@@ -508,161 +540,18 @@
             return COLOR_CSS3.get('lightpink');
         }
     }
-    const COLOR_HEX = {};
-    const COLOR_CSS3 = new Map([
-        ['black', '#000000'],
-        ['dimgray', '#696969'],
-        ['dimgrey', '#696969'],
-        ['gray', '#808080'],
-        ['grey', '#808080'],
-        ['darkgray', '#a9a9a9'],
-        ['darkgrey', '#a9a9a9'],
-        ['silver', '#c0c0c0'],
-        ['lightgray', '#d3d3d3'],
-        ['lightgrey', '#d3d3d3'],
-        ['gainsboro', '#dcdcdc'],
-        ['whitesmoke', '#f5f5f5'],
-        ['white', '#ffffff'],
-        ['rosybrown', '#bc8f8f'],
-        ['indianred', '#cd5c5c'],
-        ['brown', '#a52a2a'],
-        ['firebrick', '#b22222'],
-        ['lightcoral', '#f08080'],
-        ['maroon', '#800000'],
-        ['darkred', '#8b0000'],
-        ['red', '#ff0000'],
-        ['snow', '#fffafa'],
-        ['mistyrose', '#ffe4e1'],
-        ['salmon', '#fa8072'],
-        ['tomato', '#ff6347'],
-        ['darksalmon', '#e9967a'],
-        ['coral', '#ff7f50'],
-        ['orangered', '#ff4500'],
-        ['lightsalmon', '#ffa07a'],
-        ['sienna', '#a0522d'],
-        ['seashell', '#fff5ee'],
-        ['chocolate', '#d2691e'],
-        ['saddlebrown', '#8b4513'],
-        ['sandybrown', '#f4a460'],
-        ['peachpuff', '#ffdab9'],
-        ['peru', '#cd853f'],
-        ['linen', '#faf0e6'],
-        ['bisque', '#ffe4c4'],
-        ['darkorange', '#ff8c00'],
-        ['burlywood', '#deb887'],
-        ['antiquewhite', '#faebd7'],
-        ['tan', '#d2b48c'],
-        ['navajowhite', '#ffdead'],
-        ['blanchedalmond', '#ffebcd'],
-        ['papayawhip', '#ffefd5'],
-        ['moccasin', '#ffe4b5'],
-        ['orange', '#ffa500'],
-        ['wheat', '#f5deb3'],
-        ['oldlace', '#fdf5e6'],
-        ['floralwhite', '#fffaf0'],
-        ['darkgoldenrod', '#b8860b'],
-        ['goldenrod', '#daa520'],
-        ['cornsilk', '#fff8dc'],
-        ['gold', '#ffd700'],
-        ['lemonchiffon', '#fffacd'],
-        ['khaki', '#f0e68c'],
-        ['palegoldenrod', '#eee8aa'],
-        ['darkkhaki', '#bdb76b'],
-        ['beige', '#f5f5dc'],
-        ['lightgoldenrodyellow', '#fafad2'],
-        ['olive', '#808000'],
-        ['yellow', '#ffff00'],
-        ['lightyellow', '#ffffe0'],
-        ['ivory', '#fffff0'],
-        ['olivedrab', '#6b8e23'],
-        ['yellowgreen', '#9acd32'],
-        ['darkolivegreen', '#556b2f'],
-        ['greenyellow', '#adff2f'],
-        ['chartreuse', '#7fff00'],
-        ['lawngreen', '#7cfc00'],
-        ['darkseagreen', '#8fbc8f'],
-        ['forestgreen', '#228b22'],
-        ['limegreen', '#32cd32'],
-        ['lightgreen', '#90ee90'],
-        ['palegreen', '#98fb98'],
-        ['darkgreen', '#006400'],
-        ['green', '#008000'],
-        ['lime', '#00ff00'],
-        ['honeydew', '#f0fff0'],
-        ['seagreen', '#2e8b57'],
-        ['mediumseagreen', '#3cb371'],
-        ['springgreen', '#00ff7f'],
-        ['mintcream', '#f5fffa'],
-        ['mediumspringgreen', '#00fa9a'],
-        ['mediumaquamarine', '#66cdaa'],
-        ['aquamarine', '#7fffd4'],
-        ['turquoise', '#40e0d0'],
-        ['lightseagreen', '#20b2aa'],
-        ['mediumturquoise', '#48d1cc'],
-        ['darkslategray', '#2f4f4f'],
-        ['darkslategrey', '#2f4f4f'],
-        ['paleturquoise', '#afeeee'],
-        ['teal', '#008080'],
-        ['darkcyan', '#008b8b'],
-        ['aqua', '#00ffff'],
-        ['cyan', '#00ffff'],
-        ['lightcyan', '#e0ffff'],
-        ['azure', '#f0ffff'],
-        ['darkturquoise', '#00ced1'],
-        ['cadetblue', '#5f9ea0'],
-        ['powderblue', '#b0e0e6'],
-        ['lightblue', '#add8e6'],
-        ['deepskyblue', '#00bfff'],
-        ['skyblue', '#87ceeb'],
-        ['lightskyblue', '#87cefa'],
-        ['steelblue', '#4682b4'],
-        ['aliceblue', '#f0f8ff'],
-        ['dodgerblue', '#1e90ff'],
-        ['slategray', '#708090'],
-        ['slategrey', '#708090'],
-        ['lightslategray', '#778899'],
-        ['lightslategrey', '#778899'],
-        ['lightsteelblue', '#b0c4de'],
-        ['cornflower', '#6495ed'],
-        ['royalblue', '#4169e1'],
-        ['midnightblue', '#191970'],
-        ['lavender', '#e6e6fa'],
-        ['navy', '#000080'],
-        ['darkblue', '#00008b'],
-        ['mediumblue', '#0000cd'],
-        ['blue', '#0000ff'],
-        ['ghostwhite', '#f8f8ff'],
-        ['slateblue', '#6a5acd'],
-        ['darkslateblue', '#483d8b'],
-        ['mediumslateblue', '#7b68ee'],
-        ['mediumpurple', '#9370db'],
-        ['rebeccapurple', '#663399'],
-        ['blueviolet', '#8a2be2'],
-        ['indigo', '#4b0082'],
-        ['darkorchid', '#9932cc'],
-        ['darkviolet', '#9400d3'],
-        ['mediumorchid', '#ba55d3'],
-        ['thistle', '#d8bfd8'],
-        ['plum', '#dda0dd'],
-        ['violet', '#ee82ee'],
-        ['purple', '#800080'],
-        ['darkmagenta', '#8b008b'],
-        ['fuchsia', '#ff00ff'],
-        ['magenta', '#ff00ff'],
-        ['orchid', '#da70d6'],
-        ['mediumvioletred', '#c71585'],
-        ['deeppink', '#ff1493'],
-        ['hotpink', '#ff69b4'],
-        ['lavenderblush', '#fff0f5'],
-        ['palevioletred', '#db7093'],
-        ['crimson', '#dc143c'],
-        ['pink', '#ffc0cb'],
-        ['lightpink', '#ffb6c1']
-    ]);
-    for (const [key, value] of COLOR_CSS3) {
-        COLOR_HEX[value] = key;
-        COLOR_CSS3.set(key, Object.freeze(new Color(key, value)));
-    }
+    const [COLOR_HEX, COLOR_CSS3] = (function () {
+        const items = ['black', '#000000', 'dimgray', '#696969', 'dimgrey', '#696969', 'gray', '#808080', 'grey', '#808080', 'darkgray', '#a9a9a9', 'darkgrey', '#a9a9a9', 'silver', '#c0c0c0', 'lightgray', '#d3d3d3', 'lightgrey', '#d3d3d3', 'gainsboro', '#dcdcdc', 'whitesmoke', '#f5f5f5', 'white', '#ffffff', 'rosybrown', '#bc8f8f', 'indianred', '#cd5c5c', 'brown', '#a52a2a', 'firebrick', '#b22222', 'lightcoral', '#f08080', 'maroon', '#800000', 'darkred', '#8b0000', 'red', '#ff0000', 'snow', '#fffafa', 'mistyrose', '#ffe4e1', 'salmon', '#fa8072', 'tomato', '#ff6347', 'darksalmon', '#e9967a', 'coral', '#ff7f50', 'orangered', '#ff4500', 'lightsalmon', '#ffa07a', 'sienna', '#a0522d', 'seashell', '#fff5ee', 'chocolate', '#d2691e', 'saddlebrown', '#8b4513', 'sandybrown', '#f4a460', 'peachpuff', '#ffdab9', 'peru', '#cd853f', 'linen', '#faf0e6', 'bisque', '#ffe4c4', 'darkorange', '#ff8c00', 'burlywood', '#deb887', 'antiquewhite', '#faebd7', 'tan', '#d2b48c', 'navajowhite', '#ffdead', 'blanchedalmond', '#ffebcd', 'papayawhip', '#ffefd5', 'moccasin', '#ffe4b5', 'orange', '#ffa500', 'wheat', '#f5deb3', 'oldlace', '#fdf5e6', 'floralwhite', '#fffaf0', 'darkgoldenrod', '#b8860b', 'goldenrod', '#daa520', 'cornsilk', '#fff8dc', 'gold', '#ffd700', 'lemonchiffon', '#fffacd', 'khaki', '#f0e68c', 'palegoldenrod', '#eee8aa', 'darkkhaki', '#bdb76b', 'beige', '#f5f5dc', 'lightgoldenrodyellow', '#fafad2', 'olive', '#808000', 'yellow', '#ffff00', 'lightyellow', '#ffffe0', 'ivory', '#fffff0', 'olivedrab', '#6b8e23', 'yellowgreen', '#9acd32', 'darkolivegreen', '#556b2f', 'greenyellow', '#adff2f', 'chartreuse', '#7fff00', 'lawngreen', '#7cfc00', 'darkseagreen', '#8fbc8f', 'forestgreen', '#228b22', 'limegreen', '#32cd32', 'lightgreen', '#90ee90', 'palegreen', '#98fb98', 'darkgreen', '#006400', 'green', '#008000', 'lime', '#00ff00', 'honeydew', '#f0fff0', 'seagreen', '#2e8b57', 'mediumseagreen', '#3cb371', 'springgreen', '#00ff7f', 'mintcream', '#f5fffa', 'mediumspringgreen', '#00fa9a', 'mediumaquamarine', '#66cdaa', 'aquamarine', '#7fffd4', 'turquoise', '#40e0d0', 'lightseagreen', '#20b2aa', 'mediumturquoise', '#48d1cc', 'darkslategray', '#2f4f4f', 'darkslategrey', '#2f4f4f', 'paleturquoise', '#afeeee', 'teal', '#008080', 'darkcyan', '#008b8b', 'aqua', '#00ffff', 'cyan', '#00ffff', 'lightcyan', '#e0ffff', 'azure', '#f0ffff', 'darkturquoise', '#00ced1', 'cadetblue', '#5f9ea0', 'powderblue', '#b0e0e6', 'lightblue', '#add8e6', 'deepskyblue', '#00bfff', 'skyblue', '#87ceeb', 'lightskyblue', '#87cefa', 'steelblue', '#4682b4', 'aliceblue', '#f0f8ff', 'dodgerblue', '#1e90ff', 'slategray', '#708090', 'slategrey', '#708090', 'lightslategray', '#778899', 'lightslategrey', '#778899', 'lightsteelblue', '#b0c4de', 'cornflower', '#6495ed', 'royalblue', '#4169e1', 'midnightblue', '#191970', 'lavender', '#e6e6fa', 'navy', '#000080', 'darkblue', '#00008b', 'mediumblue', '#0000cd', 'blue', '#0000ff', 'ghostwhite', '#f8f8ff', 'slateblue', '#6a5acd', 'darkslateblue', '#483d8b', 'mediumslateblue', '#7b68ee', 'mediumpurple', '#9370db', 'rebeccapurple', '#663399', 'blueviolet', '#8a2be2', 'indigo', '#4b0082', 'darkorchid', '#9932cc', 'darkviolet', '#9400d3', 'mediumorchid', '#ba55d3', 'thistle', '#d8bfd8', 'plum', '#dda0dd', 'violet', '#ee82ee', 'purple', '#800080', 'darkmagenta', '#8b008b', 'fuchsia', '#ff00ff', 'magenta', '#ff00ff', 'orchid', '#da70d6', 'mediumvioletred', '#c71585', 'deeppink', '#ff1493', 'hotpink', '#ff69b4', 'lavenderblush', '#fff0f5', 'palevioletred', '#db7093', 'crimson', '#dc143c', 'pink', '#ffc0cb', 'lightpink', '#ffb6c1'];
+        const hex = {};
+        const css3 = new Map();
+        for (let i = 0, length = items.length; i < length; i += 2) {
+            const key = items[i];
+            const value = items[i + 1];
+            hex[value] = key;
+            css3.set(key, Object.freeze(new Color(key, value)));
+        }
+        return [hex, css3];
+    })();
     function hue2rgb(t, p, q) {
         if (t < 0) {
             t += 1;
@@ -673,10 +562,10 @@
         if (t < 1 / 6) {
             return p + (q - p) * 6 * t;
         }
-        else if (t < 1 / 2) {
+        if (t < 1 / 2) {
             return q;
         }
-        else if (t < 2 / 3) {
+        if (t < 2 / 3) {
             return p + (q - p) * (2 / 3 - t) * 6;
         }
         return p;
@@ -778,9 +667,8 @@
         const b = value.b / 255;
         const min = Math.min(r, g, b);
         const max = Math.max(r, g, b);
-        let h = (max + min) / 2;
+        let h = (max + min) / 2, s;
         const l = h;
-        let s;
         if (max === min) {
             h = 0;
             s = 0;
@@ -809,11 +697,11 @@
         };
     }
     function convertRGBA(value) {
-        let { h, s, l, a } = value;
+        let { h, s, l, a } = value, // eslint-disable-line prefer-const
+        r, g, b;
         h /= 360;
         s /= 100;
         l /= 100;
-        let r, g, b;
         if (s === 0) {
             r = l;
             g = l;
@@ -826,11 +714,12 @@
             g = hue2rgb(h, p, q);
             b = hue2rgb(h - 1 / 3, p, q);
         }
-        r = Math.round(Math.min(r, 1) * 255);
-        g = Math.round(Math.min(g, 1) * 255);
-        b = Math.round(Math.min(b, 1) * 255);
-        a = Math.round(Math.min(a, 1) * 255);
-        return { r, g, b, a };
+        return {
+            r: Math.round(Math.min(r, 1) * 255),
+            g: Math.round(Math.min(g, 1) * 255),
+            b: Math.round(Math.min(b, 1) * 255),
+            a: Math.round(Math.min(a, 1) * 255)
+        };
     }
     function formatRGBA(value) {
         return `rgb${value.a < 255 ? 'a' : ''}(${value.r}, ${value.g}, ${value.b + (value.a < 255 ? ', ' + (value.a / 255).toPrecision(2) : '')})`;
@@ -1418,7 +1307,7 @@
         return value;
     }
     function escapePattern(value) {
-        return value.replace(/[-|\\{}()[\]^$+*?.]/g, capture => capture === '-' ? '\\x2d' : capture);
+        return value.replace(/[-|\\{}()[\]^$+*?.]/g, capture => capture === '-' ? '\\x2d' : '\\' + capture);
     }
     function fromLastIndexOf(value, ...char) {
         let i = 0;
@@ -1453,6 +1342,15 @@
             }
         }
     }
+    function findReverse(list, predicate, start = 0, end = Infinity) {
+        start = Math.max(start, 0);
+        for (let i = Math.min(list.length, end) - 1; i >= start; --i) {
+            const item = list[i];
+            if (predicate(item, i, list)) {
+                return item;
+            }
+        }
+    }
     function sortByArray(list, ...attrs) {
         let length = attrs.length, ascending = attrs[length - 1];
         if (typeof ascending === 'boolean') {
@@ -1477,13 +1375,13 @@
                         valueA = vA;
                         valueB = vB;
                     }
-                    else if (!oA && !oB) {
-                        return 0;
-                    }
-                    else if (oA) {
-                        return ascending ? -1 : 1;
-                    }
                     else {
+                        if (!oA && !oB) {
+                            return 0;
+                        }
+                        if (oA) {
+                            return ascending ? -1 : 1;
+                        }
                         return ascending ? 1 : -1;
                     }
                 }
@@ -1609,6 +1507,7 @@
         withinRange: withinRange,
         sortNumber: sortNumber,
         findSet: findSet,
+        findReverse: findReverse,
         sortByArray: sortByArray,
         spliceArray: spliceArray,
         partitionArray: partitionArray,
@@ -1622,20 +1521,27 @@
     let DOCUMENT_FONTMAP;
     let DOCUMENT_FONTBASE;
     let DOCUMENT_FONTSIZE;
+    const SELECTOR_ENCLOSING = /:(?:not|is|where)/gi;
     const SELECTOR_GROUP = /^:(?:not|is|where)\(/i;
+    const SELECTOR_ATTR = new RegExp(CSS.SELECTOR_ATTR, 'g');
     const SPEC_GROUP = /:(?:is|where)/;
-    const SPEC_IS = /^:is\((.+)\)$/;
+    const SPEC_ISWHERE = /^:(is|where)\((.+)\)$/;
     const SPEC_NOT = /^:not\((.+)\)$/;
     updateDocumentFont();
     function calculateSpecificity(value) {
         const result = [0, 0, 0];
+        const items = splitEnclosing(value, ':not');
+        const length = items.length;
         let match;
-        splitEnclosing(value, ':not').forEach(seg => {
-            if (seg[0] === ':' && (match = SPEC_NOT.exec(seg))) {
-                addSpecificity(result, getSelectorValue(match[1]));
-                value = spliceString(value, match.index, match[0].length);
+        if (length > 1) {
+            for (let i = 0; i < length; ++i) {
+                const seg = items[i];
+                if (seg[0] === ':' && (match = SPEC_NOT.exec(seg))) {
+                    addSpecificity(result, getSelectorValue(match[1]));
+                    value = spliceString(value, match.index, match[0].length);
+                }
             }
-        });
+        }
         CSS.SELECTOR_G.lastIndex = 0;
         while (match = CSS.SELECTOR_G.exec(value)) {
             let segment = match[1];
@@ -1707,6 +1613,20 @@
                 value[i] += other[i];
             }
         }
+    }
+    function mergeSelector(value) {
+        const result = [];
+        let match;
+        for (let seg of parseSelectorText(value)) {
+            if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
+                if (match[1][0] === 'w') {
+                    continue;
+                }
+                seg = mergeSelector(match[2]);
+            }
+            result.push(seg);
+        }
+        return result.join(', ');
     }
     const fromFontNamedValue = (index, fixedWidth) => (!fixedWidth ? DOCUMENT_FONTMAP[index] : DOCUMENT_FIXEDMAP[index]).toPrecision(8) + 'rem';
     const CSS_PROPERTIES = {
@@ -2963,6 +2883,41 @@
             return target[attr] || (value = (_a = CSS_PROPERTIES[attr]) === null || _a === void 0 ? void 0 : _a.value) && typeof value === 'string' && value || '';
         }
     }));
+    const ELEMENT_BLOCK = [
+        'ADDRESS',
+        'ARTICLE',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DD',
+        'DETAILS',
+        'DIALOG',
+        'DIV',
+        'DL',
+        'DT',
+        'FIELDSET',
+        'FIGCAPTION',
+        'FIGURE',
+        'FOOTER',
+        'FORM',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'HEADER',
+        'HGROUP',
+        'HR',
+        'LI',
+        'MAIN',
+        'NAV',
+        'OL',
+        'P',
+        'PRE',
+        'SECTION',
+        'TABLE',
+        'UL'
+    ];
     const CSS_BORDER_SET = [
         CSS_PROPERTIES.borderTop.value,
         CSS_PROPERTIES.borderRight.value,
@@ -3011,7 +2966,7 @@
     function getDocumentFontSize() {
         return DOCUMENT_FONTSIZE;
     }
-    function convertFontSize(value, fixedWidth) {
+    function convertFontSize(value, fixedWidth = false) {
         switch (value) {
             case '':
                 return 'inherit';
@@ -3079,90 +3034,94 @@
         return true;
     }
     function getSpecificity(value) {
+        if (value.indexOf('(') === -1) {
+            return calculateSpecificity(value);
+        }
+        const items = splitEnclosing(value, SPEC_GROUP);
         let result;
-        splitEnclosing(value, SPEC_GROUP).forEach(seg => {
+        for (let i = 0, length = items.length, match; i < length; ++i) {
+            const seg = items[i];
             let group;
-            if (seg[0] === ':') {
-                if (startsWith(seg, ':where(')) {
-                    return;
+            if (seg[0] === ':' && (match = SPEC_ISWHERE.exec(seg))) {
+                if (match[1][0] === 'w') {
+                    continue;
                 }
-                const match = SPEC_IS.exec(seg);
-                if (match) {
-                    group = getSelectorValue(match[1]);
-                }
+                group = getSelectorValue(mergeSelector(match[2]));
             }
-            group || (group = calculateSpecificity(seg));
+            else {
+                group = calculateSpecificity(seg);
+            }
             if (!result) {
                 result = group;
             }
             else {
                 addSpecificity(result, group);
             }
-        });
+        }
         return result || [0, 0, 0];
     }
     function parseSelectorText(value) {
-        if ((value = value.trim()).indexOf(',') !== -1) {
-            const segments = splitEnclosing(value, CSS.SELECTOR_ENCLOSING_G);
-            let timestamp, removed;
-            for (let i = 0; i < segments.length; ++i) {
-                const seg = segments[i];
-                if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
-                    (removed || (removed = [])).push(seg);
-                    segments[i] = (timestamp || (timestamp = Date.now())) + '-' + (removed.length - 1);
+        if (value.indexOf(',') === -1) {
+            return [value];
+        }
+        const items = splitEnclosing(value, SELECTOR_ENCLOSING);
+        let timestamp, removed;
+        for (let i = 0; i < items.length; ++i) {
+            const seg = items[i];
+            if (seg[0] === ':' && seg.indexOf(',') !== -1 && SELECTOR_GROUP.test(seg)) {
+                (removed || (removed = [])).push(seg);
+                items[i] = (timestamp || (timestamp = Date.now())) + '-' + (removed.length - 1);
+            }
+        }
+        if (removed) {
+            value = items.join('');
+        }
+        let result, normalized = value, found, match;
+        while (match = SELECTOR_ATTR.exec(normalized)) {
+            if (match[0].indexOf(',') !== -1) {
+                const index = match.index;
+                const length = match[0].length;
+                normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
+                found = true;
+            }
+        }
+        SELECTOR_ATTR.lastIndex = 0;
+        if (found) {
+            result = [];
+            let position = 0;
+            do {
+                const index = normalized.indexOf(',', position);
+                if (index !== -1) {
+                    result.push(value.substring(position, index));
+                    position = index + 1;
                 }
-            }
-            if (removed) {
-                value = segments.join('');
-            }
-            CSS.SELECTOR_ATTR_G.lastIndex = 0;
-            let result, normalized = value, found, match;
-            while (match = CSS.SELECTOR_ATTR_G.exec(normalized)) {
-                if (match[0].indexOf(',') !== -1) {
-                    const index = match.index;
-                    const length = match[0].length;
-                    normalized = (index ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
-                    found = true;
+                else {
+                    result.push(value.substring(position));
+                    break;
                 }
-            }
-            if (found) {
-                result = [];
-                let position = 0;
-                do {
-                    const index = normalized.indexOf(',', position);
-                    if (index !== -1) {
-                        result.push(value.substring(position, index));
-                        position = index + 1;
-                    }
-                    else {
-                        result.push(value.substring(position));
+            } while (true);
+        }
+        else {
+            result = value.split(/\s*,\s*/);
+        }
+        if (removed) {
+            for (let i = 0, k = 0; i < removed.length; ++i) {
+                const part = removed[i];
+                const placeholder = timestamp + '-' + i;
+                for (let j = k; j < result.length; ++j) {
+                    const seg = result[j];
+                    result[j] = replaceAll(seg, placeholder, part, 1);
+                    if (seg !== result[j]) {
+                        k = j;
                         break;
                     }
-                } while (true);
-            }
-            else {
-                result = value.split(/\s*,\s*/);
-            }
-            if (removed) {
-                for (let i = 0, k = 0; i < removed.length; ++i) {
-                    const part = removed[i];
-                    const placeholder = timestamp + '-' + i;
-                    for (let j = k; j < result.length; ++j) {
-                        const seg = result[j];
-                        result[j] = replaceAll(seg, placeholder, part, 1);
-                        if (seg !== result[j]) {
-                            k = j;
-                            break;
-                        }
-                    }
                 }
             }
-            return result;
         }
-        return [value];
+        return result;
     }
     function insertStyleSheetRule(value, shadowRoot) {
-        if (isUserAgent(1 /* CHROME */ | 8 /* EDGE */, 73)) {
+        if (document.adoptedStyleSheets) {
             try {
                 const sheet = new CSSStyleSheet();
                 sheet.replaceSync(value);
@@ -3174,6 +3133,8 @@
             }
         }
         const style = document.createElement('style');
+        const parentElement = shadowRoot || document.head;
+        parentElement.appendChild(style);
         const sheet = style.sheet;
         if (sheet && typeof sheet.insertRule === 'function') {
             try {
@@ -3181,8 +3142,6 @@
                     style.appendChild(document.createTextNode(''));
                 }
                 sheet.insertRule(value);
-                const parentElement = shadowRoot || document.head;
-                parentElement.appendChild(style);
                 return () => {
                     try {
                         parentElement.removeChild(style);
@@ -3194,6 +3153,7 @@
             catch (_b) {
             }
         }
+        parentElement.removeChild(style);
         return null;
     }
 
@@ -3201,6 +3161,7 @@
         __proto__: null,
         CSS_PROPERTIES: CSS_PROPERTIES,
         PROXY_INLINESTYLE: PROXY_INLINESTYLE,
+        ELEMENT_BLOCK: ELEMENT_BLOCK,
         CSS_BORDER_SET: CSS_BORDER_SET,
         updateDocumentFont: updateDocumentFont,
         getDocumentFontSize: getDocumentFontSize,
@@ -3213,41 +3174,6 @@
         insertStyleSheetRule: insertStyleSheetRule
     });
 
-    const ELEMENT_BLOCK = [
-        'ADDRESS',
-        'ARTICLE',
-        'ASIDE',
-        'BLOCKQUOTE',
-        'DD',
-        'DETAILS',
-        'DIALOG',
-        'DIV',
-        'DL',
-        'DT',
-        'FIELDSET',
-        'FIGCAPTION',
-        'FIGURE',
-        'FOOTER',
-        'FORM',
-        'H1',
-        'H2',
-        'H3',
-        'H4',
-        'H5',
-        'H6',
-        'HEADER',
-        'HGROUP',
-        'HR',
-        'LI',
-        'MAIN',
-        'NAV',
-        'OL',
-        'P',
-        'PRE',
-        'SECTION',
-        'TABLE',
-        'UL'
-    ];
     const REGEXP_LENGTH = new RegExp(`^(?:^|\\s+)${STRING.LENGTH}(?:$|\\s+)$`, 'i');
     const REGEXP_LENGTHPERCENTAGE = new RegExp(`^(?:^|\\s+)${STRING.LENGTH_PERCENTAGE}(?:$|\\s+)$`, 'i');
     const REGEXP_ANGLE = new RegExp(`^(?:^|\\s+)${STRING.CSS_ANGLE}(?:$|\\s+)$`, 'i');
@@ -3266,14 +3192,14 @@
     const CHAR_SEPARATOR = /\s*,\s*/;
     function calculatePosition(element, value, boundingBox) {
         const alignment = [];
-        splitEnclosing(value, REGEXP_CALCENCLOSING).forEach(seg => {
+        for (let seg of splitEnclosing(value, REGEXP_CALCENCLOSING)) {
             if ((seg = seg.trim()).indexOf(' ') !== -1 && !isCalc(seg)) {
                 alignment.push(...seg.split(CHAR_SPACE));
             }
             else if (seg) {
                 alignment.push(seg);
             }
-        });
+        }
         const length = alignment.length;
         switch (length) {
             case 1:
@@ -3794,6 +3720,10 @@
                 return calculateVarAsString(element, value, { dimension: 'width', boundingBox, min: 0 });
             case 'objectPosition':
                 return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox });
+            case 'backgroundPositionX':
+                return calculateVarAsString(element, value, { dimension: 'width', boundingBox, parent: false });
+            case 'backgroundPositionY':
+                return calculateVarAsString(element, value, { dimension: 'height', boundingBox, parent: false });
             case 'backgroundSize':
             case 'maskSize':
             case 'gap':
@@ -3988,7 +3918,7 @@
             }
             case 'boxShadow':
             case 'textShadow':
-                return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*\s+(-[\d.]+[a-z]*)/ });
+                return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*\s+(-?[\d.]+[a-z]*)?/ });
             case 'animation':
             case 'animationDelay':
             case 'animationDuration':
@@ -4261,7 +4191,7 @@
                                     break;
                                 case 'brightness':
                                 case 'saturate':
-                                    result = calculatePercent(element, seg);
+                                    result = calculatePercent(element, seg, false);
                                     break;
                                 case 'contrast':
                                 case 'grayscale':
@@ -4298,7 +4228,7 @@
                 if (alias !== attr) {
                     return calculateStyle(element, typeof alias === 'string' ? alias : alias[0], value, boundingBox);
                 }
-                else if (attr in style) {
+                if (attr in style) {
                     return style[attr];
                 }
             }
@@ -4366,7 +4296,7 @@
             if (hasCalc(value)) {
                 return calculateStyle(element, attr, value) || getStyle(element)[attr];
             }
-            else if (hasCustomProperty(value)) {
+            if (hasCustomProperty(value)) {
                 return parseVar(element, value) || getStyle(element)[attr];
             }
         }
@@ -4410,13 +4340,10 @@
     function calculateVarAsString(element, value, options) {
         let orderedSize, dimension, separator, unitType, checkUnit, errorString;
         if (options) {
-            if (Array.isArray(options.orderedSize)) {
-                orderedSize = options.orderedSize;
-            }
+            ({ separator, unitType, checkUnit, orderedSize, errorString } = options);
             if (Array.isArray(options.dimension)) {
                 dimension = options.dimension;
             }
-            ({ separator, unitType, checkUnit, errorString } = options);
         }
         if (separator === ' ') {
             value = value.trim();
@@ -4461,18 +4388,16 @@
         if (errorString) {
             let match;
             while (match = errorString.exec(value)) {
-                if (match[1] === undefined) {
-                    return '';
-                }
-                const segment = match[0];
-                let optional = segment;
+                let optional = match[0];
                 for (let i = match.length - 1; i >= 1; --i) {
-                    optional = optional.replace(new RegExp(escapePattern(match[i]) + '$'), '');
+                    if (match[i]) {
+                        optional = optional.replace(new RegExp(`\\s*${escapePattern(match[i])}\\s*$`), '');
+                    }
                 }
-                if (optional === segment) {
+                if (optional === match[0]) {
                     return '';
                 }
-                value = value.replace(segment, optional);
+                value = value.replace(match[0], optional);
             }
         }
         return value;
@@ -4496,37 +4421,34 @@
                             if (options.parent === false) {
                                 boundingElement = element;
                             }
-                            else {
-                                boundingElement = element.parentElement;
-                                if (boundingElement instanceof HTMLElement) {
-                                    let style;
-                                    if (hasCoords(getStyle(element).position)) {
-                                        do {
-                                            style = getStyle(boundingElement);
-                                            if (boundingElement === document.body) {
-                                                break;
-                                            }
-                                            if (style.position === 'static') {
-                                                boundingElement = boundingElement.parentElement;
-                                            }
-                                            else {
-                                                break;
-                                            }
-                                        } while (boundingElement);
-                                    }
-                                    else {
+                            else if ((boundingElement = element.parentElement) instanceof HTMLElement) {
+                                let style;
+                                if (hasCoords(getStyle(element).position)) {
+                                    do {
                                         style = getStyle(boundingElement);
-                                    }
-                                    offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
-                                }
-                                else if (element instanceof SVGElement) {
-                                    if (options.parent !== true) {
-                                        boundingElement = element;
-                                    }
+                                        if (boundingElement === document.body) {
+                                            break;
+                                        }
+                                        if (style.position === 'static') {
+                                            boundingElement = boundingElement.parentElement;
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                    } while (boundingElement);
                                 }
                                 else {
-                                    boundingElement = null;
+                                    style = getStyle(boundingElement);
                                 }
+                                offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
+                            }
+                            else if (element instanceof SVGElement) {
+                                if (options.parent !== true) {
+                                    boundingElement = element;
+                                }
+                            }
+                            else {
+                                boundingElement = null;
                             }
                             if (boundingElement) {
                                 options.boundingSize = Math.max(0, boundingElement.getBoundingClientRect()[dimension] - offsetPadding);
@@ -4546,7 +4468,7 @@
                 if (options.precision !== undefined) {
                     return options.precision === 0 ? Math.floor(result) : +truncate(result, options.precision);
                 }
-                else if (options.roundValue) {
+                if (options.roundValue) {
                     return Math.round(result);
                 }
                 return result;
@@ -5210,6 +5132,21 @@
         reject: reject
     });
 
+    class Iterator$1 {
+        constructor(children) {
+            this.children = children;
+            this._index = -1;
+            this.length = children.length;
+        }
+        [Symbol.iterator]() {
+            return this;
+        }
+        next() {
+            const i = ++this._index;
+            return (i < this.length ? { value: this.children[i] } : { done: true });
+        }
+    }
+
     class Iterator {
         constructor(children) {
             this.children = children;
@@ -5218,6 +5155,10 @@
             this._length = children.length;
         }
         next() {
+            if (this._iterating === -1) {
+                this._iterating = 1;
+                return this.children[this._index];
+            }
             if (this.hasNext()) {
                 this._iterating = 1;
                 return this.children[++this._index];
@@ -5227,11 +5168,12 @@
             return this._index < this._length - 1;
         }
         remove() {
-            const iterating = this._iterating;
-            if (iterating !== 0) {
+            if (this._length && this._iterating !== 0) {
                 this.children.splice(this._index, 1);
-                this._index -= iterating;
+                this._index -= this._iterating;
                 --this._length;
+            }
+            else {
                 this._iterating = 0;
             }
         }
@@ -5245,53 +5187,43 @@
 
     class ListIterator extends Iterator {
         add(item) {
-            const iterating = this._iterating;
-            if (iterating !== 0) {
-                this.children.splice(iterating === 1 ? Math.min(++this._index, this._length) : Math.max(--this._index, 0), 0, item);
+            if (this._iterating !== 0) {
+                this.children.splice(this._iterating === 1 ? Math.min(this._index + 1, this._length) : Math.max(this._index - 1, 0), 0, item);
                 ++this._length;
-                this._iterating = 0;
             }
         }
         set(item) {
             if (this._iterating !== 0) {
                 this.children[this._index] = item;
-                this._iterating = 0;
             }
         }
         nextIndex() {
-            return Math.min(this._index + 1, this._length);
+            return this._index + 1;
         }
         hasPrevious() {
-            return this.previousIndex() > 0;
+            return this._index > 0;
         }
         previous() {
+            if (this._iterating === 1) {
+                this._iterating = -1;
+                return this.children[this._index];
+            }
             if (this.hasPrevious()) {
                 this._iterating = -1;
                 return this.children[--this._index];
             }
         }
         previousIndex() {
-            return Math.max(this._index - 1, -1);
+            return this._index - 1;
         }
     }
 
-    class Iter {
-        constructor(children, length = children.length) {
-            this.children = children;
-            this.length = length;
-            this.index = -1;
-        }
-        next() {
-            const i = ++this.index;
-            return (i < this.length ? { value: this.children[i] } : { done: true });
-        }
-    }
     class Container {
         constructor(children = []) {
             this.children = children;
         }
         [Symbol.iterator]() {
-            return new Iter(this.children);
+            return new Iterator$1(this.children);
         }
         item(index, value) {
             const children = this.children;
@@ -5302,8 +5234,7 @@
                 else {
                     index = Math.min(index, children.length);
                 }
-                children[index] = value;
-                return value;
+                return children[index] = value;
             }
             return index >= 0 ? children[index] : children[children.length + index];
         }
@@ -5404,17 +5335,16 @@
         removeIf(predicate, options) {
             let count, cascade, also, error;
             if (options) {
-                ({ count, cascade, also, error } = options);
+                ({ cascade, also, error } = options);
             }
-            if (!count || count < 0) {
-                count = Infinity;
-            }
+            count || (count = 0);
             let complete;
             return (function recurse(container, result) {
                 const children = container.children;
                 for (let i = 0; i < children.length; ++i) {
                     const item = children[i];
                     if (error && error(item, i, children)) {
+                        options.hadError = true;
                         complete = true;
                         break;
                     }
@@ -5442,12 +5372,9 @@
         }
         find(predicate, options) {
             if (options) {
-                let { also, error, cascade, start, end, count } = options; // eslint-disable-line prefer-const
+                let { count = 0, also, error, cascade, start, end } = options; // eslint-disable-line prefer-const
                 start && (start = Math.max(start, 0));
                 end && (end = Math.min(this.size(), end));
-                if (!count || count < 0) {
-                    count = 0;
-                }
                 let complete;
                 return (function recurse(container, level) {
                     const children = container.children;
@@ -5463,6 +5390,7 @@
                     for (; i < length; ++i) {
                         const item = children[i];
                         if (error && error(item, i, children)) {
+                            options.hadError = true;
                             complete = true;
                             break;
                         }
@@ -5494,19 +5422,17 @@
             if (options) {
                 ({ count, also, error } = options);
             }
-            if (!count || count < 0) {
-                count = Infinity;
-            }
+            count || (count = 0);
             let complete;
             return (function recurse(container, result) {
                 const children = container.children;
-                for (let i = 0, length = children.length; i < length; ++i) {
+                for (let i = 0, length = children.length, next; i < length; ++i) {
                     const item = children[i];
                     if (error && error(item, i, children)) {
+                        options.hadError = true;
                         complete = true;
                         break;
                     }
-                    let next;
                     if (!predicate || (next = predicate(item, i, children)) === true) {
                         if (also) {
                             next = also.call(container, item);
@@ -5802,7 +5728,7 @@
                 incomplete = true;
             }
         }
-        return !incomplete ? result : result.filter(item => item);
+        return !incomplete ? result : result.filter((item) => item);
     }
     async function findElementAsync(element, cache) {
         if (cache) {
@@ -5827,7 +5753,7 @@
                 incomplete = true;
             }
         }
-        return !incomplete ? result : result.filter(item => item);
+        return !incomplete ? result : result.filter((item) => item);
     }
     const errorReject = (type) => reject(type === 1 ? FRAMEWORK_NOT_INSTALLED : type === 2 ? UNABLE_TO_FINALIZE_DOCUMENT : INVALID_ASSET_REQUEST);
     const checkWritable = (app) => !!app && !app.initializing && app.length > 0;
@@ -6061,17 +5987,17 @@
     function latest(value = 1) {
         if (main) {
             const items = Array.from(main.session.active.keys());
-            if (value < 0) {
-                items.reverse();
-                value *= -1;
+            const length = items.length;
+            if (length) {
+                if (value < 0) {
+                    items.reverse();
+                    value *= -1;
+                }
+                if (value === 1) {
+                    return items[length - 1];
+                }
+                return value < length ? items.slice(length - value) : items;
             }
-            switch (value) {
-                case 0:
-                    return items;
-                case 1:
-                    return items.pop() || '';
-            }
-            return items.slice(0, Math.abs(value));
         }
         return Math.abs(value) === 1 ? '' : [];
     }
@@ -6122,7 +6048,7 @@
         }
         return errorReject(1);
     }
-    function getElementById(value, sync, cache = true) {
+    function getElementById(value, sync = false, cache = true) {
         if (main) {
             const element = document.getElementById(value);
             if (element) {
@@ -6131,7 +6057,7 @@
         }
         return sync ? null : Promise.resolve(null);
     }
-    function querySelector(value, sync, cache = true) {
+    function querySelector(value, sync = false, cache = true) {
         if (main) {
             const element = document.querySelector(value);
             if (element) {
@@ -6140,7 +6066,7 @@
         }
         return sync ? null : Promise.resolve(null);
     }
-    function querySelectorAll(value, sync, cache = true) {
+    function querySelectorAll(value, sync = false, cache = true) {
         if (main) {
             const query = document.querySelectorAll(value);
             const length = query.length;
@@ -6149,7 +6075,7 @@
                     if (length === 1) {
                         return [findElement(query[0], true, cache)];
                     }
-                    else if (cache) {
+                    if (cache) {
                         return findElementAll(query, length);
                     }
                     return main.parseDocumentSync(...Array.from(query));
@@ -6157,7 +6083,7 @@
                 if (length === 1) {
                     return promisify(findElementAsync)(query[0], cache);
                 }
-                else if (cache) {
+                if (cache) {
                     return promisify(findElementAllAsync)(query, length);
                 }
                 return main.parseDocument(...Array.from(query));
@@ -6165,13 +6091,13 @@
         }
         return sync ? [] : Promise.resolve([]);
     }
-    function fromElement(element, sync, cache) {
+    function fromElement(element, sync = false, cache = false) {
         if (main) {
             return findElement(element, sync, cache);
         }
         return sync ? null : Promise.resolve(null);
     }
-    function fromNode(node, sync, cache) {
+    function fromNode(node, sync = false, cache = false) {
         if (main && node instanceof squared.base.Node) {
             return findElement(node.element, sync, cache);
         }
@@ -6193,6 +6119,7 @@
         base: {
             Container,
             ArrayIterator: Iterator,
+            Iterator: Iterator$1,
             ListIterator,
             Pattern
         },

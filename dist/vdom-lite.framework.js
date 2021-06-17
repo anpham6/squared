@@ -24,7 +24,7 @@ var vdom = (function () {
     }
 
     const { CSS_CANNOT_BE_PARSED, DOCUMENT_ROOT_NOT_FOUND, OPERATION_NOT_SUPPORTED, reject } = squared.lib.error;
-    const { CSS_PROPERTIES: CSS_PROPERTIES$1, compareSpecificity, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule, parseSelectorText: parseSelectorText$1 } = squared.lib.internal;
+    const { CSS_PROPERTIES: CSS_PROPERTIES$1, compareSpecificity, getSpecificity, getPropertiesAsTraits, insertStyleSheetRule, parseSelectorText } = squared.lib.internal;
     const { FILE: FILE$1, STRING } = squared.lib.regex;
     const { getElementCache: getElementCache$1, newSessionInit, setElementCache: setElementCache$1 } = squared.lib.session;
     const { allSettled, capitalize, convertCamelCase: convertCamelCase$1, isBase64, isEmptyString, isPlainObject, replaceAll, resolvePath, splitPair: splitPair$1, splitSome: splitSome$1, startsWith: startsWith$1 } = squared.lib.util;
@@ -32,7 +32,21 @@ var vdom = (function () {
     const REGEXP_CSSHOST = /^:(?:host|host-context)\(([^)]+)\)/;
     const REGEXP_DATAURI = new RegExp(`url\\("(${STRING.DATAURI})"\\)`, 'g');
     const CSS_SHORTHANDNONE = getPropertiesAsTraits(64 /* NONE */);
-    function parseImageUrl(value, styleSheetHref, resource, resourceId) {
+    function parseError(error) {
+        if (typeof error === 'string') {
+            return error;
+        }
+        if (error instanceof Error) {
+            return error.message;
+        }
+        if (error instanceof Event) {
+            error = error.target;
+        }
+        return error instanceof HTMLImageElement ? error.src : '';
+    }
+    const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
+    function parseImageUrl(value, styleSheetHref, resource, resourceId, dataUri) {
+        REGEXP_DATAURI.lastIndex = 0;
         let result, match;
         while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
@@ -47,6 +61,9 @@ var vdom = (function () {
                         content = match[5];
                     }
                     resource.addRawData(resourceId, match[1], { mimeType: leading && leading.indexOf('/') !== -1 ? leading : 'image/unknown', encoding, content, base64 });
+                    if (dataUri) {
+                        return match[1];
+                    }
                 }
             }
             else {
@@ -59,22 +76,8 @@ var vdom = (function () {
                 }
             }
         }
-        REGEXP_DATAURI.lastIndex = 0;
         return result || value;
     }
-    function parseError(error) {
-        if (typeof error === 'string') {
-            return error;
-        }
-        if (error instanceof Error) {
-            return error.message;
-        }
-        if (error instanceof Event) {
-            error = error.target;
-        }
-        return error instanceof HTMLImageElement ? error.src : '';
-    }
-    const getErrorMessage = (errors) => errors.map(value => '- ' + value).join('\n');
     class Application$1 {
         constructor(framework, nodeConstructor, ControllerConstructor, ExtensionManagerConstructor, ResourceConstructor, builtInExtensions = new Map()) {
             this.framework = framework;
@@ -83,7 +86,10 @@ var vdom = (function () {
             this.userSettings = {};
             this.closed = false;
             this.elementMap = new WeakMap();
-            this.session = { active: new Map() };
+            this.session = {
+                active: new Map(),
+                data: new Map()
+            };
             this._nextId = 0;
             this.Node = nodeConstructor;
             const controller = new ControllerConstructor(this);
@@ -128,40 +134,45 @@ var vdom = (function () {
             }
         }
         copyTo(pathname, options) {
-            var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyTo(pathname, options)) || reject(OPERATION_NOT_SUPPORTED);
+            const fileHandler = this.fileHandler;
+            return fileHandler ? fileHandler.copyTo(pathname, options) : reject(OPERATION_NOT_SUPPORTED);
         }
         appendTo(pathname, options) {
-            var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendTo(pathname, options)) || reject(OPERATION_NOT_SUPPORTED);
+            const fileHandler = this.fileHandler;
+            return fileHandler ? fileHandler.appendTo(pathname, options) : reject(OPERATION_NOT_SUPPORTED);
         }
         saveAs(filename, options) {
-            var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveAs(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
+            const fileHandler = this.fileHandler;
+            return fileHandler ? fileHandler.saveAs(filename, options) : reject(OPERATION_NOT_SUPPORTED);
         }
         saveFiles(filename, options) {
-            var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveFiles(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
+            const fileHandler = this.fileHandler;
+            return fileHandler ? fileHandler.saveFiles(filename, options) : reject(OPERATION_NOT_SUPPORTED);
         }
         appendFiles(filename, options) {
-            var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendFiles(filename, options)) || reject(OPERATION_NOT_SUPPORTED);
+            const fileHandler = this.fileHandler;
+            return fileHandler ? fileHandler.appendFiles(filename, options) : reject(OPERATION_NOT_SUPPORTED);
         }
         copyFiles(pathname, options) {
-            var _a;
-            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyFiles(pathname, options)) || reject(OPERATION_NOT_SUPPORTED);
+            const fileHandler = this.fileHandler;
+            return fileHandler ? fileHandler.copyFiles(pathname, options) : reject(OPERATION_NOT_SUPPORTED);
         }
         reset() {
-            var _a;
             this.controllerHandler.reset();
-            (_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.reset();
+            const resourceHandler = this.resourceHandler;
+            if (resourceHandler) {
+                resourceHandler.reset();
+            }
             this.extensions.forEach(ext => ext.reset());
             this.elementMap = new WeakMap();
+            const session = this.session;
+            session.active.clear();
+            session.data.clear();
             this.closed = false;
         }
         parseDocument(...elements) {
             const resource = this.resourceHandler;
-            const [processing, rootElements, shadowElements, styleSheets] = this.createThread(elements);
+            const [processing, rootElements, shadowElements, styleSheets] = this.createThread(elements, false);
             if (rootElements.length === 0) {
                 return reject(DOCUMENT_ROOT_NOT_FOUND);
             }
@@ -173,35 +184,33 @@ var vdom = (function () {
             }
             if (preloadItems.length) {
                 processing.initializing = true;
-                return (Promise.allSettled.bind(Promise) || allSettled)(preloadItems.map(item => {
-                    return new Promise((success, error) => {
-                        if (typeof item === 'string') {
-                            fetch(item)
-                                .then(async (result) => {
-                                if (result.status >= 300) {
-                                    error(item + ` (${result.status}: ${result.statusText})`);
+                return (Promise.allSettled || allSettled).bind(Promise)(preloadItems.map(item => new Promise((success, error) => {
+                    if (typeof item === 'string') {
+                        fetch(item)
+                            .then(async (result) => {
+                            if (result.status >= 300) {
+                                error(item + ` (${result.status}: ${result.statusText})`);
+                            }
+                            else {
+                                const mimeType = result.headers.get('content-type') || '';
+                                if (styleSheets && styleSheets.includes(item) || mimeType.indexOf('text/css') !== -1) {
+                                    success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
+                                }
+                                else if (FILE$1.SVG.test(item) || mimeType.indexOf('image/svg+xml') !== -1) {
+                                    success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
                                 }
                                 else {
-                                    const mimeType = result.headers.get('content-type') || '';
-                                    if (startsWith$1(mimeType, 'text/css') || styleSheets && styleSheets.includes(item)) {
-                                        success({ mimeType: 'text/css', encoding: 'utf8', content: await result.text() });
-                                    }
-                                    else if (startsWith$1(mimeType, 'image/svg+xml') || FILE$1.SVG.test(item)) {
-                                        success({ mimeType: 'image/svg+xml', encoding: 'utf8', content: await result.text() });
-                                    }
-                                    else {
-                                        success({ mimeType: result.headers.get('content-type') || 'font/' + (splitPair$1(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
-                                    }
+                                    success({ mimeType: mimeType || 'font/' + (splitPair$1(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
                                 }
-                            })
-                                .catch(err => error(err));
-                        }
-                        else {
-                            item.addEventListener('load', () => success(item));
-                            item.addEventListener('error', err => error(err));
-                        }
-                    });
-                }))
+                            }
+                        })
+                            .catch(err => error(err));
+                    }
+                    else {
+                        item.addEventListener('load', () => success(item));
+                        item.addEventListener('error', err => error(err));
+                    }
+                })))
                     .then((result) => {
                     let errors;
                     for (let i = 0, length = result.length; i < length; ++i) {
@@ -222,12 +231,11 @@ var vdom = (function () {
                         }
                     }
                     if (errors) {
-                        const length = errors.length;
-                        if (length === 1) {
+                        if (errors.length === 1) {
                             this.writeError('FAIL: ' + errors[0]);
                         }
                         else {
-                            this.writeError(getErrorMessage(errors), `FAIL: ${length} errors`);
+                            this.writeError(getErrorMessage(errors), `FAIL: ${errors.length} errors`);
                         }
                     }
                     for (let i = 0, length = preloaded.length; i < length; ++i) {
@@ -262,6 +270,10 @@ var vdom = (function () {
                         settings = item;
                         item = item.element;
                     }
+                    else if (i === 0) {
+                        settings = item;
+                        item = this.mainElement;
+                    }
                     else {
                         continue;
                     }
@@ -273,13 +285,14 @@ var vdom = (function () {
                     rootElements.push(item);
                     customSettings.push(settings);
                     if (!sync && resourceHandler && isEnabled(settings, 'pierceShadowRoot') && isEnabled(settings, 'preloadCustomElements')) {
-                        item.querySelectorAll('*').forEach(host => {
-                            const shadowRoot = host.shadowRoot;
+                        const items = item.querySelectorAll('*');
+                        for (let j = 0, q = items.length; j < q; ++j) {
+                            const shadowRoot = items[j].shadowRoot;
                             if (shadowRoot) {
                                 shadowRoot.querySelectorAll('link[href][rel*="stylesheet" i]').forEach((child) => (styleSheets || (styleSheets = [])).push(child.href));
                                 (shadowElements || (shadowElements = [])).push(shadowRoot);
                             }
-                        });
+                        }
                     }
                 }
             }
@@ -318,21 +331,24 @@ var vdom = (function () {
                     queryElements.push(...shadowElements);
                 }
                 for (const element of queryElements) {
-                    element.querySelectorAll('[style]').forEach((child) => {
-                        const { backgroundImage, listStyleImage } = child.style;
-                        if (backgroundImage) {
-                            parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId);
+                    const items = element.querySelectorAll('[style]');
+                    const q = items.length;
+                    if (q) {
+                        for (let i = 0; i < q; ++i) {
+                            const { backgroundImage, listStyleImage } = items[i].style;
+                            if (backgroundImage) {
+                                parseImageUrl(backgroundImage, location.href, resourceHandler, resourceId, false);
+                            }
+                            if (listStyleImage) {
+                                parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId, false);
+                            }
                         }
-                        if (listStyleImage) {
-                            parseImageUrl(listStyleImage, location.href, resourceHandler, resourceId);
-                        }
-                    });
+                    }
                 }
             }
             return [processing, rootElements, shadowElements ? [...rootElements, ...shadowElements] : rootElements, styleSheets];
         }
         resumeThread(processing, rootElements, requestCount) {
-            var _a;
             processing.initializing = false;
             const { controllerHandler, extensions } = this;
             const sessionId = processing.sessionId;
@@ -353,11 +369,15 @@ var vdom = (function () {
                 }
             }
             for (let i = 0; i < rootElements.length; ++i) {
-                processing.settings = processing.customSettings[i];
+                const settings = processing.customSettings[i];
+                processing.settings = settings;
                 controllerHandler.processUserSettings(processing);
+                if (settings && settings.beforeCascade) {
+                    settings.beforeCascade(processing.sessionId);
+                }
                 if (length) {
                     const current = [];
-                    const exclude = (_a = processing.settings) === null || _a === void 0 ? void 0 : _a.exclude;
+                    const exclude = settings && settings.exclude;
                     for (let j = 0; j < length; ++j) {
                         const ext = extensions[j];
                         if (!(exclude === ext.name || Array.isArray(exclude) && exclude.find(name => name === ext.name))) {
@@ -372,6 +392,14 @@ var vdom = (function () {
                 const node = this.createCache(processing, rootElements[i]);
                 if (node) {
                     this.afterCreateCache(processing, node);
+                    if (settings) {
+                        if (settings.data) {
+                            this.session.data.set(sessionId, settings.data);
+                        }
+                        if (settings.afterCascade) {
+                            settings.afterCascade(sessionId, node);
+                        }
+                    }
                     success.push(node);
                 }
             }
@@ -428,8 +456,8 @@ var vdom = (function () {
                     const parentSlot = slot.parentElement;
                     if (parentSlot) {
                         const childNodes = parentSlot.childNodes;
-                        for (let k = 0, q = childNodes.length; k < q; ++k) {
-                            const item = childNodes[k];
+                        for (let j = 0, q = childNodes.length; j < q; ++j) {
+                            const item = childNodes[j];
                             if (item === slot) {
                                 parentSlot.insertBefore(hostChild.cloneNode(true), item);
                                 parentSlot.removeChild(item);
@@ -442,14 +470,14 @@ var vdom = (function () {
         setExtensions(namespaces = this.userSettings.builtInExtensions) {
             const { builtInExtensions, extensions } = this;
             extensions.length = 0;
-            for (let i = 0, length = namespaces.length; i < length; ++i) {
-                let ext = builtInExtensions.get(namespaces[i]);
-                if (ext) {
+            for (let i = 0, length = namespaces.length, ext; i < length; ++i) {
+                let namespace = namespaces[i];
+                if (ext = builtInExtensions.get(namespace)) {
                     ext.application = this;
                     extensions.push(ext);
                 }
                 else {
-                    const namespace = namespaces[i] + '.';
+                    namespace += '.';
                     for (const data of builtInExtensions) {
                         if (startsWith$1(data[0], namespace) && !extensions.includes(ext = data[1])) {
                             ext.application = this;
@@ -500,7 +528,7 @@ var vdom = (function () {
         createRootNode(processing, rootElement) {
             const { sessionId, resourceId } = processing;
             const extensions = processing.extensions.filter(item => !!item.beforeInsertNode);
-            const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, this.getUserSetting(processing, 'pierceShadowRoot'), this.getUserSetting(processing, 'createQuerySelectorMap'), extensions.length ? extensions : null);
+            const node = this.cascadeParentNode(processing, sessionId, resourceId, rootElement, 0, this.getUserSetting(processing, 'pierceShadowRoot'), extensions.length ? extensions : null);
             if (node) {
                 node.documentRoot = true;
                 processing.node = node;
@@ -544,7 +572,7 @@ var vdom = (function () {
             }
             return node;
         }
-        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowParent) {
+        cascadeParentNode(processing, sessionId, resourceId, parentElement, depth, pierceShadowRoot, extensions, shadowParent) {
             const node = this.insertNode(processing, parentElement);
             if (node) {
                 if (depth === 0) {
@@ -580,7 +608,7 @@ var vdom = (function () {
                         if (pierceShadowRoot && (shadowRoot = element.shadowRoot)) {
                             this.setStyleMap(sessionId, resourceId, shadowRoot);
                         }
-                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, pierceShadowRoot, createQuerySelectorMap, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
+                        if (child = (shadowRoot || element).childNodes.length ? this.cascadeParentNode(processing, sessionId, resourceId, element, childDepth, pierceShadowRoot, extensions, shadowRoot || shadowParent) : this.insertNode(processing, element)) {
                             elements.push(child);
                             inlineText = false;
                         }
@@ -606,32 +634,11 @@ var vdom = (function () {
                         processing.cache.add(children[0]);
                     }
                 }
-                if (elements.length && createQuerySelectorMap) {
-                    node.queryMap = this.createQueryMap(elements);
-                }
             }
             return node;
         }
         visibleText(node, element) {
             return element.nodeName === '#text' && (!isEmptyString(element.textContent) || node.preserveWhiteSpace && (node.tagName !== 'PRE' || node.element.childElementCount === 0));
-        }
-        createQueryMap(elements) {
-            const result = [elements];
-            for (let i = 0, length = elements.length; i < length; ++i) {
-                const childMap = elements[i].queryMap;
-                if (childMap) {
-                    for (let j = 0, k = 1, q = childMap.length; j < q; ++j, ++k) {
-                        const items = result[k];
-                        if (items) {
-                            items.push(...childMap[j]);
-                        }
-                        else {
-                            result[k] = q === 1 ? childMap[j] : childMap[j].slice(0);
-                        }
-                    }
-                }
-            }
-            return result;
         }
         applyStyleRule(sessionId, resourceId, item, documentRoot, queryRoot) {
             var _a, _b;
@@ -682,7 +689,7 @@ var vdom = (function () {
                                 case 'backgroundImage':
                                 case 'listStyleImage':
                                 case 'content':
-                                    value = parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId);
+                                    value = parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId, false);
                                     break;
                             }
                         }
@@ -709,7 +716,7 @@ var vdom = (function () {
                         REGEXP_IMPORTANT.lastIndex = 0;
                     }
                     const { usedSelector, unusedSelector } = this.session;
-                    for (const selectorText of parseSelectorText$1(item.selectorText)) {
+                    for (const selectorText of parseSelectorText(item.selectorText)) {
                         const specificity = getSpecificity(selectorText);
                         const [selector, target] = splitPair$1(selectorText, '::');
                         const targetElt = target ? '::' + target : '';
@@ -892,7 +899,7 @@ var vdom = (function () {
                                     case 'content': {
                                         const value = cssStyle[attr];
                                         if (value !== 'initial') {
-                                            parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId);
+                                            parseImageUrl(value, (_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href, resource, resourceId, false);
                                         }
                                         break;
                                     }
@@ -925,8 +932,8 @@ var vdom = (function () {
             return this._resourceHandler;
         }
         get fileHandler() {
-            var _a;
-            return ((_a = this.resourceHandler) === null || _a === void 0 ? void 0 : _a.fileHandler) || null;
+            const resourceHandler = this.resourceHandler;
+            return resourceHandler ? resourceHandler.fileHandler : null;
         }
         get extensionManager() {
             return this._extensionManager;
@@ -941,9 +948,7 @@ var vdom = (function () {
             const children = [];
             for (const processing of active.values()) {
                 if (extensions.length) {
-                    const items = processing.extensions;
-                    for (let i = 0, length = items.length; i < length; ++i) {
-                        const item = items[i];
+                    for (const item of processing.extensions) {
                         if (!extensions.includes(item)) {
                             extensions.push(item);
                         }
@@ -1013,15 +1018,15 @@ var vdom = (function () {
     }
     Controller.KEY_NAME = 'squared.base.controller';
 
-    const { CSS_BORDER_SET, CSS_PROPERTIES, PROXY_INLINESTYLE, convertFontSize, getInitialValue, parseSelectorText } = squared.lib.internal;
-    const { CSS: CSS$1, FILE } = squared.lib.regex;
+    const { CSS_BORDER_SET, CSS_PROPERTIES, PROXY_INLINESTYLE, convertFontSize, getInitialValue } = squared.lib.internal;
+    const { FILE } = squared.lib.regex;
     const { isUserAgent } = squared.lib.client;
     const { isTransparent } = squared.lib.color;
     const { asPercent, asPx, checkStyleValue, checkWritingMode, convertUnit, getRemSize, getStyle, isAngle, isLength, isPercent, isTime, parseUnit } = squared.lib.css;
     const { assignRect, getNamedItem, getParentElement, getRangeClientRect } = squared.lib.dom;
     const { clamp, truncate } = squared.lib.math;
     const { getElementCache, getElementData, setElementCache } = squared.lib.session;
-    const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, escapePattern, hasValue, isObject, isSpace, iterateArray, iterateReverseArray, lastItemOf, safeFloat, spliceString, splitEnclosing, splitPair, splitSome, startsWith } = squared.lib.util;
+    const { convertCamelCase, convertFloat, convertInt, convertPercent, endsWith, hasValue, isObject, iterateArray, iterateReverseArray, lastItemOf, safeFloat, splitPair, splitSome, startsWith } = squared.lib.util;
     const TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -1038,15 +1043,8 @@ var vdom = (function () {
         'wordSpacing'
     ];
     const [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT, BORDER_OUTLINE] = CSS_BORDER_SET;
-    const REGEXP_EM = /\dem$/i;
-    const REGEXP_NOT = /^:not\((.+)\)$/i;
-    const REGEXP_ENCLOSING = /^:(not|is|where)\((.+)\)$/i;
-    const REGEXP_ISWHERE = /^(.*?)@((?:\{\{.+?\}\})+)(.*)$/;
-    const REGEXP_NOTINDEX = /:not-(x+)/;
-    const REGEXP_QUERYNTH = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
-    const REGEXP_QUERYNTHPOSITION = /^([+-])?(\d+)?n\s*(?:([+-])\s*(\d+))?$/;
-    const REGEXP_DIR = /^:dir\(\s*(ltr|rtl)\s*\)$/;
-    function setStyleCache(element, attr, value, style, sessionId) {
+    const REGEXP_EM = /\dem$/;
+    function setStyleCache(sessionId, style, element, attr, value) {
         const current = style[attr];
         if (value !== current) {
             const restore = element.style[attr];
@@ -1070,8 +1068,8 @@ var vdom = (function () {
         return !isNaN(n) ? n * fontSize : parseUnit(value, { fontSize });
     }
     function isFixedFont(node) {
-        const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',', true);
-        return fontFirst === 'monospace' && fontSecond !== 'monospace';
+        const [fontFirst, fontSecond] = splitPair(node.css('fontFamily'), ',');
+        return fontFirst === 'monospace' && fontSecond.trim() !== 'monospace';
     }
     function getCssFloat(node, attr, fallback) {
         const value = +node.css(attr);
@@ -1117,21 +1115,18 @@ var vdom = (function () {
             const attr = dimension === 'width' ? 'maxWidth' : 'maxHeight';
             const max = style[attr];
             if (max) {
-                if (value === max) {
-                    delete style[attr];
-                }
-                else {
-                    const maxValue = node.parseUnit(max, { dimension });
-                    if (maxValue) {
+                if (!(max === value || max === 'auto')) {
+                    const maxValue = node.parseUnit(max, { dimension, fallback: NaN });
+                    if (!isNaN(maxValue)) {
                         if (maxValue <= baseValue && value && isLength(value)) {
                             style[dimension] = max;
-                            delete style[attr];
                         }
                         else {
                             return Math.min(result, maxValue);
                         }
                     }
                 }
+                delete style[attr];
             }
         }
         return result;
@@ -1199,507 +1194,20 @@ var vdom = (function () {
         }
         return 0;
     }
-    function checkReadOnly(element, value) {
-        switch (element.tagName) {
-            case 'INPUT':
-                switch (element.type) {
-                    case 'hidden':
-                    case 'range':
-                    case 'color':
-                    case 'checkbox':
-                    case 'radio':
-                    case 'button':
-                    case 'submit':
-                    case 'reset':
-                    case 'file':
-                    case 'image':
-                        return false;
-                }
-            case 'TEXTAREA':
-                if (element.readOnly === value) {
-                    return false;
-                }
-                break;
-            default:
-                if (element.isContentEditable === !value) {
-                    return false;
-                }
-                break;
-        }
-        return true;
-    }
-    function validateSelector(selector, child) {
-        if (selector.tagName && selector.tagName !== this.tagName.toUpperCase() || selector.id && selector.id !== this.elementId) {
-            return false;
-        }
-        const element = this.element;
-        const { classList, attrList, pseudoList, notList } = selector;
-        if (classList) {
-            const classes = element.classList;
-            for (let i = 0, length = classList.length; i < length; ++i) {
-                if (!classes.contains(classList[i])) {
-                    return false;
-                }
+    function recurseNaturalElements(result, items, children) {
+        for (let i = 0, length = children.length; i < length; ++i) {
+            const node = children[i];
+            if (items.includes(node.element) && result.push(node) === items.length) {
+                return true;
+            }
+            const next = node.naturalElements;
+            if (next.length && recurseNaturalElements(result, items, next)) {
+                return true;
             }
         }
-        if (attrList) {
-            const attributes = this.attributes;
-            for (let i = 0, length = attrList.length; i < length; ++i) {
-                const attr = attrList[i];
-                let value;
-                if (attr.trailing) {
-                    const pattern = new RegExp(`^([^:]+:)?${escapePattern(attr.key)}$`);
-                    for (const name in attributes) {
-                        if (pattern.test(name)) {
-                            value = attributes[name];
-                            break;
-                        }
-                    }
-                }
-                else {
-                    value = attributes[attr.key];
-                }
-                if (value === undefined) {
-                    return false;
-                }
-                const other = attr.value;
-                if (other) {
-                    if (attr.ignoreCase) {
-                        value = value.toLowerCase();
-                    }
-                    switch (attr.symbol) {
-                        case '~':
-                            if (!splitSome(value, item => item === other, /\s+/g)) {
-                                return false;
-                            }
-                            break;
-                        case '^':
-                            if (!startsWith(value, other)) {
-                                return false;
-                            }
-                            break;
-                        case '$':
-                            if (!endsWith(value, other)) {
-                                return false;
-                            }
-                            break;
-                        case '*':
-                            if (!value.includes(other)) {
-                                return false;
-                            }
-                            break;
-                        case '|':
-                            if (value !== other && !startsWith(value, other + '-')) {
-                                return false;
-                            }
-                            break;
-                        default:
-                            if (value !== other) {
-                                return false;
-                            }
-                            break;
-                    }
-                }
-            }
-        }
-        if (pseudoList) {
-            const { actualParent: parent, tagName } = this;
-            const scoped = [];
-            for (let i = 0, length = pseudoList.length; i < length; ++i) {
-                const pseudo = pseudoList[i];
-                switch (pseudo) {
-                    case ':first-child':
-                        if (this !== parent.firstElementChild) {
-                            return false;
-                        }
-                        break;
-                    case ':last-child':
-                        if (this !== parent.lastElementChild) {
-                            return false;
-                        }
-                        break;
-                    case ':only-child':
-                        if (parent.naturalElements.length > 1) {
-                            return false;
-                        }
-                        break;
-                    case ':only-of-type': {
-                        const children = parent.naturalElements;
-                        for (let j = 0, k = 0, q = children.length; j < q; ++j) {
-                            if (children[j].tagName === tagName && ++k > 1) {
-                                return false;
-                            }
-                        }
-                        break;
-                    }
-                    case ':first-of-type': {
-                        const children = parent.naturalElements;
-                        for (let j = 0, q = children.length; j < q; ++j) {
-                            const item = children[j];
-                            if (item.tagName === tagName) {
-                                if (item !== this) {
-                                    return false;
-                                }
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case ':empty':
-                        if (element.hasChildNodes()) {
-                            return false;
-                        }
-                        break;
-                    case ':checked':
-                        if (!this.checked) {
-                            return false;
-                        }
-                        break;
-                    case ':disabled':
-                        if (!this.inputElement && this.tagName !== 'OPTION' || !element.disabled) {
-                            return false;
-                        }
-                        break;
-                    case ':enabled':
-                        if (!this.inputElement && this.tagName !== 'OPTION' || element.disabled) {
-                            return false;
-                        }
-                        break;
-                    case ':read-only':
-                        if (!checkReadOnly(element, false)) {
-                            return false;
-                        }
-                        break;
-                    case ':read-write':
-                        if (!checkReadOnly(element, true)) {
-                            return false;
-                        }
-                        break;
-                    case ':required':
-                        if (!this.inputElement || this.tagName === 'BUTTON' || !element.required) {
-                            return false;
-                        }
-                        break;
-                    case ':optional':
-                        if (!this.inputElement || this.tagName === 'BUTTON' || element.required) {
-                            return false;
-                        }
-                        break;
-                    case ':placeholder-shown':
-                        switch (tagName) {
-                            case 'INPUT':
-                                switch (element.type) {
-                                    case 'text':
-                                    case 'search':
-                                    case 'tel':
-                                    case 'url':
-                                    case 'email':
-                                        break;
-                                    default:
-                                        return false;
-                                }
-                            case 'TEXTAREA':
-                                if (element.value || !element.placeholder) {
-                                    return false;
-                                }
-                                break;
-                            default:
-                                return false;
-                        }
-                        break;
-                    case ':in-range':
-                    case ':out-of-range':
-                        if (tagName === 'INPUT') {
-                            const value = +element.value;
-                            if (!isNaN(value)) {
-                                const { min, max } = element;
-                                if (value >= +min && value <= +max) {
-                                    if (pseudo === ':out-of-range') {
-                                        return false;
-                                    }
-                                }
-                                else if (pseudo === ':in-range') {
-                                    return false;
-                                }
-                            }
-                            else if (pseudo === ':in-range') {
-                                return false;
-                            }
-                        }
-                        else {
-                            return false;
-                        }
-                        break;
-                    case ':target': {
-                        const hash = location.hash;
-                        if (!hash || !(hash === '#' + this.elementId || tagName === 'A' && hash === '#' + this.toElementString('name'))) {
-                            return false;
-                        }
-                        break;
-                    }
-                    case ':indeterminate':
-                        if (tagName === 'INPUT') {
-                            switch (element.type) {
-                                case 'checkbox':
-                                    if (!element.indeterminate) {
-                                        return false;
-                                    }
-                                    continue;
-                                case 'radio':
-                                    if (element.checked) {
-                                        return false;
-                                    }
-                                    break;
-                                default:
-                                    return false;
-                            }
-                        }
-                        else if (tagName === 'PROGRESS') {
-                            if (!element.attributes.getNamedItem('value')) {
-                                return false;
-                            }
-                            break;
-                        }
-                        else {
-                            return false;
-                        }
-                    case ':focus':
-                        if (element !== document.activeElement) {
-                            return false;
-                        }
-                        break;
-                    case ':focus-within': {
-                        const activeElement = document.activeElement;
-                        if (element !== activeElement && !this.querySelectorAll('*').find(item => item.element === activeElement)) {
-                            return false;
-                        }
-                        break;
-                    }
-                    case ':default':
-                    case ':defined':
-                    case ':link':
-                    case ':visited':
-                    case ':hover':
-                    case ':active':
-                    case ':any-link':
-                    case ':fullscreen':
-                    case ':valid':
-                    case ':invalid':
-                        scoped.push(pseudo);
-                        break;
-                    default: {
-                        let match = REGEXP_QUERYNTH.exec(pseudo);
-                        if (match) {
-                            const children = match[1] ? parent.naturalElements.slice(0).reverse() : parent.naturalElements;
-                            const index = match[2] === 'child' ? children.indexOf(this) + 1 : children.filter((item) => item.tagName === tagName).indexOf(this) + 1;
-                            if (index) {
-                                const placement = match[3].trim();
-                                switch (placement) {
-                                    case 'even':
-                                        if (index % 2) {
-                                            return false;
-                                        }
-                                        break;
-                                    case 'odd':
-                                        if (index % 2 === 0) {
-                                            return false;
-                                        }
-                                        break;
-                                    default:
-                                        if (!isNaN(+placement)) {
-                                            if (placement !== index.toString()) {
-                                                return false;
-                                            }
-                                        }
-                                        else if (match = REGEXP_QUERYNTHPOSITION.exec(placement)) {
-                                            const reverse = match[1] === '-';
-                                            const increment = match[2] ? +match[2] : 1;
-                                            if (match[4]) {
-                                                const modifier = +match[4] * (match[3] === '-' ? -1 : 1);
-                                                if (increment !== 0) {
-                                                    if (index !== modifier) {
-                                                        let j = modifier;
-                                                        do {
-                                                            if (reverse) {
-                                                                j -= increment;
-                                                                if (j < 0) {
-                                                                    return false;
-                                                                }
-                                                            }
-                                                            else {
-                                                                j += increment;
-                                                                if (j > index) {
-                                                                    return false;
-                                                                }
-                                                            }
-                                                            if (j === index) {
-                                                                break;
-                                                            }
-                                                        } while (true);
-                                                    }
-                                                }
-                                                else if (index !== modifier) {
-                                                    return false;
-                                                }
-                                            }
-                                            else if (reverse || index % increment !== 0) {
-                                                return false;
-                                            }
-                                        }
-                                        else {
-                                            return !!selector.fromNot;
-                                        }
-                                        break;
-                                }
-                            }
-                            else {
-                                return !!selector.fromNot;
-                            }
-                        }
-                        else if (match = REGEXP_DIR.exec(pseudo)) {
-                            switch (this.dir) {
-                                case 'rtl':
-                                    if (match[1] === 'ltr') {
-                                        return false;
-                                    }
-                                    break;
-                                case 'auto':
-                                    scoped.push(pseudo);
-                                    break;
-                                default:
-                                    if (match[1] === 'rtl') {
-                                        return false;
-                                    }
-                                    break;
-                            }
-                        }
-                        else {
-                            scoped.push(pseudo);
-                        }
-                        break;
-                    }
-                }
-            }
-            if (scoped.length) {
-                try {
-                    if (iterateArray(element.parentElement.querySelectorAll(':scope > ' + scoped.join('')), item => item === element) !== Infinity) {
-                        return false;
-                    }
-                }
-                catch (_a) {
-                    return !!selector.fromNot;
-                }
-            }
-        }
-        if (notList) {
-            for (let i = 0, length = notList.length; i < length; ++i) {
-                const not = notList[i];
-                let notData, match;
-                switch (not[0]) {
-                    case ':':
-                        if ((match = CSS$1.SELECTOR_PSEUDO_CLASS.exec(not)) && match[0] === not) {
-                            notData = { pseudoList: [not] };
-                        }
-                        break;
-                    case '[':
-                        if ((match = CSS$1.SELECTOR_ATTR.exec(not)) && match[0] === not) {
-                            const value = match[3] || match[4] || match[5];
-                            const ignoreCase = match[6] === 'i';
-                            notData = {
-                                attrList: [{
-                                        key: match[1],
-                                        symbol: match[2],
-                                        value: ignoreCase && value ? value.toLowerCase() : value,
-                                        ignoreCase
-                                    }]
-                            };
-                        }
-                        break;
-                    default:
-                        if ((match = CSS$1.SELECTOR_LABEL.exec(not)) && match[0] === not) {
-                            switch (not[0]) {
-                                case '.':
-                                    notData = { classList: [not] };
-                                    break;
-                                case '#':
-                                    notData = { id: not.substring(1) };
-                                    break;
-                                default:
-                                    notData = { tagName: not.toUpperCase() };
-                                    break;
-                            }
-                        }
-                        break;
-                }
-                if (notData) {
-                    notData.fromNot = true;
-                    if (validateSelector.call(this, notData)) {
-                        return false;
-                    }
-                }
-                else if ((child ? this : this.actualParent).querySelectorAll(':scope > ' + not).includes(child || this)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    function ascendSelector(selectors, index, nodes, offset, checked) {
-        const selector = selectors[index];
-        const selectorAdjacent = index > 0 && selectors[--index];
-        const adjacent = selector.adjacent;
-        const next = [];
-        for (let i = 0, length = nodes.length; i < length; ++i) {
-            const child = nodes[i];
-            if (checked || selector.all || validateSelector.call(child, selector)) {
-                let parent = child.actualParent;
-                if (adjacent) {
-                    if (adjacent === '>') {
-                        if (!next.includes(parent) && (selectorAdjacent && (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent, child))) || !selectorAdjacent && parent === this) {
-                            next.push(parent);
-                        }
-                    }
-                    else if (selectorAdjacent) {
-                        const children = parent.naturalElements;
-                        switch (adjacent) {
-                            case '+': {
-                                const j = children.indexOf(child) - 1;
-                                if (j >= 0 && (selectorAdjacent.all || validateSelector.call(children[j], selectorAdjacent))) {
-                                    next.push(children[j]);
-                                }
-                                break;
-                            }
-                            case '~':
-                                for (let j = 0, q = children.length; j < q; ++j) {
-                                    const sibling = children[j];
-                                    if (sibling === child) {
-                                        break;
-                                    }
-                                    else if (selectorAdjacent.all || validateSelector.call(sibling, selectorAdjacent)) {
-                                        next.push(sibling);
-                                    }
-                                }
-                                break;
-                        }
-                    }
-                }
-                else if (selectorAdjacent) {
-                    while (parent && parent.depth - this.depth >= index + offset) {
-                        if (selectorAdjacent.all || validateSelector.call(parent, selectorAdjacent)) {
-                            next.push(parent);
-                        }
-                        parent = parent.actualParent;
-                    }
-                }
-                else {
-                    next.push(child);
-                }
-            }
-        }
-        return next.length > 0 && (index === 0 ? true : ascendSelector.call(this, selectors, index, next, offset + (!adjacent || adjacent === '>' ? 0 : 1), adjacent));
     }
     function getMinMax(node, min, attr, options) {
-        let self, last, wrapperOf, subAttr, initialValue, initial;
+        let self, last, wrapperOf, subAttr, initial, initialValue;
         if (options) {
             ({ self, subAttr, last, wrapperOf, initialValue, initial } = options);
         }
@@ -1755,16 +1263,11 @@ var vdom = (function () {
         });
         return result || node;
     }
-    function getBoundsSize(node, options) {
-        var _a;
-        const bounds = (!options || options.parent !== false) && ((_a = node.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || node.bounds;
-        return bounds[options && options.dimension || 'width'];
-    }
     const aboveRange = (a, b, offset = 1) => a + offset >= b;
     const belowRange = (a, b, offset = 1) => a - offset <= b;
     const sortById = (a, b) => a.id - b.id;
     const isInlineVertical = (value) => startsWith(value, 'inline') || value === 'table-cell';
-    const canTextAlign = (node) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
+    const canTextAlign = (node) => node.naturalChild && (node.isEmpty() || isInlineVertical(node.display) && node.percentWidth < 1) && !node.floating && node.autoMargin.horizontal !== true;
     const newBoxRectDimension = () => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 });
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element, children) {
@@ -1772,7 +1275,8 @@ var vdom = (function () {
             this.id = id;
             this.sessionId = sessionId;
             this.documentRoot = false;
-            this.queryMap = null;
+            this.shadowHost = null;
+            this.pseudoElt = '';
             this._parent = null;
             this._depth = -1;
             this._cache = {};
@@ -1791,20 +1295,20 @@ var vdom = (function () {
             this._childIndex = Infinity;
             this._elementData = null;
             this._style = null;
+            this._data = null;
             this._element = element || null;
             if (element && sessionId !== '0') {
                 this.syncWith(sessionId);
                 setElementCache(element, 'node', this, sessionId);
             }
         }
-        static sanitizeCss(element, style, writingMode) {
-            const result = {};
-            for (let attr in style) {
-                let value = style[attr];
+        static sanitizeCss(element, input, writingMode, output = {}) {
+            for (let attr in input) {
                 const alias = checkWritingMode(attr, writingMode);
+                let value = input[attr];
                 if (alias !== attr) {
                     if (typeof alias === 'string') {
-                        if (!style[alias]) {
+                        if (!input[alias]) {
                             attr = alias;
                         }
                         else {
@@ -1814,9 +1318,9 @@ var vdom = (function () {
                     else {
                         let actual;
                         for (const alt of alias) {
-                            if (!style[alt]) {
+                            if (!input[alt]) {
                                 if (actual || (actual = checkStyleValue(element, alt, value))) {
-                                    result[alt] = actual;
+                                    output[alt] = actual;
                                 }
                                 else {
                                     break;
@@ -1827,10 +1331,10 @@ var vdom = (function () {
                     }
                 }
                 if (value = checkStyleValue(element, attr, value)) {
-                    result[attr] = value;
+                    output[attr] = value;
                 }
             }
-            return result;
+            return output;
         }
         internalSelf(parent, depth, childIndex, actualParent) {
             this._parent = parent;
@@ -1877,10 +1381,10 @@ var vdom = (function () {
                                     }
                                 }
                             }
-                            else {
+                            else if (elementData.pseudoElt) {
                                 this.pseudoElt = elementData.pseudoElt;
                             }
-                            this._styleMap = Node.sanitizeCss(element, styleMap, styleMap.writingMode);
+                            Node.sanitizeCss(element, styleMap, styleMap.writingMode, this._styleMap);
                         }
                         else {
                             this._styleMap = styleMap;
@@ -1905,27 +1409,45 @@ var vdom = (function () {
                 if (data[name]) {
                     delete data[name][attr];
                 }
-                return;
             }
-            else if (value !== undefined) {
-                let obj = data[name];
-                if (!isObject(obj)) {
-                    obj = {};
-                    data[name] = obj;
+            else {
+                if (value !== undefined) {
+                    let obj = data[name];
+                    if (!isObject(obj)) {
+                        obj = {};
+                        data[name] = obj;
+                    }
+                    if (overwrite || !hasValue(obj[attr])) {
+                        obj[attr] = value;
+                    }
                 }
-                if (overwrite || !hasValue(obj[attr])) {
-                    obj[attr] = value;
+                const stored = data[name];
+                if (isObject(stored)) {
+                    return stored[attr];
                 }
             }
-            const stored = data[name];
-            if (isObject(stored)) {
-                return stored[attr];
+        }
+        elementAttr(attr, value) {
+            if (this.naturalElement) {
+                const element = this._element;
+                if (attr in element && typeof value === typeof element[attr]) {
+                    element[attr] = value;
+                    return element[attr];
+                }
             }
         }
         unsetCache(...attrs) {
             const length = attrs.length;
             if (length) {
                 const cache = this._cache;
+                const resetWidth = () => {
+                    cache.actualHeight = undefined;
+                    cache.contentBoxWidth = undefined;
+                };
+                const resetHeight = () => {
+                    cache.actualHeight = undefined;
+                    cache.contentBoxHeight = undefined;
+                };
                 for (let i = 0; i < length; ++i) {
                     const attr = attrs[i];
                     switch (attr) {
@@ -1957,9 +1479,17 @@ var vdom = (function () {
                             cache.height = undefined;
                             cache.hasHeight = undefined;
                             if (!this._preferInitial) {
-                                this.cascade(item => item.unsetCache('height', 'bottomAligned'));
+                                this.cascade(item => item.unsetCache('height', 'bottomAligned', 'containerHeight'));
                             }
                             break;
+                        case 'actualWidth':
+                        case 'contentBoxWidth':
+                            resetWidth();
+                            break;
+                        case 'actualHeight':
+                        case 'contentBoxHeight':
+                            resetHeight();
+                            continue;
                         case 'verticalAlign':
                             cache.baseline = undefined;
                             break;
@@ -1975,7 +1505,7 @@ var vdom = (function () {
                             break;
                         case 'paddingLeft':
                         case 'paddingRight':
-                            cache.contentBoxWidth = undefined;
+                            resetWidth();
                             break;
                         case 'marginLeft':
                         case 'marginRight':
@@ -1990,12 +1520,13 @@ var vdom = (function () {
                             break;
                         case 'paddingTop':
                         case 'paddingBottom':
-                            cache.contentBoxHeight = undefined;
+                            resetHeight();
                             break;
                         case 'whiteSpace':
                             cache.preserveWhiteSpace = undefined;
                             cache.textStyle = undefined;
                             this._cacheState.textEmpty = undefined;
+                            this._cacheState.textBounds = undefined;
                             continue;
                         default:
                             if (startsWith(attr, 'background')) {
@@ -2004,19 +1535,19 @@ var vdom = (function () {
                             else if (startsWith(attr, 'border')) {
                                 if (startsWith(attr, 'borderTop')) {
                                     cache.borderTopWidth = undefined;
-                                    cache.contentBoxHeight = undefined;
+                                    resetHeight();
                                 }
                                 else if (startsWith(attr, 'borderRight')) {
                                     cache.borderRightWidth = undefined;
-                                    cache.contentBoxWidth = undefined;
+                                    resetWidth();
                                 }
                                 else if (startsWith(attr, 'borderBottom')) {
                                     cache.borderBottomWidth = undefined;
-                                    cache.contentBoxHeight = undefined;
+                                    resetHeight();
                                 }
                                 else {
                                     cache.borderLeftWidth = undefined;
-                                    cache.contentBoxWidth = undefined;
+                                    resetWidth();
                                 }
                                 cache.visibleStyle = undefined;
                             }
@@ -2046,12 +1577,7 @@ var vdom = (function () {
                     return;
                 }
                 parent.resetBounds();
-                if (parent.queryMap) {
-                    parent.querySelectorAll('*').forEach(item => item.resetBounds());
-                }
-                else {
-                    this.cascade(item => item.resetBounds());
-                }
+                parent.querySelectorAll('*').forEach(item => item.resetBounds());
             }
         }
         unsetState(...attrs) {
@@ -2063,11 +1589,13 @@ var vdom = (function () {
                     const attr = attrs[i];
                     if (attr in cacheState) {
                         switch (attr) {
+                            case 'dir':
                             case 'absoluteParent':
                                 reset = true;
                                 break;
                             case 'textContent':
                                 cacheState.textEmpty = undefined;
+                                cacheState.textBounds = undefined;
                                 reset = true;
                                 break;
                         }
@@ -2225,23 +1753,10 @@ var vdom = (function () {
         }
         css(attr, value, cache = true) {
             const style = this.style;
-            if (this.styleElement && attr in style) {
-                if (value === '') {
-                    style[attr] = 'initial';
-                    const property = CSS_PROPERTIES[attr];
-                    if (property && typeof property.value === 'string') {
-                        this._styleMap[attr] = getInitialValue(this._element, attr) + (property.trait & 256 /* UNIT */ ? 'px' : '');
-                    }
-                    else {
-                        delete this._styleMap[attr];
-                    }
-                    if (cache) {
-                        this.unsetCache(attr);
-                    }
-                }
-                else if (value) {
+            if (this.styleElement && attr in style && typeof value === 'string') {
+                if (value) {
                     const current = style[attr];
-                    this.style[attr] = value;
+                    style[attr] = value;
                     if (current !== style[attr]) {
                         this._styleMap[attr] = value;
                         if (cache) {
@@ -2250,6 +1765,17 @@ var vdom = (function () {
                         return value;
                     }
                     return current;
+                }
+                style[attr] = 'initial';
+                const property = CSS_PROPERTIES[attr];
+                if (property && typeof property.value === 'string') {
+                    this._styleMap[attr] = getInitialValue(this._element, attr) + (property.trait & 256 /* UNIT */ ? 'px' : '');
+                }
+                else {
+                    delete this._styleMap[attr];
+                }
+                if (cache) {
+                    this.unsetCache(attr);
                 }
             }
             return this._styleMap[attr] || style[attr] || '';
@@ -2332,7 +1858,7 @@ var vdom = (function () {
                 if (valueA === valueB) {
                     return 0;
                 }
-                else if (ascending !== false) {
+                if (ascending !== false) {
                     return valueA < valueB ? -1 : 1;
                 }
                 return valueA > valueB ? -1 : 1;
@@ -2353,7 +1879,7 @@ var vdom = (function () {
         cssTry(attr, value, callback) {
             if (this.styleElement) {
                 const element = this._element;
-                if (setStyleCache(element, attr, value, !this.pseudoElement ? this.style : getStyle(element), this.sessionId)) {
+                if (setStyleCache(this.sessionId, !this.pseudoElement ? this.style : getStyle(element), element, attr, value)) {
                     if (callback) {
                         callback.call(this, attr);
                         this.cssFinally(attr);
@@ -2371,7 +1897,7 @@ var vdom = (function () {
                 const style = !this.pseudoElement ? this.style : getStyle(element);
                 for (const attr in values) {
                     const value = values[attr];
-                    switch (setStyleCache(element, attr, value, style, sessionId)) {
+                    switch (setStyleCache(sessionId, style, element, attr, value)) {
                         case 0 /* FAIL */:
                             this.cssFinally(result);
                             return false;
@@ -2532,8 +2058,8 @@ var vdom = (function () {
             if (!isNaN(n)) {
                 return n;
             }
-            else if (!isNaN(n = asPercent(value))) {
-                return n * getBoundsSize(this, options);
+            if (!isNaN(n = asPercent(value))) {
+                return n * this.getContainerSize(options);
             }
             if (!options) {
                 options = { fontSize: this.fontSize };
@@ -2546,7 +2072,7 @@ var vdom = (function () {
         convertUnit(value, unit = 'px', options) {
             let result = this.parseUnit(value, options);
             if (unit === '%' || unit === 'percent') {
-                result *= 100 / getBoundsSize(this, options);
+                result *= 100 / this.getContainerSize(options);
                 return (options && options.precision !== undefined ? truncate(result, options.precision) : result) + '%';
             }
             return convertUnit(result, unit, options);
@@ -2557,7 +2083,7 @@ var vdom = (function () {
                 ({ percent, initial } = options);
             }
             const value = initial ? this.cssInitial(attr, options) : this._styleMap[attr];
-            return value ? isLength(value, percent !== false) : false;
+            return !!value && isLength(value, percent !== false);
         }
         setBounds(cache = true) {
             var _a;
@@ -2591,6 +2117,11 @@ var vdom = (function () {
             this._box = null;
             this._linear = null;
         }
+        getContainerSize(options) {
+            var _a;
+            const bounds = (!options || options.parent !== false) && (this.positionFixed ? { width: window.innerWidth, height: window.innerHeight } : (_a = this.absoluteParent) === null || _a === void 0 ? void 0 : _a.box) || this.bounds;
+            return bounds[options && options.dimension || 'width'];
+        }
         min(attr, options) {
             return getMinMax(this, true, attr, options);
         }
@@ -2598,352 +2129,100 @@ var vdom = (function () {
             return getMinMax(this, false, attr, options);
         }
         querySelector(value) {
-            return this.querySelectorAll(value)[0] || null;
-        }
-        querySelectorAll(value, sorted = true, customMap) {
-            const queryMap = customMap || this.queryMap;
-            const result = [];
-            if (queryMap) {
-                const queries = [];
-                let notIndex;
-                const addNot = (part) => {
-                    (notIndex || (notIndex = [])).push(part);
-                    return ':not-' + 'x'.repeat(notIndex.length);
-                };
-                const parseNot = (condition) => condition.indexOf(',') !== -1 ? parseSelectorText(condition).reduce((a, b) => a + addNot(b), '') : addNot(condition);
-                const checkNot = (condition) => {
-                    return splitEnclosing(condition, /:not/gi).reduce((a, b) => {
-                        if (b[0] === ':') {
-                            const match = REGEXP_NOT.exec(b);
-                            if (match) {
-                                b = parseNot(match[1].trim());
-                            }
-                        }
-                        return a + b;
-                    }, '');
-                };
-                for (const query of parseSelectorText(value)) {
-                    let selector = '', expand;
-                    invalid: {
-                        let match;
-                        for (let seg of splitEnclosing(query, CSS$1.SELECTOR_ENCLOSING_G)) {
-                            if (seg[0] === ':' && (match = REGEXP_ENCLOSING.exec(seg))) {
-                                const condition = match[2].trim();
-                                switch (match[1].toLowerCase()) {
-                                    case 'not':
-                                        seg = parseNot(condition);
-                                        break;
-                                    case 'is':
-                                    case 'where':
-                                        if (selector && !isSpace(lastItemOf(selector))) {
-                                            break invalid;
-                                        }
-                                        if (condition.indexOf(',') !== -1) {
-                                            seg = parseSelectorText(condition).reduce((a, b) => a + '{{' + checkNot(b) + '}}', '@');
-                                            expand = true;
-                                        }
-                                        else {
-                                            seg = checkNot(condition);
-                                        }
-                                        break;
-                                }
-                            }
-                            selector += seg;
-                        }
-                    }
-                    if (expand) {
-                        (function expandQuery(segments) {
-                            for (let i = 0, length = segments.length; i < length; ++i) {
-                                const match = REGEXP_ISWHERE.exec(segments[i]);
-                                if (match) {
-                                    const pending = [];
-                                    const pattern = /\{\{(.+?)\}\}/g;
-                                    let subMatch;
-                                    while (subMatch = pattern.exec(match[2])) {
-                                        pending.push(match[1] + subMatch[1] + match[3]);
-                                    }
-                                    expandQuery(pending);
-                                }
-                                else {
-                                    queries.push(segments[i]);
-                                }
-                            }
-                        })([selector]);
-                    }
-                    else {
-                        queries.push(selector);
-                    }
-                }
-                for (let i = 0, length = queries.length; i < length; ++i) {
-                    invalid: {
-                        const query = queries[i];
-                        const selectors = [];
-                        let q = 0, offset = 0, start;
-                        if (query === '*') {
-                            q = selectors.push({ all: true });
-                            start = true;
-                        }
-                        else {
-                            CSS$1.SELECTOR_G.lastIndex = 0;
-                            let position = -1, adjacent = '', segment, match;
-                            while (match = CSS$1.SELECTOR_G.exec(query)) {
-                                if (match.index > position + 1) {
-                                    break invalid;
-                                }
-                                position = match.index + match[0].length;
-                                switch (segment = match[1]) {
-                                    case '+':
-                                    case '~':
-                                        --offset;
-                                    case '>':
-                                        if (adjacent || q === 0 && (segment !== '>' || !/^:(?:root|scope)/i.test(query))) {
-                                            break invalid;
-                                        }
-                                        adjacent = segment;
-                                        continue;
-                                    case '*':
-                                    case '*|*':
-                                        q = selectors.push({ all: true, adjacent });
-                                        start = true;
-                                        adjacent = '';
-                                        continue;
-                                    case ':root':
-                                        if (q === 0 && this._element === document.documentElement) {
-                                            if (result.includes(this)) {
-                                                result.push(this);
-                                            }
-                                            start = true;
-                                            continue;
-                                        }
-                                        break invalid;
-                                    case ':scope':
-                                        if (q) {
-                                            break invalid;
-                                        }
-                                        start = true;
-                                        continue;
-                                    default:
-                                        if (startsWith(segment, '*|')) {
-                                            segment = segment.substring(2);
-                                        }
-                                        break;
-                                }
-                                let attrList, partial;
-                                const removeUsed = () => segment = spliceString(segment, partial.index, partial[0].length);
-                                while (partial = CSS$1.SELECTOR_ATTR.exec(segment)) {
-                                    let key = partial[1].replace('\\:', ':').toLowerCase(), trailing;
-                                    switch (key.indexOf('|')) {
-                                        case -1:
-                                            break;
-                                        case 1:
-                                            if (key[0] === '*') {
-                                                trailing = true;
-                                                key = key.substring(2);
-                                                break;
-                                            }
-                                        default:
-                                            break invalid;
-                                    }
-                                    const ignoreCase = partial[6] === 'i';
-                                    let attrValue = partial[3] || partial[4] || partial[5] || '';
-                                    if (ignoreCase) {
-                                        attrValue = attrValue.toLowerCase();
-                                    }
-                                    (attrList || (attrList = [])).push({
-                                        key,
-                                        symbol: partial[2],
-                                        value: attrValue,
-                                        trailing,
-                                        ignoreCase
-                                    });
-                                    removeUsed();
-                                }
-                                if (segment.indexOf('::') !== -1) {
-                                    break invalid;
-                                }
-                                let notList, pseudoList;
-                                if (notIndex) {
-                                    while (partial = REGEXP_NOTINDEX.exec(segment)) {
-                                        (notList || (notList = [])).push(notIndex[partial[1].length - 1]);
-                                        removeUsed();
-                                    }
-                                }
-                                while (partial = CSS$1.SELECTOR_PSEUDO_CLASS.exec(segment)) {
-                                    const pseudoClass = partial[0].toLowerCase();
-                                    switch (pseudoClass) {
-                                        case ':root':
-                                        case ':scope':
-                                            break invalid;
-                                        default:
-                                            (pseudoList || (pseudoList = [])).push(pseudoClass);
-                                            break;
-                                    }
-                                    removeUsed();
-                                }
-                                let tagName, id, classList;
-                                while (partial = CSS$1.SELECTOR_LABEL.exec(segment)) {
-                                    const label = partial[0];
-                                    switch (label[0]) {
-                                        case '#': {
-                                            const subId = label.substring(1);
-                                            if (id && id !== subId) {
-                                                break invalid;
-                                            }
-                                            id = subId;
-                                            break;
-                                        }
-                                        case '.':
-                                            (classList || (classList = [])).push(label.substring(1));
-                                            break;
-                                        default:
-                                            if (id || classList || tagName) {
-                                                break invalid;
-                                            }
-                                            tagName = label.toUpperCase();
-                                            break;
-                                    }
-                                    removeUsed();
-                                }
-                                if (q === 0 && (notList || pseudoList)) {
-                                    start = true;
-                                }
-                                q = selectors.push({
-                                    tagName,
-                                    id,
-                                    adjacent,
-                                    classList,
-                                    pseudoList,
-                                    notList,
-                                    attrList
-                                });
-                                adjacent = '';
-                            }
-                            if (position < query.length) {
-                                continue;
-                            }
-                        }
-                        if (q) {
-                            if (q > 1 && selectors[0].all && selectors[1].all) {
-                                let max = 0, parent = this.actualParent;
-                                while (parent) {
-                                    ++max;
-                                    parent = parent.actualParent;
-                                }
-                                if (max) {
-                                    let min = 0;
-                                    for (let j = 2; j < q; ++j) {
-                                        if (selectors[j].all) {
-                                            ++min;
-                                        }
-                                        else {
-                                            break;
-                                        }
-                                    }
-                                    const s = min <= max ? min + 1 : max;
-                                    selectors.splice(0, s);
-                                    q -= s;
-                                }
-                            }
-                            const all = result.length === 0;
-                            for (let j = start || customMap ? 0 : q - offset - 1, r = queryMap.length; j < r; ++j) {
-                                const items = queryMap[j];
-                                for (let k = 0, s = items.length; k < s; ++k) {
-                                    const node = items[k];
-                                    if ((all || !result.includes(node)) && ascendSelector.call(this, selectors, q - 1, [node], offset)) {
-                                        result.push(node);
-                                    }
-                                }
-                            }
-                        }
+            if (this.naturalElement) {
+                const element = this._element.querySelector(value);
+                if (element) {
+                    const result = [];
+                    if (recurseNaturalElements(result, [element], this.naturalElements)) {
+                        return result[0];
                     }
                 }
             }
-            return sorted ? result.sort(sortById) : result;
+            return null;
+        }
+        querySelectorAll(value, queryMap, queryRoot) {
+            if (!queryRoot) {
+                if (!this.naturalElement) {
+                    return [];
+                }
+                queryRoot = this._element;
+            }
+            const result = [];
+            try {
+                const items = Array.from(queryRoot.querySelectorAll(value));
+                const itemCount = items.length;
+                if (itemCount) {
+                    if (queryMap) {
+                        for (let i = 0, length = queryMap.length; i < length; ++i) {
+                            const node = queryMap[i];
+                            if (items.includes(node.element) && result.push(node) === itemCount) {
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        recurseNaturalElements(result, items, this.naturalElements);
+                    }
+                }
+            }
+            catch (_a) {
+            }
+            return result;
         }
         ancestors(value, options) {
             const result = this.ascend(options);
-            if (value && result.length) {
-                const customMap = [];
-                let depth = NaN;
-                iterateReverseArray(result, (item) => {
-                    if (!isNaN(depth)) {
-                        for (let i = item.depth - 1; i > depth; --i) {
-                            customMap.push([]);
-                        }
-                    }
-                    customMap.push([item]);
-                    depth = item.depth;
-                });
-                return this.querySelectorAll(value, true, customMap);
-            }
-            return result.sort(sortById);
+            return value && result.length ? this.querySelectorAll(value, result, document.documentElement) : result.sort(sortById);
         }
         descendants(value, options) {
             if (this.naturalElements.length) {
-                if (options || !this.queryMap) {
-                    const children = this.descend(options).filter(item => item.naturalElement);
-                    let length = children.length;
-                    if (value && length) {
-                        const customMap = [];
-                        const depth = this.depth + 1;
-                        let index;
-                        for (let i = 0; i < length; ++i) {
-                            const item = children[i];
-                            index = item.depth - depth;
-                            (customMap[index] || (customMap[index] = [])).push(item);
-                        }
-                        length = customMap.length;
-                        for (let i = 0; i < length; ++i) {
-                            customMap[i] || (customMap[i] = []);
-                        }
-                        return this.querySelectorAll(value, true, customMap);
-                    }
-                    return children.sort(sortById);
+                if (options) {
+                    const children = this.descend(options);
+                    return value && children.length ? this.querySelectorAll(value, children) : children.filter(item => item.naturalElement).sort(sortById);
                 }
                 return this.querySelectorAll(value || '*');
             }
             return [];
         }
         siblings(value, options) {
-            if (this.naturalElement) {
-                let condition, error, every, including, excluding, reverse;
-                if (options) {
-                    ({ condition, error, every, including, excluding, reverse } = options);
+            const parent = this.actualParent;
+            if (!parent) {
+                return [];
+            }
+            let condition, error, every, including, excluding, reverse;
+            if (options) {
+                ({ condition, error, every, including, excluding, reverse } = options);
+            }
+            let result = [];
+            const filterPredicate = (item) => {
+                if (error && error(item) || item === excluding) {
+                    return true;
                 }
-                let result = [];
-                const filterPredicate = (item) => {
-                    if (error && error(item) || item === excluding) {
-                        return true;
-                    }
-                    if (condition) {
-                        if (condition(item)) {
-                            result.push(item);
-                            if (!every) {
-                                return true;
-                            }
+                if (condition) {
+                    if (condition(item)) {
+                        result.push(item);
+                        if (!every) {
+                            return true;
                         }
                     }
-                    else {
-                        result.push(item);
-                    }
-                    return item === including;
-                };
-                if (reverse) {
-                    iterateReverseArray(this.actualParent.naturalElements, filterPredicate, 0, this.childIndex);
                 }
                 else {
-                    iterateArray(this.actualParent.naturalElements, filterPredicate, this.childIndex + 1);
+                    result.push(item);
                 }
-                if (value) {
-                    const ancestors = this.ascend();
-                    const customMap = [];
-                    iterateReverseArray(ancestors, (item) => customMap.push([item]));
-                    customMap.push(result);
-                    result = this.querySelectorAll(value, true, customMap).filter(item => !ancestors.includes(item));
-                }
-                return reverse && result.length > 1 ? result.reverse() : result;
+                return item === including;
+            };
+            if (reverse) {
+                iterateReverseArray(parent.naturalElements, filterPredicate, 0, this.childIndex);
             }
-            return [];
+            else {
+                iterateArray(parent.naturalElements, filterPredicate, this.childIndex + 1);
+            }
+            if (value) {
+                result = parent.querySelectorAll(value, result);
+                if (reverse && result.length > 1) {
+                    result.reverse();
+                }
+            }
+            return result;
         }
         valueOf(attr, options) {
             return this._preferInitial ? this.cssInitial(attr, options) : this._styleMap[attr] || options && options.computed && this.style[attr] || '';
@@ -2960,7 +2239,7 @@ var vdom = (function () {
             const result = this._cache.tagName;
             if (result === undefined) {
                 const element = this._element;
-                return this._cache.tagName = element ? element.nodeName[0] === '#' ? element.nodeName : element.tagName : '';
+                return this._cache.tagName = element ? element.nodeName : '';
             }
             return result;
         }
@@ -2968,8 +2247,8 @@ var vdom = (function () {
             return this._element;
         }
         get elementId() {
-            var _a;
-            return ((_a = this._element) === null || _a === void 0 ? void 0 : _a.id) || '';
+            const element = this._element;
+            return element ? element.id : '';
         }
         get htmlElement() {
             const result = this._cacheState.htmlElement;
@@ -2989,7 +2268,7 @@ var vdom = (function () {
         }
         get parentElement() {
             var _a;
-            return this._element ? getParentElement(this._element) : ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.element) || null;
+            return this._element && getParentElement(this._element) || ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.element) || null;
         }
         get textElement() {
             return this.plainText || this.inlineText && this.tagName !== 'BUTTON';
@@ -3041,6 +2320,9 @@ var vdom = (function () {
         get positionRelative() {
             return this.valueOf('position') === 'relative';
         }
+        get positionFixed() {
+            return this.valueOf('position') === 'fixed';
+        }
         get display() {
             return this.css('display');
         }
@@ -3054,8 +2336,8 @@ var vdom = (function () {
             return this.toInt('zIndex', 0);
         }
         get opacity() {
-            const opacity = this.valueOf('opacity');
-            return opacity ? clamp(+opacity) : 1;
+            const value = this.valueOf('opacity');
+            return value ? clamp(+value) : 1;
         }
         get textContent() {
             return this.naturalChild && !this.svgElement ? this._element.textContent : '';
@@ -3071,12 +2353,16 @@ var vdom = (function () {
         }
         get linear() {
             if (!this._linear) {
-                const bounds = this.bounds;
+                const bounds = this._bounds || this.setBounds(false);
                 if (bounds) {
                     if (this.styleElement) {
-                        const { marginBottom, marginRight } = this;
-                        const marginTop = Math.max(this.marginTop, 0);
-                        const marginLeft = Math.max(this.marginLeft, 0);
+                        let { marginTop, marginBottom, marginRight, marginLeft } = this; // eslint-disable-line prefer-const
+                        if (marginTop < 0) {
+                            marginTop = 0;
+                        }
+                        if (marginLeft < 0) {
+                            marginLeft = 0;
+                        }
                         return this._linear = {
                             top: bounds.top - marginTop,
                             right: bounds.right + marginRight,
@@ -3094,16 +2380,23 @@ var vdom = (function () {
         }
         get box() {
             if (!this._box) {
-                const bounds = this.bounds;
+                const bounds = this._bounds || this.setBounds(false);
                 if (bounds) {
                     if (this.styleElement && this.naturalChildren.length) {
+                        let { marginTop, marginLeft } = this;
+                        if (marginTop > 0) {
+                            marginTop = 0;
+                        }
+                        if (marginLeft > 0) {
+                            marginLeft = 0;
+                        }
                         return this._box = {
                             top: bounds.top + (this.paddingTop + this.borderTopWidth),
                             right: bounds.right - (this.paddingRight + this.borderRightWidth),
                             bottom: bounds.bottom - (this.paddingBottom + this.borderBottomWidth),
                             left: bounds.left + (this.paddingLeft + this.borderLeftWidth),
-                            width: bounds.width - this.contentBoxWidth,
-                            height: bounds.height - this.contentBoxHeight
+                            width: bounds.width + marginLeft - this.contentBoxWidth,
+                            height: bounds.height + marginTop - this.contentBoxHeight
                         };
                     }
                     return this._box = bounds;
@@ -3172,7 +2465,7 @@ var vdom = (function () {
         get hasHeight() {
             var _a;
             const result = this._cache.hasHeight;
-            return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.valueOf('position') === 'fixed' || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
+            return result === undefined ? this._cache.hasHeight = isPercent(this.valueOf('height')) ? this.pageFlow ? ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody : this.positionFixed || this.hasUnit('top') || this.hasUnit('bottom') : this.height > 0 || this.hasUnit('height', { percent: false }) : result;
         }
         get lineHeight() {
             let result = this._cache.lineHeight;
@@ -3399,9 +2692,10 @@ var vdom = (function () {
             return result === undefined ? this._cache.bottomAligned = !this.pageFlow ? this.hasUnit('bottom') && !this.hasUnit('top') : !!(((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) && this.autoMargin.top) : result;
         }
         get autoMargin() {
+            var _a;
             let result = this._cache.autoMargin;
             if (result === undefined) {
-                if (this.blockStatic || !this.pageFlow || this.display === 'table') {
+                if (this.blockStatic || ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexElement) || !this.pageFlow || this.display === 'table') {
                     const style = this._styleMap;
                     const left = style.marginLeft === 'auto' && (this.pageFlow || this.hasUnit('right'));
                     const right = style.marginRight === 'auto' && (this.pageFlow || this.hasUnit('left'));
@@ -3441,10 +2735,11 @@ var vdom = (function () {
             return result;
         }
         get verticalAlign() {
+            var _a;
             let result = this._cache.verticalAlign;
             if (result === undefined) {
                 const value = this.css('verticalAlign');
-                if (value !== 'baseline' && this.pageFlow && isNaN(result = asPx(value))) {
+                if (value !== 'baseline' && this.pageFlow && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.flexElement) !== true) && isNaN(result = asPx(value))) {
                     if (isLength(value)) {
                         result = this.parseUnit(value);
                     }
@@ -3534,6 +2829,9 @@ var vdom = (function () {
                     if (isTransparent(result = this.css('backgroundColor')) && !this.buttonElement) {
                         result = '';
                     }
+                    else if (result === 'currentcolor') {
+                        result = this.style.backgroundColor;
+                    }
                 }
                 else {
                     result = '';
@@ -3558,19 +2856,63 @@ var vdom = (function () {
             }
             return result;
         }
+        get containerHeight() {
+            var _a;
+            let result = this._cache.containerHeight;
+            if (result === undefined) {
+                if (this.pageFlow) {
+                    result = ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) === true;
+                }
+                else if (this.positionFixed) {
+                    result = true;
+                }
+                else {
+                    const parent = this.absoluteParent;
+                    result = !!parent && (parent.hasHeight || parent.naturalChildren.some(item => item.pageFlow && item.bounds.height > 0));
+                }
+                this._cache.containerHeight = result;
+            }
+            return result;
+        }
         get percentWidth() {
             const result = this._cache.percentWidth;
             if (result === undefined) {
-                return this._cache.percentWidth = asPercent(this.valueOf('width')) || 0;
+                let value = asPercent(this.valueOf('width'));
+                if (value > 0) {
+                    const min = asPercent(this.valueOf('minWidth'));
+                    const max = asPercent(this.valueOf('maxWidth'));
+                    if (!isNaN(min)) {
+                        value = Math.max(value, min);
+                    }
+                    if (!isNaN(max)) {
+                        value = Math.min(value, max);
+                    }
+                }
+                else {
+                    value = 0;
+                }
+                return this._cache.percentWidth = value;
             }
             return result;
         }
         get percentHeight() {
-            var _a;
             const result = this._cache.percentHeight;
             if (result === undefined) {
-                const value = asPercent(this.valueOf('height'));
-                return this._cache.percentHeight = !isNaN(value) && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.valueOf('position') === 'fixed') ? value : 0;
+                let value = asPercent(this.valueOf('height'));
+                if (value > 0 && this.containerHeight) {
+                    const min = asPercent(this.valueOf('minHeight'));
+                    const max = asPercent(this.valueOf('maxHeight'));
+                    if (!isNaN(min)) {
+                        value = Math.max(value, min);
+                    }
+                    if (!isNaN(max)) {
+                        value = Math.min(value, max);
+                    }
+                }
+                else {
+                    value = 0;
+                }
+                return this._cache.percentHeight = value;
             }
             return result;
         }
@@ -3581,17 +2923,29 @@ var vdom = (function () {
                     const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
                     const backgroundColor = this.backgroundColor !== '';
                     const backgroundImage = this.backgroundImage !== '';
+                    const background = backgroundColor || borderWidth || backgroundImage;
+                    const borderRadius = (background || this.imageElement || this.svgElement) && this.css('borderRadius') !== '0px';
                     let backgroundRepeatX = false, backgroundRepeatY = false;
                     if (backgroundImage) {
-                        splitSome(this.css('backgroundRepeat'), repeat => {
-                            const [repeatX, repeatY] = splitPair(repeat, ' ');
-                            backgroundRepeatX || (backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x');
-                            backgroundRepeatY || (backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat');
+                        splitSome(this.css('backgroundRepeat'), value => {
+                            const [repeatX, repeatY] = splitPair(value, ' ');
+                            if (repeatX === 'repeat') {
+                                backgroundRepeatX = true;
+                                backgroundRepeatY = true;
+                                return true;
+                            }
+                            if (repeatX === 'repeat-x') {
+                                backgroundRepeatX = true;
+                            }
+                            if (repeatX === 'repeat-y' || repeatY === 'repeat') {
+                                backgroundRepeatY = true;
+                            }
                         });
                     }
                     result = {
-                        background: borderWidth || backgroundImage || backgroundColor,
+                        background: background || borderRadius,
                         borderWidth,
+                        borderRadius,
                         backgroundImage,
                         backgroundColor,
                         backgroundRepeat: backgroundRepeatX || backgroundRepeatY,
@@ -3666,7 +3020,7 @@ var vdom = (function () {
                 }
                 else {
                     let parent;
-                    if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.row) && (result = this.width) && this.contentBox && !this.tableElement) {
+                    if (!(this.inlineStatic && !this.valueOf('width') || this.display === 'table-cell' || this.bounds.width && (parent = this.actualParent) && parent.flexElement && parent.flexdata.row) && (result = this.width) && this.contentBox && !this.tableElement) {
                         result += this.contentBoxWidth;
                     }
                 }
@@ -3678,7 +3032,7 @@ var vdom = (function () {
             let result = this._cache.actualHeight;
             if (result === undefined) {
                 let parent;
-                if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || (parent = this.actualParent) && parent.flexElement && parent.flexdata.column) && (result = this.height) && this.contentBox && !this.tableElement) {
+                if (!(this.inlineStatic && !this.valueOf('height') || this.display === 'table-cell' || this.bounds.height && (parent = this.actualParent) && parent.flexElement && parent.flexdata.column) && (result = this.height) && this.contentBox && !this.tableElement) {
                     result += this.contentBoxHeight;
                 }
                 return this._cache.actualHeight = result || this.bounds.height;
@@ -3775,7 +3129,7 @@ var vdom = (function () {
             return false;
         }
         get boundingClientRect() {
-            if (this.styleElement) {
+            if (this.naturalElement) {
                 return this._element.getBoundingClientRect();
             }
             else if (this.plainText && this.naturalChild) {
@@ -3806,18 +3160,18 @@ var vdom = (function () {
             if (result === undefined) {
                 if (this.naturalChild) {
                     if (this.styleElement) {
-                        const fixedWidth = isFixedFont(this);
-                        let value = convertFontSize(this.valueOf('fontSize'), fixedWidth);
+                        const fixed = isFixedFont(this);
+                        let value = convertFontSize(this.valueOf('fontSize'), fixed);
                         if (isNaN(result = asPx(value)) && !isNaN(result = asPercent(value))) {
                             const parent = this.actualParent;
                             if (parent) {
                                 result *= parent.fontSize;
-                                if (fixedWidth && !isFixedFont(parent)) {
+                                if (fixed && !isFixedFont(parent)) {
                                     result *= 13 / getRemSize();
                                 }
                             }
                             else {
-                                result = getRemSize(fixedWidth);
+                                result = getRemSize(fixed);
                             }
                         }
                         else {
@@ -3856,7 +3210,7 @@ var vdom = (function () {
                                     value = '1rem';
                                 }
                             }
-                            result = (endsWith(value, 'rem') ? safeFloat(value, 3) * getRemSize(fixedWidth) : parseUnit(value, { fixedWidth })) * emRatio;
+                            result = (endsWith(value, 'rem') ? safeFloat(value, 3) * getRemSize(fixed) : parseUnit(value, { fixedWidth: fixed })) * emRatio;
                         }
                     }
                     else {
@@ -3915,7 +3269,6 @@ var vdom = (function () {
     const settings = {
         builtInExtensions: [],
         createElementMap: true,
-        createQuerySelectorMap: true,
         pierceShadowRoot: false,
         showErrorMessages: false
     };

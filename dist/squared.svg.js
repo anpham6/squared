@@ -5,17 +5,16 @@ this.squared = this.squared || {};
 this.squared.svg = (function (exports) {
     'use strict';
 
-    var Pattern$1 = squared.lib.base.Pattern;
     const { CSS_PROPERTIES } = squared.lib.internal;
     const { STRING: STRING$3, TRANSFORM: __TRANSFORM } = squared.lib.regex;
     const { asPercent: asPercent$3, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize: getFontSize$3, getStyle: getStyle$2, hasEm: hasEm$3, isLength: isLength$4, parseUnit: parseUnit$3 } = squared.lib.css;
     const { getNamedItem: getNamedItem$a } = squared.lib.dom;
     const { convertRadian, hypotenuse, truncateExponential, truncateFraction: truncateFraction$3, truncateTrailingZero } = squared.lib.math;
     const { getElementCache } = squared.lib.session;
-    const { convertCamelCase: convertCamelCase$2, lastItemOf: lastItemOf$3, resolvePath: resolvePath$1, splitPair: splitPair$1, startsWith: startsWith$2 } = squared.lib.util;
-    const RE_PARSE = new Pattern$1(/(\w+)\([^)]+\)/g);
-    const RE_ROTATE = new Pattern$1(/rotate\((-?[\d.]+)\s*(?:,?\s+(-?[\d.]+))?\s*(?:,?\s+(-?[\d.]+))?\)/g);
+    const { convertCamelCase: convertCamelCase$2, convertFloat: convertFloat$1, escapePattern, lastItemOf: lastItemOf$3, resolvePath: resolvePath$1, splitPair: splitPair$1, startsWith: startsWith$2 } = squared.lib.util;
     const REGEXP_EXPONENT = new RegExp(STRING$3.DECIMAL_EXPONENT, 'g');
+    const REGEXP_PARSE = /(\w+)\([^)]+\)/g;
+    const REGEXP_ROTATE = /rotate\((-?[\d.]+)\s*(?:,?\s+(-?[\d.]+))?\s*(?:,?\s+(-?[\d.]+))?\)/g;
     const REGEXP_TRUNCATECACHE = new Map();
     function setOriginPosition(element, point, attr, value, dimension) {
         if (isLength$4(value)) {
@@ -30,15 +29,23 @@ this.squared.svg = (function (exports) {
     }
     function getDataSetValue(element, attr) {
         var _a;
-        const data = element.dataset.baseValue;
-        if (data) {
-            try {
-                const obj = JSON.parse(data);
-                if (obj) {
-                    return ((_a = obj[attr]) === null || _a === void 0 ? void 0 : _a.toString().trim()) || '';
+        let value = element.dataset.baseValue;
+        if (value && (value = value.trim())) {
+            if (value[0] === '{' && lastItemOf$3(value) === '}') {
+                try {
+                    const obj = JSON.parse(value);
+                    if (obj) {
+                        return ((_a = obj[attr]) === null || _a === void 0 ? void 0 : _a.toString().trim()) || '';
+                    }
+                }
+                catch (_b) {
                 }
             }
-            catch (_b) {
+            else {
+                const match = new RegExp(`\\b${escapePattern(attr)}\\s*:([^;]+)`).exec(value);
+                if (match) {
+                    return match[1].trim();
+                }
             }
         }
         return '';
@@ -380,9 +387,9 @@ this.squared.svg = (function (exports) {
         parse(element, value = getDataValue(element, 'transform')) {
             if (value && value !== 'none') {
                 const result = [];
-                RE_PARSE.matcher(value);
-                while (RE_PARSE.find()) {
-                    const [transform, method] = RE_PARSE.groups();
+                let match;
+                while (match = REGEXP_PARSE.exec(value)) {
+                    const [transform, method] = match;
                     if (startsWith$2(method, 'matrix')) {
                         const matrix = TRANSFORM.matrix(element, transform);
                         if (matrix) {
@@ -426,7 +433,7 @@ this.squared.svg = (function (exports) {
                             const scale = __TRANSFORM.SCALE.exec(transform);
                             if (scale) {
                                 const x = isY ? 1 : +scale[2];
-                                const y = isX ? 1 : isY ? +scale[2] : !isX && scale[3] ? +scale[3] : x;
+                                const y = isX ? 1 : isY ? +scale[2] : scale[3] ? +scale[3] : x;
                                 result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, y), 0, !isY, !isX));
                             }
                         }
@@ -453,6 +460,7 @@ this.squared.svg = (function (exports) {
                         }
                     }
                 }
+                REGEXP_PARSE.lastIndex = 0;
                 const length = result.length;
                 if (length) {
                     for (let i = 0; i < length; ++i) {
@@ -548,13 +556,14 @@ this.squared.svg = (function (exports) {
             const value = getNamedItem$a(element, attr);
             const result = [];
             if (value) {
-                RE_ROTATE.matcher(value);
-                while (RE_ROTATE.find()) {
-                    const [angle, x, y] = RE_ROTATE.map(group => +group || 0, 1);
+                let match;
+                while (match = REGEXP_ROTATE.exec(value)) {
+                    const angle = +match[1];
                     if (angle !== 0) {
-                        result.push({ angle, x, y });
+                        result.push({ angle, x: convertFloat$1(match[2]), y: convertFloat$1(match[3]) });
                     }
                 }
+                REGEXP_ROTATE.lastIndex = 0;
             }
             return result;
         },
@@ -666,13 +675,13 @@ this.squared.svg = (function (exports) {
                 return !isNaN(result) ? SVG.rect(element) ? Math.min(result, viewBox.height / 2).toString() : result.toString() : '0';
             }
             case 'strokeDasharray':
-                return calculateVarAsString(element, value, { boundingSize: getViewportArea(viewBox), min: 0 });
+                return calculateVarAsString(element, value, { boundingSize: getViewportArea(viewBox, false), min: 0 });
             case 'strokeDashoffset': {
                 const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox, true), unitType: 32 /* DECIMAL */ });
                 return !isNaN(result) ? result.toString() : '';
             }
             case 'strokeWidth': {
-                const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox), unitType: 32 /* DECIMAL */, min: 0 });
+                const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox, false), unitType: 32 /* DECIMAL */, min: 0 });
                 return !isNaN(result) ? result.toString() : '';
             }
         }
@@ -684,12 +693,10 @@ this.squared.svg = (function (exports) {
     function getParentAttribute(element, attr, computed) {
         let current = element, value;
         do {
-            value = getAttribute(current, attr, computed);
-            if (value && value !== 'inherit') {
+            if ((value = getAttribute(current, attr, computed)) && value !== 'inherit') {
                 break;
             }
-            current = current.parentElement;
-        } while (current && !(current instanceof HTMLElement));
+        } while ((current = current.parentElement) && !(current instanceof HTMLElement));
         return value;
     }
     function getTargetElement(element, rootElement, contentMap) {
@@ -724,13 +731,13 @@ this.squared.svg = (function (exports) {
                 const content = contentMap[resolvePath$1(href)];
                 if (content) {
                     document.body.insertAdjacentHTML('beforeend', content);
-                    element = document.body.lastElementChild;
-                    if (element instanceof SVGGraphicsElement) {
-                        element.style.display = 'none';
-                        return element.querySelector(`#${id}`);
+                    const lastElementChild = document.body.lastElementChild;
+                    if (lastElementChild instanceof SVGGraphicsElement) {
+                        lastElementChild.style.display = 'none';
+                        return lastElementChild.querySelector(`#${id}`);
                     }
-                    else if (element) {
-                        document.body.removeChild(element);
+                    else if (lastElementChild) {
+                        document.body.removeChild(lastElementChild);
                     }
                 }
             }
@@ -755,18 +762,23 @@ this.squared.svg = (function (exports) {
         return output;
     }
     function getNearestViewBox$1(element) {
-        let current = element.parentElement;
+        let current = element.parentElement, result = null;
         while (current) {
             if (SVG.svg(current) || SVG.symbol(current)) {
                 const viewBox = current.viewBox;
                 if (viewBox) {
                     const baseVal = viewBox.baseVal;
-                    return baseVal && baseVal.width && baseVal.height ? baseVal : getDOMRect(current);
+                    if (baseVal && baseVal.width && baseVal.height) {
+                        return baseVal;
+                    }
+                    else if (!result && SVG.svg(current)) {
+                        result = getDOMRect(current);
+                    }
                 }
             }
             current = current.parentElement;
         }
-        return null;
+        return result;
     }
     function getRootOffset(element, rootElement) {
         let x = 0, y = 0, parent = element.parentElement;
@@ -1682,12 +1694,9 @@ this.squared.svg = (function (exports) {
                         }
                         default: {
                             const object = this.element[attr];
-                            if (object) {
-                                const baseVal = object.baseVal;
-                                if (baseVal) {
-                                    this._baseVal[attr] = baseVal.value;
-                                    return true;
-                                }
+                            if (object && object.baseVal) {
+                                this._baseVal[attr] = object.baseVal.value;
+                                return true;
                             }
                             break;
                         }
@@ -1773,7 +1782,7 @@ this.squared.svg = (function (exports) {
 
     const { getFontSize: getFontSize$2, getStyle: getStyle$1, hasEm: hasEm$2, isLength: isLength$3, parseUnit: parseUnit$2 } = squared.lib.css;
     const { getNamedItem: getNamedItem$7 } = squared.lib.dom;
-    const { capitalize, hasValue: hasValue$1, sortNumber: sortNumber$2, splitSome: splitSome$2 } = squared.lib.util;
+    const { capitalize, hasValue: hasValue$1, isPlainObject, sortNumber: sortNumber$2, splitSome: splitSome$2 } = squared.lib.util;
     const REGEXP_TIME = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/;
     const REGGXP_TIMEDELIMITED = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/;
     function setFillMode(mode, value) {
@@ -1793,8 +1802,9 @@ this.squared.svg = (function (exports) {
             this.fillMode = 0;
             this.synchronizeState = 0;
             this.paused = false;
-            this.id = null;
+            this.id = NaN;
             this.baseValue = '';
+            this.replaceValue = '';
             this.animationElement = null;
             this.instanceType = 8 /* SVG_ANIMATION */;
             this._to = '';
@@ -1890,17 +1900,20 @@ this.squared.svg = (function (exports) {
             }
         }
         removeState(...values) {
-            values.forEach(value => this.synchronizeState &= ~value);
+            for (const value of values) {
+                this.synchronizeState &= ~value;
+            }
         }
         hasState(...values) {
             return values.some(value => this.synchronizeState & value);
         }
         set attributeName(value) {
-            var _a, _b, _c, _d;
+            var _a, _b, _c;
+            this._attributeName = value;
             if (value !== 'transform' && !this.baseValue) {
-                let baseValue = (_b = (_a = this._dataset) === null || _a === void 0 ? void 0 : _a.baseValue) === null || _b === void 0 ? void 0 : _b[value];
-                if (hasValue$1(baseValue)) {
-                    this.baseValue = baseValue.toString().trim();
+                const baseValue = (_a = this._dataset) === null || _a === void 0 ? void 0 : _a.baseValue;
+                if (isPlainObject(baseValue) && hasValue$1(baseValue[value])) {
+                    this.baseValue = baseValue[value].toString().trim();
                 }
                 else {
                     const element = this.element;
@@ -1909,31 +1922,27 @@ this.squared.svg = (function (exports) {
                             case 'opacity':
                             case 'stroke-opacity':
                             case 'fill-opacity':
-                                baseValue = getAttribute(element, value) || '1';
+                                this.baseValue = getAttribute(element, value) || '1';
                                 break;
                             default:
-                                baseValue = getAttribute(element, value);
+                                this.baseValue = getAttribute(element, value);
                                 break;
                         }
-                        if (!baseValue) {
+                        if (!this.baseValue) {
                             const animationElement = this.animationElement;
                             if (animationElement && getStyle$1(element).animationPlayState === 'paused') {
                                 const parentElement = animationElement.parentElement;
                                 if (parentElement) {
-                                    const valueAsString = (_d = (_c = parentElement[value]) === null || _c === void 0 ? void 0 : _c.baseVal) === null || _d === void 0 ? void 0 : _d.valueAsString;
+                                    const valueAsString = (_c = (_b = parentElement[value]) === null || _b === void 0 ? void 0 : _b.baseVal) === null || _c === void 0 ? void 0 : _c.valueAsString;
                                     if (valueAsString && isLength$3(valueAsString)) {
                                         this.baseValue = parseUnit$2(valueAsString, hasEm$2(valueAsString) ? { fontSize: getFontSize$2(parentElement) } : undefined).toString();
                                     }
                                 }
                             }
                         }
-                        else {
-                            this.baseValue = baseValue;
-                        }
                     }
                 }
             }
-            this._attributeName = value;
         }
         get attributeName() {
             return this._attributeName;
@@ -2019,6 +2028,9 @@ this.squared.svg = (function (exports) {
             this.type = 0;
             this.additiveSum = false;
             this.accumulateSum = false;
+            this.by = 0;
+            this.end = NaN;
+            this.synchronized = undefined;
             this.instanceType = 32776 /* SVG_ANIMATE */;
             this._reverse = false;
             this._alternate = false;
@@ -2073,10 +2085,10 @@ this.squared.svg = (function (exports) {
             if (keySpline) {
                 return keySpline;
             }
-            else if (REGEXP_BEZIER.test(value)) {
+            if (REGEXP_BEZIER.test(value)) {
                 return value.trim();
             }
-            else if (value.startsWith('step')) {
+            if (value.startsWith('step')) {
                 return SvgAnimate.KEYSPLINE_NAME.linear;
             }
             const match = REGEXP_BEZIERCSS.exec(value);
@@ -2425,7 +2437,7 @@ this.squared.svg = (function (exports) {
         }
         set values(value) {
             this._values = value;
-            if (value && value.length !== this.keyTimes.length) {
+            if (value.length !== this.keyTimes.length) {
                 this._keyTimes = null;
                 this._keySplines = null;
             }
@@ -2572,6 +2584,8 @@ this.squared.svg = (function (exports) {
     class SvgAnimateTransform extends SvgAnimate {
         constructor(element, animationElement) {
             super(element, animationElement);
+            this.transformFrom = '';
+            this.transformOrigin = undefined;
             this.instanceType = 98312 /* SVG_ANIMATE_TRANSFORM */;
             if (animationElement) {
                 const type = getNamedItem$5(animationElement, 'type');
@@ -3129,7 +3143,7 @@ this.squared.svg = (function (exports) {
             if (value !== undefined) {
                 value = convertToAnimateValue(value, true);
                 if (value !== '') {
-                    setTimelineValue(map, time, value);
+                    setTimelineValue(map, time, value, false);
                 }
             }
         }
@@ -3282,9 +3296,7 @@ this.squared.svg = (function (exports) {
                         break;
                     }
                 }
-                if (value !== undefined) {
-                    result.push({ key, value });
-                }
+                result.push({ key, value });
             }
         }
         return result;
@@ -3423,7 +3435,7 @@ this.squared.svg = (function (exports) {
             nextIndex = previousIndex !== -1 ? previousIndex + 1 : keyTimes.length - 1;
             value = getItemValue(item, values, iteration, nextIndex, baseValue);
         }
-        time = setTimelineValue(timelineMap, time, value);
+        time = setTimelineValue(timelineMap, time, value, false);
         insertInterpolator(item, time, keySplines, nextIndex, keyTimeMode, interpolatorMap, transformOriginMap);
         return [time, value];
     }
@@ -3643,7 +3655,7 @@ this.squared.svg = (function (exports) {
         if (value === undefined) {
             value = item.to;
         }
-        return setTimelineValue(baseMap, time, transforming ? value : convertToAnimateValue(value));
+        return setTimelineValue(baseMap, time, transforming ? value : convertToAnimateValue(value, false), false);
     }
     function sortSetterData(data, item) {
         if (item) {
@@ -3674,13 +3686,13 @@ this.squared.svg = (function (exports) {
                 if (maxTime === delayA && maxTime !== delayB) {
                     return -1;
                 }
-                else if (maxTime !== delayA && maxTime === delayB) {
+                if (maxTime !== delayA && maxTime === delayB) {
                     return 1;
                 }
-                else if (delayA > maxTime && delayB < maxTime) {
+                if (delayA > maxTime && delayB < maxTime) {
                     return 1;
                 }
-                else if (delayA < maxTime && delayB > maxTime) {
+                if (delayA < maxTime && delayB > maxTime) {
                     return -1;
                 }
             }
@@ -3712,13 +3724,13 @@ this.squared.svg = (function (exports) {
             if (delayA === delayB) {
                 return b.group.id - a.group.id;
             }
-            else if (delayA === maxTime) {
+            if (delayA === maxTime) {
                 return -1;
             }
-            else if (delayB === maxTime) {
+            if (delayB === maxTime) {
                 return 1;
             }
-            else if (delayA < maxTime && delayB < maxTime) {
+            if (delayA < maxTime && delayB < maxTime) {
                 return delayB - delayA;
             }
             return delayA - delayB;
@@ -3746,7 +3758,7 @@ this.squared.svg = (function (exports) {
     const convertToString = (value) => Array.isArray(value) ? value.map(pt => pt.x + ',' + pt.y).join(' ') : value !== undefined ? value.toString() : '';
     const isKeyTimeFormat = (transforming, keyTimeMode) => ((transforming ? 16 /* KEYTIME_TRANSFORM */ : 2 /* KEYTIME_ANIMATE */) & keyTimeMode) > 0;
     const isFromToFormat = (transforming, keyTimeMode) => ((transforming ? 8 /* FROMTO_TRANSFORM */ : 1 /* FROMTO_ANIMATE */) & keyTimeMode) > 0;
-    const playableAnimation = (item) => item.playable || item.animationElement && item.duration !== -1;
+    const playableAnimation = (item) => (item.playable || item.animationElement && item.duration !== -1) && !item.synchronized;
     const cloneKeyTimes = (item) => { var _a; return [item.keyTimes.slice(0), item.values.slice(0), ((_a = item.keySplines) === null || _a === void 0 ? void 0 : _a.slice(0)) || null]; };
     const getStartIteration = (time, delay, duration) => Math.floor(Math.max(0, time - delay) / duration);
     var SvgSynchronize$MX = (Base) => {
@@ -3802,7 +3814,7 @@ this.squared.svg = (function (exports) {
                 const animations = this.animations;
                 for (let i = 0, length = animations.length; i < length; ++i) {
                     const item = animations[i];
-                    if (SvgBuild.isAnimateTransform(item) && item.duration > 0) {
+                    if (SvgBuild.isAnimateTransform(item) && !item.synchronized && item.duration > 0) {
                         result.push(item);
                         if (options && SvgBuild.asAnimateMotion(item)) {
                             const framesPerSecond = options.framesPerSecond;
@@ -3873,9 +3885,9 @@ this.squared.svg = (function (exports) {
                                                 break;
                                             }
                                         }
-                                        else if (!itemB.evaluateStart && !itemB.evaluateEnd) {
+                                        else if (!itemB.evaluateStart) {
                                             if (itemA.delay === itemB.delay && (!itemB.fillReplace || itemB.iterationCount === -1 || timeA <= itemB.getTotalDuration()) ||
-                                                itemB.fillBackwards && itemA.delay <= itemB.delay && (itemB.fillForwards || itemA.fillReplace && timeA <= itemB.delay) ||
+                                                itemB.fillBackwards && itemA.delay <= itemB.delay && (itemB.fillForwards || timeA <= itemB.delay) ||
                                                 itemA.animationElement && !itemB.animationElement && (itemA.delay >= itemB.delay && timeA <= itemB.getTotalDuration() || itemB.fillForwards)) {
                                                 excluded[i] = itemA;
                                                 break;
@@ -3904,7 +3916,7 @@ this.squared.svg = (function (exports) {
                         }
                         removeAnimations(animationsBase, removeable);
                     }
-                    if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
+                    if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || !isNaN(staggered[0].end))) {
                         const groupName = {};
                         const groupAttributeMap = {};
                         const intervalMap = new SvgAnimationIntervalMap(mergeable);
@@ -3995,7 +4007,7 @@ this.squared.svg = (function (exports) {
                                             if (previous.name === name) {
                                                 return true;
                                             }
-                                            else if (SvgAnimationIntervalMap.getGroupEndTime(previous) >= duration) {
+                                            if (SvgAnimationIntervalMap.getGroupEndTime(previous) >= duration) {
                                                 return false;
                                             }
                                         }
@@ -4009,7 +4021,7 @@ this.squared.svg = (function (exports) {
                                         let currentMaxTime = maxTime;
                                         const replaceValue = checkSetterDelay(actualMaxTime, actualMaxTime + 1);
                                         if (replaceValue !== undefined && item.fillReplace && nextDelay > actualMaxTime && incomplete.length === 0) {
-                                            currentMaxTime = setTimelineValue(baseMap, currentMaxTime, replaceValue);
+                                            currentMaxTime = setTimelineValue(baseMap, currentMaxTime, replaceValue, false);
                                             if (transforming) {
                                                 setTimeRange(animateTimeRangeMap, item.type, currentMaxTime);
                                             }
@@ -4034,7 +4046,7 @@ this.squared.svg = (function (exports) {
                                     }
                                     setFreezeValue(set.delay, to, set.type, set);
                                     if (set.delay === delayTime) {
-                                        replaceValue = transforming ? to : convertToAnimateValue(to);
+                                        replaceValue = transforming ? to : convertToAnimateValue(to, false);
                                     }
                                     else {
                                         maxTime = setSetterValue(baseMap, set, transforming);
@@ -4070,7 +4082,7 @@ this.squared.svg = (function (exports) {
                             const setFreezeValue = (time, value, type = 0, item) => {
                                 if (hasValue(value)) {
                                     if (!transforming) {
-                                        value = convertToAnimateValue(value);
+                                        value = convertToAnimateValue(value, false);
                                     }
                                     const forwardItem = getForwardItem(forwardMap, attr);
                                     if (!forwardItem || time >= forwardItem.time) {
@@ -4101,7 +4113,7 @@ this.squared.svg = (function (exports) {
                                     if (value === undefined) {
                                         value = TRANSFORM.typeAsValue(previousTransform.type);
                                     }
-                                    maxTime = setTimelineValue(baseMap, resetTime, value);
+                                    maxTime = setTimelineValue(baseMap, resetTime, value, false);
                                     if (resetTime !== maxTime) {
                                         setTimeRange(animateTimeRangeMap, previousTransform.type, maxTime);
                                     }
@@ -4111,7 +4123,7 @@ this.squared.svg = (function (exports) {
                             const backwards = groupAttributeMap[attr].find(item => item.fillBackwards);
                             if (backwards) {
                                 baseValue = getItemValue(backwards, backwards.values, 0, 0);
-                                maxTime = setTimelineValue(baseMap, 0, baseValue);
+                                maxTime = setTimelineValue(baseMap, 0, baseValue, false);
                                 if (transforming) {
                                     setTimeRange(animateTimeRangeMap, backwards.type, 0);
                                     previousTransform = backwards;
@@ -4251,7 +4263,7 @@ this.squared.svg = (function (exports) {
                                             checkSetterDelay(actualMaxTime, delay);
                                         }
                                         if (maxTime !== -1 && maxTime < delay) {
-                                            maxTime = setTimelineValue(baseMap, delay - 1, baseValue);
+                                            maxTime = setTimelineValue(baseMap, delay - 1, baseValue, false);
                                             actualMaxTime = delay;
                                         }
                                         nextDelayTime = Infinity;
@@ -4473,7 +4485,7 @@ this.squared.svg = (function (exports) {
                                                             if (l === length - 1 && !item.accumulateSum && (k < iterationTotal - 1 || item.fillReplace && (!forwardItem || value !== forwardItem.value))) {
                                                                 --time;
                                                             }
-                                                            maxTime = setTimelineValue(baseMap, time, value);
+                                                            maxTime = setTimelineValue(baseMap, time, value, false);
                                                             insertInterpolator(item, maxTime, keySplines, l, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                             lastValue = value;
                                                         }
@@ -4600,7 +4612,7 @@ this.squared.svg = (function (exports) {
                                                                 [maxTime, baseValue] = insertIntermediateValue(k, maxThreadTime - (fillReplace ? 1 : 0));
                                                                 if (fillReplace) {
                                                                     baseValue = getItemValue(item, values, j, 0, baseValue);
-                                                                    maxTime = setTimelineValue(baseMap, maxThreadTime, baseValue);
+                                                                    maxTime = setTimelineValue(baseMap, maxThreadTime, baseValue, false);
                                                                 }
                                                                 actualMaxTime = maxThreadTime;
                                                             }
@@ -4611,7 +4623,7 @@ this.squared.svg = (function (exports) {
                                                                 --time;
                                                             }
                                                             baseValue = getItemValue(item, values, j, k, baseValue);
-                                                            maxTime = setTimelineValue(baseMap, time, baseValue);
+                                                            maxTime = setTimelineValue(baseMap, time, baseValue, false);
                                                             insertInterpolator(item, maxTime, keySplines, k, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                         }
                                                     }
@@ -4656,7 +4668,7 @@ this.squared.svg = (function (exports) {
                                         value = baseValueMap[attr];
                                     }
                                     if (value !== undefined && !isEqual$1(baseMap.get(maxTime), value)) {
-                                        maxTime = setTimelineValue(baseMap, maxTime, value);
+                                        maxTime = setTimelineValue(baseMap, maxTime, value, false);
                                         if (transforming) {
                                             setTimeRange(animateTimeRangeMap, key, maxTime);
                                         }
@@ -4727,7 +4739,7 @@ this.squared.svg = (function (exports) {
                                                             --time;
                                                         }
                                                         baseValue = getItemValue(item, values, i, j, baseValue);
-                                                        maxTime = setTimelineValue(baseMap, time, baseValue);
+                                                        maxTime = setTimelineValue(baseMap, time, baseValue, false);
                                                         insertInterpolator(item, time, keySplines, j, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                         keyTimesRepeating.add(maxTime);
                                                     }
@@ -4829,7 +4841,7 @@ this.squared.svg = (function (exports) {
                                             --time;
                                         }
                                         baseValue = getItemValue(item, values, j, k, baseValue);
-                                        maxTime = setTimelineValue(timelineMap[attr], time, baseValue);
+                                        maxTime = setTimelineValue(timelineMap[attr], time, baseValue, false);
                                         insertInterpolator(item, maxTime, keySplines, k, keyTimeMode, infiniteInterpolatorMap, infiniteTransformOriginMap);
                                         if (!keyTimes.includes(maxTime)) {
                                             keyTimes.push(maxTime);
@@ -4852,7 +4864,7 @@ this.squared.svg = (function (exports) {
                                             if (interpolator) {
                                                 infiniteInterpolatorMap.set(maxTime, interpolator);
                                             }
-                                            maxTime = setTimelineValue(map, maxTime, values[i]);
+                                            maxTime = setTimelineValue(map, maxTime, values[i], false);
                                             if (!keyTimes.includes(maxTime)) {
                                                 keyTimes.push(maxTime);
                                             }
@@ -4872,207 +4884,205 @@ this.squared.svg = (function (exports) {
                             }
                             infiniteResult = createKeyTimeMap(timelineMap, keyTimes, forwardMap);
                         }
-                        if (repeatingResult || infiniteResult) {
-                            removeAnimations(animationsBase, staggered);
-                            const timeRange = Array.from(animateTimeRangeMap);
-                            const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
-                            const parent = this.parent;
-                            for (const result of [repeatingResult, infiniteResult]) {
-                                if (result) {
-                                    const repeating = result === repeatingResult;
-                                    const interpolatorMap = repeating ? repeatingInterpolatorMap : infiniteInterpolatorMap;
-                                    const transformOriginMap = (repeating ? repeatingTransformOriginMap : infiniteTransformOriginMap);
-                                    if (isKeyTimeFormat(transforming, keyTimeMode)) {
-                                        const keySplines = [];
-                                        if (transforming) {
-                                            const transformMap = [];
-                                            if (repeating) {
-                                                const entries = Array.from(result);
-                                                let type = timeRange[0][1];
-                                                for (let i = 0, j = 0, k = 0, length = timeRange.length; i < length; ++i) {
-                                                    const next = i < length - 1 ? timeRange[i + 1][1] : -1;
-                                                    if (type !== next) {
-                                                        const map = new Map();
-                                                        for (let l = k, q = entries.length; l < q; ++l) {
-                                                            const keyTime = entries[l][0];
-                                                            if (keyTime >= timeRange[j][0] && keyTime <= timeRange[i][0]) {
-                                                                map.set(keyTime, new Map([[type, entries[l][1].values().next().value]]));
-                                                                k = l;
-                                                            }
-                                                            else if (keyTime > timeRange[i][0]) {
-                                                                break;
-                                                            }
+                        removeAnimations(animationsBase, staggered);
+                        const timeRange = Array.from(animateTimeRangeMap);
+                        const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-');
+                        const parent = this.parent;
+                        for (const result of [repeatingResult, infiniteResult]) {
+                            if (result) {
+                                const repeating = result === repeatingResult;
+                                const interpolatorMap = repeating ? repeatingInterpolatorMap : infiniteInterpolatorMap;
+                                const transformOriginMap = (repeating ? repeatingTransformOriginMap : infiniteTransformOriginMap);
+                                if (isKeyTimeFormat(transforming, keyTimeMode)) {
+                                    const keySplines = [];
+                                    if (transforming) {
+                                        const transformMap = [];
+                                        if (repeating) {
+                                            const entries = Array.from(result);
+                                            let type = timeRange[0][1];
+                                            for (let i = 0, j = 0, k = 0, length = timeRange.length; i < length; ++i) {
+                                                const next = i < length - 1 ? timeRange[i + 1][1] : -1;
+                                                if (type !== next) {
+                                                    const map = new Map();
+                                                    for (let l = k, q = entries.length; l < q; ++l) {
+                                                        const keyTime = entries[l][0];
+                                                        if (keyTime >= timeRange[j][0] && keyTime <= timeRange[i][0]) {
+                                                            map.set(keyTime, new Map([[type, entries[l][1].values().next().value]]));
+                                                            k = l;
                                                         }
-                                                        transformMap.push(map);
-                                                        type = next;
-                                                        j = i + 1;
+                                                        else if (keyTime > timeRange[i][0]) {
+                                                            break;
+                                                        }
                                                     }
+                                                    transformMap.push(map);
+                                                    type = next;
+                                                    j = i + 1;
                                                 }
                                             }
-                                            else if (infiniteMap.transform) {
-                                                const map = new Map();
-                                                for (const [time, item] of result) {
-                                                    map.set(time, new Map([[infiniteMap.transform.type, item.values().next().value]]));
+                                        }
+                                        else if (infiniteMap.transform) {
+                                            const map = new Map();
+                                            for (const [time, item] of result) {
+                                                map.set(time, new Map([[infiniteMap.transform.type, item.values().next().value]]));
+                                            }
+                                            transformMap.push(map);
+                                        }
+                                        else {
+                                            continue;
+                                        }
+                                        let previousEndTime = 0;
+                                        for (let i = 0, length = transformMap.length; i < length; ++i) {
+                                            const entries = Array.from(transformMap[i]);
+                                            const items = entries[0];
+                                            let delay = items[0];
+                                            const value = items[1];
+                                            if (entries.length === 1) {
+                                                if (i < length - 1) {
+                                                    entries.push([transformMap[i + 1].keys().next().value, value]);
                                                 }
-                                                transformMap.push(map);
+                                                else {
+                                                    entries.push([delay + 1, value]);
+                                                }
+                                            }
+                                            const q = entries.length;
+                                            const endTime = entries[q - 1][0];
+                                            let duration = endTime - delay;
+                                            const animate = new SvgAnimateTransform();
+                                            animate.type = value.keys().next().value;
+                                            for (let j = 0; j < q; ++j) {
+                                                const entry = entries[j];
+                                                keySplines.push(interpolatorMap.get(entry[0]) || '');
+                                                if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
+                                                    const transformOrigin = transformOriginMap.get(entry[0]);
+                                                    if (transformOrigin) {
+                                                        (animate.transformOrigin || (animate.transformOrigin = []))[j] = transformOrigin;
+                                                    }
+                                                }
+                                                entry[0] -= delay;
+                                            }
+                                            for (const [keyTime, data] of convertToFraction(entries)) {
+                                                animate.keyTimes.push(keyTime);
+                                                animate.values.push(data.values().next().value);
+                                            }
+                                            delay -= previousEndTime;
+                                            if (delay > 1) {
+                                                animate.delay = delay;
+                                            }
+                                            else if (delay === 1 && (duration + 1) % 10 === 0) {
+                                                ++duration;
+                                            }
+                                            animate.duration = duration;
+                                            animate.keySplines = keySplines;
+                                            animate.synchronized = { key: i, value: '' };
+                                            previousEndTime = endTime;
+                                            insertAnimate(animationsBase, animate, repeating);
+                                        }
+                                    }
+                                    else {
+                                        const entries = Array.from(result);
+                                        const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
+                                        let object;
+                                        for (let i = 0, q = entries.length; i < q; ++i) {
+                                            const item = entries[i];
+                                            keySplines.push(interpolatorMap.get(item[0]) || '');
+                                            item[0] -= delay;
+                                        }
+                                        if (path) {
+                                            const pathData = getPathData(convertToFraction(entries), path, parent, forwardMap, precision);
+                                            if (pathData) {
+                                                object = new SvgAnimate();
+                                                object.attributeName = 'd';
+                                                for (let i = 0, q = pathData.length; i < q; ++i) {
+                                                    const item = pathData[i];
+                                                    object.keyTimes.push(item.key);
+                                                    object.values.push(item.value.toString());
+                                                }
                                             }
                                             else {
                                                 continue;
                                             }
-                                            let previousEndTime = 0;
-                                            for (let i = 0, length = transformMap.length; i < length; ++i) {
-                                                const entries = Array.from(transformMap[i]);
-                                                const items = entries[0];
-                                                let delay = items[0];
-                                                const value = items[1];
-                                                if (entries.length === 1) {
-                                                    if (i < length - 1) {
-                                                        entries.push([transformMap[i + 1].keys().next().value, value]);
+                                        }
+                                        else {
+                                            const animate = new SvgAnimateTransform();
+                                            animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                            for (const [keyTime, data] of result) {
+                                                const x = data.get('x') || 0;
+                                                const y = data.get('y') || 0;
+                                                animate.keyTimes.push(keyTime);
+                                                animate.values.push(parent ? parent.refitX(x) + ' ' + parent.refitX(y) : x + ' ' + y);
+                                            }
+                                            object = animate;
+                                        }
+                                        object.delay = delay;
+                                        object.keySplines = keySplines;
+                                        object.duration = lastItemOf$1(entries)[0];
+                                        insertAnimate(animationsBase, object, repeating);
+                                    }
+                                }
+                                else if (isFromToFormat(transforming, keyTimeMode)) {
+                                    const entries = Array.from(result);
+                                    for (let i = 0, length = entries.length - 1; i < length; ++i) {
+                                        const [keyTimeFrom, dataFrom] = entries[i];
+                                        const [keyTimeTo, dataTo] = entries[i + 1];
+                                        let value = synchronizedName, object;
+                                        if (transforming) {
+                                            const animate = new SvgAnimateTransform();
+                                            if (repeating) {
+                                                for (let j = 0, q = timeRange.length - 1; j < q; ++j) {
+                                                    const previous = timeRange[j];
+                                                    const next = timeRange[j + 1];
+                                                    if (previous[1] === next[1] && keyTimeFrom >= previous[0] && keyTimeTo <= next[0]) {
+                                                        animate.type = previous[1];
+                                                        break;
                                                     }
-                                                    else {
-                                                        entries.push([delay + 1, value]);
+                                                    else if (keyTimeTo - keyTimeFrom === 1 && keyTimeTo === next[0]) {
+                                                        animate.type = next[1];
+                                                        break;
                                                     }
                                                 }
-                                                const q = entries.length;
-                                                const endTime = entries[q - 1][0];
-                                                let duration = endTime - delay;
-                                                const animate = new SvgAnimateTransform();
-                                                animate.type = value.keys().next().value;
-                                                for (let j = 0; j < q; ++j) {
-                                                    const entry = entries[j];
-                                                    keySplines.push(interpolatorMap.get(entry[0]) || '');
-                                                    if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
-                                                        const transformOrigin = transformOriginMap.get(entry[0]);
-                                                        if (transformOrigin) {
-                                                            (animate.transformOrigin || (animate.transformOrigin = []))[j] = transformOrigin;
-                                                        }
-                                                    }
-                                                    entry[0] -= delay;
-                                                }
-                                                for (const [keyTime, data] of convertToFraction(entries)) {
-                                                    animate.keyTimes.push(keyTime);
-                                                    animate.values.push(data.values().next().value);
-                                                }
-                                                delay -= previousEndTime;
-                                                if (delay > 1) {
-                                                    animate.delay = delay;
-                                                }
-                                                else if (delay === 1 && (duration + 1) % 10 === 0) {
-                                                    ++duration;
-                                                }
-                                                animate.duration = duration;
-                                                animate.keySplines = keySplines;
-                                                animate.synchronized = { key: i, value: '' };
-                                                previousEndTime = endTime;
-                                                insertAnimate(animationsBase, animate, repeating);
+                                            }
+                                            else if (infiniteMap.transform) {
+                                                animate.type = infiniteMap.transform.type;
+                                            }
+                                            if (animate.type === 0) {
+                                                continue;
+                                            }
+                                            animate.values = [dataFrom.values().next().value, dataTo.values().next().value];
+                                            const transformOrigin = transformOriginMap.get(keyTimeTo);
+                                            if (transformOrigin) {
+                                                animate.transformOrigin = [transformOrigin];
+                                            }
+                                            object = animate;
+                                        }
+                                        else if (path) {
+                                            const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, parent, forwardMap, precision);
+                                            if (pathData) {
+                                                object = new SvgAnimate();
+                                                object.attributeName = 'd';
+                                                object.values = replaceMap(pathData, item => item.value.toString());
+                                            }
+                                            else {
+                                                continue;
                                             }
                                         }
                                         else {
-                                            const entries = Array.from(result);
-                                            const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
-                                            let object;
-                                            for (let i = 0, q = entries.length; i < q; ++i) {
-                                                const item = entries[i];
-                                                keySplines.push(interpolatorMap.get(item[0]) || '');
-                                                item[0] -= delay;
-                                            }
-                                            if (path) {
-                                                const pathData = getPathData(convertToFraction(entries), path, parent, forwardMap, precision);
-                                                if (pathData) {
-                                                    object = new SvgAnimate();
-                                                    object.attributeName = 'd';
-                                                    for (let i = 0, q = pathData.length; i < q; ++i) {
-                                                        const item = pathData[i];
-                                                        object.keyTimes.push(item.key);
-                                                        object.values.push(item.value.toString());
-                                                    }
-                                                }
-                                                else {
-                                                    continue;
-                                                }
-                                            }
-                                            else {
-                                                const animate = new SvgAnimateTransform();
-                                                animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                                for (const [keyTime, data] of result) {
-                                                    const x = data.get('x') || 0;
-                                                    const y = data.get('y') || 0;
-                                                    animate.keyTimes.push(keyTime);
-                                                    animate.values.push(parent ? parent.refitX(x) + ' ' + parent.refitX(y) : x + ' ' + y);
-                                                }
-                                                object = animate;
-                                            }
-                                            object.delay = delay;
-                                            object.keySplines = keySplines;
-                                            object.duration = lastItemOf$1(entries)[0];
-                                            insertAnimate(animationsBase, object, repeating);
+                                            const animate = new SvgAnimateTransform();
+                                            animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                            animate.values = [refitTransformPoints(dataFrom, parent), refitTransformPoints(dataTo, parent)];
+                                            value += i;
+                                            object = animate;
                                         }
-                                    }
-                                    else if (isFromToFormat(transforming, keyTimeMode)) {
-                                        const entries = Array.from(result);
-                                        for (let i = 0, length = entries.length - 1; i < length; ++i) {
-                                            const [keyTimeFrom, dataFrom] = entries[i];
-                                            const [keyTimeTo, dataTo] = entries[i + 1];
-                                            let value = synchronizedName, object;
-                                            if (transforming) {
-                                                const animate = new SvgAnimateTransform();
-                                                if (repeating) {
-                                                    for (let j = 0, q = timeRange.length - 1; j < q; ++j) {
-                                                        const previous = timeRange[j];
-                                                        const next = timeRange[j + 1];
-                                                        if (previous[1] === next[1] && keyTimeFrom >= previous[0] && keyTimeTo <= next[0]) {
-                                                            animate.type = previous[1];
-                                                            break;
-                                                        }
-                                                        else if (keyTimeTo - keyTimeFrom === 1 && keyTimeTo === next[0]) {
-                                                            animate.type = next[1];
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                else if (infiniteMap.transform) {
-                                                    animate.type = infiniteMap.transform.type;
-                                                }
-                                                if (animate.type === 0) {
-                                                    continue;
-                                                }
-                                                animate.values = [dataFrom.values().next().value, dataTo.values().next().value];
-                                                const transformOrigin = transformOriginMap.get(keyTimeTo);
-                                                if (transformOrigin) {
-                                                    animate.transformOrigin = [transformOrigin];
-                                                }
-                                                object = animate;
-                                            }
-                                            else if (path) {
-                                                const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, parent, forwardMap, precision);
-                                                if (pathData) {
-                                                    object = new SvgAnimate();
-                                                    object.attributeName = 'd';
-                                                    object.values = replaceMap(pathData, item => item.value.toString());
-                                                }
-                                                else {
-                                                    continue;
-                                                }
-                                            }
-                                            else {
-                                                const animate = new SvgAnimateTransform();
-                                                animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                                animate.values = [refitTransformPoints(dataFrom, parent), refitTransformPoints(dataTo, parent)];
-                                                value += i;
-                                                object = animate;
-                                            }
-                                            if (repeating) {
-                                                object.delay = i === 0 ? keyTimeFrom : 0;
-                                            }
-                                            object.duration = keyTimeTo - keyTimeFrom;
-                                            object.keyTimes = [0, 1];
-                                            object.synchronized = { key: i, value };
-                                            const interpolator = interpolatorMap.get(keyTimeTo);
-                                            if (interpolator) {
-                                                object.keySplines = [interpolator];
-                                            }
-                                            insertAnimate(animationsBase, object, repeating);
+                                        if (repeating) {
+                                            object.delay = i === 0 ? keyTimeFrom : 0;
                                         }
+                                        object.duration = keyTimeTo - keyTimeFrom;
+                                        object.keyTimes = [0, 1];
+                                        object.synchronized = { key: i, value };
+                                        const interpolator = interpolatorMap.get(keyTimeTo);
+                                        if (interpolator) {
+                                            object.keySplines = [interpolator];
+                                        }
+                                        insertAnimate(animationsBase, object, repeating);
                                     }
                                 }
                             }
@@ -5095,6 +5105,8 @@ this.squared.svg = (function (exports) {
             this.distance = '0%';
             this.rotate = 'auto 0deg';
             this.motionPathElement = null;
+            this.framesPerSecond = NaN;
+            this.rotateData = undefined;
             this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
             this.instanceType = 229384 /* SVG_ANIMATE_MOTION */;
             this._offsetLength = 0;
@@ -5521,13 +5533,11 @@ this.squared.svg = (function (exports) {
         }
     }
 
-    var Pattern = squared.lib.base.Pattern;
     const { STRING: STRING$1 } = squared.lib.regex;
     const { asPercent: asPercent$1, hasCalc: hasCalc$1, isAngle, hasCustomProperty: hasCustomProperty$1, parseAngle, parseVar: parseVar$1 } = squared.lib.css;
     const { getNamedItem: getNamedItem$3 } = squared.lib.dom;
     const { convertCamelCase: convertCamelCase$1, convertWord, iterateArray: iterateArray$1, splitEnclosing, splitPairEnd, spliceString, startsWith: startsWith$1 } = squared.lib.util;
     const { getKeyframesRules: getKeyframesRules$1 } = squared.base.lib.css;
-    const RE_TIMINGFUNCTION = new Pattern(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`);
     const ANIMATION_DEFAULT = {
         'animation-delay': '0s',
         'animation-duration': '0s',
@@ -5538,14 +5548,16 @@ this.squared.svg = (function (exports) {
         'animation-timing-function': 'ease'
     };
     const REGEXP_PERCENT = new RegExp(STRING$1.PERCENT, 'g');
+    const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-(?:in|out|in-out)|linear|step-(?:start|end)|steps\\(\\d+,\\s*(?:start|end|jump-(?:start|end|both|none))\\)|cubic-bezier\\(${PATTERN_CUBICBEZIER}\\))\\s*,?`, 'g');
     function parseAttribute(element, attr) {
         const value = getAttribute(element, attr);
         if (attr === 'animation-timing-function') {
             const result = [];
-            RE_TIMINGFUNCTION.matcher(value);
-            while (RE_TIMINGFUNCTION.find()) {
-                result.push(RE_TIMINGFUNCTION.group(1));
+            let match;
+            while (match = REGEXP_TIMINGFUNCTION.exec(value)) {
+                result.push(match[1]);
             }
+            REGEXP_TIMINGFUNCTION.lastIndex = 0;
             return result;
         }
         return value.split(/\s*,\s*/);
@@ -5582,13 +5594,13 @@ this.squared.svg = (function (exports) {
                 this.transformed = null;
                 this._transforms = null;
                 this._animations = null;
-                this._name = null;
+                this._name = '';
             }
             getTransforms(element = this.element) {
                 return SvgBuild.filterTransforms(TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal));
             }
             getAnimations(element = this.element) {
-                var _a, _b, _c, _d;
+                var _a, _b, _c;
                 const result = [];
                 let id = 0;
                 const addAnimation = (item, delay, name = '') => {
@@ -5606,8 +5618,7 @@ this.squared.svg = (function (exports) {
                         const begin = getNamedItem$3(item, 'begin');
                         let times;
                         if (begin) {
-                            times = SvgAnimation.getClockTimes(begin);
-                            if (times.length === 0) {
+                            if ((times = SvgAnimation.getClockTimes(begin)).length === 0) {
                                 return;
                             }
                         }
@@ -5664,10 +5675,13 @@ this.squared.svg = (function (exports) {
                     values.length = length;
                     cssData[name] = values;
                 }
-                for (let i = 0; i < length; ++i) {
+                for (let i = 0, duration; i < length; ++i) {
+                    const clockTime = cssData['animation-duration'][i];
+                    if (!clockTime) {
+                        continue;
+                    }
                     const keyframes = keyframesMap.get(animationName[i]);
-                    const duration = SvgAnimation.parseClockTime(cssData['animation-duration'][i]);
-                    if (keyframes && !isNaN(duration) && duration > 0) {
+                    if (keyframes && (duration = SvgAnimation.parseClockTime(clockTime)) > 0) {
                         ++id;
                         const attrData = {};
                         const keyframeData = {};
@@ -5720,12 +5734,14 @@ this.squared.svg = (function (exports) {
                             }
                         }
                         if (attrData.transform) {
-                            const transforms = sortAttribute(attrData.transform);
-                            for (let j = 0, q = transforms.length; j < q; ++j) {
-                                const transform = transforms[j];
-                                const key = transform.key;
+                            for (const { key, value: transform } of sortAttribute(attrData.transform)) {
+                                const items = TRANSFORM.parse(element, transform);
+                                if (!items) {
+                                    continue;
+                                }
                                 const origin = getKeyframeOrigin(attrData, element, key) || TRANSFORM.origin(element);
-                                (_b = TRANSFORM.parse(element, transform.value)) === null || _b === void 0 ? void 0 : _b.forEach(item => {
+                                for (let j = 0, q = items.length; j < q; ++j) {
+                                    const item = items[j];
                                     const m = item.matrix;
                                     let name, value, transformOrigin;
                                     switch (item.type) {
@@ -5735,8 +5751,8 @@ this.squared.svg = (function (exports) {
                                             break;
                                         case SVGTransform.SVG_TRANSFORM_SCALE:
                                             name = 'scale';
-                                            value = m.a + ' ' + m.d + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
-                                            if (origin && (key !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                            value = m.a + ' ' + m.d + ' ' + origin.x + ' ' + origin.y;
+                                            if (origin.x !== 0 || origin.y !== 0) {
                                                 transformOrigin = {
                                                     x: origin.x * (1 - m.a),
                                                     y: origin.y * (1 - m.d)
@@ -5745,12 +5761,12 @@ this.squared.svg = (function (exports) {
                                             break;
                                         case SVGTransform.SVG_TRANSFORM_ROTATE:
                                             name = 'rotate';
-                                            value = item.angle + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
+                                            value = item.angle + ' ' + origin.x + ' ' + origin.y;
                                             break;
                                         case SVGTransform.SVG_TRANSFORM_SKEWX:
                                             name = 'skewX';
                                             value = item.angle.toString();
-                                            if (origin && (key !== 0 || origin.y !== 0)) {
+                                            if (origin.y !== 0) {
                                                 transformOrigin = {
                                                     x: origin.y * m.c * -1,
                                                     y: 0
@@ -5760,7 +5776,7 @@ this.squared.svg = (function (exports) {
                                         case SVGTransform.SVG_TRANSFORM_SKEWY:
                                             name = 'skewY';
                                             value = item.angle.toString();
-                                            if (origin && (key !== 0 || origin.x !== 0)) {
+                                            if (origin.x !== 0) {
                                                 transformOrigin = {
                                                     x: 0,
                                                     y: origin.x * m.b * -1
@@ -5768,7 +5784,7 @@ this.squared.svg = (function (exports) {
                                             }
                                             break;
                                         default:
-                                            return;
+                                            continue;
                                     }
                                     const itemData = attrData[name] || (attrData[name] = []);
                                     const index = itemData.findIndex(previous => previous.key === key);
@@ -5778,13 +5794,9 @@ this.squared.svg = (function (exports) {
                                         indexData.transformOrigin = transformOrigin;
                                     }
                                     else {
-                                        itemData.push({
-                                            key,
-                                            value,
-                                            transformOrigin
-                                        });
+                                        itemData.push({ key, value, transformOrigin });
                                     }
-                                });
+                                }
                             }
                             delete attrData.transform;
                             delete attrData['transform-origin'];
@@ -5900,7 +5912,7 @@ this.squared.svg = (function (exports) {
                                     keyTimes[j] = key;
                                     values[j] = value;
                                     if (includeKeySplines && j < q - 1) {
-                                        keySplines.push(((_d = (_c = keyframeData['animation-timing-function']) === null || _c === void 0 ? void 0 : _c.find(timing => timing.key === key)) === null || _d === void 0 ? void 0 : _d.value) || timingFunction);
+                                        keySplines.push(((_c = (_b = keyframeData['animation-timing-function']) === null || _b === void 0 ? void 0 : _b.find(timing => timing.key === key)) === null || _c === void 0 ? void 0 : _c.value) || timingFunction);
                                     }
                                     const transformOrigin = item.transformOrigin;
                                     if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
@@ -5977,12 +5989,18 @@ this.squared.svg = (function (exports) {
             getDesc(lang) {
                 return !lang && getNamedItem$3(this.element, 'aria-describedby') || getTextContent(this.element, 'desc', lang);
             }
+            hasAnimations() {
+                return this.animations.length > 0;
+            }
+            hasTransforms() {
+                return this.transforms.length > 0;
+            }
             set name(value) {
                 this._name = value;
             }
             get name() {
                 let result = this._name;
-                if (result === null) {
+                if (!result) {
                     const element = this.element;
                     let id = element.id.trim(), value, tagName;
                     if (id) {
@@ -6030,7 +6048,7 @@ this.squared.svg = (function (exports) {
             if (isUserAgent(4 /* FIREFOX */)) {
                 return element.parentElement instanceof HTMLElement;
             }
-            else if (isUserAgent(2 /* SAFARI */)) {
+            if (isUserAgent(2 /* SAFARI */)) {
                 return !(element.parentElement instanceof HTMLElement);
             }
         }
@@ -6040,6 +6058,7 @@ this.squared.svg = (function (exports) {
         return class extends Base {
             constructor() {
                 super(...arguments);
+                this.rectElement = null;
                 this._x = NaN;
                 this._y = NaN;
                 this._width = NaN;
@@ -6058,6 +6077,12 @@ this.squared.svg = (function (exports) {
                 this.setBaseValue('y', y);
                 this.setBaseValue('width', width);
                 this.setBaseValue('height', height);
+            }
+            getX() {
+                return this._x;
+            }
+            getY() {
+                return this._y;
             }
             getRectElement() {
                 const element = this.rectElement || this.element;
@@ -6255,8 +6280,7 @@ this.squared.svg = (function (exports) {
             if (SvgBuild.asSvg(container) && container.documentRoot) {
                 return container;
             }
-            container = container.parent;
-        } while (container);
+        } while (container = container.parent);
         return null;
     }
     function getNearestViewBox(container) {
@@ -6264,8 +6288,7 @@ this.squared.svg = (function (exports) {
             if (container.hasViewBox()) {
                 return container;
             }
-            container = container.parent;
-        } while (container);
+        } while (container = container.parent);
     }
     class SvgContainer extends squared.lib.base.Container {
         constructor(element) {
@@ -6311,7 +6334,7 @@ this.squared.svg = (function (exports) {
                 element = this.element;
             }
             const viewport = getViewport(this);
-            let rootElement, contentMap = null;
+            let contentMap = null, rootElement;
             if (viewport) {
                 ({ element: rootElement, contentMap } = viewport);
                 if (precision === undefined) {
@@ -6611,6 +6634,8 @@ this.squared.svg = (function (exports) {
             super(element);
             this.element = element;
             this.documentRoot = documentRoot;
+            this.precision = undefined;
+            this.keyframesMap = undefined;
             this.instanceType = 18 /* SVG */;
             this.definitions = {
                 clipPath: new Map(),
@@ -6624,18 +6649,20 @@ this.squared.svg = (function (exports) {
             this.init();
         }
         build(options) {
+            if (options.precision) {
+                this.precision = options.precision;
+            }
             if (this.documentRoot) {
                 this.keyframesMap = options.keyframesMap || getKeyframesRules();
             }
-            this.precision = options.precision;
             this.setRect();
-            super.build(options);
+            super.build(...arguments);
         }
         synchronize(options) {
-            if (!this.documentRoot && this.animations.length) {
+            if (!this.documentRoot && this.hasAnimations()) {
                 this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
             }
-            super.synchronize(options);
+            super.synchronize(...arguments);
         }
         findFill(value) {
             if (typeof value !== 'string') {
@@ -6744,7 +6771,7 @@ this.squared.svg = (function (exports) {
 
     const { STRING } = squared.lib.regex;
     const { parseColor } = squared.lib.color;
-    const { asPercent, extractURL, getFontSize, getStyle, hasCalc, hasEm, hasCustomProperty, isLength, parseUnit, parseVar } = squared.lib.css;
+    const { asPercent, checkStyleValue, extractURL, getFontSize, getStyle, hasCalc, hasEm, hasCustomProperty, isLength, parseUnit, parseVar } = squared.lib.css;
     const { truncate } = squared.lib.math;
     const { convertCamelCase, splitSome } = squared.lib.util;
     const REGEXP_CACHE = {
@@ -6772,6 +6799,8 @@ this.squared.svg = (function (exports) {
                 this.color = '';
                 this.clipPath = '';
                 this.clipRule = '';
+                this.useParent = null;
+                this.patternParent = null;
                 this._strokeWidth = '';
             }
             setStroke() {
@@ -6903,6 +6932,9 @@ this.squared.svg = (function (exports) {
                     else if (hasCustomProperty(value)) {
                         value = parseVar(element, value) || getStyle(element)[attr];
                     }
+                    else {
+                        value = checkStyleValue(element, attr, value);
+                    }
                     switch (attr) {
                         case 'strokeDasharray':
                             if (value !== 'none') {
@@ -6928,15 +6960,14 @@ this.squared.svg = (function (exports) {
                             }
                             else {
                                 let color;
-                                switch (value) {
+                                switch (value = value.toLowerCase()) {
                                     case 'none':
                                     case 'transparent':
                                     case 'rgba(0, 0, 0, 0)':
                                         this[attr] = 'none';
                                         return;
                                     case 'currentcolor':
-                                    case 'currentColor':
-                                        value = this.color || getAttribute(element, 'color', true);
+                                        value = this.color || getAttribute(this.parent && SvgBuild.asUseSymbol(this.parent) ? this.parent.element : element, 'color', true);
                                     default:
                                         color = parseColor(value);
                                         break;
@@ -6978,7 +7009,7 @@ this.squared.svg = (function (exports) {
                 if (!isNaN(n)) {
                     return n;
                 }
-                else if (isLength(value)) {
+                if (isLength(value)) {
                     return parseUnit(value, hasEm(value) ? { fontSize: getFontSize(this.element) } : undefined);
                 }
                 return !isNaN(n = asPercent(value)) ? Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * n) : 0;
@@ -7025,7 +7056,7 @@ this.squared.svg = (function (exports) {
             this.instanceType = 34 /* SVG_G */;
         }
         build(options) {
-            super.build(options);
+            super.build(...arguments);
             this.setPaint(this.getPathAll(), options && options.precision);
         }
     }
@@ -7035,6 +7066,8 @@ this.squared.svg = (function (exports) {
         constructor(element, imageElement) {
             super(element);
             this.element = element;
+            this.rotateAngle = 0;
+            this.transformResidual = null;
             this.imageElement = null;
             this.instanceType = 8196 /* SVG_IMAGE */;
             if (imageElement) {
@@ -7126,15 +7159,21 @@ this.squared.svg = (function (exports) {
             super.x = value;
         }
         get x() {
-            var _a;
-            return super.x || ((_a = this.imageElement) === null || _a === void 0 ? void 0 : _a.x.baseVal.value) || 0;
+            const x = this.getX();
+            if (!isNaN(x)) {
+                return x;
+            }
+            return super.x;
         }
         set y(value) {
             super.y = value;
         }
         get y() {
-            var _a;
-            return super.y || ((_a = this.imageElement) === null || _a === void 0 ? void 0 : _a.y.baseVal.value) || 0;
+            const y = this.getY();
+            if (!isNaN(y)) {
+                return y;
+            }
+            return super.y;
         }
         set width(value) {
             super.width = value;
@@ -7155,10 +7194,10 @@ this.squared.svg = (function (exports) {
             return SVG.image(element) ? resolvePath(element.href.baseVal) : '';
         }
         get transforms() {
-            return !this._transforms ? this._transforms = this.imageElement ? super.transforms.concat(this.getTransforms(this.imageElement)) : super.transforms : this._transforms;
+            return this._transforms || (this._transforms = this.imageElement ? super.transforms.concat(this.getTransforms(this.imageElement)) : super.transforms);
         }
         get animations() {
-            return !this._animations ? this._animations = this.imageElement ? super.animations.concat(this.getAnimations(this.imageElement)) : super.animations : this._animations;
+            return this._animations || (this._animations = this.imageElement ? super.animations.concat(this.getAnimations(this.imageElement)) : super.animations);
         }
     }
 
@@ -7243,12 +7282,12 @@ this.squared.svg = (function (exports) {
             }
         }
     }
-    function getDashOffset(map, valueOffset, time, playing) {
-        const value = map.get('stroke-dashoffset', time, playing);
+    function getDashOffset(map, valueOffset, time) {
+        const value = map.get('stroke-dashoffset', time);
         return value ? +value : valueOffset;
     }
-    function getDashArray(map, valueArray, time, playing) {
-        const value = map.get('stroke-dasharray', time, playing);
+    function getDashArray(map, valueArray, time) {
+        const value = map.get('stroke-dasharray', time);
         return value ? SvgBuild.parseCoordinates(value) : valueArray;
     }
     const getFromToValue = (item) => item ? item.start + ' ' + item.end : '1 1';
@@ -7259,8 +7298,10 @@ this.squared.svg = (function (exports) {
             this.name = '';
             this.value = '';
             this.baseValue = '';
+            this.rotateAngle = 0;
             this.parent = null;
             this.transformed = null;
+            this.transformResidual = null;
             this.instanceType = 16388 /* SVG_PATH */;
             this.init();
         }
@@ -7779,10 +7820,10 @@ this.squared.svg = (function (exports) {
                                 if (a.delay !== b.delay) {
                                     return a.delay - b.delay;
                                 }
-                                else if (SvgBuild.asSet(a) && SvgBuild.asAnimate(b) || !a.animationElement && b.animationElement) {
+                                if (SvgBuild.asSet(a) && SvgBuild.asAnimate(b) || !a.animationElement && b.animationElement) {
                                     return -1;
                                 }
-                                else if (SvgBuild.asAnimate(a) && SvgBuild.asSet(b) || a.animationElement && !b.animationElement) {
+                                if (SvgBuild.asAnimate(a) && SvgBuild.asSet(b) || a.animationElement && !b.animationElement) {
                                     return 1;
                                 }
                             }
@@ -7990,7 +8031,7 @@ this.squared.svg = (function (exports) {
                                             const getKeyTimeIncrement = (offset) => ((offset / offsetTotal) * segDuration) / duration;
                                             if (j === 0) {
                                                 offsetRemaining %= extendedLength;
-                                                setFinalValue(0);
+                                                setFinalValue(0, false);
                                                 if (increasing) {
                                                     finalValue = 1 - finalValue;
                                                 }
@@ -8001,7 +8042,7 @@ this.squared.svg = (function (exports) {
                                                     const remaining = increasing ? previousRemaining : 1 - previousRemaining;
                                                     const remainingValue = truncateFraction(remaining * extendedLength);
                                                     if (lessEqual(offsetRemaining, remainingValue)) {
-                                                        setFinalValue(0);
+                                                        setFinalValue(0, false);
                                                         if (increasing) {
                                                             finalValue = previousRemaining - finalValue;
                                                         }
@@ -8046,7 +8087,9 @@ this.squared.svg = (function (exports) {
                                             }
                                         }
                                         item.baseValue = '0';
-                                        item.replaceValue = replaceValue;
+                                        if (replaceValue) {
+                                            item.replaceValue = replaceValue;
+                                        }
                                         item.values = values;
                                         item.keyTimes = keyTimes;
                                         const timingFunction = item.timingFunction;
@@ -8170,7 +8213,7 @@ this.squared.svg = (function (exports) {
             }
         }
         synchronize(options) {
-            if (this.animations.length) {
+            if (this.hasAnimations()) {
                 const path = this.path;
                 if (path) {
                     const element = options && options.element;
@@ -8384,7 +8427,7 @@ this.squared.svg = (function (exports) {
         }
         build(options) {
             this.setRect();
-            super.build(options);
+            super.build(...arguments);
         }
     }
 
@@ -8406,12 +8449,12 @@ this.squared.svg = (function (exports) {
             this.path = path;
         }
         build(options) {
-            super.build(options);
+            super.build(...arguments);
             this.setPaint(this.path && [this.path.value], options && options.precision);
         }
         synchronize(options) {
             options = Object.assign(Object.assign({}, options), { element: this.element });
-            if (this.animations.length) {
+            if (this.hasAnimations()) {
                 this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
             }
             super.synchronize(options);
@@ -8439,7 +8482,7 @@ this.squared.svg = (function (exports) {
             if (animations.length || transforms.length) {
                 this.animateSequentially(this.getAnimateViewRect(animations), transforms, undefined, options);
             }
-            super.synchronize(options);
+            super.synchronize(...arguments);
         }
     }
 
@@ -8458,10 +8501,10 @@ this.squared.svg = (function (exports) {
             this.setPaint(this.getPathAll(), options && options.precision);
         }
         synchronize(options) {
-            if (this.animations.length) {
+            if (this.hasAnimations()) {
                 this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
             }
-            super.synchronize(options);
+            super.synchronize(...arguments);
         }
         get viewBox() {
             return this.symbolElement.viewBox.baseVal || { x: 0, y: 0, width: 0, height: 0 };

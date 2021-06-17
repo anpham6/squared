@@ -22,7 +22,6 @@ var vdom = (function () {
     const settings = {
         builtInExtensions: [],
         createElementMap: true,
-        createQuerySelectorMap: true,
         pierceShadowRoot: false,
         showErrorMessages: false
     };

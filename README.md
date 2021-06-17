@@ -1,4 +1,4 @@
-## squared 3.0
+## squared 3.1
 
 * README: [squared-functions](https://github.com/anpham6/squared-functions#readme)  
 * README: [squared-express](https://github.com/anpham6/squared-express#readme)
@@ -35,7 +35,7 @@ Option #1 - [Node.js](http://www.nodejs.org)
 
 ```xml
 > npm install squared  
-> cd node_modules/squared  
+> cd node_modules/squared
 ```
 
 #### GitHub &amp; NPM
@@ -87,7 +87,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
     squared.settings.targetAPI = 30; // optional
 
     document.addEventListener("DOMContentLoaded", async () => {
-        squared.setFramework(android, /* settings (optional) */);
+        squared.setFramework(android, /* settings */);
 
         await squared.parseDocument(); // document.body "BODY" (default)
         // OR
@@ -114,7 +114,7 @@ The primary function "parseDocument" can be called on multiple elements and mult
 
         await squared.save(); // Uses defaults from settings
         // OR
-        await squared.saveAs(/* archive filename */, /* options */);
+        await squared.saveAs(/* archive filename */, /* options from squared-express */);
         // OR
         await squared.copyTo(/* directory */, /* options */);
         // OR
@@ -125,23 +125,48 @@ The primary function "parseDocument" can be called on multiple elements and mult
 </script>
 ```
 
-#### Example: vdom / chrome
+#### Example: chrome
 
-VDOM is a minimal framework (41kb gzipped) for those who prefer a universal HTMLElement. The "lite" version is about half the bundle size and is recommended for most browser applications. Chrome framework offers the same features as VDOM but can also bundle assets using HTML syntax and Express server. It is adequate for most applications and gives you the ability to see your application first and to build it last.
+You have the same features as VDOM framework but you can also bundle assets using HTML syntax and the provided Express server. It is adequate for most applications and gives you the ability to see your application first and to build it last.
+
+```html
+<script src="/dist/squared.min.js"></script>
+<script src="/dist/squared.base.min.js"></script>
+<script src="/dist/chrome.framework.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        squared.setFramework(chrome, /* settings */);
+
+        await squared.save(); // Uses defaults from settings
+        // OR
+        await squared.saveAs(/* archive filename */, /* options from squared-express + squared-functions */);
+        // OR
+        await squared.copyTo(/* directory */, /* options */);
+        // OR
+        await squared.appendTo(/* archive location */, /* options */);
+    });
+</script>
+```
+
+#### Example: vdom
+
+VDOM is a minimal framework (41kb gzipped) for those who prefer a universal HTMLElement. The "lite" version is about half the bundle size and is recommended for most browser applications. The native querySelector engine is being used as of squared 3.1.
 
 ```html
 <script src="/dist/squared.min.js"></script>
 <script src="/dist/squared.base-dom.min.js"></script>
-<script src="/dist/vdom.framework.min.js"></script> /* chrome.framework.min.js */
+<script src="/dist/vdom.framework.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", async () => {
-        squared.setFramework(vdom /* chrome */, /* optional: settings */);
+        squared.setFramework(vdom, /* settings */);
 
-        const element = await squared.parseDocument(/* HTMLElement */); // document.documentElement "HTML" (default)
+        const element = squared.querySelector('body', true /* synchronous */);
         // OR
-        const elements = squared.parseDocumentSync(/* HTMLElement */, /* "elementId" */, /* ...etc */); // Multiple elements
-
-        squared.reset(); // Start new "parseDocument" session (optional)
+        const elements = await squared.querySelectorAll('*');
+        // OR
+        const element = squared.fromElement(document.body, true /* synchronous */);
+        // OR
+        const elements = await squared.getElementById("content-id").querySelectorAll('*');
     });
 </script>
 ```

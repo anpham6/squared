@@ -619,16 +619,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             for (const [uri, item] of rawData) {
                 bundled: {
                     if (item.mimeType === 'text/css') {
-                        let command = saveAsLink,
-                            saveAs: Undef<string>,
-                            filename: Optional<string>,
-                            compress: Undef<CompressFormat[]>,
-                            download: Undef<boolean>,
-                            preserve: Undef<boolean>,
-                            process: Undef<string[]>,
-                            tasks: Undef<TaskAction[]>,
-                            cloudStorage: Undef<CloudStorage[]>,
-                            documentData: Undef<StringOfArray>;
                         try {
                             invalid: {
                                 if (new URL(uri).origin === location.origin) {
@@ -683,6 +673,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         }
                         catch {
                         }
+                        let command = saveAsLink,
+                            saveAs: Undef<string>,
+                            filename: Optional<string>,
+                            compress: Undef<CompressFormat[]>,
+                            download: Undef<boolean>,
+                            preserve: Undef<boolean>,
+                            process: Undef<string[]>,
+                            tasks: Undef<TaskAction[]>,
+                            cloudStorage: Undef<CloudStorage[]>,
+                            documentData: Undef<StringOfArray>;
                         if (command) {
                             if (command.customize) {
                                 if ((filename = command.customize.call(null, uri, 'text/css', command = { ...command })) === null) {
