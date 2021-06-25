@@ -554,8 +554,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 if (mimeType === 'application/javascript') {
                     mimeType = 'text/javascript';
                 }
-                mimeType += '|' + (element.defer ? '1' : '0') + (element.async ? '1' : '0') + (element.noModule ? '1' : '0');
-                this.createBundle(true, result, element, src, mimeType, 'js', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsScript });
+                this.createBundle(true, result, element, src, mimeType + '|' + (element.defer ? '1' : '0') + (element.async ? '1' : '0') + (element.noModule ? '1' : '0'), 'js', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsScript });
             }
         });
         setBundleIndex(bundleIndex);

@@ -610,7 +610,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 const imageAssets = getImageAssets(resource, resourceId, outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages, documentHandler);
                 const videoAssets = getRawAssets(resource, resourceId, 'video', outputDirectory + this.directory.video, this.resourceRawVideoToString(), documentHandler);
                 const audioAssets = getRawAssets(resource, resourceId, 'audio', outputDirectory + this.directory.audio, this.resourceRawAudioToString(), documentHandler);
-                const uri = options.config?.uri;
+                const uri = File.findConfigUri(options);
                 if (uri) {
                     const items = await this.loadConfig(uri, options);
                     if (items) {

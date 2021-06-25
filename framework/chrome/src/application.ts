@@ -220,7 +220,7 @@ export default class Application<T extends squared.base.Node> extends squared.ba
             delete options.removeUnusedClasses;
             delete options.removeUnusedPseudoClasses;
         }
-        const uri = options.config?.uri;
+        const uri = File.findConfigUri(options);
         if (uri) {
             const commands = await this.fileHandler!.loadConfig(uri, options) as Undef<AssetCommand[]>;
             if (commands) {

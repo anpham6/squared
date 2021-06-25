@@ -84,6 +84,18 @@ export default abstract class File<T extends Node> implements squared.base.File<
         return Array.isArray(value) ? value.slice(0) : value;
     }
 
+    public static findConfigUri(options: Undef<squared.FileActionOptions>) {
+        const config = options?.config;
+        if (config) {
+            if (config.uri) {
+                return config.uri;
+            }
+            if (config.mimeType) {
+                return location.origin + location.pathname + '.' + config.mimeType;
+            }
+        }
+    }
+
     public readonly archiveFormats = ['zip', 'tar', '7z', 'gz', 'tgz'];
 
     private _hostname = '';
