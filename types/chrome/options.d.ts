@@ -19,6 +19,6 @@ interface UriOptions {
     saveTo?: boolean;
     format?: string;
     mimeType?: string;
-    preserveCrossOrigin?: boolean;
+    pathname?: string;
     fromConfig?: boolean;
 }

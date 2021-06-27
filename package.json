@@ -122,6 +122,7 @@
     "gulp": "^4.0.2",
     "ibm-cos-sdk": "^1.10.0",
     "imagemin-pngquant": "^9.0.2",
+    "jsonpath": "^1.1.1",
     "md5": "^2.3.0",
     "node-7z": "^2.1.2",
     "oracledb": "^5.2.0",

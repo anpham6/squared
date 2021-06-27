@@ -470,7 +470,7 @@ Leaving the sessionId empty sets the default view model for the entire project.
 // NOTE: latest(undefined = 1): string (1: most recent sessionId | -1: first sessionId)
 
 await squared.parseDocument(/* "mainview" */, /* "subview" */).then(nodes => {
-    const sessions = squared.latest(2); // ['1'. '2'. '3'] => ['2', '3']
+    const sessions = squared.latest(2); // ['1', '2', '3'] => ['2', '3']
     android.setViewModel(
         {
             import: ["java.util.Map", "java.util.List"],

@@ -10,7 +10,7 @@ type FileCopyingOptions = squared.base.FileCopyingOptions;
 const { DIRECTORY_NOT_PROVIDED, INVALID_ASSET_REQUEST, SERVER_REQUIRED } = squared.lib.error;
 
 const { createElement } = squared.lib.dom;
-const { escapePattern, fromLastIndexOf, isPlainObject, replaceAll, splitPair, startsWith } = squared.lib.util;
+const { escapePattern, fromLastIndexOf, lastItemOf, isPlainObject, replaceAll, splitPair, startsWith } = squared.lib.util;
 
 function validateAsset(file: FileAsset, exclusions: Exclusions) {
     const { pathname, filename } = file;
@@ -91,7 +91,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 return config.uri;
             }
             if (config.mimeType) {
-                return location.origin + location.pathname + '.' + config.mimeType;
+                const pathname = location.pathname;
+                return location.origin + pathname + (lastItemOf(pathname) === '/' ? 'index' : '') + '.' + config.mimeType;
             }
         }
     }

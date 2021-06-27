@@ -1,6 +1,5 @@
 import { PLATFORM, USER_AGENT } from './constant';
 
-const CLIENT_USERAGENT = navigator.userAgentData;
 let CLIENT_BROWSER = USER_AGENT.CHROME;
 let CLIENT_VERSION: Undef<number[]>;
 
@@ -113,8 +112,8 @@ export function getDeviceDPI() {
     return window.devicePixelRatio * 96;
 }
 
-if (CLIENT_USERAGENT) {
-    const brands = CLIENT_USERAGENT.brands;
+if ('userAgentData' in navigator) {
+    const brands = navigator.userAgentData!.brands;
     const items = ['Microsoft Edge', 'Opera', 'Chromium'];
     for (let i = 0; i < 3; ++i) {
         const brand = items[i];
