@@ -7,7 +7,6 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.squared = {}));
 }(this, (function (exports) { 'use strict';
 
-    const CLIENT_USERAGENT = navigator.userAgentData;
     let CLIENT_BROWSER = 1 /* CHROME */;
     let CLIENT_VERSION;
     function setUserAgentData() {
@@ -115,8 +114,8 @@
     function getDeviceDPI() {
         return window.devicePixelRatio * 96;
     }
-    if (CLIENT_USERAGENT) {
-        const brands = CLIENT_USERAGENT.brands;
+    if ('userAgentData' in navigator) {
+        const brands = navigator.userAgentData.brands;
         const items = ['Microsoft Edge', 'Opera', 'Chromium'];
         for (let i = 0; i < 3; ++i) {
             const brand = items[i];

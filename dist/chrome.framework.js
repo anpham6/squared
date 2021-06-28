@@ -292,9 +292,9 @@ var chrome = (function () {
             }
         }
         static parseUri(uri, preserveCrossOrigin, options) {
-            let saveAs, mimeType, format, saveTo, fromConfig;
+            let saveAs, saveTo, mimeType, format, pathname, fromConfig;
             if (options) {
-                ({ saveAs, mimeType, format, saveTo, fromConfig } = options);
+                ({ saveAs, saveTo, mimeType, format, pathname, fromConfig } = options);
             }
             mimeType || (mimeType = parseMimeType(uri));
             let value = trimEnd(uri, '/'), file;
@@ -326,15 +326,15 @@ var chrome = (function () {
             try {
                 const { host, port, pathname: path } = new URL(value);
                 const [pathsub, filesub] = splitPair(path, '/', false, true);
-                let pathname = '', filename = '', moveTo;
+                let moveTo, filename;
                 if (file) {
                     [moveTo, pathname, filename] = getFilePath(file, saveTo, getFileExt(uri));
                 }
-                else if (!local) {
-                    pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + pathsub;
-                }
-                if (uri !== location.href) {
-                    if (local && !pathname) {
+                else if (pathname === undefined) {
+                    if (!local) {
+                        pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + pathsub;
+                    }
+                    else {
                         let pathbase = location.pathname;
                         if (lastItemOf(pathbase) !== '/') {
                             pathbase = splitPairStart(pathbase, '/', false, true);
@@ -347,13 +347,12 @@ var chrome = (function () {
                             pathname = pathsub[0] === '/' ? pathsub.substring(1) : pathsub;
                         }
                     }
-                    filename || (filename = filesub);
                 }
                 return {
                     uri,
                     moveTo,
                     pathname: decodeURIComponent(pathname),
-                    filename: decodeURIComponent(filename),
+                    filename: decodeURIComponent(filename || filesub),
                     mimeType,
                     format
                 };
@@ -405,14 +404,10 @@ var chrome = (function () {
             if (process) {
                 format = process.join('+');
             }
-            const data = File.parseUri(location.href, false, { saveAs: file, format, mimeType: 'text/html' });
+            const data = File.parseUri(location.href, false, { saveAs: file, mimeType: 'text/html', format, pathname: '' });
             if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, element)) {
                 if (filename) {
                     data.filename = filename;
-                }
-                else if (!data.filename) {
-                    const value = location.pathname.split('/').pop();
-                    data.filename = /\.(?:html?|php|jsp|aspx?)$/i.exec(value) ? value : 'index.html';
                 }
                 if (hasFormat(data.format)) {
                     data.willChange = true;
@@ -485,8 +480,7 @@ var chrome = (function () {
                     if (mimeType === 'application/javascript') {
                         mimeType = 'text/javascript';
                     }
-                    mimeType += '|' + (element.defer ? '1' : '0') + (element.async ? '1' : '0') + (element.noModule ? '1' : '0');
-                    this.createBundle(true, result, element, src, mimeType, 'js', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsScript });
+                    this.createBundle(true, result, element, src, mimeType + '|' + (element.defer ? '1' : '0') + (element.async ? '1' : '0') + (element.noModule ? '1' : '0'), 'js', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsScript });
                 }
             });
             setBundleIndex(bundleIndex);
@@ -1444,7 +1438,6 @@ var chrome = (function () {
             return this.processAssets('appendTo', target, options);
         }
         async processAssets(module, pathname, options) {
-            var _a;
             const result = await this.parseDocument();
             if (!result) {
                 return reject$1(UNABLE_TO_FINALIZE_DOCUMENT);
@@ -1544,7 +1537,7 @@ var chrome = (function () {
                 delete options.removeUnusedClasses;
                 delete options.removeUnusedPseudoClasses;
             }
-            const uri = (_a = options.config) === null || _a === void 0 ? void 0 : _a.uri;
+            const uri = File.findConfigUri(options);
             if (uri) {
                 const commands = await this.fileHandler.loadConfig(uri, options);
                 if (commands) {

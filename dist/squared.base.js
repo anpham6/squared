@@ -1844,7 +1844,7 @@ this.squared.base = (function (exports) {
 
     const { DIRECTORY_NOT_PROVIDED, INVALID_ASSET_REQUEST, SERVER_REQUIRED } = squared.lib.error;
     const { createElement: createElement$1 } = squared.lib.dom;
-    const { escapePattern: escapePattern$1, fromLastIndexOf: fromLastIndexOf$1, isPlainObject, replaceAll: replaceAll$3, splitPair: splitPair$5, startsWith: startsWith$8 } = squared.lib.util;
+    const { escapePattern: escapePattern$1, fromLastIndexOf: fromLastIndexOf$1, lastItemOf: lastItemOf$2, isPlainObject, replaceAll: replaceAll$3, splitPair: splitPair$5, startsWith: startsWith$8 } = squared.lib.util;
     function validateAsset(file, exclusions) {
         const { pathname, filename } = file;
         const glob = exclusions.glob;
@@ -1923,6 +1923,18 @@ this.squared.base = (function (exports) {
         }
         static copyDocument(value) {
             return Array.isArray(value) ? value.slice(0) : value;
+        }
+        static findConfigUri(options) {
+            const config = options === null || options === void 0 ? void 0 : options.config;
+            if (config) {
+                if (config.uri) {
+                    return config.uri;
+                }
+                if (config.mimeType) {
+                    const pathname = location.pathname;
+                    return location.origin + pathname + (lastItemOf$2(pathname) === '/' ? 'index' : '') + '.' + config.mimeType;
+                }
+            }
         }
         finalizeRequestBody(options) { }
         getCopyQueryParameters(options) { return ''; }
