@@ -3,6 +3,7 @@ type DocumentElement = HTMLElement | SVGSVGElement;
 type QuerySelectorElement = DocumentRoot | DocumentElement;
 type StyleElement = HTMLElement | SVGElement;
 type SrcElement = HTMLInputElement | HTMLVideoElement | HTMLAudioElement | HTMLEmbedElement | HTMLSourceElement | HTMLIFrameElement | HTMLTrackElement;
+type TypeElement = HTMLLinkElement | HTMLStyleElement | HTMLScriptElement | HTMLAnchorElement | HTMLInputElement | HTMLButtonElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement;
 type DimensionElement = HTMLImageElement | HTMLObjectElement | HTMLCanvasElement | SVGSVGElement | Exclude<SrcElement, HTMLTrackElement>;
 type PositionAttr = "top" | "right" | "bottom" | "left";
 type PositionDirectionAttr = "start" | "end";

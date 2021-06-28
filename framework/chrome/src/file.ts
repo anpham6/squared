@@ -991,11 +991,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
         const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach(element => {
-            const items = new Map<HTMLElement, string>();
+            const group = new Map<HTMLElement, string>();
             switch (element.tagName.toUpperCase()) {
                 case 'VIDEO':
                 case 'AUDIO':
-                    element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
+                    element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, group));
                     break;
                 case 'IFRAME':
                     if (!(getAssetCommand(assetMap, element) || startsWith(element.dataset.chromeFile, 'saveTo'))) {
@@ -1004,7 +1004,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 case 'OBJECT':
                 case 'EMBED': {
                     const src = element instanceof HTMLObjectElement ? element.data : element.src;
-                    const mimeType = (element as HTMLObjectElement | HTMLEmbedElement).type || parseMimeType(src);
+                    const mimeType = (element as TypeElement).type || parseMimeType(src);
                     if (startsWith(mimeType, 'image/')) {
                         this.processImageUri(result, element, src, saveAsImage, preserveCrossOrigin, assetMap, mimeType);
                         return;
@@ -1012,15 +1012,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     break;
                 }
             }
-            resolveAssetSource(element, items);
-            for (const [item, uri] of items) {
-                const file = item.dataset.chromeFile;
+            resolveAssetSource(element, group);
+            for (const [child, uri] of group) {
+                const file = child.dataset.chromeFile;
                 if (file === 'ignore') {
                     continue;
                 }
-                const command = getAssetCommand(assetMap, item);
+                const command = getAssetCommand(assetMap, child);
                 let saveAs: Undef<string>,
                     saveTo: Undef<boolean>,
+                    mimeType: Undef<string>,
                     filename: Undef<string>,
                     compress: Undef<CompressFormat[]>,
                     download: Undef<boolean>,
@@ -1032,7 +1033,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     fromConfig: Undef<boolean>;
                 if (command) {
                     ({ filename, compress, download, tasks, watch, attributes, cloudStorage, document: documentData } = command);
-                    if (excludeAsset(result, command, item, documentData)) {
+                    if (excludeAsset(result, command, child, documentData)) {
                         continue;
                     }
                     [saveAs, saveTo] = checkSaveAs(uri, command.saveTo || command.pathname, filename || getComponentEnd(uri));
@@ -1046,13 +1047,24 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     if (fileAs) {
                         saveAs = fileAs.file;
                     }
-                    const { chromeOptions, chromeTasks, chromeWatch } = item.dataset;
+                    const { chromeOptions, chromeTasks, chromeWatch } = child.dataset;
                     ({ compress, download } = parseOptions(chromeOptions));
                     tasks = parseTask(chromeTasks);
                     watch = parseWatchInterval(chromeWatch);
                 }
-                const data = File.parseUri(uri, isCrossOrigin(download, preserveCrossOrigin), { saveAs, saveTo, fromConfig });
-                if (this.processExtensions(data, item, attributes, documentData, cloudStorage, compress, tasks, watch)) {
+                switch (child.tagName.toUpperCase()) {
+                    case 'OBJECT':
+                    case 'EMBED':
+                    case 'SOURCE': {
+                        const type = (element as TypeElement).type.trim().toLowerCase();
+                        if (fromMimeType(type)) {
+                            mimeType = type;
+                        }
+                        break;
+                    }
+                }
+                const data = File.parseUri(uri, isCrossOrigin(download, preserveCrossOrigin), { saveAs, saveTo, mimeType, fromConfig });
+                if (this.processExtensions(data, child, attributes, documentData, cloudStorage, compress, tasks, watch)) {
                     if (filename) {
                         data.filename = filename;
                     }
@@ -1084,10 +1096,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             let mimeType = item.mimeType;
             if (mimeType) {
                 mimeType = splitPairStart(mimeType, '|');
-                if (mimeType === 'module') {
-                    mimeType = 'application/javascript';
-                }
-                item.mimeType = mimeType;
+                item.mimeType = mimeType === 'module' ? 'application/javascript' : mimeType;
             }
             if (hasFormat(item.format) || item.bundleId || item.trailingContent) {
                 item.willChange = true;
