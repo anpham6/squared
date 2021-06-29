@@ -6,6 +6,7 @@ interface RequestData extends DocumentOutput, ICssRuleData {
 interface DocumentOutput {
     productionRelease?: boolean | string;
     normalizeHtmlOutput?: boolean;
+    imports?: StringMap;
 }
 
 interface ICssRuleData {

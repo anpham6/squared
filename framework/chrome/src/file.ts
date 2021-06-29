@@ -303,7 +303,7 @@ const isCrossOrigin = (download: Undef<boolean>, preserveCrossOrigin: Undef<bool
 const getContentType = (element: HTMLElement) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
 const getTagNode = (node: XmlTagNode, attributes: Undef<AttributeMap>, append?: TagAppend): XmlTagNode => ({ ...node, attributes, append });
 const getAssetCommand = (assetMap: Undef<ElementAssetMap>, element: HTMLElement) => assetMap && assetMap.get(element);
-const getMimeType = (element: HTMLLinkElement | HTMLStyleElement | HTMLScriptElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
+const getMimeType = (element: TypeElement, src: Undef<string>, fallback = '') => element.type.trim().toLowerCase() || src && parseMimeType(src) || fallback;
 const getFileExt = (value: string) => splitPairEnd(value, '.', true, true).toLowerCase();
 const getBaseUrl = () => location.origin + location.pathname;
 const hasSamePath = (item: ChromeAsset, other: ChromeAsset, bundle: boolean) => item.pathname === other.pathname && (item.filename === other.filename || FILENAME_MAP.get(item) === other.filename || bundle && startsWith(item.filename, DIR_FUNCTIONS.ASSIGN)) && (item.moveTo || '') === (other.moveTo || '');
@@ -1114,11 +1114,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         );
         if (appendMap) {
             const tagCount: ObjectMap<number> = {};
-            const getAppendData = (tagName: string, order: number, textContent?: string, prepend?: boolean): TagAppend => {
+            const getAppendData = (tagName: string, order: number): TagAppend => {
                 if (!(tagName in tagCount)) {
                     tagCount[tagName] = document.querySelectorAll(tagName).length;
                 }
-                return { tagName, tagCount: tagCount[tagName], order, textContent, prepend };
+                return { tagName, tagCount: tagCount[tagName], order };
             };
             for (const [element, appending] of appendMap) {
                 const node = File.createTagNode(element, domAll, cache);
@@ -1128,7 +1128,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                     File.setDocumentId(node, element, documentData);
                 }
                 node.outerXml = element.outerHTML.trim();
-                let i = 0;
+                let i = 0, j = 0;
                 for (const appendCommand of appending) {
                     const { type, attributes, download, textContent } = appendCommand;
                     let js: Undef<boolean>,
@@ -1161,14 +1161,21 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                                 }
                             }
                             else {
-                                const append = getAppendData(splitPairEnd(type!, '/', true, true).toLowerCase(), ++i, textContent);
-                                if (startsWith(type, 'append/')) {
+                                prepend = startsWith(type, 'prepend/');
+                                if (!prepend && !startsWith(type, 'append/')) {
+                                    continue;
+                                }
+                                const append = getAppendData(splitPairEnd(type!, '/', true, true).toLowerCase(), prepend ? ++j : ++i);
+                                if (prepend) {
+                                    append.prepend = true;
+                                    elementData = getTagNode(node, attributes, append);
+                                }
+                                else {
                                     append.nextSibling = getNextSibling();
                                     elementData = getTagNode(node, attributes, append);
                                 }
-                                else if (startsWith(type, 'prepend/')) {
-                                    append.prepend = true;
-                                    elementData = getTagNode(node, attributes, append);
+                                if (textContent) {
+                                    append.textContent = textContent;
                                 }
                             }
                             if (elementData) {
@@ -1185,8 +1192,14 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             if (isCrossOrigin(download, preserveCrossOrigin)) {
                                 delete data.uri;
                             }
-                            const append = getAppendData(js ? 'script' : 'link', ++i, undefined, prepend);
-                            if (!prepend) {
+                            const tagName = js ? 'script' : 'link';
+                            let append: TagAppend;
+                            if (prepend) {
+                                append = getAppendData(tagName, ++j);
+                                append.prepend = prepend;
+                            }
+                            else {
+                                append = getAppendData(tagName, ++i);
                                 append.nextSibling = getNextSibling();
                             }
                             data.element = getTagNode(node, attributes, append);

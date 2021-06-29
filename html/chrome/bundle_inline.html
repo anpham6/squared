@@ -93,12 +93,20 @@
     <script src="/dist/squared.js" data-chrome-file="saveAs:js/modules1.js::es5-script" data-chrome-options="compress[br]" data-chrome-watch="100::1m 1s"></script>
     <script src="/dist/squared.base.js" data-chrome-file="saveAs:js/modules2.js::minify" data-chrome-watch="~::1h 0.5m::true"></script>
     <script src="/dist/chrome.framework.js" data-chrome-file="saveAs:js/modules2.js"></script>
+    <!-- <script type="module" src="/build/framework/android/src/main.js" data-chrome-file="saveAs:js/main.js::bundle-es6+minify"></script> -->
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {
             squared.setFramework(chrome);
             const time = performance.now();
             squared
-                .copyTo('C:/Users/An/Downloads/chrome', { useOriginalHtmlPage: true, watch: true, saveAs: { image: { blob: true, pathname: 'images' } } })
+                .copyTo('C:/Users/An/Downloads/chrome', {
+                    useOriginalHtmlPage: true,
+                    watch: true,
+                    saveAs: { image: { blob: true, pathname: 'images' } },
+                    imports: {
+                        'http://localhost:3000/build/': 'C:\\Users\\An\\git\\squared\\build'
+                    }
+                })
                 .then(result => {
                     console.log(((performance.now() - time) / 1000).toPrecision(4));
                     console.log(result);
