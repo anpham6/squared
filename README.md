@@ -150,7 +150,7 @@ You have the same features as VDOM framework but you can also bundle assets usin
 
 #### Example: vdom
 
-VDOM is a minimal framework (41kb gzipped) for those who prefer a universal HTMLElement. The "lite" version is about half the bundle size and is recommended for most browser applications. The native querySelector engine is being used as of squared 3.1.
+VDOM is a minimal framework (41kb gzipped) and is especially useful for debugging. The "lite" version is about half the bundle size and is recommended for most browser applications. The native querySelector engine is being used as of squared 3.1 to give you more consistent results.
 
 ```html
 <script src="/dist/squared.min.js"></script>

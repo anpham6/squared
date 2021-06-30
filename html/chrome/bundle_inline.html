@@ -97,7 +97,8 @@
         import appBase from '/build/framework/chrome/src/main.js?format=bundle-es6%2Bminify&type=js&mime=text/javascript';
         chrome = appBase;
     </script>
-    <!-- <script type="module" src="/build/framework/android/src/main.js" data-chrome-file="saveAs:js/main.js::bundle-es6+minify"></script> -->
+    <script type="module" src="esm/main.js" data-chrome-file="saveAs:js/multiple-entry.js::bundle-es6+minify" data-chrome-watch="true"></script>
+    <script type="module" src="esm/otherEntry.js" data-chrome-file="saveAs:js/multiple-entry.js::bundle-es6+minify"></script>
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {
             squared.setFramework(chrome);
@@ -108,7 +109,8 @@
                     watch: true,
                     saveAs: { image: { blob: true, pathname: 'images' } },
                     imports: {
-                        'http://localhost:3000/build/': 'C:\\Users\\An\\git\\squared\\build'
+                        'http://localhost:3000/build/': 'C:\\Users\\An\\git\\squared\\build',
+                        'http://localhost:3000/chrome/esm/': './html/chrome/esm'
                     }
                 })
                 .then(result => {

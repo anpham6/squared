@@ -19,7 +19,7 @@ export function parseWatchInterval(value: Undef<string>) {
         if (value === 'true') {
             return true;
         }
-        const match = /^(?:^|\s+)(~|\d+)\s*(?:::\s*(~|.+?)\s*(?:::\s*(.+?)(?:\[([^\]]+)\])?)?)?(?:\s+|$)$/.exec(value);
+        const match = /^(~|\d+)\s*(?:::\s*(~|.+?)\s*(?:::\s*(.+?)(?:\[([^\]]+)\])?)?)?$/.exec(value);
         if (match) {
             let interval: Undef<number>,
                 expires: Undef<string>,

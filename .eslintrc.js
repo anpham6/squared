@@ -4,13 +4,15 @@ module.exports = {
         "es2017": true
     },
     "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "plugin:promise/recommended",
-        "./config/.eslint-shared"
+        "./config/.eslint-shared",
+        "plugin:promise/recommended"
     ],
+    "plugins": [
+        "promise"
+    ],
+    "rules": {
+        "promise/param-names": "off"
+    },
     "ignorePatterns": [
         "index.d.ts"
     ],

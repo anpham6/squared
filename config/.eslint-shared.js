@@ -4,9 +4,14 @@ module.exports = {
         "project": "tsconfig.json",
         "sourceType": "module"
     },
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    ],
     "plugins": [
-        "@typescript-eslint",
-        "promise"
+        "@typescript-eslint"
     ],
     "rules": {
         "keyword-spacing": "off",
@@ -54,7 +59,6 @@ module.exports = {
         "no-useless-return": "error",
         "no-var": "error",
         "object-shorthand": ["error", "always", { "avoidQuotes": true }],
-        "promise/param-names": "off",
         "prefer-arrow-callback": "error",
         "prefer-const": "error",
         "prefer-regex-literals": "error",
