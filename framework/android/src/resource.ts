@@ -313,23 +313,26 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(resourceId, images, prefix, this._imageFormat);
     }
 
-    public addFontProvider(authority: string, packageName: string, certs: string[], webFonts: string | PlainObject, verified?: boolean): Void<Promise<void>> {
+    public addFontProvider(authority: string, packageName: string, certs: string[], webFonts: string | PlainObject, verified?: boolean): Void<Promise<boolean>> {
         const setFont = (fonts: Undef<FontProviderFonts>) => {
             if (fonts) {
                 this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
+                return true;
             }
+            return false;
         };
         if (typeof webFonts === 'string') {
             return fetch(webFonts)
                 .then(async res => {
                     const result: unknown = await res.json();
-                    if (isPlainObject(result)) {
-                        setFont(this.parseWebFonts(result));
-                    }
+                    return isPlainObject(result) && setFont(this.parseWebFonts(result));
                 })
-                .catch(err => this.errorWebFonts(err));
+                .catch(err => {
+                    this.errorWebFonts(err);
+                    return false;
+                });
         }
-        setFont(!verified ? this.parseWebFonts(webFonts) : webFonts as FontProviderFonts);
+        return Promise.resolve(setFont(!verified ? this.parseWebFonts(webFonts) : webFonts as FontProviderFonts));
     }
 
     public assignFilename(uri: string, mimeType?: string, ext = 'unknown') {

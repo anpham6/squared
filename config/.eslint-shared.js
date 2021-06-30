@@ -5,7 +5,8 @@ module.exports = {
         "sourceType": "module"
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "promise"
     ],
     "rules": {
         "keyword-spacing": "off",
@@ -53,6 +54,7 @@ module.exports = {
         "no-useless-return": "error",
         "no-var": "error",
         "object-shorthand": ["error", "always", { "avoidQuotes": true }],
+        "promise/param-names": "off",
         "prefer-arrow-callback": "error",
         "prefer-const": "error",
         "prefer-regex-literals": "error",

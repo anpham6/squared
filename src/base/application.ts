@@ -236,6 +236,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                         success({ mimeType: mimeType || 'font/' + (splitPair(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() } as RawDataOptions);
                                     }
                                 }
+                                return result;
                             })
                             .catch(err => error(err));
                     }

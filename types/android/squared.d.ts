@@ -53,7 +53,7 @@ declare namespace base {
         readonly application: Application<T>;
         addImageSrc(resourceId: number, element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcData[]): string;
         addImageSet(resourceId: number, images: StringMap, prefix?: string): string;
-        addFontProvider(authority: string, package: string, certs: string[], webFonts: PlainObject, verified?: boolean): Void<Promise<void>>;
+        addFontProvider(authority: string, package: string, certs: string[], webFonts: PlainObject, verified?: boolean): Void<Promise<boolean>>;
         get fontProvider(): ObjectMap<FontProvider>;
     }
 

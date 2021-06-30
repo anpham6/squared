@@ -90,9 +90,13 @@
             grid-column: 10 / 13;
         }
     </style>
+    <script>var chrome = null;</script>
     <script src="/dist/squared.js" data-chrome-file="saveAs:js/modules1.js::es5-script" data-chrome-options="compress[br]" data-chrome-watch="100::1m 1s"></script>
     <script src="/dist/squared.base.js" data-chrome-file="saveAs:js/modules2.js::minify" data-chrome-watch="~::1h 0.5m::true"></script>
-    <script src="/dist/chrome.framework.js" data-chrome-file="saveAs:js/modules2.js"></script>
+    <script type="module">
+        import appBase from '/build/framework/chrome/src/main.js?format=bundle-es6%2Bminify&type=js&mime=text/javascript';
+        chrome = appBase;
+    </script>
     <!-- <script type="module" src="/build/framework/android/src/main.js" data-chrome-file="saveAs:js/main.js::bundle-es6+minify"></script> -->
     <script data-chrome-file="exclude">
         document.addEventListener('DOMContentLoaded', function() {

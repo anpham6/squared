@@ -11,12 +11,11 @@ import type ControllerUI from './controller-ui';
 import type ExtensionUI from './extension-ui';
 import type NodeUI from './node-ui';
 
-import Application from './application';
+import Application, { parseImageUrl } from './application';
 import ResourceUI from './resource-ui';
 import ContentUI from './content-ui';
 import LayoutUI from './layout-ui';
 
-import { parseImageUrl } from './application';
 import { convertListStyle } from './extensions/list';
 
 import { STRING } from './lib/regex';

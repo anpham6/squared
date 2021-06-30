@@ -40,7 +40,7 @@ interface ViewModelAction {
 }
 
 interface FontProviderAction {
-    addFontProvider(authority: string, package: string, certs: string[], webFonts: PlainObject): Void<Promise<void>>;
+    addFontProvider(authority: string, package: string, certs: string[], webFonts: PlainObject): Void<Promise<boolean>>;
 }
 
 interface FontProvider {
