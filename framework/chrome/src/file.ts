@@ -493,7 +493,11 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         let templateMap: Undef<TemplateMap>;
-        const addTemplate = (type: string, module: string, identifier: string, value: string) => ((templateMap ||= { html: {}, js: {}, css: {} })[type][module] ||= {})[identifier] = value;
+        const addTemplate = (type: "html" | "js" | "css" | "data", module: string, identifier: string, value: string) => {
+            templateMap ||= {};
+            const template = type === 'data' ? templateMap[type] ||= {} : (templateMap[type] ||= {})[module] ||= {};
+            template[identifier] = value.trim();
+        };
         if (assetMap) {
             for (const { template, type, selector } of assetMap.values()) {
                 if (template && type && !selector) {
@@ -501,10 +505,16 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                         case 'html':
                         case 'js':
                         case 'css': {
-                            const { module, identifier } = template;
-                            let value = template.value;
-                            if (module && identifier && value && (value = value.trim()) && value.indexOf('function') !== -1) {
+                            let { module, identifier, value } = template; // eslint-disable-line prefer-const
+                            if (module && identifier && value && value.indexOf('function') !== -1) {
                                 addTemplate(type, module, identifier, value);
+                            }
+                            break;
+                        }
+                        case 'data': {
+                            let { value, identifier } = template; // eslint-disable-line prefer-const
+                            if (identifier && value && value.indexOf('function') !== -1) {
+                                addTemplate(type, '', identifier, value);
                             }
                             break;
                         }
@@ -529,14 +539,21 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 else if (template) {
                     [type, module, identifier] = template.split('::').map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
                 }
-                if (type && module && identifier) {
-                    switch (type) {
-                        case 'html':
-                        case 'js':
-                        case 'css':
-                            addTemplate(type, module, identifier, element.textContent!.trim());
-                            excludeAsset(result, { exclude: true }, element);
-                            return;
+                if (module) {
+                    if (type === 'data') {
+                        addTemplate(type, '', module, element.textContent!);
+                        excludeAsset(result, { exclude: true }, element);
+                        return;
+                    }
+                    else if (identifier) {
+                        switch (type) {
+                            case 'html':
+                            case 'js':
+                            case 'css':
+                                addTemplate(type, module, identifier, element.textContent!);
+                                excludeAsset(result, { exclude: true }, element);
+                                return;
+                        }
                     }
                 }
                 if (command) {

@@ -158,6 +158,16 @@
 <body>
     <!-- START: DEMO -->
     <!-- <p><img src="images/harbour1.webp"></p> -->
+    <script type="text/template" data-chrome-template="data::preRender-db">
+        async function (value, item) {
+            console.log('preRender', value, item);
+        }
+    </script>
+    <script type="text/template" data-chrome-template="data::postQuery-db">
+        async function (value, item) {
+            console.log('postQuery', value, item);
+        }
+    </script>
     <div id="squared_ui">
         <div class="cards">
             <div class="card" style="background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg);">

@@ -45,6 +45,8 @@ interface DataSource extends ElementAction, DocumentAction {
     query?: unknown;
     index?: number;
     limit?: number;
+    postQuery?: string;
+    preRender?: string;
     removeEmpty?: boolean;
 }
 
