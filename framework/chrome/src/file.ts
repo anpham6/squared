@@ -298,6 +298,12 @@ function hasFormat(value: Undef<string>) {
     return false;
 }
 
+function getResourceAssets(resourceId: Undef<number>) {
+    if (resourceId !== undefined && resourceId !== -1) {
+        return Resource.ASSETS[resourceId];
+    }
+}
+
 const assignFilename = (value: string, ext?: string) => DIR_FUNCTIONS.ASSIGN + '.' + (ext || value && getFileExt(value) || 'unknown');
 const isCrossOrigin = (download: Undef<boolean>, preserveCrossOrigin: Undef<boolean>) => typeof download === 'boolean' ? !download : !!preserveCrossOrigin;
 const getContentType = (element: HTMLElement) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
@@ -656,7 +662,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 styleMap.set(element, data);
             }
         });
-        const rawData = this.getResourceAssets(resourceId)?.rawData;
+        const rawData = getResourceAssets(resourceId)?.rawData;
         if (rawData) {
             const styleSheets = document.styleSheets;
             const length = styleSheets.length;
@@ -792,7 +798,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                 }
             });
         });
-        const assets = this.getResourceAssets(resourceId);
+        const assets = getResourceAssets(resourceId);
         if (assets) {
             for (const uri of assets.image.keys()) {
                 const image = Resource.parseDataURI(uri);
@@ -820,9 +826,9 @@ export default class File<T extends squared.base.Node> extends squared.base.File
                             filename ||= item.filename;
                             if (startsWith(mimeType, 'image/') && (commands = command.commands)) {
                                 for (let i = 0; i < commands.length; ++i) {
-                                    const match = /^(?:^|\s+)(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
+                                    const match = /^([a-z]+)\s*[@%]?(.*)$/.exec(commands[i].trim());
                                     if (match) {
-                                        commands[i] = match[1] + '@' + match[2].trim();
+                                        commands[i] = match[1] + '@' + match[2];
                                     }
                                     else {
                                         commands.splice(i--, 1);
@@ -880,7 +886,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             saveAsFont = options.saveAs?.font;
         }
         const result: ChromeAsset[] = [];
-        const assets = this.getResourceAssets(resourceId);
+        const assets = getResourceAssets(resourceId);
         if (assets) {
             for (const fonts of assets.fonts.values()) {
                 for (const { srcUrl, srcBase64, mimeType } of fonts) {
@@ -1508,12 +1514,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
         }
     }
 
-    private getResourceAssets(resourceId: Undef<number>) {
-        if (resourceId !== undefined && resourceId !== -1) {
-            return Resource.ASSETS[resourceId];
-        }
-    }
-
     private processExtensions(data: Optional<ChromeAsset>, element?: Null<HTMLElement>, attributes?: Null<AttributeMap>, document?: Null<StringOfArray>, cloudStorage?: Null<CloudStorage[]>, compress?: CompressFormat[], tasks?: TaskAction[], watch?: WatchValue, modified?: Undef<boolean>): data is ChromeAsset {
         if (data) {
             if (compress) {
@@ -1557,6 +1557,6 @@ export default class File<T extends squared.base.Node> extends squared.base.File
     }
 
     get userSettings() {
-        return this.resource.application.userSettings as UserResourceSettings;
+        return this.application.userSettings as UserResourceSettings;
     }
 }
