@@ -6,6 +6,7 @@ import Resource = squared.base.Resource;
 
 type CloudStorage = unknown;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
+type FileComponents = [string, string, string?];
 
 interface OptionsData {
     preserve?: boolean;
@@ -43,7 +44,7 @@ let BUNDLE_ID = 0;
 
 function parseFileAs(attr: string, value: Undef<string>) {
     if (value) {
-        const match = new RegExp(`^(?:^|\\s+)${attr}\\s*:(.+)$`).exec(value);
+        const match = new RegExp(`^${attr}\\s*:(.+)$`).exec(value.trim());
         if (match) {
             const [file, format] = splitPair(match[1], '::', true);
             return { file: replaceAll(file, '\\', '/'), format } as FileAsData;
@@ -78,12 +79,12 @@ function parseOptions(value: Undef<string>) {
     return result;
 }
 
-function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<string>, string, string] {
+function getFilePath(value: string, saveTo?: boolean, ext?: string) {
     if (startsWith(value, './')) {
         value = value.substring(2);
     }
     if (value.indexOf('/') === -1) {
-        return [undefined, '', value];
+        return ['', value] as FileComponents;
     }
     let moveTo: Undef<string>;
     if (value[0] === '/') {
@@ -102,11 +103,14 @@ function getFilePath(value: string, saveTo?: boolean, ext?: string): [Undef<stri
         }
         value = (pathname.shift() ? pathname.join('/') + '/' : '') + value.split('../').pop();
     }
-    const result = splitPair(value, '/', false, true);
+    const result = splitPair(value, '/', false, true) as FileComponents;
     if (saveTo) {
         result[1] = assignFilename(result[1], ext);
     }
-    return [moveTo, ...result];
+    if (moveTo) {
+        result.push(moveTo);
+    }
+    return result;
 }
 
 function resolveAssetSource(element: SrcElement | HTMLObjectElement, data: Map<HTMLElement, string>) {
@@ -165,7 +169,7 @@ function setBundleIndex(bundles: BundleIndex) {
 function createBundleAsset(assets: ChromeAsset[], element: HTMLElement, file: string, mimeType: string, format: Undef<string>, preserve: Undef<boolean>, inline: Undef<boolean>, document: Undef<StringOfArray>): Null<ChromeAsset> {
     const content = element.innerHTML;
     if (content.trim()) {
-        const [moveTo, pathname, filename] = getFilePath(file);
+        const [pathname, filename, moveTo] = getFilePath(file);
         const data: ChromeAsset = {
             uri: getBaseUrl(),
             pathname,
@@ -388,7 +392,7 @@ export default class File<T extends squared.base.Node> extends squared.base.File
             let moveTo: Undef<string>,
                 filename: Undef<string>;
             if (file) {
-                [moveTo, pathname, filename] = getFilePath(file, saveTo, getFileExt(uri));
+                [pathname, filename, moveTo] = getFilePath(file, saveTo, getFileExt(uri));
             }
             else if (pathname === undefined) {
                 if (!local) {

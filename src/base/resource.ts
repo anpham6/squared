@@ -13,7 +13,7 @@ const { extractURL, resolveURL } = squared.lib.css;
 const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath, splitEnclosing, splitPair, splitPairEnd, splitPairStart, splitSome, startsWith } = squared.lib.util;
 
 const REGEXP_FONTURL = /(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)\s*(?:format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
-const REGEXP_DATAURI = new RegExp(`^(?:^|\\s+)${STRING.DATAURI}(?:$|\\s+)$`);
+const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
 export default class Resource<T extends Node> implements squared.base.Resource<T> {
     public static readonly KEY_NAME = 'squared.base.resource';
@@ -28,7 +28,7 @@ export default class Resource<T extends Node> implements squared.base.Resource<T
     }
 
     public static parseDataURI(value: string, mimeType = 'image/unknown', encoding = 'base64') {
-        const match = REGEXP_DATAURI.exec(value);
+        const match = REGEXP_DATAURI.exec(value.trim());
         if (match && match[1]) {
             const leading = match[2];
             const trailing = match[3];
