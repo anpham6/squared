@@ -2,7 +2,7 @@ import type View from '../../view';
 
 type AppViewModel = android.base.AppViewModel;
 
-const { convertHyphenated, isPlainObject, startsWith } = squared.lib.util;
+const { convertHyphenated, isPlainObject } = squared.lib.util;
 
 export default class ResourceData<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
@@ -22,7 +22,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                 if (node.styleElement) {
                     const dataset = node.dataset;
                     for (const name in dataset) {
-                        if (startsWith(name, 'viewmodel')) {
+                        if (name.startsWith('viewmodel')) {
                             const items = convertHyphenated(name).split('-');
                             if (items.length === 3) {
                                 const attr = items[2];

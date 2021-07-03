@@ -69,22 +69,8 @@ function getImageAssets(resource: Resource<View>, resourceId: number, pathname: 
         if (endsWith(filename, '.unknown')) {
             mimeType = 'image/unknown';
         }
-        else if (convertImages) {
-            switch (mimeType = parseMimeType(filename)) {
-                case 'image/png':
-                case 'image/jpeg':
-                case 'image/webp':
-                case 'image/gif':
-                case 'image/bmp':
-                case 'image/tiff':
-                case 'image/unknown':
-                    splitSome(convertImages.toLowerCase(), value => {
-                        if (/^(?:png|jpeg|webp|bmp)/i.test(value)) {
-                            (commands ||= []).push(value);
-                        }
-                    }, '::');
-                    break;
-            }
+        if (convertImages && (mimeType ||= parseMimeType(filename)).startsWith('image/')) {
+            splitSome(convertImages.toLowerCase(), value => (commands ||= []).push(value), '::');
         }
         const image = resource.getImage(resourceId, uri);
         result[j++] = {
