@@ -204,6 +204,7 @@ this.squared.base = (function (exports) {
                                     success({ mimeType: mimeType || 'font/' + (splitPair$6(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
                                 }
                             }
+                            return result;
                         })
                             .catch(err => error(err));
                     }
@@ -4788,7 +4789,7 @@ this.squared.base = (function (exports) {
     const { extractURL, resolveURL } = squared.lib.css;
     const { convertBase64, endsWith, fromLastIndexOf, isBase64, resolvePath: resolvePath$1, splitEnclosing, splitPair: splitPair$1, splitPairEnd, splitPairStart, splitSome: splitSome$2, startsWith } = squared.lib.util;
     const REGEXP_FONTURL = /(url|local)\(\s*(?:"([^"]+)"|'([^']+)'|([^)]+))\s*\)\s*(?:format\(\s*["']?\s*([\w-]+)\s*["']?\s*\))?/g;
-    const REGEXP_DATAURI = new RegExp(`^(?:^|\\s+)${STRING$1.DATAURI}(?:$|\\s+)$`);
+    const REGEXP_DATAURI = new RegExp(`^${STRING$1.DATAURI}$`);
     class Resource {
         constructor(application) {
             this.application = application;
@@ -4803,7 +4804,7 @@ this.squared.base = (function (exports) {
             return ((_a = /\.([^.\s/]+?)(?:\s+|$)$/.exec(value)) === null || _a === void 0 ? void 0 : _a[1]) || '';
         }
         static parseDataURI(value, mimeType = 'image/unknown', encoding = 'base64') {
-            const match = REGEXP_DATAURI.exec(value);
+            const match = REGEXP_DATAURI.exec(value.trim());
             if (match && match[1]) {
                 const leading = match[2];
                 const trailing = match[3];
@@ -5583,7 +5584,7 @@ this.squared.base = (function (exports) {
             if (value === 'true') {
                 return true;
             }
-            const match = /^(?:^|\s+)(~|\d+)\s*(?:::\s*(~|.+?)\s*(?:::\s*(.+?)(?:\[([^\]]+)\])?)?)?(?:\s+|$)$/.exec(value);
+            const match = /^(~|\d+)\s*(?:::\s*(~|.+?)\s*(?:::\s*(.+?)(?:\[([^\]]+)\])?)?)?$/.exec(value);
             if (match) {
                 let interval, expires, reload;
                 if (match[1] !== '~' && !isNaN(+match[1])) {

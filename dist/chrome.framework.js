@@ -14,7 +14,7 @@ var chrome = (function () {
     let BUNDLE_ID = 0;
     function parseFileAs(attr, value) {
         if (value) {
-            const match = new RegExp(`^(?:^|\\s+)${attr}\\s*:(.+)$`).exec(value);
+            const match = new RegExp(`^${attr}\\s*:(.+)$`).exec(value.trim());
             if (match) {
                 const [file, format] = splitPair(match[1], '::', true);
                 return { file: replaceAll(file, '\\', '/'), format };
@@ -52,7 +52,7 @@ var chrome = (function () {
             value = value.substring(2);
         }
         if (value.indexOf('/') === -1) {
-            return [undefined, '', value];
+            return ['', value];
         }
         let moveTo;
         if (value[0] === '/') {
@@ -75,7 +75,10 @@ var chrome = (function () {
         if (saveTo) {
             result[1] = assignFilename(result[1], ext);
         }
-        return [moveTo, ...result];
+        if (moveTo) {
+            result.push(moveTo);
+        }
+        return result;
     }
     function resolveAssetSource(element, data) {
         const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
@@ -131,7 +134,7 @@ var chrome = (function () {
     function createBundleAsset(assets, element, file, mimeType, format, preserve, inline, document) {
         const content = element.innerHTML;
         if (content.trim()) {
-            const [moveTo, pathname, filename] = getFilePath(file);
+            const [pathname, filename, moveTo] = getFilePath(file);
             const data = {
                 uri: getBaseUrl(),
                 pathname,
@@ -255,6 +258,11 @@ var chrome = (function () {
         }
         return false;
     }
+    function getResourceAssets(resourceId) {
+        if (resourceId !== undefined && resourceId !== -1) {
+            return Resource.ASSETS[resourceId];
+        }
+    }
     const assignFilename = (value, ext) => "__assign__" /* ASSIGN */ + '.' + (ext || value && getFileExt(value) || 'unknown');
     const isCrossOrigin = (download, preserveCrossOrigin) => typeof download === 'boolean' ? !download : !!preserveCrossOrigin;
     const getContentType = (element) => element instanceof HTMLLinkElement ? 'style' : element.tagName.toLowerCase();
@@ -328,7 +336,7 @@ var chrome = (function () {
                 const [pathsub, filesub] = splitPair(path, '/', false, true);
                 let moveTo, filename;
                 if (file) {
-                    [moveTo, pathname, filename] = getFilePath(file, saveTo, getFileExt(uri));
+                    [pathname, filename, moveTo] = getFilePath(file, saveTo, getFileExt(uri));
                 }
                 else if (pathname === undefined) {
                     if (!local) {
@@ -405,7 +413,7 @@ var chrome = (function () {
                 format = process.join('+');
             }
             const data = File.parseUri(location.href, false, { saveAs: file, mimeType: 'text/html', format, pathname: '' });
-            if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, element)) {
+            if (this.processExtensions(data, element, attributes, documentData, cloudStorage, compress, tasks)) {
                 if (filename) {
                     data.filename = filename;
                 }
@@ -426,7 +434,12 @@ var chrome = (function () {
             const result = [];
             const bundleIndex = {};
             let templateMap;
-            const addTemplate = (type, module, identifier, value) => { var _a; return ((_a = (templateMap || (templateMap = { html: {}, js: {}, css: {} }))[type])[module] || (_a[module] = {}))[identifier] = value; };
+            const addTemplate = (type, module, identifier, value) => {
+                var _a;
+                templateMap || (templateMap = {});
+                const template = type === 'data' ? templateMap[type] || (templateMap[type] = {}) : (_a = (templateMap[type] || (templateMap[type] = {})))[module] || (_a[module] = {});
+                template[identifier] = value.trim();
+            };
             if (assetMap) {
                 for (const { template, type, selector } of assetMap.values()) {
                     if (template && type && !selector) {
@@ -434,10 +447,16 @@ var chrome = (function () {
                             case 'html':
                             case 'js':
                             case 'css': {
-                                const { module, identifier } = template;
-                                let value = template.value;
-                                if (module && identifier && value && (value = value.trim()) && value.indexOf('function') !== -1) {
+                                let { module, identifier, value } = template; // eslint-disable-line prefer-const
+                                if (module && identifier && value && value.indexOf('function') !== -1) {
                                     addTemplate(type, module, identifier, value);
+                                }
+                                break;
+                            }
+                            case 'data': {
+                                let { value, identifier } = template; // eslint-disable-line prefer-const
+                                if (identifier && value && value.indexOf('function') !== -1) {
+                                    addTemplate(type, '', identifier, value);
                                 }
                                 break;
                             }
@@ -460,14 +479,21 @@ var chrome = (function () {
                     else if (template) {
                         [type, module, identifier] = template.split('::').map((value, index) => (index === 0 ? value.toLowerCase() : value).trim());
                     }
-                    if (type && module && identifier) {
-                        switch (type) {
-                            case 'html':
-                            case 'js':
-                            case 'css':
-                                addTemplate(type, module, identifier, element.textContent.trim());
-                                excludeAsset(result, { exclude: true }, element);
-                                return;
+                    if (module) {
+                        if (type === 'data') {
+                            addTemplate(type, '', module, element.textContent);
+                            excludeAsset(result, { exclude: true }, element);
+                            return;
+                        }
+                        else if (identifier) {
+                            switch (type) {
+                                case 'html':
+                                case 'js':
+                                case 'css':
+                                    addTemplate(type, module, identifier, element.textContent);
+                                    excludeAsset(result, { exclude: true }, element);
+                                    return;
+                            }
                         }
                     }
                     if (command) {
@@ -497,11 +523,16 @@ var chrome = (function () {
             const bundleIndex = {};
             const styleMap = new WeakMap();
             document.querySelectorAll('link, style').forEach((element) => {
-                let href = '', mimeType = 'text/css';
+                let href = '';
                 if (element instanceof HTMLLinkElement) {
                     const rel = element.rel.trim().toLowerCase();
                     href = element.href;
                     if (rel !== 'stylesheet') {
+                        const file = element.dataset.chromeFile;
+                        if (file === 'exclude' || file === 'ignore') {
+                            return;
+                        }
+                        let mimeType;
                         const checkMimeType = () => {
                             const filename = fromLastIndexOf(href, '/');
                             if (filename.indexOf('.') !== -1) {
@@ -510,30 +541,59 @@ var chrome = (function () {
                             }
                             return false;
                         };
-                        if (getAssetCommand(assetMap, element)) {
-                            checkMimeType();
-                        }
-                        else if (!href || rel.indexOf('icon') === -1 || !checkMimeType()) {
-                            return;
+                        if (href && rel.indexOf('icon') !== -1 && checkMimeType() && startsWith(mimeType, 'image/')) {
+                            const data = this.processImageUri(result, element, href, undefined, preserveCrossOrigin, assetMap, mimeType);
+                            if (data) {
+                                delete data.format;
+                            }
                         }
                         else {
-                            try {
-                                if (new URL(href).origin !== location.origin) {
+                            const command = getAssetCommand(assetMap, element);
+                            if (command) {
+                                if (excludeAsset(result, command, element, command.document)) {
                                     return;
                                 }
+                                checkMimeType();
+                                if (command.download && href) {
+                                    const data = File.parseUri(href, false, { saveAs: file, mimeType, pathname: command.pathname });
+                                    if (this.processExtensions(data, element, command.attributes, command.document, command.cloudStorage, command.compress, command.tasks, command.watch)) {
+                                        if (command.filename) {
+                                            data.filename = command.filename;
+                                        }
+                                        result.push(data);
+                                    }
+                                }
+                                else {
+                                    const data = createFile(mimeType);
+                                    if (this.processExtensions(data, element, command.attributes, command.document)) {
+                                        result.push(data);
+                                    }
+                                }
                             }
-                            catch (_a) {
-                                return;
+                            else if (href) {
+                                const chromeOptions = element.dataset.chromeOptions;
+                                if (chromeOptions) {
+                                    const { download, compress } = parseOptions(chromeOptions);
+                                    if (download && href) {
+                                        const { chromeTasks, chromeWatch } = element.dataset;
+                                        checkMimeType();
+                                        const data = File.parseUri(href, false, { saveAs: file, mimeType });
+                                        if (this.processExtensions(data, element, null, null, null, compress, parseTask(chromeTasks), parseWatchInterval(chromeWatch))) {
+                                            result.push(data);
+                                        }
+                                    }
+                                }
                             }
                         }
+                        return;
                     }
                 }
-                const data = this.createBundle(mimeType === 'text/css', result, element, href, mimeType, 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
+                const data = this.createBundle(true, result, element, href, 'text/css', 'css', { preserveCrossOrigin, bundleIndex, assetMap, saveAsOptions: saveAsLink });
                 if (data) {
                     styleMap.set(element, data);
                 }
             });
-            const rawData = (_b = this.getResourceAssets(resourceId)) === null || _b === void 0 ? void 0 : _b.rawData;
+            const rawData = (_b = getResourceAssets(resourceId)) === null || _b === void 0 ? void 0 : _b.rawData;
             if (rawData) {
                 const styleSheets = document.styleSheets;
                 const length = styleSheets.length;
@@ -606,7 +666,7 @@ var chrome = (function () {
                                 ({ compress, download, preserve, process, tasks, cloudStorage, document: documentData } = command);
                             }
                             const data = File.parseUri(resolvePath(uri), isCrossOrigin(download, preserveCrossOrigin), { saveAs, mimeType: 'text/css', format: process ? process.join('+') : '' });
-                            if (this.processExtensions(data, documentData, compress, tasks, cloudStorage)) {
+                            if (this.processExtensions(data, null, null, documentData, cloudStorage, compress, tasks)) {
                                 if (filename) {
                                     data.filename = filename;
                                 }
@@ -654,7 +714,7 @@ var chrome = (function () {
                     }
                 });
             });
-            const assets = this.getResourceAssets(resourceId);
+            const assets = getResourceAssets(resourceId);
             if (assets) {
                 for (const uri of assets.image.keys()) {
                     const image = Resource.parseDataURI(uri);
@@ -680,9 +740,9 @@ var chrome = (function () {
                                 filename || (filename = item.filename);
                                 if (startsWith(mimeType, 'image/') && (commands = command.commands)) {
                                     for (let i = 0; i < commands.length; ++i) {
-                                        const match = /^(?:^|\s+)(?:(png|jpeg|webp|bmp)\s*[@%]?)(.*)$/.exec(commands[i]);
+                                        const match = /^([a-z]+)\s*[@%]?(.*)$/.exec(commands[i].trim());
                                         if (match) {
-                                            commands[i] = match[1] + '@' + match[2].trim();
+                                            commands[i] = match[1] + '@' + match[2];
                                         }
                                         else {
                                             commands.splice(i--, 1);
@@ -736,7 +796,7 @@ var chrome = (function () {
                 saveAsFont = (_a = options.saveAs) === null || _a === void 0 ? void 0 : _a.font;
             }
             const result = [];
-            const assets = this.getResourceAssets(resourceId);
+            const assets = getResourceAssets(resourceId);
             if (assets) {
                 for (const fonts of assets.fonts.values()) {
                     for (const { srcUrl, srcBase64, mimeType } of fonts) {
@@ -855,11 +915,11 @@ var chrome = (function () {
             }
             const result = [];
             document.querySelectorAll(tagName).forEach(element => {
-                const items = new Map();
+                const group = new Map();
                 switch (element.tagName.toUpperCase()) {
                     case 'VIDEO':
                     case 'AUDIO':
-                        element.querySelectorAll('source, track').forEach((source) => resolveAssetSource(source, items));
+                        element.querySelectorAll('source, track').forEach((source) => resolveAssetSource(source, group));
                         break;
                     case 'IFRAME':
                         if (!(getAssetCommand(assetMap, element) || startsWith(element.dataset.chromeFile, 'saveTo'))) {
@@ -876,17 +936,17 @@ var chrome = (function () {
                         break;
                     }
                 }
-                resolveAssetSource(element, items);
-                for (const [item, uri] of items) {
-                    const file = item.dataset.chromeFile;
+                resolveAssetSource(element, group);
+                for (const [child, uri] of group) {
+                    const file = child.dataset.chromeFile;
                     if (file === 'ignore') {
                         continue;
                     }
-                    const command = getAssetCommand(assetMap, item);
-                    let saveAs, saveTo, filename, compress, download, tasks, watch, attributes, cloudStorage, documentData, fromConfig;
+                    const command = getAssetCommand(assetMap, child);
+                    let saveAs, saveTo, mimeType, filename, compress, download, tasks, watch, attributes, cloudStorage, documentData, fromConfig;
                     if (command) {
                         ({ filename, compress, download, tasks, watch, attributes, cloudStorage, document: documentData } = command);
-                        if (excludeAsset(result, command, item, documentData)) {
+                        if (excludeAsset(result, command, child, documentData)) {
                             continue;
                         }
                         [saveAs, saveTo] = checkSaveAs(uri, command.saveTo || command.pathname, filename || getComponentEnd(uri));
@@ -900,13 +960,24 @@ var chrome = (function () {
                         if (fileAs) {
                             saveAs = fileAs.file;
                         }
-                        const { chromeOptions, chromeTasks, chromeWatch } = item.dataset;
+                        const { chromeOptions, chromeTasks, chromeWatch } = child.dataset;
                         ({ compress, download } = parseOptions(chromeOptions));
                         tasks = parseTask(chromeTasks);
                         watch = parseWatchInterval(chromeWatch);
                     }
-                    const data = File.parseUri(uri, isCrossOrigin(download, preserveCrossOrigin), { saveAs, saveTo, fromConfig });
-                    if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, item, watch)) {
+                    switch (child.tagName.toUpperCase()) {
+                        case 'OBJECT':
+                        case 'EMBED':
+                        case 'SOURCE': {
+                            const type = element.type.trim().toLowerCase();
+                            if (fromMimeType(type)) {
+                                mimeType = type;
+                            }
+                            break;
+                        }
+                    }
+                    const data = File.parseUri(uri, isCrossOrigin(download, preserveCrossOrigin), { saveAs, saveTo, mimeType, fromConfig });
+                    if (this.processExtensions(data, child, attributes, documentData, cloudStorage, compress, tasks, watch)) {
                         if (filename) {
                             data.filename = filename;
                         }
@@ -938,10 +1009,7 @@ var chrome = (function () {
                 let mimeType = item.mimeType;
                 if (mimeType) {
                     mimeType = splitPairStart(mimeType, '|');
-                    if (mimeType === 'module') {
-                        mimeType = 'application/javascript';
-                    }
-                    item.mimeType = mimeType;
+                    item.mimeType = mimeType === 'module' ? 'application/javascript' : mimeType;
                 }
                 if (hasFormat(item.format) || item.bundleId || item.trailingContent) {
                     item.willChange = true;
@@ -950,11 +1018,11 @@ var chrome = (function () {
             assets.push(...scriptAssets, ...this.getImageAssets(options), ...this.getVideoAssets(options), ...this.getAudioAssets(options), ...this.getRawAssets('object', options), ...this.getRawAssets('embed', options), ...this.getRawAssets('iframe', options), ...this.getFontAssets(options));
             if (appendMap) {
                 const tagCount = {};
-                const getAppendData = (tagName, order, textContent, prepend) => {
+                const getAppendData = (tagName, order) => {
                     if (!(tagName in tagCount)) {
                         tagCount[tagName] = document.querySelectorAll(tagName).length;
                     }
-                    return { tagName, tagCount: tagCount[tagName], order, textContent, prepend };
+                    return { tagName, tagCount: tagCount[tagName], order };
                 };
                 for (const [element, appending] of appendMap) {
                     const node = File.createTagNode(element, domAll, cache);
@@ -964,7 +1032,7 @@ var chrome = (function () {
                         File.setDocumentId(node, element, documentData);
                     }
                     node.outerXml = element.outerHTML.trim();
-                    let i = 0;
+                    let i = 0, j = 0;
                     for (const appendCommand of appending) {
                         const { type, attributes, download, textContent } = appendCommand;
                         let js, url, prepend;
@@ -995,14 +1063,21 @@ var chrome = (function () {
                                     }
                                 }
                                 else {
-                                    const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), ++i, textContent);
-                                    if (startsWith(type, 'append/')) {
+                                    prepend = startsWith(type, 'prepend/');
+                                    if (!prepend && !startsWith(type, 'append/')) {
+                                        continue;
+                                    }
+                                    const append = getAppendData(splitPairEnd(type, '/', true, true).toLowerCase(), prepend ? ++j : ++i);
+                                    if (prepend) {
+                                        append.prepend = true;
+                                        elementData = getTagNode(node, attributes, append);
+                                    }
+                                    else {
                                         append.nextSibling = getNextSibling();
                                         elementData = getTagNode(node, attributes, append);
                                     }
-                                    else if (startsWith(type, 'prepend/')) {
-                                        append.prepend = true;
-                                        elementData = getTagNode(node, attributes, append);
+                                    if (textContent) {
+                                        append.textContent = textContent;
                                     }
                                 }
                                 if (elementData) {
@@ -1019,8 +1094,14 @@ var chrome = (function () {
                                 if (isCrossOrigin(download, preserveCrossOrigin)) {
                                     delete data.uri;
                                 }
-                                const append = getAppendData(js ? 'script' : 'link', ++i, undefined, prepend);
-                                if (!prepend) {
+                                const tagName = js ? 'script' : 'link';
+                                let append;
+                                if (prepend) {
+                                    append = getAppendData(tagName, ++j);
+                                    append.prepend = prepend;
+                                }
+                                else {
+                                    append = getAppendData(tagName, ++i);
                                     append.nextSibling = getNextSibling();
                                 }
                                 data.element = getTagNode(node, attributes, append);
@@ -1160,7 +1241,7 @@ var chrome = (function () {
             else if (!(element instanceof HTMLScriptElement)) {
                 data = createFile(mimeType);
             }
-            if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, !assetCommand && !appendCommand ? element : undefined, watch)) {
+            if (this.processExtensions(data, !assetCommand && !appendCommand ? element : null, attributes, documentData, cloudStorage, compress, tasks, watch)) {
                 if (filename) {
                     data.filename = filename;
                 }
@@ -1249,7 +1330,7 @@ var chrome = (function () {
                     commands = undefined;
                 }
                 const data = File.parseUri(uri, isCrossOrigin(download, preserveCrossOrigin), { saveAs, saveTo, mimeType, fromConfig });
-                if (this.processExtensions(data, documentData, compress, tasks, cloudStorage, attributes, element, watch, !!commands)) {
+                if (this.processExtensions(data, element, attributes, documentData, cloudStorage, compress, tasks, watch, !!commands)) {
                     if (filename) {
                         data.filename = filename;
                     }
@@ -1281,12 +1362,7 @@ var chrome = (function () {
                 }
             }
         }
-        getResourceAssets(resourceId) {
-            if (resourceId !== undefined && resourceId !== -1) {
-                return Resource.ASSETS[resourceId];
-            }
-        }
-        processExtensions(data, document, compress, tasks, cloudStorage, attributes, element, watch, modified) {
+        processExtensions(data, element, attributes, document, cloudStorage, compress, tasks, watch, modified) {
             if (data) {
                 if (compress) {
                     data.compress = compress;
@@ -1327,7 +1403,7 @@ var chrome = (function () {
             return this.resource.application;
         }
         get userSettings() {
-            return this.resource.application.userSettings;
+            return this.application.userSettings;
         }
     }
 

@@ -160,13 +160,13 @@ VDOM is a minimal framework (41kb gzipped) and is especially useful for debuggin
     document.addEventListener("DOMContentLoaded", async () => {
         squared.setFramework(vdom, /* settings */);
 
-        const element = squared.querySelector('body', true /* synchronous */);
+        const element = squared.querySelector("body", true /* synchronous */);
         // OR
-        const elements = await squared.querySelectorAll('*');
+        const elements = await squared.querySelectorAll("*");
         // OR
         const element = squared.fromElement(document.body, true /* synchronous */);
         // OR
-        const elements = await squared.getElementById("content-id").querySelectorAll('*');
+        const elements = await squared.getElementById("content-id").querySelectorAll("*");
     });
 </script>
 ```

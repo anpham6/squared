@@ -3788,7 +3788,7 @@ var android = (function () {
 
     const { DOM } = squared.base.lib.regex;
     const { parseColor: __parseColor } = squared.lib.color;
-    const { capitalize: capitalize$6, isPlainObject: isPlainObject$3, replaceAll: replaceAll$5, startsWith: startsWith$9 } = squared.lib.util;
+    const { capitalize: capitalize$6, isPlainObject: isPlainObject$3, replaceAll: replaceAll$5, startsWith: startsWith$8 } = squared.lib.util;
     const CACHE_COLORDATA = {};
     function parseColor(value, opacity = 1, transparency) {
         if (value && (value !== 'transparent' || transparency)) {
@@ -3916,7 +3916,7 @@ var android = (function () {
     function getDataSet(dataset, prefix) {
         let result;
         for (const attr in dataset) {
-            if (startsWith$9(attr, prefix)) {
+            if (startsWith$8(attr, prefix)) {
                 (result || (result = {}))[capitalize$6(attr.substring(prefix.length), false)] = dataset[attr];
             }
         }
@@ -4125,7 +4125,7 @@ var android = (function () {
 
     const { PROTOCOL } = squared.lib.regex.FILE;
     const { extractURL: extractURL$2 } = squared.lib.css;
-    const { isPlainObject: isPlainObject$2, isString: isString$1, padStart, replaceAll: replaceAll$4, resolvePath: resolvePath$2, splitPairStart: splitPairStart$2, startsWith: startsWith$8 } = squared.lib.util;
+    const { isPlainObject: isPlainObject$2, isString: isString$1, padStart, replaceAll: replaceAll$4, resolvePath: resolvePath$2, splitPairStart: splitPairStart$2, startsWith: startsWith$7 } = squared.lib.util;
     const { getSrcSet: getSrcSet$1 } = squared.base.lib.dom;
     const { getComponentEnd: getComponentEnd$1, trimString } = squared.base.lib.util;
     const REGEXP_STRINGNAME = /\\n|<\/?[A-Za-z]+>|&#?[A-Za-z\d]+;/g;
@@ -4138,7 +4138,7 @@ var android = (function () {
             if (isString$1(value)) {
                 switch (attr) {
                     case 'text':
-                        if (!startsWith$8(value, '@string/')) {
+                        if (!startsWith$7(value, '@string/')) {
                             obj[attr] = Resource.addString(resourceId, value, '', numberAlias);
                         }
                         break;
@@ -4354,7 +4354,7 @@ var android = (function () {
             const result = {};
             let mdpi;
             if (typeof element === 'string') {
-                if ((mdpi = extractURL$2(element)) && !startsWith$8(mdpi, 'data:image/')) {
+                if ((mdpi = extractURL$2(element)) && !startsWith$7(mdpi, 'data:image/')) {
                     return this.addImageSet(resourceId, { mdpi: resolvePath$2(mdpi) }, prefix);
                 }
             }
@@ -4412,19 +4412,22 @@ var android = (function () {
             const setFont = (fonts) => {
                 if (fonts) {
                     this._fontProvider[authority] = { authority, package: packageName, certs, fonts };
+                    return true;
                 }
+                return false;
             };
             if (typeof webFonts === 'string') {
                 return fetch(webFonts)
                     .then(async (res) => {
                     const result = await res.json();
-                    if (isPlainObject$2(result)) {
-                        setFont(this.parseWebFonts(result));
-                    }
+                    return isPlainObject$2(result) && setFont(this.parseWebFonts(result));
                 })
-                    .catch(err => this.errorWebFonts(err));
+                    .catch(err => {
+                    this.errorWebFonts(err);
+                    return false;
+                });
             }
-            setFont(!verified ? this.parseWebFonts(webFonts) : webFonts);
+            return Promise.resolve(setFont(!verified ? this.parseWebFonts(webFonts) : webFonts));
         }
         assignFilename(uri, mimeType, ext = 'unknown') {
             return '__' + padStart((++this._counterFilename).toString(), 5, '0') + '.' + ext;
@@ -5171,7 +5174,7 @@ var android = (function () {
     const { asPercent: asPercent$7, asPx: asPx$3, formatPX: formatPX$d, isLength: isLength$3, isPercent: isPercent$5, isPx: isPx$2 } = squared.lib.css;
     const { getNamedItem, getRangeClientRect: getRangeClientRect$1 } = squared.lib.dom;
     const { clamp: clamp$1, truncate: truncate$8 } = squared.lib.math;
-    const { capitalize: capitalize$5, convertFloat, convertInt: convertInt$1, convertWord: convertWord$4, fromLastIndexOf: fromLastIndexOf$1, hasKeys: hasKeys$2, lastItemOf: lastItemOf$7, isString, replaceMap: replaceMap$1, safeFloat: safeFloat$4, splitPair: splitPair$5, startsWith: startsWith$7 } = squared.lib.util;
+    const { capitalize: capitalize$5, convertFloat, convertInt: convertInt$1, convertWord: convertWord$4, fromLastIndexOf: fromLastIndexOf$1, hasKeys: hasKeys$2, lastItemOf: lastItemOf$7, isString, replaceMap: replaceMap$1, safeFloat: safeFloat$4, splitPair: splitPair$5, startsWith: startsWith$6 } = squared.lib.util;
     const { parseTransform: parseTransform$1 } = squared.base.lib.css;
     const { parseTask, parseWatchInterval } = squared.base.lib.internal;
     const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_MAP;
@@ -5548,7 +5551,7 @@ var android = (function () {
                     case 'layout_height':
                         break;
                     default:
-                        if (startsWith$7(attr, 'layout_') && attr.indexOf('margin') === -1) {
+                        if (startsWith$6(attr, 'layout_') && attr.indexOf('margin') === -1) {
                             target.attr(name, attr, item[attr]);
                         }
                         break;
@@ -6307,7 +6310,7 @@ var android = (function () {
                             if (this.pageFlow && !this.floating) {
                                 this.mergeGravity('layout_gravity', parentAlign, false);
                             }
-                            if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || startsWith$7(this.display, 'table-')) {
+                            if (this.rendering || this.textElement && (!this.inlineWidth || this.multiline) || startsWith$6(this.display, 'table-')) {
                                 this.mergeGravity('gravity', parentAlign, false);
                             }
                         }
@@ -8526,7 +8529,7 @@ var android = (function () {
     const { getRangeClientRect } = squared.lib.dom;
     const { truncate: truncate$7 } = squared.lib.math;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { capitalize: capitalize$4, convertWord: convertWord$3, isSpace, iterateArray: iterateArray$1, lastItemOf: lastItemOf$6, minMaxOf, partitionArray: partitionArray$1, replaceAll: replaceAll$3, splitSome: splitSome$4, startsWith: startsWith$6, withinRange: withinRange$1 } = squared.lib.util;
+    const { capitalize: capitalize$4, convertWord: convertWord$3, isSpace, iterateArray: iterateArray$1, lastItemOf: lastItemOf$6, minMaxOf, partitionArray: partitionArray$1, replaceAll: replaceAll$3, splitSome: splitSome$4, startsWith: startsWith$5, withinRange: withinRange$1 } = squared.lib.util;
     const { parseTransform } = squared.base.lib.css;
     const { getElementsBetweenSiblings, getSrcSet } = squared.base.lib.dom;
     const { assignEmptyValue, parseMimeType: parseMimeType$1 } = squared.base.lib.util;
@@ -8708,18 +8711,18 @@ var android = (function () {
         const element = node.element;
         const src = element.tagName === 'OBJECT' ? element.data : element.src;
         const type = element.type || parseMimeType$1(src);
-        if (startsWith$6(type, 'image/')) {
+        if (startsWith$5(type, 'image/')) {
             node.setCacheValue('tagName', 'IMG');
             node.setCacheValue('imageElement', true);
             element.src = src;
             layout.containerType = 5 /* IMAGE */;
         }
-        else if (startsWith$6(type, 'video/')) {
+        else if (startsWith$5(type, 'video/')) {
             node.setCacheValue('tagName', 'VIDEO');
             element.src = src;
             layout.containerType = 21 /* VIDEOVIEW */;
         }
-        else if (startsWith$6(type, 'audio/')) {
+        else if (startsWith$5(type, 'audio/')) {
             node.setCacheValue('tagName', 'AUDIO');
             element.src = src;
             layout.containerType = 21 /* VIDEOVIEW */;
@@ -8842,7 +8845,7 @@ var android = (function () {
                     case 'grid':
                         return style.float === 'none' || hasWidth();
                 }
-                return (startsWith$6(display, 'inline-') || display === 'table') && hasWidth();
+                return (startsWith$5(display, 'inline-') || display === 'table') && hasWidth();
             }
         }
         return false;
@@ -12382,22 +12385,8 @@ var android = (function () {
             if (endsWith$1(filename, '.unknown')) {
                 mimeType = 'image/unknown';
             }
-            else if (convertImages) {
-                switch (mimeType = parseMimeType(filename)) {
-                    case 'image/png':
-                    case 'image/jpeg':
-                    case 'image/webp':
-                    case 'image/gif':
-                    case 'image/bmp':
-                    case 'image/tiff':
-                    case 'image/unknown':
-                        splitSome$3(convertImages.toLowerCase(), value => {
-                            if (/^(?:png|jpeg|webp|bmp)/i.test(value)) {
-                                (commands || (commands = [])).push(value);
-                            }
-                        }, '::');
-                        break;
-                }
+            if (convertImages && (mimeType || (mimeType = parseMimeType(filename))).startsWith('image/')) {
+                splitSome$3(convertImages.toLowerCase(), value => (commands || (commands = [])).push(value), '::');
             }
             const image = resource.getImage(resourceId, uri);
             result[j++] = {
@@ -13436,7 +13425,7 @@ var android = (function () {
     var LayoutUI$a = squared.base.LayoutUI;
     const { asPercent: asPercent$5, asPx: asPx$2, formatPercent: formatPercent$1, formatPX: formatPX$9, isLength: isLength$2, isPercent: isPercent$4, isPx: isPx$1 } = squared.lib.css;
     const { truncate: truncate$5 } = squared.lib.math;
-    const { endsWith, lastItemOf: lastItemOf$3, safeFloat: safeFloat$3, startsWith: startsWith$5 } = squared.lib.util;
+    const { endsWith, lastItemOf: lastItemOf$3, safeFloat: safeFloat$3, startsWith: startsWith$4 } = squared.lib.util;
     const { flatArray } = squared.base.lib.util;
     const CSS_ALIGNSELF = ['start', 'end', 'center', 'baseline'];
     const CSS_JUSTIFYSELF = ['start', 'center', 'end', 'baseline', 'right', 'left'];
@@ -13523,7 +13512,7 @@ var android = (function () {
             MARGIN_START = 1 /* MARGIN_TOP */;
             MARGIN_END = 4 /* MARGIN_BOTTOM */;
         }
-        if (startsWith$5(alignment, 'space')) {
+        if (startsWith$4(alignment, 'space')) {
             const offset = getRemainingSize(mainData, data, node, dimension, maxScreenWidth, maxScreenHeight);
             if (offset > 0) {
                 const rowData = getRowData(mainData, horizontal);
@@ -14108,7 +14097,7 @@ var android = (function () {
                 if (mainData.alignContent === 'normal' && !parent.hasUnit('height') && !node.hasUnit('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && cellData.bounds && Math.floor(node.bounds.height) > cellData.bounds.height && this.checkRowSpan(mainData, node, rowSpan, rowStart)) {
                     target.css('minHeight', formatPX$9(node.box.height), true);
                 }
-                else if (!target.hasUnit('height') && !target.hasUnit('maxHeight') && !(row.length === 1 && startsWith$5(mainData.alignContent, 'space') && !CSS_ALIGNSELF.includes(mainData.alignItems))) {
+                else if (!target.hasUnit('height') && !target.hasUnit('maxHeight') && !(row.length === 1 && startsWith$4(mainData.alignContent, 'space') && !CSS_ALIGNSELF.includes(mainData.alignItems))) {
                     target.mergeGravity('layout_gravity', 'fill_vertical');
                 }
                 return { parent: renderAs, renderAs, outputAs };
@@ -19515,7 +19504,7 @@ var android = (function () {
         }
     }
 
-    const { convertHyphenated: convertHyphenated$1, isPlainObject, startsWith: startsWith$4 } = squared.lib.util;
+    const { convertHyphenated: convertHyphenated$1, isPlainObject } = squared.lib.util;
     class ResourceData extends squared.base.ExtensionUI {
         constructor() {
             super(...arguments);
@@ -19536,7 +19525,7 @@ var android = (function () {
                     if (node.styleElement) {
                         const dataset = node.dataset;
                         for (const name in dataset) {
-                            if (startsWith$4(name, 'viewmodel')) {
+                            if (name.startsWith('viewmodel')) {
                                 const items = convertHyphenated$1(name).split('-');
                                 if (items.length === 3) {
                                     const attr = items[2];

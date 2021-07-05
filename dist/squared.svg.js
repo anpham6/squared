@@ -2019,7 +2019,7 @@ this.squared.svg = (function (exports) {
     const { getNamedItem: getNamedItem$6 } = squared.lib.dom;
     const { lastItemOf: lastItemOf$2, replaceMap: replaceMap$1, splitSome: splitSome$1 } = squared.lib.util;
     const { trimEnd } = squared.base.lib.util;
-    const REGEXP_BEZIER = new RegExp(`^(?:^|\\s+)${PATTERN_CUBICBEZIER}(?:$|\\s+)$`);
+    const REGEXP_BEZIER = new RegExp(`^${PATTERN_CUBICBEZIER}$`);
     const REGEXP_BEZIERCSS = new RegExp(`cubic-bezier\\(${PATTERN_CUBICBEZIER}\\)`);
     const invertControlPoint = (value) => +(1 - value).toPrecision(5);
     class SvgAnimate extends SvgAnimation {
@@ -2081,7 +2081,7 @@ this.squared.svg = (function (exports) {
             return value + (next - value) * percent;
         }
         static findTimingFunction(value) {
-            const keySpline = SvgAnimate.KEYSPLINE_NAME[value];
+            const keySpline = SvgAnimate.KEYSPLINE_NAME[value = value.trim()];
             if (keySpline) {
                 return keySpline;
             }

@@ -203,6 +203,7 @@ var vdom = (function () {
                                     success({ mimeType: mimeType || 'font/' + (splitPair$1(item, '.', false, true)[1].toLowerCase() || 'ttf'), buffer: await result.arrayBuffer() });
                                 }
                             }
+                            return result;
                         })
                             .catch(err => error(err));
                     }
